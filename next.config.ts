@@ -22,10 +22,16 @@ const config: NextConfig = {
   output: 'standalone',
   allowedDevOrigins: [...new Set([...getLanIPs(), ...manualOrigins])],
   async rewrites() {
-    return [{
-      source: '/api/v1/:path*',
-      destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/api/v1/:path*`,
-    }]
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/api/v1/:path*`,
+      },
+      {
+        source: '/brand_logos/:path*',
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/brand_logos/:path*`,
+      },
+    ]
   },
 }
 

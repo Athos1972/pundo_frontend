@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
@@ -10,15 +12,14 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
     <div className="relative bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
         <div className="w-14 h-14 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
-          {item.images?.[0] ? (
+          {(item.thumbnail_url ?? (item.images?.[0] ? String(item.images[0]) : null)) && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={String(item.images[0])} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <svg viewBox="0 0 40 40" className="w-8 h-8 text-text-light" fill="none">
-              <rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="1.5"/>
-              <circle cx="16" cy="16" r="3" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="m8 28 8-8 6 6 4-4 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img
+              src={item.thumbnail_url ?? String(item.images![0])}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
           )}
         </div>
         <div className="flex-1 min-w-0">

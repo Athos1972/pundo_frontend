@@ -9,7 +9,7 @@ import { NearbyShops } from '@/components/shop/NearbyShops'
 export default async function HomePage() {
   const lang = await getLangServer()
   const tr = t(lang)
-  const categoriesData = await getCategories({ taxonomy_type: 'google' }, lang).catch(() => ({ items: [] }))
+  const categoriesData = await getCategories({ taxonomy_type: 'google', only_with_products: true }, lang).catch(() => ({ items: [] }))
 
   return (
     <div className="min-h-screen bg-bg">

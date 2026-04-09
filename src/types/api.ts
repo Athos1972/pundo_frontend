@@ -6,7 +6,7 @@ export interface BestOffer {
 }
 export interface ProductListItem {
   id: number; slug: string; name: string | null; brand: string | null;
-  category_id: number | null; images: unknown[] | null; best_offer: BestOffer | null;
+  category_id: number | null; thumbnail_url: string | null; images: unknown[] | null; best_offer: BestOffer | null;
 }
 export interface ProductListResponse { total: number; items: ProductListItem[]; }
 
@@ -22,7 +22,7 @@ export interface ProductDetailResponse {
   names: Record<string, string>; descriptions: Record<string, string> | null;
   brand: { id: number; name: string | null } | null;
   category: { id: number; name: string | null } | null;
-  images: unknown[] | null; attributes: Record<string, unknown> | null;
+  thumbnail_url: string | null; images: unknown[] | null; attributes: Record<string, unknown> | null;
   offers: OfferDetail[];
   price_history: PriceHistoryItem[];
 }

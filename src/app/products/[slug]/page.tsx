@@ -5,6 +5,7 @@ import { getProduct } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr } from '@/lib/utils'
 import { OfferList } from '@/components/product/OfferList'
+import { ProductImage } from '@/components/product/ProductImage'
 import { PriceHistory } from '@/components/ui/PriceHistory'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -48,15 +49,12 @@ export default async function ProductPage({ params }: Props) {
         {/* Hero */}
         <div className="flex gap-4 mb-6">
           <div className="w-24 h-24 flex-shrink-0 bg-surface-alt rounded-xl flex items-center justify-center overflow-hidden">
-            {product.images?.[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={String(product.images[0])} alt={name} className="w-full h-full object-cover" />
-            ) : (
-              <svg viewBox="0 0 64 64" className="w-12 h-12 text-text-light" fill="none">
-                <rect x="12" y="12" width="40" height="40" rx="6" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="24" cy="24" r="5" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="m12 44 12-12 10 10 6-6 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+            {(product.thumbnail_url ?? (product.images?.[0] ? String(product.images[0]) : null)) && (
+              <ProductImage
+                src={product.thumbnail_url ?? String(product.images![0])}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             )}
           </div>
           <div className="flex-1 min-w-0">

@@ -1,10 +1,10 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { searchProducts, getCategories } from '@/lib/api'
+import { searchProducts, getCategories, getShops } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import type { ProductListItem, CategoryItem } from '@/types/api'
+import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
 import { fmtPrice } from '@/lib/utils'
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
 
 interface SuggestionGroup {
   categories: CategoryItem[]
+  shops: ShopListItem[]
   products: ProductListItem[]
 }
 
@@ -21,28 +22,34 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
   const router = useRouter()
   const lang = getLangFromCookie()
   const [value, setValue] = useState(defaultValue)
-  const [suggestions, setSuggestions] = useState<SuggestionGroup>({ categories: [], products: [] })
+  const [suggestions, setSuggestions] = useState<SuggestionGroup>({ categories: [], shops: [], products: [] })
   const [open, setOpen] = useState(false)
-  // activeIdx counts across both sections: 0..categories.length-1, then categories.length..total-1
+  // activeIdx counts across all sections in display order:
+  //   categories → shops → products
   const [activeIdx, setActiveIdx] = useState(-1)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const fetchSuggestions = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (q.length < 2) { setSuggestions({ categories: [], products: [] }); setOpen(false); return }
+    if (q.length < 2) { setSuggestions({ categories: [], shops: [], products: [] }); setOpen(false); return }
     debounceRef.current = setTimeout(async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, shopRes] = await Promise.all([
           searchProducts({ q, limit: 5 }, lang),
-          getCategories({ q, limit: 4 }, lang),
+          getCategories({ q, limit: 4, only_with_products: true }, lang),
+          getShops({ q, limit: 3 }, lang),
         ])
-        const next = { categories: catRes.items, products: prodRes.items }
+        const next = {
+          categories: catRes.items,
+          shops: shopRes.items,
+          products: prodRes.items,
+        }
         setSuggestions(next)
-        setOpen(next.categories.length > 0 || next.products.length > 0)
+        setOpen(next.categories.length > 0 || next.shops.length > 0 || next.products.length > 0)
         setActiveIdx(-1)
       } catch {
-        setSuggestions({ categories: [], products: [] })
+        setSuggestions({ categories: [], shops: [], products: [] })
         setOpen(false)
       }
     }, 300)
@@ -64,13 +71,21 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
     router.push(`/search?category_id=${id}`)
   }
 
+  function navigateShop(id: number) {
+    setOpen(false)
+    router.push(`/shops/${id}`)
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setOpen(false)
     if (value.trim()) router.push(`/search?q=${encodeURIComponent(value.trim())}`)
   }
 
-  const totalItems = suggestions.categories.length + suggestions.products.length
+  const catCount = suggestions.categories.length
+  const shopCount = suggestions.shops.length
+  const prodCount = suggestions.products.length
+  const totalItems = catCount + shopCount + prodCount
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (!open) return
@@ -82,10 +97,12 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
       setActiveIdx(i => Math.max(i - 1, -1))
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault()
-      if (activeIdx < suggestions.categories.length) {
+      if (activeIdx < catCount) {
         navigateCategory(suggestions.categories[activeIdx].id)
+      } else if (activeIdx < catCount + shopCount) {
+        navigateShop(suggestions.shops[activeIdx - catCount].id)
       } else {
-        navigateProduct(suggestions.products[activeIdx - suggestions.categories.length].slug)
+        navigateProduct(suggestions.products[activeIdx - catCount - shopCount].slug)
       }
     } else if (e.key === 'Escape') {
       setOpen(false)
@@ -103,8 +120,9 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
-  const hasCategories = suggestions.categories.length > 0
-  const hasProducts = suggestions.products.length > 0
+  const hasCategories = catCount > 0
+  const hasShops = shopCount > 0
+  const hasProducts = prodCount > 0
 
   return (
     <div ref={containerRef} className="relative">
@@ -115,7 +133,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => (hasCategories || hasProducts) && setOpen(true)}
+          onFocus={() => (hasCategories || hasShops || hasProducts) && setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
           className="w-full h-14 pl-5 pr-14 rounded-xl border border-border bg-surface text-text placeholder-text-light text-base shadow-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
@@ -133,7 +151,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
         </button>
       </form>
 
-      {open && (hasCategories || hasProducts) && (
+      {open && (hasCategories || hasShops || hasProducts) && (
         <ul className="absolute z-50 left-0 right-0 top-full mt-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
 
           {/* ── Kategorien ── */}
@@ -171,14 +189,54 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
             </>
           )}
 
+          {/* ── Shops ── */}
+          {hasShops && (
+            <>
+              <li className={`px-4 py-1.5 bg-surface-alt border-b border-border ${hasCategories ? 'border-t' : ''}`}>
+                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">Shops</span>
+              </li>
+              {suggestions.shops.map((shop, idx) => {
+                const globalIdx = catCount + idx
+                const subtitle =
+                  shop.dist_km != null
+                    ? `${shop.dist_km.toFixed(1)} km`
+                    : shop.address_raw ?? null
+                return (
+                  <li key={`shop-${shop.id}`}>
+                    <button
+                      onMouseDown={() => navigateShop(shop.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
+                        globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
+                      }`}
+                    >
+                      {/* Storefront icon */}
+                      <div className="w-8 h-8 flex-shrink-0 bg-accent-light rounded-lg flex items-center justify-center">
+                        <svg viewBox="0 0 16 16" className="w-4 h-4 text-accent" fill="none">
+                          <path d="M2 6 3 3h10l1 3M2 6v7h12V6M2 6h12M6 13V9h4v4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text truncate">{shop.name ?? `Shop #${shop.id}`}</p>
+                        {subtitle && <p className="text-xs text-text-muted truncate">{subtitle}</p>}
+                      </div>
+                      <svg viewBox="0 0 16 16" className="w-4 h-4 text-text-light flex-shrink-0" fill="none">
+                        <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </li>
+                )
+              })}
+            </>
+          )}
+
           {/* ── Produkte ── */}
           {hasProducts && (
             <>
-              <li className={`px-4 py-1.5 bg-surface-alt border-b border-border ${hasCategories ? 'border-t' : ''}`}>
+              <li className={`px-4 py-1.5 bg-surface-alt border-b border-border ${(hasCategories || hasShops) ? 'border-t' : ''}`}>
                 <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">Produkte</span>
               </li>
               {suggestions.products.map((item, idx) => {
-                const globalIdx = suggestions.categories.length + idx
+                const globalIdx = catCount + shopCount + idx
                 const offer = item.best_offer
                 return (
                   <li key={`prod-${item.id}`}>

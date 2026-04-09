@@ -43,10 +43,16 @@ export async function getProduct(slug: string, lang: string): Promise<ProductDet
   return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang);
 }
 
-export async function getShops(params: { lat?: number; lng?: number } = {}, lang: string): Promise<ShopListResponse> {
+export async function getShops(
+  params: { q?: string; lat?: number; lng?: number; limit?: number; offset?: number } = {},
+  lang: string
+): Promise<ShopListResponse> {
   const qs = new URLSearchParams();
+  if (params.q) qs.set('q', params.q);
   if (params.lat != null) qs.set('lat', String(params.lat));
   if (params.lng != null) qs.set('lng', String(params.lng));
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.offset != null) qs.set('offset', String(params.offset));
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
 }
@@ -55,12 +61,16 @@ export async function getShop(id: number, lang: string): Promise<ShopDetailRespo
   return apiFetch<ShopDetailResponse>(`/shops/${id}`, lang);
 }
 
-export async function getCategories(params: { parent_id?: number; taxonomy_type?: string; q?: string; limit?: number } = {}, lang: string): Promise<CategoryListResponse> {
+export async function getCategories(
+  params: { parent_id?: number; taxonomy_type?: string; q?: string; limit?: number; only_with_products?: boolean } = {},
+  lang: string
+): Promise<CategoryListResponse> {
   const qs = new URLSearchParams();
   if (params.parent_id != null) qs.set('parent_id', String(params.parent_id));
   if (params.taxonomy_type) qs.set('taxonomy_type', params.taxonomy_type);
   if (params.q) qs.set('q', params.q);
   if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.only_with_products) qs.set('only_with_products', 'true');
   const q = qs.toString();
   return apiFetch<CategoryListResponse>(`/categories${q ? `?${q}` : ''}`, lang);
 }

@@ -2,21 +2,32 @@
  * Playwright Global Setup — pundo E2E Tests gegen pundo_test DB
  *
  * Läuft einmalig vor allen Tests:
- *   1. Ruft prepare_e2e_db.py auf → reset pundo_test + Kategorien kopieren
- *   2. Registriert einen Test-Shop-Owner via API
- *   3. Approvet ihn via Admin-API
- *   4. Loggt ihn ein und speichert den JWT-Cookie als Playwright Storage State
+ *   1. Test-Backend auf Port 8002 killen und neu starten (sauberer Zustand)
+ *   2. Wartet bis Backend-Healthcheck antwortet
+ *   3. Ruft prepare_e2e_db.py auf → reset pundo_test + Kategorien kopieren
+ *   4. Registriert einen Test-Shop-Owner via API
+ *   5. Approvet ihn via Admin-API
+ *   6. Loggt ihn ein und speichert den JWT-Cookie als Playwright Storage State
  *
- * Voraussetzung: Backend läuft auf Port 8001 gegen pundo_test.
- *   → scripts/start_test_server.sh im Backend-Repo ausführen
+ * Kein manueller Backend-Start nötig — global-setup übernimmt das automatisch.
+ * Port-Trennung wird erzwungen: Port 8001 (Produktion) wird abgelehnt.
  */
 
-import { execSync } from 'child_process'
+import { execSync, spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { chromium } from '@playwright/test'
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8001'
+// Port 8001 ist der Produktiv-Port — niemals für E2E.
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8002'
+if (backendUrl.includes(':8001')) {
+  throw new Error(
+    '\n[E2E Setup] BACKEND_URL zeigt auf Port 8001 — das ist der PRODUKTIV-Port!\n' +
+    '  E2E-Tests laufen immer gegen Port 8002.\n'
+  )
+}
+
+const BACKEND_URL = backendUrl
 const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3002'
 const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://localhost:${frontendPort}`
 const BACKEND_REPO = process.env.BACKEND_REPO
@@ -57,7 +68,58 @@ async function apiPatch(path: string, headers: Record<string, string> = {}) {
 }
 
 export default async function globalSetup() {
-  console.log('\n[E2E Setup] Bereite pundo_test Datenbank vor...')
+  // ── 0. Test-Backend auf Port 8002 killen und neu starten ───────────────────
+  const backendPort = new URL(BACKEND_URL).port || '8002'
+  console.log(`\n[E2E Setup] Starte Test-Backend neu (Port ${backendPort})...`)
+
+  // Laufendes Backend auf diesem Port killen
+  try {
+    execSync(`lsof -ti:${backendPort} | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+    console.log(`[E2E Setup] Altes Backend auf Port ${backendPort} beendet.`)
+  } catch {
+    // kein Prozess lief — ok
+  }
+
+  // Kurz warten damit der Port freigegeben ist
+  await new Promise(r => setTimeout(r, 500))
+
+  // Backend im Hintergrund starten
+  const backendScript = path.join(BACKEND_REPO, 'scripts', 'start_test_server.sh')
+  if (!fs.existsSync(backendScript)) {
+    throw new Error(`[E2E Setup] start_test_server.sh nicht gefunden: ${backendScript}`)
+  }
+  const backendProc = spawn('bash', [backendScript], {
+    cwd: BACKEND_REPO,
+    env: { ...process.env, E2E_BACKEND_PORT: backendPort },
+    detached: false,
+    stdio: 'pipe',
+  })
+  backendProc.stderr?.on('data', (d: Buffer) => {
+    const line = d.toString().trim()
+    if (line) console.log(`[backend] ${line}`)
+  })
+
+  // Healthcheck-Poll bis Backend antwortet (max 30s)
+  console.log('[E2E Setup] Warte auf Backend-Healthcheck...')
+  const deadline = Date.now() + 30_000
+  let healthy = false
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/health`, { signal: AbortSignal.timeout(2000) })
+      if (res.ok) { healthy = true; break }
+    } catch { /* noch nicht bereit */ }
+    await new Promise(r => setTimeout(r, 1000))
+  }
+  if (!healthy) {
+    backendProc.kill()
+    throw new Error(
+      `\n[E2E Setup] Test-Backend auf ${BACKEND_URL} antwortet nach 30s nicht.\n` +
+      `  Prüfe ${BACKEND_REPO}/scripts/start_test_server.sh und DATABASE_URL_TEST in .env\n`
+    )
+  }
+  console.log('[E2E Setup] Test-Backend bereit.')
+
+  console.log('[E2E Setup] Bereite pundo_test Datenbank vor...')
 
   // ── 1. DB reset + Kategorien kopieren ──────────────────────────────────────
   const pyBin = `${BACKEND_REPO}/.venv/bin/python`

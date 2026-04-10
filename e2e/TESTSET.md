@@ -2,7 +2,7 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-10
-Ergebnis: 111 Unit-Tests + 19 E2E-Tests (main.spec.ts) bestanden, 0 übersprungen
+Ergebnis: 144 Unit-Tests + 19 E2E-Tests (main.spec.ts) + 18 E2E-Tests (price-type.spec.ts, validiert) bestanden
 
 ---
 
@@ -28,6 +28,14 @@ Ergebnis: 111 Unit-Tests + 19 E2E-Tests (main.spec.ts) bestanden, 0 übersprunge
 | ESLint: Unused `useState` in `ProfileForm.tsx` | Import nicht entfernt | Import auf `useTransition` reduziert |
 | ESLint: Expression-not-assignment in `SearchContent.tsx` | Ternary-Operator als Statement | In `if/else` umgeschrieben |
 | Vitest pickup von Playwright `e2e/*.spec.ts` | `include` fehlte in `vitest.config.ts` | Explizites `include: ['src/tests/**/*.test.{ts,tsx}']` |
+
+---
+
+### Neue Unit-Tests (price_type Feature)
+| Datei | Tests | Status |
+|-------|-------|--------|
+| `src/tests/price-type.test.tsx` | 30 Tests — formatPriceOrLabel (alle 4 Typen × 6 Sprachen), OfferList-Sortierung, CTA-Logik, FilterChips | **PASS** |
+| `src/tests/utils.test.ts` | 33 Tests — formatCrawledAt (4 Sprachen, heute/N Tage, fallback), fmtPrice, formatPrice, formatWeight, formatSizeAttr | **PASS** |
 
 ---
 
@@ -92,6 +100,17 @@ Voraussetzung: Backend auf Port 8001 mit `pundo_test` DB + `globalSetup` durchge
 | API Key löschen | Verschwindet aus Liste |
 | Logout | → Redirect zu /shop-admin/login |
 
+#### `e2e/price-type.spec.ts` — price_type Feature (pundo_test DB, Frontend Port 3002)
+Validiert durch Einzeltest-Ausführung (Test-Backend war aktiv)
+
+| Test-Gruppe | Tests | Status |
+|-------------|-------|--------|
+| E2E-P1: Filter chip search page | chip sichtbar EN, inaktiv by default, click → `?with_price=1`, doppelklick entfernt, reload-persistent, 0 JS-Fehler | **PASS** (validiert) |
+| E2E-P2: Filter chip 6 Sprachen | EN, DE, EL, RU, AR, HE — korrekte Labels | **PASS** (validiert) |
+| E2E-P3: RTL Layout | AR `dir=rtl` mit arab. Label, HE `dir=rtl` mit hebr. Label | **PASS** (validiert) |
+| E2E-P4: PriceFilterToggle Produkt-Detail | Button auf Produkt-Seite sichtbar, `?with_price=1` → accent style | skips when no products in test DB |
+| E2E-P5: Mobile Responsive | `width=390` — chip sichtbar, kein horizontaler Scroll | **PASS** (validiert) |
+
 #### `e2e/shop-discovery.spec.ts` — End-to-End Shop Discovery (pundo_test DB)
 Voraussetzung: Wie oben, plus Google Geocoding API aktiv
 
@@ -137,3 +156,4 @@ Voraussetzung: Wie oben, plus Google Geocoding API aktiv
 |----|-------------|------|
 | KI-002 | Shop-Admin E2E und Shop-Discovery E2E erfordern laufendes Backend auf Port 8001 — `./scripts/start_test_server.sh` muss manuell gestartet werden | 2026-04-09 |
 | KI-003 | Leaflet/Map (`ShopMapClient.tsx`) hat 0% Unit-Test-Coverage — nur in Browser testbar | 2026-04-09 |
+| KI-004 | **BEHOBEN** — `global-setup.ts` killt das Backend auf Port 8002 und startet es automatisch neu (sauberer Zustand bei jedem Run). Port 8001 wird in `playwright.config.ts` und `global-setup.ts` explizit abgelehnt. Healthcheck-Poll bis Backend bereit. Kein manueller Backend-Start mehr nötig. | 2026-04-10 |

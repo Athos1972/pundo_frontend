@@ -261,7 +261,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                         <p className="text-sm font-medium text-text truncate">{item.name ?? item.slug}</p>
                         {item.brand && <p className="text-xs text-text-muted">{item.brand}</p>}
                       </div>
-                      {offer && (
+                      {offer?.price_type === 'fixed' && offer.price && (
                         <span className="flex-shrink-0 text-sm font-bold text-accent">
                           {fmtPrice(offer.price)} {offer.currency}
                         </span>

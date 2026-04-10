@@ -1,15 +1,30 @@
 import { defineConfig } from '@playwright/test'
 
-// E2E tests use the standalone production server on a dedicated port (3002).
-// This avoids conflicts with a running `next dev` server.
+// Port-Konvention (PFLICHT — niemals mischen):
+//   Produktion:  Backend 8001, Frontend 3000
+//   E2E-Tests:   Backend 8002, Frontend 3002
 //
-// IMPORTANT: The frontend must be built with the correct BACKEND_URL before
-// running tests, because next.config.ts bakes API rewrites at build time.
+// Der global-setup startet das Test-Backend automatisch (kill + restart).
+// BACKEND_URL kann weggelassen werden → default http://localhost:8002.
+// Port 8001 wird explizit abgelehnt.
 //
-// Quick start:
-//   E2E_BACKEND_PORT=8002 ./scripts/start_test_server.sh     # in pundo_main_backend
-//   BACKEND_URL=http://localhost:8002 npx playwright test     # builds + runs
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8001'
+// Quick start (kein manueller Backend-Start nötig):
+//   npx playwright test
+//
+// Oder mit explizitem Port:
+//   BACKEND_URL=http://localhost:8002 npx playwright test
+
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8002'
+
+// Sicherheitsnetz: Port 8001 ist der Produktiv-Port — niemals für E2E.
+if (backendUrl.includes(':8001')) {
+  throw new Error(
+    '\n[E2E] BACKEND_URL zeigt auf Port 8001 — das ist der PRODUKTIV-Port!\n' +
+    '  E2E-Tests verwenden Port 8002.\n' +
+    '  Lösung: BACKEND_URL weglassen (→ auto 8002) oder BACKEND_URL=http://localhost:8002 setzen.\n'
+  )
+}
+
 const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3002'
 const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:${frontendPort}`
 

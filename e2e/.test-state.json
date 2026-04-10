@@ -3,15 +3,31 @@
   "password": "E2eTestPassword!99",
   "shop_name": "E2E Test Shop Larnaca",
   "shop_address": "Finikoudes Beach, Larnaca, Cyprus",
+  "fixtures": {
+    "shop_slug": "e2e-test-shop-larnaca",
+    "shop_id": 1,
+    "product_slugs": {
+      "on_request": "e2e-vet-consultation-larnaca",
+      "free": "e2e-free-pet-advice",
+      "variable": "e2e-bulk-dog-food",
+      "fixed": "e2e-premium-cat-food-1kg"
+    },
+    "product_ids": {
+      "e2e-vet-consultation-larnaca": 1,
+      "e2e-free-pet-advice": 2,
+      "e2e-bulk-dog-food": 3,
+      "e2e-premium-cat-food-1kg": 4
+    }
+  },
   "ownerId": 1,
   "storageState": {
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6NzYsInN0YXR1cyI6ImFwcHJvdmVkIiwiZXhwIjoxNzc2NDIwMzY1fQ.kNYzxakwNLdkobkWqXPV-0xphNwE3qZoFXxurArnYRk",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6Miwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzY0MjQ2NjF9.E6sky9ezz6B2-pZRWlB6jrFSt4YYk3SwufHtgVnb9iE",
         "domain": "localhost",
         "path": "/",
-        "expires": 1776420365.42,
+        "expires": 1776424661.762,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"

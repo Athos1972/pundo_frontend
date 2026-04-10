@@ -85,7 +85,7 @@ npm run test -- --watch   # Watch-Mode
 npm run test -- --coverage  # Mit Coverage-Report
 ```
 
-111 Tests in `src/tests/` — kein Backend nötig, kein Browser.
+144 Tests in `src/tests/` — kein Backend nötig, kein Browser.
 
 ### E2E-Tests (Playwright)
 
@@ -93,15 +93,21 @@ Vollständige Anleitung: **[docs/e2e-testing.md](docs/e2e-testing.md)**
 
 Kurzversion:
 
-```bash
-# 1. Backend gegen pundo_test starten (Terminal 1)
-cd /path/to/pundo_main_backend
-E2E_BACKEND_PORT=8002 ./scripts/start_test_server.sh
+**Port-Konvention (PFLICHT — niemals mischen):**
+| Umgebung | Backend | Frontend |
+|---|---|---|
+| Produktion / Dev | 8001 | 3000 |
+| E2E-Tests | **8002** | **3002** |
 
-# 2. E2E-Tests ausführen (Frontend startet automatisch)
-BACKEND_URL=http://localhost:8002 \
-FRONTEND_URL=http://localhost:3000 \
+Das Test-Backend wird **automatisch** gestartet — kein manueller Start nötig.  
+Port 8001 wird explizit abgelehnt (Schutz vor versehentlichem Zugriff auf Produktion).
+
+```bash
+# E2E-Tests — Backend startet automatisch auf Port 8002
 npx playwright test
+
+# Oder mit explizitem Backend-Port:
+BACKEND_URL=http://localhost:8002 npx playwright test
 ```
 
 ---
@@ -122,9 +128,9 @@ npx playwright test
 
 | Variable | Default | Beschreibung |
 |---|---|---|
-| `BACKEND_URL` | `http://localhost:8001` | Backend-URL für global-setup + API-Calls in Tests |
-| `FRONTEND_URL` | `http://localhost:3000` | Frontend-URL für Playwright `baseURL` |
-| `E2E_FRONTEND_PORT` | `3000` | Port für `npm run dev` (wenn kein `FRONTEND_URL`) |
+| `BACKEND_URL` | **Pflicht** | Test-Backend-URL — muss auf Port 8002 zeigen (8001 = Produktion, wird abgelehnt) |
+| `FRONTEND_URL` | `http://localhost:3002` | Frontend-URL für Playwright `baseURL` |
+| `E2E_FRONTEND_PORT` | `3002` | Port für den E2E-Frontend-Server |
 | `BACKEND_REPO` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | Pfad zum Backend-Repo |
 | `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | Bearer-Token für Admin-Approve-API |
 
@@ -158,16 +164,21 @@ src/
 │   ├── search/                 # SearchBar, FilterChips, CategoryChips
 │   ├── shop/                   # ShopCard, NearbyShops
 │   ├── shop-admin/             # AdminNav, HoursEditor, ProductList, ...
-│   └── ui/                     # BackButton, LanguageSwitcher
+│   └── ui/                     # BackButton, LanguageSwitcher, PriceFilterToggle
 ├── lib/
 │   ├── api.ts                  # API-Client (Server Components)
+│   ├── shop-admin-api.ts       # API-Client (Shop-Admin, isoliert)
 │   ├── lang.ts                 # Spracherkennung & Cookie
 │   ├── translations.ts         # i18n-Strings (6 Sprachen, Kunden-Seite)
 │   ├── shop-admin-translations.ts  # i18n-Strings (6 Sprachen, Shop-Admin)
-│   └── utils.ts                # Hilfsfunktionen
-└── types/
-    └── api.ts                  # TypeScript-Interfaces für API-Responses
+│   └── utils.ts                # Hilfsfunktionen (formatPriceOrLabel, ...)
+├── types/
+│   ├── api.ts                  # TypeScript-Interfaces für API-Responses (inkl. PriceType)
+│   └── shop-admin.ts           # TypeScript-Interfaces für Shop-Admin
+└── tests/                      # Vitest Unit-Tests
 ```
+
+Detaillierte Docs: [`docs/architecture.md`](./docs/architecture.md) · [`docs/i18n.md`](./docs/i18n.md) · [`docs/price-types.md`](./docs/price-types.md)
 
 ---
 
@@ -185,6 +196,20 @@ Leaflet manipuliert `window` und `document` — daher wird `ShopMapClient` mit `
 ### Auth: JWT-Cookie + Route-Group-Guard
 Shop-Admin-Seiten unter `(portal)/` sind durch ein Auth-Guard-Layout geschützt, das den `shop_owner_token`-Cookie prüft. Login/Register/etc. liegen außerhalb der `(portal)`-Gruppe und sind öffentlich. `src/proxy.ts` fängt unauthentifizierte Requests ab.
 
+### Preis-Typen (`price_type`)
+
+Angebote können einen Fixpreis haben oder auch nicht. Das `price_type`-Feld trägt die Semantik:
+
+| Wert | Bedeutung | Preis-Feld |
+|---|---|---|
+| `fixed` | Konkreter Preis | `string` |
+| `on_request` | Preis auf Anfrage | `null` |
+| `free` | Kostenlos | `null` |
+| `variable` | Variabler Preis | `null` |
+
+`formatPriceOrLabel()` in `src/lib/utils.ts` übersetzt den Typ in ein sprachspezifisches Label.  
+Vollständige Dokumentation: [`docs/price-types.md`](./docs/price-types.md)
+
 ### API-Routing
 ```
 Browser → /api/v1/* → Next.js Rewrite → BACKEND_URL/api/v1/*
@@ -200,6 +225,8 @@ RTL-Sprachen (automatisches `dir="rtl"` im HTML): **ar, he**
 
 Sprachauswahl wird im Cookie `pundo_lang` (1 Jahr, SameSite=Lax) gespeichert.  
 Server Components lesen die Sprache via `getLangServer()` aus dem Request-Cookie.
+
+Vollständige Dokumentation: [`docs/i18n.md`](./docs/i18n.md)
 
 ---
 

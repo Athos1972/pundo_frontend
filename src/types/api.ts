@@ -6,6 +6,8 @@ export interface BestOffer {
   dist_km: number | null; is_available: boolean; crawled_at: string;
   url: string | null;
   shop_location: { lat: number; lng: number } | null;
+  shop_type?: 'local' | 'online_only';
+  delivery_available?: boolean;
 }
 export interface ProductListItem {
   id: number; slug: string; name: string | null; brand: string | null;
@@ -21,6 +23,8 @@ export interface OfferDetail {
   shop_phone: string | null;
   is_available: boolean;
   sku: string | null; url: string | null; crawled_at: string;
+  shop_type?: 'local' | 'online_only';
+  delivery_available?: boolean;
 }
 export interface ProductDetailResponse {
   id: number; slug: string;

@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
     startTransition(async () => {
       try {
-        const res = await fetch('/api/shop-admin/auth/register', {
+        const res = await fetch('/api/shop-admin/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

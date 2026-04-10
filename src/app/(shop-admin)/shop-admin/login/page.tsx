@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getLangFromCookie } from '@/lib/lang'
@@ -18,6 +18,8 @@ function LoginForm() {
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
 
+  useEffect(() => { document.body.dataset.hydrated = 'true' }, [])
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const data = new FormData(e.currentTarget)
@@ -32,7 +34,7 @@ function LoginForm() {
 
     startTransition(async () => {
       try {
-        const res = await fetch('/api/shop-admin/auth/login', {
+        const res = await fetch('/api/shop-admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),

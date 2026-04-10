@@ -1,5 +1,8 @@
+export type PriceType = 'fixed' | 'on_request' | 'free' | 'variable'
+
 export interface BestOffer {
-  price: string; currency: string; shop_id: number; shop_slug: string | null; shop_name: string;
+  price: string | null; currency: string; price_type: PriceType; price_note: string | null;
+  shop_id: number; shop_slug: string | null; shop_name: string;
   dist_km: number | null; is_available: boolean; crawled_at: string;
   url: string | null;
   shop_location: { lat: number; lng: number } | null;
@@ -14,7 +17,9 @@ export interface PriceHistoryItem { shop_id: number; price: string; crawled_at: 
 export interface OfferDetail {
   shop_id: number; shop_slug: string; shop_name: string; shop_address: string | null;
   shop_location: { lat: number; lng: number } | null;
-  price: string; currency: string; is_available: boolean;
+  price: string | null; currency: string; price_type: PriceType; price_note: string | null;
+  shop_phone: string | null;
+  is_available: boolean;
   sku: string | null; url: string | null; crawled_at: string;
 }
 export interface ProductDetailResponse {
@@ -35,7 +40,7 @@ export interface ShopListItem {
   status: string; product_count: number; last_scraped: string | null;
 }
 export interface ShopListResponse { items: ShopListItem[]; }
-export interface TopProduct { id: number; slug: string; name: string | null; price: string; currency: string; }
+export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }
 export interface ShopDetailResponse extends ShopListItem { top_products: TopProduct[]; }
 
 export interface CategoryItem {

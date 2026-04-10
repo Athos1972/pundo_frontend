@@ -1,3 +1,26 @@
+import type { PriceType } from '@/types/api'
+import type { Translations } from '@/lib/translations'
+
+export function formatPriceOrLabel(
+  price: string | null,
+  currency: string,
+  priceType: PriceType,
+  priceNote: string | null,
+  tr: Translations
+): { display: string; isNumeric: boolean; note: string | null } {
+  switch (priceType) {
+    case 'fixed':
+      return { display: `${fmtPrice(price!)} ${currency}`, isNumeric: true, note: priceNote }
+    case 'free':
+      return { display: tr.price_free, isNumeric: false, note: priceNote }
+    case 'variable':
+      return { display: tr.price_variable, isNumeric: false, note: priceNote }
+    case 'on_request':
+    default:
+      return { display: tr.price_on_request, isNumeric: false, note: priceNote }
+  }
+}
+
 export function formatCrawledAt(crawledAt: string, lang: string): string {
   const date = new Date(crawledAt)
   const now = new Date()

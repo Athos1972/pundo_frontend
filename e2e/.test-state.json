@@ -1,0 +1,22 @@
+{
+  "email": "e2e-owner@pundo-e2e.io",
+  "password": "E2eTestPassword!99",
+  "shop_name": "E2E Test Shop Larnaca",
+  "shop_address": "Finikoudes Beach, Larnaca, Cyprus",
+  "ownerId": 1,
+  "storageState": {
+    "cookies": [
+      {
+        "name": "shop_owner_token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6NzYsInN0YXR1cyI6ImFwcHJvdmVkIiwiZXhwIjoxNzc2NDIwMzY1fQ.kNYzxakwNLdkobkWqXPV-0xphNwE3qZoFXxurArnYRk",
+        "domain": "localhost",
+        "path": "/",
+        "expires": 1776420365.42,
+        "httpOnly": true,
+        "secure": false,
+        "sameSite": "Lax"
+      }
+    ],
+    "origins": []
+  }
+}

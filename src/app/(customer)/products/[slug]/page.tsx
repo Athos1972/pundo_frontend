@@ -8,8 +8,12 @@ import { OfferList } from '@/components/product/OfferList'
 import { ProductImage } from '@/components/product/ProductImage'
 import { PriceHistory } from '@/components/ui/PriceHistory'
 import { BackButton } from '@/components/ui/BackButton'
+import { PriceFilterToggle } from '@/components/ui/PriceFilterToggle'
 
-interface Props { params: Promise<{ slug: string }> }
+interface Props {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ with_price?: string }>
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -17,9 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const product = await getProduct(slug, lang)
     const name = product.names[lang] ?? product.names.en ?? slug
-    const price = product.offers[0]?.price
+    const firstOffer = product.offers[0]
+    const priceDisplay = firstOffer?.price_type === 'fixed' && firstOffer.price
+      ? ` — ${firstOffer.price} €`
+      : ''
     return {
-      title: `${name}${price ? ` — ${price} €` : ''} | Pundo`,
+      title: `${name}${priceDisplay} | Pundo`,
       description: product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined,
     }
   } catch {
@@ -27,8 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const { with_price } = await searchParams
+  const withPrice = with_price === '1'
   const lang = await getLangServer()
   const tr = t(lang)
 
@@ -41,6 +50,9 @@ export default async function ProductPage({ params }: Props) {
 
   const name = product.names[lang] ?? product.names.en ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
+  const visibleOffers = withPrice
+    ? product.offers.filter(o => o.price_type === 'fixed')
+    : product.offers
 
   return (
     <main className="min-h-screen bg-bg">
@@ -75,8 +87,11 @@ export default async function ProductPage({ params }: Props) {
 
         {/* Offers */}
         <div className="bg-surface border border-border rounded-xl p-4">
-          <h2 className="font-bold text-sm text-text mb-3" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.all_offers}</h2>
-          <OfferList offers={product.offers} lang={lang} />
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-sm text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.all_offers}</h2>
+            <PriceFilterToggle />
+          </div>
+          <OfferList offers={visibleOffers} lang={lang} />
         </div>
       </div>
     </main>

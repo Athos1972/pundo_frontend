@@ -33,7 +33,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
         if (res.ok) {
           const result: ImportUploadResult = await res.json()
           setUploadResult(result)
-          showToast(tr.upload_success(result.imported), 'success')
+          showToast(tr.upload_success.replace('{n}', String(result.imported)), 'success')
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -131,10 +131,10 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
 
         {uploadResult && (
           <div className={`rounded-lg px-4 py-3 text-sm ${uploadResult.errors.length > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-            <p className="font-medium">{tr.upload_success(uploadResult.imported)}</p>
+            <p className="font-medium">{tr.upload_success.replace('{n}', String(uploadResult.imported))}</p>
             {uploadResult.errors.length > 0 && (
               <>
-                <p className="text-amber-700 mt-1">{tr.upload_errors(uploadResult.errors.length)}</p>
+                <p className="text-amber-700 mt-1">{tr.upload_errors.replace('{n}', String(uploadResult.errors.length))}</p>
                 <ul className="mt-2 text-xs text-amber-600 space-y-0.5 max-h-32 overflow-y-auto">
                   {uploadResult.errors.map((err) => (
                     <li key={err.row}>Row {err.row}: {err.message}</li>

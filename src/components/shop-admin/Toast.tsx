@@ -23,6 +23,8 @@ export function ToastProvider() {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
   useEffect(() => {
+    // Signal to E2E tests that React has hydrated
+    document.body.dataset.hydrated = 'true'
     globalHandler = (message, type = 'info') => {
       const id = ++toastId
       setToasts((prev) => [...prev, { id, message, type }])

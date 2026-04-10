@@ -58,7 +58,7 @@ BACKEND_URL=http://localhost:8001
 npm run dev
 ```
 
-Öffne [http://localhost:3001](http://localhost:3001) im Browser.
+Öffne [http://localhost:3000](http://localhost:3000) im Browser.
 
 ---
 
@@ -69,11 +69,46 @@ npm run dev      # Entwicklungsserver (Turbopack, bindet auf 0.0.0.0)
 npm run build    # Produktions-Build
 npm run start    # Produktions-Server starten
 npm run lint     # ESLint
+npm run test     # Unit-Tests (Vitest)
+npm run test:e2e # E2E-Tests (Playwright)
+```
+
+---
+
+## Tests
+
+### Unit-Tests (Vitest)
+
+```bash
+npm run test          # Einmalig
+npm run test -- --watch   # Watch-Mode
+npm run test -- --coverage  # Mit Coverage-Report
+```
+
+111 Tests in `src/tests/` — kein Backend nötig, kein Browser.
+
+### E2E-Tests (Playwright)
+
+Vollständige Anleitung: **[docs/e2e-testing.md](docs/e2e-testing.md)**
+
+Kurzversion:
+
+```bash
+# 1. Backend gegen pundo_test starten (Terminal 1)
+cd /path/to/pundo_main_backend
+E2E_BACKEND_PORT=8002 ./scripts/start_test_server.sh
+
+# 2. E2E-Tests ausführen (Frontend startet automatisch)
+BACKEND_URL=http://localhost:8002 \
+FRONTEND_URL=http://localhost:3000 \
+npx playwright test
 ```
 
 ---
 
 ## Umgebungsvariablen
+
+### Runtime
 
 | Variable | Scope | Pflicht | Beschreibung |
 |---|---|---|---|
@@ -82,6 +117,16 @@ npm run lint     # ESLint
 | `ALLOWED_DEV_ORIGINS` | Server (dev only) | Nein | Komma-getrennte zusätzliche Dev-Origins |
 
 ¹ Default: `BACKEND_URL=http://localhost:8001`, `NEXT_PUBLIC_API_URL=/api/v1`
+
+### E2E-Tests
+
+| Variable | Default | Beschreibung |
+|---|---|---|
+| `BACKEND_URL` | `http://localhost:8001` | Backend-URL für global-setup + API-Calls in Tests |
+| `FRONTEND_URL` | `http://localhost:3000` | Frontend-URL für Playwright `baseURL` |
+| `E2E_FRONTEND_PORT` | `3000` | Port für `npm run dev` (wenn kein `FRONTEND_URL`) |
+| `BACKEND_REPO` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | Pfad zum Backend-Repo |
+| `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | Bearer-Token für Admin-Approve-API |
 
 ---
 
@@ -92,19 +137,33 @@ src/
 ├── app/                        # Next.js App Router
 │   ├── layout.tsx              # Root-Layout (Fonts, Metadata, dir=rtl/ltr)
 │   ├── page.tsx                # Startseite (Hero, Suche, Nearby Shops)
-│   ├── search/                 # Suchergebnisse mit Karte
-│   ├── products/[slug]/        # Produktdetailseite
-│   └── shops/[id]/             # Shopdetailseite
+│   ├── (customer)/             # Route Group: Customer-Facing
+│   │   ├── search/             # Suchergebnisse mit Karte
+│   │   ├── products/[slug]/    # Produktdetailseite
+│   │   └── shops/[slug]/       # Shopdetailseite
+│   └── (shop-admin)/           # Route Group: Shop-Admin Portal
+│       └── shop-admin/
+│           ├── login/          # Öffentlich (kein Auth-Guard)
+│           ├── register/       # Öffentlich
+│           └── (portal)/       # Auth-Guard-Gruppe (JWT-Cookie erforderlich)
+│               ├── dashboard/
+│               ├── profile/
+│               ├── hours/
+│               ├── products/
+│               ├── offers/
+│               └── api-keys/
 ├── components/
 │   ├── map/                    # Leaflet-Karte (Client-only, dynamic import)
 │   ├── product/                # ProductCard, OfferList, PriceHistory
 │   ├── search/                 # SearchBar, FilterChips, CategoryChips
 │   ├── shop/                   # ShopCard, NearbyShops
+│   ├── shop-admin/             # AdminNav, HoursEditor, ProductList, ...
 │   └── ui/                     # BackButton, LanguageSwitcher
 ├── lib/
 │   ├── api.ts                  # API-Client (Server Components)
 │   ├── lang.ts                 # Spracherkennung & Cookie
-│   ├── translations.ts         # i18n-Strings (6 Sprachen)
+│   ├── translations.ts         # i18n-Strings (6 Sprachen, Kunden-Seite)
+│   ├── shop-admin-translations.ts  # i18n-Strings (6 Sprachen, Shop-Admin)
 │   └── utils.ts                # Hilfsfunktionen
 └── types/
     └── api.ts                  # TypeScript-Interfaces für API-Responses
@@ -122,6 +181,9 @@ Alle `app/`-Seiten sind Server Components. Datenfetching erfolgt direkt im Compo
 
 ### Karte: Client-only via dynamic import
 Leaflet manipuliert `window` und `document` — daher wird `ShopMapClient` mit `dynamic(() => import(...), { ssr: false })` geladen. Auf SSR-Seite erscheint ein Skeleton.
+
+### Auth: JWT-Cookie + Route-Group-Guard
+Shop-Admin-Seiten unter `(portal)/` sind durch ein Auth-Guard-Layout geschützt, das den `shop_owner_token`-Cookie prüft. Login/Register/etc. liegen außerhalb der `(portal)`-Gruppe und sind öffentlich. `src/proxy.ts` fängt unauthentifizierte Requests ab.
 
 ### API-Routing
 ```

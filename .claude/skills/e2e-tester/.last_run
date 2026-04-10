@@ -1,9 +1,9 @@
 {
-  "sha": "1fd60ada7518ad7222acca600cd4326fa34330b9",
-  "timestamp": "2026-04-09T19:10:29.830849+00:00",
+  "sha": "a639c23762209f7cde71763243e938114656d2b4",
+  "timestamp": "2026-04-10T08:06:18.389355+00:00",
   "coverage_snapshot": {
     "api_ts": "100%",
-    "shop_admin_translations": "71%",
+    "shop_admin_translations": "100%",
     "ProductCard": "94%",
     "HoursEditor": "83%",
     "OfferList_shop_admin": "90%",

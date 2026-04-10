@@ -28,6 +28,7 @@ export default function SearchContent() {
   const categoryId = params.get('category_id') ? Number(params.get('category_id')) : undefined
   const available = params.get('available') === 'true'
   const shopId = params.get('shop_id') ? Number(params.get('shop_id')) : undefined
+  const withPrice = params.get('with_price') === '1'
 
   const [items, setItems] = useState<ProductListItem[]>([])
   const [total, setTotal] = useState(0)
@@ -56,11 +57,11 @@ export default function SearchContent() {
   useEffect(() => {
     setOffset(0)
     load(true, 0)
-  }, [q, categoryId, available, shopId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, categoryId, available, shopId, withPrice]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-bg">
-      <div className="sticky top-0 z-10 bg-bg/95 backdrop-blur border-b border-border px-4 py-3">
+      <div className="sticky top-0 z-[9999] bg-bg border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-2">
           <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -75,6 +76,12 @@ export default function SearchContent() {
           onAvailableChange={v => {
             const p = new URLSearchParams(params.toString())
             if (v) { p.set('available', 'true') } else { p.delete('available') }
+            router.push(`/search?${p}`)
+          }}
+          withPrice={withPrice}
+          onWithPriceChange={v => {
+            const p = new URLSearchParams(params.toString())
+            if (v) { p.set('with_price', '1') } else { p.delete('with_price') }
             router.push(`/search?${p}`)
           }}
           lang={lang}
@@ -100,7 +107,8 @@ export default function SearchContent() {
       {/* Desktop: side by side. Mobile: toggled */}
       <div className="flex h-[calc(100vh-120px)]">
         <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[55%] overflow-y-auto px-4 pb-4 gap-3 pt-3`}>
-          {items.map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+          {(withPrice ? items.filter(item => item.best_offer?.price_type === 'fixed') : items)
+            .map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
           {loading && [1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-alt rounded-xl animate-pulse" />)}
           {!loading && items.length < total && (
             <button

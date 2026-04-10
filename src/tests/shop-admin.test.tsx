@@ -33,14 +33,14 @@ describe('tAdmin', () => {
 
   it('returns English as fallback for missing language', async () => {
     const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('he').login_btn).toBe('Sign in') // HE not yet translated → falls back to EN
+    expect(tAdmin('xx').login_btn).toBe('Sign in') // unknown lang → falls back to EN
   })
 
-  it('upload_success is a function returning interpolated string', async () => {
+  it('upload_success is a string template with {n} placeholder', async () => {
     const { tAdmin } = await import('@/lib/shop-admin-translations')
     const tr = tAdmin('en')
-    expect(tr.upload_success(5)).toContain('5')
-    expect(tr.upload_errors(3)).toContain('3')
+    expect(tr.upload_success.replace('{n}', '5')).toContain('5')
+    expect(tr.upload_errors.replace('{n}', '3')).toContain('3')
   })
 
   it('days array has 7 entries', async () => {

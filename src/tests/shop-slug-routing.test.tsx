@@ -22,12 +22,19 @@ vi.mock('@/lib/translations', () => ({
     available: 'Verfügbar',
     unavailable: 'Nicht verfügbar',
     last_checked: 'Zuletzt geprüft',
+    price_on_request: 'Preis auf Anfrage',
+    price_free: 'Kostenlos',
+    price_variable: 'Variabler Preis',
+    filter_price_only: 'Nur mit Preis',
+    contact_shop: 'Shop kontaktieren',
   }),
 }))
 
 vi.mock('@/lib/utils', () => ({
   formatCrawledAt: () => '01.01.2025',
   fmtPrice: (p: string) => p,
+  formatPriceOrLabel: (price: string | null, currency: string) =>
+    ({ display: price ? `${price} ${currency}` : 'Preis auf Anfrage', isNumeric: !!price, note: null }),
 }))
 
 const makeShop = (overrides?: Partial<ShopListItem>): ShopListItem => ({
@@ -54,6 +61,9 @@ const makeOffer = (overrides?: Partial<OfferDetail>): OfferDetail => ({
   shop_location: null,
   price: '9.99',
   currency: 'EUR',
+  price_type: 'fixed',
+  price_note: null,
+  shop_phone: null,
   is_available: true,
   sku: null,
   url: null,
@@ -72,6 +82,8 @@ const makeProduct = (overrides?: Partial<ProductListItem>): ProductListItem => (
   best_offer: {
     price: '12.99',
     currency: 'EUR',
+    price_type: 'fixed',
+    price_note: null,
     shop_id: 42,
     shop_slug: 'mein-testshop',
     shop_name: 'Mein Testshop',

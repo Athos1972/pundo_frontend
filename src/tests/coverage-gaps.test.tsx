@@ -19,12 +19,19 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/lib/translations', () => ({
-  t: () => ({ available: 'Available', last_checked: 'Last checked' }),
+  t: () => ({
+    available: 'Available', last_checked: 'Last checked',
+    price_on_request: 'Price on request', price_free: 'Free',
+    price_variable: 'Variable price', filter_price_only: 'With price only',
+    contact_shop: 'Contact shop',
+  }),
 }))
 
 vi.mock('@/lib/utils', () => ({
   formatCrawledAt: () => 'yesterday',
   fmtPrice: (p: string) => p,
+  formatPriceOrLabel: (price: string | null, currency: string) =>
+    ({ display: price ? `${price} ${currency}` : 'Price on request', isNumeric: !!price, note: null }),
 }))
 
 // ─── ProductCard: resolveImgSrc branches ─────────────────────────────────────
@@ -32,7 +39,7 @@ vi.mock('@/lib/utils', () => ({
 describe('ProductCard image resolution', () => {
   const base = {
     id: 1, slug: 'cat-food', name: 'Cat Food', brand: null,
-    thumbnail_url: null, images: [], best_offer: null,
+    category_id: null, thumbnail_url: null, images: [], best_offer: null,
   }
 
   it('renders without image when no thumbnail or images', async () => {
@@ -68,8 +75,8 @@ describe('ProductCard image resolution', () => {
     const item = {
       ...base,
       best_offer: {
-        price: '4.99', currency: 'EUR', shop_name: 'Pet Store',
-        shop_slug: 'pet-store', is_available: true,
+        price: '4.99', currency: 'EUR', price_type: 'fixed', price_note: null,
+        shop_name: 'Pet Store', shop_slug: 'pet-store', is_available: true,
         crawled_at: '2026-01-01T00:00:00Z',
       },
     }
@@ -85,8 +92,8 @@ describe('ProductCard image resolution', () => {
     const item = {
       ...base,
       best_offer: {
-        price: '2.50', currency: 'EUR', shop_name: 'Generic Shop',
-        shop_slug: null, is_available: false,
+        price: '2.50', currency: 'EUR', price_type: 'fixed', price_note: null,
+        shop_name: 'Generic Shop', shop_slug: null, is_available: false,
         crawled_at: '2026-01-01T00:00:00Z',
       },
     }
@@ -183,18 +190,47 @@ describe('HoursEditor save and second slot', () => {
   })
 })
 
-// ─── shop-admin-translations: DE upload functions ────────────────────────────
+// ─── shop-admin-translations: all languages ──────────────────────────────────
 
-describe('shop-admin-translations DE coverage', () => {
-  it('DE upload_success returns interpolated string', async () => {
+describe('shop-admin-translations — all languages', () => {
+  const langs = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
+
+  for (const lang of langs) {
+    it(`${lang}: upload_success/upload_errors interpolate n`, async () => {
+      const { tAdmin } = await import('@/lib/shop-admin-translations')
+      const tr = tAdmin(lang)
+      expect(tr.upload_success.replace('{n}', '7')).toContain('7')
+      expect(tr.upload_errors.replace('{n}', '3')).toContain('3')
+    })
+
+    it(`${lang}: days array has 7 entries`, async () => {
+      const { tAdmin } = await import('@/lib/shop-admin-translations')
+      expect(tAdmin(lang).days).toHaveLength(7)
+    })
+
+    it(`${lang}: login_btn is non-empty string`, async () => {
+      const { tAdmin } = await import('@/lib/shop-admin-translations')
+      expect(tAdmin(lang).login_btn.length).toBeGreaterThan(0)
+    })
+  }
+
+  it('AR: login_btn is in Arabic script', async () => {
     const { tAdmin } = await import('@/lib/shop-admin-translations')
-    const tr = tAdmin('de')
-    expect(tr.upload_success(10)).toContain('10')
-    expect(tr.upload_errors(2)).toContain('2')
+    expect(tAdmin('ar').login_btn).toBe('تسجيل الدخول')
   })
 
-  it('DE days array has 7 entries', async () => {
+  it('HE: login_btn is in Hebrew script', async () => {
     const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('de').days).toHaveLength(7)
+    expect(tAdmin('he').login_btn).toBe('כניסה')
+  })
+
+  it('EL: days[0] is Monday in Greek', async () => {
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    expect(tAdmin('el').days[0]).toBe('Δευτέρα')
+  })
+
+  it('RU: days[0] is Monday in Russian', async () => {
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    expect(tAdmin('ru').days[0]).toBe('Понедельник')
   })
 })

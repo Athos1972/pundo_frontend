@@ -1,8 +1,8 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-09
-Ergebnis: 91 Unit-Tests + 19 E2E-Tests bestanden, 0 übersprungen
+Datum: 2026-04-10
+Ergebnis: 111 Unit-Tests + 19 E2E-Tests (main.spec.ts) bestanden, 0 übersprungen
 
 ---
 
@@ -52,12 +52,14 @@ Ergebnis: 91 Unit-Tests + 19 E2E-Tests bestanden, 0 übersprungen
 ### COVERAGE_GAP (nicht blockierend)
 | Modul | Aktuell | Ziel | Ursache |
 |-------|---------|------|---------|
-| `shop-admin-translations.ts` | 71% | 80% | DE `upload_success`/`upload_errors` Funcs bereits getestet; EL/RU/AR/HE Übersetzungen noch nicht implementiert → kein Code zu testen |
+| `shop-admin-translations.ts` | 71% | 80% | EL/RU/AR/HE Übersetzungen implementiert, Coverage-Gap durch fehlende Branches |
 | `AdminNav.tsx` | 75% (Funcs 50%) | 70% | Mobile Drawer (lines 96-115) braucht Browser-Viewport — nur in Playwright testbar |
 
 ---
 
-### E2E-Tests
+### E2E-Test Struktur
+
+#### `e2e/main.spec.ts` — Customer-Facing (keine Authentifizierung)
 | Test | Status | Details |
 |------|--------|---------|
 | E2E-01 Startseite | **PASS** | HTTP 200, Suchfeld sichtbar, 0 JS-Fehler |
@@ -68,6 +70,55 @@ Ergebnis: 91 Unit-Tests + 19 E2E-Tests bestanden, 0 übersprungen
 | E2E-06 Responsive Mobile | **PASS** | Kein horizontaler Scroll bei 390px, Input min 36px hoch |
 | E2E-07 Auth Redirect | **PASS** | Unauthenticated → redirect zu /shop-admin/login; Login/Register-Seiten laden (200) |
 | E2E-07b Fehler-Handling | **PASS** | Unbekannte Route → 404 |
+
+#### `e2e/shop-admin-e2e.spec.ts` — Shop-Admin Portal (pundo_test DB)
+Voraussetzung: Backend auf Port 8001 mit `pundo_test` DB + `globalSetup` durchgelaufen
+
+| Test | Details |
+|------|---------|
+| Login korrekt | → Redirect zu /shop-admin/dashboard |
+| Login falsch | Bleibt auf Login-Seite |
+| Dashboard lädt | Keine JS-Fehler |
+| Navigation | Alle Menüpunkte sichtbar |
+| Profil lädt | Shop-Name vorausgefüllt |
+| Profil speichern | Toast "Saved" erscheint |
+| Öffnungszeiten | 7 Checkboxen, Speichern mit Toast |
+| Produkt anlegen | → Redirect zur Liste, Name sichtbar |
+| Produkt bearbeiten | Append "(bearbeitet)", Redirect, sichtbar |
+| Produkt löschen | Confirm → verschwindet aus Liste |
+| Angebot anlegen | → Liste, Titel sichtbar |
+| Angebot archivieren | Verschwindet aus Active, sichtbar in Expired-Tab |
+| API Key anlegen | "Shown only once", `<code>` > 10 Zeichen |
+| API Key löschen | Verschwindet aus Liste |
+| Logout | → Redirect zu /shop-admin/login |
+
+#### `e2e/shop-discovery.spec.ts` — End-to-End Shop Discovery (pundo_test DB)
+Voraussetzung: Wie oben, plus Google Geocoding API aktiv
+
+| Test | Details |
+|------|---------|
+| Geocoding | Shop hat lat/lng nach Approval (Larnaca ~34.9°N, ~33.6°E) |
+| Shops-Listing lädt | Keine JS-Fehler |
+| Test-Shop in Übersicht | Shop-Name auf `/shops` sichtbar |
+| Textsuche nach Name | Test-Shop in Suchergebnissen |
+| API-Suche | `GET /api/v1/shops/search?q=...` findet Shop |
+| Geo-Suche | `GET /api/v1/shops/nearby?lat=34.9&lng=33.6&radius_km=5` (optional) |
+| Shop-Detailseite lädt | Keine JS-Fehler |
+| Shop-Name auf Detail | Sichtbar auf `/shops/[slug]` |
+| Adresse auf Detail | "Larnaca" sichtbar |
+| Karte (optional) | Leaflet/Map-Element vorhanden und sichtbar |
+| Produkt anlegen → API | Via Shop-Admin anlegen, via `GET /api/v1/shops/{id}/products` abrufen |
+| Öffnungszeiten → API | Via Shop-Admin setzen, via `GET /api/v1/shops/{id}/hours` verifizieren |
+
+---
+
+### E2E-Setup Infrastruktur
+| Datei | Zweck |
+|-------|-------|
+| `e2e/global-setup.ts` | DB-Reset, Shop-Owner registrieren, approven, einloggen, `storageState` speichern |
+| `pundo_main_backend/scripts/prepare_e2e_db.py` | pundo_test reset (alembic) + Kategorien von pundo kopieren |
+| `pundo_main_backend/scripts/start_test_server.sh` | Backend auf Port 8001 mit `DATABASE_URL_TEST` starten |
+| `e2e/.test-state.json` | Auth-State + Credentials (gitignored) |
 
 ### RTL-Validierung
 | Sprache | dir-Attribut | Status |
@@ -84,6 +135,5 @@ Ergebnis: 91 Unit-Tests + 19 E2E-Tests bestanden, 0 übersprungen
 ### Known Issues
 | ID | Beschreibung | Seit |
 |----|-------------|------|
-| KI-001 | EL/RU/AR/HE Translations in `shop-admin-translations.ts` noch nicht implementiert — EN wird als Fallback genutzt | 2026-04-09 |
-| KI-002 | Shop-Admin Portal requires backend (`pundo_main_backend`) for full E2E — backend API not yet implemented | 2026-04-09 |
+| KI-002 | Shop-Admin E2E und Shop-Discovery E2E erfordern laufendes Backend auf Port 8001 — `./scripts/start_test_server.sh` muss manuell gestartet werden | 2026-04-09 |
 | KI-003 | Leaflet/Map (`ShopMapClient.tsx`) hat 0% Unit-Test-Coverage — nur in Browser testbar | 2026-04-09 |

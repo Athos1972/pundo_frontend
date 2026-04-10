@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
-import { formatCrawledAt, fmtPrice } from '@/lib/utils'
+import { formatCrawledAt, formatPriceOrLabel } from '@/lib/utils'
 
 function resolveImgSrc(item: ProductListItem): string | null {
   // Prefer relative path from images[] to avoid localhost URLs that break on mobile
@@ -26,6 +26,10 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
   const tr = t(lang)
   const offer = item.best_offer
   const imgSrc = resolveImgSrc(item)
+  const priceLabel = offer
+    ? formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
+    : null
+
   return (
     <div className="relative bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
@@ -48,9 +52,11 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
             </Link>
           </p>
           {item.brand && <p className="text-xs text-text-muted mt-0.5">{item.brand}</p>}
-          {offer && (
+          {offer && priceLabel && (
             <div className="relative z-10 flex items-center gap-2 mt-1.5">
-              <span className="text-accent font-bold text-sm">{fmtPrice(offer.price)} {offer.currency}</span>
+              <span className={`font-bold text-sm ${priceLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
+                {priceLabel.display}
+              </span>
               {offer.shop_slug
                 ? <Link href={`/shops/${offer.shop_slug}`} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
                 : <span className="text-xs text-accent truncate">{offer.shop_name}</span>

@@ -100,5 +100,13 @@ Client Components nutzen `NEXT_PUBLIC_API_URL` (relativ, geht durch den Rewrite)
 
 ## Weiterführende Docs
 
+**Fachliche Dokumentation:**
+- [Suche & Produktentdeckung](./search.md)
+- [Datenmodell](./data-model.md)
+- [Shop-Owner Portal](./shop-owner-portal.md)
+- [Shop-Sprachen](./shop-languages.md)
+
+**Technische Dokumentation:**
 - [I18n & RTL](./i18n.md)
 - [Price Types](./price-types.md)
+- [E2E-Testing](./e2e-testing.md)

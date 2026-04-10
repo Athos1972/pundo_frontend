@@ -44,6 +44,19 @@ export async function getProduct(slug: string, lang: string): Promise<ProductDet
   return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang);
 }
 
+/**
+ * Fetches products related to the given product slug.
+ * The backend ranks results by: same brand+category first, then same category,
+ * sorted by offer count descending. The current product is excluded server-side.
+ */
+export async function getRelatedProducts(
+  slug: string,
+  lang: string,
+  limit = 8
+): Promise<ProductListResponse> {
+  return apiFetch<ProductListResponse>(`/products/${slug}/related?limit=${limit}`, lang);
+}
+
 export async function getShops(
   params: { q?: string; lat?: number; lng?: number; limit?: number; offset?: number } = {},
   lang: string

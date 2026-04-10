@@ -178,7 +178,9 @@ src/
 └── tests/                      # Vitest Unit-Tests
 ```
 
-Detaillierte Docs: [`docs/architecture.md`](./docs/architecture.md) · [`docs/i18n.md`](./docs/i18n.md) · [`docs/price-types.md`](./docs/price-types.md)
+**Fachliche Docs:** [`docs/search.md`](./docs/search.md) · [`docs/data-model.md`](./docs/data-model.md) · [`docs/shop-owner-portal.md`](./docs/shop-owner-portal.md) · [`docs/shop-languages.md`](./docs/shop-languages.md)
+
+**Technische Docs:** [`docs/architecture.md`](./docs/architecture.md) · [`docs/i18n.md`](./docs/i18n.md) · [`docs/price-types.md`](./docs/price-types.md) · [`docs/e2e-testing.md`](./docs/e2e-testing.md)
 
 ---
 

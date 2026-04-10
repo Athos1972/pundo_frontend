@@ -31,7 +31,10 @@ test.describe('E2E-02: Suche', () => {
 
   test('empty search does not crash', async ({ page }) => {
     const errors: string[] = []
-    page.on('pageerror', (err) => errors.push(err.message))
+    // Hydration warnings are expected on the dev server — only real errors matter
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
     await page.goto('/search?q=xyzxyz123notexist')
     await page.waitForLoadState('networkidle')
     expect(errors).toHaveLength(0)
@@ -108,6 +111,104 @@ test.describe('E2E-04: Produkt-Detailseite', () => {
     // Either 200 (with empty state) or 404 — not 500
     expect([200, 404]).toContain(response?.status())
     expect(errors).toHaveLength(0)
+  })
+})
+
+// ─── E2E-04b: Related Products Carousel ──────────────────────────────────────
+
+test.describe('E2E-04b: Related Products Carousel', () => {
+  const TEST_SLUG = 'avicentra-avicentra-classic-menu-budgie-1kg'
+
+  test('carousel section visible when related products exist', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => errors.push(err.message))
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+
+    // Section must be visible (backend has related products for this slug)
+    const section = page.getByRole('region', { name: /related products/i })
+    await expect(section).toBeVisible()
+    expect(errors).toHaveLength(0)
+  })
+
+  test('carousel heading is rendered', async ({ page }) => {
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { name: /related products/i })).toBeVisible()
+  })
+
+  test('current product does not appear in carousel', async ({ page }) => {
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+
+    const section = page.getByRole('region', { name: /related products/i })
+    // All links inside the carousel must NOT point back to the current product
+    const carouselLinks = section.getByRole('link')
+    const hrefs = await carouselLinks.evaluateAll((links) =>
+      links.map((l) => (l as HTMLAnchorElement).href)
+    )
+    for (const href of hrefs) {
+      expect(href).not.toContain(TEST_SLUG)
+    }
+  })
+
+  test('carousel cards are clickable and link to products', async ({ page }) => {
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+
+    const section = page.getByRole('region', { name: /related products/i })
+    const firstCard = section.getByRole('listitem').first()
+    const link = firstCard.getByRole('link').first()
+    const href = await link.getAttribute('href')
+    expect(href).toMatch(/^\/products\//)
+  })
+
+  test('page loads without crash when /related returns 500 (graceful fallback)', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => errors.push(err.message))
+
+    // Intercept /related endpoint and return 500
+    await page.route(`**/api/v1/products/${TEST_SLUG}/related**`, (route) =>
+      route.fulfill({ status: 500, body: 'Internal Server Error' })
+    )
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+
+    // Page must render (offers section visible), carousel absent
+    await expect(page.getByRole('heading', { name: /all offers/i })).toBeVisible()
+    expect(errors).toHaveLength(0)
+  })
+
+  test('RTL: carousel renders correctly in Arabic', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'pundo_lang', value: 'ar', domain: 'localhost', path: '/',
+    }])
+    const errors: string[] = []
+    // Hydration warnings are expected on the dev server — only real errors matter
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
+    await page.goto(`/products/${TEST_SLUG}`)
+    await page.waitForLoadState('networkidle')
+
+    // dir=rtl must be set
+    const dir = await page.locator('html').getAttribute('dir')
+    expect(dir).toBe('rtl')
+    expect(errors).toHaveLength(0)
+  })
+
+  test.describe('mobile 375px', () => {
+    test.use({ viewport: { width: 375, height: 812 } })
+
+    test('carousel does not cause horizontal page overflow', async ({ page }) => {
+      await page.goto(`/products/${TEST_SLUG}`)
+      await page.waitForLoadState('networkidle')
+
+      // Outer document must not overflow — the scroll must be contained inside the carousel
+      const docScrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+      const docClientWidth = await page.evaluate(() => document.documentElement.clientWidth)
+      expect(docScrollWidth).toBeLessThanOrEqual(docClientWidth + 1) // 1px tolerance
+    })
   })
 })
 

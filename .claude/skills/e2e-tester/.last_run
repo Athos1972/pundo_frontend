@@ -1,11 +1,10 @@
 {
-  "sha": "83baf99597b12b7d3224e991f72337b8b62351f2",
-  "timestamp": "2026-04-10T10:43:54.092891+00:00",
+  "sha": "cce95144a19af033d7c32505214c565bc6d063c9",
+  "timestamp": "2026-04-10T18:41:24.470326+00:00",
   "coverage_snapshot": {
-    "src/lib/utils.ts": "100%",
-    "src/lib/api.ts": "100%",
-    "src/lib/translations.ts": "covered via tests",
-    "src/components/product/ProductCard.tsx": "94%",
-    "src/components/product/OfferList.tsx": "86%"
+    "unit_tests": "285/285",
+    "typescript": "PASS",
+    "eslint": "PASS (0 errors)",
+    "notes": "system-admin UI added"
   }
 }

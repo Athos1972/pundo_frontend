@@ -55,16 +55,54 @@ async function apiPost(path: string, body: unknown, headers: Record<string, stri
   return res.json()
 }
 
-async function apiPatch(path: string, headers: Record<string, string> = {}) {
+async function apiPatch(path: string, body?: unknown, headers: Record<string, string> = {}) {
   const res = await fetch(`${BACKEND_URL}${path}`, {
     method: 'PATCH',
-    headers,
+    headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
+    body: body ? JSON.stringify(body) : undefined,
   })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`PATCH ${path} → ${res.status}: ${text}`)
   }
+  if (res.status === 204) return {}
   return res.json()
+}
+
+async function adminLogin(): Promise<string> {
+  const BACKEND_REPO_PATH = process.env.BACKEND_REPO
+    ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
+  const pyBin = `${BACKEND_REPO_PATH}/.venv/bin/python`
+  const adminEmail = 'e2e-admin@pundo-e2e.io'
+  const adminPassword = 'E2eAdminPassword!99'
+  // Seed admin user into the test DB (idempotent).
+  // Read DATABASE_URL_TEST from backend's .env if not in process.env, then
+  // override DATABASE_URL so seed_admin.py writes to pundo_test.
+  let testDbUrl = process.env.DATABASE_URL_TEST
+  if (!testDbUrl) {
+    const envFile = fs.readFileSync(path.join(BACKEND_REPO_PATH, '.env'), 'utf8')
+    const match = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)
+    if (match) testDbUrl = match[1].trim()
+  }
+  if (!testDbUrl) throw new Error('[E2E Setup] DATABASE_URL_TEST not found — check backend .env')
+  execSync(
+    `${pyBin} scripts/seed_admin.py --email ${adminEmail} --password ${adminPassword}`,
+    { cwd: BACKEND_REPO_PATH, stdio: 'pipe', env: { ...process.env, DATABASE_URL: testDbUrl } }
+  )
+  // Login to get admin_token cookie
+  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Admin login failed: ${res.status}: ${text}`)
+  }
+  const cookieHeader = res.headers.get('set-cookie') ?? ''
+  const match = cookieHeader.match(/admin_token=([^;]+)/)
+  if (!match) throw new Error('admin_token cookie not found in login response')
+  return match[1]
 }
 
 export default async function globalSetup() {
@@ -105,7 +143,7 @@ export default async function globalSetup() {
   let healthy = false
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/health`, { signal: AbortSignal.timeout(2000) })
+      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(2000) })
       if (res.ok) { healthy = true; break }
     } catch { /* noch nicht bereit */ }
     await new Promise(r => setTimeout(r, 1000))
@@ -193,9 +231,8 @@ export default async function globalSetup() {
         if (msg.includes('403') || msg.includes('pending')) {
           console.log('[E2E Setup] Account pending — approving via admin API…')
           try {
-            await apiPatch('/api/v1/admin/shop-owner/1/approve', {
-              Authorization: `Bearer ${ADMIN_SECRET}`,
-            })
+            const tok = await adminLogin()
+            await apiPatch('/api/v1/admin/shop-owners/1', { status: 'approved' }, { Cookie: `admin_token=${tok}` })
           } catch {/* ignore if already approved */}
           continue
         }
@@ -209,14 +246,17 @@ export default async function globalSetup() {
     throw new Error('[E2E Setup] Could not register or log in test owner')
   }
 
-  let ownerId = await ensureOwner()
+  const ownerId = await ensureOwner()
 
   // ── 3. Approven ────────────────────────────────────────────────────────────
   console.log(`[E2E Setup] Approve Owner ${ownerId}...`)
   try {
-    await apiPatch(`/api/v1/admin/shop-owner/${ownerId}/approve`, {
-      Authorization: `Bearer ${ADMIN_SECRET}`,
-    })
+    const adminToken = await adminLogin()
+    await apiPatch(
+      `/api/v1/admin/shop-owners/${ownerId}`,
+      { status: 'approved' },
+      { Cookie: `admin_token=${adminToken}` }
+    )
     console.log('[E2E Setup] Shop-Owner approved.')
   } catch (err: unknown) {
     // Ignore if already approved (idempotent)

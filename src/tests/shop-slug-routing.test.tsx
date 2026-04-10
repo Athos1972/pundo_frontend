@@ -30,12 +30,15 @@ vi.mock('@/lib/translations', () => ({
   }),
 }))
 
-vi.mock('@/lib/utils', () => ({
-  formatCrawledAt: () => '01.01.2025',
-  fmtPrice: (p: string) => p,
-  formatPriceOrLabel: (price: string | null, currency: string) =>
-    ({ display: price ? `${price} ${currency}` : 'Preis auf Anfrage', isNumeric: !!price, note: null }),
-}))
+vi.mock('@/lib/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/utils')>()
+  return {
+    ...actual,
+    formatCrawledAt: () => '01.01.2025',
+    formatPriceOrLabel: (price: string | null, currency: string) =>
+      ({ display: price ? `${price} ${currency}` : 'Preis auf Anfrage', isNumeric: !!price, note: null }),
+  }
+})
 
 const makeShop = (overrides?: Partial<ShopListItem>): ShopListItem => ({
   id: 42,

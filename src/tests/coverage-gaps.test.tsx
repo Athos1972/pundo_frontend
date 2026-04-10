@@ -27,12 +27,15 @@ vi.mock('@/lib/translations', () => ({
   }),
 }))
 
-vi.mock('@/lib/utils', () => ({
-  formatCrawledAt: () => 'yesterday',
-  fmtPrice: (p: string) => p,
-  formatPriceOrLabel: (price: string | null, currency: string) =>
-    ({ display: price ? `${price} ${currency}` : 'Price on request', isNumeric: !!price, note: null }),
-}))
+vi.mock('@/lib/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/utils')>()
+  return {
+    ...actual,
+    formatCrawledAt: () => 'yesterday',
+    formatPriceOrLabel: (price: string | null, currency: string) =>
+      ({ display: price ? `${price} ${currency}` : 'Price on request', isNumeric: !!price, note: null }),
+  }
+})
 
 // ─── ProductCard: resolveImgSrc branches ─────────────────────────────────────
 

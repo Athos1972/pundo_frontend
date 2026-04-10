@@ -36,7 +36,6 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
     return NextResponse.json({ detail: 'Backend unreachable' }, { status: 502 })
   }
 
-  const responseBody = await backendRes.blob()
   const responseHeaders = new Headers()
 
   // Forward Set-Cookie so login can set the auth cookie on the browser
@@ -46,6 +45,12 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   const responseContentType = backendRes.headers.get('content-type')
   if (responseContentType) responseHeaders.set('content-type', responseContentType)
 
+  // 204 No Content must not have a body (e.g. DELETE returns 204)
+  if (backendRes.status === 204) {
+    return new NextResponse(null, { status: 204, headers: responseHeaders })
+  }
+
+  const responseBody = await backendRes.blob()
   return new NextResponse(responseBody, {
     status: backendRes.status,
     headers: responseHeaders,

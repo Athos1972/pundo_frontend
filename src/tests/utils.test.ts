@@ -10,6 +10,7 @@ import {
   formatPrice,
   formatWeight,
   formatSizeAttr,
+  toRelativeImageUrl,
 } from '@/lib/utils'
 
 // ─── formatCrawledAt ─────────────────────────────────────────────────────────
@@ -184,5 +185,37 @@ describe('formatSizeAttr', () => {
 
   it('handles string value in object form', () => {
     expect(formatSizeAttr({ unit: 'g', value: '400' })).toBe('400 g')
+  })
+})
+
+// ─── toRelativeImageUrl ───────────────────────────────────────────────────────
+
+describe('toRelativeImageUrl', () => {
+  it('strips localhost origin from thumbnail_url (bug regression: images broken on mobile)', () => {
+    expect(toRelativeImageUrl('http://localhost:8001/product_images/abc.jpg')).toBe('/product_images/abc.jpg')
+  })
+
+  it('strips localhost:3000 origin', () => {
+    expect(toRelativeImageUrl('http://localhost:3000/product_images/abc.jpg')).toBe('/product_images/abc.jpg')
+  })
+
+  it('returns relative path unchanged', () => {
+    expect(toRelativeImageUrl('/product_images/abc.jpg')).toBe('/product_images/abc.jpg')
+  })
+
+  it('returns null for null', () => {
+    expect(toRelativeImageUrl(null)).toBeNull()
+  })
+
+  it('returns null for undefined', () => {
+    expect(toRelativeImageUrl(undefined)).toBeNull()
+  })
+
+  it('returns null for empty string', () => {
+    expect(toRelativeImageUrl('')).toBeNull()
+  })
+
+  it('leaves non-localhost absolute URLs unchanged', () => {
+    expect(toRelativeImageUrl('https://cdn.example.com/img.jpg')).toBe('https://cdn.example.com/img.jpg')
   })
 })

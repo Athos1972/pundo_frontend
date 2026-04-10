@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { getProduct } from '@/lib/api'
 import { t } from '@/lib/translations'
-import { formatSizeAttr } from '@/lib/utils'
+import { formatSizeAttr, toRelativeImageUrl } from '@/lib/utils'
 import { OfferList } from '@/components/product/OfferList'
 import { ProductImage } from '@/components/product/ProductImage'
 import { PriceHistory } from '@/components/ui/PriceHistory'
@@ -50,6 +50,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   const name = product.names[lang] ?? product.names.en ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
+
+  // Prefer relative URL from images[] to avoid absolute localhost URLs that break on mobile
+  const firstImgUrl = (() => {
+    const img = product.images?.[0]
+    if (img && typeof img === 'object' && img !== null && 'url' in img) return String((img as { url: string }).url)
+    return toRelativeImageUrl(product.thumbnail_url)
+  })()
   const visibleOffers = withPrice
     ? product.offers.filter(o => o.price_type === 'fixed')
     : product.offers
@@ -61,9 +68,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Hero */}
         <div className="flex gap-4 mb-6">
           <div className="w-24 h-24 flex-shrink-0 bg-surface-alt rounded-xl flex items-center justify-center overflow-hidden">
-            {(product.thumbnail_url ?? (product.images?.[0] ? String(product.images[0]) : null)) && (
+            {firstImgUrl && (
               <ProductImage
-                src={product.thumbnail_url ?? String(product.images![0])}
+                src={firstImgUrl}
                 alt={name}
                 className="w-full h-full object-cover"
               />

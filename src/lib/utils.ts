@@ -59,6 +59,19 @@ export function formatWeight(grams: number): string {
  *   { unit: "ml", value: 100.0 }  →  "100 ml"
  *   "50 cm"                       →  "50 cm"   (Rohstring)
  */
+/**
+ * Strips an absolute backend origin (e.g. http://localhost:8001) from image URLs
+ * so the relative path is served through Next.js rewrites and works on mobile too.
+ */
+export function toRelativeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'localhost') return u.pathname
+  } catch { /* already relative */ }
+  return url
+}
+
 export function formatSizeAttr(size: unknown): string | null {
   if (!size) return null
 

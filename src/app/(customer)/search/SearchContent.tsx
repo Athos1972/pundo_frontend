@@ -4,11 +4,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { searchProducts } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
+import { useGeolocation } from '@/lib/useGeolocation'
 import type { ProductListItem } from '@/types/api'
 import { SearchBar } from '@/components/search/SearchBar'
 import { ProductCard } from '@/components/product/ProductCard'
-import dynamic from 'next/dynamic'
 import { FilterChips } from '@/components/search/FilterChips'
+import { DistanceSlider } from '@/components/search/DistanceSlider'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
 const ShopMap = dynamic(() => import('@/components/map/ShopMap').then(m => ({ default: m.ShopMap })), {
@@ -17,18 +19,31 @@ const ShopMap = dynamic(() => import('@/components/map/ShopMap').then(m => ({ de
 })
 
 const PAGE_SIZE = 20
+const DEFAULT_MAX_DIST_KM = 50
+
+/** Returns true if this offer is from an online-only retailer.
+ *  Uses shop_type when available (backend field); falls back to dist_km === null
+ *  as structural proxy until all shop records have shop_type set. */
+function isOnlineOffer(offer: ProductListItem['best_offer']): boolean {
+  if (!offer) return false
+  if (offer.shop_type != null) return offer.shop_type === 'online_only'
+  return offer.dist_km == null
+}
 
 export default function SearchContent() {
   const params = useSearchParams()
   const router = useRouter()
   const lang = getLangFromCookie()
   const tr = t(lang)
+  const location = useGeolocation()
 
   const q = params.get('q') ?? ''
   const categoryId = params.get('category_id') ? Number(params.get('category_id')) : undefined
   const available = params.get('available') === 'true'
   const shopId = params.get('shop_id') ? Number(params.get('shop_id')) : undefined
   const withPrice = params.get('with_price') === '1'
+  const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
+  const includeOnline = params.get('include_online') !== '0'
 
   const [items, setItems] = useState<ProductListItem[]>([])
   const [total, setTotal] = useState(0)
@@ -41,7 +56,17 @@ export default function SearchContent() {
     const newOffset = reset ? 0 : currentOffset
     try {
       const res = await searchProducts(
-        { q, category_id: categoryId, available, shop_id: shopId, limit: PAGE_SIZE, offset: newOffset },
+        {
+          q,
+          category_id: categoryId,
+          available,
+          shop_id: shopId,
+          lat: location.lat,
+          lng: location.lng,
+          max_dist_km: maxDistKm,
+          limit: PAGE_SIZE,
+          offset: newOffset,
+        },
         lang
       )
       setItems(prev => reset ? res.items : [...prev, ...res.items])
@@ -52,12 +77,38 @@ export default function SearchContent() {
     } finally {
       setLoading(false)
     }
-  }, [q, categoryId, available, shopId, lang])
+  }, [q, categoryId, available, shopId, location.lat, location.lng, maxDistKm, lang])
 
   useEffect(() => {
     setOffset(0)
     load(true, 0)
-  }, [q, categoryId, available, shopId, withPrice]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, categoryId, available, shopId, withPrice, maxDistKm, location.lat, location.lng]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function setParam(key: string, value: string | null) {
+    const p = new URLSearchParams(params.toString())
+    if (value === null) { p.delete(key) } else { p.set(key, value) }
+    router.push(`/search?${p}`)
+  }
+
+  const allFiltered = withPrice ? items.filter(item => item.best_offer?.price_type === 'fixed') : items
+
+  // Split into local and online sections
+  const localItems = allFiltered.filter(item => !isOnlineOffer(item.best_offer))
+    .filter(item => item.best_offer?.dist_km == null || item.best_offer.dist_km <= maxDistKm)
+  const onlineItems = allFiltered.filter(item => isOnlineOffer(item.best_offer))
+
+  const mapShops = Array.from(
+    new Map(
+      localItems
+        .filter(i => i.best_offer?.shop_location)
+        .map(i => [i.best_offer!.shop_id, {
+          id: i.best_offer!.shop_id,
+          name: i.best_offer!.shop_name,
+          lat: i.best_offer!.shop_location!.lat,
+          lng: i.best_offer!.shop_location!.lng,
+        }])
+    ).values()
+  )
 
   return (
     <div className="min-h-screen bg-bg">
@@ -73,17 +124,16 @@ export default function SearchContent() {
         <SearchBar placeholder={tr.search_placeholder} defaultValue={q} />
         <FilterChips
           available={available}
-          onAvailableChange={v => {
-            const p = new URLSearchParams(params.toString())
-            if (v) { p.set('available', 'true') } else { p.delete('available') }
-            router.push(`/search?${p}`)
-          }}
+          onAvailableChange={v => setParam('available', v ? 'true' : null)}
           withPrice={withPrice}
-          onWithPriceChange={v => {
-            const p = new URLSearchParams(params.toString())
-            if (v) { p.set('with_price', '1') } else { p.delete('with_price') }
-            router.push(`/search?${p}`)
-          }}
+          onWithPriceChange={v => setParam('with_price', v ? '1' : null)}
+          includeOnline={includeOnline}
+          onIncludeOnlineChange={v => setParam('include_online', v ? null : '0')}
+          lang={lang}
+        />
+        <DistanceSlider
+          value={maxDistKm}
+          onChange={v => setParam('max_dist_km', v === DEFAULT_MAX_DIST_KM ? null : String(v))}
           lang={lang}
         />
       </div>
@@ -105,11 +155,26 @@ export default function SearchContent() {
       </div>
 
       {/* Desktop: side by side. Mobile: toggled */}
-      <div className="flex h-[calc(100vh-120px)]">
+      <div className="flex h-[calc(100vh-160px)]">
         <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[55%] overflow-y-auto px-4 pb-4 gap-3 pt-3`}>
-          {(withPrice ? items.filter(item => item.best_offer?.price_type === 'fixed') : items)
-            .map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+
+          {/* Local shops section */}
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
+          {localItems.map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+          {!loading && localItems.length === 0 && (
+            <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
+          )}
+
+          {/* Online retailers section */}
+          {includeOnline && onlineItems.length > 0 && (
+            <>
+              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3">{tr.online_retailers}</h2>
+              {onlineItems.map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+            </>
+          )}
+
           {loading && [1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-alt rounded-xl animate-pulse" />)}
+
           {!loading && items.length < total && (
             <button
               onClick={() => load(false, offset)}
@@ -124,18 +189,7 @@ export default function SearchContent() {
         </div>
         <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[45%] p-4`}>
           <ShopMap
-            shops={Array.from(
-              new Map(
-                items
-                  .filter(i => i.best_offer?.shop_location)
-                  .map(i => [i.best_offer!.shop_id, {
-                    id: i.best_offer!.shop_id,
-                    name: i.best_offer!.shop_name,
-                    lat: i.best_offer!.shop_location!.lat,
-                    lng: i.best_offer!.shop_location!.lng,
-                  }])
-              ).values()
-            )}
+            shops={mapShops}
             className="w-full h-full rounded-xl overflow-hidden"
             lang={lang}
           />

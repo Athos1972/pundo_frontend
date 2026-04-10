@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
-import { formatCrawledAt, formatPriceOrLabel } from '@/lib/utils'
+import { formatCrawledAt, formatPriceOrLabel, toRelativeImageUrl } from '@/lib/utils'
 
 function resolveImgSrc(item: ProductListItem): string | null {
   // Prefer relative path from images[] to avoid localhost URLs that break on mobile
@@ -11,15 +11,7 @@ function resolveImgSrc(item: ProductListItem): string | null {
   if (firstImg && typeof firstImg === 'object' && firstImg !== null && 'url' in firstImg) {
     return String((firstImg as { url: string }).url)
   }
-  // Fall back to thumbnail_url but strip absolute localhost origin so Next.js proxy works
-  if (item.thumbnail_url) {
-    try {
-      const u = new URL(item.thumbnail_url)
-      if (u.hostname === 'localhost') return u.pathname
-    } catch { /* not a valid URL */ }
-    return item.thumbnail_url
-  }
-  return null
+  return toRelativeImageUrl(item.thumbnail_url)
 }
 
 export function ProductCard({ item, lang }: { item: ProductListItem; lang: string }) {

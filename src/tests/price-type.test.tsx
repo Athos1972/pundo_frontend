@@ -243,6 +243,7 @@ describe('FilterChips withPrice', () => {
       <FilterChips
         available={false} onAvailableChange={vi.fn()}
         withPrice={false} onWithPriceChange={vi.fn()}
+        includeOnline={true} onIncludeOnlineChange={vi.fn()}
         lang="en"
       />
     )
@@ -256,6 +257,7 @@ describe('FilterChips withPrice', () => {
       <FilterChips
         available={false} onAvailableChange={vi.fn()}
         withPrice={false} onWithPriceChange={spy}
+        includeOnline={true} onIncludeOnlineChange={vi.fn()}
         lang="en"
       />
     )
@@ -269,6 +271,7 @@ describe('FilterChips withPrice', () => {
       <FilterChips
         available={false} onAvailableChange={vi.fn()}
         withPrice={true} onWithPriceChange={vi.fn()}
+        includeOnline={true} onIncludeOnlineChange={vi.fn()}
         lang="de"
       />
     )

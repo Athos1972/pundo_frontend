@@ -23,7 +23,7 @@ async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Prom
 }
 
 export async function searchProducts(
-  params: { q?: string; category_id?: number; shop_id?: number; available?: boolean; lat?: number; lng?: number; limit?: number; offset?: number },
+  params: { q?: string; category_id?: number; shop_id?: number; available?: boolean; lat?: number; lng?: number; max_dist_km?: number; limit?: number; offset?: number },
   lang: string
 ): Promise<ProductListResponse> {
   const qs = new URLSearchParams();
@@ -33,6 +33,7 @@ export async function searchProducts(
   if (params.available) qs.set('available', 'true');
   if (params.lat != null) qs.set('lat', String(params.lat));
   if (params.lng != null) qs.set('lng', String(params.lng));
+  if (params.max_dist_km != null) qs.set('max_dist_km', String(params.max_dist_km));
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.offset != null) qs.set('offset', String(params.offset));
   const q = qs.toString();

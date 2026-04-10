@@ -64,6 +64,9 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
               {offer.is_available && (
                 <span className="text-xs px-1.5 py-0.5 bg-success/10 text-success rounded-full">{tr.available}</span>
               )}
+              {offer.delivery_available && (
+                <span className="text-xs px-1.5 py-0.5 bg-accent/10 text-accent rounded-full rtl:mr-0 rtl:ml-1">{tr.delivery_available}</span>
+              )}
             </div>
           )}
           {offer && (

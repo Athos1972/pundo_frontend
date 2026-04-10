@@ -6,12 +6,16 @@ export function FilterChips({
   onAvailableChange,
   withPrice,
   onWithPriceChange,
+  includeOnline,
+  onIncludeOnlineChange,
   lang,
 }: {
   available: boolean
   onAvailableChange: (v: boolean) => void
   withPrice: boolean
   onWithPriceChange: (v: boolean) => void
+  includeOnline: boolean
+  onIncludeOnlineChange: (v: boolean) => void
   lang: string
 }) {
   const tr = t(lang)
@@ -32,6 +36,15 @@ export function FilterChips({
         }`}
       >
         {tr.filter_price_only}
+      </button>
+      <button
+        onClick={() => onIncludeOnlineChange(!includeOnline)}
+        aria-pressed={includeOnline}
+        className={`flex-shrink-0 px-3 py-1 rounded-full text-sm transition-colors ${
+          includeOnline ? 'bg-accent text-white' : 'bg-surface border border-border text-text-muted hover:border-accent'
+        }`}
+      >
+        {tr.show_online}
       </button>
     </div>
   )

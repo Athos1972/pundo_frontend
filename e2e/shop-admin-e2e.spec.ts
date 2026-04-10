@@ -170,7 +170,7 @@ test.describe('Produkte CRUD', () => {
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     // Nach erfolgreichem Anlegen zurück zur Produktliste
     await expect(page).toHaveURL(/\/shop-admin\/products$/, { timeout: 15_000 })
-    await expect(page.getByText(TEST_PRODUCT)).toBeVisible()
+    await expect(page.getByText(TEST_PRODUCT).first()).toBeVisible()
   })
 
   test('Produkt bearbeiten', async ({ page }) => {
@@ -261,7 +261,7 @@ test.describe('API Keys', () => {
     await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /delete|löschen/i }).first().click()
     // Key ist weg
-    await expect(page.getByText('E2E Test Key')).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('E2E Test Key').first()).not.toBeVisible({ timeout: 10_000 })
   })
 })
 

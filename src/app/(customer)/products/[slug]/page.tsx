@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
-import { getProduct } from '@/lib/api'
+import { getProduct, getRelatedProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl } from '@/lib/utils'
 import { OfferList } from '@/components/product/OfferList'
 import { ProductImage } from '@/components/product/ProductImage'
+import { RelatedProductsCarousel } from '@/components/product/RelatedProductsCarousel'
 import { PriceHistory } from '@/components/ui/PriceHistory'
 import { BackButton } from '@/components/ui/BackButton'
 import { PriceFilterToggle } from '@/components/ui/PriceFilterToggle'
@@ -41,12 +42,18 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const lang = await getLangServer()
   const tr = t(lang)
 
-  let product
-  try {
-    product = await getProduct(slug, lang)
-  } catch {
-    notFound()
-  }
+  // Fetch product + related in parallel; related failure must not break the page.
+  const [productResult, relatedResult] = await Promise.allSettled([
+    getProduct(slug, lang),
+    getRelatedProducts(slug, lang),
+  ])
+
+  if (productResult.status === 'rejected') notFound()
+  const product = productResult.value
+  // Filter out the current product defensively in case the backend misses it.
+  const relatedItems = relatedResult.status === 'fulfilled'
+    ? relatedResult.value.items.filter(p => p.slug !== slug)
+    : []
 
   const name = product.names[lang] ?? product.names.en ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
@@ -100,6 +107,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </div>
           <OfferList offers={visibleOffers} lang={lang} />
         </div>
+
+        {/* Related products carousel — hidden when empty */}
+        <RelatedProductsCarousel
+          items={relatedItems}
+          lang={lang}
+          title={tr.related_products}
+        />
       </div>
     </main>
   )

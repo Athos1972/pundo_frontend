@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { getShops } from '@/lib/api'
 import type { ShopListItem } from '@/types/api'
+import { t } from '@/lib/translations'
 import { ShopCard } from './ShopCard'
 
 type Status = 'loading' | 'ok' | 'empty' | 'error'
@@ -51,7 +52,7 @@ export function NearbyShops({ lang }: { lang: string }) {
   if (status === 'error') {
     return (
       <p className="text-sm text-text-muted py-4">
-        Backend nicht erreichbar — bitte Backend starten.{' '}
+        {t(lang).backend_unreachable}{' '}
         <span className="text-text-light text-xs font-mono">{errorMsg}</span>
       </p>
     )
@@ -60,7 +61,7 @@ export function NearbyShops({ lang }: { lang: string }) {
   if (status === 'empty') {
     return (
       <p className="text-sm text-text-muted py-4">
-        Noch keine Shops in der Datenbank.
+        {t(lang).no_shops_in_db}
       </p>
     )
   }

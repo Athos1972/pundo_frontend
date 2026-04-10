@@ -51,7 +51,7 @@ export default function SearchContent() {
     } finally {
       setLoading(false)
     }
-  }, [q, categoryId, available, shopId, lang]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, categoryId, available, shopId, lang])
 
   useEffect(() => {
     setOffset(0)
@@ -74,7 +74,7 @@ export default function SearchContent() {
           available={available}
           onAvailableChange={v => {
             const p = new URLSearchParams(params.toString())
-            v ? p.set('available', 'true') : p.delete('available')
+            if (v) { p.set('available', 'true') } else { p.delete('available') }
             router.push(`/search?${p}`)
           }}
           lang={lang}

@@ -57,8 +57,8 @@ export async function getShops(
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
 }
 
-export async function getShop(id: number, lang: string): Promise<ShopDetailResponse> {
-  return apiFetch<ShopDetailResponse>(`/shops/${id}`, lang);
+export async function getShop(slug: string, lang: string): Promise<ShopDetailResponse> {
+  return apiFetch<ShopDetailResponse>(`/shops/by-slug/${slug}`, lang);
 }
 
 export async function getCategories(

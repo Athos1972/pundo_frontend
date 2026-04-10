@@ -71,9 +71,9 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
     router.push(`/search?category_id=${id}`)
   }
 
-  function navigateShop(id: number) {
+  function navigateShop(slug: string) {
     setOpen(false)
-    router.push(`/shops/${id}`)
+    router.push(`/shops/${slug}`)
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -100,7 +100,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
       if (activeIdx < catCount) {
         navigateCategory(suggestions.categories[activeIdx].id)
       } else if (activeIdx < catCount + shopCount) {
-        navigateShop(suggestions.shops[activeIdx - catCount].id)
+        navigateShop(suggestions.shops[activeIdx - catCount].slug)
       } else {
         navigateProduct(suggestions.products[activeIdx - catCount - shopCount].slug)
       }
@@ -204,7 +204,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                 return (
                   <li key={`shop-${shop.id}`}>
                     <button
-                      onMouseDown={() => navigateShop(shop.id)}
+                      onMouseDown={() => navigateShop(shop.slug)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
                         globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                       }`}
@@ -216,7 +216,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text truncate">{shop.name ?? `Shop #${shop.id}`}</p>
+                        <p className="text-sm font-medium text-text truncate">{shop.name ?? shop.slug}</p>
                         {subtitle && <p className="text-xs text-text-muted truncate">{subtitle}</p>}
                       </div>
                       <svg viewBox="0 0 16 16" className="w-4 h-4 text-text-light flex-shrink-0" fill="none">
@@ -247,16 +247,15 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                       } ${idx > 0 ? 'border-t border-border' : ''}`}
                     >
                       <div className="w-8 h-8 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
-                        {item.images?.[0] ? (
+                        {item.thumbnail_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={String(item.images[0])} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <svg viewBox="0 0 24 24" className="w-4 h-4 text-text-light" fill="none">
-                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-                            <circle cx="8.5" cy="8.5" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="m3 16 5-5 4 4 3-3 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                          </svg>
-                        )}
+                          <img
+                            src={item.thumbnail_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                          />
+                        ) : null}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-text truncate">{item.name ?? item.slug}</p>
@@ -280,7 +279,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
               onMouseDown={(e) => handleSubmit(e as unknown as React.FormEvent)}
               className="w-full px-4 py-2.5 text-xs text-text-muted hover:text-accent hover:bg-surface-alt transition-colors text-left"
             >
-              Alle Ergebnisse für „{value}" →
+              Alle Ergebnisse für &bdquo;{value}&ldquo; →
             </button>
           </li>
         </ul>

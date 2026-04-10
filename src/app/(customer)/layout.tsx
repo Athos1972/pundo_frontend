@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk, DM_Sans } from 'next/font/google'
-import './globals.css'
+import '../globals.css'
 import { getLangServer, isRTL } from '@/lib/lang'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 

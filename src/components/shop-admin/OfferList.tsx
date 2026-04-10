@@ -1,0 +1,119 @@
+'use client'
+// Only imports from src/components/ui/ allowed (Clean Boundary)
+
+import { useState, useTransition } from 'react'
+import Link from 'next/link'
+import { tAdmin } from '@/lib/shop-admin-translations'
+import { showToast } from './Toast'
+import type { AdminOffer } from '@/types/shop-admin'
+
+interface OfferListProps {
+  activeItems: AdminOffer[]
+  expiredItems: AdminOffer[]
+  lang: string
+}
+
+export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
+  const tr = tAdmin(lang)
+  const [tab, setTab] = useState<'active' | 'expired'>('active')
+  const [active, setActive] = useState(activeItems)
+  const [expired, setExpired] = useState(expiredItems)
+  const [confirmId, setConfirmId] = useState<number | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  const items = tab === 'active' ? active : expired
+
+  function handleArchive(id: number) {
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/shop-admin/offers/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ archived: true }),
+        })
+        if (res.ok) {
+          const offer = active.find((o) => o.id === id)
+          if (offer) {
+            setActive((prev) => prev.filter((o) => o.id !== id))
+            setExpired((prev) => [{ ...offer, archived: true }, ...prev])
+          }
+          showToast('Archived', 'success')
+        } else {
+          showToast(tr.error_generic, 'error')
+        }
+      } catch {
+        showToast(tr.error_generic, 'error')
+      }
+      setConfirmId(null)
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200">
+        {(['active', 'expired'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors
+              ${tab === t
+                ? 'border-accent text-accent'
+                : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+          >
+            {t === 'active' ? tr.active : tr.expired}
+          </button>
+        ))}
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-gray-400 text-sm py-8 text-center">{tr.no_results}</p>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+          {items.map((offer) => (
+            <div key={offer.id} className="flex items-start gap-3 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800">{offer.title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {offer.valid_from} – {offer.valid_until}
+                  {offer.price && ` · ${offer.price}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link
+                  href={`/shop-admin/offers/${offer.id}/edit`}
+                  className="text-xs text-accent hover:underline"
+                >
+                  {tr.edit}
+                </Link>
+                {tab === 'active' && (
+                  confirmId === offer.id ? (
+                    <span className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleArchive(offer.id)}
+                        disabled={isPending}
+                        className="text-xs text-white bg-orange-500 px-2 py-0.5 rounded hover:bg-orange-600 disabled:opacity-50"
+                      >
+                        {tr.archive}
+                      </button>
+                      <button onClick={() => setConfirmId(null)} className="text-xs text-gray-400">
+                        {tr.cancel}
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(offer.id)}
+                      className="text-xs text-gray-400 hover:text-orange-500"
+                    >
+                      {tr.archive}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

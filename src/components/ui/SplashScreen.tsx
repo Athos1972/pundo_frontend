@@ -11,10 +11,9 @@ export function SplashScreen() {
     if (sessionStorage.getItem('pundo_splash')) return
     sessionStorage.setItem('pundo_splash', '1')
 
-    setVisible(true)
-
-    const t = setTimeout(() => setVisible(false), OUTRO_MS)
-    return () => clearTimeout(t)
+    const show = setTimeout(() => setVisible(true), 0)
+    const hide = setTimeout(() => setVisible(false), OUTRO_MS)
+    return () => { clearTimeout(show); clearTimeout(hide) }
   }, [])
 
   if (!visible) return null

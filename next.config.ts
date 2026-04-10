@@ -31,6 +31,10 @@ const config: NextConfig = {
         source: '/brand_logos/:path*',
         destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/brand_logos/:path*`,
       },
+      {
+        source: '/product_images/:path*',
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/product_images/:path*`,
+      },
     ]
   },
 }

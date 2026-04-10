@@ -1,20 +1,20 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
-import { getShop } from '@/lib/api'
+import { getShop, searchProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
 import Link from 'next/link'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
-import { fmtPrice } from '@/lib/utils'
 import { BackButton } from '@/components/ui/BackButton'
+import { ProductCard } from '@/components/product/ProductCard'
 
-interface Props { params: Promise<{ id: string }> }
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
+  const { slug } = await params
   const lang = await getLangServer()
   try {
-    const shop = await getShop(Number(id), lang)
+    const shop = await getShop(slug, lang)
     return { title: `${shop.name ?? 'Shop'} | Pundo` }
   } catch {
     return { title: 'Shop | Pundo' }
@@ -22,16 +22,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ShopPage({ params }: Props) {
-  const { id } = await params
+  const { slug } = await params
   const lang = await getLangServer()
   const tr = t(lang)
 
   let shop
   try {
-    shop = await getShop(Number(id), lang)
+    shop = await getShop(slug, lang)
   } catch {
     notFound()
   }
+
+  const topProducts = shop.top_products.length > 0
+    ? (await searchProducts({ shop_id: shop.id, limit: 10 }, lang)).items
+    : []
 
   const pins = shop.location
     ? [{ id: shop.id, name: shop.name ?? 'Shop', lat: shop.location.lat, lng: shop.location.lng }]
@@ -81,8 +85,8 @@ export default async function ShopPage({ params }: Props) {
         )}
 
         {/* Top products */}
-        {shop.top_products.length > 0 && (
-          <div className="bg-surface border border-border rounded-xl p-4">
+        {topProducts.length > 0 && (
+          <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-sm text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.products}</h2>
               <Link href={`/search?shop_id=${shop.id}`} className="text-xs text-accent hover:underline">
@@ -90,11 +94,8 @@ export default async function ShopPage({ params }: Props) {
               </Link>
             </div>
             <div className="space-y-2">
-              {shop.top_products.map(p => (
-                <Link key={p.id} href={`/products/${p.slug}`} className="flex justify-between items-center py-2 border-t border-border first:border-0 hover:text-accent transition-colors">
-                  <span className="text-sm text-text truncate">{p.name ?? p.slug}</span>
-                  <span className="text-sm font-medium text-accent flex-shrink-0 ml-2">{fmtPrice(p.price)} {p.currency}</span>
-                </Link>
+              {topProducts.map(p => (
+                <ProductCard key={p.id} item={p} lang={lang} />
               ))}
             </div>
           </div>

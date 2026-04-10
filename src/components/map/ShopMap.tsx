@@ -1,5 +1,6 @@
 'use client'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -29,12 +30,21 @@ interface ShopMapProps {
   lang?: string
 }
 
+// Re-centers the map whenever center/zoom change (MapContainer ignores prop updates after mount)
+function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap()
+  useEffect(() => {
+    map.setView(center, zoom)
+  }, [center[0], center[1], zoom]) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
+}
+
 // Map OSM language codes — fall back to English for unsupported locales
 const TILE_LANG: Record<string, string> = {
   de: 'de', en: 'en', ru: 'ru', ar: 'ar', he: 'he',
 }
 
-export function ShopMap({ shops, className = '', center, zoom = 13, lang = 'en' }: ShopMapProps) {
+export function ShopMap({ shops, className = '', center, zoom = 15, lang = 'en' }: ShopMapProps) {
   const defaultCenter: [number, number] = center ?? (shops.length > 0 ? [shops[0].lat, shops[0].lng] : [34.9, 33.63])
   const tileUrl = `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
   const langCode = TILE_LANG[lang] ?? 'en'
@@ -52,6 +62,7 @@ export function ShopMap({ shops, className = '', center, zoom = 13, lang = 'en' 
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={false}
       >
+        <ChangeView center={defaultCenter} zoom={zoom} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
           url={localizedUrl}

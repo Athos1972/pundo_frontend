@@ -1,0 +1,16 @@
+{
+  "sha": "1fd60ada7518ad7222acca600cd4326fa34330b9",
+  "timestamp": "2026-04-09T19:10:29.830849+00:00",
+  "coverage_snapshot": {
+    "api_ts": "100%",
+    "shop_admin_translations": "71%",
+    "ProductCard": "94%",
+    "HoursEditor": "83%",
+    "OfferList_shop_admin": "90%",
+    "ProductList": "87%",
+    "ApiKeyList": "77%",
+    "Toast": "85%",
+    "FormField": "100%",
+    "AdminNav": "75%"
+  }
+}

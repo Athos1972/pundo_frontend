@@ -80,35 +80,88 @@ export default async function globalSetup() {
     throw err
   }
 
-  // ── 2. Shop-Owner registrieren ─────────────────────────────────────────────
+  // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
+  // After a schema reset the backend's SQLAlchemy connection pool may have stale
+  // connections → first request(s) return 5xx. Retry with backoff.
+  // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)
-  let ownerId: number
-  try {
-    const reg = await apiPost('/api/v1/shop-owner/register', {
-      email: creds.email,
-      password: creds.password,
-      name: 'E2E Test Owner',
-      shop_name: creds.shop_name,
-      shop_address: creds.shop_address,
-    })
-    ownerId = reg.id
-    console.log(`[E2E Setup] Registriert, ID: ${ownerId}, status: ${reg.status}`)
-  } catch (err) {
-    // Wenn er schon existiert (409), Login versuchen um ID zu holen
-    const loginRes = await apiPost('/api/v1/shop-owner/login', {
-      email: creds.email,
-      password: creds.password,
-    })
-    ownerId = loginRes.id
-    console.log(`[E2E Setup] Shop-Owner schon vorhanden, ID: ${ownerId}`)
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+  async function ensureOwner(): Promise<number> {
+    // ── try registration (with retry for transient 5xx) ───────────────────
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        const reg = await apiPost('/api/v1/shop-owner/register', {
+          email: creds.email,
+          password: creds.password,
+          name: 'E2E Test Owner',
+          shop_name: creds.shop_name,
+          shop_address: creds.shop_address,
+        })
+        console.log(`[E2E Setup] Registriert, ID: ${reg.id}, status: ${reg.status}`)
+        return reg.id
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        if (msg.includes('400') || msg.includes('Already registered')) {
+          console.log('[E2E Setup] Email already registered, falling back to login…')
+          break // user exists → fall through to login
+        }
+        if (attempt < 5) {
+          console.log(`[E2E Setup] Registrierung Versuch ${attempt} fehlgeschlagen (${msg.slice(0, 80)}), warte 2s…`)
+          await sleep(2000)
+        } else {
+          throw err
+        }
+      }
+    }
+
+    // ── user already exists: login or approve+login ───────────────────────
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await apiPost('/api/v1/shop-owner/login', {
+          email: creds.email,
+          password: creds.password,
+        })
+        console.log(`[E2E Setup] Shop-Owner schon vorhanden, ID: ${res.id}`)
+        return res.id
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        // 403 = pending approval — approve by ID (after clean DB reset it's always 1)
+        if (msg.includes('403') || msg.includes('pending')) {
+          console.log('[E2E Setup] Account pending — approving via admin API…')
+          try {
+            await apiPatch('/api/v1/admin/shop-owner/1/approve', {
+              Authorization: `Bearer ${ADMIN_SECRET}`,
+            })
+          } catch {/* ignore if already approved */}
+          continue
+        }
+        if (attempt < 3) {
+          await sleep(1000)
+        } else {
+          throw err
+        }
+      }
+    }
+    throw new Error('[E2E Setup] Could not register or log in test owner')
   }
+
+  let ownerId = await ensureOwner()
 
   // ── 3. Approven ────────────────────────────────────────────────────────────
   console.log(`[E2E Setup] Approve Owner ${ownerId}...`)
-  await apiPatch(`/api/v1/admin/shop-owner/${ownerId}/approve`, {
-    Authorization: `Bearer ${ADMIN_SECRET}`,
-  })
-  console.log('[E2E Setup] Shop-Owner approved.')
+  try {
+    await apiPatch(`/api/v1/admin/shop-owner/${ownerId}/approve`, {
+      Authorization: `Bearer ${ADMIN_SECRET}`,
+    })
+    console.log('[E2E Setup] Shop-Owner approved.')
+  } catch (err: unknown) {
+    // Ignore if already approved (idempotent)
+    const msg = err instanceof Error ? err.message : String(err)
+    if (!msg.includes('already') && !msg.includes('200')) throw err
+    console.log('[E2E Setup] Shop-Owner war bereits approved.')
+  }
 
   // ── 4. Login + Storage State für Playwright speichern ─────────────────────
   console.log('[E2E Setup] Erstelle Playwright Storage State (JWT-Cookie)...')

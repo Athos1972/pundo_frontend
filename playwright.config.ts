@@ -26,7 +26,7 @@ export default defineConfig({
     command: `BACKEND_URL=${backendUrl} npm run build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public && PORT=${frontendPort} BACKEND_URL=${backendUrl} node .next/standalone/server.js`,
     url: frontendUrl,
     reuseExistingServer: true,
-    timeout: 120_000,
+    timeout: 300_000,
     env: {
       BACKEND_URL: backendUrl,
       PORT: frontendPort,

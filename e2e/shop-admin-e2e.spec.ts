@@ -191,10 +191,9 @@ test.describe('Produkte CRUD', () => {
   test('Produkt löschen', async ({ page }) => {
     await page.goto('/shop-admin/products')
     await waitHydrated(page)
-    // Erstes Delete-Button klicken → Confirm → wieder Delete
-    const deleteBtn = page.getByRole('button', { name: /delete|löschen/i }).first()
-    await deleteBtn.click()
-    // Confirm-Button erscheint
+    // Click Delete → wait for Cancel button (confirms React committed the confirm state) → click Delete again
+    await page.getByRole('button', { name: /delete|löschen/i }).first().click()
+    await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /delete|löschen/i }).first().click()
     // Produkt verschwindet aus Liste
     await expect(page.getByText(/bearbeitet/)).not.toBeVisible({ timeout: 10_000 })
@@ -221,15 +220,15 @@ test.describe('Angebote CRUD', () => {
   test('Angebot archivieren', async ({ page }) => {
     await page.goto('/shop-admin/offers')
     await waitHydrated(page)
-    const archiveBtn = page.getByRole('button', { name: /archive|archivieren/i }).first()
-    await archiveBtn.click()
-    // Confirm
+    // Click Archive → wait for Cancel button → click Archive to confirm
+    await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
+    await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
     // Angebot verschwindet aus Active-Tab
     await expect(page.getByText(TEST_OFFER)).not.toBeVisible({ timeout: 10_000 })
-    // Im Expired-Tab sichtbar
+    // Im Expired-Tab sichtbar (use .first() to avoid strict mode if duplicates)
     await page.getByRole('button', { name: /expired|abgelaufen/i }).click()
-    await expect(page.getByText(TEST_OFFER)).toBeVisible()
+    await expect(page.getByText(TEST_OFFER).first()).toBeVisible()
   })
 })
 
@@ -257,8 +256,9 @@ test.describe('API Keys', () => {
   test('API Key löschen', async ({ page }) => {
     await page.goto('/shop-admin/api-keys')
     await waitHydrated(page)
-    const deleteBtn = page.getByRole('button', { name: /delete|löschen/i }).first()
-    await deleteBtn.click()
+    // Click Delete → wait for Cancel to appear → click Delete to confirm
+    await page.getByRole('button', { name: /delete|löschen/i }).first().click()
+    await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /delete|löschen/i }).first().click()
     // Key ist weg
     await expect(page.getByText('E2E Test Key')).not.toBeVisible({ timeout: 10_000 })

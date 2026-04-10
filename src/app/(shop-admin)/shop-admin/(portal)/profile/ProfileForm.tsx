@@ -1,8 +1,9 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from '@/components/shop-admin/FormField'
+import { LanguageSelector } from '@/components/shop-admin/LanguageSelector'
 import { showToast } from '@/components/shop-admin/Toast'
 import type { AdminShop } from '@/types/shop-admin'
 
@@ -14,6 +15,9 @@ interface ProfileFormProps {
 export function ProfileForm({ shop, lang }: ProfileFormProps) {
   const tr = tAdmin(lang)
   const [isPending, startTransition] = useTransition()
+  const [spokenLanguages, setSpokenLanguages] = useState<string[]>(
+    shop?.spoken_languages ?? []
+  )
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -29,6 +33,7 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
             description: data.get('description'),
             logo_url: data.get('logo_url'),
             address: data.get('address'),
+            spoken_languages: spokenLanguages,
           }),
         })
         if (res.ok) {
@@ -70,6 +75,11 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         name="address"
         type="text"
         defaultValue={shop?.address ?? ''}
+      />
+      <LanguageSelector
+        value={spokenLanguages}
+        onChange={setSpokenLanguages}
+        label={tr.spoken_languages}
       />
       <button
         type="submit"

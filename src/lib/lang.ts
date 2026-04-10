@@ -1,5 +1,8 @@
 export const LANGS = ['en', 'de', 'ru', 'el', 'ar', 'he'] as const;
 export type Lang = typeof LANGS[number];
+
+export const SUPPORTED_LANGUAGES = ['EN', 'DE', 'EL', 'RU', 'AR', 'HE'] as const;
+export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 export const DEFAULT_LANG: Lang = 'en';
 
 export const RTL_LANGS: ReadonlySet<Lang> = new Set(['ar', 'he']);

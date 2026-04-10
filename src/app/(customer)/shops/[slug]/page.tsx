@@ -6,6 +6,7 @@ import { t } from '@/lib/translations'
 import Link from 'next/link'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
+import { LanguageChips } from '@/components/ui/LanguageChips'
 import { ProductCard } from '@/components/product/ProductCard'
 
 interface Props { params: Promise<{ slug: string }> }
@@ -55,6 +56,11 @@ export default async function ShopPage({ params }: Props) {
             </span>
             {shop.phone && <a href={`tel:${shop.phone}`} className="text-sm text-accent">{shop.phone}</a>}
           </div>
+          {shop.spoken_languages && shop.spoken_languages.length > 0 && (
+            <div className="mt-3">
+              <LanguageChips languages={shop.spoken_languages} label={tr.spoken_languages} />
+            </div>
+          )}
         </div>
 
         {/* Map */}

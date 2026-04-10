@@ -39,6 +39,7 @@ export const translations = {
     distance_label: 'Distance',
     distance_km: (n: number) => `${n} km`,
     no_local_results: 'No local shops in this radius.',
+    spoken_languages: 'Languages spoken',
     days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday', ph: 'Public holiday' },
   },
   de: {
@@ -81,6 +82,7 @@ export const translations = {
     distance_label: 'Umkreis',
     distance_km: (n: number) => `${n} km`,
     no_local_results: 'Keine lokalen Shops in diesem Umkreis.',
+    spoken_languages: 'Gesprochene Sprachen',
     days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag', ph: 'Feiertag' },
   },
   ru: {
@@ -123,6 +125,7 @@ export const translations = {
     distance_label: 'Радиус',
     distance_km: (n: number) => `${n} км`,
     no_local_results: 'Нет местных магазинов в этом радиусе.',
+    spoken_languages: 'Языки общения',
     days: { mon: 'Понедельник', tue: 'Вторник', wed: 'Среда', thu: 'Четверг', fri: 'Пятница', sat: 'Суббота', sun: 'Воскресенье', ph: 'Праздник' },
   },
   el: {
@@ -165,6 +168,7 @@ export const translations = {
     distance_label: 'Απόσταση',
     distance_km: (n: number) => `${n} χλμ`,
     no_local_results: 'Δεν βρέθηκαν τοπικά καταστήματα σε αυτή την περιοχή.',
+    spoken_languages: 'Γλώσσες',
     days: { mon: 'Δευτέρα', tue: 'Τρίτη', wed: 'Τετάρτη', thu: 'Πέμπτη', fri: 'Παρασκευή', sat: 'Σάββατο', sun: 'Κυριακή', ph: 'Αργία' },
   },
   ar: {
@@ -207,6 +211,7 @@ export const translations = {
     distance_label: 'النطاق',
     distance_km: (n: number) => `${n} كم`,
     no_local_results: 'لا توجد متاجر محلية في هذا النطاق.',
+    spoken_languages: 'اللغات المتحدثة',
     days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد', ph: 'عطلة رسمية' },
   },
   he: {
@@ -249,6 +254,7 @@ export const translations = {
     distance_label: 'רדיוס',
     distance_km: (n: number) => `${n} ק"מ`,
     no_local_results: 'לא נמצאו חנויות מקומיות ברדיוס זה.',
+    spoken_languages: 'שפות מדוברות',
     days: { mon: 'יום שני', tue: 'יום שלישי', wed: 'יום רביעי', thu: 'יום חמישי', fri: 'יום שישי', sat: 'שבת', sun: 'יום ראשון', ph: 'חג רשמי' },
   },
 } as const;

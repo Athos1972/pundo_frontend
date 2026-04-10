@@ -17,6 +17,7 @@ export interface AdminShop {
   logo_url: string | null
   address: string | null
   location: { lat: number; lng: number } | null
+  spoken_languages: string[]
 }
 
 export interface OpeningHours {

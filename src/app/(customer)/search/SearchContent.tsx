@@ -1,11 +1,12 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { searchProducts } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { useGeolocation } from '@/lib/useGeolocation'
 import type { ProductListItem } from '@/types/api'
+import { useInfiniteScroll } from '@/lib/useInfiniteScroll'
 import { SearchBar } from '@/components/search/SearchBar'
 import { ProductCard } from '@/components/product/ProductCard'
 import { FilterChips } from '@/components/search/FilterChips'
@@ -50,6 +51,7 @@ export default function SearchContent() {
   const [loading, setLoading] = useState(false)
   const [offset, setOffset] = useState(0)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
     setLoading(true)
@@ -83,6 +85,14 @@ export default function SearchContent() {
     setOffset(0)
     load(true, 0)
   }, [q, categoryId, available, shopId, withPrice, maxDistKm, location.lat, location.lng]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadMore = useCallback(() => load(false, offset), [load, offset])
+  const { sentinelRef, isSupported } = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore: items.length < total,
+    isLoading: loading,
+    rootRef: scrollContainerRef,
+  })
 
   function setParam(key: string, value: string | null) {
     const p = new URLSearchParams(params.toString())
@@ -156,7 +166,7 @@ export default function SearchContent() {
 
       {/* Desktop: side by side. Mobile: toggled */}
       <div className="flex h-[calc(100vh-160px)]">
-        <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[55%] overflow-y-auto px-4 pb-4 gap-3 pt-3`}>
+        <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[55%] overflow-y-auto px-4 pb-4 gap-3 pt-3`}>
 
           {/* Local shops section */}
           <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
@@ -175,7 +185,9 @@ export default function SearchContent() {
 
           {loading && [1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-alt rounded-xl animate-pulse" />)}
 
-          {!loading && items.length < total && (
+          {isSupported && <div ref={sentinelRef} aria-hidden="true" />}
+
+          {!isSupported && !loading && items.length < total && (
             <button
               onClick={() => load(false, offset)}
               className="w-full py-3 bg-surface border border-border rounded-xl text-text-muted hover:border-accent hover:text-accent transition-colors text-sm font-medium"

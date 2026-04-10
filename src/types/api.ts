@@ -45,7 +45,7 @@ export interface ShopListItem {
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }
-export interface ShopDetailResponse extends ShopListItem { top_products: TopProduct[]; }
+export interface ShopDetailResponse extends ShopListItem { top_products: TopProduct[]; spoken_languages?: string[]; }
 
 export interface CategoryItem {
   id: number; parent_id: number | null; taxonomy_type: string;

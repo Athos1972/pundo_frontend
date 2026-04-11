@@ -3,15 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { Translations } from '@/lib/translations'
+import { t } from '@/lib/translations'
 import { GoogleOAuthButton } from './GoogleOAuthButton'
 
 interface Props {
-  tr: Translations
   lang: string
 }
 
-export function SignupForm({ tr, lang }: Props) {
+export function SignupForm({ lang }: Props) {
+  const tr = t(lang)
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

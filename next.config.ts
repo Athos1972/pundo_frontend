@@ -25,15 +25,15 @@ const config: NextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/api/v1/:path*`,
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1/:path*`,
       },
       {
         source: '/brand_logos/:path*',
-        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/brand_logos/:path*`,
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/brand_logos/:path*`,
       },
       {
         source: '/product_images/:path*',
-        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8001'}/product_images/:path*`,
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/product_images/:path*`,
       },
     ]
   },

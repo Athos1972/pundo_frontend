@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { Translations } from '@/lib/translations'
+import { t } from '@/lib/translations'
 import type { CreateReviewRequest } from '@/types/api'
 import { useSession } from '@/components/auth/SessionProvider'
 import { StarRatingInput } from './StarRatingInput'
@@ -13,11 +13,11 @@ import { ModerationBadge } from './ModerationBadge'
 interface Props {
   entityType: 'product' | 'shop'
   entityId: number
-  tr: Translations
   lang: string
 }
 
-export function ReviewForm({ entityType, entityId, tr, lang }: Props) {
+export function ReviewForm({ entityType, entityId, lang }: Props) {
+  const tr = t(lang)
   const session = useSession()
   const router = useRouter()
   const [stars, setStars] = useState(0)

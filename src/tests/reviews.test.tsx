@@ -97,12 +97,12 @@ const mockReview: Review = {
 
 describe('ReviewList', () => {
   it('shows no-reviews message when empty', () => {
-    render(<ReviewList reviews={[]} tr={tr} />)
+    render(<ReviewList reviews={[]} tr={tr} lang="en" />)
     expect(screen.getByText(tr.reviews_no_reviews)).toBeTruthy()
   })
 
   it('renders review cards', () => {
-    render(<ReviewList reviews={[mockReview]} tr={tr} />)
+    render(<ReviewList reviews={[mockReview]} tr={tr} lang="en" />)
     expect(screen.getByText('Alice')).toBeTruthy()
     expect(screen.getByText('Great product!')).toBeTruthy()
   })
@@ -112,7 +112,7 @@ describe('ReviewList', () => {
       mockReview,
       { ...mockReview, id: 2, user_display_name: 'Bob', comment: 'Good' },
     ]
-    render(<ReviewList reviews={reviews} tr={tr} />)
+    render(<ReviewList reviews={reviews} tr={tr} lang="en" />)
     expect(screen.getByText('Alice')).toBeTruthy()
     expect(screen.getByText('Bob')).toBeTruthy()
   })
@@ -125,14 +125,14 @@ describe('ReviewList', () => {
 describe('ReportButton — authenticated', () => {
   it('renders report button when user is logged in', async () => {
     const { ReportButton } = await import('@/components/reviews/ReportButton')
-    render(<ReportButton reviewId={1} tr={tr} />)
+    render(<ReportButton reviewId={1} lang="en" />)
     expect(screen.getByText(tr.reviews_report)).toBeTruthy()
   })
 
   it('calls report endpoint on click and shows reported state', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200 })
     const { ReportButton } = await import('@/components/reviews/ReportButton')
-    render(<ReportButton reviewId={99} tr={tr} />)
+    render(<ReportButton reviewId={99} lang="en" />)
     const btn = screen.getByText(tr.reviews_report)
     fireEvent.click(btn)
     await waitFor(() => {
@@ -149,7 +149,7 @@ describe('ReportButton — authenticated', () => {
   it('shows reported state on 409 conflict', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 409 })
     const { ReportButton } = await import('@/components/reviews/ReportButton')
-    render(<ReportButton reviewId={77} tr={tr} />)
+    render(<ReportButton reviewId={77} lang="en" />)
     fireEvent.click(screen.getByText(tr.reviews_report))
     await waitFor(() => {
       expect(screen.getByText(tr.reviews_reported)).toBeTruthy()
@@ -163,7 +163,7 @@ describe('ReviewPhotoGrid', () => {
   it('renders nothing when no approved photos', async () => {
     const { ReviewPhotoGrid } = await import('@/components/reviews/ReviewPhotoGrid')
     const { container } = render(
-      <ReviewPhotoGrid photos={[{ id: 1, url: '/x.jpg', thumbnail_url: null, status: 'pending' }]} />,
+      <ReviewPhotoGrid photos={[{ id: 1, url: '/x.jpg', thumbnail_url: null, status: 'pending', moderation_reason: null, moderation_categories: null }]} />,
     )
     expect(container.firstChild).toBeNull()
   })
@@ -173,8 +173,8 @@ describe('ReviewPhotoGrid', () => {
     render(
       <ReviewPhotoGrid
         photos={[
-          { id: 1, url: '/a.jpg', thumbnail_url: '/a_thumb.jpg', status: 'approved' },
-          { id: 2, url: '/b.jpg', thumbnail_url: null, status: 'approved' },
+          { id: 1, url: '/a.jpg', thumbnail_url: '/a_thumb.jpg', status: 'approved', moderation_reason: null, moderation_categories: null },
+          { id: 2, url: '/b.jpg', thumbnail_url: null, status: 'approved', moderation_reason: null, moderation_categories: null },
         ]}
       />,
     )
@@ -186,7 +186,7 @@ describe('ReviewPhotoGrid', () => {
     const { ReviewPhotoGrid } = await import('@/components/reviews/ReviewPhotoGrid')
     const { container } = render(
       <ReviewPhotoGrid
-        photos={[{ id: 3, url: '/c.jpg', thumbnail_url: null, status: 'rejected' }]}
+        photos={[{ id: 3, url: '/c.jpg', thumbnail_url: null, status: 'rejected', moderation_reason: null, moderation_categories: null }]}
       />,
     )
     expect(container.firstChild).toBeNull()

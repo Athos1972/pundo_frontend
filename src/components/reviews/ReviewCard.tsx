@@ -7,6 +7,7 @@ import { ReportButton } from './ReportButton'
 interface Props {
   review: Review
   tr: Translations
+  lang: string
 }
 
 function formatDate(iso: string): string {
@@ -17,7 +18,7 @@ function formatDate(iso: string): string {
   }
 }
 
-export function ReviewCard({ review, tr }: Props) {
+export function ReviewCard({ review, tr, lang }: Props) {
   return (
     <article className="bg-surface border border-border rounded-xl p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -37,7 +38,7 @@ export function ReviewCard({ review, tr }: Props) {
       <ReviewPhotoGrid photos={review.photos} />
 
       <div className="mt-3 flex justify-end">
-        <ReportButton reviewId={review.id} tr={tr} />
+        <ReportButton reviewId={review.id} lang={lang} />
       </div>
     </article>
   )

@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { getShop, searchProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
+import { getSiteUrl } from '@/lib/seo'
+import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import Link from 'next/link'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
@@ -17,9 +19,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = await getLangServer()
   try {
     const shop = await getShop(slug, lang)
-    return { title: `${shop.name ?? 'Shop'} | Pundo` }
+    const name = shop.name ?? 'Shop'
+    const description = shop.address_raw ?? undefined
+    const siteUrl = getSiteUrl()
+    return {
+      title: name,
+      description,
+      openGraph: {
+        type: 'website',
+        title: name,
+        description,
+        url: `${siteUrl}/shops/${slug}`,
+      },
+      twitter: {
+        card: 'summary',
+        title: name,
+        description,
+      },
+      alternates: { canonical: `${siteUrl}/shops/${slug}` },
+    }
   } catch {
-    return { title: 'Shop | Pundo' }
+    return { title: 'Shop' }
   }
 }
 
@@ -27,6 +47,7 @@ export default async function ShopPage({ params }: Props) {
   const { slug } = await params
   const lang = await getLangServer()
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
 
   let shop
   try {
@@ -102,7 +123,7 @@ export default async function ShopPage({ params }: Props) {
             </div>
             <div className="space-y-2">
               {topProducts.map(p => (
-                <ProductCard key={p.id} item={p} lang={lang} />
+                <ProductCard key={p.id} item={p} lang={lang} variant="horizontal" />
               ))}
             </div>
           </div>
@@ -111,6 +132,10 @@ export default async function ShopPage({ params }: Props) {
         {/* Reviews */}
         <ReviewSection entityType="shop" entityId={shop.id} lang={lang} tr={tr} />
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJson(buildLocalBusinessSchema(shop, siteUrl)) }}
+      />
     </main>
   )
 }

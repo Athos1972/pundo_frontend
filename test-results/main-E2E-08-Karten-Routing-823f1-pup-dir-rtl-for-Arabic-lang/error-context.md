@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: main.spec.ts >> E2E-08: Karten-Routing-Links >> routing links open in new tab (target=_blank)
-- Location: e2e/main.spec.ts:408:7
+- Name: main.spec.ts >> E2E-08: Karten-Routing-Links >> popup dir=rtl for Arabic lang
+- Location: e2e/main.spec.ts:421:7
 
 # Error details
 
@@ -18,7 +18,7 @@ Test timeout of 30000ms exceeded.
 ```
 Error: locator.click: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for getByRole('button', { name: /map|karte/i })
+  - waiting for getByRole('button', { name: /خريطة|map/i })
 
 ```
 
@@ -28,28 +28,28 @@ Call log:
 - generic [ref=e1]:
   - generic [ref=e2]:
     - generic [ref=e3]:
-      - link "Home" [ref=e5] [cursor=pointer]:
+      - link "الرئيسية" [ref=e5] [cursor=pointer]:
         - /url: /
         - img [ref=e6]
-        - text: Home
+        - text: الرئيسية
       - generic [ref=e9]:
-        - searchbox "Find a product or shop..." [active] [ref=e10]: cat
+        - searchbox "ابحث عن منتج أو متجر..." [active] [ref=e10]: cat
         - button "Search" [ref=e11]:
           - img [ref=e12]
       - generic [ref=e15]:
-        - button "In stock" [ref=e16]
-        - button "With price only" [ref=e17]
-        - button "Online" [pressed] [ref=e18]
+        - button "متوفر" [ref=e16]
+        - button "بسعر فقط" [ref=e17]
+        - button "أونلاين" [pressed] [ref=e18]
       - generic [ref=e19]:
-        - generic [ref=e20]: Distance
-        - slider "Distance" [ref=e21]: "50"
-        - generic [ref=e22]: 50 km
+        - generic [ref=e20]: النطاق
+        - slider "النطاق" [ref=e21]: "50"
+        - generic [ref=e22]: 50 كم
     - generic [ref=e23]:
       - generic [ref=e24]:
-        - heading "Local Shops" [level=2] [ref=e25]
+        - heading "المتاجر المحلية" [level=2] [ref=e25]
         - generic [ref=e28]:
           - paragraph [ref=e29]:
-            - link "SEED CATCHER COVER SKIRT FOR CAGES" [ref=e30] [cursor=pointer]:
+            - link "غطاء مشرفة صائد البذور للأقفاص" [ref=e30] [cursor=pointer]:
               - /url: /products/seed-catcher-cover-skirt-for-cages
           - generic [ref=e31]:
             - generic [ref=e32]: 6.00 EUR
@@ -93,7 +93,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e72]:
           - paragraph [ref=e73]:
-            - link "APPLAWS CAT FOOD TUNA FILLET WITH CRAB 70 G" [ref=e74] [cursor=pointer]:
+            - link "APPLAWS طعام القطط فيليه التونة مع سرطان البحر 70 G" [ref=e74] [cursor=pointer]:
               - /url: /products/applaws-applaws-cat-food-tuna-fillet-with-crab-70-g
           - paragraph [ref=e75]: APPLAWS
           - generic [ref=e76]:
@@ -102,7 +102,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e81]:
           - paragraph [ref=e82]:
-            - link "ARQUIVET CAT HOUSE CHERRY 40*40*50 CM" [ref=e83] [cursor=pointer]:
+            - link "ARQUIVET بيت القطة الكرز 40*40*50 CM" [ref=e83] [cursor=pointer]:
               - /url: /products/arquivet-arquivet-cat-house-cherry-40-40-50-cm
           - paragraph [ref=e84]: Arquivet
           - generic [ref=e85]:
@@ -111,7 +111,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e90]:
           - paragraph [ref=e91]:
-            - link "BACHUS FOR CATS & DOGS CALM & BRAVE 60 TABLETS" [ref=e92] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب الهدوء والشجاعة 60 قرص" [ref=e92] [cursor=pointer]:
               - /url: /products/bachus-for-cats-dogs-calm-brave-60-tables
           - generic [ref=e93]:
             - generic [ref=e94]: 27.00 EUR
@@ -119,7 +119,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e98]:
           - paragraph [ref=e99]:
-            - link "BACHUS FOR CATS & DOGS HAIR & SKIN 60 TABLETS" [ref=e100] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب الشعر والجلد 60 قرص" [ref=e100] [cursor=pointer]:
               - /url: /products/bachus-bachus-for-cats-dogs-hair-skin-60tables
           - paragraph [ref=e101]: BACHUS
           - generic [ref=e102]:
@@ -128,7 +128,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e107]:
           - paragraph [ref=e108]:
-            - link "BACHUS FOR CATS & DOGS HEPATIC & DIGEST 60 TABLETS" [ref=e109] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب الكبد والهضم 60 قرص" [ref=e109] [cursor=pointer]:
               - /url: /products/bachus-bachus-for-cats-dogs-hepatic-digest-60tables
           - paragraph [ref=e110]: BACHUS
           - generic [ref=e111]:
@@ -137,7 +137,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e116]:
           - paragraph [ref=e117]:
-            - link "BACHUS FOR CATS & DOGS IMMUNITY & RESISTANCE 60 TABLETS" [ref=e118] [cursor=pointer]:
+            - link "BACHUS للقطط والكلاب المناعة والمقاومة 60 حبة" [ref=e118] [cursor=pointer]:
               - /url: /products/bachus-bachus-for-cats-dogs-immunity-resistance-60tables
           - paragraph [ref=e119]: BACHUS
           - generic [ref=e120]:
@@ -146,7 +146,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e125]:
           - paragraph [ref=e126]:
-            - link "BACHUS FOR CATS & DOGS SMALL & HEALTHY 60 TABLETS" [ref=e127] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب صغير وصحي 60 قرص" [ref=e127] [cursor=pointer]:
               - /url: /products/bachus-bachus-for-cats-dogs-small-healthy-60tables
           - paragraph [ref=e128]: BACHUS
           - generic [ref=e129]:
@@ -155,7 +155,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e134]:
           - paragraph [ref=e135]:
-            - link "BACHUS FOR CATS & DOGS TEETH & GUMS 60 TABLETS" [ref=e136] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب الأسنان واللثة 60 قرص" [ref=e136] [cursor=pointer]:
               - /url: /products/bachus-bachus-for-cats-dogs-teeth-gums-60tables
           - paragraph [ref=e137]: BACHUS
           - generic [ref=e138]:
@@ -164,7 +164,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e143]:
           - paragraph [ref=e144]:
-            - link "BACHUS FOR CATS & DOGS JOINTS & FLEXI 60 TABLETS" [ref=e145] [cursor=pointer]:
+            - link "باخوس للقطط والكلاب المفاصل والمرونة 60 قرص" [ref=e145] [cursor=pointer]:
               - /url: /products/bachus-for-ctas-dogs-joints-flexi-60tables
           - generic [ref=e146]:
             - generic [ref=e147]: 28.00 EUR
@@ -172,7 +172,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e151]:
           - paragraph [ref=e152]:
-            - link "BEEF 100% NATURAL REWARDS FOR CATS & DOGS" [ref=e153] [cursor=pointer]:
+            - link "لحم البقر 100% مكافآت طبيعية للقطط والكلاب" [ref=e153] [cursor=pointer]:
               - /url: /products/beef-100-natural-rewords-for-cats-dogs
           - generic [ref=e154]:
             - generic [ref=e155]: 8.40 EUR
@@ -180,7 +180,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e159]:
           - paragraph [ref=e160]:
-            - link "BRIT FILLETS IN GRAVY FOR ADULT CATS HEALTHY RABBIT 85G" [ref=e161] [cursor=pointer]:
+            - link "BRIT فيليه في الصلصة للقطط البالغة أرنب صحي 85G" [ref=e161] [cursor=pointer]:
               - /url: /products/brit-brit-filletd-in-gravy-for-adult-cats-healthy-rabbit-85g
           - paragraph [ref=e162]: Brit
           - generic [ref=e163]:
@@ -189,7 +189,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e168]:
           - paragraph [ref=e169]:
-            - link "BRIT FILLETS IN GRAVY FOR ADULT CATS CHOICE CHICKEN 85G" [ref=e170] [cursor=pointer]:
+            - link "BRIT فيليه في الصلصة للقطط البالغة اختيار دجاج 85G" [ref=e170] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-gravy-for-adult-cats-choice-chicken-85g
           - paragraph [ref=e171]: Brit
           - generic [ref=e172]:
@@ -198,7 +198,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e177]:
           - paragraph [ref=e178]:
-            - link "BRIT FILLETS IN GRAVY FOR ADULT CATS HEALTHY DUCK 85G" [ref=e179] [cursor=pointer]:
+            - link "BRIT فيليه في الصلصة للقطط البالغة البط الصحي 85G" [ref=e179] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-gravy-for-adult-cats-healthy-duck-85g
           - paragraph [ref=e180]: Brit
           - generic [ref=e181]:
@@ -207,7 +207,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e186]:
           - paragraph [ref=e187]:
-            - link "BRIT FILLETS IN GRAVY FOR ADULT CATS SAVORY SALMON 85G" [ref=e188] [cursor=pointer]:
+            - link "بريت فيليه في الصلصة للقطط البالغة سلمون لذيذ 85G" [ref=e188] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-gravy-for-adult-cats-savory-salmon-85g
           - paragraph [ref=e189]: Brit
           - generic [ref=e190]:
@@ -216,7 +216,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e195]:
           - paragraph [ref=e196]:
-            - link "BRIT FILLETS IN GRAVY FOR ADULT CATS TENDER TURKEY & SAVORY SALMON 85G" [ref=e197] [cursor=pointer]:
+            - link "بريت فيليه في الصلصة للقطط البالغة ديك رومي طري وسلمون لذيذ 85G" [ref=e197] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-gravy-for-adult-cats-tender-turkey-savory-salmon-85g
           - paragraph [ref=e198]: Brit
           - generic [ref=e199]:
@@ -225,7 +225,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e204]:
           - paragraph [ref=e205]:
-            - link "BRIT FILLETS IN JELLY FOR ADULT CATS CHOICE CHICKEN WITH CHEESE 85G" [ref=e206] [cursor=pointer]:
+            - link "بريت فيليه في الهلام للقطط البالغة دجاج متميز مع جبن 85G" [ref=e206] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-jelly-for-adult-cats-choice-chicken-with-cheese-85g
           - paragraph [ref=e207]: Brit
           - generic [ref=e208]:
@@ -234,7 +234,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e213]:
           - paragraph [ref=e214]:
-            - link "BRIT FILLETS IN JELLY FOR ADULT CATS FINE TROUT & COAT 85G" [ref=e215] [cursor=pointer]:
+            - link "بريت فيليه في الهلام للقطط البالغة سمك السلمون الرقيق والمعطف 85G" [ref=e215] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-jelly-for-adult-cats-fine-trout-coat-85g
           - paragraph [ref=e216]: Brit
           - generic [ref=e217]:
@@ -243,7 +243,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e222]:
           - paragraph [ref=e223]:
-            - link "BRIT FILLETS IN JELLY FOR ADULT CATS TENDER TURKEY SHRIMPS 85G" [ref=e224] [cursor=pointer]:
+            - link "بريت فيليه في الهلام للقطط البالغة ديك رومي طري الروبيان 85G" [ref=e224] [cursor=pointer]:
               - /url: /products/brit-brit-fillets-in-jelly-for-adult-cats-tender-turkey-shrimps-85g
           - paragraph [ref=e225]: Brit
           - generic [ref=e226]:
@@ -252,7 +252,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e231]:
           - paragraph [ref=e232]:
-            - link "BRIT SENSITIVE HEALTHY DIGESTION DELICATE TASTE FRESH TURKEY SALMON" [ref=e233] [cursor=pointer]:
+            - link "BRIT SENSITIVE هضم صحي طعم لطيف ديك رومي طازج سلمون" [ref=e233] [cursor=pointer]:
               - /url: /products/brit-brit-sensitive-healthy-digestion-delicute-taste-fresh-turkey-salmon
           - paragraph [ref=e234]: Brit
           - generic [ref=e235]:
@@ -261,7 +261,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e240]:
           - paragraph [ref=e241]:
-            - link "CAMON PLUSH MOUSE / BIRD WITH CATNIP AND BELL 10 CM" [ref=e242] [cursor=pointer]:
+            - link "CAMON فأر / طائر فالب مع CATNIP والجرس 10 CM" [ref=e242] [cursor=pointer]:
               - /url: /products/camon-camon-plush-mouse-bird-with-catnip-and-bell-10-cm
           - paragraph [ref=e243]: CAMON
           - generic [ref=e244]:
@@ -270,7 +270,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e249]:
           - paragraph [ref=e250]:
-            - link "CAMON PRO 2 FOOD SYRINGE FOR DOGS AND CATS" [ref=e251] [cursor=pointer]:
+            - link "CAMON PRO 2 حقنة الطعام للكلاب والقطط" [ref=e251] [cursor=pointer]:
               - /url: /products/camon-camon-pro-2-food-syringe-for-dogs-and-cats
           - paragraph [ref=e252]: CAMON
           - generic [ref=e253]:
@@ -279,7 +279,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e258]:
           - paragraph [ref=e259]:
-            - link "CARUSO CAT COLLAR" [ref=e260] [cursor=pointer]:
+            - link "CARUSO طوق القط" [ref=e260] [cursor=pointer]:
               - /url: /products/m-pets-caruso-cat-collar
           - paragraph [ref=e261]: M-Pets
           - generic [ref=e262]:
@@ -288,7 +288,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e267]:
           - paragraph [ref=e268]:
-            - link "CAT COLLAR BELL WITH BOW TIE BURGUNDY 10 MM" [ref=e269] [cursor=pointer]:
+            - link "طوق قط جرس مع ربطة عنق بورجوندي 10 MM" [ref=e269] [cursor=pointer]:
               - /url: /products/cat-collar-bell-with-bow-tie-burgundy-10-mm
           - generic [ref=e270]:
             - generic [ref=e271]: 5.50 EUR
@@ -296,7 +296,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e275]:
           - paragraph [ref=e276]:
-            - link "CAT COLLAR BELL WITH BOW TIE LILAC 10 MM 20/30" [ref=e277] [cursor=pointer]:
+            - link "طوق قط جرس مع ربطة عنق ليلكي 10 MM 20/30" [ref=e277] [cursor=pointer]:
               - /url: /products/cat-collar-bell-with-bow-tie-lilac-10-mm-20-30
           - generic [ref=e278]:
             - generic [ref=e279]: 5.50 EUR
@@ -304,7 +304,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e283]:
           - paragraph [ref=e284]:
-            - link "CAT COLLAR WITH BOW TIE PINK 10 MM X 20/30" [ref=e285] [cursor=pointer]:
+            - link "طوق قط مع ربطة عنق وردي 10 MM X 20/30" [ref=e285] [cursor=pointer]:
               - /url: /products/cat-collar-with-bow-tie-pink-10-mm-x-20-30
           - generic [ref=e286]:
             - generic [ref=e287]: 5.50 EUR
@@ -312,7 +312,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e291]:
           - paragraph [ref=e292]:
-            - link "CAT FURNITURE BLACK" [ref=e293] [cursor=pointer]:
+            - link "أثاث القط أسود" [ref=e293] [cursor=pointer]:
               - /url: /products/cat-furniture-black
           - generic [ref=e294]:
             - generic [ref=e295]: 88.00 EUR
@@ -320,7 +320,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e299]:
           - paragraph [ref=e300]:
-            - link "CAT GLOBAL CAT LITTER BABY POWDER 10 L" [ref=e301] [cursor=pointer]:
+            - link "CAT GLOBAL رمل القط بودرة الأطفال 10 L" [ref=e301] [cursor=pointer]:
               - /url: /products/cat-global-cat-global-cat-litter-baby-powder-10-l
           - paragraph [ref=e302]: CAT GLOBAL
           - generic [ref=e303]:
@@ -329,7 +329,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e308]:
           - paragraph [ref=e309]:
-            - link "CAT GLOBAL – CAT LITTER – LEVANDER – 20KG" [ref=e310] [cursor=pointer]:
+            - link "CAT GLOBAL – رمل القطط – اللافندر – 20KG" [ref=e310] [cursor=pointer]:
               - /url: /products/cat-global-cat-global-cat-litter-levander-20kg
           - paragraph [ref=e311]: CAT GLOBAL
           - generic [ref=e312]:
@@ -338,7 +338,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e317]:
           - paragraph [ref=e318]:
-            - link "CAT GLOBAL LITTER LEVANDER 10 L" [ref=e319] [cursor=pointer]:
+            - link "CAT GLOBAL رمل الخزامى 10 L" [ref=e319] [cursor=pointer]:
               - /url: /products/cat-global-cat-global-litter-levander-10-l
           - paragraph [ref=e320]: CAT GLOBAL
           - generic [ref=e321]:
@@ -347,7 +347,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e326]:
           - paragraph [ref=e327]:
-            - link "CAT GLOBAL (N.B) BABY POWDER 20 KG" [ref=e328] [cursor=pointer]:
+            - link "CAT GLOBAL (N.B) بودرة الأطفال 20 KG" [ref=e328] [cursor=pointer]:
               - /url: /products/cat-global-cat-global-n-b-baby-powder-20-kg
           - paragraph [ref=e329]: CAT GLOBAL
           - generic [ref=e330]:
@@ -356,7 +356,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e335]:
           - paragraph [ref=e336]:
-            - link "CAT LITTER MAT 60X55 CM" [ref=e337] [cursor=pointer]:
+            - link "حصيرة رمل القطط 60X55 CM" [ref=e337] [cursor=pointer]:
               - /url: /products/cat-litter-mat-60x55-cm
           - generic [ref=e338]:
             - generic [ref=e339]: 20.00 EUR
@@ -364,7 +364,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e343]:
           - paragraph [ref=e344]:
-            - link "CAT LITTER TRAY IRIZ42″ ANTHRACITE 42X30,5X10CM" [ref=e345] [cursor=pointer]:
+            - link "صينية رمل القطط IRIZ42″ أنثراسايت 42X30,5X10CM" [ref=e345] [cursor=pointer]:
               - /url: /products/cat-litter-tray-iriz42-anthracite-42x305x10cm
           - generic [ref=e346]:
             - generic [ref=e347]: 7.00 EUR
@@ -372,7 +372,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e351]:
           - paragraph [ref=e352]:
-            - link "CAT LITTER TRAY IRIZ42″ BLUESTONE 42X30,5X10CM" [ref=e353] [cursor=pointer]:
+            - link "صندوق فضلات القط IRIZ42″ حجر أزرق 42X30,5X10CM" [ref=e353] [cursor=pointer]:
               - /url: /products/cat-litter-tray-iriz42-bluestone-42x305x10cm
           - generic [ref=e354]:
             - generic [ref=e355]: 5.00 EUR
@@ -380,7 +380,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e359]:
           - paragraph [ref=e360]:
-            - link "CAT LITTER TRAY TAT PITOU MATTI GREY 30*40 CM" [ref=e361] [cursor=pointer]:
+            - link "صندوق فضلات القط TAT PITOU MATTI رمادي 30*40 CM" [ref=e361] [cursor=pointer]:
               - /url: /products/cat-litter-tray-tat-pitou-matti-grey-30-40-cm
           - generic [ref=e362]:
             - generic [ref=e363]: 6.70 EUR
@@ -388,7 +388,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e367]:
           - paragraph [ref=e368]:
-            - link "CAT LITTER TRAY&RIM IRIZ42″ ANTHRACITE 42X31X12,5CM" [ref=e369] [cursor=pointer]:
+            - link "صندوق فضلات القط&RIM IRIZ42″ أنثراسايت 42X31X12,5CM" [ref=e369] [cursor=pointer]:
               - /url: /products/cat-litter-tray-rim-iriz42-anthracite-42x31x125cm
           - generic [ref=e370]:
             - generic [ref=e371]: 7.40 EUR
@@ -396,7 +396,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e375]:
           - paragraph [ref=e376]:
-            - link "CAT LITTER TRAY+RIM IRIZ50″ BLUESTONE 50X37X14CM" [ref=e377] [cursor=pointer]:
+            - link "صينية رمل القطط+RIM IRIZ50\" حجر أزرق 50X37X14CM" [ref=e377] [cursor=pointer]:
               - /url: /products/cat-litter-tray-rim-iriz50-bluestone-50x37x14cm
           - generic [ref=e378]:
             - generic [ref=e379]: 10.50 EUR
@@ -404,7 +404,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e383]:
           - paragraph [ref=e384]:
-            - link "CAT LUVS MOUSE" [ref=e385] [cursor=pointer]:
+            - link "CAT LUVS الفأر" [ref=e385] [cursor=pointer]:
               - /url: /products/cat-luvs-mouse
           - generic [ref=e386]:
             - generic [ref=e387]: 9.00 EUR
@@ -412,7 +412,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e391]:
           - paragraph [ref=e392]:
-            - link "CAT NAIL ART | GLEE CACTUS DOUBLE" [ref=e393] [cursor=pointer]:
+            - link "فن أظافر القطط | GLEE CACTUS DOUBLE" [ref=e393] [cursor=pointer]:
               - /url: /products/cat-nail-art-glee-cactus-double
           - generic [ref=e394]:
             - generic [ref=e395]: 65.75 EUR
@@ -420,7 +420,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e399]:
           - paragraph [ref=e400]:
-            - link "CAT NAIL ART | GLEE CACTUS" [ref=e401] [cursor=pointer]:
+            - link "فن أظافر القطط | GLEE CACTUS" [ref=e401] [cursor=pointer]:
               - /url: /products/cat-nail-art-glee-cactus
           - generic [ref=e402]:
             - generic [ref=e403]: 34.99 EUR
@@ -428,7 +428,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e407]:
           - paragraph [ref=e408]:
-            - link "CAT SCRATCHFOOTBALL FEATHER" [ref=e409] [cursor=pointer]:
+            - link "خدش القطط كرة القدم الريش" [ref=e409] [cursor=pointer]:
               - /url: /products/cat-scratchfootball-feather
           - generic [ref=e410]:
             - generic [ref=e411]: 29.00 EUR
@@ -436,7 +436,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e415]:
           - paragraph [ref=e416]:
-            - link "CAT SCRATCH TREE LINE" [ref=e417] [cursor=pointer]:
+            - link "خط شجرة خدش القطط" [ref=e417] [cursor=pointer]:
               - /url: /products/cat-scratch-tree-line
           - generic [ref=e418]:
             - generic [ref=e419]: 33.00 EUR
@@ -444,7 +444,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e423]:
           - paragraph [ref=e424]:
-            - link "CAT SCRATCHER ALVIN 34X35X40 CM" [ref=e425] [cursor=pointer]:
+            - link "خادش القطط ALVIN 34X35X40 CM" [ref=e425] [cursor=pointer]:
               - /url: /products/cat-scratcher-alvin-34x35x40-cm
           - generic [ref=e426]:
             - generic [ref=e427]: 48.00 EUR
@@ -452,7 +452,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e431]:
           - paragraph [ref=e432]:
-            - link "CAT SCRATCHER BAFFO 30X30X40 CM" [ref=e433] [cursor=pointer]:
+            - link "خادش القطط BAFFO 30X30X40 CM" [ref=e433] [cursor=pointer]:
               - /url: /products/cat-scratcher-baffo-30x30x40-cm
           - generic [ref=e434]:
             - generic [ref=e435]: 12.90 EUR
@@ -460,7 +460,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e439]:
           - paragraph [ref=e440]:
-            - link "CAT SCRATCHER BAFFO" [ref=e441] [cursor=pointer]:
+            - link "خادش القطط BAFFO" [ref=e441] [cursor=pointer]:
               - /url: /products/cat-scratcher-baffo
           - generic [ref=e442]:
             - generic [ref=e443]: 12.90 EUR
@@ -468,7 +468,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e447]:
           - paragraph [ref=e448]:
-            - link "CAT SCRATCHER CACTUS 34*34*65 CM" [ref=e449] [cursor=pointer]:
+            - link "مخدش القطط صبار 34*34*65 CM" [ref=e449] [cursor=pointer]:
               - /url: /products/cat-scratcher-cactus-34-34-65-cm
           - generic [ref=e450]:
             - generic [ref=e451]: 31.00 EUR
@@ -476,7 +476,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e455]:
           - paragraph [ref=e456]:
-            - link "CAT SCRATCHER PACO 35X35X97.5 CM" [ref=e457] [cursor=pointer]:
+            - link "مخدش القطط باكو 35X35X97.5 CM" [ref=e457] [cursor=pointer]:
               - /url: /products/cat-scratcher-paco-35x35x97-5-cm
           - generic [ref=e458]:
             - generic [ref=e459]: 68.00 EUR
@@ -484,7 +484,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e463]:
           - paragraph [ref=e464]:
-            - link "CAT SCRATCHING POST WITH BALL 15 CM, 40 X 20 X H 17 CM" [ref=e465] [cursor=pointer]:
+            - link "عمود خدش القطط مع الكرة 15 CM, 40 X 20 X H 17 CM" [ref=e465] [cursor=pointer]:
               - /url: /products/cat-scratching-post-with-ball-15-cm-40-x-20-x-h-17-cm
           - generic [ref=e466]:
             - generic [ref=e467]: 25.00 EUR
@@ -492,7 +492,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e471]:
           - paragraph [ref=e472]:
-            - link "CAT TOY LASER POINTER IN THE SHAPE OF A MOUSE 6.5 CM RED" [ref=e473] [cursor=pointer]:
+            - link "لعبة القط مؤشر الليزر على شكل فأر 6.5 سم أحمر" [ref=e473] [cursor=pointer]:
               - /url: /products/camon-cat-toy-laser-pointer-in-the-shape-of-a-mouse-6-5-cm-red
           - paragraph [ref=e474]: CAMON
           - generic [ref=e475]:
@@ -501,7 +501,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e480]:
           - paragraph [ref=e481]:
-            - link "CAT TOY MATATABI SPHERE" [ref=e482] [cursor=pointer]:
+            - link "لعبة القط كرة ماتاتابي" [ref=e482] [cursor=pointer]:
               - /url: /products/camon-cat-toy-matatabi-sphere
           - paragraph [ref=e483]: CAMON
           - generic [ref=e484]:
@@ -510,7 +510,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e489]:
           - paragraph [ref=e490]:
-            - link "CAT TREE VICTORIA 125 – GREY – 12CM POST – CUSHION INCL." [ref=e491] [cursor=pointer]:
+            - link "شجرة القط VICTORIA 125 – رمادي – 12 سم عمود – الوسادة مشمولة" [ref=e491] [cursor=pointer]:
               - /url: /products/cat-tree-victoria-125-grey-12cm-post-cushion-incl
           - generic [ref=e492]:
             - generic [ref=e493]: 300.00 EUR
@@ -518,7 +518,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e497]:
           - paragraph [ref=e498]:
-            - link "CATIT CAT WATERER REPLACEMET CATRIDG – V" [ref=e499] [cursor=pointer]:
+            - link "CATIT موزع مياه القط خرطوشة استبدال – V" [ref=e499] [cursor=pointer]:
               - /url: /products/catit-cat-waterer-replacemet-catridg-v
           - generic [ref=e500]:
             - generic [ref=e501]: 9.00 EUR
@@ -526,7 +526,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e505]:
           - paragraph [ref=e506]:
-            - link "HYGGE CHICKEN FILLETS COMPLETE FOOD FOR ADULT CATS 70 G" [ref=e507] [cursor=pointer]:
+            - link "HYGGE شرائح الدجاج غذاء كامل للقطط البالغة 70 G" [ref=e507] [cursor=pointer]:
               - /url: /products/hygge-hygge-chicken-fillets-complete-food-for-adult-cats-70-g
           - paragraph [ref=e508]: HYGGE
           - generic [ref=e509]:
@@ -535,7 +535,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e514]:
           - paragraph [ref=e515]:
-            - link "CROCI EASY CLEAN CRYSTAL CAT LITTER 15LT" [ref=e516] [cursor=pointer]:
+            - link "CROCI تنظيف سهل رمل قطط بلوري 15 لتر" [ref=e516] [cursor=pointer]:
               - /url: /products/croci-croci-easy-clean-crystal-cat-litter-15lt
           - paragraph [ref=e517]: CROCI
           - generic [ref=e518]:
@@ -544,7 +544,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e523]:
           - paragraph [ref=e524]:
-            - link "CROCI EASY CLEAN CRYSTAL CAT LITTER 7.5LT" [ref=e525] [cursor=pointer]:
+            - link "CROCI تنظيف سهل رمل قطط بلوري 7.5 لتر" [ref=e525] [cursor=pointer]:
               - /url: /products/croci-croci-easy-clean-crystal-cat-litter-7-5lt
           - paragraph [ref=e526]: CROCI
           - generic [ref=e527]:
@@ -553,7 +553,7 @@ Call log:
               - /url: /shops/manjo-pet-087d8709
         - generic [ref=e532]:
           - paragraph [ref=e533]:
-            - link "CROCI EASY CLEAN SILICA CAT LITTER 7.5L APPLE" [ref=e534] [cursor=pointer]:
+            - link "CROCI EASY CLEAN SILICA رمل القطط 7.5L تفاح" [ref=e534] [cursor=pointer]:
               - /url: /products/croci-croci-easy-clean-silica-cat-litter-7-5l-apple
           - paragraph [ref=e535]: CROCI
           - generic [ref=e536]:
@@ -580,15 +580,15 @@ Call log:
   - contentinfo [ref=e554]:
     - generic [ref=e555]:
       - navigation "legal" [ref=e556]:
-        - link "About Us" [ref=e557] [cursor=pointer]:
+        - link "من نحن" [ref=e557] [cursor=pointer]:
           - /url: /about
-        - link "Contact" [ref=e558] [cursor=pointer]:
+        - link "اتصل بنا" [ref=e558] [cursor=pointer]:
           - /url: /contact
-        - link "Imprint" [ref=e559] [cursor=pointer]:
+        - link "بيانات الشركة" [ref=e559] [cursor=pointer]:
           - /url: /legal/imprint
-        - link "Privacy Policy" [ref=e560] [cursor=pointer]:
+        - link "سياسة الخصوصية" [ref=e560] [cursor=pointer]:
           - /url: /legal/privacy
-        - link "Terms of Service" [ref=e561] [cursor=pointer]:
+        - link "شروط الاستخدام" [ref=e561] [cursor=pointer]:
           - /url: /legal/terms
       - paragraph [ref=e562]: © 2026 pundo
   - generic [ref=e567] [cursor=pointer]:
@@ -608,23 +608,6 @@ Call log:
 # Test source
 
 ```ts
-  310 | 
-  311 |   test('login page RTL (Arabic)', async ({ page }) => {
-  312 |     await page.context().addCookies([{
-  313 |       name: 'pundo_lang', value: 'ar', domain: 'localhost', path: '/',
-  314 |     }])
-  315 |     await page.goto('/auth/login')
-  316 |     const dir = await page.locator('html').getAttribute('dir')
-  317 |     expect(dir).toBe('rtl')
-  318 |   })
-  319 | 
-  320 |   test('no JS errors on login page', async ({ page }) => {
-  321 |     const errors: string[] = []
-  322 |     page.on('pageerror', (err) => {
-  323 |       if (!err.message.includes('Hydration failed')) errors.push(err.message)
-  324 |     })
-  325 |     await page.goto('/auth/login')
-  326 |     await page.waitForLoadState('networkidle')
   327 |     expect(errors).toHaveLength(0)
   328 |   })
   329 | 
@@ -708,8 +691,7 @@ Call log:
   407 | 
   408 |   test('routing links open in new tab (target=_blank)', async ({ page }) => {
   409 |     await page.goto('/search?q=cat')
-> 410 |     await page.getByRole('button', { name: /map|karte/i }).click()
-      |                                                            ^ Error: locator.click: Test timeout of 30000ms exceeded.
+  410 |     await page.getByRole('button', { name: /map|karte/i }).click()
   411 |     await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
   412 |     await page.locator('.leaflet-marker-icon').first().click()
   413 |     await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })
@@ -726,7 +708,8 @@ Call log:
   424 |       document.cookie = 'pundo_lang=ar; path=/'
   425 |     })
   426 |     await page.reload()
-  427 |     await page.getByRole('button', { name: /خريطة|map/i }).click()
+> 427 |     await page.getByRole('button', { name: /خريطة|map/i }).click()
+      |                                                            ^ Error: locator.click: Test timeout of 30000ms exceeded.
   428 |     await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
   429 |     await page.locator('.leaflet-marker-icon').first().click()
   430 |     await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })

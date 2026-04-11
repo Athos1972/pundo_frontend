@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: main.spec.ts >> E2E-08: Karten-Routing-Links >> routing links open in new tab (target=_blank)
-- Location: e2e/main.spec.ts:408:7
+- Name: main.spec.ts >> E2E-08: Karten-Routing-Links >> map popup shows 3 routing links with correct URLs after clicking a pin
+- Location: e2e/main.spec.ts:385:7
 
 # Error details
 
@@ -608,6 +608,28 @@ Call log:
 # Test source
 
 ```ts
+  288 |     await expect(page).toHaveURL(/\/auth\/login/)
+  289 |   })
+  290 | 
+  291 |   test('login page renders email and password fields', async ({ page }) => {
+  292 |     const response = await page.goto('/auth/login')
+  293 |     expect(response?.status()).toBe(200)
+  294 |     await expect(page.locator('input[type="email"]')).toBeVisible()
+  295 |     await expect(page.locator('input[type="password"]')).toBeVisible()
+  296 |   })
+  297 | 
+  298 |   test('signup page renders required fields', async ({ page }) => {
+  299 |     const response = await page.goto('/auth/signup')
+  300 |     expect(response?.status()).toBe(200)
+  301 |     await expect(page.locator('input[type="email"]')).toBeVisible()
+  302 |     await expect(page.locator('input[type="password"]')).toBeVisible()
+  303 |   })
+  304 | 
+  305 |   test('verify-email without params redirects to signup', async ({ page }) => {
+  306 |     await page.goto('/auth/verify-email')
+  307 |     // No email param → redirect to signup
+  308 |     await expect(page).toHaveURL(/\/auth\/signup/)
+  309 |   })
   310 | 
   311 |   test('login page RTL (Arabic)', async ({ page }) => {
   312 |     await page.context().addCookies([{
@@ -686,7 +708,8 @@ Call log:
   385 |   test('map popup shows 3 routing links with correct URLs after clicking a pin', async ({ page }) => {
   386 |     await page.goto('/search?q=cat')
   387 |     // Switch to map view
-  388 |     await page.getByRole('button', { name: /map|karte/i }).click()
+> 388 |     await page.getByRole('button', { name: /map|karte/i }).click()
+      |                                                            ^ Error: locator.click: Test timeout of 30000ms exceeded.
   389 |     // Wait for Leaflet to load
   390 |     await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
   391 |     // Click first marker
@@ -708,8 +731,7 @@ Call log:
   407 | 
   408 |   test('routing links open in new tab (target=_blank)', async ({ page }) => {
   409 |     await page.goto('/search?q=cat')
-> 410 |     await page.getByRole('button', { name: /map|karte/i }).click()
-      |                                                            ^ Error: locator.click: Test timeout of 30000ms exceeded.
+  410 |     await page.getByRole('button', { name: /map|karte/i }).click()
   411 |     await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
   412 |     await page.locator('.leaflet-marker-icon').first().click()
   413 |     await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Create account | Pundo' }
 
 export default async function SignupPage() {
   const lang = await getLangServer()
-  const tr = t(lang)
+  const { auth_signup } = t(lang)
 
   return (
     <main className="min-h-screen bg-bg flex items-center justify-center px-4">
@@ -16,9 +16,9 @@ export default async function SignupPage() {
           className="text-2xl font-extrabold text-text mb-6"
           style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
         >
-          {tr.auth_signup}
+          {auth_signup}
         </h1>
-        <SignupForm tr={tr} lang={lang} />
+        <SignupForm lang={lang} />
       </div>
     </main>
   )

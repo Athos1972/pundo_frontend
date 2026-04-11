@@ -28,7 +28,7 @@ export async function ReviewSection({ entityType, entityId, lang, tr }: Props) {
 
       <div className="mb-6">
         <h3 className="text-sm font-medium text-text mb-3">{tr.reviews_write}</h3>
-        <ReviewForm entityType={entityType} entityId={entityId} tr={tr} lang={lang} />
+        <ReviewForm entityType={entityType} entityId={entityId} lang={lang} />
       </div>
 
       <Suspense fallback={<ReviewListSkeleton />}>
@@ -46,7 +46,7 @@ async function ReviewStatsLoader({ entityType, entityId, lang, tr }: Props) {
 
 async function ReviewListLoader({ entityType, entityId, lang, tr }: Props) {
   const reviews = await getReviews(entityType, entityId, lang)
-  return <ReviewList reviews={reviews} tr={tr} />
+  return <ReviewList reviews={reviews} tr={tr} lang={lang} />
 }
 
 function ReviewStatsSkeleton() {

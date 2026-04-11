@@ -1,13 +1,14 @@
 import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { LoginForm } from '@/components/auth/LoginForm'
+// t() used for heading string only — tr object not passed to client component
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Sign in | Pundo' }
 
 export default async function LoginPage() {
   const lang = await getLangServer()
-  const tr = t(lang)
+  const { auth_login } = t(lang)
 
   return (
     <main className="min-h-screen bg-bg flex items-center justify-center px-4">
@@ -16,9 +17,9 @@ export default async function LoginPage() {
           className="text-2xl font-extrabold text-text mb-6"
           style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
         >
-          {tr.auth_login}
+          {auth_login}
         </h1>
-        <LoginForm tr={tr} lang={lang} />
+        <LoginForm lang={lang} />
       </div>
     </main>
   )

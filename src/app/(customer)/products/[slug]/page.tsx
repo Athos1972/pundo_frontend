@@ -4,6 +4,8 @@ import { getLangServer } from '@/lib/lang'
 import { getProduct, getRelatedProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl } from '@/lib/utils'
+import { getSiteUrl } from '@/lib/seo'
+import { buildProductSchema, safeJson } from '@/lib/structured-data'
 import { OfferList } from '@/components/product/OfferList'
 import { ProductHeroImage } from '@/components/product/ProductHeroImage'
 import { RelatedProductsCarousel } from '@/components/product/RelatedProductsCarousel'
@@ -27,12 +29,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const priceDisplay = firstOffer?.price_type === 'fixed' && firstOffer.price
       ? ` — ${firstOffer.price} €`
       : ''
+    const description = product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined
+    const relativeImg = toRelativeImageUrl(product.thumbnail_url)
+    const siteUrl = getSiteUrl()
     return {
-      title: `${name}${priceDisplay} | Pundo`,
-      description: product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined,
+      title: `${name}${priceDisplay}`,
+      description,
+      openGraph: {
+        type: 'website',
+        title: `${name}${priceDisplay}`,
+        description,
+        url: `${siteUrl}/products/${slug}`,
+        images: relativeImg ? [{ url: relativeImg }] : undefined,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${name}${priceDisplay}`,
+        description,
+        images: relativeImg ? [relativeImg] : undefined,
+      },
+      alternates: { canonical: `${siteUrl}/products/${slug}` },
     }
   } catch {
-    return { title: 'Produkt | Pundo' }
+    return { title: 'Produkt' }
   }
 }
 
@@ -56,6 +75,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
     ? relatedResult.value.items.filter(p => p.slug !== slug)
     : []
 
+  const siteUrl = getSiteUrl()
   const name = product.names[lang] ?? product.names.en ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
 
@@ -113,6 +133,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Reviews */}
         <ReviewSection entityType="product" entityId={product.id} lang={lang} tr={tr} />
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJson(buildProductSchema(product, lang, siteUrl)) }}
+      />
     </main>
   )
 }

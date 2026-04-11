@@ -1,15 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import type { Translations } from '@/lib/translations'
+import { t } from '@/lib/translations'
 import { useSession } from '@/components/auth/SessionProvider'
 
 interface Props {
   reviewId: number
-  tr: Translations
+  lang: string
 }
 
-export function ReportButton({ reviewId, tr }: Props) {
+export function ReportButton({ reviewId, lang }: Props) {
+  const tr = t(lang)
   const session = useSession()
   const [reported, setReported] = useState(false)
   const [loading, setLoading] = useState(false)

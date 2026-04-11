@@ -1,31 +1,31 @@
 import { defineConfig } from '@playwright/test'
 
 // Port-Konvention (PFLICHT — niemals mischen):
-//   Produktion:  Backend 8001, Frontend 3000
-//   E2E-Tests:   Backend 8002, Frontend 3002
+//   Produktion:  Backend 8000, Frontend 3000
+//   E2E-Tests:   Backend 8500, Frontend 3500
 //
 // Der global-setup startet das Test-Backend automatisch (kill + restart).
-// BACKEND_URL kann weggelassen werden → default http://localhost:8002.
-// Port 8001 wird explizit abgelehnt.
+// BACKEND_URL kann weggelassen werden → default http://localhost:8500.
+// Port 8000 wird explizit abgelehnt.
 //
 // Quick start (kein manueller Backend-Start nötig):
 //   npx playwright test
 //
 // Oder mit explizitem Port:
-//   BACKEND_URL=http://localhost:8002 npx playwright test
+//   BACKEND_URL=http://localhost:8500 npx playwright test
 
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8002'
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
-// Sicherheitsnetz: Port 8001 ist der Produktiv-Port — niemals für E2E.
-if (backendUrl.includes(':8001')) {
+// Sicherheitsnetz: Port 8000 ist der Produktiv-Port — niemals für E2E.
+if (backendUrl.includes(':8000')) {
   throw new Error(
-    '\n[E2E] BACKEND_URL zeigt auf Port 8001 — das ist der PRODUKTIV-Port!\n' +
-    '  E2E-Tests verwenden Port 8002.\n' +
-    '  Lösung: BACKEND_URL weglassen (→ auto 8002) oder BACKEND_URL=http://localhost:8002 setzen.\n'
+    '\n[E2E] BACKEND_URL zeigt auf Port 8000 — das ist der PRODUKTIV-Port!\n' +
+    '  E2E-Tests verwenden Port 8500.\n' +
+    '  Lösung: BACKEND_URL weglassen (→ auto 8500) oder BACKEND_URL=http://localhost:8500 setzen.\n'
   )
 }
 
-const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3002'
+const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
 const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:${frontendPort}`
 
 export default defineConfig({

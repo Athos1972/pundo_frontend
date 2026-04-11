@@ -5,9 +5,10 @@ import { ReviewCard } from './ReviewCard'
 interface Props {
   reviews: Review[]
   tr: Translations
+  lang: string
 }
 
-export function ReviewList({ reviews, tr }: Props) {
+export function ReviewList({ reviews, tr, lang }: Props) {
   if (reviews.length === 0) {
     return <p className="text-sm text-text-muted">{tr.reviews_no_reviews}</p>
   }
@@ -15,7 +16,7 @@ export function ReviewList({ reviews, tr }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {reviews.map((review) => (
-        <ReviewCard key={review.id} review={review} tr={tr} />
+        <ReviewCard key={review.id} review={review} tr={tr} lang={lang} />
       ))}
     </div>
   )

@@ -70,7 +70,7 @@ async function AccountReviews({
   return (
     <div className="flex flex-col gap-4">
       {(reviews as Review[]).map((r) => (
-        <ReviewCard key={r.id} review={r} tr={tr} />
+        <ReviewCard key={r.id} review={r} tr={tr} lang={lang} />
       ))}
     </div>
   )

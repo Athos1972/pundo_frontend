@@ -2,16 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Translations } from '@/lib/translations'
+import { t } from '@/lib/translations'
 
 interface Props {
-  tr: Translations
   lang: string
   email: string
   purpose: 'signup' | 'password_reset'
 }
 
-export function VerifyEmailForm({ tr, lang, email, purpose }: Props) {
+export function VerifyEmailForm({ lang, email, purpose }: Props) {
+  const tr = t(lang)
   const router = useRouter()
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')

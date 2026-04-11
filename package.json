@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
+    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "dev:test": "BACKEND_URL=http://localhost:8500 next dev -H 0.0.0.0 -p 3500",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

@@ -7,14 +7,35 @@ import { SplashScreen } from '@/components/ui/SplashScreen'
 import { SessionProvider } from '@/components/auth/SessionProvider'
 import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
+import { getSiteUrl } from '@/lib/seo'
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-heading' })
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-sans' })
 
+const siteUrl = getSiteUrl()
+const defaultDescription = 'Finde Produkte in Shops in deiner Nähe in Larnaca, Zypern'
+
 export const metadata: Metadata = {
-  title: 'Pundo — Lokale Produkte finden',
-  description: 'Finde Produkte in Shops in deiner Nähe in Larnaca, Zypern',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Pundo — Lokale Produkte finden',
+    template: '%s | Pundo',
+  },
+  description: defaultDescription,
   manifest: '/manifest.json',
+  openGraph: {
+    type: 'website',
+    siteName: 'Pundo',
+    title: 'Pundo — Lokale Produkte finden',
+    description: defaultDescription,
+    images: [{ url: '/pundo-logo.png', width: 512, height: 512, alt: 'Pundo' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Pundo — Lokale Produkte finden',
+    description: defaultDescription,
+    images: ['/pundo-logo.png'],
+  },
 }
 
 export const viewport: Viewport = {

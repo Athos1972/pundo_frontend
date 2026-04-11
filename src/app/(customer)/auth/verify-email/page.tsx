@@ -16,7 +16,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
 
   const resolvedPurpose = purpose === 'password_reset' ? 'password_reset' : 'signup'
   const lang = await getLangServer()
-  const tr = t(lang)
+  const { auth_verify_email } = t(lang)
 
   return (
     <main className="min-h-screen bg-bg flex items-center justify-center px-4">
@@ -25,9 +25,9 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
           className="text-2xl font-extrabold text-text mb-6"
           style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
         >
-          {tr.auth_verify_email}
+          {auth_verify_email}
         </h1>
-        <VerifyEmailForm tr={tr} lang={lang} email={email} purpose={resolvedPurpose} />
+        <VerifyEmailForm lang={lang} email={email} purpose={resolvedPurpose} />
       </div>
     </main>
   )

@@ -22,7 +22,7 @@ export default async function EditShopPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_shops} — {shop.name}</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_shops} — {shop.names?.['en'] ?? shop.slug}</h1>
       <ShopForm shop={shop} shopTypes={shopTypes} tr={tr} />
     </div>
   )

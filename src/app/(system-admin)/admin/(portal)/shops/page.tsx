@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import { getShops } from '@/lib/system-admin-api'
+import { pickName } from '@/types/system-admin'
 import { EntityTable } from '@/components/system-admin/EntityTable'
 
 const LIMIT = 20
@@ -21,6 +22,15 @@ export default async function ShopsPage({ searchParams }: PageProps) {
   try {
     data = await getShops({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
+
+  // Pre-process multilingual fields into display strings
+  const rows = data.items.map((s) => ({
+    id: s.id,
+    name: pickName(s.names),
+    address: [s.address_line1, s.city].filter(Boolean).join(', ') || '—',
+    status: s.status,
+    shop_type_id: s.shop_type_id ?? '—',
+  }))
 
   return (
     <div className="flex flex-col gap-5">
@@ -54,13 +64,13 @@ export default async function ShopsPage({ searchParams }: PageProps) {
         columns={[
           { key: 'id', label: tr.id },
           { key: 'name', label: tr.name },
-          { key: 'address_raw', label: tr.address },
+          { key: 'address', label: tr.address },
           { key: 'status', label: tr.status },
           { key: 'shop_type_id', label: tr.shop_type },
         ]}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/shops/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/shops/${id}`}
+        rows={rows as unknown as Array<Record<string, unknown> & { id: number }>}
+        editHref="/admin/shops/{id}/edit"
+        deleteUrl="/api/admin/shops/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

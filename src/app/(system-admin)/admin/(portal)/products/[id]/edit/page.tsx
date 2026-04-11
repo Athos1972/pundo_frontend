@@ -24,7 +24,7 @@ export default async function EditProductPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_products} — {product.name}</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_products} — {product.names?.['en'] ?? product.slug}</h1>
       <ProductForm product={product} attributes={attributes} categories={categories} brands={brands} tr={tr} />
     </div>
   )

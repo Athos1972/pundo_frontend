@@ -4,7 +4,6 @@ import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import { getCategory, getCategoryAttributeDefs } from '@/lib/system-admin-api'
 import { EntityTable } from '@/components/system-admin/EntityTable'
-import type { Column } from '@/components/system-admin/EntityTable'
 
 interface PageProps {
   params: Promise<{ categoryId: string }>
@@ -22,22 +21,16 @@ export default async function CategoryAttrDefsDetailPage({ params }: PageProps) 
 
   if (!category) notFound()
 
-  const columns: Column[] = [
-    { key: 'id', label: tr.id },
-    { key: 'key', label: tr.key },
-    { key: 'label', label: tr.label },
-    { key: 'type', label: tr.type },
-    {
-      key: 'options',
-      label: tr.options,
-      render: (v) => {
-        const opts = v as string[] | null
-        return opts?.join(', ') ?? '—'
-      },
-    },
-  ]
-
-  const rows = defs as unknown as Array<Record<string, unknown> & { id: number }>
+  // Pre-process: use actual backend field names and convert lists/dicts to strings
+  const rows = defs.map((d) => ({
+    id: d.id,
+    attribute_key: d.attribute_key,
+    labels_en: (d.labels as Record<string, string>)?.['en'] ?? Object.values(d.labels ?? {})[0] ?? '—',
+    attribute_type: d.attribute_type,
+    allowed_values: Array.isArray(d.allowed_values)
+      ? (d.allowed_values as string[]).join(', ')
+      : (d.allowed_values ?? '—'),
+  })) as unknown as Array<Record<string, unknown> & { id: number }>
 
   return (
     <div className="flex flex-col gap-5">
@@ -46,7 +39,9 @@ export default async function CategoryAttrDefsDetailPage({ params }: PageProps) 
           <Link href="/admin/category-attribute-definitions" className="text-sm text-gray-500 hover:text-gray-700">
             ← {tr.nav_cat_attr_defs}
           </Link>
-          <h1 className="text-xl font-semibold text-gray-900 mt-1">{category.name}</h1>
+          <h1 className="text-xl font-semibold text-gray-900 mt-1">
+            {category.name ?? category.external_id}
+          </h1>
         </div>
         <Link
           href={`/admin/category-attribute-definitions/${categoryId}/new`}
@@ -57,10 +52,16 @@ export default async function CategoryAttrDefsDetailPage({ params }: PageProps) 
       </div>
 
       <EntityTable
-        columns={columns}
+        columns={[
+          { key: 'id', label: tr.id },
+          { key: 'attribute_key', label: tr.key },
+          { key: 'labels_en', label: tr.label },
+          { key: 'attribute_type', label: tr.type },
+          { key: 'allowed_values', label: tr.options },
+        ]}
         rows={rows}
-        editHref={(id) => `/admin/category-attribute-definitions/${categoryId}/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/categories/${categoryId}/attribute-definitions/${id}`}
+        editHref={`/admin/category-attribute-definitions/${categoryId}/{id}/edit`}
+        deleteUrl={`/api/admin/categories/${categoryId}/attribute-definitions/{id}`}
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

@@ -26,28 +26,53 @@ export interface DayHours {
 /** Keys "0"–"6" = Mon–Sun */
 export type OpeningHoursMap = Record<string, DayHours>
 
-// Shops
+// ─── Helper ────────────────────────────────────────────────────────────────────
+/** Extract a display name from a multilingual names dict (en → de → first → fallback). */
+export function pickName(
+  names: Record<string, string> | null | undefined,
+  fallback = '—',
+): string {
+  if (!names) return fallback
+  return names['en'] ?? names['de'] ?? Object.values(names)[0] ?? fallback
+}
+
+// ─── Shops ─────────────────────────────────────────────────────────────────────
 export interface SysAdminShop {
   id: number
-  name: string
-  address_raw: string | null
-  location: { lat: number; lng: number } | null
+  slug: string
+  status: string
+  names: Record<string, string>
+  descriptions?: Record<string, string> | null
+  address_line1: string | null
+  address_line2?: string | null
+  city: string | null
+  postal_code?: string | null
+  country_code: string
+  lat: number | null
+  lng: number | null
+  phone: string | null
+  phone_alt?: string | null
+  email?: string | null
+  website_url: string | null
+  webshop_url?: string | null
   opening_hours: OpeningHoursMap | null
   shop_type_id: number | null
-  status: string
-  phone: string | null
-  website: string | null
-  last_scraped: string | null
+  source?: string | null
+  created_at: string
+  updated_at: string
 }
 
-// Shop Types
+// ─── Shop Types ────────────────────────────────────────────────────────────────
 export interface SysAdminShopType {
   id: number
-  name: string
-  description: string | null
+  canonical: string
+  translations: Record<string, string>
+  /** Populated by backend: translations["en"] or first available or canonical */
+  name: string | null
+  created_at: string
 }
 
-// Shop Owners
+// ─── Shop Owners ───────────────────────────────────────────────────────────────
 export interface SysAdminShopOwner {
   id: number
   email: string
@@ -56,75 +81,97 @@ export interface SysAdminShopOwner {
   shop_id: number
 }
 
-// Products
+// ─── Products ──────────────────────────────────────────────────────────────────
 export interface SysAdminProduct {
   id: number
-  name: string
   slug: string
+  item_type?: string
+  status?: string
+  names: Record<string, string>
+  descriptions?: Record<string, string> | null
   brand_id: number | null
   category_id: number | null
+  ean?: string | null
 }
 
 export interface SysAdminProductAttribute {
   id: number
   product_id: number
   attribute_key: string
-  attribute_value: string
-  source: string
-  confidence: number
+  attribute_value: unknown
+  source: string | null
+  confidence: number | null
   created_at: string
   updated_at: string
 }
 
-// Categories
+// ─── Categories ────────────────────────────────────────────────────────────────
 export interface SysAdminCategory {
   id: number
-  name: string
   parent_id: number | null
-  level: number
   taxonomy_type: string
-  child_count: number
+  external_id: string
+  level: string | null
+  path: string | null
+  /** Populated by backend: EN translation or first available */
+  name: string | null
 }
 
 export interface SysAdminCategoryAttributeDef {
   id: number
   category_id: number
-  key: string
-  label: string
-  type: 'text' | 'number' | 'bool' | 'select'
-  options: string[] | null
+  attribute_key: string
+  attribute_type: string
+  allowed_values: unknown | null
+  unit: string | null
+  is_filterable: boolean
+  display_order: number
+  override_mode: string
+  labels: Record<string, string>
+  value_labels?: Record<string, string> | null
+  created_at: string
+  updated_at: string
 }
 
 export interface SysAdminCategoryTranslation {
   id: number
   category_id: number
-  language: string
+  lang: string
   name: string
   rtl: boolean
 }
 
-// Brands
+// ─── Brands ────────────────────────────────────────────────────────────────────
 export interface SysAdminBrand {
   id: number
-  name: string
-  logo_url: string | null
-  website: string | null
+  slug: string
+  names: Record<string, string>
+  descriptions?: Record<string, string> | null
+  country_code: string | null
+  homepages?: Record<string, string> | null
+  logos?: Array<{ url?: string; [key: string]: unknown }> | null
+  social_links?: Record<string, string> | null
+  created_at: string
+  updated_at: string
 }
 
-// Offers (scraped/admin-managed)
+// ─── Offers (scraped/admin-managed) ───────────────────────────────────────────
 export interface SysAdminOffer {
   id: number
+  product_id: number
   shop_id: number
-  product_id: number | null
-  price: number
+  price: string | null
+  price_type: string
+  price_note: string | null
   currency: string
-  price_type: 'fixed' | 'on_request' | 'free' | 'variable'
+  stock_status: string
   is_available: boolean
-  url: string | null
   sku: string | null
+  url: string | null
+  image_url?: string | null
 }
 
-// Shop-Owner Offers (created by shop owners)
+// ─── Shop-Owner Offers ─────────────────────────────────────────────────────────
 export interface SysAdminShopOwnerOffer {
   id: number
   shop_id: number
@@ -137,7 +184,7 @@ export interface SysAdminShopOwnerOffer {
   archived: boolean
 }
 
-// API Keys
+// ─── API Keys ─────────────────────────────────────────────────────────────────
 export interface SysAdminApiKey {
   id: number
   shop_owner_id: number

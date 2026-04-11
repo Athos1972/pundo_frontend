@@ -4,6 +4,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SysAdminBrand } from '@/types/system-admin'
+import { pickName } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { BrandLogoInput } from './BrandLogoInput'
@@ -19,9 +20,13 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
   const [isPending, startTransition] = useTransition()
   const isEdit = brand != null
 
-  const [name, setName] = useState(brand?.name ?? '')
-  const [logoUrl, setLogoUrl] = useState(brand?.logo_url ?? '')
-  const [website, setWebsite] = useState(brand?.website ?? '')
+  const [name, setName] = useState(pickName(brand?.names, ''))
+  const firstLogo = brand?.logos?.[0]
+  const firstLogoUrl = (firstLogo as Record<string, unknown> | undefined)?.['url'] as string | undefined
+  const [logoUrl, setLogoUrl] = useState(firstLogoUrl ?? '')
+  const [website, setWebsite] = useState(
+    brand?.homepages?.['en'] ?? (brand?.homepages ? Object.values(brand.homepages)[0] : '') ?? '',
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function validate() {
@@ -36,9 +41,9 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
     if (!validate()) return
 
     const payload = {
-      name: name.trim(),
-      logo_url: logoUrl.trim() || null,
-      website: website.trim() || null,
+      names: { en: name.trim() },
+      logos: logoUrl.trim() ? [{ url: logoUrl.trim() }] : null,
+      homepages: website.trim() ? { en: website.trim() } : null,
     }
 
     startTransition(async () => {

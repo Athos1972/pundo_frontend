@@ -172,26 +172,26 @@ export async function getApiKeys(
 
 // ─── Helper lists for form selects ────────────────────────────────────────────
 export async function getAllShopTypes(): Promise<SysAdminShopType[]> {
-  const res = await getShopTypes({ limit: 200 })
+  const res = await getShopTypes({ limit: 1000 })
   return res.items
 }
 
 export async function getAllCategories(): Promise<SysAdminCategory[]> {
-  const res = await getCategories({ limit: 500 })
+  const res = await getCategories({ limit: 1000 })
   return res.items
 }
 
 export async function getAllBrands(): Promise<SysAdminBrand[]> {
-  const res = await getBrands({ limit: 500 })
+  const res = await getBrands({ limit: 1000 })
   return res.items
 }
 
 export async function getAllShops(): Promise<SysAdminShop[]> {
-  const res = await getShops({ limit: 500 })
+  const res = await getShops({ limit: 1000 })
   return res.items
 }
 
 export async function getAllProducts(): Promise<SysAdminProduct[]> {
-  const res = await getProducts({ limit: 500 })
+  const res = await getProducts({ limit: 1000 })
   return res.items
 }

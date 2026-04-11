@@ -1,10 +1,9 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import { getBrands } from '@/lib/system-admin-api'
+import { pickName } from '@/types/system-admin'
 import { EntityTable } from '@/components/system-admin/EntityTable'
-import type { Column } from '@/components/system-admin/EntityTable'
 
 const LIMIT = 20
 
@@ -24,20 +23,14 @@ export default async function BrandsPage({ searchParams }: PageProps) {
     data = await getBrands({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
 
-  const columns: Column[] = [
-    { key: 'id', label: tr.id },
-    {
-      key: 'logo_url',
-      label: tr.logo_url,
-      render: (v) => v
-        ? <div className="relative w-8 h-8 rounded overflow-hidden bg-gray-50 border border-gray-200">
-            <Image src={v as string} alt="" fill className="object-contain p-0.5" unoptimized />
-          </div>
-        : <span className="text-gray-400">—</span>,
-    },
-    { key: 'name', label: tr.name },
-    { key: 'website', label: tr.website },
-  ]
+  // Pre-process: extract display name and first logo URL from multilingual dicts
+  const rows = data.items.map((b) => ({
+    id: b.id,
+    logo_url: b.logos?.[0]?.url ?? null,
+    name: pickName(b.names),
+    slug: b.slug,
+    website: b.homepages?.['en'] ?? (b.homepages ? Object.values(b.homepages)[0] : null) ?? '—',
+  }))
 
   return (
     <div className="flex flex-col gap-5">
@@ -63,10 +56,16 @@ export default async function BrandsPage({ searchParams }: PageProps) {
       </form>
 
       <EntityTable
-        columns={columns}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/brands/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/brands/${id}`}
+        columns={[
+          { key: 'id', label: tr.id },
+          { key: 'logo_url', label: tr.logo_url, isImage: true },
+          { key: 'name', label: tr.name },
+          { key: 'slug', label: tr.slug },
+          { key: 'website', label: tr.website },
+        ]}
+        rows={rows as unknown as Array<Record<string, unknown> & { id: number }>}
+        editHref="/admin/brands/{id}/edit"
+        deleteUrl="/api/admin/brands/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

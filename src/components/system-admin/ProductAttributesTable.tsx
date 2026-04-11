@@ -133,9 +133,9 @@ export function ProductAttributesTable({
               {attributes.map((attr) => (
                 <tr key={attr.id} className="border-b border-gray-100 last:border-0">
                   <td className="px-3 py-2 font-mono text-xs text-gray-700">{attr.attribute_key}</td>
-                  <td className="px-3 py-2 text-gray-700">{attr.attribute_value}</td>
-                  <td className="px-3 py-2 text-gray-500">{attr.source}</td>
-                  <td className="px-3 py-2 text-gray-500">{attr.confidence.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-gray-700">{String(attr.attribute_value ?? '—')}</td>
+                  <td className="px-3 py-2 text-gray-500">{attr.source ?? '—'}</td>
+                  <td className="px-3 py-2 text-gray-500">{attr.confidence != null ? attr.confidence.toFixed(2) : '—'}</td>
                   <td className="px-3 py-2">
                     <button
                       type="button"

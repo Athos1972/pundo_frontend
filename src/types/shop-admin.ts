@@ -84,3 +84,45 @@ export interface ImportUploadResult {
   imported: number
   errors: { row: number; message: string }[]
 }
+
+// ─── Review Moderation (admin-only, never imported by customer code) ──────────
+
+export interface AdminReviewPhoto {
+  id: number
+  url: string
+  thumbnail_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  moderation_reason: string | null
+  moderation_categories: string[] | null
+}
+
+export interface AdminReview {
+  id: number
+  user_id: number
+  user_display_name: string
+  entity_type: 'product' | 'shop'
+  entity_id: number
+  stars: number
+  comment: string | null
+  photos: AdminReviewPhoto[]
+  is_visible: boolean
+  created_at: string
+  updated_at: string
+  reporter_count: number
+  last_reported_at: string | null
+  invalidated_at: string | null
+  invalidated_by: number | null
+}
+
+export interface AuditLogEntry {
+  id: number
+  review_id: number
+  action: string
+  actor_type: string
+  actor_id: number | null
+  actor_ip: string | null
+  moderation_model: string | null
+  moderation_confidence: number | null
+  reason: string | null
+  timestamp: string
+}

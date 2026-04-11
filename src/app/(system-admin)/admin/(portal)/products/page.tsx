@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getProducts } from '@/lib/system-admin-api'
+import { getProducts, getAllBrands, getAllCategories } from '@/lib/system-admin-api'
+import { pickName } from '@/types/system-admin'
 import { EntityTable } from '@/components/system-admin/EntityTable'
 
 const LIMIT = 20
@@ -17,10 +18,28 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(sp.page ?? 1))
   const q = sp.q ?? ''
 
-  let data = { items: [] as Awaited<ReturnType<typeof getProducts>>['items'], total: 0, limit: LIMIT, offset: 0 }
-  try {
-    data = await getProducts({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
-  } catch { /* handled below */ }
+  const [data, brands, categories] = await Promise.all([
+    getProducts({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT }).catch(() => ({
+      items: [] as Awaited<ReturnType<typeof getProducts>>['items'],
+      total: 0,
+      limit: LIMIT,
+      offset: 0,
+    })),
+    getAllBrands().catch(() => []),
+    getAllCategories().catch(() => []),
+  ])
+
+  // Build lookup maps for human-readable names
+  const brandMap = new Map(brands.map((b) => [b.id, pickName(b.names)]))
+  const catMap = new Map(categories.map((c) => [c.id, c.name ?? c.external_id]))
+
+  const rows = data.items.map((p) => ({
+    id: p.id,
+    name: pickName(p.names),
+    slug: p.slug,
+    category: p.category_id ? (catMap.get(p.category_id) ?? String(p.category_id)) : '—',
+    brand: p.brand_id ? (brandMap.get(p.brand_id) ?? String(p.brand_id)) : '—',
+  }))
 
   return (
     <div className="flex flex-col gap-5">
@@ -50,12 +69,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           { key: 'id', label: tr.id },
           { key: 'name', label: tr.name },
           { key: 'slug', label: tr.slug },
-          { key: 'category_id', label: tr.category },
-          { key: 'brand_id', label: tr.brand },
+          { key: 'category', label: tr.category },
+          { key: 'brand', label: tr.brand },
         ]}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/products/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/products/${id}`}
+        rows={rows as unknown as Array<Record<string, unknown> & { id: number }>}
+        editHref="/admin/products/{id}/edit"
+        deleteUrl="/api/admin/products/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

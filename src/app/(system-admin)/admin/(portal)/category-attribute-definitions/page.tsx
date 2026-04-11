@@ -1,9 +1,7 @@
-import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import { getCategories } from '@/lib/system-admin-api'
 import { EntityTable } from '@/components/system-admin/EntityTable'
-import type { Column } from '@/components/system-admin/EntityTable'
 
 // This page lists all categories and links to their attribute definitions
 const LIMIT = 50
@@ -24,24 +22,6 @@ export default async function CategoryAttributeDefsPage({ searchParams }: PagePr
     data = await getCategories({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
 
-  const columns: Column[] = [
-    { key: 'id', label: tr.id },
-    { key: 'name', label: tr.name },
-    { key: 'level', label: tr.level },
-    {
-      key: 'id',
-      label: tr.actions,
-      render: (_, row) => (
-        <Link
-          href={`/admin/category-attribute-definitions/${row.id}`}
-          className="text-xs font-medium text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline"
-        >
-          Manage defs
-        </Link>
-      ),
-    },
-  ]
-
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-semibold text-gray-900">{tr.nav_cat_attr_defs}</h1>
@@ -59,9 +39,14 @@ export default async function CategoryAttributeDefsPage({ searchParams }: PagePr
       </form>
 
       <EntityTable
-        columns={columns}
+        columns={[
+          { key: 'id', label: tr.id },
+          { key: 'name', label: tr.name },
+          { key: 'level', label: tr.level },
+        ]}
         rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editLabel={tr.edit}
+        editHref="/admin/category-attribute-definitions/{id}"
+        editLabel="Manage defs"
         deleteLabel={tr.delete}
         confirmMessage={tr.confirm_delete}
         cancelLabel={tr.cancel}

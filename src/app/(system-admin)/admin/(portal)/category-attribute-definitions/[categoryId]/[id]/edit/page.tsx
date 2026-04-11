@@ -19,7 +19,7 @@ export default async function EditAttrDefPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-5 max-w-lg">
-      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_cat_attr_defs} — {def.key}</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_cat_attr_defs} — {def.attribute_key}</h1>
       <AttrDefEditForm def={def} categoryId={categoryId} tr={tr} />
     </div>
   )

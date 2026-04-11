@@ -224,7 +224,11 @@ describe('ConfirmDialog', () => {
 import { AttributeDefinitionEditor } from '@/components/system-admin/AttributeDefinitionEditor'
 
 describe('AttributeDefinitionEditor', () => {
-  const base = { key: 'weight', label: 'Weight', type: 'text' as const, options: null }
+  const base: import('@/components/system-admin/AttributeDefinitionEditor').AttrDefDraft = {
+    attribute_key: 'weight', labels: { en: 'Weight' }, attribute_type: 'text', allowed_values: null,
+    unit: null, is_filterable: false, display_order: 0, override_mode: 'merge',
+    value_labels: null, created_at: '', updated_at: '',
+  }
 
   it('renders key, label, type fields', () => {
     render(
@@ -263,7 +267,7 @@ describe('AttributeDefinitionEditor', () => {
   it('shows options input when type = select', () => {
     render(
       <AttributeDefinitionEditor
-        value={{ ...base, type: 'select', options: ['A', 'B'] }}
+        value={{ ...base, attribute_type: 'select', allowed_values: ['A', 'B'] }}
         onChange={vi.fn()}
         keyLabel="Key"
         labelLabel="Label"
@@ -282,7 +286,7 @@ describe('AttributeDefinitionEditor', () => {
     const onChange = vi.fn()
     render(
       <AttributeDefinitionEditor
-        value={{ ...base, type: 'select', options: [] }}
+        value={{ ...base, attribute_type: 'select', allowed_values: [] }}
         onChange={onChange}
         keyLabel="Key"
         labelLabel="Label"
@@ -295,13 +299,13 @@ describe('AttributeDefinitionEditor', () => {
     fireEvent.change(optInput, { target: { value: 'Red, Green, Blue' } })
     expect(onChange).toHaveBeenCalled()
     const last = onChange.mock.calls[onChange.mock.calls.length - 1][0]
-    expect(last.options).toEqual(['Red', 'Green', 'Blue'])
+    expect(last.allowed_values).toEqual(['Red', 'Green', 'Blue'])
   })
 
   it('renders tag chips for existing options', () => {
     render(
       <AttributeDefinitionEditor
-        value={{ ...base, type: 'select', options: ['XS', 'M', 'XL'] }}
+        value={{ ...base, attribute_type: 'select', allowed_values: ['XS', 'M', 'XL'] }}
         onChange={vi.fn()}
         keyLabel="Key"
         labelLabel="Label"

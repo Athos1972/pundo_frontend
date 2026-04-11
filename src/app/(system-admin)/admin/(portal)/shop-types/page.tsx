@@ -15,12 +15,18 @@ export default async function ShopTypesPage({ searchParams }: PageProps) {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
   const page = Math.max(1, Number(sp.page ?? 1))
-  const q = sp.q ?? ''
 
   let data = { items: [] as Awaited<ReturnType<typeof getShopTypes>>['items'], total: 0, limit: LIMIT, offset: 0 }
   try {
-    data = await getShopTypes({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
+    data = await getShopTypes({ limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
+
+  // Pre-process: use computed name field (backend populates it from translations)
+  const rows = data.items.map((st) => ({
+    id: st.id,
+    canonical: st.canonical,
+    name: st.name ?? st.canonical,
+  }))
 
   return (
     <div className="flex flex-col gap-5">
@@ -37,12 +43,12 @@ export default async function ShopTypesPage({ searchParams }: PageProps) {
       <EntityTable
         columns={[
           { key: 'id', label: tr.id },
+          { key: 'canonical', label: 'Canonical' },
           { key: 'name', label: tr.name },
-          { key: 'description', label: tr.description },
         ]}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/shop-types/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/shop-types/${id}`}
+        rows={rows as unknown as Array<Record<string, unknown> & { id: number }>}
+        editHref="/admin/shop-types/{id}/edit"
+        deleteUrl="/api/admin/shop-types/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}
@@ -54,7 +60,6 @@ export default async function ShopTypesPage({ searchParams }: PageProps) {
         page={page}
         limit={LIMIT}
         baseHref="/admin/shop-types"
-        searchQ={q || undefined}
       />
     </div>
   )

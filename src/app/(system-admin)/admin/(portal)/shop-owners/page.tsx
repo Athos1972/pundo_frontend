@@ -28,25 +28,19 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
     })
   } catch { /* handled below */ }
 
-  const statusBadge = (s: unknown) => {
-    const val = String(s)
-    const colors: Record<string, string> = {
-      approved: 'bg-green-100 text-green-700',
-      pending: 'bg-yellow-100 text-yellow-700',
-      rejected: 'bg-red-100 text-red-700',
-    }
-    return (
-      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${colors[val] ?? 'bg-gray-100 text-gray-600'}`}>
-        {val}
-      </span>
-    )
-  }
-
   const columns: Column[] = [
     { key: 'id', label: tr.id },
     { key: 'name', label: tr.owner_name },
     { key: 'email', label: tr.email },
-    { key: 'status', label: tr.status, render: (v) => statusBadge(v) },
+    {
+      key: 'status',
+      label: tr.status,
+      badgeColors: {
+        approved: 'bg-green-100 text-green-700',
+        pending: 'bg-yellow-100 text-yellow-700',
+        rejected: 'bg-red-100 text-red-700',
+      },
+    },
     { key: 'shop_id', label: 'Shop ID' },
   ]
 
@@ -86,7 +80,7 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
       <EntityTable
         columns={columns}
         rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/shop-owners/${id}/edit`}
+        editHref="/admin/shop-owners/{id}/edit"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

@@ -45,11 +45,13 @@ function TreeNode({ node, depth, editLabel }: { node: TreeNode; depth: number; e
         className="flex items-center gap-2 py-1.5 hover:bg-gray-50 rounded px-2"
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
-        {node.child_count > 0 && (
+        {node.children.length > 0 && (
           <span className="text-gray-400 text-xs">▸</span>
         )}
-        <span className="text-sm text-gray-800 flex-1">{node.name}</span>
-        <span className="text-xs text-gray-400">L{node.level}</span>
+        <span className="text-sm text-gray-800 flex-1">
+          {node.name ?? node.external_id}
+        </span>
+        <span className="text-xs text-gray-400">{node.level}</span>
         <Link
           href={`/admin/categories/${node.id}/edit`}
           className="text-xs text-slate-500 hover:text-slate-900 underline-offset-2 hover:underline"

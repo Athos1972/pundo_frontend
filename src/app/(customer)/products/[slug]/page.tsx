@@ -5,7 +5,7 @@ import { getProduct, getRelatedProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl } from '@/lib/utils'
 import { OfferList } from '@/components/product/OfferList'
-import { ProductImage } from '@/components/product/ProductImage'
+import { ProductHeroImage } from '@/components/product/ProductHeroImage'
 import { RelatedProductsCarousel } from '@/components/product/RelatedProductsCarousel'
 import { PriceHistory } from '@/components/ui/PriceHistory'
 import { BackButton } from '@/components/ui/BackButton'
@@ -74,15 +74,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <BackButton />
         {/* Hero */}
         <div className="flex gap-4 mb-6">
-          <div className="w-24 h-24 flex-shrink-0 bg-surface-alt rounded-xl flex items-center justify-center overflow-hidden">
-            {firstImgUrl && (
-              <ProductImage
-                src={firstImgUrl}
-                alt={name}
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
+          {firstImgUrl && (
+            <ProductHeroImage src={firstImgUrl} alt={name} />
+          )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold text-text leading-tight" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{name}</h1>
             {product.brand && <p className="text-sm text-text-muted mt-1">{product.brand.name}</p>}

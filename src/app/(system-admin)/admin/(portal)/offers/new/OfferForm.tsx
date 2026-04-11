@@ -3,9 +3,12 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SysAdminOffer, SysAdminShop, SysAdminProduct } from '@/types/system-admin'
+import { pickName } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from '@/components/system-admin/FormField'
 import { showToast } from '@/components/system-admin/Toast'
+
+type PriceType = 'fixed' | 'on_request' | 'free' | 'variable'
 
 interface OfferFormProps {
   offer: SysAdminOffer | null
@@ -23,7 +26,7 @@ export function OfferForm({ offer, shops, products, tr }: OfferFormProps) {
   const [productId, setProductId] = useState(String(offer?.product_id ?? ''))
   const [price, setPrice] = useState(String(offer?.price ?? ''))
   const [currency, setCurrency] = useState(offer?.currency ?? 'EUR')
-  const [priceType, setPriceType] = useState<'fixed' | 'on_request' | 'free' | 'variable'>(offer?.price_type ?? 'fixed')
+  const [priceType, setPriceType] = useState<PriceType>((offer?.price_type as PriceType) ?? 'fixed')
   const [isAvailable, setIsAvailable] = useState(offer?.is_available ?? true)
   const [url, setUrl] = useState(offer?.url ?? '')
   const [sku, setSku] = useState(offer?.sku ?? '')
@@ -58,17 +61,17 @@ export function OfferForm({ offer, shops, products, tr }: OfferFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-lg">
       <FormField as="select" label={tr.shop} name="shop_id" value={shopId} onChange={(e) => setShopId(e.target.value)} disabled={isPending}>
         <option value="">{tr.none}</option>
-        {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        {shops.map((s) => <option key={s.id} value={s.id}>{pickName(s.names)}</option>)}
       </FormField>
       <FormField as="select" label={tr.product} name="product_id" value={productId} onChange={(e) => setProductId(e.target.value)} disabled={isPending}>
         <option value="">{tr.none}</option>
-        {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        {products.map((p) => <option key={p.id} value={p.id}>{pickName(p.names)}</option>)}
       </FormField>
       <div className="grid grid-cols-2 gap-4">
         <FormField label={tr.price} name="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} disabled={isPending} />
         <FormField label={tr.currency} name="currency" value={currency} onChange={(e) => setCurrency(e.target.value)} disabled={isPending} />
       </div>
-      <FormField as="select" label={tr.price_type} name="price_type" value={priceType} onChange={(e) => setPriceType(e.target.value as 'fixed' | 'on_request' | 'free' | 'variable')} disabled={isPending}>
+      <FormField as="select" label={tr.price_type} name="price_type" value={priceType} onChange={(e) => setPriceType(e.target.value as PriceType)} disabled={isPending}>
         <option value="fixed">fixed</option>
         <option value="on_request">on_request</option>
         <option value="free">free</option>

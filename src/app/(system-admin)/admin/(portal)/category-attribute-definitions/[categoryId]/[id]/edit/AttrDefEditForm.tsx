@@ -13,16 +13,21 @@ interface Props {
   tr: SysAdminTranslations
 }
 
-type AttrType = 'text' | 'number' | 'bool' | 'select'
-
 export function AttrDefEditForm({ def, categoryId, tr }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [value, setValue] = useState({
-    key: def.key,
-    label: def.label,
-    type: def.type as AttrType,
-    options: def.options,
+  const [value, setValue] = useState<import('@/components/system-admin/AttributeDefinitionEditor').AttrDefDraft>({
+    attribute_key: def.attribute_key,
+    attribute_type: def.attribute_type,
+    allowed_values: def.allowed_values,
+    unit: def.unit,
+    is_filterable: def.is_filterable,
+    display_order: def.display_order,
+    override_mode: def.override_mode,
+    labels: def.labels ?? {},
+    value_labels: def.value_labels,
+    created_at: def.created_at,
+    updated_at: def.updated_at,
   })
 
   function handleSubmit(e: React.FormEvent) {

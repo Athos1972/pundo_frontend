@@ -4,6 +4,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SysAdminShop, SysAdminShopType, OpeningHoursMap } from '@/types/system-admin'
+import { pickName } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { OpeningHoursEditor } from './OpeningHoursEditor'
@@ -21,14 +22,16 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [isPending, startTransition] = useTransition()
   const isEdit = shop != null
 
-  const [name, setName] = useState(shop?.name ?? '')
-  const [address, setAddress] = useState(shop?.address_raw ?? '')
+  // For EN name editing — stored internally as a plain string, sent as {en: ...}
+  const [name, setName] = useState(pickName(shop?.names, ''))
+  const [address, setAddress] = useState(shop?.address_line1 ?? '')
+  const [city, setCity] = useState(shop?.city ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
-  const [website, setWebsite] = useState(shop?.website ?? '')
+  const [website, setWebsite] = useState(shop?.website_url ?? '')
   const [status, setStatus] = useState(shop?.status ?? 'active')
   const [shopTypeId, setShopTypeId] = useState<string>(String(shop?.shop_type_id ?? ''))
-  const [lat, setLat] = useState<number | null>(shop?.location?.lat ?? null)
-  const [lng, setLng] = useState<number | null>(shop?.location?.lng ?? null)
+  const [lat, setLat] = useState<number | null>(shop?.lat ?? null)
+  const [lng, setLng] = useState<number | null>(shop?.lng ?? null)
   const [openingHours, setOpeningHours] = useState<OpeningHoursMap | null>(shop?.opening_hours ?? null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -49,13 +52,15 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
     if (!validate()) return
 
     const payload = {
-      name: name.trim(),
-      address_raw: address.trim() || null,
+      names: { en: name.trim() },
+      address_line1: address.trim() || null,
+      city: city.trim() || null,
       phone: phone.trim() || null,
-      website: website.trim() || null,
+      website_url: website.trim() || null,
       status,
       shop_type_id: shopTypeId ? Number(shopTypeId) : null,
-      location: lat != null && lng != null ? { lat, lng } : null,
+      lat: lat ?? null,
+      lng: lng ?? null,
       opening_hours: openingHours,
     }
 
@@ -92,13 +97,22 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         disabled={isPending}
       />
 
-      <FormField
-        label={tr.address}
-        name="address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        disabled={isPending}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          label={tr.address}
+          name="address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          disabled={isPending}
+        />
+        <FormField
+          label="City"
+          name="city"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          disabled={isPending}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
@@ -143,7 +157,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         >
           <option value="">{tr.none}</option>
           {shopTypes.map((st) => (
-            <option key={st.id} value={st.id}>{st.name}</option>
+            <option key={st.id} value={st.id}>{st.name ?? st.canonical}</option>
           ))}
         </FormField>
       </div>

@@ -52,3 +52,53 @@ export interface CategoryItem {
   external_id: string; level: string | null; name: string | null; child_count: number;
 }
 export interface CategoryListResponse { items: CategoryItem[]; }
+
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+
+export interface ReviewPhoto {
+  id: number
+  url: string
+  thumbnail_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  moderation_reason: string | null
+  moderation_categories: string[] | null
+}
+
+export interface Review {
+  id: number
+  user_id: number
+  user_display_name: string
+  entity_type: 'product' | 'shop'
+  entity_id: number
+  stars: 1 | 2 | 3 | 4 | 5
+  comment: string | null
+  photos: ReviewPhoto[]
+  is_visible: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ReviewStats {
+  average_stars: number
+  total_count: number
+  distribution: Record<string, number>   // keys: "1".."5"
+}
+
+export interface PhotoStatusItem {
+  photo_id: number
+  status: 'pending' | 'approved' | 'rejected'
+  moderation_reason: string | null
+  moderation_categories: string[] | null
+}
+
+export interface CreateReviewRequest {
+  entity_type: 'product' | 'shop'
+  entity_id: number
+  stars: number
+  comment?: string
+}
+
+export interface UpdateReviewRequest {
+  stars?: number
+  comment?: string
+}

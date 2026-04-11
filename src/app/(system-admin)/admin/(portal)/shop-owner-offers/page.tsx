@@ -15,7 +15,6 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
   const page = Math.max(1, Number(sp.page ?? 1))
-  const q = sp.q ?? ''
 
   let data = { items: [] as Awaited<ReturnType<typeof getShopOwnerOffers>>['items'], total: 0, limit: LIMIT, offset: 0 }
   try {
@@ -32,11 +31,12 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
     {
       key: 'archived',
       label: tr.archived,
-      render: (v) => (
-        <span className={`text-xs font-medium ${v ? 'text-gray-400' : 'text-green-600'}`}>
-          {v ? 'Yes' : 'No'}
-        </span>
-      ),
+      boolDisplay: {
+        trueLabel: 'Yes',
+        falseLabel: 'No',
+        trueClass: 'text-gray-400',
+        falseClass: 'text-green-600',
+      },
     },
   ]
 
@@ -47,8 +47,8 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
       <EntityTable
         columns={columns}
         rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-        editHref={(id) => `/admin/shop-owner-offers/${id}/edit`}
-        deleteUrl={(id) => `/api/admin/shop-owner-offers/${id}`}
+        editHref="/admin/shop-owner-offers/{id}/edit"
+        deleteUrl="/api/admin/shop-owner-offers/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}
@@ -60,7 +60,6 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
         page={page}
         limit={LIMIT}
         baseHref="/admin/shop-owner-offers"
-        searchQ={q || undefined}
       />
     </div>
   )

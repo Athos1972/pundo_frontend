@@ -24,6 +24,15 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
     data = await getCategories({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
 
+  // Pre-process for table view: use translated name or external_id as display name
+  const tableRows = data.items.map((c) => ({
+    id: c.id,
+    name: c.name ?? c.external_id,
+    parent_id: c.parent_id ?? '—',
+    level: c.level ?? '—',
+    taxonomy_type: c.taxonomy_type,
+  }))
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
@@ -74,11 +83,10 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
             { key: 'parent_id', label: tr.parent_category },
             { key: 'level', label: tr.level },
             { key: 'taxonomy_type', label: tr.taxonomy_type },
-            { key: 'child_count', label: tr.child_count },
           ]}
-          rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
-          editHref={(id) => `/admin/categories/${id}/edit`}
-          deleteUrl={(id) => `/api/admin/categories/${id}`}
+          rows={tableRows as unknown as Array<Record<string, unknown> & { id: number }>}
+          editHref="/admin/categories/{id}/edit"
+          deleteUrl="/api/admin/categories/{id}"
           deleteLabel={tr.delete}
           editLabel={tr.edit}
           confirmMessage={tr.confirm_delete}

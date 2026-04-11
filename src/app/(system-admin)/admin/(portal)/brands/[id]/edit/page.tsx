@@ -17,7 +17,7 @@ export default async function EditBrandPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_brands} — {brand.name}</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_brands} — {brand.names?.['en'] ?? brand.slug}</h1>
       <BrandForm brand={brand} tr={tr} />
     </div>
   )

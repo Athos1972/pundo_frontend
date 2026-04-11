@@ -9,6 +9,7 @@ import type {
   SysAdminCategory,
   SysAdminBrand,
 } from '@/types/system-admin'
+import { pickName } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { ProductAttributesTable } from './ProductAttributesTable'
@@ -27,7 +28,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
   const [isPending, startTransition] = useTransition()
   const isEdit = product != null
 
-  const [name, setName] = useState(product?.name ?? '')
+  const [name, setName] = useState(pickName(product?.names, ''))
   const [slug, setSlug] = useState(product?.slug ?? '')
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ''))
   const [brandId, setBrandId] = useState(String(product?.brand_id ?? ''))
@@ -46,7 +47,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
     if (!validate()) return
 
     const payload = {
-      name: name.trim(),
+      names: { en: name.trim() },
       slug: slug.trim(),
       category_id: categoryId ? Number(categoryId) : null,
       brand_id: brandId ? Number(brandId) : null,
@@ -107,7 +108,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
         >
           <option value="">{tr.none}</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>{c.name ?? c.external_id}</option>
           ))}
         </FormField>
 
@@ -121,7 +122,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
         >
           <option value="">{tr.none}</option>
           {brands.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
+            <option key={b.id} value={b.id}>{pickName(b.names)}</option>
           ))}
         </FormField>
       </div>

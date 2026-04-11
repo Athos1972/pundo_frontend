@@ -8,19 +8,24 @@ import { AttributeDefinitionEditor } from '@/components/system-admin/AttributeDe
 import { showToast } from '@/components/system-admin/Toast'
 import { useTransition } from 'react'
 
-type AttrType = 'text' | 'number' | 'bool' | 'select'
-
 export default function NewCategoryAttrDefPage() {
   const params = useParams()
   const categoryId = params.categoryId as string
   const router = useRouter()
   const tr = tSysAdmin(getLangFromCookie())
   const [isPending, startTransition] = useTransition()
-  const [def, setDef] = useState({
-    key: '',
-    label: '',
-    type: 'text' as AttrType,
-    options: null as string[] | null,
+  const [def, setDef] = useState<import('@/components/system-admin/AttributeDefinitionEditor').AttrDefDraft>({
+    attribute_key: '',
+    attribute_type: 'text',
+    allowed_values: null,
+    unit: null,
+    is_filterable: false,
+    display_order: 0,
+    override_mode: 'merge',
+    labels: {},
+    value_labels: null,
+    created_at: '',
+    updated_at: '',
   })
 
   function handleSubmit(e: React.FormEvent) {

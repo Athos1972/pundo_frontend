@@ -10,14 +10,36 @@ import { showToast } from './Toast'
 export interface Column {
   key: string
   label: string
-  render?: (value: unknown, row: Record<string, unknown> & { id: number }) => React.ReactNode
+  /**
+   * Serializable rendering options — use instead of a render function so that
+   * columns can be defined in Server Components without crossing the SC→CC boundary.
+   */
+  /** Render value as a colored badge. Map value string → Tailwind class string. */
+  badgeColors?: Record<string, string>
+  /** Render boolean value with custom labels and colors. */
+  boolDisplay?: {
+    trueLabel: string
+    falseLabel: string
+    trueClass: string
+    falseClass: string
+  }
+  /** Render string value as <img src={value}> thumbnail. */
+  isImage?: boolean
 }
 
 interface EntityTableProps {
   columns: Column[]
   rows: Array<Record<string, unknown> & { id: number }>
-  editHref?: (id: number) => string
-  deleteUrl?: (id: number) => string
+  /**
+   * URL template for edit links. Use `{id}` as placeholder.
+   * Example: "/admin/shops/{id}/edit"
+   */
+  editHref?: string
+  /**
+   * URL template for DELETE requests. Use `{id}` as placeholder.
+   * Example: "/api/admin/shops/{id}"
+   */
+  deleteUrl?: string
   /** Use for non-standard delete labels like "Revoke" */
   deleteLabel: string
   editLabel: string
@@ -33,6 +55,35 @@ interface EntityTableProps {
   /** Base URL without query params, used to build pagination links */
   baseHref: string
   searchQ?: string
+}
+
+function resolveTemplate(template: string, id: number): string {
+  return template.replace('{id}', String(id))
+}
+
+function renderCell(col: Column, value: unknown): React.ReactNode {
+  if (col.isImage) {
+    return value
+      ? <img src={String(value)} alt="" className="w-8 h-8 object-contain rounded bg-gray-50 border border-gray-200 p-0.5" />
+      : <span className="text-gray-400">—</span>
+  }
+  if (col.badgeColors) {
+    const val = String(value ?? '')
+    return (
+      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${col.badgeColors[val] ?? 'bg-gray-100 text-gray-600'}`}>
+        {val}
+      </span>
+    )
+  }
+  if (col.boolDisplay) {
+    const isTrue = Boolean(value)
+    return (
+      <span className={`text-xs font-medium ${isTrue ? col.boolDisplay.trueClass : col.boolDisplay.falseClass}`}>
+        {isTrue ? col.boolDisplay.trueLabel : col.boolDisplay.falseLabel}
+      </span>
+    )
+  }
+  return String(value ?? '—')
 }
 
 export function EntityTable({
@@ -67,13 +118,9 @@ export function EntityTable({
     return `${baseHref}?${qs.toString()}`
   }
 
-  function handleDeleteClick(id: number) {
-    setConfirmId(id)
-  }
-
   function handleDeleteConfirm() {
     if (confirmId == null || !deleteUrl) return
-    const url = deleteUrl(confirmId)
+    const url = resolveTemplate(deleteUrl, confirmId)
     startTransition(async () => {
       try {
         const res = await fetch(url, { method: 'DELETE' })
@@ -110,9 +157,9 @@ export function EntityTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {columns.map((col) => (
+                {columns.map((col, i) => (
                   <th
-                    key={col.key}
+                    key={`${col.key}-${i}`}
                     className="px-4 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wide"
                   >
                     {col.label}
@@ -128,11 +175,9 @@ export function EntityTable({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3 text-gray-700">
-                      {col.render
-                        ? col.render(row[col.key], row)
-                        : String(row[col.key] ?? '—')}
+                  {columns.map((col, i) => (
+                    <td key={`${col.key}-${i}`} className="px-4 py-3 text-gray-700">
+                      {renderCell(col, row[col.key])}
                     </td>
                   ))}
                   {hasActions && (
@@ -140,7 +185,7 @@ export function EntityTable({
                       <div className="flex items-center gap-2">
                         {editHref && (
                           <Link
-                            href={editHref(row.id)}
+                            href={resolveTemplate(editHref, row.id)}
                             className="text-xs font-medium text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline"
                           >
                             {editLabel}
@@ -149,7 +194,7 @@ export function EntityTable({
                         {deleteUrl && (
                           <button
                             type="button"
-                            onClick={() => handleDeleteClick(row.id)}
+                            onClick={() => setConfirmId(row.id)}
                             disabled={isPending}
                             className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
                           >

@@ -25,7 +25,7 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
   return (
     <div className="relative bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
-        <div className="w-14 h-14 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
+        <div className="w-20 h-20 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
           {imgSrc && (
             // eslint-disable-next-line @next/next/no-img-element
             <img

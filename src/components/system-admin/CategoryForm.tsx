@@ -25,7 +25,8 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
   const [isPending, startTransition] = useTransition()
   const isEdit = category != null
 
-  const [name, setName] = useState(category?.name ?? '')
+  // external_id is the human-editable key for categories
+  const [externalId, setExternalId] = useState(category?.external_id ?? '')
   const [parentId, setParentId] = useState(String(category?.parent_id ?? ''))
   const [taxonomyType, setTaxonomyType] = useState(category?.taxonomy_type ?? 'product')
   const [translations, setTranslations] = useState<SysAdminCategoryTranslation[]>(initTr)
@@ -33,21 +34,21 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!name.trim()) e.name = 'Name is required'
+    if (!externalId.trim()) e.external_id = 'External ID is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   function updateTranslation(lang: string, field: 'name' | 'rtl', value: string | boolean) {
     setTranslations((prev) => {
-      const existing = prev.find((t) => t.language === lang)
+      const existing = prev.find((t) => t.lang === lang)
       if (existing) {
-        return prev.map((t) => t.language === lang ? { ...t, [field]: value } : t)
+        return prev.map((t) => t.lang === lang ? { ...t, [field]: value } : t)
       }
       return [...prev, {
         id: -Date.now(),
         category_id: category?.id ?? 0,
-        language: lang,
+        lang,
         name: '',
         rtl: false,
         [field]: value,
@@ -60,7 +61,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
     if (!validate()) return
 
     const payload = {
-      name: name.trim(),
+      external_id: externalId.trim(),
       parent_id: parentId ? Number(parentId) : null,
       taxonomy_type: taxonomyType,
     }
@@ -83,7 +84,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
         if (isEdit) {
           const trPayload = translations
             .filter((t) => t.name.trim())
-            .map(({ language, name: tName, rtl }) => ({ language, name: tName, rtl }))
+            .map(({ lang, name: tName, rtl }) => ({ lang, name: tName, rtl }))
 
           await fetch(`/api/admin/categories/${category.id}/translations`, {
             method: 'PUT',
@@ -103,13 +104,14 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
       <FormField
-        label={tr.name}
-        name="name"
+        label="External ID"
+        name="external_id"
         required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={errors.name}
+        value={externalId}
+        onChange={(e) => setExternalId(e.target.value)}
+        error={errors.external_id}
         disabled={isPending}
+        hint="Unique identifier, e.g. Google taxonomy ID or UNSPSC code"
       />
 
       <div className="grid grid-cols-2 gap-4">
@@ -125,7 +127,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
           {allCategories
             .filter((c) => c.id !== category?.id)
             .map((c) => (
-              <option key={c.id} value={c.id}>{c.name} (L{c.level})</option>
+              <option key={c.id} value={c.id}>{c.name ?? c.external_id} ({c.level})</option>
             ))}
         </FormField>
 
@@ -152,7 +154,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, tr
               </thead>
               <tbody>
                 {LANGUAGES.map((lang) => {
-                  const t = translations.find((x) => x.language === lang)
+                  const t = translations.find((x) => x.lang === lang)
                   return (
                     <tr key={lang} className="border-b border-gray-100 last:border-0">
                       <td className="px-3 py-2 font-mono text-xs text-gray-500 uppercase">{lang}</td>

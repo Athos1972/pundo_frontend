@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
-import { formatCrawledAt, formatPriceOrLabel, toRelativeImageUrl } from '@/lib/utils'
+import { formatPriceOrLabel, toRelativeImageUrl } from '@/lib/utils'
 
 function resolveImgSrc(item: ProductListItem): string | null {
   // Prefer relative path from images[] to avoid localhost URLs that break on mobile
@@ -23,48 +23,43 @@ export function ProductCard({ item, lang }: { item: ProductListItem; lang: strin
     : null
 
   return (
-    <div className="relative bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors">
-      <div className="flex items-start gap-3">
-        <div className="w-20 h-20 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
-          {imgSrc && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imgSrc}
-              alt=""
-              className="w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-text text-sm leading-tight truncate" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
-            {/* Stretched link covers the whole card */}
-            <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
-              {item.name ?? '—'}
-            </Link>
-          </p>
-          {item.brand && <p className="text-xs text-text-muted mt-0.5">{item.brand}</p>}
-          {offer && priceLabel && (
-            <div className="relative z-10 flex items-center gap-2 mt-1.5">
-              <span className={`font-bold text-sm ${priceLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
-                {priceLabel.display}
-              </span>
-              {offer.shop_slug
-                ? <Link href={`/shops/${offer.shop_slug}`} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
-                : <span className="text-xs text-accent truncate">{offer.shop_name}</span>
-              }
-              {offer.is_available && (
-                <span className="text-xs px-1.5 py-0.5 bg-success/10 text-success rounded-full">{tr.available}</span>
-              )}
-              {offer.delivery_available && (
-                <span className="text-xs px-1.5 py-0.5 bg-accent/10 text-accent rounded-full rtl:mr-0 rtl:ml-1">{tr.delivery_available}</span>
-              )}
-            </div>
-          )}
-          {offer && (
-            <p className="text-xs text-text-light mt-0.5">{tr.last_checked}: {formatCrawledAt(offer.crawled_at, lang)}</p>
-          )}
-        </div>
+    <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors">
+      {/* Image — primary visual element, full card width */}
+      <div className="w-full h-40 bg-surface-alt flex items-center justify-center overflow-hidden">
+        {imgSrc && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imgSrc}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+          />
+        )}
+      </div>
+
+      {/* Text content below the image */}
+      <div className="p-3">
+        <p className="font-bold text-text text-sm leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
+          {/* Stretched link covers the whole card */}
+          <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
+            {item.name ?? '—'}
+          </Link>
+        </p>
+        {item.brand && <p className="text-xs text-text-muted mt-0.5">{item.brand}</p>}
+        {offer && priceLabel && (
+          <div className="relative z-10 flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className={`font-bold text-sm ${priceLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
+              {priceLabel.display}
+            </span>
+            {offer.shop_slug
+              ? <Link href={`/shops/${offer.shop_slug}`} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
+              : <span className="text-xs text-accent truncate">{offer.shop_name}</span>
+            }
+            {offer.delivery_available && (
+              <span className="text-xs px-1.5 py-0.5 bg-accent/10 text-accent rounded-full rtl:mr-0 rtl:ml-1">{tr.delivery_available}</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

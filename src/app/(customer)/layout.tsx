@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk, DM_Sans } from 'next/font/google'
+import Script from 'next/script'
 import '../globals.css'
 import { getLangServer, isRTL } from '@/lib/lang'
 import { SplashScreen } from '@/components/ui/SplashScreen'
+import { SessionProvider } from '@/components/auth/SessionProvider'
+import { getCustomerSession } from '@/lib/customer-api'
+import { Footer } from '@/components/layout/Footer'
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-heading' })
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-sans' })
@@ -23,12 +27,24 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = await getLangServer()
   const dir = isRTL(lang) ? 'rtl' : 'ltr'
+  const session = await getCustomerSession(lang)
 
   return (
     <html lang={lang} dir={dir}>
       <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
+        {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
+          <Script
+            defer
+            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.js"
+            strategy="afterInteractive"
+          />
+        )}
         <SplashScreen />
-        {children}
+        <SessionProvider initialSession={session}>
+          {children}
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   )

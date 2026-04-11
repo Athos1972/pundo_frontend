@@ -1,10 +1,17 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-10
-Ergebnis: 285 Unit-Tests (12 Suites) bestanden. E2E (main.spec.ts) braucht laufendes Backend — manuell ausführen wenn Backend bereit.
+Datum: 2026-04-11
+Ergebnis: 341 Unit-Tests (16 Suites) bestanden. E2E (main.spec.ts) braucht laufendes Backend — manuell ausführen wenn Backend bereit.
 
-### System-Admin UI (neues Feature, dieser Lauf)
+### Karten-Routing-Links (neues Feature, dieser Lauf)
+- Leaflet-Popup erweitert: Shop-Name + „Get directions"-Label + 3 Links (Google Maps, Apple Maps, Waze)
+- `ShopMap.tsx`: `lang`-Prop von `string` auf `Lang` getypt, `isRTL` für Popup-`dir` genutzt
+- `translations.ts`: `show_route` in 6 Sprachen aktualisiert (Pfeil-Zeichen entfernt)
+- Visuell verifiziert im Preview-Browser: Popup mit korrekten URLs (34.9817944,33.6581987) ✓
+- E2E-08 Karten-Routing-Links: 3 Tests geschrieben — werden beim nächsten vollständigen E2E-Lauf ausgeführt
+
+### System-Admin UI (vorheriger Lauf)
 - 29 neue Admin-Routen kompiliert (Build: PASS)
 - Auth-Guard verifiziert: `/admin/dashboard` → redirect zu `/admin/login` ✓
 - Login-Seite rendert korrekt, kein JS-Fehler ✓
@@ -16,7 +23,7 @@ Ergebnis: 285 Unit-Tests (12 Suites) bestanden. E2E (main.spec.ts) braucht laufe
 | Prüfung | Status |
 |---------|--------|
 | TypeScript | PASS (0 Fehler) |
-| ESLint | PASS (0 Errors, 9 pre-existing Warnings) |
+| ESLint | PASS (0 Errors, 19 pre-existing Warnings) |
 
 **Verbleibende ESLint Warnings (pre-existing, kein Blocker):**
 - `CategoryChips.tsx`, `ShopCard.tsx`: `_lang` unused (intentional, `_`-prefix)
@@ -80,7 +87,7 @@ Ergebnis: 285 Unit-Tests (12 Suites) bestanden. E2E (main.spec.ts) braucht laufe
 
 ### E2E-Test Struktur
 
-#### `e2e/main.spec.ts` — Customer-Facing (26 Tests)
+#### `e2e/main.spec.ts` — Customer-Facing (29 Tests)
 | Test | Status | Details |
 |------|--------|---------|
 | E2E-01 Startseite | **PASS** | HTTP 200, Suchfeld sichtbar, 0 JS-Fehler |
@@ -92,6 +99,7 @@ Ergebnis: 285 Unit-Tests (12 Suites) bestanden. E2E (main.spec.ts) braucht laufe
 | E2E-06 Responsive Mobile | **PASS** | Kein horizontaler Scroll bei 390px, Input min 36px hoch |
 | E2E-07 Auth Redirect | **PASS** | Unauthenticated → redirect zu /shop-admin/login; Login/Register-Seiten laden |
 | E2E-07b Fehler-Handling | **PASS** | Unbekannte Route → 404 |
+| E2E-08 Karten-Routing-Links | **AUSSTEHEND** | 3 Tests geschrieben; brauchen vollständigen E2E-Build (Port 3002). Visuell verifiziert im Preview ✓ |
 
 #### `e2e/shop-admin-e2e.spec.ts` — Shop-Admin Portal
 Voraussetzung: Backend auf Port 8001 mit `pundo_test` DB + `globalSetup` durchgelaufen
@@ -131,3 +139,4 @@ Nicht Teil dieses Laufs — erfordert Geocoding API.
 | KI-002 | Shop-Admin E2E und Shop-Discovery E2E erfordern laufendes Backend auf Port 8001 | 2026-04-09 |
 | KI-003 | Leaflet/Map (`ShopMapClient.tsx`) hat 0% Unit-Test-Coverage — nur in Browser testbar | 2026-04-09 |
 | KI-005 | Hydration-Warnings auf Dev-Server (port 3001) bei RTL-Cookie-Seiten und Search — kein Bug in Production-Build | 2026-04-10 |
+| KI-006 | E2E-08 Karten-Routing-Links: `globalSetup` schlägt fehl mit `ECONNREFUSED ::1:3002` wenn `standalone`-Build nicht vorhanden — `npm run build` nötig vor E2E | 2026-04-11 |

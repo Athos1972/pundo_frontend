@@ -1,5 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
+import type { Lang } from '@/lib/lang'
 
 const ShopMap = dynamic(() => import('./ShopMap').then(m => ({ default: m.ShopMap })), {
   ssr: false,
@@ -18,7 +19,7 @@ interface ShopMapClientProps {
   className?: string
   center?: [number, number]
   zoom?: number
-  lang?: string
+  lang?: Lang
 }
 
 export function ShopMapClient(props: ShopMapClientProps) {

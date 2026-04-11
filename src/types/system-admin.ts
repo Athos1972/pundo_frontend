@@ -55,7 +55,14 @@ export interface SysAdminShop {
   email?: string | null
   website_url: string | null
   webshop_url?: string | null
+  social_links?: Record<string, string> | null
   opening_hours: OpeningHoursMap | null
+  delivery_services?: unknown[] | null
+  has_parking?: boolean | null
+  has_own_delivery?: boolean | null
+  is_online_only: boolean
+  sells_live_animals?: boolean | null
+  images?: unknown[] | null
   shop_type_id: number | null
   source?: string | null
   created_at: string
@@ -169,6 +176,7 @@ export interface SysAdminOffer {
   sku: string | null
   url: string | null
   image_url?: string | null
+  crawled_at: string
 }
 
 // ─── Shop-Owner Offers ─────────────────────────────────────────────────────────

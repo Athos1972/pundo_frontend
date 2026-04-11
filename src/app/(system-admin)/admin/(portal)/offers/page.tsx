@@ -9,7 +9,7 @@ import type { Column } from '@/components/system-admin/EntityTable'
 const LIMIT = 20
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; q?: string }>
+  searchParams: Promise<{ page?: string; q?: string; shop_id?: string; product_id?: string }>
 }
 
 export default async function OffersPage({ searchParams }: PageProps) {
@@ -17,9 +17,18 @@ export default async function OffersPage({ searchParams }: PageProps) {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
   const page = Math.max(1, Number(sp.page ?? 1))
+  const q = sp.q ?? ''
+  const shopIdQ = sp.shop_id ?? ''
+  const productIdQ = sp.product_id ?? ''
 
   const [data, shops, products] = await Promise.all([
-    getOffers({ limit: LIMIT, offset: (page - 1) * LIMIT }).catch(() => ({
+    getOffers({
+      q: q || undefined,
+      shop_id: shopIdQ ? Number(shopIdQ) : undefined,
+      product_id: productIdQ ? Number(productIdQ) : undefined,
+      limit: LIMIT,
+      offset: (page - 1) * LIMIT,
+    }).catch(() => ({
       items: [] as Awaited<ReturnType<typeof getOffers>>['items'],
       total: 0,
       limit: LIMIT,
@@ -72,6 +81,55 @@ export default async function OffersPage({ searchParams }: PageProps) {
           + {tr.add_new}
         </Link>
       </div>
+
+      <form method="GET" className="flex gap-2 flex-wrap items-end">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">{tr.product}</label>
+          <div className="flex gap-1">
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder={tr.search_product}
+              className="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-slate-600"
+            />
+            <input
+              name="product_id"
+              defaultValue={productIdQ}
+              placeholder="ID"
+              type="number"
+              min="1"
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-slate-600"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">{tr.shop}</label>
+          <div className="flex gap-1">
+            <input
+              name="shop_id"
+              defaultValue={shopIdQ}
+              placeholder="ID"
+              type="number"
+              min="1"
+              className="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm
+                focus:outline-none focus:ring-2 focus:ring-slate-600"
+            />
+          </div>
+        </div>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 rounded-lg"
+        >
+          ↵
+        </button>
+        {(q || shopIdQ || productIdQ) && (
+          <a href="/admin/offers" className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
+            {tr.clear}
+          </a>
+        )}
+      </form>
 
       <EntityTable
         columns={columns}

@@ -355,3 +355,239 @@ describe('system-admin FormField', () => {
     expect(screen.getByRole('combobox')).toBeDefined()
   })
 })
+
+// ─── Combobox ─────────────────────────────────────────────────────────────────
+
+import { Combobox } from '@/components/system-admin/Combobox'
+import type { ComboboxItem } from '@/components/system-admin/Combobox'
+
+const ITEMS: ComboboxItem[] = [
+  { value: '1', label: 'Cat Food', subLabel: 'pets/cat-food' },
+  { value: '2', label: 'Catering', subLabel: 'services/catering' },
+  { value: '3', label: 'Dog Food', subLabel: 'pets/dog-food' },
+  { value: '4', label: 'Birds', subLabel: 'pets/birds' },
+]
+
+describe('Combobox', () => {
+  it('renders trigger button with placeholder when no value', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} placeholder="Select…" />)
+    expect(screen.getByText('Select…')).toBeDefined()
+  })
+
+  it('shows selected label when value is set', () => {
+    render(<Combobox items={ITEMS} value="1" onChange={vi.fn()} placeholder="Select…" />)
+    expect(screen.getByText('Cat Food')).toBeDefined()
+  })
+
+  it('opens dropdown on button click', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    const btn = screen.getByRole('button')
+    fireEvent.click(btn)
+    expect(screen.getByRole('listbox')).toBeDefined()
+    expect(screen.getByText('Cat Food')).toBeDefined()
+    expect(screen.getByText('Catering')).toBeDefined()
+  })
+
+  it('calls onChange when item is clicked', () => {
+    const onChange = vi.fn()
+    render(<Combobox items={ITEMS} value="" onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByText('Cat Food'))
+    expect(onChange).toHaveBeenCalledWith('1')
+  })
+
+  it('filters items by startsWith first', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'cat' } })
+    const listItems = screen.getAllByRole('option')
+    // "Cat Food" (startsWith) should appear before "Catering" (startsWith too, but alphabetically Cat < Cat)
+    // Both start with "cat" — Cat Food and Catering both match startsWith — order is exact > startsWith
+    expect(listItems.length).toBeGreaterThanOrEqual(2)
+    // "Cat Food" must be in results
+    const labels = listItems.map((li) => li.textContent ?? '')
+    expect(labels.some((l) => l.includes('Cat Food'))).toBe(true)
+    expect(labels.some((l) => l.includes('Catering'))).toBe(true)
+  })
+
+  it('filters by subLabel when label does not match', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button'))
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'pets' } })
+    const listItems = screen.getAllByRole('option')
+    // pets matches subLabel of Cat Food, Dog Food, Birds
+    expect(listItems.length).toBe(3)
+  })
+
+  it('shows subLabel in dropdown', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByText('pets/cat-food')).toBeDefined()
+  })
+
+  it('shows no-results message when filter matches nothing', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button'))
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'xyzxyz' } })
+    expect(screen.getByText(/No results/)).toBeDefined()
+  })
+
+  it('clears selection when clear button clicked', () => {
+    const onChange = vi.fn()
+    render(<Combobox items={ITEMS} value="1" onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button'))
+    // Clear button appears since value is set
+    const clearBtn = screen.getByText('✕')
+    fireEvent.click(clearBtn)
+    expect(onChange).toHaveBeenCalledWith('')
+  })
+
+  it('is disabled when disabled=true', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} disabled />)
+    expect(screen.getByRole('button')).toBeDisabled()
+  })
+
+  it('opens on ArrowDown keydown when closed', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    const container = screen.getByRole('button').parentElement!
+    fireEvent.keyDown(container, { key: 'ArrowDown' })
+    expect(screen.getByRole('listbox')).toBeDefined()
+  })
+
+  it('opens on Enter keydown when closed', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    const container = screen.getByRole('button').parentElement!
+    fireEvent.keyDown(container, { key: 'Enter' })
+    expect(screen.getByRole('listbox')).toBeDefined()
+  })
+
+  it('closes on Escape when open', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByRole('listbox')).toBeDefined()
+    const container = screen.getByRole('button').parentElement!
+    fireEvent.keyDown(container, { key: 'Escape' })
+    expect(screen.queryByRole('listbox')).toBeNull()
+  })
+
+  it('navigates with ArrowDown/Up and selects with Enter', () => {
+    const onChange = vi.fn()
+    render(<Combobox items={ITEMS} value="" onChange={onChange} />)
+    fireEvent.click(screen.getByRole('button'))
+    const container = screen.getByRole('button').parentElement!
+    // ArrowDown twice → index 1
+    fireEvent.keyDown(container, { key: 'ArrowDown' })
+    fireEvent.keyDown(container, { key: 'ArrowDown' })
+    // ArrowUp once → back to index 1 (was 2, now 1)
+    fireEvent.keyDown(container, { key: 'ArrowUp' })
+    // Enter selects current item (index 1 after sort = second item alphabetically)
+    fireEvent.keyDown(container, { key: 'Enter' })
+    expect(onChange).toHaveBeenCalled()
+  })
+
+  it('renders hidden input when name prop is provided', () => {
+    const { container } = render(<Combobox items={ITEMS} value="1" onChange={vi.fn()} name="cat_id" />)
+    const hidden = container.querySelector('input[type="hidden"]')
+    expect(hidden).not.toBeNull()
+    expect((hidden as HTMLInputElement).name).toBe('cat_id')
+    expect((hidden as HTMLInputElement).value).toBe('1')
+  })
+
+  it('ignores unrelated key presses when closed', () => {
+    render(<Combobox items={ITEMS} value="" onChange={vi.fn()} />)
+    const container = screen.getByRole('button').parentElement!
+    // Tab/other keys should NOT open the dropdown
+    fireEvent.keyDown(container, { key: 'Tab' })
+    expect(screen.queryByRole('listbox')).toBeNull()
+  })
+})
+
+// ─── CategoryTreeView ────────────────────────────────────────────────────────
+
+import { CategoryTreeView } from '@/components/system-admin/CategoryTreeView'
+import type { SysAdminCategory } from '@/types/system-admin'
+
+const CATS: SysAdminCategory[] = [
+  { id: 1, parent_id: null, taxonomy_type: 'product', external_id: 'pets', level: '1', path: null, name: 'Pets' },
+  { id: 2, parent_id: 1, taxonomy_type: 'product', external_id: 'cat-food', level: '2', path: null, name: 'Cat Food' },
+  { id: 3, parent_id: 1, taxonomy_type: 'product', external_id: 'dog-food', level: '2', path: null, name: 'Dog Food' },
+  { id: 4, parent_id: null, taxonomy_type: 'service', external_id: 'grooming', level: '1', path: null, name: null },
+]
+
+describe('CategoryTreeView', () => {
+  it('renders root-level nodes', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    expect(screen.getByText('Pets')).toBeDefined()
+  })
+
+  it('falls back to external_id when name is null', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    // name is null → shows external_id as the bold label (may appear multiple times with mono span)
+    expect(screen.getAllByText('grooming').length).toBeGreaterThan(0)
+  })
+
+  it('shows taxonomy_type badge', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    // taxonomy_type badges shown for each root node
+    expect(screen.getAllByText('product').length).toBeGreaterThan(0)
+    expect(screen.getByText('service')).toBeDefined()
+  })
+
+  it('top-level nodes with children are expanded by default', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    // Children of 'Pets' (id=1) should be visible by default
+    expect(screen.getByText('Cat Food')).toBeDefined()
+    expect(screen.getByText('Dog Food')).toBeDefined()
+  })
+
+  it('collapses children when toggle is clicked', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    // 'Pets' row has a ▾ toggle button
+    const toggleBtns = screen.getAllByRole('button', { name: /Collapse/i })
+    expect(toggleBtns.length).toBeGreaterThan(0)
+    fireEvent.click(toggleBtns[0])
+    // After collapse, children should no longer be visible
+    expect(screen.queryByText('Cat Food')).toBeNull()
+  })
+
+  it('shows no categories message when list is empty', () => {
+    render(<CategoryTreeView categories={[]} editLabel="Edit" />)
+    expect(screen.getByText(/No categories/)).toBeDefined()
+  })
+
+  it('renders edit links for each node', () => {
+    render(<CategoryTreeView categories={CATS} editLabel="Edit" />)
+    const editLinks = screen.getAllByText('Edit')
+    expect(editLinks.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('renders expand/collapse all controls', () => {
+    render(
+      <CategoryTreeView
+        categories={CATS}
+        editLabel="Edit"
+        expandAllLabel="Expand all"
+        collapseAllLabel="Collapse all"
+      />,
+    )
+    expect(screen.getByText('Expand all')).toBeDefined()
+    expect(screen.getByText('Collapse all')).toBeDefined()
+  })
+
+  it('collapses all nodes when collapse-all clicked', () => {
+    render(
+      <CategoryTreeView
+        categories={CATS}
+        editLabel="Edit"
+        expandAllLabel="Expand all"
+        collapseAllLabel="Collapse all"
+      />,
+    )
+    // Children visible initially
+    expect(screen.getByText('Cat Food')).toBeDefined()
+    fireEvent.click(screen.getByText('Collapse all'))
+    expect(screen.queryByText('Cat Food')).toBeNull()
+  })
+})

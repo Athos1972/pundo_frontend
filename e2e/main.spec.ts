@@ -278,3 +278,158 @@ test.describe('E2E-07b: Fehler-Handling', () => {
     expect(response?.status()).toBe(404)
   })
 })
+
+// ─── E2E-09: Customer Auth Pages ─────────────────────────────────────────────
+
+test.describe('E2E-09: Customer Auth Pages', () => {
+  test('unauthenticated /account redirects to /auth/login', async ({ page }) => {
+    // No customer_token cookie → should redirect
+    await page.goto('/account')
+    await expect(page).toHaveURL(/\/auth\/login/)
+  })
+
+  test('login page renders email and password fields', async ({ page }) => {
+    const response = await page.goto('/auth/login')
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('input[type="email"]')).toBeVisible()
+    await expect(page.locator('input[type="password"]')).toBeVisible()
+  })
+
+  test('signup page renders required fields', async ({ page }) => {
+    const response = await page.goto('/auth/signup')
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('input[type="email"]')).toBeVisible()
+    await expect(page.locator('input[type="password"]')).toBeVisible()
+  })
+
+  test('verify-email without params redirects to signup', async ({ page }) => {
+    await page.goto('/auth/verify-email')
+    // No email param → redirect to signup
+    await expect(page).toHaveURL(/\/auth\/signup/)
+  })
+
+  test('login page RTL (Arabic)', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'pundo_lang', value: 'ar', domain: 'localhost', path: '/',
+    }])
+    await page.goto('/auth/login')
+    const dir = await page.locator('html').getAttribute('dir')
+    expect(dir).toBe('rtl')
+  })
+
+  test('no JS errors on login page', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
+    await page.goto('/auth/login')
+    await page.waitForLoadState('networkidle')
+    expect(errors).toHaveLength(0)
+  })
+
+  test('no JS errors on signup page', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
+    await page.goto('/auth/signup')
+    await page.waitForLoadState('networkidle')
+    expect(errors).toHaveLength(0)
+  })
+})
+
+// ─── E2E-10: Review Section on Product/Shop Pages ────────────────────────────
+
+test.describe('E2E-10: Review Section', () => {
+  const TEST_PRODUCT_SLUG = 'acana-acana-wild-prairie-cat-18kg'
+
+  test('product page renders without crash', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
+    await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    expect(errors).toHaveLength(0)
+  })
+
+  test('product page shows review section or login prompt', async ({ page }) => {
+    await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    // ReviewForm should be present (either login prompt or star input)
+    // The section container always renders even for unauthenticated users
+    const body = await page.content()
+    // Either star buttons or a login link/button must exist
+    const hasStars = await page.locator('[aria-label$="stars"]').count()
+    const hasLoginHint = body.includes('login') || body.includes('Login') || body.includes('anmelden') || body.includes('Anmelden')
+    expect(hasStars > 0 || hasLoginHint).toBe(true)
+  })
+
+  test('RTL: product page with Arabic sets dir=rtl', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'pundo_lang', value: 'ar', domain: 'localhost', path: '/',
+    }])
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+    })
+    await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    const dir = await page.locator('html').getAttribute('dir')
+    expect(dir).toBe('rtl')
+    expect(errors).toHaveLength(0)
+  })
+})
+
+test.describe('E2E-08: Karten-Routing-Links', () => {
+  test('map popup shows 3 routing links with correct URLs after clicking a pin', async ({ page }) => {
+    await page.goto('/search?q=cat')
+    // Switch to map view
+    await page.getByRole('button', { name: /map|karte/i }).click()
+    // Wait for Leaflet to load
+    await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
+    // Click first marker
+    await page.locator('.leaflet-marker-icon').first().click()
+    // Wait for popup
+    await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })
+
+    const links = page.locator('.leaflet-popup-content a')
+    await expect(links).toHaveCount(3)
+
+    const hrefs = await links.evaluateAll((els: HTMLAnchorElement[]) => els.map(e => e.href))
+    expect(hrefs[0]).toContain('google.com/maps/dir/')
+    expect(hrefs[0]).toContain('destination=')
+    expect(hrefs[1]).toContain('maps.apple.com')
+    expect(hrefs[1]).toContain('daddr=')
+    expect(hrefs[2]).toContain('waze.com/ul')
+    expect(hrefs[2]).toContain('navigate=yes')
+  })
+
+  test('routing links open in new tab (target=_blank)', async ({ page }) => {
+    await page.goto('/search?q=cat')
+    await page.getByRole('button', { name: /map|karte/i }).click()
+    await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
+    await page.locator('.leaflet-marker-icon').first().click()
+    await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })
+
+    const targets = await page.locator('.leaflet-popup-content a').evaluateAll(
+      (els: HTMLAnchorElement[]) => els.map(e => e.target)
+    )
+    expect(targets.every(t => t === '_blank')).toBe(true)
+  })
+
+  test('popup dir=rtl for Arabic lang', async ({ page }) => {
+    await page.goto('/search?q=cat')
+    await page.evaluate(() => {
+      document.cookie = 'pundo_lang=ar; path=/'
+    })
+    await page.reload()
+    await page.getByRole('button', { name: /خريطة|map/i }).click()
+    await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
+    await page.locator('.leaflet-marker-icon').first().click()
+    await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 })
+
+    const dir = await page.locator('.leaflet-popup-content div').first().getAttribute('dir')
+    expect(dir).toBe('rtl')
+  })
+})

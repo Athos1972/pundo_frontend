@@ -70,6 +70,7 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
     { href: '/shop-admin/offers', label: tr.nav_offers, icon: '🏷️' },
     { href: '/shop-admin/import', label: tr.nav_import, icon: '⬆' },
     { href: '/shop-admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },
+    { href: '/shop-admin/reviews', label: tr.nav_reviews, icon: '★' },
   ]
 
   const closeMobile = () => setMobileOpen(false)

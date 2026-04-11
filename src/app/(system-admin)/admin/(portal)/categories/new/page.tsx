@@ -11,7 +11,7 @@ export default async function NewCategoryPage() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-semibold text-gray-900">{tr.nav_categories} — {tr.add_new}</h1>
-      <CategoryForm category={null} allCategories={allCategories} translations={[]} tr={tr} />
+      <CategoryForm category={null} allCategories={allCategories} translations={[]} attrDefs={[]} tr={tr} />
     </div>
   )
 }

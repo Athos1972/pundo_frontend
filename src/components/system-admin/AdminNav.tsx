@@ -69,7 +69,6 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
     { href: '/admin/shop-owners', label: tr.nav_shop_owners, icon: '👤' },
     { href: '/admin/products', label: tr.nav_products, icon: '📦' },
     { href: '/admin/categories', label: tr.nav_categories, icon: '🗂' },
-    { href: '/admin/category-attribute-definitions', label: tr.nav_cat_attr_defs, icon: '📋' },
     { href: '/admin/brands', label: tr.nav_brands, icon: '✦' },
     { href: '/admin/offers', label: tr.nav_offers, icon: '💰' },
     { href: '/admin/shop-owner-offers', label: tr.nav_so_offers, icon: '🛍' },

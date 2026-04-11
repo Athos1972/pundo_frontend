@@ -33,6 +33,13 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [lat, setLat] = useState<number | null>(shop?.lat ?? null)
   const [lng, setLng] = useState<number | null>(shop?.lng ?? null)
   const [openingHours, setOpeningHours] = useState<OpeningHoursMap | null>(shop?.opening_hours ?? null)
+  const [email, setEmail] = useState(shop?.email ?? '')
+  const [webshopUrl, setWebshopUrl] = useState(shop?.webshop_url ?? '')
+  const [postalCode, setPostalCode] = useState(shop?.postal_code ?? '')
+  const [isOnlineOnly, setIsOnlineOnly] = useState(shop?.is_online_only ?? false)
+  const [hasParking, setHasParking] = useState(shop?.has_parking ?? false)
+  const [hasOwnDelivery, setHasOwnDelivery] = useState(shop?.has_own_delivery ?? false)
+  const [sellsLiveAnimals, setSellsLiveAnimals] = useState(shop?.sells_live_animals ?? false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function handleLocationChange(newLat: number, newLng: number) {
@@ -62,6 +69,13 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       lat: lat ?? null,
       lng: lng ?? null,
       opening_hours: openingHours,
+      email: email.trim() || null,
+      webshop_url: webshopUrl.trim() || null,
+      postal_code: postalCode.trim() || null,
+      is_online_only: isOnlineOnly,
+      has_parking: hasParking,
+      has_own_delivery: hasOwnDelivery,
+      sells_live_animals: sellsLiveAnimals,
     }
 
     startTransition(async () => {
@@ -135,6 +149,25 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <FormField
+          label={tr.shop_email}
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isPending}
+        />
+        <FormField
+          label={tr.webshop_url}
+          name="webshop_url"
+          type="url"
+          value={webshopUrl}
+          onChange={(e) => setWebshopUrl(e.target.value)}
+          disabled={isPending}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
           as="select"
           label={tr.status}
           name="status"
@@ -160,6 +193,37 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
             <option key={st.id} value={st.id}>{st.name ?? st.canonical}</option>
           ))}
         </FormField>
+      </div>
+
+      <FormField
+        label={tr.postal_code}
+        name="postal_code"
+        value={postalCode}
+        onChange={(e) => setPostalCode(e.target.value)}
+        disabled={isPending}
+      />
+
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-700">Options</span>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: tr.is_online_only, checked: isOnlineOnly, onChange: setIsOnlineOnly },
+            { label: tr.has_parking, checked: hasParking, onChange: setHasParking },
+            { label: tr.has_own_delivery, checked: hasOwnDelivery, onChange: setHasOwnDelivery },
+            { label: tr.sells_live_animals, checked: sellsLiveAnimals, onChange: setSellsLiveAnimals },
+          ].map(({ label, checked, onChange }) => (
+            <label key={label} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                disabled={isPending}
+                className="rounded border-gray-300 text-slate-700 focus:ring-slate-600"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

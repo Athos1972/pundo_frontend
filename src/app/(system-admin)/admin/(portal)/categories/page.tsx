@@ -8,7 +8,7 @@ import { EntityTable } from '@/components/system-admin/EntityTable'
 const LIMIT = 50
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; q?: string; view?: string }>
+  searchParams: Promise<{ page?: string; q?: string; id?: string; taxonomy_type?: string; view?: string }>
 }
 
 export default async function CategoriesPage({ searchParams }: PageProps) {
@@ -17,12 +17,22 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
   const tr = tSysAdmin(lang)
   const page = Math.max(1, Number(sp.page ?? 1))
   const q = sp.q ?? ''
+  const idQ = sp.id ?? ''
+  const taxonomyType = sp.taxonomy_type ?? ''
   const view = sp.view ?? 'tree'
 
   let data = { items: [] as Awaited<ReturnType<typeof getCategories>>['items'], total: 0, limit: LIMIT, offset: 0 }
   try {
-    data = await getCategories({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
+    data = await getCategories({ q: q || undefined, id: idQ ? Number(idQ) : undefined, taxonomy_type: taxonomyType || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
+
+  let allCategoriesForTree: Awaited<ReturnType<typeof getCategories>>['items'] = []
+  if (view === 'tree') {
+    try {
+      const allData = await getCategories({ q: q || undefined, id: idQ ? Number(idQ) : undefined, taxonomy_type: taxonomyType || undefined, limit: 2000, offset: 0 })
+      allCategoriesForTree = allData.items
+    } catch { /* handled */ }
+  }
 
   // Pre-process for table view: use translated name or external_id as display name
   const tableRows = data.items.map((c) => ({
@@ -45,27 +55,43 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <div className="flex gap-2 items-center">
-        <form method="GET" className="flex gap-2 flex-1">
+      <div className="flex gap-2 items-center flex-wrap">
+        <form method="GET" className="flex gap-2 flex-1 flex-wrap">
           <input name="view" type="hidden" value={view} />
           <input
             name="q"
             defaultValue={q}
             placeholder={tr.search}
-            className="flex-1 max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm
+            className="flex-1 min-w-32 max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm
+              focus:outline-none focus:ring-2 focus:ring-slate-600"
+          />
+          <input
+            name="id"
+            defaultValue={idQ}
+            placeholder={tr.search_by_id}
+            type="number"
+            min="1"
+            className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm
+              focus:outline-none focus:ring-2 focus:ring-slate-600"
+          />
+          <input
+            name="taxonomy_type"
+            defaultValue={taxonomyType}
+            placeholder={tr.taxonomy_type}
+            className="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm
               focus:outline-none focus:ring-2 focus:ring-slate-600"
           />
           <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 rounded-lg">↵</button>
         </form>
         <div className="flex gap-1">
           <Link
-            href={`/admin/categories?view=tree${q ? `&q=${q}` : ''}`}
+            href={`/admin/categories?view=tree${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'tree' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             Tree
           </Link>
           <Link
-            href={`/admin/categories?view=table${q ? `&q=${q}` : ''}`}
+            href={`/admin/categories?view=table${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'table' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             Table
@@ -74,7 +100,12 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       </div>
 
       {view === 'tree' ? (
-        <CategoryTreeView categories={data.items} editLabel={tr.edit} />
+        <CategoryTreeView
+          categories={allCategoriesForTree}
+          editLabel={tr.edit}
+          expandAllLabel={tr.expand_all}
+          collapseAllLabel={tr.collapse_all}
+        />
       ) : (
         <EntityTable
           columns={[

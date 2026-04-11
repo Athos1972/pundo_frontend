@@ -8,6 +8,7 @@ import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ReviewSection } from '@/components/reviews/ReviewSection'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -106,6 +107,9 @@ export default async function ShopPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* Reviews */}
+        <ReviewSection entityType="shop" entityId={shop.id} lang={lang} tr={tr} />
       </div>
     </main>
   )

@@ -87,7 +87,8 @@ describe('ProductCard image resolution', () => {
     render(<ProductCard item={item as any} lang="en" />)
     expect(screen.getByText(/4\.99/)).toBeInTheDocument()
     expect(screen.getByText('Pet Store')).toBeInTheDocument()
-    expect(screen.getByText('Available')).toBeInTheDocument()
+    // "In Stock" badge removed by design — not shown in carousel cards
+    expect(screen.queryByText('Available')).not.toBeInTheDocument()
   })
 
   it('renders offer without shop slug as plain span', async () => {

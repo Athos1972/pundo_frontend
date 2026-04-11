@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getCategory, getCategoryTranslations, getAllCategories } from '@/lib/system-admin-api'
+import { getCategory, getCategoryTranslations, getAllCategories, getCategoryAttributeDefs } from '@/lib/system-admin-api'
 import { CategoryForm } from '@/components/system-admin/CategoryForm'
 
 interface PageProps {
@@ -13,10 +13,11 @@ export default async function EditCategoryPage({ params }: PageProps) {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
 
-  const [category, translations, allCategories] = await Promise.all([
+  const [category, translations, allCategories, attrDefs] = await Promise.all([
     getCategory(Number(id)).catch(() => null),
     getCategoryTranslations(Number(id)).catch(() => []),
     getAllCategories().catch(() => []),
+    getCategoryAttributeDefs(Number(id)).catch(() => []),
   ])
 
   if (!category) notFound()
@@ -28,6 +29,7 @@ export default async function EditCategoryPage({ params }: PageProps) {
         category={category}
         allCategories={allCategories}
         translations={translations}
+        attrDefs={attrDefs}
         tr={tr}
       />
     </div>

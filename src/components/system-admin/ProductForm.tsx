@@ -14,6 +14,8 @@ import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { ProductAttributesTable } from './ProductAttributesTable'
 import { showToast } from './Toast'
+import { Combobox } from './Combobox'
+import type { ComboboxItem } from './Combobox'
 
 interface ProductFormProps {
   product: SysAdminProduct | null
@@ -33,6 +35,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ''))
   const [brandId, setBrandId] = useState(String(product?.brand_id ?? ''))
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [attrFilter, setAttrFilter] = useState('')
 
   function validate() {
     const e: Record<string, string> = {}
@@ -98,19 +101,23 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
       />
 
       <div className="grid grid-cols-2 gap-4">
-        <FormField
-          as="select"
-          label={tr.category}
-          name="category_id"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          disabled={isPending}
-        >
-          <option value="">{tr.none}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name ?? c.external_id}</option>
-          ))}
-        </FormField>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">{tr.category}</label>
+          <Combobox
+            items={[
+              { value: '', label: tr.none },
+              ...categories.map((c): ComboboxItem => ({
+                value: String(c.id),
+                label: c.name ?? c.external_id,
+                subLabel: c.path ?? c.external_id,
+              })),
+            ]}
+            value={categoryId}
+            onChange={setCategoryId}
+            placeholder={tr.category}
+            disabled={isPending}
+          />
+        </div>
 
         <FormField
           as="select"
@@ -150,9 +157,19 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
       {isEdit && (
         <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700">{tr.attribute_key} / {tr.attribute_value}</h3>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder={`${tr.search} ${tr.attribute_key}…`}
+              value={attrFilter}
+              onChange={(e) => setAttrFilter(e.target.value)}
+              className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-1.5 text-sm
+                focus:outline-none focus:ring-2 focus:ring-slate-600"
+            />
+          </div>
           <ProductAttributesTable
             productId={product.id}
-            attributes={attributes}
+            attributes={attributes.filter(a => !attrFilter || a.attribute_key.toLowerCase().includes(attrFilter.toLowerCase()))}
             labels={{
               key: tr.attribute_key,
               value: tr.attribute_value,

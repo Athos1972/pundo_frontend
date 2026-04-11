@@ -61,7 +61,7 @@ export async function getAdminMe(): Promise<SysAdminUser> {
 
 // ─── Shops ─────────────────────────────────────────────────────────────────────
 export async function getShops(
-  params: { q?: string; limit?: number; offset?: number } = {},
+  params: { q?: string; id?: number; status?: string; shop_type_id?: number; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminShop>> {
   return apiFetch<PaginatedResponse<SysAdminShop>>(`/shops${buildQs(params)}`)
 }
@@ -94,7 +94,7 @@ export async function getShopOwner(id: number): Promise<SysAdminShopOwner> {
 
 // ─── Products ──────────────────────────────────────────────────────────────────
 export async function getProducts(
-  params: { q?: string; limit?: number; offset?: number } = {},
+  params: { q?: string; id?: number; category_id?: number; brand_id?: number; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminProduct>> {
   return apiFetch<PaginatedResponse<SysAdminProduct>>(`/products${buildQs(params)}`)
 }
@@ -109,7 +109,7 @@ export async function getProductAttributes(productId: number): Promise<SysAdminP
 
 // ─── Categories ────────────────────────────────────────────────────────────────
 export async function getCategories(
-  params: { q?: string; parent_id?: number | null; limit?: number; offset?: number } = {},
+  params: { q?: string; id?: number; taxonomy_type?: string; parent_id?: number | null; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminCategory>> {
   return apiFetch<PaginatedResponse<SysAdminCategory>>(`/categories${buildQs(params)}`)
 }
@@ -132,7 +132,7 @@ export async function getCategoryTranslations(
 
 // ─── Brands ────────────────────────────────────────────────────────────────────
 export async function getBrands(
-  params: { q?: string; limit?: number; offset?: number } = {},
+  params: { q?: string; id?: number; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminBrand>> {
   return apiFetch<PaginatedResponse<SysAdminBrand>>(`/brands${buildQs(params)}`)
 }
@@ -143,7 +143,7 @@ export async function getBrand(id: number): Promise<SysAdminBrand> {
 
 // ─── Offers ────────────────────────────────────────────────────────────────────
 export async function getOffers(
-  params: { q?: string; shop_id?: number; limit?: number; offset?: number } = {},
+  params: { q?: string; shop_id?: number; product_id?: number; is_available?: boolean; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminOffer>> {
   return apiFetch<PaginatedResponse<SysAdminOffer>>(`/offers${buildQs(params)}`)
 }

@@ -1,10 +1,10 @@
 {
-  "sha": "cce95144a19af033d7c32505214c565bc6d063c9",
-  "timestamp": "2026-04-10T18:41:24.470326+00:00",
+  "sha": "266384b3afc15c183a4ccf7f2248be3b22ed7b5b",
+  "timestamp": "2026-04-11T09:58:00.000000+00:00",
   "coverage_snapshot": {
-    "unit_tests": "285/285",
+    "unit_tests": "341/341",
     "typescript": "PASS",
-    "eslint": "PASS (0 errors)",
-    "notes": "system-admin UI added"
+    "eslint": "PASS (0 errors, 19 warnings)",
+    "notes": "map routing links feature added"
   }
 }

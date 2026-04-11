@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { t } from '@/lib/translations'
+import { isRTL, Lang, DEFAULT_LANG } from '@/lib/lang'
 
 // Fix Leaflet default icon (webpack issue)
 const icon = L.icon({
@@ -27,7 +29,7 @@ interface ShopMapProps {
   className?: string
   center?: [number, number]
   zoom?: number
-  lang?: string
+  lang?: Lang
 }
 
 // Re-centers the map whenever center/zoom change (MapContainer ignores prop updates after mount)
@@ -44,7 +46,7 @@ const TILE_LANG: Record<string, string> = {
   de: 'de', en: 'en', ru: 'ru', ar: 'ar', he: 'he',
 }
 
-export function ShopMap({ shops, className = '', center, zoom = 15, lang = 'en' }: ShopMapProps) {
+export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAULT_LANG }: ShopMapProps) {
   const defaultCenter: [number, number] = center ?? (shops.length > 0 ? [shops[0].lat, shops[0].lng] : [34.9, 33.63])
   const tileUrl = `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
   const langCode = TILE_LANG[lang] ?? 'en'
@@ -69,7 +71,35 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = 'en' 
         />
         {shops.map(shop => (
           <Marker key={shop.id} position={[shop.lat, shop.lng]} icon={icon}>
-            <Popup>{shop.name}</Popup>
+            <Popup>
+              <div dir={isRTL(lang) ? 'rtl' : 'ltr'} style={{ minWidth: '160px' }}>
+                <p style={{ fontWeight: 600, marginBottom: '4px' }}>{shop.name}</p>
+                <p style={{ fontSize: '11px', color: '#6b7280', marginBottom: '6px' }}>{t(lang).show_route}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${shop.name} – Google Maps`}
+                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                  >Google Maps</a>
+                  <a
+                    href={`https://maps.apple.com/?daddr=${shop.lat},${shop.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${shop.name} – Apple Maps`}
+                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                  >Apple Maps</a>
+                  <a
+                    href={`https://www.waze.com/ul?ll=${shop.lat},${shop.lng}&navigate=yes`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${shop.name} – Waze`}
+                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                  >Waze</a>
+                </div>
+              </div>
+            </Popup>
           </Marker>
         ))}
       </MapContainer>

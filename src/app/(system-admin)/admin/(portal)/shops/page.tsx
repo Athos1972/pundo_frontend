@@ -8,7 +8,7 @@ import { EntityTable } from '@/components/system-admin/EntityTable'
 const LIMIT = 20
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; q?: string }>
+  searchParams: Promise<{ page?: string; q?: string; id?: string }>
 }
 
 export default async function ShopsPage({ searchParams }: PageProps) {
@@ -17,10 +17,11 @@ export default async function ShopsPage({ searchParams }: PageProps) {
   const tr = tSysAdmin(lang)
   const page = Math.max(1, Number(sp.page ?? 1))
   const q = sp.q ?? ''
+  const idQ = sp.id ?? ''
 
   let data = { items: [] as Awaited<ReturnType<typeof getShops>>['items'], total: 0, limit: LIMIT, offset: 0 }
   try {
-    data = await getShops({ q: q || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
+    data = await getShops({ q: q || undefined, id: idQ ? Number(idQ) : undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
 
   // Pre-process multilingual fields into display strings
@@ -44,12 +45,21 @@ export default async function ShopsPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <form method="GET" className="flex gap-2">
+      <form method="GET" className="flex gap-2 flex-wrap">
         <input
           name="q"
           defaultValue={q}
           placeholder={tr.search}
-          className="flex-1 max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm
+          className="flex-1 min-w-32 max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-slate-600"
+        />
+        <input
+          name="id"
+          defaultValue={idQ}
+          placeholder={tr.search_by_id}
+          type="number"
+          min="1"
+          className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         />
         <button

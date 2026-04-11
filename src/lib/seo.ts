@@ -9,36 +9,44 @@ export interface SlugEntry {
   lastModified?: string | null
 }
 
+const PAGE_LIMIT = 100  // backend max per request
+
 export async function getAllProductSlugs(): Promise<SlugEntry[]> {
-  const slugs: SlugEntry[] = []
-  const limit = 1000
-  let offset = 0
+  const first = await searchProducts({ limit: PAGE_LIMIT, offset: 0 }, 'en')
+  const total = first.total
+  const firstSlugs: SlugEntry[] = first.items.map(item => ({ slug: item.slug, lastModified: null }))
 
-  while (true) {
-    const result = await searchProducts({ limit, offset }, 'en')
-    for (const item of result.items) {
-      slugs.push({ slug: item.slug, lastModified: null })
-    }
-    if (result.items.length < limit) break
-    offset += limit
-  }
+  if (total <= PAGE_LIMIT) return firstSlugs
 
-  return slugs
+  const pageCount = Math.ceil(total / PAGE_LIMIT)
+  const offsets = Array.from({ length: pageCount - 1 }, (_, i) => (i + 1) * PAGE_LIMIT)
+
+  const results = await Promise.allSettled(
+    offsets.map(offset => searchProducts({ limit: PAGE_LIMIT, offset }, 'en'))
+  )
+
+  const moreSlugs = results
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof searchProducts>>> => r.status === 'fulfilled')
+    .flatMap(r => r.value.items.map(item => ({ slug: item.slug, lastModified: null })))
+
+  return [...firstSlugs, ...moreSlugs]
 }
 
 export async function getAllShopSlugs(): Promise<SlugEntry[]> {
-  const slugs: SlugEntry[] = []
-  const limit = 1000
-  let offset = 0
+  const first = await getShops({ limit: PAGE_LIMIT, offset: 0 }, 'en')
+  const firstSlugs: SlugEntry[] = first.items.map(item => ({ slug: item.slug, lastModified: item.last_scraped ?? null }))
 
+  // ShopListResponse has no `total` — paginate until a page comes back shorter than limit
+  if (first.items.length < PAGE_LIMIT) return firstSlugs
+
+  const moreSlugs: SlugEntry[] = []
+  let offset = PAGE_LIMIT
   while (true) {
-    const result = await getShops({ limit, offset }, 'en')
-    for (const item of result.items) {
-      slugs.push({ slug: item.slug, lastModified: item.last_scraped ?? null })
-    }
-    if (result.items.length < limit) break
-    offset += limit
+    const result = await getShops({ limit: PAGE_LIMIT, offset }, 'en')
+    moreSlugs.push(...result.items.map(item => ({ slug: item.slug, lastModified: item.last_scraped ?? null })))
+    if (result.items.length < PAGE_LIMIT) break
+    offset += PAGE_LIMIT
   }
 
-  return slugs
+  return [...firstSlugs, ...moreSlugs]
 }

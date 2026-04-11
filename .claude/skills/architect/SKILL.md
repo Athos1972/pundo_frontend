@@ -42,6 +42,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 - **API-Proxy:** Kein direkter Backend-Zugriff vom Browser — alles via `/api/v1/` Next.js-Rewrite
 - **Lean Typen:** TypeScript-Interfaces in `src/types/api.ts` spiegeln Backend-Schema; kein Over-Engineering
 - **Backend als Quelle der Wahrheit:** RTL-Flag, Kategorien, Übersetzungen kommen immer vom Backend
+- **Restart-Regel:** Test-Instanzen (Frontend 3500 / Backend 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
 
 ---
 

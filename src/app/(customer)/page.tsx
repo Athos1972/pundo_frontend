@@ -1,7 +1,6 @@
 import { getLangServer } from '@/lib/lang'
 import { getCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { SearchBar } from '@/components/search/SearchBar'
 import { CategoryChips } from '@/components/search/CategoryChips'
 import { NearbyShops } from '@/components/shop/NearbyShops'
@@ -13,15 +12,6 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-bg">
-
-      {/* ── Nav Bar ── */}
-      <header className="border-b border-border bg-surface sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/pundo-logo.svg" alt="Pundo" className="h-12 w-auto" />
-          <LanguageSwitcher current={lang} />
-        </div>
-      </header>
 
       {/* ── Hero / Search ── */}
       <section className="bg-surface border-b border-border">

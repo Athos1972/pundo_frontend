@@ -7,6 +7,7 @@ import { SplashScreen } from '@/components/ui/SplashScreen'
 import { SessionProvider } from '@/components/auth/SessionProvider'
 import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
+import { Header } from '@/components/layout/Header'
 import { getSiteUrl } from '@/lib/seo'
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-heading' })
@@ -63,6 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         <SplashScreen />
         <SessionProvider initialSession={session}>
+          <Header />
           {children}
           <Footer />
         </SessionProvider>

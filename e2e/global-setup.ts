@@ -2,7 +2,7 @@
  * Playwright Global Setup — pundo E2E Tests gegen pundo_test DB
  *
  * Läuft einmalig vor allen Tests:
- *   1. Test-Backend auf Port 8002 killen und neu starten (sauberer Zustand)
+ *   1. Test-Backend auf Port 8500 killen und neu starten (sauberer Zustand)
  *   2. Wartet bis Backend-Healthcheck antwortet
  *   3. Ruft prepare_e2e_db.py auf → reset pundo_test + Kategorien kopieren
  *   4. Registriert einen Test-Shop-Owner via API
@@ -10,7 +10,7 @@
  *   6. Loggt ihn ein und speichert den JWT-Cookie als Playwright Storage State
  *
  * Kein manueller Backend-Start nötig — global-setup übernimmt das automatisch.
- * Port-Trennung wird erzwungen: Port 8001 (Produktion) wird abgelehnt.
+ * Port-Trennung wird erzwungen: Port 8000/8001 (Produktion) wird abgelehnt.
  */
 
 import { execSync, spawn } from 'child_process'
@@ -18,18 +18,18 @@ import fs from 'fs'
 import path from 'path'
 import { chromium } from '@playwright/test'
 
-// Port 8001 ist der Produktiv-Port — niemals für E2E.
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8002'
-if (backendUrl.includes(':8001')) {
+// Port 8000/8001 ist der Produktiv-Port — niemals für E2E.
+const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8500'
+if (backendUrl.includes(':8000') || backendUrl.includes(':8001')) {
   throw new Error(
-    '\n[E2E Setup] BACKEND_URL zeigt auf Port 8001 — das ist der PRODUKTIV-Port!\n' +
-    '  E2E-Tests laufen immer gegen Port 8002.\n'
+    '\n[E2E Setup] BACKEND_URL zeigt auf Port 8000/8001 — das ist der PRODUKTIV-Port!\n' +
+    '  E2E-Tests laufen immer gegen Port 8500.\n'
   )
 }
 
 const BACKEND_URL = backendUrl
-const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3002'
-const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://localhost:${frontendPort}`
+const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
+const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
 const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
@@ -107,12 +107,12 @@ async function adminLogin(): Promise<string> {
 
 export default async function globalSetup() {
   // ── 0. Test-Backend auf Port 8002 killen und neu starten ───────────────────
-  const backendPort = new URL(BACKEND_URL).port || '8002'
+  const backendPort = new URL(BACKEND_URL).port || '8500'
   console.log(`\n[E2E Setup] Starte Test-Backend neu (Port ${backendPort})...`)
 
   // Laufendes Backend auf diesem Port killen
   try {
-    execSync(`lsof -ti:${backendPort} | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+    execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
     console.log(`[E2E Setup] Altes Backend auf Port ${backendPort} beendet.`)
   } catch {
     // kein Prozess lief — ok

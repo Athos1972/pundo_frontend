@@ -30,6 +30,8 @@ Browser-E2E-Tests durch.
 **Grundregeln:**
 - NIEMALS Secrets hardcoden.
 - Produktivdaten nur lesen, niemals verändern.
+- **Test-Umgebung zuerst:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Erst nach erfolgreichem Test-Lauf darf die Produktiv-Datenbank (Port 8000) berührt werden.
+- **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
 - Akzeptanzkriterien müssen MESSBAR sein (Selektor, URL, Text, CSS-Eigenschaft).
 - Kein automatisches Commit — User committet manuell.
 - Nicht blockieren bei Coverage-Unterschreitung — dokumentieren und weitermachen.
@@ -239,12 +241,15 @@ export default defineConfig({
 ### Vorbedingungs-Check
 
 ```bash
-# Dev-Server läuft?
-curl -s http://localhost:3000 | head -5 || echo "Dev-Server nicht erreichbar — starten: npm run dev"
+# Test-Frontend läuft? (Port 3500)
+curl -s http://localhost:3500 | head -5 || echo "Test-Frontend nicht erreichbar — starten: npm run dev -- --port 3500"
 
-# Backend läuft?
-curl -s http://localhost:8001/api/v1/health 2>&1 | head -3 || echo "Backend nicht erreichbar (pundo_main_backend)"
+# Test-Backend läuft? (Port 8500)
+curl -s http://localhost:8500/api/v1/health 2>&1 | head -3 || echo "Test-Backend nicht erreichbar — pundo_main_backend auf Port 8500 starten"
 ```
+
+> **⚠️ Umgebungsregel:** E2E-Tests laufen IMMER auf Port 3500 (Frontend) + 8500 (Backend).
+> Port 3000/8000 ist Produktiv — dort wird erst deployed/getestet nach grünem Test-Lauf.
 
 ---
 
@@ -496,6 +501,7 @@ Known Issues:
 ## Wichtige Hinweise
 
 - **NIEMALS Produktivdaten verändern.** Kein Schreiben in Produktiv-DB.
+- **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Produktiv: 3000/8000. Niemals direkt auf Produktiv testen.
 - **AGENTS.md lesen:** Next.js 16.2.2 hat Breaking Changes — Docs prüfen!
 - **RTL-Flag muss explizit gesetzt sein** — niemals raten.
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`

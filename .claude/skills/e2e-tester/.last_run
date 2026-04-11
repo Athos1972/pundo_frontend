@@ -1,35 +1,5 @@
 {
-  "date": "2026-04-11",
-  "sha": "95c44fd3f57322d729e99abd03dcf481908d481f",
-  "phases": {
-    "phase0": "PASS",
-    "phase1": "PASS - TypeScript 0 errors, ESLint 0 errors",
-    "phase2": "PASS - 341 unit tests, Combobox 91.66%, CategoryTreeView covered",
-    "phase3": "DONE - combined 54 PASS, 3 FAIL (known), 23 SKIP (dev server)"
-  },
-  "test_results": {
-    "unit_tests": 341,
-    "e2e_total_pass": 54,
-    "e2e_total_fail": 3,
-    "e2e_total_skip": 23,
-    "e2e_main_pass": 26,
-    "e2e_main_fail": 3,
-    "e2e_admin_pass": 18,
-    "e2e_admin_skip": 23
-  },
-  "known_issues": [
-    "KI-006: Related Products Carousel - product slug missing from pundo_test DB (passes on dev with prod data)",
-    "KI-007: Map routing tests - no shops with geodata in pundo_test DB",
-    "KI-008: Backend port 8000 JWT bug - admin auth not working on dev server; tests use test.skip()"
-  ],
-  "new_files": [
-    "e2e/admin.spec.ts"
-  ],
-  "test_environment": {
-    "frontend_port": 3000,
-    "backend_dev_port": 8000,
-    "backend_test_port": 8002,
-    "playwright_version": "1.59.1",
-    "nextjs_version": "16.2.2"
-  }
+  "sha": "7e7f3fec51300abc06b2b9571830a4344b38b41e",
+  "timestamp": "2026-04-11T13:30:27.509306+00:00",
+  "coverage_snapshot": {}
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { legalContent } from '@/lib/legal-content'
+import { BackButton } from '@/components/ui/BackButton'
 
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
@@ -16,6 +17,7 @@ export default async function AboutPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
+      <BackButton />
       <h1 className="text-2xl font-bold mb-8">{tr.page_title_about}</h1>
       <div className="space-y-6">
         {content.sections.map((section, i) => (

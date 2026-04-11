@@ -19,4 +19,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Port 8000 und 3000 sind PRODUKTIV — niemals für Tests verwenden
 - Port 8500 und 3500 sind TEST — niemals für Produktion verwenden
 - Backend-Repo startet Test-Server mit `./scripts/start_test_server.sh` (Port 8500, DB: pundo_test)
+
+**Restart-Regeln:**
+- Test-Instanzen (Port **3500** / **8500**) dürfen automatisch neu gestartet werden — kein Zögern
+- Produktiv-Instanzen (Port **3000** / **8000**) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung
 <!-- END:port-convention -->

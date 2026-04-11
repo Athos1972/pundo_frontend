@@ -76,7 +76,7 @@ export function ReviewModerationTable({ reviews: initial, tr }: Props) {
               )}
               {review.reporter_count > 0 && (
                 <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
-                  {tr.reviews_reported_badge(review.reporter_count)}
+                  {tr.reviews_reported_badge.replace('{n}', review.reporter_count.toString())}
                 </span>
               )}
             </div>

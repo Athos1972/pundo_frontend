@@ -26,7 +26,7 @@ if (backendUrl.includes(':8000')) {
 }
 
 const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
-const frontendUrl = process.env.FRONTEND_URL ?? `http://localhost:${frontendPort}`
+const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
 
 export default defineConfig({
   testDir: './e2e',

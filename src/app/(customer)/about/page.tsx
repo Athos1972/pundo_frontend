@@ -16,9 +16,9 @@ export default async function AboutPage() {
   const content = legalContent.about[lang]
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-12">
+    <main className="max-w-2xl mx-auto px-4 py-6 sm:py-12">
       <BackButton />
-      <h1 className="text-2xl font-bold mb-8">{tr.page_title_about}</h1>
+      <h1 className="text-2xl font-bold mb-4 sm:mb-8">{tr.page_title_about}</h1>
       <div className="space-y-6">
         {content.sections.map((section, i) => (
           <section key={i}>

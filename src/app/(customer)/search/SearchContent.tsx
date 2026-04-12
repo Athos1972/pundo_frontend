@@ -165,11 +165,11 @@ export default function SearchContent({ lang }: { lang: Lang }) {
 
       {/* Desktop: side by side. Mobile: toggled */}
       <div className="flex h-[calc(100vh-160px)]">
-        <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[55%] overflow-y-auto px-4 pb-4 gap-3 pt-3`}>
+        <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'block' : 'hidden'} md:block w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3`}>
 
           {/* Local shops section */}
           <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
-          {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} />)}
+          {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
           {!loading && localItems.length === 0 && (
             <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
           )}
@@ -178,7 +178,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
           {includeOnline && onlineItems.length > 0 && (
             <>
               <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3">{tr.online_retailers}</h2>
-              {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} />)}
+              {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
             </>
           )}
 

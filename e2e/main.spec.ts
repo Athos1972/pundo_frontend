@@ -124,8 +124,6 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto(`/products/${TEST_SLUG}`)
     await page.waitForLoadState('networkidle')
-    const body = await page.content()
-    if (body.includes('not found') || body.includes('404')) test.skip()
 
     // Section must be visible (backend has related products for this slug)
     const section = page.getByRole('region', { name: /related products/i })
@@ -136,8 +134,6 @@ test.describe('E2E-04b: Related Products Carousel', () => {
   test('carousel heading is rendered', async ({ page }) => {
     await page.goto(`/products/${TEST_SLUG}`)
     await page.waitForLoadState('networkidle')
-    const body = await page.content()
-    if (body.includes('not found') || body.includes('404')) test.skip()
     await expect(page.getByRole('heading', { name: /related products/i })).toBeVisible()
   })
 
@@ -159,8 +155,6 @@ test.describe('E2E-04b: Related Products Carousel', () => {
   test('carousel cards are clickable and link to products', async ({ page }) => {
     await page.goto(`/products/${TEST_SLUG}`)
     await page.waitForLoadState('networkidle')
-    const body = await page.content()
-    if (body.includes('not found') || body.includes('404')) test.skip()
 
     const section = page.getByRole('region', { name: /related products/i })
     const firstCard = section.getByRole('listitem').first()
@@ -179,8 +173,6 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     )
     await page.goto(`/products/${TEST_SLUG}`)
     await page.waitForLoadState('networkidle')
-    const body = await page.content()
-    if (body.includes('not found') || body.includes('404')) test.skip()
 
     // Page must render (offers section visible), carousel absent
     await expect(page.getByRole('heading', { name: /all offers/i })).toBeVisible()
@@ -192,9 +184,9 @@ test.describe('E2E-04b: Related Products Carousel', () => {
       name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
     }])
     const errors: string[] = []
-    // Hydration warnings are expected on the dev server — only real errors matter
+    // Hydration warnings are expected — #418 is the minified form
     page.on('pageerror', (err) => {
-      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_SLUG}`)
     await page.waitForLoadState('networkidle')
@@ -328,7 +320,7 @@ test.describe('E2E-09: Customer Auth Pages', () => {
   test('no JS errors on login page', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => {
-      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/auth/login')
     await page.waitForLoadState('networkidle')
@@ -338,7 +330,7 @@ test.describe('E2E-09: Customer Auth Pages', () => {
   test('no JS errors on signup page', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => {
-      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/auth/signup')
     await page.waitForLoadState('networkidle')
@@ -354,7 +346,7 @@ test.describe('E2E-10: Review Section', () => {
   test('product page renders without crash', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => {
-      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
     await page.waitForLoadState('networkidle')
@@ -364,10 +356,8 @@ test.describe('E2E-10: Review Section', () => {
   test('product page shows review section or login prompt', async ({ page }) => {
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
     await page.waitForLoadState('networkidle')
-    const body = await page.content()
-    // If the product doesn't exist in the test DB, skip gracefully
-    if (body.includes('not found') || body.includes('404') || body.includes('Nicht gefunden')) test.skip()
     // ReviewForm should be present (either login prompt or star input)
+    const body = await page.content()
     const hasStars = await page.locator('[aria-label$="stars"]').count()
     const hasLoginHint = body.includes('/auth/login') || body.includes('Sign in') || body.includes('anmelden') || body.includes('Anmelden')
     expect(hasStars > 0 || hasLoginHint).toBe(true)
@@ -379,7 +369,7 @@ test.describe('E2E-10: Review Section', () => {
     }])
     const errors: string[] = []
     page.on('pageerror', (err) => {
-      if (!err.message.includes('Hydration failed')) errors.push(err.message)
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
     await page.waitForLoadState('networkidle')
@@ -390,26 +380,31 @@ test.describe('E2E-10: Review Section', () => {
 })
 
 test.describe('E2E-08: Karten-Routing-Links', () => {
-  /** Navigate to search map view and return false if no markers are available (skip guard). */
+  // Map toggle button is mobile-only (md:hidden on desktop) — use mobile viewport
+  test.use({ viewport: { width: 400, height: 900 } })
+
   async function gotoSearchMapWithMarker(page: import('@playwright/test').Page, lang?: string) {
     await page.goto('/search?q=cat')
     if (lang) {
       await page.evaluate((l) => { document.cookie = `pundo_lang=${l}; path=/` }, lang)
       await page.reload()
     }
-    const mapBtn = page.getByRole('button', { name: /map|karte|خريطة/i })
-    if (!(await mapBtn.isVisible())) return false
-    await mapBtn.click()
-    const marker = await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 }).catch(() => null)
-    if (!marker) return false
-    await page.locator('.leaflet-marker-icon').first().click()
-    const popup = await page.waitForSelector('.leaflet-popup-content', { timeout: 5000 }).catch(() => null)
-    return popup !== null
+    await page.getByRole('button', { name: /map|karte|خريطة/i }).click()
+    await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
+    // Give Leaflet time to finish attaching popup event handlers
+    await page.waitForTimeout(1500)
+    // Trigger via native DOM event — Leaflet needs a bubbling click to open its popup
+    await page.evaluate(() => {
+      const marker = document.querySelector('.leaflet-marker-icon') as HTMLElement | null
+      if (marker) {
+        marker.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
+      }
+    })
+    await page.waitForSelector('.leaflet-popup-content', { timeout: 8000 })
   }
 
   test('map popup shows 3 routing links with correct URLs after clicking a pin', async ({ page }) => {
-    const ok = await gotoSearchMapWithMarker(page)
-    if (!ok) test.skip()
+    await gotoSearchMapWithMarker(page)
 
     const links = page.locator('.leaflet-popup-content a')
     await expect(links).toHaveCount(3)
@@ -424,8 +419,7 @@ test.describe('E2E-08: Karten-Routing-Links', () => {
   })
 
   test('routing links open in new tab (target=_blank)', async ({ page }) => {
-    const ok = await gotoSearchMapWithMarker(page)
-    if (!ok) test.skip()
+    await gotoSearchMapWithMarker(page)
 
     const targets = await page.locator('.leaflet-popup-content a').evaluateAll(
       (els: HTMLAnchorElement[]) => els.map(e => e.target)
@@ -434,8 +428,7 @@ test.describe('E2E-08: Karten-Routing-Links', () => {
   })
 
   test('popup dir=rtl for Arabic lang', async ({ page }) => {
-    const ok = await gotoSearchMapWithMarker(page, 'ar')
-    if (!ok) test.skip()
+    await gotoSearchMapWithMarker(page, 'ar')
 
     const dir = await page.locator('.leaflet-popup-content div').first().getAttribute('dir')
     expect(dir).toBe('rtl')

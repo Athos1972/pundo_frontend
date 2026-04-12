@@ -175,8 +175,9 @@ test.describe('Shop-Detailseite', () => {
 
   test.beforeAll(async () => {
     const state = loadStorageState()
-    const shop = await fetchShopByOwner(state.ownerId)
-    shopSlug = shop?.slug ?? shop?.id?.toString() ?? null
+    // Use slug saved by global-setup (avoids owner_id lookup via public API which doesn't support that filter)
+    shopSlug = (state as Record<string, unknown>).shopSlug as string | null
+      ?? (await fetchShopByOwner(state.ownerId))?.slug ?? null
   })
 
   test('Shop-Detailseite lädt ohne Fehler', async ({ page }) => {
@@ -292,6 +293,12 @@ test.describe('Öffnungszeiten via Admin setzen', () => {
     const state = loadStorageState()
 
     await page.goto('/shop-admin/hours')
+    // Days default to Closed — uncheck the first "Closed" checkbox to reveal time inputs
+    const closedCheckboxes = page.locator('input[type="checkbox"][aria-label*="Closed"]')
+    const firstClosed = closedCheckboxes.first()
+    if (await firstClosed.isChecked()) {
+      await firstClosed.click()
+    }
     const openInputs = page.locator('input[type="time"][aria-label*="open from"]')
     await openInputs.first().fill('09:00')
     const closeInputs = page.locator('input[type="time"][aria-label*="close at"]')

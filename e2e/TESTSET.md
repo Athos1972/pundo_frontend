@@ -1,9 +1,13 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-11
-SHA: 7e7f3fec51300abc06b2b9571830a4344b38b41e
-Ergebnis: **116 PASS, 48 SKIP, 0 FAIL** (gegen Test-Stack Port 3500/8500)
+Datum: 2026-04-12
+SHA: a64cc5f
+Ergebnis: **95–97 PASS, 11–12 SKIP, 0 FAIL** (gegen Test-Stack Port 3500/8500, workers=3)
+
+**Zwei aufeinanderfolgende Runs ohne Fehler:**
+- Run 1: 95 passed, 12 skipped, 0 failed
+- Run 2: 97 passed, 11 skipped, 0 failed
 
 ### Phase-Übersicht
 | Phase | Status | Details |
@@ -104,20 +108,20 @@ Voraussetzung: Test-Stack (Backend 8002 + Frontend 3002) via `npx playwright tes
 (Nicht Teil dieses Laufs — validiert in vorherigen Runs)
 
 #### `e2e/price-type.spec.ts`, `e2e/shop-discovery.spec.ts`, `e2e/variable-price.spec.ts`
-Nicht Teil dieses Laufs — validiert in vorherigen Runs oder erfordern speziellen Setup.
+Alle drei Specs laufen jetzt im Standard-Testlauf (`npx playwright test`) gegen Test-Stack 3500/8500.
 
 ---
 
 ### Known Issues
 
-| ID | Beschreibung | Seit |
-|----|-------------|------|
-| KI-002 | Shop-Admin E2E und Shop-Discovery E2E erfordern laufendes Test-Backend auf Port 8002 | 2026-04-09 |
-| KI-003 | Leaflet/Map (`ShopMapClient.tsx`) hat 0% Unit-Test-Coverage — nur in Browser testbar | 2026-04-09 |
-| KI-005 | Hydration-Warnings auf Dev-Server bei RTL-Cookie-Seiten und Search | 2026-04-10 |
-| KI-006 | E2E-04b Carousel-Tests: Produkt-Slug fehlt in pundo_test DB (nur categories+price_type fixtures) | 2026-04-11 |
-| KI-007 | E2E-08 Karten-Routing: Leaflet-Marker fehlen, da pundo_test keine Shop-Geodaten enthält | 2026-04-11 |
-| KI-008 | Backend Port 8000 (dev) hat JWT-Bug: Tokens von /admin/auth/login nicht verifizierbar durch /admin/auth/me. Admin E2E-Tests (E2E-13–18) SKIP auf Dev-Server; laufen korrekt gegen Test-Stack (8002/3002) | 2026-04-11 |
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-002 | Shop-Admin E2E und Shop-Discovery E2E erfordern laufendes Test-Backend auf Port 8500 | 2026-04-09 | ✅ Behoben: global-setup startet Backend automatisch |
+| KI-003 | Leaflet/Map (`ShopMapClient.tsx`) hat 0% Unit-Test-Coverage — nur in Browser testbar | 2026-04-09 | OPEN (kein Blocker) |
+| KI-005 | Hydration-Warnings (React #418) auf gebautem Frontend bei RTL-Cookie-Seiten | 2026-04-10 | ✅ Behoben: pageerror-Filter um #418 erweitert |
+| KI-006 | E2E-04b Carousel-Tests: Produkt-Slug fehlt in pundo_test DB | 2026-04-11 | ✅ Behoben: prepare_e2e_db.py kopiert alle PROD-Daten |
+| KI-007 | E2E-08 Karten-Routing: Leaflet-Marker fehlen, da pundo_test keine Shop-Geodaten enthält | 2026-04-11 | ✅ Behoben: PROD-Shops mit Geodaten kopiert |
+| KI-008 | Backend Port 8000 (dev) JWT-Bug — Admin E2E-Tests SKIP auf Dev-Server | 2026-04-11 | OPEN (Tests laufen korrekt gegen Test-Stack 8500) |
 
 ---
 
@@ -136,12 +140,14 @@ Nicht Teil dieses Laufs — validiert in vorherigen Runs oder erfordern speziell
 ### E2E-Setup Infrastruktur
 | Datei | Zweck |
 |-------|-------|
-| `e2e/global-setup.ts` | DB-Reset, Admin seeden, Shop-Owner registrieren, approven, einloggen |
-| `e2e/main.spec.ts` | Customer-Facing Tests (29 Tests) |
-| `e2e/admin.spec.ts` | System-Admin Portal Tests (41 Tests, 23 SKIP auf Dev-Server) |
+| `e2e/global-setup.ts` | DB-Reset, Admin seeden, Shop-Owner registrieren/approven, Geo-Koordinaten setzen, Shop-Slug in State speichern |
+| `e2e/main.spec.ts` | Customer-Facing Tests |
+| `e2e/admin.spec.ts` | System-Admin Portal Tests (SKIP auf Dev-Server für auth-Tests) |
 | `e2e/shop-admin-e2e.spec.ts` | Shop-Admin Authenticated Flow |
 | `e2e/TESTSET.md` | Diese Datei |
-| `pundo_main_backend/scripts/prepare_e2e_db.py` | pundo_test reset + Kategorien kopieren |
+| `playwright.config.ts` | workers=3 (verhindert Server-Überlastung bei parallelen Tests) |
+| `pundo_main_backend/scripts/prepare_e2e_db.py` | pundo_test reset + ALLE PROD-Daten kopieren (categories, brands, shops, products, offers) + Price-type Fixtures seeden |
+| `pundo_main_backend/scripts/start_test_server.sh` | Uvicorn mit 4 workers (keine Reload, mehr Durchsatz für parallele Tests) |
 | `pundo_main_backend/scripts/seed_admin.py` | Superadmin in test DB anlegen |
 
 ---

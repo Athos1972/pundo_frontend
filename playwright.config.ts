@@ -31,6 +31,8 @@ const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
+  // Limit parallelism to avoid overloading the standalone Next.js server under concurrent requests
+  workers: 3,
   use: {
     baseURL: frontendUrl,
   },

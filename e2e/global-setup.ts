@@ -265,6 +265,34 @@ export default async function globalSetup() {
     console.log('[E2E Setup] Shop-Owner war bereits approved.')
   }
 
+  // ── 3b. Geo-Koordinaten für Test-Shop setzen + Slug ermitteln ──────────────
+  let testShopId: number | null = null
+  let testShopSlug: string | null = null
+  try {
+    const adminToken = await adminLogin()
+    // Get shop_id from owner record (shop_owners.shop_id is a direct FK)
+    const ownerRes = await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
+      headers: { Cookie: `admin_token=${adminToken}` },
+    })
+    if (ownerRes.ok) {
+      const ownerData = await ownerRes.json()
+      const shopId = ownerData?.shop_id
+      if (shopId) {
+        testShopId = shopId
+        // Set geo-coordinates (geocoding service not available in test env)
+        const shopRes = await apiPatch(
+          `/api/v1/admin/shops/${shopId}`,
+          { lat: 34.9177, lng: 33.6273 },
+          { Cookie: `admin_token=${adminToken}` }
+        ) as Record<string, unknown>
+        testShopSlug = shopRes?.slug as string ?? null
+        console.log(`[E2E Setup] Geo-Koordinaten gesetzt für Shop ${shopId} (slug=${testShopSlug}).`)
+      }
+    }
+  } catch (err) {
+    console.warn('[E2E Setup] Geo-Koordinaten setzen fehlgeschlagen (nicht kritisch):', err)
+  }
+
   // ── 4. Login + Storage State für Playwright speichern ─────────────────────
   console.log('[E2E Setup] Erstelle Playwright Storage State (JWT-Cookie)...')
   const browser = await chromium.launch()
@@ -299,7 +327,7 @@ export default async function globalSetup() {
   await browser.close()
 
   // ── 5. State + Credentials speichern ──────────────────────────────────────
-  const state = { ...creds, ownerId, storageState }
+  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
   console.log(`[E2E Setup] State gespeichert: ${STATE_FILE}`)
   console.log('[E2E Setup] Setup abgeschlossen.\n')

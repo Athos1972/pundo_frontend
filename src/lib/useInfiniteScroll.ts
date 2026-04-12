@@ -20,7 +20,11 @@ export function useInfiniteScroll({
   isLoading,
   rootRef,
 }: UseInfiniteScrollOptions): UseInfiniteScrollResult {
-  const [isSupported] = useState(() => typeof IntersectionObserver !== 'undefined')
+  const [isSupported, setIsSupported] = useState(false)
+
+  useEffect(() => {
+    setIsSupported(typeof IntersectionObserver !== 'undefined')
+  }, [])
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {

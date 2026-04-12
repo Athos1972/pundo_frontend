@@ -2,8 +2,8 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { searchProducts } from '@/lib/api'
-import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
+import type { Lang } from '@/lib/lang'
 import { useGeolocation } from '@/lib/useGeolocation'
 import type { ProductListItem } from '@/types/api'
 import { useInfiniteScroll } from '@/lib/useInfiniteScroll'
@@ -31,10 +31,9 @@ function isOnlineOffer(offer: ProductListItem['best_offer']): boolean {
   return offer.dist_km == null
 }
 
-export default function SearchContent() {
+export default function SearchContent({ lang }: { lang: Lang }) {
   const params = useSearchParams()
   const router = useRouter()
-  const lang = getLangFromCookie()
   const tr = t(lang)
   const location = useGeolocation()
 
@@ -170,7 +169,7 @@ export default function SearchContent() {
 
           {/* Local shops section */}
           <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
-          {localItems.map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+          {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} />)}
           {!loading && localItems.length === 0 && (
             <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
           )}
@@ -179,7 +178,7 @@ export default function SearchContent() {
           {includeOnline && onlineItems.length > 0 && (
             <>
               <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3">{tr.online_retailers}</h2>
-              {onlineItems.map(item => <ProductCard key={item.id} item={item} lang={lang} />)}
+              {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} />)}
             </>
           )}
 

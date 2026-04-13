@@ -16,11 +16,19 @@ export async function ReviewSection({ entityType, entityId, lang, tr }: Props) {
   return (
     <section className="bg-surface border border-border rounded-xl p-4 mt-4" aria-label={tr.reviews_title}>
       <h2
-        className="font-bold text-sm text-text mb-4"
+        className="font-bold text-sm text-text mb-2"
         style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
       >
         {tr.reviews_title}
       </h2>
+
+      <details className="mb-4 text-sm text-gray-500 group [&>summary]:list-none [&>summary::-webkit-details-marker]:hidden">
+        <summary className="cursor-pointer select-none flex items-center gap-1 hover:text-gray-700 transition-colors rtl:flex-row-reverse">
+          <span>{tr.reviews_how_it_works_toggle}</span>
+          <span className="transition-transform group-open:rotate-180">▾</span>
+        </summary>
+        <p className="mt-2 leading-relaxed rtl:text-right">{tr.reviews_how_it_works_body}</p>
+      </details>
 
       <Suspense fallback={<ReviewStatsSkeleton />}>
         <ReviewStatsLoader entityType={entityType} entityId={entityId} lang={lang} tr={tr} />

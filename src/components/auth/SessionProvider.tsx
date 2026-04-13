@@ -3,9 +3,14 @@
 import { createContext, useContext, useState } from 'react'
 import type { CustomerSession } from '@/types/customer'
 
-const SessionContext = createContext<CustomerSession>({
-  user: null,
-  is_authenticated: false,
+interface SessionContextValue {
+  session: CustomerSession
+  setSession: (session: CustomerSession) => void
+}
+
+const SessionContext = createContext<SessionContextValue>({
+  session: { user: null, is_authenticated: false },
+  setSession: () => {},
 })
 
 export function SessionProvider({
@@ -15,14 +20,18 @@ export function SessionProvider({
   children: React.ReactNode
   initialSession: CustomerSession
 }) {
-  const [session] = useState<CustomerSession>(initialSession)
+  const [session, setSession] = useState<CustomerSession>(initialSession)
   return (
-    <SessionContext.Provider value={session}>
+    <SessionContext.Provider value={{ session, setSession }}>
       {children}
     </SessionContext.Provider>
   )
 }
 
 export function useSession(): CustomerSession {
-  return useContext(SessionContext)
+  return useContext(SessionContext).session
+}
+
+export function useSetSession(): (session: CustomerSession) => void {
+  return useContext(SessionContext).setSession
 }

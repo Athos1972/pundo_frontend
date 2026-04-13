@@ -8,7 +8,20 @@ export interface AuthUser {
   display_name: string
   is_verified: boolean
   provider: 'email' | 'google'
+  avatar_url?: string
+  has_password?: boolean
   created_at: string
+}
+
+export interface LinkedProvider {
+  provider: 'google'
+  linked: boolean
+  can_unlink: boolean
+}
+
+export interface LinkedAccountsResponse {
+  providers: LinkedProvider[]
+  has_password: boolean
 }
 
 export interface CustomerSession {

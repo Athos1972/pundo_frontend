@@ -13,6 +13,12 @@ export async function Footer() {
           <Link href="/about" className="hover:text-gray-900 transition-colors">
             {tr.footer_about}
           </Link>
+          <Link href="/help" className="hover:text-gray-900 transition-colors">
+            {tr.footer_help}
+          </Link>
+          <Link href="/for-shops" className="hover:text-gray-900 transition-colors">
+            {tr.footer_for_shops}
+          </Link>
           <Link href="/contact" className="hover:text-gray-900 transition-colors">
             {tr.footer_contact}
           </Link>

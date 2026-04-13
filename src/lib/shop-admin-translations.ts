@@ -108,6 +108,9 @@ const shopAdminTranslations = {
     scope_read: 'Read',
     scope_write: 'Write',
     scope_read_write: 'Read & Write',
+    // Help
+    nav_help: 'Help',
+    help_title: 'Help & FAQ',
     // Reviews moderation
     nav_reviews: 'Reviews',
     reviews_title: 'Review Moderation',
@@ -237,6 +240,9 @@ const shopAdminTranslations = {
     scope_read: 'Lesen',
     scope_write: 'Schreiben',
     scope_read_write: 'Lesen & Schreiben',
+    // Help
+    nav_help: 'Hilfe',
+    help_title: 'Hilfe & FAQ',
     // Reviews moderation
     nav_reviews: 'Bewertungen',
     reviews_title: 'Bewertungs-Moderation',
@@ -365,6 +371,9 @@ const shopAdminTranslations = {
     scope_read: 'Ανάγνωση',
     scope_write: 'Εγγραφή',
     scope_read_write: 'Ανάγνωση & Εγγραφή',
+    // Help
+    nav_help: 'Βοήθεια',
+    help_title: 'Βοήθεια & FAQ',
     // Reviews moderation
     nav_reviews: 'Αξιολογήσεις',
     reviews_title: 'Έλεγχος αξιολογήσεων',
@@ -493,6 +502,9 @@ const shopAdminTranslations = {
     scope_read: 'Чтение',
     scope_write: 'Запись',
     scope_read_write: 'Чтение и запись',
+    // Help
+    nav_help: 'Помощь',
+    help_title: 'Помощь и FAQ',
     // Reviews moderation
     nav_reviews: 'Отзывы',
     reviews_title: 'Модерация отзывов',
@@ -621,6 +633,9 @@ const shopAdminTranslations = {
     scope_read: 'قراءة',
     scope_write: 'كتابة',
     scope_read_write: 'قراءة وكتابة',
+    // Help
+    nav_help: 'مساعدة',
+    help_title: 'المساعدة والأسئلة الشائعة',
     // Reviews moderation
     nav_reviews: 'التقييمات',
     reviews_title: 'إدارة التقييمات',
@@ -749,6 +764,9 @@ const shopAdminTranslations = {
     scope_read: 'קריאה',
     scope_write: 'כתיבה',
     scope_read_write: 'קריאה וכתיבה',
+    // Help
+    nav_help: 'עזרה',
+    help_title: 'עזרה ושאלות נפוצות',
     // Reviews moderation
     nav_reviews: 'ביקורות',
     reviews_title: 'ניהול ביקורות',

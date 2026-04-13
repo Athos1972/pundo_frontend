@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { UserMenu } from '@/components/layout/UserMenu'
 
 export async function Header() {
   const lang = await getLangServer()
@@ -12,7 +13,10 @@ export async function Header() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/pundo-logo.svg" alt="Pundo" className="h-12 w-auto" />
         </Link>
-        <LanguageSwitcher current={lang} />
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher current={lang} />
+          <UserMenu lang={lang} />
+        </div>
       </div>
     </header>
   )

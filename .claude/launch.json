@@ -4,7 +4,7 @@
     {
       "name": "pundo_frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["run", "start:prod"],
       "port": 3000
     },
     {

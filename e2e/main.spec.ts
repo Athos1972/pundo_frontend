@@ -379,6 +379,136 @@ test.describe('E2E-10: Review Section', () => {
   })
 })
 
+// ─── E2E-11: Help & For-Shops Pages ─────────────────────────────────────────
+
+test.describe('E2E-11: Help & For-Shops Pages', () => {
+  test('/help returns 200 and shows FAQ heading', async ({ page }) => {
+    const response = await page.goto('/help')
+    expect(response?.status()).toBe(200)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    const h1 = await page.getByRole('heading', { level: 1 }).textContent()
+    expect(h1).toMatch(/help|faq|hilfe|aide|ayuda/i)
+  })
+
+  test('/help renders at least one <details> accordion item', async ({ page }) => {
+    await page.goto('/help')
+    await page.waitForLoadState('networkidle')
+    const count = await page.locator('details').count()
+    expect(count).toBeGreaterThanOrEqual(1)
+  })
+
+  test('/help accordion opens on click', async ({ page }) => {
+    await page.goto('/help')
+    const firstDetails = page.locator('details').first()
+    const summary = firstDetails.locator('summary')
+    // Initially closed
+    await expect(firstDetails).not.toHaveAttribute('open')
+    await summary.click()
+    // Now open
+    await expect(firstDetails).toHaveAttribute('open', '')
+  })
+
+  test('/help no JS errors', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
+    })
+    await page.goto('/help')
+    await page.waitForLoadState('networkidle')
+    expect(errors).toHaveLength(0)
+  })
+
+  test('/help RTL: Arabic shows dir=rtl', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
+    }])
+    await page.goto('/help')
+    const dir = await page.locator('html').getAttribute('dir')
+    expect(dir).toBe('rtl')
+  })
+
+  test('/for-shops returns 200 and shows hero heading', async ({ page }) => {
+    const response = await page.goto('/for-shops')
+    expect(response?.status()).toBe(200)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    const h1 = await page.getByRole('heading', { level: 1 }).textContent()
+    expect(h1!.length).toBeGreaterThan(5)
+  })
+
+  test('/for-shops has CTA link pointing to /shop-admin/register', async ({ page }) => {
+    await page.goto('/for-shops')
+    const ctaLinks = await page.getByRole('link', { name: /register|registr|anmeld/i }).all()
+    expect(ctaLinks.length).toBeGreaterThanOrEqual(1)
+    const href = await ctaLinks[0].getAttribute('href')
+    expect(href).toContain('/shop-admin/register')
+  })
+
+  test('/for-shops feature grid renders at least 4 cards', async ({ page }) => {
+    await page.goto('/for-shops')
+    await page.waitForLoadState('networkidle')
+    // Feature cards are <div> elements inside the grid
+    const headings = await page.getByRole('heading', { level: 3 }).count()
+    expect(headings).toBeGreaterThanOrEqual(4)
+  })
+
+  test('/for-shops no JS errors', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (err) => {
+      if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
+    })
+    await page.goto('/for-shops')
+    await page.waitForLoadState('networkidle')
+    expect(errors).toHaveLength(0)
+  })
+
+  test('/for-shops RTL: Hebrew shows dir=rtl', async ({ page }) => {
+    await page.context().addCookies([{
+      name: 'pundo_lang', value: 'he', domain: '127.0.0.1', path: '/',
+    }])
+    await page.goto('/for-shops')
+    const dir = await page.locator('html').getAttribute('dir')
+    expect(dir).toBe('rtl')
+  })
+
+  test('footer contains links to /help and /for-shops', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const helpLink = page.locator('footer a[href="/help"]')
+    const forShopsLink = page.locator('footer a[href="/for-shops"]')
+    await expect(helpLink).toBeVisible()
+    await expect(forShopsLink).toBeVisible()
+  })
+
+  test('/shop-admin/help redirects unauthenticated user to login', async ({ page }) => {
+    await page.goto('/shop-admin/help')
+    // Should redirect to login
+    await expect(page).toHaveURL(/\/shop-admin\/login/)
+  })
+})
+
+test.describe('E2E-11b: ReviewSection how-it-works hint', () => {
+  const TEST_PRODUCT_SLUG = 'acana-acana-wild-prairie-cat-18kg'
+
+  test('review section contains how-it-works <details> hint', async ({ page }) => {
+    await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    // The inline hint is a <details> inside the review section
+    const reviewSection = page.locator('section[aria-label]').filter({ hasText: /review|bewertung|отзыв/i })
+    const hintDetails = reviewSection.locator('details').first()
+    await expect(hintDetails).toBeVisible()
+  })
+
+  test('review section hint opens and shows body text', async ({ page }) => {
+    await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
+    await page.waitForLoadState('networkidle')
+    const reviewSection = page.locator('section[aria-label]').filter({ hasText: /review|bewertung|отзыв/i })
+    const hintDetails = reviewSection.locator('details').first()
+    const summary = hintDetails.locator('summary')
+    await summary.click()
+    await expect(hintDetails).toHaveAttribute('open', '')
+  })
+})
+
 test.describe('E2E-08: Karten-Routing-Links', () => {
   // Map toggle button is mobile-only (md:hidden on desktop) — use mobile viewport
   test.use({ viewport: { width: 400, height: 900 } })

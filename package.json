@@ -6,7 +6,9 @@
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "dev:test": "BACKEND_URL=http://localhost:8500 next dev -H 0.0.0.0 -p 3500",
     "build": "next build",
+    "build:prod": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "next start",
+    "start:prod": "BACKEND_URL=http://localhost:8000 HOSTNAME=0.0.0.0 PORT=3000 node .next/standalone/server.js",
     "lint": "eslint"
   },
   "dependencies": {

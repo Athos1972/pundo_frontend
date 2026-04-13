@@ -11,11 +11,15 @@ describe('Footer translation keys', () => {
     'footer_terms',
     'footer_about',
     'footer_contact',
+    'footer_help',
+    'footer_for_shops',
     'page_title_imprint',
     'page_title_privacy',
     'page_title_terms',
     'page_title_about',
     'page_title_contact',
+    'page_title_help',
+    'page_title_for_shops',
   ] as const
 
   for (const lang of LANGS) {

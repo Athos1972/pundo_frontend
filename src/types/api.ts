@@ -45,7 +45,26 @@ export interface ShopListItem {
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }
-export interface ShopDetailResponse extends ShopListItem { top_products: TopProduct[]; spoken_languages?: string[]; }
+
+export interface OpeningHoursPeriodTime { day: number; hour: number; minute: number; }
+export interface OpeningHoursPeriod { open: OpeningHoursPeriodTime; close: OpeningHoursPeriodTime; }
+export interface OpeningHoursSpecialDay {
+  date: string;
+  isOpen: boolean;
+  openingHours?: { open: string; close: string };
+}
+export interface OpeningHoursRaw {
+  periods?: OpeningHoursPeriod[];
+  weekdayDescriptions?: string[];
+  specialDays?: OpeningHoursSpecialDay[];
+}
+
+export interface ShopDetailResponse extends ShopListItem {
+  top_products: TopProduct[];
+  spoken_languages?: string[];
+  opening_hours_raw?: OpeningHoursRaw | null;
+  description?: string | null;
+}
 
 export interface CategoryItem {
   id: number; parent_id: number | null; taxonomy_type: string;

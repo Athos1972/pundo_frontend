@@ -71,6 +71,7 @@ export default async function ShopPage({ params }: Props) {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-extrabold text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{shop.name}</h1>
+          {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
           <div className="flex items-center gap-3 mt-2">
             <span className={`text-xs px-2 py-1 rounded-full ${shop.status === 'active' ? 'bg-success/10 text-success' : 'bg-surface-alt text-text-muted'}`}>
@@ -91,24 +92,45 @@ export default async function ShopPage({ params }: Props) {
         )}
 
         {/* Opening hours */}
-        {shop.opening_hours && (
+        {(shop.opening_hours_raw || shop.opening_hours) && (
           <div className="bg-surface border border-border rounded-xl p-4">
             <h2 className="font-bold text-sm text-text mb-3" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.opening_hours}</h2>
-            <div className="space-y-1">
-              {(['mon','tue','wed','thu','fri','sat','sun','ph'] as const)
-                .filter(key => key in shop.opening_hours!)
-                .map(key => {
-                  const hours = shop.opening_hours![key]
-                  return (
-                    <div key={key} className="flex justify-between text-sm">
-                      <span className="text-text-muted">{tr.days[key]}</span>
-                      <span className={hours ? 'text-text' : 'text-text-light'}>
-                        {hours ? String(hours) : tr.closed}
-                      </span>
-                    </div>
-                  )
-                })}
-            </div>
+            {shop.opening_hours_raw?.weekdayDescriptions ? (
+              <ul className="space-y-1">
+                {shop.opening_hours_raw.weekdayDescriptions.map((line, i) => (
+                  <li key={i} className="text-sm text-text">{line}</li>
+                ))}
+              </ul>
+            ) : shop.opening_hours ? (
+              <div className="space-y-1">
+                {(['mon','tue','wed','thu','fri','sat','sun','ph'] as const)
+                  .filter(key => key in shop.opening_hours!)
+                  .map(key => {
+                    const hours = shop.opening_hours![key]
+                    return (
+                      <div key={key} className="flex justify-between text-sm">
+                        <span className="text-text-muted">{tr.days[key]}</span>
+                        <span className={hours ? 'text-text' : 'text-text-light'}>
+                          {hours ? String(hours) : tr.closed}
+                        </span>
+                      </div>
+                    )
+                  })}
+              </div>
+            ) : null}
+            {(shop.opening_hours_raw?.specialDays?.length ?? 0) > 0 && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-xs font-semibold text-text-muted mb-1">Sonderöffnungszeiten</p>
+                <ul className="space-y-1">
+                  {shop.opening_hours_raw!.specialDays!.map((day, i) => (
+                    <li key={i} className="text-xs text-text-muted flex justify-between">
+                      <span>{day.date}</span>
+                      <span>{day.isOpen && day.openingHours ? `${day.openingHours.open} – ${day.openingHours.close}` : tr.closed}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

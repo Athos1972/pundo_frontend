@@ -55,12 +55,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={lang} dir={dir}>
       <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
         {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
-          <Script
-            defer
-            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
-            src="https://plausible.io/js/script.js"
-            strategy="afterInteractive"
-          />
+          <>
+            {/* Plausible Analytics — self-hosted auf plausible.pundo.cy. */}
+            {/* Full-featured build: file-downloads, hash (SPA-Routing), */}
+            {/* outbound-links, pageview-props, revenue, tagged-events. */}
+            <Script
+              id="plausible-tracker"
+              defer
+              data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+              src="https://plausible.pundo.cy/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"
+              strategy="afterInteractive"
+            />
+            {/* Queue helper: erlaubt plausible('Event', ...) Aufrufe bevor */}
+            {/* der Tracker geladen hat — Events werden dann asynchron abgesetzt */}
+            {/* sobald die Tracker-Datei da ist. */}
+            <Script
+              id="plausible-queue"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`,
+              }}
+            />
+          </>
         )}
         <SplashScreen />
         <SessionProvider initialSession={session}>

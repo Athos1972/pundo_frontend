@@ -8,6 +8,14 @@ WORKDIR /app
 ARG BACKEND_URL=http://backend:8000
 ENV BACKEND_URL=$BACKEND_URL
 
+# NEXT_PUBLIC_PLAUSIBLE_DOMAIN ist das site-identifier-Attribut im
+# Plausible-Dashboard (https://plausible.pundo.cy/pundo.cy). Next.js baked
+# NEXT_PUBLIC_* env-vars zur Build-Zeit in den Client-Bundle ein — zur
+# Laufzeit gesetzte env-vars wirken nicht. Leer lassen in Dev/Test, dann
+# wird der Plausible-<Script>-Block gar nicht erst gerendert.
+ARG NEXT_PUBLIC_PLAUSIBLE_DOMAIN=pundo.cy
+ENV NEXT_PUBLIC_PLAUSIBLE_DOMAIN=$NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

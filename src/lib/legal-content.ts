@@ -130,7 +130,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'Analytics',
-          body: 'We use Plausible Analytics (plausible.io) to understand how our site is used. Plausible is cookieless and privacy-friendly — it does not use cookies, does not track individual users, and does not share data with third parties. No cookie consent is required.',
+          body: 'We use Plausible Analytics, a self-hosted and privacy-friendly web analytics tool, to understand how our site is used. Our Plausible instance runs on our own servers (plausible.pundo.cy) — your analytics data never leaves our infrastructure and is not shared with any third party. Plausible is cookieless and does not track individual users. No cookie consent is required.',
         },
         {
           heading: 'Data we collect',
@@ -155,7 +155,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'Analytics',
-          body: 'Wir verwenden Plausible Analytics (plausible.io) um zu verstehen, wie unsere Seite genutzt wird. Plausible ist cookielos und datenschutzfreundlich — es werden keine Cookies gesetzt, keine Einzelnutzer getrackt und keine Daten an Dritte weitergegeben. Eine Cookie-Einwilligung ist nicht erforderlich.',
+          body: 'Wir verwenden Plausible Analytics, ein selbst gehostetes und datenschutzfreundliches Web-Analyse-Tool, um zu verstehen, wie unsere Seite genutzt wird. Unsere Plausible-Instanz läuft auf unseren eigenen Servern (plausible.pundo.cy) — deine Analysedaten verlassen unsere Infrastruktur niemals und werden an keinen Dritten weitergegeben. Plausible ist cookielos und trackt keine Einzelnutzer. Eine Cookie-Einwilligung ist nicht erforderlich.',
         },
         {
           heading: 'Erhobene Daten',
@@ -180,7 +180,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'Аналитика',
-          body: 'Мы используем Plausible Analytics (plausible.io) для понимания использования сайта. Plausible не использует cookies, не отслеживает отдельных пользователей и не передаёт данные третьим сторонам. Согласие на cookies не требуется.',
+          body: 'Мы используем Plausible Analytics — самостоятельно размещённый, дружественный к приватности инструмент веб-аналитики — чтобы понять, как используется наш сайт. Наш экземпляр Plausible работает на наших собственных серверах (plausible.pundo.cy) — ваши данные аналитики никогда не покидают нашу инфраструктуру и не передаются третьим сторонам. Plausible не использует cookies и не отслеживает отдельных пользователей. Согласие на cookies не требуется.',
         },
         {
           heading: 'Собираемые данные',
@@ -205,7 +205,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'Analytics',
-          body: 'Χρησιμοποιούμε το Plausible Analytics (plausible.io) για να κατανοήσουμε πώς χρησιμοποιείται ο ιστότοπός μας. Το Plausible δεν χρησιμοποιεί cookies, δεν παρακολουθεί μεμονωμένους χρήστες και δεν κοινοποιεί δεδομένα σε τρίτους.',
+          body: 'Χρησιμοποιούμε το Plausible Analytics, ένα αυτο-φιλοξενούμενο εργαλείο ανάλυσης ιστού φιλικό προς την ιδιωτικότητα, για να κατανοήσουμε πώς χρησιμοποιείται ο ιστότοπός μας. Το Plausible τρέχει στους δικούς μας διακομιστές (plausible.pundo.cy) — τα δεδομένα αναλυτικών σας δεν εγκαταλείπουν ποτέ την υποδομή μας και δεν κοινοποιούνται σε τρίτους. Το Plausible δεν χρησιμοποιεί cookies και δεν παρακολουθεί μεμονωμένους χρήστες.',
         },
         {
           heading: 'Δεδομένα που συλλέγουμε',
@@ -230,7 +230,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'التحليلات',
-          body: 'نستخدم Plausible Analytics (plausible.io) لفهم كيفية استخدام موقعنا. لا يستخدم Plausible ملفات تعريف الارتباط، ولا يتتبع مستخدمين بعينهم، ولا يشارك البيانات مع أطراف ثالثة.',
+          body: 'نستخدم Plausible Analytics، وهو أداة تحليل ويب ذاتية الاستضافة وصديقة للخصوصية، لفهم كيفية استخدام موقعنا. تعمل نسخة Plausible الخاصة بنا على خوادمنا الخاصة (plausible.pundo.cy) — بيانات التحليلات الخاصة بك لا تغادر بنيتنا التحتية أبداً ولا تتم مشاركتها مع أي طرف ثالث. لا يستخدم Plausible ملفات تعريف الارتباط ولا يتتبع مستخدمين بعينهم.',
         },
         {
           heading: 'البيانات التي نجمعها',
@@ -255,7 +255,7 @@ export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
         },
         {
           heading: 'ניתוח נתונים',
-          body: 'אנו משתמשים ב-Plausible Analytics (plausible.io) להבנת אופן השימוש באתר. Plausible אינו משתמש בעוגיות, אינו עוקב אחרי משתמשים בודדים ואינו משתף נתונים עם צדדים שלישיים.',
+          body: 'אנו משתמשים ב-Plausible Analytics, כלי אנליטיקה לאינטרנט מבוזר-עצמית וידידותי לפרטיות, להבנת אופן השימוש באתר שלנו. מופע ה-Plausible שלנו רץ על השרתים שלנו (plausible.pundo.cy) — נתוני האנליטיקה שלך לעולם לא עוזבים את התשתית שלנו ואינם משותפים עם צדדים שלישיים. Plausible אינו משתמש בעוגיות ואינו עוקב אחרי משתמשים בודדים.',
         },
         {
           heading: 'הנתונים שאנו אוספים',

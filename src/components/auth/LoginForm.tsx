@@ -40,8 +40,15 @@ export function LoginForm({ lang }: Props) {
         return
       }
 
-      router.refresh()
+      // Wichtig: push VOR refresh. Andersherum rennt refresh gegen die noch
+      // aktive /auth/login-Route und cached die (ohne Wirkung auf das ziel /),
+      // danach soft-navigiert push auf / und zeigt das gecachete /-RSC mit
+      // alter Session → UI bleibt "Login" bis zum naechsten manuellen Reload.
+      // Bei push→refresh invalidiert refresh den RSC-Cache nach der Navigation
+      // und der SessionProvider sieht den neuen initialSession per useEffect.
+      // Selbe Reihenfolge wie der Google-OAuth-Callback in auth/callback/page.tsx.
       router.push('/')
+      router.refresh()
     } catch {
       setError(tr.error_generic)
     } finally {

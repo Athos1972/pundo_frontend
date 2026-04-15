@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 
+// Cookie-Domain aus E2E_COOKIE_DOMAIN (Env) oder Fallback 127.0.0.1
+const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
+
 // ─── E2E-01: Startseite ───────────────────────────────────────────────────────
 
 test.describe('E2E-01: Startseite', () => {
@@ -54,7 +57,7 @@ test.describe('E2E-02: Suche', () => {
 test.describe('E2E-03: RTL-Layout', () => {
   async function setLang(page: import('@playwright/test').Page, lang: string) {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: lang, domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
     }])
   }
 
@@ -181,7 +184,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
 
   test('RTL: carousel renders correctly in Arabic', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     const errors: string[] = []
     // Hydration warnings are expected — #418 is the minified form
@@ -310,7 +313,7 @@ test.describe('E2E-09: Customer Auth Pages', () => {
 
   test('login page RTL (Arabic)', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/auth/login')
     const dir = await page.locator('html').getAttribute('dir')
@@ -365,7 +368,7 @@ test.describe('E2E-10: Review Section', () => {
 
   test('RTL: product page with Arabic sets dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     const errors: string[] = []
     page.on('pageerror', (err) => {
@@ -420,7 +423,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/help RTL: Arabic shows dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/help')
     const dir = await page.locator('html').getAttribute('dir')
@@ -463,7 +466,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/for-shops RTL: Hebrew shows dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'he', domain: '127.0.0.1', path: '/',
+      name: 'pundo_lang', value: 'he', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/for-shops')
     const dir = await page.locator('html').getAttribute('dir')

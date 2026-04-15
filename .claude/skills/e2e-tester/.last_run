@@ -1,9 +1,11 @@
 {
-  "sha": "14d3468d01d9c3efc23bd9879ba7ce558d173f63",
-  "timestamp": "2026-04-13T10:48:29.684139+00:00",
+  "sha": "21d13b1d98d4f3f9df71907d7c029c3e9eb185c3",
+  "timestamp": "2026-04-14T18:43:00+00:00",
   "coverage_snapshot": {
-    "total_tests": 532,
+    "total_tests": 53,
     "new_tests_added": 0,
-    "test_files": 22
+    "test_files": 1,
+    "target": "pundo.cy (production)",
+    "config": "playwright-cy.config.ts"
   }
 }

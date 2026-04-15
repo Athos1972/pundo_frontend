@@ -1,6 +1,48 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
+Datum: 2026-04-14
+SHA: 21d13b1 (Server-Commit)
+Konfiguration: **playwright-cy.config.ts → https://pundo.cy (Produktion, DNS-Override: 138.201.141.109)**
+Ergebnis: **53/53 E2E-Tests PASS**
+
+---
+
+## Testlauf 2026-04-14 — pundo.cy (Produktion, lesend)
+
+### Infrastruktur-Befund
+- DNS-A-Record `pundo.cy` zeigt auf alten Server `185.26.106.234` (Apache, kein HTTPS) → HTTPS Connection Refused
+- Nginx-Server `138.201.141.109` hostet die laufende Next.js-App und TLS-Zertifikat (SAN: `pundo.cy`, `www.pundo.cy`)
+- Workaround: Chromium `--host-resolver-rules=MAP pundo.cy 138.201.141.109` in `playwright-cy.config.ts`
+- **Empfohlene Sofort-Maßnahme:** DNS A-Record `pundo.cy` → `138.201.141.109` setzen
+
+### E2E-Ergebnisse gegen pundo.cy
+
+| Test | Tests | Status |
+|------|-------|--------|
+| E2E-01 Startseite | 2 | **PASS** |
+| E2E-02 Suche | 3 | **PASS** |
+| E2E-03 RTL-Layout | 6 | **PASS** — ar/he=rtl, en/de/el/ru=ltr |
+| E2E-04 Produkt-Detail | 1 | **PASS** |
+| E2E-04b Related Products Carousel | 6 | **PASS** |
+| E2E-05 Shop-Seite | 1 | **PASS** |
+| E2E-06 Responsive Mobile | 2 | **PASS** |
+| E2E-07 Auth Redirect | 3 | **PASS** |
+| E2E-07b Fehler-Handling | 1 | **PASS** |
+| E2E-08 Karten-Routing | 3 | **PASS** — Marker, 3 Routing-Links, RTL-Popup |
+| E2E-09 Customer Auth | 7 | **PASS** |
+| E2E-10 Review Section | 3 | **PASS** |
+| E2E-11 Help & For-Shops | 14 | **PASS** |
+| E2E-11b ReviewSection Hint | 2 | **PASS** |
+| **Gesamt** | **53** | **53/53 PASS** |
+
+### Neue Dateien
+- `playwright-cy.config.ts` — Playwright-Config für lesende Produktions-Tests gegen `https://pundo.cy`
+- `e2e/main.spec.ts` — Cookie-Domain via `E2E_COOKIE_DOMAIN` Env-Variable (Fallback: `127.0.0.1`)
+
+---
+
+## Letzter lokaler Testlauf (Referenz)
 Datum: 2026-04-13
 SHA: 14d3468d01d9c3efc23bd9879ba7ce558d173f63
 Konfiguration: Browser-Verifikation Port 3500 (Test-Dev-Server)

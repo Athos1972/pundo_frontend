@@ -36,7 +36,14 @@ export function VerifyEmailForm({ lang, email, purpose }: Props) {
       }
 
       if (purpose === 'signup') {
-        router.push('/auth/login')
+        // Nach erfolgreichem Signup-Verify hat das Backend den Auth-Cookie
+        // bereits gesetzt (siehe customer_auth.verify_otp). Wir navigieren
+        // direkt auf die Startseite und rufen router.refresh() auf, damit
+        // das Server-Layout `getCustomerSession()` neu ausfuehrt und der
+        // SessionProvider den eingeloggten User im UI sieht — sonst bleibt
+        // der Header-Button auf "Sign in" bis zum naechsten Full-Reload.
+        router.push('/')
+        router.refresh()
       } else {
         router.push(`/auth/password-reset/confirm?email=${encodeURIComponent(email)}`)
       }

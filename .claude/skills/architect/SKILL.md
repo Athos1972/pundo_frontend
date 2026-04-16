@@ -280,5 +280,3 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 **Auswirkungen:** Welche Komponenten/Routen/Typen sind betroffen?
 **Backend-Abhängigkeit:** Ja / Nein — wenn ja, was genau?
 **Nächster Schritt:** Erste konkrete Aktion (Datei, Komponente, Interface, Config-Key)
-
-Sei direkt. Wenn eine Idee schlecht ist, sag es — mit Begründung.

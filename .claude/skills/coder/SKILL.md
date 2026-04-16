@@ -304,6 +304,8 @@ Empfehlung an E2E-Tester:
 - **Keine Secrets:** Kein Hardcoding von API-Keys, URLs, Passwörtern.
 - **Keine automatischen Commits:** User committet manuell.
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
+- Dokumentation immer auf Letztstand halten README.md
+- Wenn sich wesentliche Änderungen ergeben maintaine den SKILL.md im /architect dieses Projekts
 - **Shop-Admin Clean Boundary (PFLICHT, keine Ausnahmen):**
   - `src/components/shop-admin/` → darf NUR aus `src/components/ui/` importieren, nicht aus `map/`, `product/`, `search/`, `shop/`
   - `src/lib/shop-admin-api.ts` → separates File, nicht in `api.ts` mischen

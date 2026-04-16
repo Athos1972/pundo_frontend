@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { getProduct, getRelatedProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
-import { formatSizeAttr, toRelativeImageUrl } from '@/lib/utils'
+import { formatSizeAttr, toRelativeImageUrl, pickImg } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/seo'
 import { buildProductSchema, safeJson } from '@/lib/structured-data'
 import { OfferList } from '@/components/product/OfferList'
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? ` — ${firstOffer.price} €`
       : ''
     const description = product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined
-    const relativeImg = toRelativeImageUrl(product.thumbnail_url)
+    const relativeImg = product.images?.card ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()
     return {
       title: `${name}${priceDisplay}`,
@@ -79,12 +79,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const name = product.names[lang] ?? product.names.en ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
 
-  // Prefer relative URL from images[] to avoid absolute localhost URLs that break on mobile
-  const firstImgUrl = (() => {
-    const img = product.images?.[0]
-    if (img && typeof img === 'object' && img !== null && 'url' in img) return String((img as { url: string }).url)
-    return toRelativeImageUrl(product.thumbnail_url)
-  })()
+  const firstImgUrl = pickImg(product.images, 'detail', product.thumbnail_url)
+  const origImgUrl  = product.images?.orig ?? firstImgUrl ?? undefined
   const visibleOffers = withPrice
     ? product.offers.filter(o => o.price_type === 'fixed')
     : product.offers
@@ -96,7 +92,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Hero */}
         <div className="flex gap-4 mb-6">
           {firstImgUrl && (
-            <ProductHeroImage src={firstImgUrl} alt={name} />
+            <ProductHeroImage src={firstImgUrl} origSrc={origImgUrl} alt={name} />
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold text-text leading-tight" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{name}</h1>

@@ -3,21 +3,12 @@
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
-import { formatPriceOrLabel, toRelativeImageUrl } from '@/lib/utils'
-
-function resolveImgSrc(item: ProductListItem): string | null {
-  // Prefer relative path from images[] to avoid localhost URLs that break on mobile
-  const firstImg = item.images?.[0]
-  if (firstImg && typeof firstImg === 'object' && firstImg !== null && 'url' in firstImg) {
-    return String((firstImg as { url: string }).url)
-  }
-  return toRelativeImageUrl(item.thumbnail_url)
-}
+import { formatPriceOrLabel, pickImg } from '@/lib/utils'
 
 export function ProductCard({ item, lang, variant = 'vertical' }: { item: ProductListItem; lang: string; variant?: 'vertical' | 'horizontal' }) {
   const tr = t(lang)
   const offer = item.best_offer
-  const imgSrc = resolveImgSrc(item)
+  const imgSrc = pickImg(item.images, 'card', item.thumbnail_url)
   const priceLabel = offer
     ? formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
     : null

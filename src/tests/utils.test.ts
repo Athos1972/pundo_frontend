@@ -11,6 +11,7 @@ import {
   formatWeight,
   formatSizeAttr,
   toRelativeImageUrl,
+  pickImg,
 } from '@/lib/utils'
 
 // ─── formatCrawledAt ─────────────────────────────────────────────────────────
@@ -185,6 +186,53 @@ describe('formatSizeAttr', () => {
 
   it('handles string value in object form', () => {
     expect(formatSizeAttr({ unit: 'g', value: '400' })).toBe('400 g')
+  })
+})
+
+// ─── pickImg ─────────────────────────────────────────────────────────────────
+
+describe('pickImg', () => {
+  const fullImages = {
+    thumb:    '/product_images/abc_thumb.webp',
+    card:     '/product_images/abc_card.webp',
+    carousel: '/product_images/abc_carousel.webp',
+    detail:   '/product_images/abc_detail.webp',
+    orig:     '/product_images/abc_orig.jpg',
+  }
+
+  it('returns the requested variant URL', () => {
+    expect(pickImg(fullImages, 'card')).toBe('/product_images/abc_card.webp')
+    expect(pickImg(fullImages, 'detail')).toBe('/product_images/abc_detail.webp')
+    expect(pickImg(fullImages, 'orig')).toBe('/product_images/abc_orig.jpg')
+  })
+
+  it('falls back to toRelativeImageUrl(fallback) when variant is null', () => {
+    const partialImages = { ...fullImages, carousel: null }
+    expect(pickImg(partialImages, 'carousel', '/thumb/cat.png')).toBe('/thumb/cat.png')
+  })
+
+  it('strips localhost from fallback URL', () => {
+    const noImages = { ...fullImages, card: null }
+    expect(pickImg(noImages, 'card', 'http://localhost:8001/product_images/cat.jpg'))
+      .toBe('/product_images/cat.jpg')
+  })
+
+  it('returns null when images is null and no fallback', () => {
+    expect(pickImg(null, 'card')).toBeNull()
+  })
+
+  it('returns null when images is undefined and no fallback', () => {
+    expect(pickImg(undefined, 'card')).toBeNull()
+  })
+
+  it('returns null when variant is null and fallback is null', () => {
+    const noCard = { ...fullImages, card: null }
+    expect(pickImg(noCard, 'card', null)).toBeNull()
+  })
+
+  it('returns variant over fallback (variant wins)', () => {
+    expect(pickImg(fullImages, 'thumb', '/should-not-be-used.jpg'))
+      .toBe('/product_images/abc_thumb.webp')
   })
 })
 

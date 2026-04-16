@@ -42,7 +42,7 @@ vi.mock('@/lib/utils', async (importOriginal) => {
 describe('ProductCard image resolution', () => {
   const base = {
     id: 1, slug: 'cat-food', name: 'Cat Food', brand: null,
-    category_id: null, thumbnail_url: null, images: [], best_offer: null,
+    category_id: null, thumbnail_url: null, images: null, best_offer: null,
   }
 
   it('renders without image when no thumbnail or images', async () => {
@@ -51,22 +51,21 @@ describe('ProductCard image resolution', () => {
     expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 
-  it('uses images[0].url when available', async () => {
+  it('uses images.card variant when available', async () => {
     const { ProductCard } = await import('@/components/product/ProductCard')
-    const item = { ...base, images: [{ url: '/img/cat.jpg' }] }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { container } = render(<ProductCard item={item as any} lang="en" />)
-    expect(container.querySelector('img')?.getAttribute('src')).toBe('/img/cat.jpg')
+    const item = { ...base, images: { thumb: null, card: '/img/cat_card.webp', carousel: null, detail: null, orig: null } }
+    const { container } = render(<ProductCard item={item} lang="en" />)
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/img/cat_card.webp')
   })
 
-  it('uses thumbnail_url as fallback', async () => {
+  it('uses thumbnail_url as fallback when images is null', async () => {
     const { ProductCard } = await import('@/components/product/ProductCard')
     const item = { ...base, thumbnail_url: '/thumb/cat.png' }
     const { container } = render(<ProductCard item={item} lang="en" />)
     expect(container.querySelector('img')?.getAttribute('src')).toBe('/thumb/cat.png')
   })
 
-  it('strips localhost origin from thumbnail_url', async () => {
+  it('strips localhost origin from thumbnail_url fallback', async () => {
     const { ProductCard } = await import('@/components/product/ProductCard')
     const item = { ...base, thumbnail_url: 'http://localhost:8001/media/cat.jpg' }
     const { container } = render(<ProductCard item={item} lang="en" />)

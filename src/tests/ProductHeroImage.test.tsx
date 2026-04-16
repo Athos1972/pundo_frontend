@@ -43,12 +43,29 @@ describe('ProductHeroImage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('lightbox image has same src as hero image', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+  it('lightbox falls back to src when origSrc is not provided', () => {
+    render(<ProductHeroImage src="/product_images/test_detail.webp" alt="Test Product" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     const images = screen.getAllByRole('img')
     expect(images.length).toBe(2)
-    expect(images[1]).toHaveAttribute('src', '/product_images/test.jpg')
+    expect(images[1]).toHaveAttribute('src', '/product_images/test_detail.webp')
+  })
+
+  it('lightbox uses origSrc when provided', () => {
+    render(
+      <ProductHeroImage
+        src="/product_images/test_detail.webp"
+        origSrc="/product_images/test_orig.jpg"
+        alt="Test Product"
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
+    const images = screen.getAllByRole('img')
+    expect(images.length).toBe(2)
+    // Hero shows detail variant
+    expect(images[0]).toHaveAttribute('src', '/product_images/test_detail.webp')
+    // Fullscreen dialog shows orig
+    expect(images[1]).toHaveAttribute('src', '/product_images/test_orig.jpg')
   })
 
   it('clicking the lightbox image does not close the dialog', () => {

@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 
 interface Props {
-  src: string
+  src: string       // detail-Variante (1024 px) — für den Hero-Container
+  origSrc?: string  // orig — für den Fullscreen-Dialog (unveränderte Originalgröße)
   alt: string
 }
 
-export function ProductHeroImage({ src, alt }: Props) {
+export function ProductHeroImage({ src, origSrc, alt }: Props) {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function ProductHeroImage({ src, alt }: Props) {
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={src}
+            src={origSrc ?? src}
             alt={alt}
             className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl"
             onClick={(e) => e.stopPropagation()}

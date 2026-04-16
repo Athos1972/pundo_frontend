@@ -1,5 +1,13 @@
 export type PriceType = 'fixed' | 'on_request' | 'free' | 'variable'
 
+export interface ProductImages {
+  thumb:    string | null
+  card:     string | null
+  carousel: string | null
+  detail:   string | null
+  orig:     string | null
+}
+
 export interface BestOffer {
   price: string | null; currency: string; price_type: PriceType; price_note: string | null;
   shop_id: number; shop_slug: string | null; shop_name: string;
@@ -11,7 +19,7 @@ export interface BestOffer {
 }
 export interface ProductListItem {
   id: number; slug: string; name: string | null; brand: string | null;
-  category_id: number | null; thumbnail_url: string | null; images: unknown[] | null; best_offer: BestOffer | null;
+  category_id: number | null; thumbnail_url: string | null; images: ProductImages | null; best_offer: BestOffer | null;
 }
 export interface ProductListResponse { total: number; items: ProductListItem[]; }
 
@@ -31,7 +39,7 @@ export interface ProductDetailResponse {
   names: Record<string, string>; descriptions: Record<string, string> | null;
   brand: { id: number; name: string | null } | null;
   category: { id: number; name: string | null } | null;
-  thumbnail_url: string | null; images: unknown[] | null; attributes: Record<string, unknown> | null;
+  thumbnail_url: string | null; images: ProductImages | null; attributes: Record<string, unknown> | null;
   offers: OfferDetail[];
   price_history: PriceHistoryItem[];
 }

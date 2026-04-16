@@ -56,6 +56,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Isolated git worktrees created by Claude Code — never lint these
+    ".claude/worktrees/**",
   ]),
 ]);
 

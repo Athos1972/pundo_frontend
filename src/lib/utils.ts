@@ -1,4 +1,4 @@
-import type { PriceType } from '@/types/api'
+import type { PriceType, ProductImages } from '@/types/api'
 import type { Translations } from '@/lib/translations'
 
 export function formatPriceOrLabel(
@@ -70,6 +70,18 @@ export function toRelativeImageUrl(url: string | null | undefined): string | nul
     if (u.hostname === 'localhost') return u.pathname
   } catch { /* already relative */ }
   return url
+}
+
+/**
+ * Picks a variant URL from a ProductImages object with graceful fallback.
+ * Falls back to toRelativeImageUrl(fallback) when the variant is null/missing.
+ */
+export function pickImg(
+  images: ProductImages | null | undefined,
+  variant: keyof ProductImages,
+  fallback?: string | null,
+): string | null {
+  return images?.[variant] ?? toRelativeImageUrl(fallback) ?? null
 }
 
 export function formatSizeAttr(size: unknown): string | null {

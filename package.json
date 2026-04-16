@@ -21,6 +21,7 @@
     "yet-another-react-lightbox": "^3.31.0"
   },
   "devDependencies": {
+    "@csstools/postcss-cascade-layers": "^4.0.6",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

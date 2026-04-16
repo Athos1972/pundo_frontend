@@ -41,11 +41,12 @@ Browser-E2E-Tests durch.
 ## Ablauf-Übersicht
 
 ```
-Phase 0: Scope-Ermittlung     (git diff → was wurde geändert?)
-Phase 1: Statische Prüfung    (TypeScript + ESLint → fehlerfrei?)
-Phase 2: Unit-Tests           (Vitest → Coverage-Lücken schließen)
-Phase 3: E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
-Phase 4: Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
+Phase 0:   Scope-Ermittlung     (git diff → was wurde geändert?)
+Phase 1:   Statische Prüfung    (TypeScript + ESLint → fehlerfrei?)
+Phase 2:   Unit-Tests           (Vitest → Coverage-Lücken schließen)
+Phase 3:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
+Phase 4:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
+Phase 4.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
 ```
 
 ---
@@ -494,6 +495,77 @@ COVERAGE_GAPs (nicht blockierend):
 
 Known Issues:
   - <ID>: <Beschreibung>
+```
+
+---
+
+## Phase 4.5: Living Docs Sync
+
+Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.md`) noch zum tatsächlichen Code-Stand passen.
+**Nicht-blocking** — läuft immer durch, egal ob User j oder n antwortet.
+
+### Schritt 1: Heuristik-Check
+
+```bash
+DIFF_BASE=$(python3 -c "import json; d=json.load(open('.claude/skills/e2e-tester/.last_run')); print(d['sha'])" 2>/dev/null || echo "main")
+
+# Neue öffentliche Routen (außerhalb von api/, admin/, shop-admin/, auth/)
+git diff "$DIFF_BASE" --name-only -- 'src/app/**' \
+  | grep -v -E 'src/app/(api|admin|shop-admin|auth)/' \
+  | grep -v 'llms\.txt'
+
+# Typ- oder API-Änderungen
+git diff "$DIFF_BASE" --name-only -- 'src/types/api.ts' 'src/lib/api.ts'
+
+# Feature-Keywords im Diff
+git diff "$DIFF_BASE" -- 'src/**/*.ts' 'src/**/*.tsx' \
+  | grep -E '^\+' \
+  | grep -iE 'shop_type|online_only|price_type|on_request|review|rating' \
+  | head -5
+```
+
+**Auswertung:**
+- Mindestens eine Zeile Ausgabe → **Signal vorhanden** → weiter mit Schritt 2
+- Keine Ausgabe → `Docs-Sync: keine Signale — übersprungen` in TESTSET.md → fertig
+
+### Schritt 2: Patch-Vorschlag erstellen
+
+Für jedes betroffene Dokument:
+
+1. Dokument lesen (`src/app/llms.txt/route.ts`, `README.md`, `AGENTS.md`)
+2. Git-Diff lesen (relevante Abschnitte)
+3. Konkret formulieren: Welcher Absatz ist veraltet? Was ist die neue korrekte Aussage?
+4. Patch als `--- alt`/`+++ neu` Diff anzeigen — **je Datei separat**
+
+```
+Docs-Sync — Patch-Vorschlag für src/app/llms.txt/route.ts:
+
+--- alt
+- Shops: Lokale Geschäfte in Larnaca mit Öffnungszeiten, Adresse und Angeboten
++++ neu
+- Lokale Shops (shop_type: local): Geschäfte in Larnaca mit Adresse, Öffnungszeiten und Angeboten
+- Online-Shops (shop_type: online_only): Händler ohne physischen Standort, nur Lieferung
+
+Soll ich diese Änderung anwenden? (j/n)
+```
+
+### Schritt 3: Anwenden oder überspringen
+
+- User antwortet `j` → Datei patchen, weiter
+- User antwortet `n` → überspringen, weiter
+- Kein Blocker in beiden Fällen
+
+### Schritt 4: In TESTSET.md dokumentieren
+
+Neue Zeile unter dem Abschlussbericht:
+
+```
+### Docs-Sync
+| Dokument | Status |
+|----------|--------|
+| llms.txt/route.ts | aktualisiert / unverändert / übersprungen / kein Signal |
+| README.md         | aktualisiert / unverändert / übersprungen / kein Signal |
+| AGENTS.md         | aktualisiert / unverändert / übersprungen / kein Signal |
 ```
 
 ---

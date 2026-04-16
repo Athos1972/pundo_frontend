@@ -53,7 +53,13 @@ const buildCsp = (nonce: string): string =>
     // in Browsern die nonces unterstuetzen, wird es ignoriert.
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg) ergaenzt 2026-04-15.
-    `img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com`,
+    // api.pundo.cy ergaenzt 2026-04-16: das Frontend rendert <img>-Tags fuer
+    // Produkt-/Brand-/Review-Bilder seit dem image-variants-Release als
+    // ABSOLUTE URLs auf https://api.pundo.cy/product_images/... — das ist
+    // ein anderer Origin als pundo.cy, faellt also nicht unter 'self'.
+    // Ohne dieses Whitelisting werden alle Produktbilder still vom Browser
+    // geblockt.
+    `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com`,
     `font-src 'self'`,
     // connect: Plausible Analytics self-hosted — Tracker postet Events an /api/event
     // auf plausible.pundo.cy. Ohne diesen Eintrag wuerde der Browser jeden Pageview blockieren.

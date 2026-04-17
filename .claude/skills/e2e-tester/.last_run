@@ -1,13 +1,13 @@
 {
-  "sha": "32ffdf7c71b60ffa5ee43f693756fa2341cfac7e",
-  "timestamp": "2026-04-16T20:06:34.185162+00:00",
+  "sha": "987a5e506b7d919d32dd58c2bedbb08945c3fe4d",
+  "timestamp": "2026-04-17T11:02:50.695643+00:00",
   "coverage_snapshot": {
-    "total_tests_unit": 567,
-    "total_tests_e2e": 11,
-    "e2e_passed": 9,
-    "e2e_skipped": 2,
-    "utils_coverage": "100%",
-    "offerlist_coverage": "93.75%",
-    "api_coverage": "100%"
+    "src/lib/legal-content.ts": "100%",
+    "src/lib/legal-content-en.ts": "n/a (static data)",
+    "src/lib/legal-content-de.ts": "n/a (static data)",
+    "src/lib/legal-content-ru.ts": "n/a (static data)",
+    "src/lib/legal-content-el.ts": "n/a (static data)",
+    "src/lib/legal-content-ar.ts": "n/a (static data)",
+    "src/lib/legal-content-he.ts": "n/a (static data)"
   }
 }

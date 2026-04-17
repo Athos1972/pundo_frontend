@@ -2,9 +2,92 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-17
-SHA: uncommitted (F5000 WhatsApp-Button)
-Konfiguration: **playwright.config.ts → http://127.0.0.1:3500 (Test-Instanz)**
-Ergebnis: **11/11 E2E-Tests PASS ✓**
+SHA: 987a5e506b7d919d32dd58c2bedbb08945c3fe4d (Legal Content Translations)
+Konfiguration: **e2e/pw-legal.config.ts → http://localhost:3500 (Test-Instanz)**
+Ergebnis: **18/18 E2E-Tests PASS ✓**
+
+---
+
+## Testlauf 2026-04-17 — Legal Content (Alle Sprachen)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler in src/ |
+| TypeScript (e2e/) | KNOWN_ISSUE — pre-existing Fehler in `e2e/shop-discovery.spec.ts` |
+| ESLint | **PASS** — 0 Errors, pre-existing Warnings |
+
+### Unit-Tests (Vitest)
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **565+ bestanden** |
+| Fehlgeschlagene | 0 |
+
+### Coverage-Snapshot
+
+| Modul | Status |
+|-------|--------|
+| `src/lib/legal-content.ts` | n/a — re-export only |
+| `src/lib/legal-content-en.ts` | n/a — static data |
+| `src/lib/legal-content-de.ts` | n/a — static data |
+| `src/lib/legal-content-ru.ts` | n/a — static data |
+| `src/lib/legal-content-el.ts` | n/a — static data |
+| `src/lib/legal-content-ar.ts` | n/a — static data |
+| `src/lib/legal-content-he.ts` | n/a — static data |
+
+### E2E-Tests (legal-pages.spec.ts)
+
+| Test | Status | Anmerkung |
+|------|--------|-----------|
+| /legal/imprint lädt (EN) | **PASS** | |
+| /legal/privacy lädt (EN) | **PASS** | |
+| /legal/terms lädt (EN) | **PASS** | |
+| /about lädt (EN) | **PASS** | |
+| /contact lädt (EN) | **PASS** | |
+| /legal/imprint kein Placeholder (en) | **PASS** | |
+| /legal/imprint kein Placeholder (de) | **PASS** | |
+| /legal/imprint kein Placeholder (ru) | **PASS** | |
+| /legal/imprint kein Placeholder (el) | **PASS** | |
+| /legal/imprint kein Placeholder (ar) | **PASS** | |
+| /legal/imprint kein Placeholder (he) | **PASS** | |
+| Arabisch dir=rtl auf Legal-Seite | **PASS** | |
+| Hebräisch dir=rtl auf Legal-Seite | **PASS** | |
+| Englisch dir=ltr auf Legal-Seite | **PASS** | |
+| Deutsch dir=ltr auf Legal-Seite | **PASS** | |
+| Imprint enthält echte Firmendaten | **PASS** | HE 329258, CY10329258B, Kimonos 1, Bernhard Buhl |
+| Privacy Policy enthält GDPR-Rechte | **PASS** | |
+| Terms enthält Datum | **PASS** | |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** |
+| he | rtl | **PASS** |
+| en | ltr | **PASS** |
+| de | ltr | **PASS** |
+
+### Neue/Geänderte Dateien
+
+| Datei | Änderung |
+|-------|---------|
+| `src/lib/legal-content.ts` | Refactored — imports + merge statt inline content |
+| `src/lib/legal-content-en.ts` | NEU — Englische Legal-Texte (imprint, privacy, terms, about, contact) |
+| `src/lib/legal-content-de.ts` | NEU — Deutsche Übersetzungen |
+| `src/lib/legal-content-ru.ts` | NEU — Russische Übersetzungen |
+| `src/lib/legal-content-el.ts` | NEU — Griechische Übersetzungen |
+| `src/lib/legal-content-ar.ts` | NEU — Arabische Übersetzungen (RTL) |
+| `src/lib/legal-content-he.ts` | NEU — Hebräische Übersetzungen (RTL) |
+| `e2e/legal-pages.spec.ts` | NEU — 18 E2E-Tests (kein globalSetup, standalone) |
+| `e2e/pw-legal.config.ts` | NEU — Playwright-Config ohne globalSetup für Legal-Tests |
+
+### Docs-Sync
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | kein Signal — keine API-Änderungen |
+| `README.md` | unverändert |
 
 ---
 

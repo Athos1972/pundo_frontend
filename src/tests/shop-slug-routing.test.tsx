@@ -27,7 +27,14 @@ vi.mock('@/lib/translations', () => ({
     price_variable: 'Variabler Preis',
     filter_price_only: 'Nur mit Preis',
     contact_shop: 'Shop kontaktieren',
+    whatsapp_contact: 'WhatsApp',
+    whatsapp_message_product: (productName: string, hostname: string) => `Hallo! ${productName} auf ${hostname}`,
+    whatsapp_message_shop: (shopName: string, hostname: string) => `Hallo! ${shopName} auf ${hostname}`,
   }),
+}))
+
+vi.mock('@/lib/seo', () => ({
+  getSiteUrl: () => 'https://pundo.cy',
 }))
 
 vi.mock('@/lib/utils', async (importOriginal) => {
@@ -48,6 +55,8 @@ const makeShop = (overrides?: Partial<ShopListItem>): ShopListItem => ({
   location: null,
   dist_km: null,
   phone: null,
+  whatsapp_number: null,
+  whatsapp_url: null,
   website: null,
   opening_hours: null,
   status: 'active',
@@ -129,7 +138,7 @@ describe('ShopCard', () => {
 
 describe('OfferList', () => {
   it('verlinkt auf /shops/<slug>', () => {
-    render(<OfferList offers={[makeOffer()]} lang="de" />)
+    render(<OfferList offers={[makeOffer()]} lang="de" productName="Test" />)
     const link = screen.getByRole('link', { name: 'Mein Testshop' })
     expect(link).toHaveAttribute('href', '/shops/mein-testshop')
     expect(link).not.toHaveAttribute('href', '/shops/42')
@@ -140,7 +149,7 @@ describe('OfferList', () => {
       makeOffer({ shop_name: 'Teuer', price: '5.00', is_available: false }),
       makeOffer({ shop_slug: 'billig', shop_name: 'Billig', price: '3.00', is_available: true }),
     ]
-    render(<OfferList offers={offers} lang="de" />)
+    render(<OfferList offers={offers} lang="de" productName="Test" />)
     const links = screen.getAllByRole('link')
     expect(links[0]).toHaveTextContent('Billig')
   })
@@ -181,7 +190,7 @@ describe('getShop API-Client', () => {
       json: async () => ({
         id: 42, slug: 'mein-testshop', name: 'Mein Testshop',
         address_raw: null, location: null, dist_km: null,
-        phone: null, website: null, opening_hours: null,
+        phone: null, whatsapp_number: null, whatsapp_url: null, website: null, opening_hours: null,
         status: 'active', product_count: 0, last_scraped: null,
         top_products: [],
       }),

@@ -147,6 +147,8 @@ describe('buildLocalBusinessSchema', () => {
     location: { lat: 34.9, lng: 33.6 },
     dist_km: null,
     phone: '+357 24 123456',
+    whatsapp_number: null,
+    whatsapp_url: null,
     website: null,
     opening_hours: { mon: '09:00-18:00', tue: '09:00-18:00', sat: '10:00-15:00', sun: null },
     status: 'active',

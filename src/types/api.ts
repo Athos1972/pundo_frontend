@@ -47,7 +47,7 @@ export interface ProductDetailResponse {
 export interface ShopListItem {
   id: number; slug: string; name: string | null; address_raw: string | null;
   location: { lat: number; lng: number } | null; dist_km: number | null;
-  phone: string | null; website: string | null;
+  phone: string | null; whatsapp_number: string | null; whatsapp_url: string | null; website: string | null;
   opening_hours: Record<string, unknown> | null;
   status: string; product_count: number; last_scraped: string | null;
 }

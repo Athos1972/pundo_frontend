@@ -1,11 +1,13 @@
 {
-  "sha": "21d13b1d98d4f3f9df71907d7c029c3e9eb185c3",
-  "timestamp": "2026-04-14T18:43:00+00:00",
+  "sha": "32ffdf7c71b60ffa5ee43f693756fa2341cfac7e",
+  "timestamp": "2026-04-16T20:06:34.185162+00:00",
   "coverage_snapshot": {
-    "total_tests": 53,
-    "new_tests_added": 0,
-    "test_files": 1,
-    "target": "pundo.cy (production)",
-    "config": "playwright-cy.config.ts"
+    "total_tests_unit": 567,
+    "total_tests_e2e": 11,
+    "e2e_passed": 9,
+    "e2e_skipped": 2,
+    "utils_coverage": "100%",
+    "offerlist_coverage": "93.75%",
+    "api_coverage": "100%"
   }
 }

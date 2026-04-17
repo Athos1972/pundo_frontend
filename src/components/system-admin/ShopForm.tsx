@@ -27,6 +27,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [address, setAddress] = useState(shop?.address_line1 ?? '')
   const [city, setCity] = useState(shop?.city ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
+  const [whatsapp_number, setWhatsapp] = useState(shop?.whatsapp_number ?? '')
   const [website, setWebsite] = useState(shop?.website_url ?? '')
   const [status, setStatus] = useState(shop?.status ?? 'active')
   const [shopTypeId, setShopTypeId] = useState<string>(String(shop?.shop_type_id ?? ''))
@@ -63,6 +64,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       address_line1: address.trim() || null,
       city: city.trim() || null,
       phone: phone.trim() || null,
+      whatsapp_number: whatsapp_number.trim() || null,
       website_url: website.trim() || null,
       status,
       shop_type_id: shopTypeId ? Number(shopTypeId) : null,
@@ -138,6 +140,18 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           disabled={isPending}
         />
         <FormField
+          label="WhatsApp"
+          name="whatsapp_number"
+          type="tel"
+          placeholder="+35799123456"
+          value={whatsapp_number}
+          onChange={(e) => setWhatsapp(e.target.value)}
+          disabled={isPending}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
           label={tr.website}
           name="website"
           type="url"
@@ -145,9 +159,6 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           onChange={(e) => setWebsite(e.target.value)}
           disabled={isPending}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <FormField
           label={tr.shop_email}
           name="email"
@@ -156,12 +167,22 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isPending}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <FormField
           label={tr.webshop_url}
           name="webshop_url"
           type="url"
           value={webshopUrl}
           onChange={(e) => setWebshopUrl(e.target.value)}
+          disabled={isPending}
+        />
+        <FormField
+          label={tr.postal_code}
+          name="postal_code"
+          value={postalCode}
+          onChange={(e) => setPostalCode(e.target.value)}
           disabled={isPending}
         />
       </div>
@@ -194,14 +215,6 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           ))}
         </FormField>
       </div>
-
-      <FormField
-        label={tr.postal_code}
-        name="postal_code"
-        value={postalCode}
-        onChange={(e) => setPostalCode(e.target.value)}
-        disabled={isPending}
-      />
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-gray-700">Options</span>

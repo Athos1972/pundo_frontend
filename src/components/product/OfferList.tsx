@@ -3,7 +3,7 @@ import type { OfferDetail } from '@/types/api'
 import { t } from '@/lib/translations'
 import { formatCrawledAt, formatPriceOrLabel } from '@/lib/utils'
 
-export function OfferList({ offers, lang }: { offers: OfferDetail[]; lang: string }) {
+export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
   const tr = t(lang)
 
   const sorted = [...offers].sort((a, b) => {

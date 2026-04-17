@@ -52,6 +52,7 @@ export interface SysAdminShop {
   lng: number | null
   phone: string | null
   phone_alt?: string | null
+  whatsapp_number: string | null
   email?: string | null
   website_url: string | null
   webshop_url?: string | null

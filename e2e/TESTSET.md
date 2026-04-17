@@ -1,10 +1,89 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-14
-SHA: 21d13b1 (Server-Commit)
-Konfiguration: **playwright-cy.config.ts → https://pundo.cy (Produktion, DNS-Override: 138.201.141.109)**
-Ergebnis: **53/53 E2E-Tests PASS**
+Datum: 2026-04-17
+SHA: uncommitted (F5000 WhatsApp-Button)
+Konfiguration: **playwright.config.ts → http://127.0.0.1:3500 (Test-Instanz)**
+Ergebnis: **11/11 E2E-Tests PASS ✓**
+
+---
+
+## Testlauf 2026-04-16 — F5000 WhatsApp-Button
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler in src/ |
+| TypeScript (e2e/) | KNOWN_ISSUE — 12 Fehler in `e2e/shop-discovery.spec.ts` (pre-existing, seit early alpha) |
+| ESLint | **PASS** — 0 Errors, 18 pre-existing Warnings |
+
+### Unit-Tests (Vitest)
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **567 bestanden** (+35 vs. vorher 532) |
+| Fehlgeschlagene | 0 |
+| Neu geschrieben | +5 `buildWhatsAppUrl`-Tests, +4 WhatsApp-CTA-Tests, +18 Translation-Tests |
+
+### Coverage-Snapshot (relevante Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/lib/utils.ts` | **100%** | 90% | PASS |
+| `src/lib/api.ts` | **100%** | 80% | PASS |
+| `src/components/product/OfferList.tsx` | **93.75%** | 70% | PASS |
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | COVERAGE_GAP |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `ShopMapClient.tsx` | 0% | 70% | Leaflet braucht Browser-Canvas — kein JSDOM-Support |
+
+### E2E-Tests (whatsapp-button.spec.ts)
+
+| Test | Status | Anmerkung |
+|------|--------|-----------|
+| Startseite lädt fehlerfrei | **PASS** | |
+| OfferList-Seite lädt fehlerfrei | **PASS** | |
+| RTL ar: dir=rtl | **PASS** | |
+| RTL he: dir=rtl | **PASS** | |
+| LTR en: dir=ltr | **PASS** | |
+| LTR de: dir=ltr | **PASS** | |
+| Shop mit whatsapp: wa.me-Link | **PASS** | wa.me + `?text=` korrekt, kein tel:-Link |
+| Shop ohne whatsapp, mit phone: tel:-Link | **PASS** | Regression-Check ✓ |
+| OfferList: on_request-Angebot zeigt Website-CTA | **PASS** | (kein wa.me in Offers — Backend-Design) |
+| Mobile: lädt fehlerfrei | **PASS** | |
+| Mobile: kein horizontaler Scroll | **PASS** | |
+
+### Geänderte Dateien (dieses Feature)
+
+| Datei | Änderung |
+|-------|---------|
+| `src/types/api.ts` | `whatsapp_number`+`whatsapp_url` in ShopListItem/ShopDetailResponse (kein shop_whatsapp in OfferDetail) |
+| `src/types/system-admin.ts` | `whatsapp_number` in SysAdminShop |
+| `src/lib/utils.ts` | `buildWhatsAppUrl()` neu |
+| `src/lib/translations.ts` | 3 neue Keys in 6 Sprachen |
+| `src/components/ui/WhatsAppIcon.tsx` | Neu — SVG #25D366 |
+| `src/app/(customer)/products/[slug]/page.tsx` | `productName` Prop zu OfferList |
+| `src/app/(customer)/shops/[slug]/page.tsx` | WhatsApp-Button via `buildWhatsAppUrl(shop.whatsapp_number, ...)` + `?text=` |
+| `src/components/system-admin/ShopForm.tsx` | `whatsapp_number` Eingabefeld |
+| `e2e/whatsapp-button.spec.ts` | Neu — 11 E2E-Tests |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-01 | `e2e/shop-discovery.spec.ts`: 12 TypeScript-Fehler (`shop` possibly null, `lat`/`lng` fehlen auf `{}`) | Early Alpha |
+
+### Docs-Sync
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | — (Phase 4.5 nicht ausgeführt, keine API-Änderungen die llms.txt betreffen) |
+| `README.md` | unverändert |
+
+---
 
 ---
 

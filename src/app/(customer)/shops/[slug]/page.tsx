@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
+import { buildWhatsAppUrl } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 
@@ -77,7 +79,22 @@ export default async function ShopPage({ params }: Props) {
             <span className={`text-xs px-2 py-1 rounded-full ${shop.status === 'active' ? 'bg-success/10 text-success' : 'bg-surface-alt text-text-muted'}`}>
               {shop.status}
             </span>
-            {shop.phone && <a href={`tel:${shop.phone}`} className="text-sm text-accent">{shop.phone}</a>}
+            {shop.whatsapp_number ? (
+              <a
+                href={buildWhatsAppUrl(
+                  shop.whatsapp_number,
+                  tr.whatsapp_message_shop(shop.name ?? '', new URL(siteUrl).hostname)
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-[#128C7E] hover:opacity-80"
+              >
+                <WhatsAppIcon size={16} />
+                {tr.whatsapp_contact}
+              </a>
+            ) : shop.phone ? (
+              <a href={`tel:${shop.phone}`} className="text-sm text-accent">{shop.phone}</a>
+            ) : null}
           </div>
           {shop.spoken_languages && shop.spoken_languages.length > 0 && (
             <div className="mt-3">

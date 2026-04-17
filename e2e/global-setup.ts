@@ -168,7 +168,7 @@ export default async function globalSetup() {
     const output = execSync(`${pyBin} ${pyScript}`, {
       cwd: BACKEND_REPO,
       encoding: 'utf8',
-      timeout: 120_000,
+      timeout: 300_000,
       env: { ...process.env, PYTHONPATH: BACKEND_REPO },
     })
     // Last line of stdout is the JSON credentials

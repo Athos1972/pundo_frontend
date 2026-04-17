@@ -12,6 +12,7 @@ import {
   formatSizeAttr,
   toRelativeImageUrl,
   pickImg,
+  buildWhatsAppUrl,
 } from '@/lib/utils'
 
 // ─── formatCrawledAt ─────────────────────────────────────────────────────────
@@ -233,6 +234,40 @@ describe('pickImg', () => {
   it('returns variant over fallback (variant wins)', () => {
     expect(pickImg(fullImages, 'thumb', '/should-not-be-used.jpg'))
       .toBe('/product_images/abc_thumb.webp')
+  })
+})
+
+// ─── buildWhatsAppUrl ─────────────────────────────────────────────────────────
+
+describe('buildWhatsAppUrl', () => {
+  it('strips leading + from E.164 number', () => {
+    expect(buildWhatsAppUrl('+35799123456', 'Hello')).toBe(
+      'https://wa.me/35799123456?text=Hello'
+    )
+  })
+
+  it('leaves number without + unchanged', () => {
+    expect(buildWhatsAppUrl('35799123456', 'Hi')).toBe(
+      'https://wa.me/35799123456?text=Hi'
+    )
+  })
+
+  it('URL-encodes text with spaces', () => {
+    expect(buildWhatsAppUrl('+35799123456', 'Hello World')).toBe(
+      'https://wa.me/35799123456?text=Hello%20World'
+    )
+  })
+
+  it('URL-encodes special characters including !', () => {
+    const url = buildWhatsAppUrl('+35799123456', 'Hello! Product on pundo.cy')
+    expect(url).toContain('text=')
+    expect(url).toContain('pundo.cy')
+  })
+
+  it('encodes unicode text correctly', () => {
+    const url = buildWhatsAppUrl('+35799123456', 'Hallo! Ich habe Test auf pundo.cy gefunden.')
+    expect(url).toContain('https://wa.me/35799123456?text=')
+    expect(url).toContain('pundo.cy')
   })
 })
 

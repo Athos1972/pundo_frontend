@@ -116,7 +116,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             <h2 className="font-bold text-sm text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.all_offers}</h2>
             <PriceFilterToggle />
           </div>
-          <OfferList offers={visibleOffers} lang={lang} />
+          <OfferList offers={visibleOffers} lang={lang} productName={name} />
         </div>
 
         {/* Related products carousel — hidden when empty */}

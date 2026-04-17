@@ -29,6 +29,10 @@ vi.mock('@/lib/lang', () => ({
   isRTL: (lang: string) => lang === 'ar' || lang === 'he',
 }))
 
+vi.mock('@/lib/seo', () => ({
+  getSiteUrl: () => 'https://pundo.cy',
+}))
+
 // ─── formatPriceOrLabel ───────────────────────────────────────────────────────
 
 describe('formatPriceOrLabel', () => {
@@ -105,7 +109,7 @@ describe('OfferList sorting', () => {
       makeOffer({ shop_name: 'Shop On Request', price_type: 'on_request' }),
       makeOffer({ shop_name: 'Shop Fixed', price: '5.00', price_type: 'fixed' }),
     ]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     const items = screen.getAllByRole('link').map(el => el.textContent)
     expect(items[0]).toBe('Shop Fixed')
     expect(items[1]).toBe('Shop On Request')
@@ -118,7 +122,7 @@ describe('OfferList sorting', () => {
       makeOffer({ shop_name: 'Cheap', price: '3.00', price_type: 'fixed' }),
       makeOffer({ shop_name: 'Medium', price: '6.00', price_type: 'fixed' }),
     ]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     const links = screen.getAllByRole('link').map(el => el.textContent)
     expect(links[0]).toBe('Cheap')
     expect(links[1]).toBe('Medium')
@@ -132,7 +136,7 @@ describe('OfferList sorting', () => {
       makeOffer({ shop_name: 'Alpha Shop', price_type: 'free' }),
       makeOffer({ shop_name: 'Fixed Shop', price: '9.99', price_type: 'fixed' }),
     ]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     const links = screen.getAllByRole('link').map(el => el.textContent)
     expect(links[0]).toBe('Fixed Shop')
     expect(links[1]).toBe('Alpha Shop')
@@ -142,7 +146,7 @@ describe('OfferList sorting', () => {
   it('on_request shows muted price label, not accent', async () => {
     const { OfferList } = await import('@/components/product/OfferList')
     const offers = [makeOffer({ shop_name: 'Pet Vet', price_type: 'on_request' })]
-    const { container } = render(<OfferList offers={offers} lang="en" />)
+    const { container } = render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     expect(screen.getByText('Price on request')).toBeInTheDocument()
     // Should NOT have accent color on the price element
     const priceEl = container.querySelector('p.font-bold')
@@ -153,7 +157,7 @@ describe('OfferList sorting', () => {
   it('shows price_note when provided', async () => {
     const { OfferList } = await import('@/components/product/OfferList')
     const offers = [makeOffer({ price: '5.00', price_type: 'fixed', price_note: 'pro Stunde' })]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     expect(screen.getByText('pro Stunde')).toBeInTheDocument()
   })
 
@@ -164,7 +168,7 @@ describe('OfferList sorting', () => {
       shop_phone: '+357 99 123456',
       url: 'https://example.com',
     })]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     const telLink = screen.getByText('Contact shop').closest('a')
     expect(telLink?.getAttribute('href')).toBe('tel:+357 99 123456')
     const webLink = screen.getByText('Website').closest('a')
@@ -174,7 +178,7 @@ describe('OfferList sorting', () => {
   it('no CTA block when on_request but no phone and no url', async () => {
     const { OfferList } = await import('@/components/product/OfferList')
     const offers = [makeOffer({ price_type: 'on_request', shop_phone: null, url: null })]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
     expect(screen.queryByText('Contact shop')).not.toBeInTheDocument()
     expect(screen.queryByText('Website')).not.toBeInTheDocument()
   })
@@ -185,7 +189,29 @@ describe('OfferList sorting', () => {
       price: '9.99', price_type: 'fixed',
       shop_phone: '+357 99 000000', url: 'https://shop.com',
     })]
-    render(<OfferList offers={offers} lang="en" />)
+    render(<OfferList offers={offers} lang="en" productName="Test Product" />)
+    expect(screen.queryByText('Contact shop')).not.toBeInTheDocument()
+  })
+
+  it('shows tel link when shop_phone is set (on_request)', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offers = [makeOffer({
+      price_type: 'on_request',
+      shop_phone: '+357 99 000000',
+    })]
+    render(<OfferList offers={offers} lang="en" productName="Dog Food" />)
+    const telLink = screen.getByText('Contact shop').closest('a')
+    expect(telLink?.getAttribute('href')).toBe('tel:+357 99 000000')
+  })
+
+  it('no CTA when shop_phone null and no url', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offers = [makeOffer({
+      price_type: 'on_request',
+      shop_phone: null,
+      url: null,
+    })]
+    render(<OfferList offers={offers} lang="en" productName="Empty" />)
     expect(screen.queryByText('Contact shop')).not.toBeInTheDocument()
   })
 })
@@ -295,5 +321,31 @@ describe('translations: new price_type keys', () => {
         expect(val.length).toBeGreaterThan(0)
       })
     }
+  }
+})
+
+// ─── translations: whatsapp keys ─────────────────────────────────────────────
+
+describe('translations: whatsapp keys', () => {
+  const langs = ['en', 'de', 'ru', 'el', 'ar', 'he'] as const
+
+  for (const lang of langs) {
+    it(`${lang}.whatsapp_contact is "WhatsApp"`, () => {
+      expect(t(lang).whatsapp_contact).toBe('WhatsApp')
+    })
+
+    it(`${lang}.whatsapp_message_product contains productName and hostname`, () => {
+      const msg = t(lang).whatsapp_message_product('TestProduct', 'pundo.cy')
+      expect(typeof msg).toBe('string')
+      expect(msg).toContain('TestProduct')
+      expect(msg).toContain('pundo.cy')
+    })
+
+    it(`${lang}.whatsapp_message_shop contains shopName and hostname`, () => {
+      const msg = t(lang).whatsapp_message_shop('TestShop', 'pundo.cy')
+      expect(typeof msg).toBe('string')
+      expect(msg).toContain('TestShop')
+      expect(msg).toContain('pundo.cy')
+    })
   }
 })

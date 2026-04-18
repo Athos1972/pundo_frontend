@@ -28,31 +28,31 @@ export function EmailSignupForm({ tr }: { tr: EmailFormTr }) {
   }
 
   if (status === 'success') {
-    return (
-      <p className="text-center text-sm text-green-300 font-medium py-3">{tr.success}</p>
-    )
+    return <p className="cs-success">{tr.success}</p>
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <input
-        type="email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        placeholder={tr.placeholder}
-        required
-        className="bg-white/10 border border-white/30 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/50 w-full focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-sm"
-      />
-      <button
-        type="submit"
-        disabled={status === 'loading'}
-        className="bg-accent text-white rounded-xl px-4 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-60 transition-opacity"
-      >
-        {status === 'loading' ? '…' : tr.submit}
-      </button>
+    <div>
+      <form onSubmit={handleSubmit} className="cs-form">
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder={tr.placeholder}
+          required
+          className="cs-input"
+        />
+        <button
+          type="submit"
+          disabled={status === 'loading'}
+          className="cs-btn"
+        >
+          {status === 'loading' ? '…' : tr.submit}
+        </button>
+      </form>
       {status === 'error' && (
-        <p className="text-center text-xs text-red-400 mt-1">{tr.error}</p>
+        <p className="cs-error">{tr.error}</p>
       )}
-    </form>
+    </div>
   )
 }

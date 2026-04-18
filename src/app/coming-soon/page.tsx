@@ -12,78 +12,90 @@ export default async function ComingSoonPage() {
 
   return (
     <main
-      className="coming-soon-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center relative"
+      className="coming-soon-bg min-h-screen relative overflow-hidden flex flex-col"
       dir={rtl ? 'rtl' : 'ltr'}
     >
-      {/* Language switcher — top right */}
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher current={lang} dark />
-      </div>
+      {/* Animated background blobs */}
+      <div className="cs-blob cs-blob-1" />
+      <div className="cs-blob cs-blob-2" />
+      <div className="cs-blob cs-blob-3" />
 
-      {/* Logo */}
-      <div className="animate-entrance mb-10" style={{ animationDelay: '0ms' }}>
-        <img
-          src={brand.assets.logoDarkSvg ?? brand.assets.logoSvg}
-          alt={brand.name}
-          className="h-16 w-auto"
+      {/* Giant watermark */}
+      <div className="cs-watermark" aria-hidden="true">НАЙДИ</div>
+
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
+
+        {/* Language switcher */}
+        <div className={`absolute top-5 ${rtl ? 'left-5' : 'right-5'}`}>
+          <LanguageSwitcher current={lang} dark />
+        </div>
+
+        {/* Logo */}
+        <div className="animate-entrance mb-10" style={{ animationDelay: '0ms' }}>
+          <img
+            src={brand.assets.logoDarkSvg ?? brand.assets.logoSvg}
+            alt={brand.name}
+            className="h-16 w-auto"
+          />
+        </div>
+
+        {/* Headline */}
+        <h1
+          className="animate-entrance cs-headline mb-5"
+          style={{ animationDelay: '120ms' }}
+        >
+          {tr.coming_soon_tagline}
+        </h1>
+
+        {/* Description */}
+        <p
+          className="animate-entrance cs-description mb-16"
+          style={{ animationDelay: '240ms' }}
+        >
+          {tr.coming_soon_description}
+        </p>
+
+        {/* Countdown label */}
+        <p
+          className="animate-entrance cs-label mb-6"
+          style={{ animationDelay: '320ms' }}
+        >
+          {tr.coming_soon_label}
+        </p>
+
+        {/* Countdown */}
+        <div className="animate-entrance" style={{ animationDelay: '400ms' }}>
+          <CountdownTimer
+            labels={{
+              days: tr.coming_soon_days,
+              hours: tr.coming_soon_hours,
+              minutes: tr.coming_soon_minutes,
+              seconds: tr.coming_soon_seconds,
+            }}
+          />
+        </div>
+
+        {/* Divider */}
+        <div
+          className="animate-entrance cs-divider mt-14 mb-10"
+          style={{ animationDelay: '480ms' }}
         />
-      </div>
 
-      {/* Tagline */}
-      <h1
-        className="animate-entrance text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
-        style={{ animationDelay: '100ms' }}
-      >
-        {tr.coming_soon_tagline}
-      </h1>
-
-      {/* Description */}
-      <p
-        className="animate-entrance text-white/70 text-base max-w-sm mb-12 leading-relaxed"
-        style={{ animationDelay: '200ms' }}
-      >
-        {tr.coming_soon_description}
-      </p>
-
-      {/* Countdown label */}
-      <p
-        className="animate-entrance text-xs uppercase tracking-widest text-white/50 mb-4"
-        style={{ animationDelay: '300ms' }}
-      >
-        {tr.coming_soon_label}
-      </p>
-
-      {/* Countdown */}
-      <div className="animate-entrance" style={{ animationDelay: '350ms' }}>
-        <CountdownTimer
-          labels={{
-            days: tr.coming_soon_days,
-            hours: tr.coming_soon_hours,
-            minutes: tr.coming_soon_minutes,
-            seconds: tr.coming_soon_seconds,
-          }}
-        />
-      </div>
-
-      {/* Divider */}
-      <div
-        className="animate-entrance w-16 h-px bg-white/20 mt-12 mb-10"
-        style={{ animationDelay: '450ms' }}
-      />
-
-      {/* Email signup */}
-      <div
-        className="animate-entrance w-full max-w-xs"
-        style={{ animationDelay: '500ms' }}
-      >
-        <EmailSignupForm
-          tr={{
-            placeholder: tr.coming_soon_email_placeholder,
-            submit: tr.coming_soon_email_submit,
-            success: tr.coming_soon_email_success,
-            error: tr.coming_soon_email_error,
-          }}
-        />
+        {/* Email signup */}
+        <div
+          className="animate-entrance w-full max-w-sm"
+          style={{ animationDelay: '560ms' }}
+        >
+          <EmailSignupForm
+            tr={{
+              placeholder: tr.coming_soon_email_placeholder,
+              submit: tr.coming_soon_email_submit,
+              success: tr.coming_soon_email_success,
+              error: tr.coming_soon_email_error,
+            }}
+          />
+        </div>
       </div>
     </main>
   )

@@ -24,6 +24,7 @@ export function CountdownTimer({ labels }: { labels: CountdownLabels }) {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft> | null>(null)
 
   useEffect(() => {
+    setTime(getTimeLeft())
     const id = setInterval(() => setTime(getTimeLeft()), 1000)
     return () => clearInterval(id)
   }, [])
@@ -31,23 +32,25 @@ export function CountdownTimer({ labels }: { labels: CountdownLabels }) {
   const pad = (n: number) => String(n).padStart(2, '0')
   const t = time ?? { d: 0, h: 0, m: 0, s: 0 }
 
+  const units = [
+    { val: t.d, label: labels.days },
+    { val: t.h, label: labels.hours },
+    { val: t.m, label: labels.minutes },
+    { val: t.s, label: labels.seconds },
+  ] as const
+
   return (
-    <div className="flex gap-3 sm:gap-4 flex-wrap justify-center">
-      {([
-        { val: t.d, label: labels.days },
-        { val: t.h, label: labels.hours },
-        { val: t.m, label: labels.minutes },
-        { val: t.s, label: labels.seconds },
-      ] as const).map(({ val, label }) => (
-        <div
-          key={label}
-          className="flex flex-col items-center w-16 sm:w-20 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl py-4"
-        >
-          <span className="text-4xl sm:text-5xl font-bold text-white tabular-nums leading-none">
-            {pad(val)}
-          </span>
-          <span className="text-xs text-white/60 mt-1.5 uppercase tracking-wide">{label}</span>
-        </div>
+    <div className="flex items-end gap-3 sm:gap-6 flex-nowrap justify-center">
+      {units.map(({ val, label }, i) => (
+        <>
+          {i > 0 && (
+            <span key={`sep-${i}`} className="cs-num-sep">:</span>
+          )}
+          <div key={label} className="flex flex-col items-center">
+            <span className="cs-num">{pad(val)}</span>
+            <span className="cs-num-label">{label}</span>
+          </div>
+        </>
       ))}
     </div>
   )

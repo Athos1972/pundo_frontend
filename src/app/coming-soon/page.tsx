@@ -3,6 +3,7 @@ import { t } from '@/lib/translations'
 import { getBrandFromHeaders } from '@/config/brands'
 import { CountdownTimer } from './CountdownTimer'
 import { EmailSignupForm } from './EmailSignupForm'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 
 export default async function ComingSoonPage() {
   const [lang, brand] = await Promise.all([getLangServer(), getBrandFromHeaders()])
@@ -11,15 +12,20 @@ export default async function ComingSoonPage() {
 
   return (
     <main
-      className="coming-soon-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center"
+      className="coming-soon-bg min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center relative"
       dir={rtl ? 'rtl' : 'ltr'}
     >
+      {/* Language switcher — top right */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher current={lang} dark />
+      </div>
+
       {/* Logo */}
       <div className="animate-entrance mb-10" style={{ animationDelay: '0ms' }}>
         <img
-          src={brand.assets.logoSvg}
+          src={brand.assets.logoDarkSvg ?? brand.assets.logoSvg}
           alt={brand.name}
-          className="h-12 w-auto brightness-0 invert"
+          className="h-16 w-auto"
         />
       </div>
 

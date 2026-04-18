@@ -7,6 +7,7 @@ export const naidivseConfig: BrandConfig = {
 
   assets: {
     logoSvg: '/brands/naidivse/logo-horizontal.svg',
+    logoDarkSvg: '/brands/naidivse/logo-horizontal-dark.svg',
     logoPng: '/brands/naidivse/logo-horizontal.svg',
     favicon: '/brands/naidivse/favicon.svg',
     splashSvg: '/brands/naidivse/logo-icon.svg',

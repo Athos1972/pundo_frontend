@@ -16,6 +16,7 @@ export interface BrandConfig {
 
   assets: {
     logoSvg: string
+    logoDarkSvg?: string
     logoPng: string
     favicon: string
     splashSvg: string

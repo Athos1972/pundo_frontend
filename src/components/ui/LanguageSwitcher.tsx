@@ -11,7 +11,7 @@ const LANG_LABELS: Record<Lang, string> = {
   he: 'עב',
 }
 
-export function LanguageSwitcher({ current }: { current: Lang }) {
+export function LanguageSwitcher({ current, dark }: { current: Lang; dark?: boolean }) {
   const router = useRouter()
 
   function handleChange(lang: Lang) {
@@ -28,8 +28,12 @@ export function LanguageSwitcher({ current }: { current: Lang }) {
           title={l.toUpperCase()}
           className={`px-2 py-1 text-xs rounded transition-colors min-w-[28px] text-center ${
             l === current
-              ? 'bg-accent text-white font-medium'
-              : 'text-text-muted hover:text-text hover:bg-surface-alt'
+              ? dark
+                ? 'bg-white/20 text-white font-medium'
+                : 'bg-accent text-white font-medium'
+              : dark
+                ? 'text-white/60 hover:text-white hover:bg-white/10'
+                : 'text-text-muted hover:text-text hover:bg-surface-alt'
           }`}
         >
           {LANG_LABELS[l]}

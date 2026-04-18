@@ -13,6 +13,7 @@ import {
   toRelativeImageUrl,
   pickImg,
   buildWhatsAppUrl,
+  getHostname,
 } from '@/lib/utils'
 
 // ─── formatCrawledAt ─────────────────────────────────────────────────────────
@@ -300,5 +301,29 @@ describe('toRelativeImageUrl', () => {
 
   it('leaves non-localhost absolute URLs unchanged', () => {
     expect(toRelativeImageUrl('https://cdn.example.com/img.jpg')).toBe('https://cdn.example.com/img.jpg')
+  })
+})
+
+// ─── getHostname ─────────────────────────────────────────────────────────────
+
+describe('getHostname', () => {
+  it('returns hostname without www', () => {
+    expect(getHostname('https://www.manjopet.com.cy/')).toBe('manjopet.com.cy')
+  })
+
+  it('returns hostname without www for plain domain', () => {
+    expect(getHostname('https://manjopet.com.cy')).toBe('manjopet.com.cy')
+  })
+
+  it('keeps subdomain other than www', () => {
+    expect(getHostname('https://shop.example.com')).toBe('shop.example.com')
+  })
+
+  it('returns null for invalid URL', () => {
+    expect(getHostname('not-a-url')).toBeNull()
+  })
+
+  it('returns null for empty string', () => {
+    expect(getHostname('')).toBeNull()
   })
 })

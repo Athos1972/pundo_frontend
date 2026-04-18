@@ -10,7 +10,9 @@ import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
-import { buildWhatsAppUrl } from '@/lib/utils'
+import { PhoneIcon } from '@/components/ui/PhoneIcon'
+import { GlobeIcon } from '@/components/ui/GlobeIcon'
+import { buildWhatsAppUrl, getHostname } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 
@@ -75,11 +77,11 @@ export default async function ShopPage({ params }: Props) {
           <h1 className="text-2xl font-extrabold text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{shop.name}</h1>
           {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex items-center gap-3 flex-wrap mt-2">
             <span className={`text-xs px-2 py-1 rounded-full ${shop.status === 'active' ? 'bg-success/10 text-success' : 'bg-surface-alt text-text-muted'}`}>
               {shop.status}
             </span>
-            {shop.whatsapp_number ? (
+            {shop.whatsapp_number && (
               <a
                 href={buildWhatsAppUrl(
                   shop.whatsapp_number,
@@ -92,9 +94,24 @@ export default async function ShopPage({ params }: Props) {
                 <WhatsAppIcon size={16} />
                 {tr.whatsapp_contact}
               </a>
-            ) : shop.phone ? (
-              <a href={`tel:${shop.phone}`} className="text-sm text-accent">{shop.phone}</a>
-            ) : null}
+            )}
+            {shop.phone && (
+              <a href={`tel:${shop.phone}`} className="inline-flex items-center gap-1.5 text-sm text-accent hover:opacity-80">
+                <PhoneIcon size={15} />
+                {shop.phone}
+              </a>
+            )}
+            {shop.website && getHostname(shop.website) && (
+              <a
+                href={shop.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-accent hover:opacity-80"
+              >
+                <GlobeIcon size={15} />
+                {getHostname(shop.website)}
+              </a>
+            )}
           </div>
           {shop.spoken_languages && shop.spoken_languages.length > 0 && (
             <div className="mt-3">

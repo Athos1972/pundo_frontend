@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getBrandConfig, buildThemeCss } from '@/config/brands'
 import { pundoConfig } from '@/config/brands/pundo'
 import { ruskyConfig } from '@/config/brands/rusky'
+import { naidivseConfig } from '@/config/brands/naidivse'
 
 describe('getBrandConfig — Domain-Lookup', () => {
   it('pundo.cy → pundo brand', () => {
@@ -35,10 +36,22 @@ describe('getBrandConfig — Domain-Lookup', () => {
   it('Slug direkt: "rusky" → rusky brand', () => {
     expect(getBrandConfig('rusky').slug).toBe('rusky')
   })
+
+  it('naidivse.com → naidivse brand', () => {
+    expect(getBrandConfig('naidivse.com').slug).toBe('naidivse')
+  })
+
+  it('www.naidivse.com → naidivse brand (www stripped)', () => {
+    expect(getBrandConfig('www.naidivse.com').slug).toBe('naidivse')
+  })
+
+  it('Slug direkt: "naidivse" → naidivse brand', () => {
+    expect(getBrandConfig('naidivse').slug).toBe('naidivse')
+  })
 })
 
 describe('BrandConfig — Vollständigkeit', () => {
-  const brands = [pundoConfig, ruskyConfig]
+  const brands = [pundoConfig, ruskyConfig, naidivseConfig]
 
   for (const brand of brands) {
     it(`${brand.slug}: alle Pflichtfelder vorhanden`, () => {
@@ -100,5 +113,28 @@ describe('Brand Feature Flags', () => {
 
   it('rusky hat socialFeed: true', () => {
     expect(ruskyConfig.features.socialFeed).toBe(true)
+  })
+
+  it('naidivse hat socialFeed: false', () => {
+    expect(naidivseConfig.features.socialFeed).toBe(false)
+  })
+})
+
+describe('naidivse Brand-Config', () => {
+  it('Akzentfarbe ist naidivse-Blau', () => {
+    expect(naidivseConfig.theme.accent).toBe('#1F4FA3')
+  })
+
+  it('Domain naidivse.com ist registriert', () => {
+    expect(naidivseConfig.domains).toContain('naidivse.com')
+  })
+
+  it('Logo-Pfad zeigt auf brands/naidivse/', () => {
+    expect(naidivseConfig.assets.logoSvg).toMatch(/^\/brands\/naidivse\//)
+  })
+
+  it('buildThemeCss enthält naidivse-Blau', () => {
+    const css = buildThemeCss(naidivseConfig)
+    expect(css).toContain('#1F4FA3')
   })
 })

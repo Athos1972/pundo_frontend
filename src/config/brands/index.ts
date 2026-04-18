@@ -7,6 +7,7 @@
 
 import { pundoConfig } from './pundo'
 import { ruskyConfig } from './rusky'
+import { naidivseConfig } from './naidivse'
 
 export interface BrandConfig {
   slug: string
@@ -69,7 +70,7 @@ export interface BrandConfig {
   }
 }
 
-const ALL_BRANDS: BrandConfig[] = [pundoConfig, ruskyConfig]
+const ALL_BRANDS: BrandConfig[] = [pundoConfig, ruskyConfig, naidivseConfig]
 
 // Domain → Brand-Slug Lookup (O(1) nach Aufbau)
 const DOMAIN_MAP: Map<string, BrandConfig> = new Map()

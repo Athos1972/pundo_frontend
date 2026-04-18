@@ -8,6 +8,71 @@ Ergebnis: **600/600 Unit-Tests PASS ✓ | E2E: 18/18 legal PASS, 2 pre-existing 
 
 ---
 
+## Testlauf 2026-04-17 — naidivse.com Coming-Soon-Seite
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler in src/ |
+| TypeScript (e2e/) | KNOWN_ISSUE — pre-existing Fehler in `e2e/shop-discovery.spec.ts` |
+| ESLint | **PASS** — 0 Errors, pre-existing Warnings |
+
+### Unit-Tests (Vitest)
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **605 bestanden** (+5 vs. 600) |
+| Fehlgeschlagene | 0 |
+| Neu geschrieben | +5 coming-soon-api, +translations (6 Sprachen × 11 Keys), +naidivse brand-config |
+
+### E2E-Tests (pw-coming-soon.config.ts)
+
+| Test | Status | Anmerkung |
+|------|--------|-----------|
+| Seite lädt ohne Fehler | **PASS** | |
+| Tagline ist sichtbar ("Find everything.") | **PASS** | |
+| Logo ist sichtbar | **PASS** | |
+| Countdown-Zahlen erscheinen nach Interval | **PASS** | |
+| E-Mail-Formular ist vorhanden | **PASS** | |
+| Ungültige E-Mail: Browser-Validation verhindert Submit | **PASS** | |
+| Kein horizontaler Scroll auf 375px | **PASS** | |
+| Kein pundo-Header | **PASS** | |
+| Valide E-Mail → Erfolgsmeldung | **PASS** | |
+| RTL dir=rtl bei app_lang=ar Cookie | **PASS** | |
+| Arabischer Tagline-Text sichtbar | **PASS** | |
+| GET / mit Host: naidivse.com → Coming-Soon-Inhalt | **PASS** | via request API |
+| **Gesamt** | **12/12 PASS** | |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** |
+| he | rtl | **PASS** (Cookie-Test) |
+
+### Neue Dateien
+
+| Datei | Änderung |
+|-------|---------|
+| `src/config/brands/naidivse.ts` | NEU — Brand-Config (#1F4FA3, naidivse.com) |
+| `src/config/brands/index.ts` | naidivseConfig zu ALL_BRANDS ergänzt |
+| `src/proxy.ts` | Job 4: naidivse Host → /coming-soon rewrite |
+| `src/lib/translations.ts` | 11 coming_soon_* Keys × 6 Sprachen |
+| `src/app/coming-soon/layout.tsx` | NEU — Root-Layout (html, body, RTL-aware) |
+| `src/app/coming-soon/page.tsx` | NEU — Server Component (Logo, Tagline, Countdown, Form) |
+| `src/app/coming-soon/CountdownTimer.tsx` | NEU — Client Component, Countdown bis 2026-05-01T06:00:00Z |
+| `src/app/coming-soon/EmailSignupForm.tsx` | NEU — Client Component, POST /api/coming-soon |
+| `src/app/api/coming-soon/route.ts` | NEU — E-Mail → data/naidivse-signups.txt |
+| `data/.gitkeep` | NEU — data/ Verzeichnis tracken |
+| `.gitignore` | data/naidivse-signups.txt ignorieren |
+| `src/tests/brand-config.test.ts` | +naidivse Domain-Tests, Brand-Vollständigkeit |
+| `src/tests/coming-soon-api.test.ts` | NEU — 5 API-Tests + 4 Translation-Tests |
+| `e2e/coming-soon.spec.ts` | NEU — 12 E2E-Tests |
+| `e2e/pw-coming-soon.config.ts` | NEU — Playwright-Config ohne Backend-Dependency |
+
+---
+
 ## Testlauf 2026-04-17 — Multi-Brand White-Label (Rusky)
 
 ### Statische Prüfung

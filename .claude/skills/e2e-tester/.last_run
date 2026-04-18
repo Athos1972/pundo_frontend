@@ -1,13 +1,5 @@
 {
-  "sha": "bfa15d786ba22d0ce69dbfffd4cbe6af129636d8",
-  "timestamp": "2026-04-17T17:42:16.918613+00:00",
-  "coverage_snapshot": {
-    "src/config/brands/index.ts": "100%",
-    "src/config/brands/pundo.ts": "100%",
-    "src/config/brands/rusky.ts": "100%",
-    "src/lib/lang.ts": "100%",
-    "src/lib/legal-content.ts": "100%",
-    "src/components/ui/SplashScreen.tsx": "100%",
-    "src/app/manifest.webmanifest/route.ts": "100%"
-  }
+  "sha": "8092f9c2bf73b97724592c8a08fda035b3b131ff",
+  "timestamp": "2026-04-18T06:56:52.912017+00:00",
+  "coverage_snapshot": {}
 }

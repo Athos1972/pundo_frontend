@@ -32,18 +32,21 @@ export function CountdownTimer({ labels }: { labels: CountdownLabels }) {
   const t = time ?? { d: 0, h: 0, m: 0, s: 0 }
 
   return (
-    <div className="flex gap-3 sm:gap-5 flex-wrap justify-center">
+    <div className="flex gap-3 sm:gap-4 flex-wrap justify-center">
       {([
         { val: t.d, label: labels.days },
         { val: t.h, label: labels.hours },
         { val: t.m, label: labels.minutes },
         { val: t.s, label: labels.seconds },
       ] as const).map(({ val, label }) => (
-        <div key={label} className="flex flex-col items-center w-16 sm:w-20">
-          <span className="text-4xl sm:text-5xl font-bold text-accent tabular-nums leading-none">
+        <div
+          key={label}
+          className="flex flex-col items-center w-16 sm:w-20 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl py-4"
+        >
+          <span className="text-4xl sm:text-5xl font-bold text-white tabular-nums leading-none">
             {pad(val)}
           </span>
-          <span className="text-xs text-text-muted mt-1.5 uppercase tracking-wide">{label}</span>
+          <span className="text-xs text-white/60 mt-1.5 uppercase tracking-wide">{label}</span>
         </div>
       ))}
     </div>

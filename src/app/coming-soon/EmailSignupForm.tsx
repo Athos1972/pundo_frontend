@@ -29,7 +29,7 @@ export function EmailSignupForm({ tr }: { tr: EmailFormTr }) {
 
   if (status === 'success') {
     return (
-      <p className="text-center text-sm text-success font-medium py-3">{tr.success}</p>
+      <p className="text-center text-sm text-green-300 font-medium py-3">{tr.success}</p>
     )
   }
 
@@ -41,7 +41,7 @@ export function EmailSignupForm({ tr }: { tr: EmailFormTr }) {
         onChange={e => setEmail(e.target.value)}
         placeholder={tr.placeholder}
         required
-        className="border border-border rounded-xl px-4 py-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-accent/40 bg-surface"
+        className="bg-white/10 border border-white/30 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/50 w-full focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-sm"
       />
       <button
         type="submit"
@@ -51,7 +51,7 @@ export function EmailSignupForm({ tr }: { tr: EmailFormTr }) {
         {status === 'loading' ? '…' : tr.submit}
       </button>
       {status === 'error' && (
-        <p className="text-center text-xs text-red-500 mt-1">{tr.error}</p>
+        <p className="text-center text-xs text-red-400 mt-1">{tr.error}</p>
       )}
     </form>
   )

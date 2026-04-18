@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { getLangFromCookie } from '@/lib/lang'
+import { useState, useTransition, useEffect } from 'react'
+import { getLangFromCookie, DEFAULT_LANG } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 
 export default function AdminLoginPage() {
-  const lang = getLangFromCookie()
-  const tr = tSysAdmin(lang)
-  const router = useRouter()
+  const [tr, setTr] = useState(() => tSysAdmin(DEFAULT_LANG))
+  useEffect(() => { setTr(tSysAdmin(getLangFromCookie())) }, [])
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
@@ -34,7 +32,10 @@ export default function AdminLoginPage() {
           setError(tr.error_generic)
           return
         }
-        router.push('/admin/dashboard')
+        // Hard navigation bypasses the Next.js router cache entirely.
+        // router.push would hit the cached redirect (→ /admin/login) that was
+        // stored before the cookie existed; a full reload always sees the cookie.
+        window.location.href = '/admin/dashboard'
       } catch {
         setError(tr.error_backend)
       }

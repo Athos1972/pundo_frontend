@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 import { DM_Sans } from 'next/font/google'
 import '../globals.css'
 import { getLangServer, isRTL } from '@/lib/lang'
@@ -17,6 +18,7 @@ export const viewport: Viewport = {
 }
 
 export default async function ShopAdminRootLayout({ children }: { children: React.ReactNode }) {
+  await headers()
   const lang = await getLangServer()
   const dir = isRTL(lang) ? 'rtl' : 'ltr'
 

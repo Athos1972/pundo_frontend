@@ -82,7 +82,8 @@ export function proxy(request: NextRequest) {
     brand.slug === 'naidivse' &&
     pathname !== '/coming-soon' &&
     !pathname.startsWith('/api/') &&
-    !pathname.startsWith('/_next/')
+    !pathname.startsWith('/_next/') &&
+    !pathname.startsWith('/brands/')
   ) {
     const rewriteResponse = NextResponse.rewrite(new URL('/coming-soon', request.url), {
       request: { headers: requestHeaders },

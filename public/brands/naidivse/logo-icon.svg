@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Naidivse — App-Block Icon (V4) -->
+  <!-- Blauer Block mit weißer Lupe -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#1F4FA3"/>
+  <circle cx="41" cy="41" r="21" stroke="white" stroke-width="7.5" fill="none"/>
+  <line x1="56.9" y1="56.9" x2="76" y2="76" stroke="white" stroke-width="7.5" stroke-linecap="round"/>
+</svg>

@@ -2,9 +2,94 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-17
-SHA: 987a5e506b7d919d32dd58c2bedbb08945c3fe4d (Legal Content Translations)
-Konfiguration: **e2e/pw-legal.config.ts → http://localhost:3500 (Test-Instanz)**
-Ergebnis: **18/18 E2E-Tests PASS ✓**
+SHA: bfa15d786ba22d0ce69dbfffd4cbe6af129636d8 (Multi-Brand White-Label)
+Konfiguration: **Unit-Tests (Vitest) + E2E partial (pw-legal.config.ts + pw-search-only)**
+Ergebnis: **600/600 Unit-Tests PASS ✓ | E2E: 18/18 legal PASS, 2 pre-existing KNOWN_ISSUE**
+
+---
+
+## Testlauf 2026-04-17 — Multi-Brand White-Label (Rusky)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler in src/ |
+| TypeScript (e2e/) | KNOWN_ISSUE — pre-existing Fehler in `e2e/shop-discovery.spec.ts` |
+| ESLint | **PASS** — 0 Errors, pre-existing Warnings |
+
+### Unit-Tests (Vitest)
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **600 bestanden** (+35 vs. vorher 565) |
+| Fehlgeschlagene | 0 |
+| Neu geschrieben | +18 brand-config, +6 legal-substitution, +5 splash-screen, +7 manifest-route |
+
+### Coverage-Snapshot (neue Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/config/brands/index.ts` | **71%** | 70% | PASS |
+| `src/lib/legal-content.ts` | **100%** | 80% | PASS |
+| `src/lib/lang.ts` | **67%** | 70% | COVERAGE_GAP |
+| `src/components/ui/SplashScreen.tsx` | **94%** | 70% | PASS |
+| `src/app/manifest.webmanifest/route.ts` | ~90% (via tests) | 80% | PASS |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/lib/lang.ts` | 67% | 70% | `getLangServer()` (Server Component only) nicht in JSDOM testbar |
+
+### E2E-Tests
+
+| Test | Config | Status | Anmerkung |
+|------|--------|--------|-----------|
+| Legal Pages (18 Tests) | pw-legal.config | **PASS** | Alle Sprachen, RTL, Firmendaten |
+| E2E-02 search navigates | pw-search-only | **FAIL** → KNOWN_ISSUE KI-009 | Pre-existing: Playwright fill() + React controlled input race condition |
+| E2E-08 popup dir=rtl | pw-search-only | **FAIL** → KNOWN_ISSUE KI-010 | Pre-existing: Leaflet Marker braucht seeded Test-DB |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** (legal pages) |
+| he | rtl | **PASS** (legal pages) |
+| en/de | ltr | **PASS** (legal pages) |
+
+### Geänderte Dateien (Multi-Brand)
+
+| Datei | Änderung |
+|-------|---------|
+| `src/config/brands/index.ts` | NEU — BrandConfig interface, getBrandConfig(), getBrandFromHeaders(), buildThemeCss() |
+| `src/config/brands/pundo.ts` | NEU — Pundo brand config |
+| `src/config/brands/rusky.ts` | NEU — Rusky brand config |
+| `src/app/manifest.webmanifest/route.ts` | NEU — Dynamic PWA manifest per Brand |
+| `src/proxy.ts` | Brand-Detection: Host → x-brand-slug, dynamic CSP analytics |
+| `src/app/globals.css` | `--brand-font-heading/body` CSS vars |
+| `src/app/(customer)/layout.tsx` | Dynamic metadata, theme CSS injection, brand assets |
+| `src/components/layout/Header.tsx` | Brand-Logo via getBrandFromHeaders() |
+| `src/components/ui/SplashScreen.tsx` | splashSvg prop + app_splash sessionStorage key |
+| `src/lib/lang.ts` | Cookie rename: pundo_lang → app_lang |
+| `src/lib/legal-content.ts` | getLegalContentForBrand() + applyBrandSubstitutions() |
+| `src/app/(customer)/legal/*/page.tsx` | Brand-aware legal pages |
+| `public/brands/pundo/` | NEU — Brand assets (logo, favicon, splash) |
+| `public/brands/rusky/` | NEU — Placeholder assets |
+| `src/tests/brand-config.test.ts` | NEU — 18 Tests |
+| `src/tests/legal-brand-substitution.test.ts` | NEU — 6 Tests |
+| `src/tests/splash-screen.test.tsx` | NEU — 5 Tests |
+| `src/tests/manifest-route.test.ts` | NEU — 7 Tests |
+| `src/tests/customer-auth.test.ts` | Cookie key fix: pundo_lang → app_lang |
+| `e2e/main.spec.ts` et al. | Cookie key fix: pundo_lang → app_lang in all E2E specs |
+
+### Known Issues (aktuell)
+
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-009 | E2E-02: Search URL `/?` statt `/search?q=...` — Playwright fill() triggert React state nicht zuverlässig in dev mode | 2026-04-13 | OPEN (pre-existing) |
+| KI-010 | E2E-08: Leaflet-Marker fehlen ohne seeded Test-DB (global-setup nötig) | 2026-04-13 | OPEN (pre-existing) |
+| KI-011 | E2E global-setup: `admin_users` table fehlt in pundo_test — verhindert vollen Playwright-Lauf auf 3500 | 2026-04-17 | OPEN |
 
 ---
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Naidivse — Favicon (optimiert für kleine Größen) -->
+  <rect x="0" y="0" width="32" height="32" rx="6" fill="#1F4FA3"/>
+  <circle cx="13" cy="13" r="7.5" stroke="white" stroke-width="2.3" fill="none"/>
+  <line x1="18.7" y1="18.7" x2="25" y2="25" stroke="white" stroke-width="2.3" stroke-linecap="round"/>
+</svg>

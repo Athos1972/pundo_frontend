@@ -85,7 +85,7 @@ const filterLabels: Record<string, string> = {
 
 for (const [lang, label] of Object.entries(filterLabels)) {
   test(`filter_price_only label correct in ${lang}`, async ({ page }) => {
-    await page.context().addCookies([{ name: 'pundo_lang', value: lang, domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: lang, domain: '127.0.0.1', path: '/' }])
     await page.goto('/search')
     await expect(page.getByRole('button', { name: label })).toBeVisible()
   })
@@ -95,7 +95,7 @@ for (const [lang, label] of Object.entries(filterLabels)) {
 
 test.describe('price_type: RTL layout', () => {
   test('AR search page has dir=rtl and filter chip visible', async ({ page }) => {
-    await page.context().addCookies([{ name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
     await page.goto('/search')
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
@@ -103,7 +103,7 @@ test.describe('price_type: RTL layout', () => {
   })
 
   test('HE search page has dir=rtl and filter chip visible', async ({ page }) => {
-    await page.context().addCookies([{ name: 'pundo_lang', value: 'he', domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: 'he', domain: '127.0.0.1', path: '/' }])
     await page.goto('/search')
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')

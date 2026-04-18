@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 
 const OUTRO_MS = 2500
 
-export function SplashScreen() {
+export function SplashScreen({ splashSvg }: { splashSvg: string }) {
   const [visible, setVisible] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (sessionStorage.getItem('pundo_splash')) return
-    sessionStorage.setItem('pundo_splash', '1')
+    if (sessionStorage.getItem('app_splash')) return
+    sessionStorage.setItem('app_splash', '1')
 
     const show = setTimeout(() => setVisible(true), 0)
     const hide = setTimeout(() => setVisible(false), OUTRO_MS)
@@ -23,11 +23,7 @@ export function SplashScreen() {
       className="fixed inset-0 z-50 bg-white flex items-center justify-center"
       aria-hidden="true"
     >
-      <img
-        src="/splash-outro.svg"
-        alt=""
-        className="w-full h-full object-contain"
-      />
+      <img src={splashSvg} alt="" className="w-full h-full object-contain" />
     </div>
   )
 }

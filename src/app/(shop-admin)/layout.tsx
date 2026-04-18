@@ -6,8 +6,8 @@ import { getLangServer, isRTL } from '@/lib/lang'
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-dm-sans' })
 
 export const metadata: Metadata = {
-  title: 'Pundo Shop Portal',
-  description: 'Pundo Shop-Owner Portal',
+  title: 'Shop Portal',
+  description: 'Shop-Owner Portal',
 }
 
 export const viewport: Viewport = {

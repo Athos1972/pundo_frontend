@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 64" width="340" height="64">
+  <!--
+    Naidivse — Horizontale Wortmarke (App-Block V4)
+    Font: Unbounded 700 — rendert korrekt in Browsern via @import
+    Für PNG-Export: logo-horizontal.png via Skript generieren (Pillow + Unbounded.ttf)
+  -->
+  <defs>
+    <style>
+      @import url('https://cdn.jsdelivr.net/npm/@fontsource/unbounded/700.css');
+    </style>
+  </defs>
+  <!-- App-Block Icon -->
+  <rect x="0" y="4" width="56" height="56" rx="13" fill="#1F4FA3"/>
+  <circle cx="23" cy="30" r="12.5" stroke="white" stroke-width="4.5" fill="none"/>
+  <line x1="32.5" y1="39.5" x2="43" y2="50" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Wordmark -->
+  <text
+    x="72" y="41"
+    font-family="'Unbounded', sans-serif"
+    font-weight="700"
+    font-size="24"
+    fill="#1F4FA3"
+    letter-spacing="-0.5"
+  >найди·всё</text>
+</svg>

@@ -14,20 +14,20 @@ export function isRTL(lang: Lang): boolean {
 // Client: Cookie lesen
 export function getLangFromCookie(): Lang {
   if (typeof document === 'undefined') return DEFAULT_LANG;
-  const match = document.cookie.match(/pundo_lang=([^;]+)/);
+  const match = document.cookie.match(/app_lang=([^;]+)/);
   const val = match?.[1];
   return (LANGS as readonly string[]).includes(val ?? '') ? (val as Lang) : DEFAULT_LANG;
 }
 
 // Client: Cookie schreiben
 export function setLangCookie(lang: Lang): void {
-  document.cookie = `pundo_lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
+  document.cookie = `app_lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
 }
 
 // Server: aus next/headers Cookie lesen (für Server Components)
 export async function getLangServer(): Promise<Lang> {
   const { cookies } = await import('next/headers');
   const store = await cookies();
-  const val = store.get('pundo_lang')?.value;
+  const val = store.get('app_lang')?.value;
   return (LANGS as readonly string[]).includes(val ?? '') ? (val as Lang) : DEFAULT_LANG;
 }

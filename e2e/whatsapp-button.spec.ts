@@ -15,7 +15,7 @@ const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
 // Helper: Sprache setzen
 async function setLang(page: import('@playwright/test').Page, lang: string) {
   await page.context().addCookies([{
-    name: 'pundo_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
+    name: 'app_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
   }])
 }
 

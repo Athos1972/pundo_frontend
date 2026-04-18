@@ -5,8 +5,8 @@ import '../globals.css'
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-dm-sans' })
 
 export const metadata: Metadata = {
-  title: 'Pundo System Admin',
-  description: 'Pundo System Administration',
+  title: 'System Admin',
+  description: 'System Administration',
 }
 
 export const viewport: Viewport = {

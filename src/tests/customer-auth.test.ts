@@ -71,17 +71,17 @@ describe('getLangFromCookie', () => {
   })
 
   it('returns lang from cookie when valid', () => {
-    Object.defineProperty(document, 'cookie', { writable: true, value: 'pundo_lang=de' })
+    Object.defineProperty(document, 'cookie', { writable: true, value: 'app_lang=de' })
     expect(getLangFromCookie()).toBe('de')
   })
 
   it('returns default for unknown lang value in cookie', () => {
-    Object.defineProperty(document, 'cookie', { writable: true, value: 'pundo_lang=xx' })
+    Object.defineProperty(document, 'cookie', { writable: true, value: 'app_lang=xx' })
     expect(getLangFromCookie()).toBe(DEFAULT_LANG)
   })
 
   it('returns ar from cookie', () => {
-    Object.defineProperty(document, 'cookie', { writable: true, value: 'pundo_lang=ar' })
+    Object.defineProperty(document, 'cookie', { writable: true, value: 'app_lang=ar' })
     expect(getLangFromCookie()).toBe('ar')
   })
 })
@@ -99,10 +99,10 @@ describe('LANGS constant', () => {
 })
 
 describe('setLangCookie', () => {
-  it('writes pundo_lang cookie', async () => {
+  it('writes app_lang cookie', async () => {
     const { setLangCookie } = await import('@/lib/lang')
     // In JSDOM document.cookie is settable
     setLangCookie('de')
-    expect(document.cookie).toContain('pundo_lang=de')
+    expect(document.cookie).toContain('app_lang=de')
   })
 })

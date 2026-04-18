@@ -195,6 +195,19 @@ Alle `app/`-Seiten sind Server Components. Datenfetching erfolgt direkt im Compo
 ### Karte: Client-only via dynamic import
 Leaflet manipuliert `window` und `document` — daher wird `ShopMapClient` mit `dynamic(() => import(...), { ssr: false })` geladen. Auf SSR-Seite erscheint ein Skeleton.
 
+### Multi-Brand / White-Label
+
+Das System unterstützt mehrere Marken (pundo.cy, rusky-in-cyprus.de, …) aus einem einzigen Next.js-Deployment.
+
+- **Brand-Erkennung:** `src/proxy.ts` liest den `Host`-Header und setzt `x-brand-slug` (z. B. `pundo`, `rusky`)
+- **Brand-Config:** `src/config/brands/index.ts` — `getBrandConfig(host)` O(1) Map-Lookup, `getBrandFromHeaders()` für Server Components, `buildThemeCss()` für CSS-Variablen-Injection
+- **Theming:** `:root { --color-accent: … }` wird server-seitig in `<head>` injiziert — kein Client-Flash
+- **Assets:** `public/brands/<slug>/logo.svg`, `splash-outro.svg` etc. — Pfade aus BrandConfig
+- **PWA:** Manifest dynamisch per Brand → `src/app/manifest.webmanifest/route.ts`
+- **Legal:** `getLegalContentForBrand()` — substituiert Pundo/pundo.cy durch brand-spezifische Werte
+- **Cookie:** `app_lang` (brand-neutral, war `pundo_lang`)
+- **Neue Brand hinzufügen:** `src/config/brands/<slug>.ts` anlegen, in `index.ts` registrieren, Assets unter `public/brands/<slug>/`
+
 ### Auth: JWT-Cookie + Route-Group-Guard
 Shop-Admin-Seiten unter `(portal)/` sind durch ein Auth-Guard-Layout geschützt, das den `shop_owner_token`-Cookie prüft. Login/Register/etc. liegen außerhalb der `(portal)`-Gruppe und sind öffentlich. `src/proxy.ts` fängt unauthentifizierte Requests ab.
 
@@ -273,4 +286,4 @@ Das Image nutzt einen **Multi-Stage-Build** (Builder → Runner auf `node:20-alp
 
 ## PWA
 
-Die App liefert ein Web-App-Manifest (`/public/manifest.json`) mit Theme-Color `#D4622A`. Icons für 192×192 und 512×512 unter `public/icons/` ablegen (noch ausstehend).
+Das Manifest wird dynamisch per Brand generiert (`/manifest.webmanifest` → Route Handler `src/app/manifest.webmanifest/route.ts`). Brand-spezifische Assets liegen unter `public/brands/<slug>/`. Theme-Color, App-Name und Icons werden per Host-Header zur Laufzeit bestimmt.

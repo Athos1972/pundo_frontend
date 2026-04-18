@@ -1,4 +1,5 @@
 import type { Lang } from './lang'
+import type { BrandConfig } from '@/config/brands'
 import { legalContentEn } from './legal-content-en'
 import { legalContentDe } from './legal-content-de'
 import { legalContentRu } from './legal-content-ru'
@@ -19,6 +20,35 @@ export type LegalContent = {
 }
 
 export type LegalContentByLang = Record<LegalPage, LegalContent>
+
+function applyBrandSubstitutions(
+  content: LegalContent,
+  brand: Pick<BrandConfig['legal'], 'appName' | 'domain'>,
+): LegalContent {
+  const sub = (text: string) =>
+    text
+      .replace(/\bPundo\b/g, brand.appName)
+      .replace(/pundo\.cy/g, brand.domain)
+      .replace(/info@pundo\.cy/g, `info@${brand.domain}`)
+
+  return {
+    title: sub(content.title),
+    sections: content.sections.map((s) => ({
+      heading: s.heading ? sub(s.heading) : s.heading,
+      body: sub(s.body),
+    })),
+  }
+}
+
+export function getLegalContentForBrand(
+  page: LegalPage,
+  lang: Lang,
+  brand: Pick<BrandConfig, 'legal'>,
+): LegalContent {
+  const raw = legalContent[page][lang]
+  if (brand.legal.appName === 'Pundo' && brand.legal.domain === 'pundo.cy') return raw
+  return applyBrandSubstitutions(raw, brand.legal)
+}
 
 export const legalContent: Record<LegalPage, Record<Lang, LegalContent>> = {
   imprint: {

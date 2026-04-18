@@ -1,0 +1,104 @@
+import { describe, it, expect } from 'vitest'
+import { getBrandConfig, buildThemeCss } from '@/config/brands'
+import { pundoConfig } from '@/config/brands/pundo'
+import { ruskyConfig } from '@/config/brands/rusky'
+
+describe('getBrandConfig — Domain-Lookup', () => {
+  it('pundo.cy → pundo brand', () => {
+    expect(getBrandConfig('pundo.cy').slug).toBe('pundo')
+  })
+
+  it('www.pundo.cy → pundo brand (www stripped)', () => {
+    expect(getBrandConfig('www.pundo.cy').slug).toBe('pundo')
+  })
+
+  it('rusky-in-cyprus.de → rusky brand', () => {
+    expect(getBrandConfig('rusky-in-cyprus.de').slug).toBe('rusky')
+  })
+
+  it('www.rusky-in-cyprus.de → rusky brand', () => {
+    expect(getBrandConfig('www.rusky-in-cyprus.de').slug).toBe('rusky')
+  })
+
+  it('unbekannte Domain → pundo Fallback', () => {
+    expect(getBrandConfig('unknown-brand.com').slug).toBe('pundo')
+  })
+
+  it('leerer String → pundo Fallback', () => {
+    expect(getBrandConfig('').slug).toBe('pundo')
+  })
+
+  it('Slug direkt: "pundo" → pundo brand', () => {
+    expect(getBrandConfig('pundo').slug).toBe('pundo')
+  })
+
+  it('Slug direkt: "rusky" → rusky brand', () => {
+    expect(getBrandConfig('rusky').slug).toBe('rusky')
+  })
+})
+
+describe('BrandConfig — Vollständigkeit', () => {
+  const brands = [pundoConfig, ruskyConfig]
+
+  for (const brand of brands) {
+    it(`${brand.slug}: alle Pflichtfelder vorhanden`, () => {
+      expect(brand.slug).toBeTruthy()
+      expect(brand.name).toBeTruthy()
+      expect(brand.domains.length).toBeGreaterThan(0)
+      expect(brand.assets.logoSvg).toMatch(/^\/brands\//)
+      expect(brand.assets.splashSvg).toMatch(/^\/brands\//)
+      expect(brand.theme.accent).toMatch(/^#[0-9a-fA-F]{6}$/)
+      expect(brand.theme.themeColor).toMatch(/^#[0-9a-fA-F]{6}$/)
+      expect(brand.pwa.name).toBeTruthy()
+      expect(brand.pwa.shortName).toBeTruthy()
+      expect(brand.meta.siteUrl).toMatch(/^https:\/\//)
+      expect(brand.legal.appName).toBeTruthy()
+      expect(brand.legal.domain).toBeTruthy()
+    })
+  }
+})
+
+describe('buildThemeCss', () => {
+  it('enthält alle CSS-Variablen', () => {
+    const css = buildThemeCss(pundoConfig)
+    expect(css).toContain('--color-accent:')
+    expect(css).toContain('--color-accent-light:')
+    expect(css).toContain('--color-bg:')
+    expect(css).toContain('--color-surface:')
+    expect(css).toContain('--brand-font-heading:')
+    expect(css).toContain('--brand-font-body:')
+  })
+
+  it('enthält pundo-Primärfarbe für pundo brand', () => {
+    const css = buildThemeCss(pundoConfig)
+    expect(css).toContain('#D4622A')
+  })
+
+  it('enthält rusky-Primärfarbe für rusky brand', () => {
+    const css = buildThemeCss(ruskyConfig)
+    expect(css).toContain(ruskyConfig.theme.accent)
+  })
+
+  it('pundo und rusky haben unterschiedliche Primärfarben', () => {
+    const pundoCss = buildThemeCss(pundoConfig)
+    const ruskyCss = buildThemeCss(ruskyConfig)
+    expect(pundoCss).not.toBe(ruskyCss)
+  })
+
+  it('kein XSS-Risiko: Farb-Werte enthalten nur #hex', () => {
+    const css = buildThemeCss(pundoConfig)
+    // CSS-Werte dürfen kein <script> oder </style> enthalten
+    expect(css).not.toContain('<')
+    expect(css).not.toContain('>')
+  })
+})
+
+describe('Brand Feature Flags', () => {
+  it('pundo hat socialFeed: false', () => {
+    expect(pundoConfig.features.socialFeed).toBe(false)
+  })
+
+  it('rusky hat socialFeed: true', () => {
+    expect(ruskyConfig.features.socialFeed).toBe(true)
+  })
+})

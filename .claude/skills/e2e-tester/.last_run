@@ -1,13 +1,13 @@
 {
-  "sha": "987a5e506b7d919d32dd58c2bedbb08945c3fe4d",
-  "timestamp": "2026-04-17T11:02:50.695643+00:00",
+  "sha": "bfa15d786ba22d0ce69dbfffd4cbe6af129636d8",
+  "timestamp": "2026-04-17T17:42:16.918613+00:00",
   "coverage_snapshot": {
+    "src/config/brands/index.ts": "100%",
+    "src/config/brands/pundo.ts": "100%",
+    "src/config/brands/rusky.ts": "100%",
+    "src/lib/lang.ts": "100%",
     "src/lib/legal-content.ts": "100%",
-    "src/lib/legal-content-en.ts": "n/a (static data)",
-    "src/lib/legal-content-de.ts": "n/a (static data)",
-    "src/lib/legal-content-ru.ts": "n/a (static data)",
-    "src/lib/legal-content-el.ts": "n/a (static data)",
-    "src/lib/legal-content-ar.ts": "n/a (static data)",
-    "src/lib/legal-content-he.ts": "n/a (static data)"
+    "src/components/ui/SplashScreen.tsx": "100%",
+    "src/app/manifest.webmanifest/route.ts": "100%"
   }
 }

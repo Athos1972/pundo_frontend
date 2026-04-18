@@ -205,7 +205,7 @@ const priceTypeLabels: Record<string, {
 for (const [lang, labels] of Object.entries(priceTypeLabels)) {
   test(`VP-3 [${lang}]: on_request label correct`, async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.on_request)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: lang, domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: lang, domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.on_request}`)
     await page.waitForLoadState('networkidle')
     await expect(page.getByText(labels.on_request).first()).toBeVisible({ timeout: 8000 })
@@ -213,7 +213,7 @@ for (const [lang, labels] of Object.entries(priceTypeLabels)) {
 
   test(`VP-3 [${lang}]: free label correct`, async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.free)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: lang, domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: lang, domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.free}`)
     await page.waitForLoadState('networkidle')
     await expect(page.getByText(labels.free).first()).toBeVisible({ timeout: 8000 })
@@ -221,7 +221,7 @@ for (const [lang, labels] of Object.entries(priceTypeLabels)) {
 
   test(`VP-3 [${lang}]: variable label correct`, async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.variable)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: lang, domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: lang, domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.variable}`)
     await page.waitForLoadState('networkidle')
     await expect(page.getByText(labels.variable).first()).toBeVisible({ timeout: 8000 })
@@ -233,7 +233,7 @@ for (const [lang, labels] of Object.entries(priceTypeLabels)) {
 test.describe('variable-price: RTL layout', () => {
   test('AR product detail dir=rtl, on_request label korrekt', async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.on_request)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.on_request}`)
     await page.waitForLoadState('networkidle')
 
@@ -244,7 +244,7 @@ test.describe('variable-price: RTL layout', () => {
 
   test('HE product detail dir=rtl, free label korrekt', async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.free)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: 'he', domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: 'he', domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.free}`)
     await page.waitForLoadState('networkidle')
 
@@ -255,7 +255,7 @@ test.describe('variable-price: RTL layout', () => {
 
   test('AR variable product: price_note in EN (not translated)', async ({ page }) => {
     if (!hasFixtures() || !await productExists(SLUGS.variable)) test.skip()
-    await page.context().addCookies([{ name: 'pundo_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.variable}`)
     await page.waitForLoadState('networkidle')
     // price_note is stored as-is (shop-entered text), not translated

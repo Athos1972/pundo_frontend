@@ -93,6 +93,15 @@ export function buildWhatsAppUrl(whatsapp: string, text: string): string {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`
 }
 
+/** Extracts hostname from a URL string, stripping www. Returns null on invalid input. */
+export function getHostname(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return null
+  }
+}
+
 export function formatSizeAttr(size: unknown): string | null {
   if (!size) return null
 

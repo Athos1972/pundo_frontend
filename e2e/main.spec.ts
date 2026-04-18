@@ -52,12 +52,12 @@ test.describe('E2E-02: Suche', () => {
 })
 
 // ─── E2E-03: RTL-Layout ───────────────────────────────────────────────────────
-// Language is set via pundo_lang cookie (not URL param)
+// Language is set via app_lang cookie (not URL param)
 
 test.describe('E2E-03: RTL-Layout', () => {
   async function setLang(page: import('@playwright/test').Page, lang: string) {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
     }])
   }
 
@@ -184,7 +184,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
 
   test('RTL: carousel renders correctly in Arabic', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     const errors: string[] = []
     // Hydration warnings are expected — #418 is the minified form
@@ -313,7 +313,7 @@ test.describe('E2E-09: Customer Auth Pages', () => {
 
   test('login page RTL (Arabic)', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/auth/login')
     const dir = await page.locator('html').getAttribute('dir')
@@ -368,7 +368,7 @@ test.describe('E2E-10: Review Section', () => {
 
   test('RTL: product page with Arabic sets dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     const errors: string[] = []
     page.on('pageerror', (err) => {
@@ -423,7 +423,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/help RTL: Arabic shows dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/help')
     const dir = await page.locator('html').getAttribute('dir')
@@ -466,7 +466,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/for-shops RTL: Hebrew shows dir=rtl', async ({ page }) => {
     await page.context().addCookies([{
-      name: 'pundo_lang', value: 'he', domain: COOKIE_DOMAIN, path: '/',
+      name: 'app_lang', value: 'he', domain: COOKIE_DOMAIN, path: '/',
     }])
     await page.goto('/for-shops')
     const dir = await page.locator('html').getAttribute('dir')
@@ -519,7 +519,7 @@ test.describe('E2E-08: Karten-Routing-Links', () => {
   async function gotoSearchMapWithMarker(page: import('@playwright/test').Page, lang?: string) {
     await page.goto('/search?q=cat')
     if (lang) {
-      await page.evaluate((l) => { document.cookie = `pundo_lang=${l}; path=/` }, lang)
+      await page.evaluate((l) => { document.cookie = `app_lang=${l}; path=/` }, lang)
       await page.reload()
     }
     await page.getByRole('button', { name: /map|karte|خريطة/i }).click()

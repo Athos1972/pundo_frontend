@@ -13,23 +13,26 @@
   --color-text-light: #B0A89F;
   --color-success: #2A8C5A;
 
-  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
-  --font-display: var(--font-heading), system-ui, sans-serif;
+  --font-sans: var(--brand-font-body, var(--font-dm-sans)), system-ui, sans-serif;
+  --font-display: var(--brand-font-heading, var(--font-heading)), system-ui, sans-serif;
 }
 
 :root {
   --font-heading: 'Space Grotesk';
   --font-dm-sans: 'DM Sans';
+  /* Brand-Font-Variablen: werden per buildThemeCss() pro Brand überschrieben */
+  --brand-font-heading: var(--font-heading);
+  --brand-font-body: var(--font-dm-sans);
 }
 
 body {
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--brand-font-body, var(--font-dm-sans)), system-ui, sans-serif;
   background-color: #F7F5F2;
   color: #1A1714;
 }
 
 h1, h2, h3, .font-display {
-  font-family: var(--font-heading), system-ui, sans-serif;
+  font-family: var(--brand-font-heading, var(--font-heading)), system-ui, sans-serif;
 }
 
 /* Hide scrollbar but keep scrollability */

@@ -24,7 +24,7 @@ export default async function ComingSoonPage() {
       <div className="cs-watermark" aria-hidden="true">НАЙДИ</div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12 sm:py-24 text-center">
 
         {/* Language switcher */}
         <div className={`absolute top-5 ${rtl ? 'left-5' : 'right-5'}`}>
@@ -32,7 +32,7 @@ export default async function ComingSoonPage() {
         </div>
 
         {/* Logo */}
-        <div className="animate-entrance mb-10" style={{ animationDelay: '0ms' }}>
+        <div className="animate-entrance mb-6 sm:mb-10" style={{ animationDelay: '0ms' }}>
           <img
             src={brand.assets.logoDarkSvg ?? brand.assets.logoSvg}
             alt={brand.name}
@@ -50,7 +50,7 @@ export default async function ComingSoonPage() {
 
         {/* Description */}
         <p
-          className="animate-entrance cs-description mb-16"
+          className="animate-entrance cs-description mb-8 sm:mb-16"
           style={{ animationDelay: '240ms' }}
         >
           {tr.coming_soon_description}
@@ -78,7 +78,7 @@ export default async function ComingSoonPage() {
 
         {/* Divider */}
         <div
-          className="animate-entrance cs-divider mt-14 mb-10"
+          className="animate-entrance cs-divider mt-8 sm:mt-14 mb-6 sm:mb-10"
           style={{ animationDelay: '480ms' }}
         />
 

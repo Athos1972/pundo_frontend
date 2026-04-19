@@ -126,6 +126,41 @@ test.describe('Shop Profil', () => {
     // Toast "Saved" soll erscheinen
     await expect(page.getByRole('status')).toContainText(/saved|gespeichert/i, { timeout: 10_000 })
   })
+
+  test('Social Links Felder sichtbar auf Profil-Seite', async ({ page }) => {
+    await page.goto('/shop-admin/profile')
+    // Wait for form to be rendered (no waitHydrated — ToastProvider not guaranteed before interaction)
+    await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 10_000 })
+    // Kontaktfelder
+    await expect(page.locator('input[name="whatsapp_number"]')).toBeVisible()
+    await expect(page.locator('input[name="website_url"]')).toBeVisible()
+    await expect(page.locator('input[name="webshop_url"]')).toBeVisible()
+    // Social Links Sektion (festes Set)
+    await expect(page.getByText('Facebook')).toBeVisible()
+    await expect(page.getByText('Instagram')).toBeVisible()
+    await expect(page.getByText('TikTok')).toBeVisible()
+  })
+
+  test('Social Links Felder befüllbar und Save-Button bleibt aktiv', async ({ page }) => {
+    await page.goto('/shop-admin/profile')
+    await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 10_000 })
+
+    // WhatsApp-Nummer befüllen
+    const waInput = page.locator('input[name="whatsapp_number"]')
+    await waInput.fill('+35799000001')
+    await expect(waInput).toHaveValue('+35799000001')
+
+    // Instagram-URL befüllen (4. URL-Input: 0=logo, 1=website, 2=webshop, 3=facebook, 4=instagram)
+    const igInput = page.locator('input[type="url"][placeholder="https://..."]').nth(4)
+    await igInput.fill('https://instagram.com/testshop_e2e')
+    await expect(igInput).toHaveValue('https://instagram.com/testshop_e2e')
+
+    // Save-Button muss nach gültiger Eingabe aktiviert bleiben (keine Validierungsfehler)
+    const saveBtn = page.getByRole('button', { name: /^save$|^speichern$/i }).first()
+    await expect(saveBtn).toBeEnabled()
+    // Kein Inline-Fehler sichtbar
+    await expect(page.getByText('Invalid URL')).not.toBeVisible()
+  })
 })
 
 // ─── Öffnungszeiten ──────────────────────────────────────────────────────────

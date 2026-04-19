@@ -123,6 +123,20 @@ describe('getShops', () => {
     expect(url).toContain('limit=5')
     expect(url).toContain('q=pet')
   })
+
+  it('includes status param when provided', async () => {
+    const { getShops } = await import('@/lib/api')
+    await getShops({ status: 'active' }, 'en')
+    const url = fetchSpy.mock.calls[0][0] as string
+    expect(url).toContain('status=active')
+  })
+
+  it('omits status param when not provided', async () => {
+    const { getShops } = await import('@/lib/api')
+    await getShops({}, 'en')
+    const url = fetchSpy.mock.calls[0][0] as string
+    expect(url).not.toContain('status')
+  })
 })
 
 describe('getCategories', () => {

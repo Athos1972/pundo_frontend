@@ -1,10 +1,56 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-17
-SHA: bfa15d786ba22d0ce69dbfffd4cbe6af129636d8 (Multi-Brand White-Label)
-Konfiguration: **Unit-Tests (Vitest) + E2E partial (pw-legal.config.ts + pw-search-only)**
-Ergebnis: **600/600 Unit-Tests PASS ✓ | E2E: 18/18 legal PASS, 2 pre-existing KNOWN_ISSUE**
+Datum: 2026-04-18
+SHA: ee5f7d79201464d7330256b1add753464b0caa9e (Social Links Feature)
+Konfiguration: **Unit-Tests (Vitest) + E2E shop-admin-e2e.spec.ts --workers=1**
+Ergebnis: **649/649 Unit-Tests PASS ✓ | E2E: 2/2 neue Social-Links-Tests PASS**
+
+---
+
+## Testlauf 2026-04-18 — Social Links (Shop-Admin + System-Admin)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 neue Errors (2 pre-existing) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **649 bestanden** (+13 neue Social-Links-Tests, +2 getShops-Status-Tests) |
+| Fehlgeschlagene | 0 |
+| Neue Test-Datei | `src/tests/social-links-editor.test.tsx` (13 Tests) |
+
+### E2E-Tests (shop-admin-e2e.spec.ts)
+
+| Test | Status |
+|------|--------|
+| Social Links Felder sichtbar auf Profil-Seite | **PASS** |
+| Social Links Felder befüllbar und Save-Button bleibt aktiv | **PASS** |
+
+### Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/types/shop-admin.ts` | `social_links`, `whatsapp_number`, `website_url`, `webshop_url` zu `AdminShop` ergänzt |
+| `src/app/(shop-admin)/.../profile/ProfileForm.tsx` | WhatsApp/Website/Webshop-Felder + SocialLinksEditor hinzugefügt |
+| `src/components/system-admin/ShopForm.tsx` | SocialLinksEditor integriert |
+| `src/lib/api.ts` | `status?: string` zu `getShops()` Params ergänzt |
+| `src/components/search/SearchBar.tsx` | `status: 'active'` Filter |
+| `src/components/shop/NearbyShops.tsx` | `status: 'active'` Filter |
+| `src/tests/social-links-editor.test.tsx` | NEU — 13 Unit-Tests |
+| `src/tests/api-and-components.test.tsx` | +2 Tests für getShops status-Filter |
+| `e2e/shop-admin-e2e.spec.ts` | +2 Social-Links E2E-Tests |
+
+### Docs-Sync
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | kein Signal — Social-Links sind interne Admin-Felder, keine API-Änderung |
+| `README.md` | unverändert |
 
 ---
 

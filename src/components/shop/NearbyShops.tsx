@@ -18,7 +18,7 @@ export function NearbyShops({ lang }: { lang: string }) {
 
   useEffect(() => {
     function load(lat: number, lng: number) {
-      getShops({ lat, lng }, lang)
+      getShops({ lat, lng, status: 'active' }, lang)
         .then(d => {
           setShops(d.items)
           setStatus(d.items.length > 0 ? 'ok' : 'empty')

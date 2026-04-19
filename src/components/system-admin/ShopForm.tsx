@@ -10,6 +10,7 @@ import { FormField } from './FormField'
 import { OpeningHoursEditor } from './OpeningHoursEditor'
 import { LocationEditor } from './LocationEditor'
 import { showToast } from './Toast'
+import { SocialLinksEditor } from '@/components/ui/SocialLinksEditor'
 
 interface ShopFormProps {
   shop: SysAdminShop | null  // null = create mode
@@ -41,6 +42,8 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [hasParking, setHasParking] = useState(shop?.has_parking ?? false)
   const [hasOwnDelivery, setHasOwnDelivery] = useState(shop?.has_own_delivery ?? false)
   const [sellsLiveAnimals, setSellsLiveAnimals] = useState(shop?.sells_live_animals ?? false)
+  const [socialLinks, setSocialLinks] = useState<Record<string, string> | null>(shop?.social_links ?? null)
+  const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function handleLocationChange(newLat: number, newLng: number) {
@@ -57,7 +60,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!validate()) return
+    if (!validate() || !socialLinksValid) return
 
     const payload = {
       names: { en: name.trim() },
@@ -78,6 +81,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       has_parking: hasParking,
       has_own_delivery: hasOwnDelivery,
       sells_live_animals: sellsLiveAnimals,
+      social_links: socialLinks,
     }
 
     startTransition(async () => {
@@ -187,6 +191,17 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         />
       </div>
 
+      <SocialLinksEditor
+        value={socialLinks}
+        onChange={setSocialLinks}
+        onValidChange={setSocialLinksValid}
+        titleLabel={tr.social_links_title}
+        otherLabel={tr.social_platform_other}
+        platformNameLabel={tr.social_platform_name}
+        urlLabel={tr.social_platform_url}
+        disabled={isPending}
+      />
+
       <div className="grid grid-cols-2 gap-4">
         <FormField
           as="select"
@@ -270,7 +285,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       <div className="flex gap-3 pt-2">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || !socialLinksValid}
           className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium
             rounded-lg disabled:opacity-50 transition-colors"
         >

@@ -18,6 +18,10 @@ export interface AdminShop {
   address: string | null
   location: { lat: number; lng: number } | null
   spoken_languages: string[]
+  whatsapp_number: string | null
+  website_url: string | null
+  webshop_url: string | null
+  social_links: Record<string, string> | null
 }
 
 export interface OpeningHours {

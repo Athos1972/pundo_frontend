@@ -38,7 +38,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
         const [prodRes, catRes, shopRes] = await Promise.all([
           searchProducts({ q, limit: 5 }, lang),
           getCategories({ q, limit: 4, only_with_products: true }, lang),
-          getShops({ q, limit: 3 }, lang),
+          getShops({ q, limit: 3, status: 'active' }, lang),
         ])
         const next = {
           categories: catRes.items,

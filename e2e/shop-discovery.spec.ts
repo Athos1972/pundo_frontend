@@ -38,13 +38,27 @@ function loadStorageState() {
   }
 }
 
+interface ShopRecord {
+  id?: number
+  slug?: string | null
+  name?: string | null
+  address_raw?: string | null
+  address?: string | null
+  shop_address?: string | null
+  location?: { lat: number; lng: number } | null
+  lat?: number | null
+  lng?: number | null
+  latitude?: number | null
+  longitude?: number | null
+}
+
 // Helper: Fetch shop data directly from API
 // Returns the first shop with an address (to skip the price_type seed shop which has no address).
-async function fetchShopByOwner(ownerId: number) {
+async function fetchShopByOwner(ownerId: number): Promise<ShopRecord | null> {
   const res = await fetch(`${BACKEND_URL}/api/v1/shops?owner_id=${ownerId}&limit=20`)
   if (!res.ok) return null
   const data = await res.json()
-  const items: Array<Record<string, unknown>> = Array.isArray(data) ? data : data?.items ?? []
+  const items = (Array.isArray(data) ? data : data?.items ?? []) as ShopRecord[]
   // Prefer shop with address_raw set (the e2e registration shop)
   return items.find(s => s.address_raw) ?? items[0] ?? null
 }
@@ -68,6 +82,7 @@ test.describe('Geocoding', () => {
 
     const shop = await fetchShopByOwner(state.ownerId)
     expect(shop, 'Shop nicht in API gefunden').toBeTruthy()
+    if (!shop) return
 
     // Adresse gesetzt (API uses address_raw)
     expect(shop.address_raw ?? shop.address ?? shop.shop_address).toBeTruthy()
@@ -177,7 +192,7 @@ test.describe('Shop-Detailseite', () => {
     const state = loadStorageState()
     // Use slug saved by global-setup (avoids owner_id lookup via public API which doesn't support that filter)
     shopSlug = (state as Record<string, unknown>).shopSlug as string | null
-      ?? (await fetchShopByOwner(state.ownerId))?.slug ?? null
+      ?? (await fetchShopByOwner(state.ownerId))?.slug as string | null ?? null
   })
 
   test('Shop-Detailseite lädt ohne Fehler', async ({ page }) => {

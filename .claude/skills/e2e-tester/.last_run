@@ -1,5 +1,11 @@
 {
-  "sha": "8092f9c2bf73b97724592c8a08fda035b3b131ff",
-  "timestamp": "2026-04-18T06:56:52.912017+00:00",
-  "coverage_snapshot": {}
+  "sha": "60c1bcdb484ca1771b72d2bf860f594581f9a613",
+  "timestamp": "2026-04-19T13:56:06.872004+00:00",
+  "coverage_snapshot": {
+    "api.ts": 98.24,
+    "SearchBar.tsx": 76.92,
+    "NearbyShops.tsx": 100.0,
+    "utils.ts": 100.0,
+    "translations.ts": 49.12
+  }
 }

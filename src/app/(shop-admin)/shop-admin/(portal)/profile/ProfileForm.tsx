@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from '@/components/shop-admin/FormField'
 import { LanguageSelector } from '@/components/shop-admin/LanguageSelector'
+import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
 import type { AdminShop } from '@/types/shop-admin'
 
@@ -18,10 +19,19 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
   const [spokenLanguages, setSpokenLanguages] = useState<string[]>(
     shop?.spoken_languages ?? []
   )
+  const [socialLinks, setSocialLinks] = useState<Record<string, string> | null>(
+    shop?.social_links ?? null
+  )
+  const [socialLinksValid, setSocialLinksValid] = useState(true)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!socialLinksValid) return
     const data = new FormData(e.currentTarget)
+
+    const whatsapp = (data.get('whatsapp_number') as string).trim() || null
+    const website = (data.get('website_url') as string).trim() || null
+    const webshop = (data.get('webshop_url') as string).trim() || null
 
     startTransition(async () => {
       try {
@@ -31,9 +41,13 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
           body: JSON.stringify({
             name: data.get('name'),
             description: data.get('description'),
-            logo_url: data.get('logo_url'),
+            logo_url: data.get('logo_url') || null,
             address: data.get('address'),
             spoken_languages: spokenLanguages,
+            whatsapp_number: whatsapp,
+            website_url: website,
+            webshop_url: webshop,
+            social_links: socialLinks,
           }),
         })
         if (res.ok) {
@@ -81,9 +95,41 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         onChange={setSpokenLanguages}
         label={tr.spoken_languages}
       />
+      <FormField
+        label={tr.whatsapp_number}
+        name="whatsapp_number"
+        type="tel"
+        placeholder="+35799123456"
+        defaultValue={shop?.whatsapp_number ?? ''}
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          label={tr.website_url}
+          name="website_url"
+          type="url"
+          placeholder="https://..."
+          defaultValue={shop?.website_url ?? ''}
+        />
+        <FormField
+          label={tr.webshop_url}
+          name="webshop_url"
+          type="url"
+          placeholder="https://..."
+          defaultValue={shop?.webshop_url ?? ''}
+        />
+      </div>
+      <SocialLinksEditor
+        value={socialLinks}
+        onChange={setSocialLinks}
+        onValidChange={setSocialLinksValid}
+        titleLabel={tr.social_links_title}
+        otherLabel={tr.social_platform_other}
+        platformNameLabel={tr.social_platform_name}
+        urlLabel={tr.social_platform_url}
+      />
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !socialLinksValid}
         className="self-start bg-accent text-white px-6 py-2 rounded-lg text-sm font-semibold
           hover:bg-accent-dark transition-colors disabled:opacity-50"
       >

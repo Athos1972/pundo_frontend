@@ -8,6 +8,52 @@ Ergebnis: **600/600 Unit-Tests PASS ✓ | E2E: 18/18 legal PASS, 2 pre-existing 
 
 ---
 
+## Testlauf 2026-04-19 — Shop-Status-Filter (status=active)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| TypeScript (e2e/) | **FIXED** — pre-existing Fehler in `e2e/shop-discovery.spec.ts` behoben |
+| ESLint | **PASS** — 0 neue Errors (2 pre-existing in admin/login + CountdownTimer) |
+
+### Coverage-Status (geänderte Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| src/lib/api.ts | 98.24% | 80% | **PASS** |
+| src/components/search/SearchBar.tsx | 76.92% | 70% | **PASS** |
+| src/components/shop/NearbyShops.tsx | 100% | 70% | **PASS** |
+
+### Unit-Tests
+
+636/636 bestanden (28 Test-Files)
+
+### E2E-Tests
+
+| Test | Status | Anmerkung |
+|------|--------|-----------|
+| API: GET /shops?status=active | **PASS** | 20 Shops zurück, 0 non-active — Filter funktioniert |
+| Playwright | **SKIP** | global-setup schlägt an Backend-DB-Migration fehl (pre-existing) |
+
+### Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| src/lib/api.ts | `status?: string` zu `getShops()` Params ergänzt |
+| src/components/search/SearchBar.tsx | `status: 'active'` in getShops()-Aufruf |
+| src/components/shop/NearbyShops.tsx | `status: 'active'` in getShops()-Aufruf |
+| e2e/shop-discovery.spec.ts | Pre-existing TS-Fehler gefixt (ShopRecord interface + null-guard) |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-001 | Playwright global-setup schlägt an `alembic_version` UniqueViolation fehl — Backend-DB-Reset nötig | pre-existing |
+
+---
+
 ## Testlauf 2026-04-17 — naidivse.com Coming-Soon-Seite
 
 ### Statische Prüfung

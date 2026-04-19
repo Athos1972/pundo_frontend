@@ -58,7 +58,7 @@ export async function getRelatedProducts(
 }
 
 export async function getShops(
-  params: { q?: string; lat?: number; lng?: number; limit?: number; offset?: number } = {},
+  params: { q?: string; lat?: number; lng?: number; limit?: number; offset?: number; status?: string } = {},
   lang: string
 ): Promise<ShopListResponse> {
   const qs = new URLSearchParams();
@@ -67,6 +67,7 @@ export async function getShops(
   if (params.lng != null) qs.set('lng', String(params.lng));
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.offset != null) qs.set('offset', String(params.offset));
+  if (params.status) qs.set('status', params.status);
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
 }

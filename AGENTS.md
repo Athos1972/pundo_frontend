@@ -33,3 +33,24 @@ Backend-Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/ski
 
 Falls eine Anforderung Backend-Änderungen erfordert: explizit benennen und ggf. in das Backend-Repo wechseln.
 <!-- END:backend-repo -->
+
+<!-- BEGIN:languages -->
+# Sprachen & i18n — PFLICHT
+
+| Code | Sprache    | RTL |
+|------|-----------|-----|
+| `en` | English   | Nein |
+| `de` | Deutsch   | Nein |
+| `el` | Ελληνικά  | Nein |
+| `ru` | Русский   | Nein |
+| `ar` | العربية   | **Ja** |
+| `he` | עברית     | **Ja** |
+
+**Regeln:**
+- Sprachkonstanten: Frontend `src/lib/lang.ts`, Backend `core/languages.py`
+- UI-Strings: `src/lib/translations.ts` (kein i18n-Framework, statisch in TypeScript)
+- Jede neue UI-Komponente mit sichtbarem Text **muss** alle 6 Sprachen in `translations.ts` bedienen
+- RTL-Layout: Tailwind `rtl:`-Modifier verwenden, niemals RTL raten
+- API-Calls senden automatisch `Accept-Language`-Header (siehe `src/lib/api.ts`)
+- Cookie `app_lang` speichert die Sprachauswahl (1 Jahr)
+<!-- END:languages -->

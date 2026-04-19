@@ -9,6 +9,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
   const tr = t(lang)
   const offer = item.best_offer
   const imgSrc = pickImg(item.images, 'card', item.thumbnail_url)
+  const productName = item.names[lang] ?? item.names.en ?? '—'
   const priceLabel = offer
     ? formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
     : null
@@ -33,7 +34,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
         <div className="p-3 flex flex-col justify-center min-w-0">
           <p className="font-bold text-text text-sm leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
             <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
-              {item.name ?? '—'}
+              {productName}
             </Link>
           </p>
           {item.brand && <p className="text-xs text-text-muted mt-0.5">{item.brand}</p>}
@@ -76,7 +77,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
         <p className="font-bold text-text text-sm leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
           {/* Stretched link covers the whole card */}
           <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
-            {item.name ?? '—'}
+            {productName}
           </Link>
         </p>
         {item.brand && <p className="text-xs text-text-muted mt-0.5">{item.brand}</p>}

@@ -18,7 +18,7 @@ export interface BestOffer {
   delivery_available?: boolean;
 }
 export interface ProductListItem {
-  id: number; slug: string; name: string | null; brand: string | null;
+  id: number; slug: string; names: Record<string, string>; brand: string | null;
   category_id: number | null; thumbnail_url: string | null; images: ProductImages | null; best_offer: BestOffer | null;
 }
 export interface ProductListResponse { total: number; items: ProductListItem[]; }

@@ -24,3 +24,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Test-Instanzen (Port **3500** / **8500**) dürfen automatisch neu gestartet werden — kein Zögern
 - Produktiv-Instanzen (Port **3000** / **8000**) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung
 <!-- END:port-convention -->
+
+<!-- BEGIN:backend-repo -->
+# Backend-Repository
+
+Das Backend liegt in `/Users/bb_studio_2025/dev/github/pundo_main_backend`.
+Backend-Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+
+Falls eine Anforderung Backend-Änderungen erfordert: explizit benennen und ggf. in das Backend-Repo wechseln.
+<!-- END:backend-repo -->

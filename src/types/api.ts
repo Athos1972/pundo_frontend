@@ -129,3 +129,11 @@ export interface UpdateReviewRequest {
   stars?: number
   comment?: string
 }
+
+// ─── Spotted-In ───────────────────────────────────────────────────────────────
+
+export interface SpottedCreateResponse {
+  spotted_id: number
+  status: 'pending'
+  message: string
+}

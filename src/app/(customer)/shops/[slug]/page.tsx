@@ -78,9 +78,6 @@ export default async function ShopPage({ params }: Props) {
           {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
           <div className="flex items-center gap-3 flex-wrap mt-2">
-            <span className={`text-xs px-2 py-1 rounded-full ${shop.status === 'active' ? 'bg-success/10 text-success' : 'bg-surface-alt text-text-muted'}`}>
-              {shop.status}
-            </span>
             {shop.whatsapp_number && (
               <a
                 href={buildWhatsAppUrl(

@@ -258,7 +258,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                         ) : null}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text truncate">{item.name ?? item.slug}</p>
+                        <p className="text-sm font-medium text-text truncate">{item.names[lang] ?? item.names.en ?? item.slug}</p>
                         {item.brand && <p className="text-xs text-text-muted">{item.brand}</p>}
                       </div>
                       {offer?.price_type === 'fixed' && offer.price && (

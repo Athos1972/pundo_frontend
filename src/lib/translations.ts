@@ -159,6 +159,14 @@ export const translations = {
     coming_soon_email_submit: 'Notify me',
     coming_soon_email_success: "Done! We'll let you know.",
     coming_soon_email_error: 'Something went wrong.',
+    // Spotted-In
+    spotted_button_label: 'Spot a price',
+    spotted_error_no_gps: 'Location not found. Please enable GPS or location access.',
+    spotted_uploading: 'Uploading…',
+    spotted_success: 'Thanks for your upload! We\'ll be in touch.',
+    spotted_error_upload: 'Upload failed. Please try again.',
+    spotted_camera_denied: 'Camera access denied.',
+    spotted_login_required: 'Sign in to upload',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -320,6 +328,14 @@ export const translations = {
     coming_soon_email_submit: 'Benachrichtigen',
     coming_soon_email_success: 'Danke! Wir melden uns.',
     coming_soon_email_error: 'Etwas ist schiefgelaufen.',
+    // Spotted-In
+    spotted_button_label: 'Preis spotten',
+    spotted_error_no_gps: 'Standort nicht ermittelt. Bitte GPS oder Ortungsdienste aktivieren.',
+    spotted_uploading: 'Wird hochgeladen…',
+    spotted_success: 'Danke für deinen Upload! Wir melden uns.',
+    spotted_error_upload: 'Upload fehlgeschlagen. Bitte erneut versuchen.',
+    spotted_camera_denied: 'Kamera-Zugriff verweigert.',
+    spotted_login_required: 'Zum Hochladen anmelden',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -481,6 +497,14 @@ export const translations = {
     coming_soon_email_submit: 'Уведомить',
     coming_soon_email_success: 'Готово! Мы напишем.',
     coming_soon_email_error: 'Что-то пошло не так.',
+    // Spotted-In
+    spotted_button_label: 'Отметить цену',
+    spotted_error_no_gps: 'Местоположение не найдено. Включите GPS или геолокацию.',
+    spotted_uploading: 'Загрузка…',
+    spotted_success: 'Спасибо за загрузку! Мы вас уведомим.',
+    spotted_error_upload: 'Ошибка загрузки. Попробуйте снова.',
+    spotted_camera_denied: 'Доступ к камере запрещён.',
+    spotted_login_required: 'Войдите для загрузки',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -642,6 +666,14 @@ export const translations = {
     coming_soon_email_submit: 'Ειδοποίησέ με',
     coming_soon_email_success: 'Εντάξει! Θα σε ειδοποιήσουμε.',
     coming_soon_email_error: 'Κάτι πήγε στραβά.',
+    // Spotted-In
+    spotted_button_label: 'Σημείωσε τιμή',
+    spotted_error_no_gps: 'Η τοποθεσία δεν βρέθηκε. Ενεργοποιήστε GPS ή υπηρεσίες τοποθεσίας.',
+    spotted_uploading: 'Μεταφόρτωση…',
+    spotted_success: 'Ευχαριστούμε για τη φωτογραφία! Θα επικοινωνήσουμε μαζί σας.',
+    spotted_error_upload: 'Η μεταφόρτωση απέτυχε. Παρακαλώ δοκιμάστε ξανά.',
+    spotted_camera_denied: 'Δεν επιτράπηκε πρόσβαση στην κάμερα.',
+    spotted_login_required: 'Συνδεθείτε για να ανεβάσετε',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -803,6 +835,14 @@ export const translations = {
     coming_soon_email_submit: 'أعلمني',
     coming_soon_email_success: 'تم! سنخبرك.',
     coming_soon_email_error: 'حدث خطأ ما.',
+    // Spotted-In
+    spotted_button_label: 'رصد سعر',
+    spotted_error_no_gps: 'لم يتم العثور على الموقع. يرجى تفعيل GPS أو خدمات الموقع.',
+    spotted_uploading: 'جارٍ الرفع…',
+    spotted_success: 'شكراً لرفعك! سنتواصل معك قريباً.',
+    spotted_error_upload: 'فشل الرفع. يرجى المحاولة مرة أخرى.',
+    spotted_camera_denied: 'تم رفض الوصول إلى الكاميرا.',
+    spotted_login_required: 'تسجيل الدخول للرفع',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -964,6 +1004,14 @@ export const translations = {
     coming_soon_email_submit: 'עדכן אותי',
     coming_soon_email_success: '!בוצע. ניצור איתך קשר',
     coming_soon_email_error: 'משהו השתבש.',
+    // Spotted-In
+    spotted_button_label: 'צלם מחיר',
+    spotted_error_no_gps: 'המיקום לא נמצא. אנא הפעל GPS או שירותי מיקום.',
+    spotted_uploading: 'מעלה…',
+    spotted_success: 'תודה על ההעלאה! נחזור אליך בקרוב.',
+    spotted_error_upload: 'ההעלאה נכשלה. אנא נסה שנית.',
+    spotted_camera_denied: 'הגישה למצלמה נדחתה.',
+    spotted_login_required: 'התחבר להעלאה',
   },
 } as const;
 

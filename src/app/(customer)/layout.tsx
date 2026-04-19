@@ -10,6 +10,7 @@ import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { getBrandFromHeaders, buildThemeCss } from '@/config/brands'
+import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -101,6 +102,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header />
           {children}
           <Footer />
+          <SpottedGlobalButton lang={lang} />
         </SessionProvider>
       </body>
     </html>

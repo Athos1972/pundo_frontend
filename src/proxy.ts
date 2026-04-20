@@ -29,7 +29,7 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
   const analyticsConnectSrc = analyticsHost ? ` ${analyticsHost}` : ''
   const analyticsScriptSrc = analyticsHost ? ` ${analyticsHost}` : ''
 
-  return [
+  const directives = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${analyticsScriptSrc}`,
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
@@ -42,8 +42,12 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
     `base-uri 'self'`,
     `form-action 'self'`,
     `frame-ancestors 'none'`,
-    `upgrade-insecure-requests`,
-  ].join('; ')
+  ]
+  // Only enforce HTTPS upgrade in production
+  if (process.env.NODE_ENV !== 'development') {
+    directives.push(`upgrade-insecure-requests`)
+  }
+  return directives.join('; ')
 }
 
 export function proxy(request: NextRequest) {
@@ -78,8 +82,10 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('x-brand-slug', brand.slug)
 
   // ---- Job 4: naidivse Coming-Soon-Rewrite --------------------------------
+  // In development, skip the rewrite so the full layout can be tested locally.
   if (
     brand.slug === 'naidivse' &&
+    process.env.NODE_ENV !== 'development' &&
     pathname !== '/coming-soon' &&
     !pathname.startsWith('/api/') &&
     !pathname.startsWith('/_next/') &&

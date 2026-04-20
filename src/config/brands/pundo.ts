@@ -43,6 +43,8 @@ export const pundoConfig: BrandConfig = {
     description: 'Finde Produkte in Shops in deiner Nähe in Larnaca, Zypern',
     siteUrl: 'https://pundo.cy',
     ogImage: '/brands/pundo/logo.png',
+    heroTitle: 'Finde lokale Shops & Produkte',
+    heroText: 'Wir sind alle aus unterschiedlichen Gründen auf dieser Insel — und alle genervt, weil wir uns nicht zurechtfinden.',
   },
 
   analytics: {
@@ -52,6 +54,8 @@ export const pundoConfig: BrandConfig = {
 
   features: {
     socialFeed: false,
+    catsfirst: false,
+    communityCard: false,
   },
 
   legal: {

@@ -197,11 +197,15 @@ test.describe('Produkte CRUD', () => {
     await page.goto('/shop-admin/products/new')
     await waitHydrated(page)
     await page.locator('input[name="name"]').fill(TEST_PRODUCT)
-    await page.locator('input[name="price"]').fill('4.99')
-    await page.locator('input[name="unit"]').fill('l')
     // Select first real category (index 1, after the "—" placeholder at index 0)
     await page.locator('select[name="category_id"]').selectOption({ index: 1 })
-    // Submit via role (logout button is now type="button", not type="submit")
+    // Add a price tier via PriceTierEditor
+    await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first().click()
+    // Select a unit (first non-empty option)
+    await page.locator('select').last().selectOption({ index: 1 })
+    // Fill in the price for the first step
+    await page.locator('input[inputmode="decimal"]').last().fill('4.99')
+    // Submit via role
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     // Nach erfolgreichem Anlegen zurück zur Produktliste
     await expect(page).toHaveURL(/\/shop-admin\/products$/, { timeout: 15_000 })

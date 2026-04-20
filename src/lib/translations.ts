@@ -174,6 +174,25 @@ export const translations = {
     spotted_account_empty: 'No uploads yet.',
     spotted_account_error_no_shop: 'No shop found nearby.',
     spotted_account_error_vision_failed: 'Photo could not be processed.',
+    // Guides
+    page_title_guides: 'Expat Guides',
+    guides_index_title: 'Expat Guides',
+    guides_index_subtitle: 'Practical guides for life in Cyprus',
+    guides_teaser_title: 'Expat Guides',
+    guides_teaser_link: (n: number) => `All ${n} guides →`,
+    guide_back: '← Back to Guides',
+    guide_readtime: (n: number) => `${n} min read`,
+    guide_related: 'Related Guides',
+    guides_filter_all: 'All',
+    category_behörden: 'Authorities',
+    category_mobilität: 'Mobility',
+    // Hero
+    hero_pain_point_pundo: "We're all here for different reasons — and all frustrated because we can't find our way.",
+    hero_pain_point_naidivse: "Everyone's here for different reasons — and everyone is desperately searching for the right thing.",
+    // Community
+    community_section_title: 'Community',
+    community_join: 'Join',
+    community_members: 'members',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -350,6 +369,25 @@ export const translations = {
     spotted_account_empty: 'Noch keine Uploads.',
     spotted_account_error_no_shop: 'Kein Shop in der Nähe gefunden.',
     spotted_account_error_vision_failed: 'Foto konnte nicht verarbeitet werden.',
+    // Guides
+    page_title_guides: 'Expat-Guides',
+    guides_index_title: 'Expat-Guides',
+    guides_index_subtitle: 'Praktische Ratgeber für das Leben auf Zypern',
+    guides_teaser_title: 'Expat-Guides',
+    guides_teaser_link: (n: number) => `Alle ${n} Guides →`,
+    guide_back: '← Zurück zu Guides',
+    guide_readtime: (n: number) => `${n} Min. Lesezeit`,
+    guide_related: 'Weitere Guides',
+    guides_filter_all: 'Alle',
+    category_behörden: 'Behörden',
+    category_mobilität: 'Mobilität',
+    // Hero
+    hero_pain_point_pundo: 'Wir sind alle aus unterschiedlichen Gründen auf dieser Insel — und alle genervt, weil wir uns nicht zurechtfinden.',
+    hero_pain_point_naidivse: 'Alle sind hier aus verschiedenen Gründen — und alle suchen verzweifelt nach dem Richtigen.',
+    // Community
+    community_section_title: 'Community',
+    community_join: 'Beitreten',
+    community_members: 'Mitglieder',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -526,6 +564,25 @@ export const translations = {
     spotted_account_empty: 'Загрузок пока нет.',
     spotted_account_error_no_shop: 'Магазин рядом не найден.',
     spotted_account_error_vision_failed: 'Не удалось обработать фото.',
+    // Guides
+    page_title_guides: 'Руководства для экспатов',
+    guides_index_title: 'Руководства для экспатов',
+    guides_index_subtitle: 'Практические руководства для жизни на Кипре',
+    guides_teaser_title: 'Руководства',
+    guides_teaser_link: (n: number) => `Все ${n} руководства →`,
+    guide_back: '← Назад к руководствам',
+    guide_readtime: (n: number) => `${n} мин. чтения`,
+    guide_related: 'Похожие руководства',
+    guides_filter_all: 'Все',
+    category_behörden: 'Органы власти',
+    category_mobilität: 'Транспорт',
+    // Hero
+    hero_pain_point_pundo: 'Мы все здесь по разным причинам — и все ищем своё.',
+    hero_pain_point_naidivse: 'Все мы здесь по разным причинам — и все ищем то, что нам нужно.',
+    // Community
+    community_section_title: 'Сообщество',
+    community_join: 'Вступить',
+    community_members: 'участников',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -702,6 +759,25 @@ export const translations = {
     spotted_account_empty: 'Δεν υπάρχουν μεταφορτώσεις.',
     spotted_account_error_no_shop: 'Δεν βρέθηκε κατάστημα κοντά.',
     spotted_account_error_vision_failed: 'Η φωτογραφία δεν μπόρεσε να επεξεργαστεί.',
+    // Guides
+    page_title_guides: 'Οδηγοί Expat',
+    guides_index_title: 'Οδηγοί Expat',
+    guides_index_subtitle: 'Πρακτικοί οδηγοί για τη ζωή στην Κύπρο',
+    guides_teaser_title: 'Οδηγοί Expat',
+    guides_teaser_link: (n: number) => `Όλοι οι ${n} οδηγοί →`,
+    guide_back: '← Πίσω στους Οδηγούς',
+    guide_readtime: (n: number) => `${n} λεπτά ανάγνωσης`,
+    guide_related: 'Σχετικοί Οδηγοί',
+    guides_filter_all: 'Όλα',
+    category_behörden: 'Αρχές',
+    category_mobilität: 'Μεταφορές',
+    // Hero
+    hero_pain_point_pundo: 'Είμαστε όλοι εδώ για διαφορετικούς λόγους — και όλοι απογοητευμένοι που δεν μπορούμε να βρούμε τον δρόμο μας.',
+    hero_pain_point_naidivse: 'Όλοι είναι εδώ για διαφορετικούς λόγους — και όλοι αναζητούν απεγνωσμένα το σωστό πράγμα.',
+    // Community
+    community_section_title: 'Κοινότητα',
+    community_join: 'Εγγραφή',
+    community_members: 'μέλη',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -878,6 +954,25 @@ export const translations = {
     spotted_account_empty: 'لا توجد رفوعات بعد.',
     spotted_account_error_no_shop: 'لم يتم العثور على متجر قريب.',
     spotted_account_error_vision_failed: 'تعذّر معالجة الصورة.',
+    // Guides
+    page_title_guides: 'أدلة المغتربين',
+    guides_index_title: 'أدلة المغتربين',
+    guides_index_subtitle: 'أدلة عملية للحياة في قبرص',
+    guides_teaser_title: 'الأدلة',
+    guides_teaser_link: (n: number) => `جميع ${n} الأدلة ←`,
+    guide_back: 'الأدلة ←',
+    guide_readtime: (n: number) => `${n} دقيقة قراءة`,
+    guide_related: 'أدلة ذات صلة',
+    guides_filter_all: 'الكل',
+    category_behörden: 'السلطات',
+    category_mobilität: 'التنقل',
+    // Hero
+    hero_pain_point_pundo: 'نحن جميعاً هنا لأسباب مختلفة — وكلنا محبطون لأننا لا نستطيع إيجاد طريقنا.',
+    hero_pain_point_naidivse: 'الجميع هنا لأسباب مختلفة — والجميع يبحث بيأس عن الشيء الصحيح.',
+    // Community
+    community_section_title: 'مجتمع',
+    community_join: 'انضم',
+    community_members: 'عضو',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1054,6 +1149,25 @@ export const translations = {
     spotted_account_empty: 'אין העלאות עדיין.',
     spotted_account_error_no_shop: 'לא נמצאה חנות בקרבת מקום.',
     spotted_account_error_vision_failed: 'לא ניתן היה לעבד את התמונה.',
+    // Guides
+    page_title_guides: 'מדריכים לעולים',
+    guides_index_title: 'מדריכים לעולים',
+    guides_index_subtitle: 'מדריכים מעשיים לחיים בקפריסין',
+    guides_teaser_title: 'מדריכים',
+    guides_teaser_link: (n: number) => `כל ${n} המדריכים ←`,
+    guide_back: 'מדריכים ←',
+    guide_readtime: (n: number) => `${n} דק׳ קריאה`,
+    guide_related: 'מדריכים נוספים',
+    guides_filter_all: 'הכל',
+    category_behörden: 'רשויות',
+    category_mobilität: 'ניידות',
+    // Hero
+    hero_pain_point_pundo: 'כולנו כאן לסיבות שונות — וכולנו מתוסכלים כי אנחנו לא יכולים למצוא את הדרך שלנו.',
+    hero_pain_point_naidivse: 'כולם כאן לסיבות שונות — וכולם מחפשים בייאוש את הדבר הנכון.',
+    // Community
+    community_section_title: 'קהילה',
+    community_join: 'הצטרף',
+    community_members: 'חברים',
   },
 } as const;
 

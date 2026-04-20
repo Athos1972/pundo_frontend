@@ -36,6 +36,8 @@ Nutzer können Shops und Produkte bewerten und kommentieren.
   - free — kostenlos
   - variable — variabler Preis (z. B. nach Gewicht/Menge)
 - price_note: optionale Freitext-Ergänzung zum Preis (z. B. "pro kg", "ab Lager")
+- ShopOwner-Produkte unterstützen Staffelpreise (price_tiers): Preis je Einheit (per_hour, per_m2, per_day, per_km, per_piece, custom) mit Mengenrabatt-Stufen (min_quantity, max_quantity optional, price); mehrere Einheiten pro Produkt möglich (z. B. "Stunde + Tag")
+- Dienstleistungen werden als ShopOwner-Produkte mit unit-basiertem Preis erfasst — ein Shop kann Produkte und Dienstleistungen parallel anbieten (Mixed Shop, F5400)
 
 ### Kategorien & Attribute
 - Hierarchische Kategorienstruktur mit Vererbung: Produkt erbt Attribute der übergeordneten Kategorien

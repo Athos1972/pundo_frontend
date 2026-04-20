@@ -2,9 +2,90 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-19
-SHA: d93a302c5ae119389b53902db165fadaf15ba042 (F3000.1 Spotted-In Account View)
-Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright main.spec.ts**
-Ergebnis: **655/655 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS | E2E 129/221 PASS (28 FAIL pre-existing, 64 SKIP)**
+SHA: 9a9d4df7c05871b554ba70bc826b827ab0f3c4ce (F5200 Dienstleistungen Mengenangaben)
+Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright shop-admin-e2e.spec.ts + main.spec.ts**
+Ergebnis: **690/690 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E 54/72 PASS (18 FAIL pre-existing)**
+
+---
+
+## Testlauf 2026-04-19 — F5200 Dienstleistungen Mengenangaben (PriceTier)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 24 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **690 bestanden** (+35 neue F5200-Tests) |
+| Fehlgeschlagene | 0 |
+| Neue Test-Dateien | `src/tests/price-tier-editor.test.ts` (20 Tests), +15 Tests in `shop-admin.test.tsx` |
+
+### Coverage-Status (F5200 Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/components/shop-admin/PriceTierEditor.tsx` | **82.9%** | 70% | **PASS** |
+| `src/components/shop-admin/ProductList.tsx` | **89.3%** | 70% | **PASS** |
+| `src/lib/shop-admin-api.ts` | ~77% | 70% | **PASS** |
+| `src/types/shop-admin.ts` | n/a (interfaces) | — | n/a |
+
+### E2E-Tests (shop-admin-e2e.spec.ts → Port 3500/8500)
+
+| Test | Status | Anmerkung |
+|------|--------|-----------|
+| Login-Tests (2) | **FAIL** | KI-001: `body[data-hydrated]` — braucht production build (`next start`) |
+| Dashboard (2) | **1 PASS / 1 FAIL** | Navigation: Links-Count pre-existing |
+| Profil (4) | **3 PASS / 1 FAIL** | `waitHydrated` — pre-existing |
+| Öffnungszeiten (2) | **1 PASS / 1 FAIL** | `waitHydrated` — pre-existing |
+| Produkte CRUD (3) | **FAIL** | `waitHydrated` — pre-existing (dev-mode limitation) |
+| Angebote CRUD (2) | **FAIL** | `waitHydrated` — pre-existing |
+| API Keys (2) | **FAIL** | `waitHydrated` — pre-existing |
+| Logout (1) | **FAIL** | `waitHydrated` — pre-existing |
+| **Gesamt** | **5 PASS / 13 FAIL** | 13 Failures = identisch mit pre-existing vor F5200 |
+
+### Backend-Fixes (pundo_main_backend)
+
+| Datei | Änderung |
+|-------|----------|
+| `scripts/prepare_e2e_db.py` | +`from ingestor.models.price_tier import PriceTier, PriceTierStep` — SQLAlchemy mapper fix |
+| `scripts/seed_admin.py` | +`from ingestor.models.price_tier import PriceTier, PriceTierStep` — SQLAlchemy mapper fix |
+
+### Geänderte Frontend-Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/types/shop-admin.ts` | +`PriceUnitOption`, `PriceTierStep`, `PriceTier`; `AdminProduct` refactored (price_tiers statt price/currency/unit) |
+| `src/lib/shop-admin-api.ts` | +`getAdminPriceUnits()` |
+| `src/lib/shop-admin-translations.ts` | +14 Keys × 6 Sprachen für PriceTierEditor |
+| `src/components/shop-admin/PriceTierEditor.tsx` | NEU — Client Component für Staffelpreise |
+| `src/components/shop-admin/ProductForm.tsx` | Rewrite: price/currency/unit → PriceTierEditor + two-step save |
+| `src/components/shop-admin/ProductList.tsx` | Preisanzeige auf `ab X €/unit` aus price_tiers umgestellt |
+| `src/app/(shop-admin)/.../products/new/page.tsx` | +`getAdminPriceUnits(lang)` parallel laden |
+| `src/app/(shop-admin)/.../products/[id]/edit/page.tsx` | +`getAdminPriceUnits(lang)` parallel laden |
+| `src/tests/price-tier-editor.test.ts` | NEU — 20 pure-logic Tests |
+| `src/tests/shop-admin.test.tsx` | +15 PriceTierEditor Tests (rendering + interaction) |
+| `src/tests/api-and-components.test.tsx` | Fixtures auf neues `price_tiers`-Schema migriert |
+| `e2e/shop-admin-e2e.spec.ts` | Produkt-anlegen Test: price/unit-Inputs → PriceTierEditor-Flow |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | **aktualisiert** — price_tiers + Mixed Shop Konzept ergänzt |
+| `README.md` | unverändert — Architektur-Überblick korrekt (shop-admin.ts listing schon vorhanden) |
+| `AGENTS.md` | unverändert — keine domain-relevanten Einträge zu price_tier |
+
+### Known Issues (aktualisiert)
+
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-001 | E2E shop-admin-e2e: `body[data-hydrated="true"]` Timeout — benötigt Production Build (`next start`), nicht Dev-Server | pre-existing | OPEN |
+| KI-012 | E2E: Filter-Chips (price_type) 3 Failures — Timing/Hydration im Dev-Mode (Suspense + useSearchParams) | 2026-04-19 | OPEN (dev-mode only) |
 
 ---
 

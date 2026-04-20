@@ -1,11 +1,5 @@
 {
-  "sha": "d93a302c5ae119389b53902db165fadaf15ba042",
-  "timestamp": "2026-04-19T19:07:26.048802+00:00",
-  "coverage_snapshot": {
-    "src/lib/utils.ts": "gap",
-    "src/lib/api.ts": "gap",
-    "src/lib/translations.ts": "gap",
-    "src/lib/customer-api.ts": "gap",
-    "src/components/map/ShopMapClient.tsx": "gap-leaflet"
-  }
+  "sha": "9a9d4df7c05871b554ba70bc826b827ab0f3c4ce",
+  "timestamp": "2026-04-20T07:18:13.016698+00:00",
+  "coverage_snapshot": {}
 }

@@ -307,3 +307,165 @@ describe('ApiKeyList', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
 })
+
+// ─── PriceTierEditor ──────────────────────────────────────────────────────────
+
+describe('PriceTierEditor', () => {
+  const priceUnits = [
+    { code: 'per_hour', label: 'Hour', sort_order: 1 },
+    { code: 'per_m2', label: 'm²', sort_order: 2 },
+    { code: 'per_piece', label: 'Piece', sort_order: 3 },
+  ]
+
+  it('zeigt leeren Zustand wenn keine Tiers', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const { container } = render(<PriceTierEditor tiers={[]} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    // Heading-Span ist das erste "Pricing"-Element
+    const heading = container.querySelector('span.font-semibold')
+    expect(heading?.textContent).toBe('Pricing')
+    expect(screen.getAllByText(/Add pricing unit/i).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('zeigt vorhandene Tier mit Steps', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const tiers = [{
+      id: 1, unit: 'per_hour',
+      steps: [{ id: 1, min_quantity: 1, price: '45.00', currency: 'EUR' }],
+    }]
+    render(<PriceTierEditor tiers={tiers} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    // Select zeigt den Label-Text der ausgewählten Option, nicht den code
+    expect(screen.getByDisplayValue('Hour')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('45.00')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('EUR')).toBeInTheDocument()
+  })
+
+  it('ruft onChange auf wenn Tier entfernt wird', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{
+      id: 1, unit: 'per_hour',
+      steps: [{ id: 1, min_quantity: 1, price: '45.00', currency: 'EUR' }],
+    }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: /Remove unit/i }))
+    expect(onChange).toHaveBeenCalledWith([])
+  })
+
+  it('zeigt custom-Label-Feld wenn unit=custom gewählt', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const tiers = [{
+      unit: 'custom',
+      unit_label_custom: 'pro Verpackung',
+      steps: [{ min_quantity: 1, price: '12.00', currency: 'EUR' }],
+    }]
+    render(<PriceTierEditor tiers={tiers} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    expect(screen.getByDisplayValue('pro Verpackung')).toBeInTheDocument()
+  })
+
+  it('zeigt Fehler wenn max_quantity < min_quantity', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const tiers = [{
+      unit: 'per_m2',
+      steps: [{ min_quantity: 10, max_quantity: 5, price: '50.00', currency: 'EUR' }],
+    }]
+    render(<PriceTierEditor tiers={tiers} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    expect(screen.getByText(/Max must be/i)).toBeInTheDocument()
+  })
+
+  it('zeigt Fehler wenn Preis = 0', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const tiers = [{
+      unit: 'per_piece',
+      steps: [{ min_quantity: 1, price: '0', currency: 'EUR' }],
+    }]
+    render(<PriceTierEditor tiers={tiers} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    expect(screen.getByText(/Price must be/i)).toBeInTheDocument()
+  })
+
+  it('ruft onChange auf wenn neuer Tier hinzugefügt', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    render(<PriceTierEditor tiers={[]} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: /Add pricing unit/i }))
+    expect(onChange).toHaveBeenCalledOnce()
+    expect(onChange.mock.calls[0][0]).toHaveLength(1)
+  })
+
+  it('zeigt alle I18n-Sprachen: de', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    render(<PriceTierEditor tiers={[]} onChange={() => {}} priceUnits={priceUnits} lang="de" />)
+    expect(screen.getByText(/Preisgestaltung/i)).toBeInTheDocument()
+  })
+
+  it('zeigt alle I18n-Sprachen: ar (RTL)', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    render(<PriceTierEditor tiers={[]} onChange={() => {}} priceUnits={priceUnits} lang="ar" />)
+    expect(screen.getByText(/التسعير/)).toBeInTheDocument()
+  })
+
+  it('ruft onChange auf wenn Step-Preis geändert', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{ unit: 'per_hour', steps: [{ min_quantity: 1, price: '10.00', currency: 'EUR' }] }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    const priceInput = document.querySelector('input[inputmode="decimal"]') as HTMLInputElement
+    fireEvent.change(priceInput, { target: { value: '20.00' } })
+    expect(onChange).toHaveBeenCalled()
+    const updated = onChange.mock.calls[0][0]
+    expect(updated[0].steps[0].price).toBe('20.00')
+  })
+
+  it('ruft onChange auf wenn min_quantity geändert', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{ unit: 'per_hour', steps: [{ min_quantity: 1, price: '10.00', currency: 'EUR' }] }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    const minInput = document.querySelectorAll('input[type="number"]')[0] as HTMLInputElement
+    fireEvent.change(minInput, { target: { value: '5' } })
+    expect(onChange).toHaveBeenCalled()
+    const updated = onChange.mock.calls[0][0]
+    expect(updated[0].steps[0].min_quantity).toBe(5)
+  })
+
+  it('ruft onChange auf wenn currency geändert', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{ unit: 'per_hour', steps: [{ min_quantity: 1, price: '10.00', currency: 'EUR' }] }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    const currencyInputs = document.querySelectorAll('input[maxlength="3"]')
+    fireEvent.change(currencyInputs[0], { target: { value: 'usd' } })
+    expect(onChange).toHaveBeenCalled()
+    const updated = onChange.mock.calls[0][0]
+    expect(updated[0].steps[0].currency).toBe('USD')
+  })
+
+  it('ruft onChange auf wenn neuer Step hinzugefügt', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{ unit: 'per_hour', steps: [{ min_quantity: 1, price: '10.00', currency: 'EUR' }] }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    fireEvent.click(screen.getByRole('button', { name: /Add step/i }))
+    expect(onChange).toHaveBeenCalled()
+    const updated = onChange.mock.calls[0][0]
+    expect(updated[0].steps).toHaveLength(2)
+  })
+
+  it('zeigt no-steps Hinweis wenn Tier ohne Steps', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const tiers = [{ unit: 'per_hour', steps: [] }]
+    render(<PriceTierEditor tiers={tiers} onChange={() => {}} priceUnits={priceUnits} lang="en" />)
+    expect(screen.getByText(/Add at least one price step/i)).toBeInTheDocument()
+  })
+
+  it('unit-selector ruft onChange auf wenn Einheit geändert', async () => {
+    const { PriceTierEditor } = await import('@/components/shop-admin/PriceTierEditor')
+    const onChange = vi.fn()
+    const tiers = [{ unit: 'per_hour', steps: [{ min_quantity: 1, price: '10.00', currency: 'EUR' }] }]
+    render(<PriceTierEditor tiers={tiers} onChange={onChange} priceUnits={priceUnits} lang="en" />)
+    const select = screen.getByDisplayValue('Hour') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'per_m2' } })
+    expect(onChange).toHaveBeenCalled()
+    const updated = onChange.mock.calls[0][0]
+    expect(updated[0].unit).toBe('per_m2')
+  })
+})

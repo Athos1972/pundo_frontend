@@ -54,6 +54,9 @@ export interface BrandConfig {
     description: string
     siteUrl: string
     ogImage: string
+    heroTitle: string
+    heroText: string
+    heroTagline?: string
   }
 
   analytics: {
@@ -63,6 +66,14 @@ export interface BrandConfig {
 
   features: {
     socialFeed: boolean
+    catsfirst: boolean
+    communityCard: boolean
+  }
+
+  community?: {
+    telegramName: string
+    telegramUrl: string
+    memberCount?: string
   }
 
   legal: {

@@ -45,6 +45,8 @@ export const ruskyConfig: BrandConfig = {
     description: 'Find products and services near you in Cyprus',
     siteUrl: 'https://rusky-in-cyprus.de',
     ogImage: '/brands/rusky/logo.png',
+    heroTitle: 'Найди всё рядом.',
+    heroText: 'Все мы здесь по разным причинам — и все ищем своё.',
   },
 
   analytics: {
@@ -54,6 +56,8 @@ export const ruskyConfig: BrandConfig = {
 
   features: {
     socialFeed: true,
+    catsfirst: false,
+    communityCard: false,
   },
 
   legal: {

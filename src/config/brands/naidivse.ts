@@ -44,6 +44,9 @@ export const naidivseConfig: BrandConfig = {
     description: 'The multilingual product & shop locator for Cyprus — coming soon.',
     siteUrl: 'https://naidivse.com',
     ogImage: '/brands/naidivse/logo-horizontal.svg',
+    heroTitle: 'Finde alles. In der Nähe.',
+    heroTagline: 'Zypern — in deiner Sprache.',
+    heroText: 'Alle sind hier aus verschiedenen Gründen — und alle suchen verzweifelt nach dem Richtigen.',
   },
 
   analytics: {
@@ -53,6 +56,14 @@ export const naidivseConfig: BrandConfig = {
 
   features: {
     socialFeed: false,
+    catsfirst: true,
+    communityCard: true,
+  },
+
+  community: {
+    telegramName: 'Русская Ларнака',
+    telegramUrl: 'https://t.me/',
+    memberCount: '1.240',
   },
 
   legal: {

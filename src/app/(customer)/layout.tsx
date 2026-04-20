@@ -71,10 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} dir={dir}>
       <head>
-        {/* Brand-spezifische CSS-Variablen — kein Client-Flash da server-seitig gerendert.
-            Kein nonce nötig: style-src hat 'unsafe-inline' als Fallback. Nonce würde nach
-            Browser-Parsing aus dem DOM entfernt und einen React-Hydration-Mismatch auslösen. */}
-        <style dangerouslySetInnerHTML={{ __html: themeCss }} />
+        <style nonce={nonce} dangerouslySetInnerHTML={{ __html: themeCss }} />
       </head>
       <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
         {brand.analytics.plausibleDomain && (

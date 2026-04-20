@@ -38,7 +38,7 @@ describe('Footer translation keys', () => {
       const result = translations[lang].footer_copyright(2026)
       expect(typeof result).toBe('string')
       expect(result).toContain('2026')
-      expect(result).toContain('pundo')
+      expect(result).toContain('Buhl Consulting')
     }
   })
 })

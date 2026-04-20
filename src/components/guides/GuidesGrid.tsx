@@ -9,11 +9,11 @@ type Props = {
   guides: GuideMeta[]
   filterAll: string
   categoryLabels: Record<string, string>
-  readtimeFn: (n: number) => string
+  readtimeLabels: Record<string, string>
   lang: string
 }
 
-export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeFn }: Props) {
+export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeLabels }: Props) {
   const [selected, setSelected] = useState('')
 
   const categories = [...new Set(guides.map((g) => g.category))]
@@ -35,7 +35,7 @@ export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeFn }: Pr
             href={`/guides/${guide.slug}`}
             variant="grid"
             categoryLabel={categoryLabels[guide.category] ?? guide.category}
-            readtimeLabel={readtimeFn(Number(guide.readtime))}
+            readtimeLabel={readtimeLabels[guide.readtime] ?? ''}
           />
         ))}
       </div>

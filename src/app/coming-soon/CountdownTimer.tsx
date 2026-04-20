@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 
 interface CountdownLabels {
   days: string
@@ -43,15 +43,15 @@ export function CountdownTimer({ labels }: { labels: CountdownLabels }) {
   return (
     <div className="flex items-end gap-3 sm:gap-6 flex-nowrap justify-center">
       {units.map(({ val, label }, i) => (
-        <>
+        <Fragment key={label}>
           {i > 0 && (
-            <span key={`sep-${i}`} className="cs-num-sep">:</span>
+            <span className="cs-num-sep">:</span>
           )}
-          <div key={label} className="flex flex-col items-center">
+          <div className="flex flex-col items-center">
             <span className="cs-num">{pad(val)}</span>
             <span className="cs-num-label">{label}</span>
           </div>
-        </>
+        </Fragment>
       ))}
     </div>
   )

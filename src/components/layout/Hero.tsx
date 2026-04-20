@@ -49,8 +49,13 @@ export function Hero({ brand, categories, lang }: Props) {
 
   const catGrid = categories.slice(0, 6)
 
-  const painPointKey = brand.slug === 'naidivse' ? 'hero_pain_point_naidivse' : 'hero_pain_point_pundo'
-  const painPointText = tr[painPointKey as keyof typeof tr] as string
+  const slug = brand.slug as 'pundo' | 'naidivse' | 'rusky'
+  const titleKey = `hero_title_${slug}` as keyof typeof tr
+  const taglineKey = `hero_tagline_${slug}` as keyof typeof tr
+  const painPointKey = `hero_pain_point_${slug === 'naidivse' ? 'naidivse' : 'pundo'}` as keyof typeof tr
+  const heroTitle = (tr[titleKey] as string) || brand.meta.heroTitle
+  const heroTagline = (tr[taglineKey] as string) || brand.meta.heroTagline
+  const painPointText = tr[painPointKey] as string
 
   return (
     <section className="bg-surface border-b border-border">
@@ -58,16 +63,24 @@ export function Hero({ brand, categories, lang }: Props) {
         <div className="max-w-2xl space-y-4">
           <div>
             <h1 className="font-display text-2xl md:text-4xl font-extrabold text-text leading-tight">
-              {brand.meta.heroTitle}
+              {heroTitle}
             </h1>
-            {brand.meta.heroTagline && (
-              <p className="mt-1 text-accent font-medium text-base">{brand.meta.heroTagline}</p>
+            {heroTagline && (
+              <p className="mt-1 text-accent font-medium text-base">{heroTagline}</p>
             )}
           </div>
 
           {!dismissed && (
-            <div className="relative rounded-2xl bg-accent/10 border border-accent/20 px-4 py-3 pr-10">
+            <div className="relative border-l-[3px] border-accent bg-accent-light pl-3 pr-10 py-2 rounded-r-md">
               <p className="text-sm text-text leading-relaxed">{painPointText}</p>
+              {slug === 'pundo' && (
+                <Link
+                  href="/contact"
+                  className="text-sm text-accent underline hover:no-underline mt-1 inline-block"
+                >
+                  {tr.contact_missing_something}
+                </Link>
+              )}
               <button
                 onClick={dismiss}
                 aria-label="dismiss"

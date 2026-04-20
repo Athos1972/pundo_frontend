@@ -1,7 +1,29 @@
 import type { Metadata } from 'next'
+import { Space_Grotesk, DM_Sans, Unbounded, Golos_Text } from 'next/font/google'
 import { getLangServer, isRTL } from '@/lib/lang'
 import { getBrandFromHeaders, buildThemeCss } from '@/config/brands'
 import '../globals.css'
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-space-grotesk',
+})
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-dm-sans',
+})
+const unbounded = Unbounded({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['600', '700'],
+  variable: '--font-unbounded',
+})
+const golosText = Golos_Text({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '700'],
+  variable: '--font-golos-text',
+})
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getBrandFromHeaders()
@@ -20,12 +42,9 @@ export default async function ComingSoonLayout({ children }: { children: React.R
   return (
     <html lang={lang} dir={dir}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Noto+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
       </head>
-      <body className="antialiased bg-bg text-text">
+      <body className={`${spaceGrotesk.variable} ${dmSans.variable} ${unbounded.variable} ${golosText.variable} antialiased bg-bg text-text`}>
         {children}
       </body>
     </html>

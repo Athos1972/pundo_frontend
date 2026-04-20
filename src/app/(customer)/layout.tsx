@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
-import { Space_Grotesk, DM_Sans } from 'next/font/google'
+import { Space_Grotesk, DM_Sans, Unbounded, Golos_Text } from 'next/font/google'
 import Script from 'next/script'
 import '../globals.css'
 import { getLangServer, isRTL } from '@/lib/lang'
@@ -21,6 +21,16 @@ const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-dm-sans',
+})
+const unbounded = Unbounded({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['600', '700'],
+  variable: '--font-unbounded',
+})
+const golosText = Golos_Text({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '700'],
+  variable: '--font-golos-text',
 })
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -71,9 +81,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} dir={dir}>
       <head>
-        <style nonce={nonce} dangerouslySetInnerHTML={{ __html: themeCss }} />
+        <style nonce={nonce} dangerouslySetInnerHTML={{ __html: themeCss }} suppressHydrationWarning />
       </head>
-      <body className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${dmSans.variable} ${unbounded.variable} ${golosText.variable} antialiased`}>
         {brand.analytics.plausibleDomain && (
           <>
             <Script

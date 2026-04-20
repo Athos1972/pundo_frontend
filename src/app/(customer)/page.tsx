@@ -22,8 +22,8 @@ export default async function HomePage() {
 
       {brand.features.communityCard && <CommunityCard brand={brand} />}
 
-      <section className="px-6 py-10">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-10">
+        <div className="max-w-6xl mx-auto px-6">
           <GuidesTeaser lang={lang} />
         </div>
       </section>

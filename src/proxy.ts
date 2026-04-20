@@ -28,11 +28,14 @@ const PUBLIC_SHOP_ADMIN_PATHS = [
 const buildCsp = (nonce: string, analyticsHost?: string): string => {
   const analyticsConnectSrc = analyticsHost ? ` ${analyticsHost}` : ''
   const analyticsScriptSrc = analyticsHost ? ` ${analyticsHost}` : ''
+  const isDev = process.env.NODE_ENV === 'development'
 
   const directives = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${analyticsScriptSrc}`,
-    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}${analyticsScriptSrc}`,
+    // In dev: allow unsafe-inline without nonce (nonce + unsafe-inline doesn't work in CSP)
+    // In prod: use nonce-only (strict)
+    isDev ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}'`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com`,
@@ -110,7 +113,7 @@ export const config = {
   matcher: [
     {
       source:
-        '/((?!api/v1|brand_logos|product_images|review_photos|_next/static|_next/image|favicon.ico|manifest.webmanifest).*)',
+        '/((?!api/v1|brand_logos|product_images|review_photos|_next|favicon.ico|manifest.webmanifest).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

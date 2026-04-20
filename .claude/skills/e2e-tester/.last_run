@@ -1,5 +1,10 @@
 {
-  "sha": "9a9d4df7c05871b554ba70bc826b827ab0f3c4ce",
-  "timestamp": "2026-04-20T07:18:13.016698+00:00",
-  "coverage_snapshot": {}
+  "sha": "140ec698b4fdc2bca9b358657473ca7a06698454",
+  "timestamp": "2026-04-20T13:23:42.039672+00:00",
+  "coverage_snapshot": {
+    "api/coming-soon/route.ts": "83.33",
+    "components/layout": "94.59",
+    "config/brands": "77.77",
+    "translations.ts": "40.57"
+  }
 }

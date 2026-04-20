@@ -3,7 +3,7 @@ import type { BrandConfig } from './index'
 export const naidivseConfig: BrandConfig = {
   slug: 'naidivse',
   name: 'Naidivse',
-  domains: ['naidivse.com', 'www.naidivse.com'],
+  domains: ['naidivse.cy', 'www.naidivse.cy', 'naidivse.com', 'www.naidivse.com'],
 
   assets: {
     logoSvg: '/brands/naidivse/logo-horizontal.svg',
@@ -30,8 +30,8 @@ export const naidivseConfig: BrandConfig = {
   },
 
   fonts: {
-    heading: 'system-ui, sans-serif',
-    body: 'system-ui, sans-serif',
+    heading: 'var(--font-unbounded)',
+    body: 'var(--font-golos-text)',
   },
 
   pwa: {
@@ -42,7 +42,7 @@ export const naidivseConfig: BrandConfig = {
   meta: {
     title: 'Naidivse — найди·всё',
     description: 'The multilingual product & shop locator for Cyprus — coming soon.',
-    siteUrl: 'https://naidivse.com',
+    siteUrl: 'https://naidivse.cy',
     ogImage: '/brands/naidivse/logo-horizontal.svg',
     heroTitle: 'Finde alles. In der Nähe.',
     heroTagline: 'Zypern — in deiner Sprache.',
@@ -66,8 +66,14 @@ export const naidivseConfig: BrandConfig = {
     memberCount: '1.240',
   },
 
+  nav: [
+    { key: 'nav_shops', href: '/shops' },
+    { key: 'nav_guides', href: '/guides' },
+    { key: 'nav_community', href: '/community' },
+  ],
+
   legal: {
     appName: 'Naidivse',
-    domain: 'naidivse.com',
+    domain: 'naidivse.cy',
   },
 }

@@ -3,6 +3,7 @@ import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getGuides } from '@/lib/guides'
 import { GuidesGrid } from '@/components/guides/GuidesGrid'
+import { BackButton } from '@/components/ui/BackButton'
 
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
@@ -22,6 +23,7 @@ export default async function GuidesIndexPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <BackButton />
       <div>
         <h1 className="text-2xl font-bold">{tr.guides_index_title}</h1>
         <p className="mt-1 text-gray-500 text-sm">{tr.guides_index_subtitle}</p>
@@ -30,7 +32,9 @@ export default async function GuidesIndexPage() {
         guides={guides}
         filterAll={tr.guides_filter_all}
         categoryLabels={categoryLabels}
-        readtimeFn={tr.guide_readtime}
+        readtimeLabels={Object.fromEntries(
+          [...new Set(guides.map((g) => g.readtime))].map((rt) => [rt, tr.guide_readtime(Number(rt))])
+        )}
         lang={lang}
       />
     </main>

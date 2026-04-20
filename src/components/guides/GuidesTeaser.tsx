@@ -25,7 +25,7 @@ export async function GuidesTeaser({ lang }: Props) {
           {tr.guides_teaser_link(total)}
         </Link>
       </div>
-      <div className="flex gap-3 overflow-x-auto px-4 pb-2 no-scrollbar">
+      <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
         {guides.map((guide) => (
           <GuideCard
             key={`${guide.slug}-${guide.lang}`}

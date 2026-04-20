@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import type { ShopListItem } from '@/types/api'
+import { t } from '@/lib/translations'
 
-export function ShopCard({ shop, lang: _lang }: { shop: ShopListItem; lang: string }) {
+export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
+  const tr = t(lang)
   return (
     <Link href={`/shops/${shop.slug}`} className="block bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors">
       <div className="flex items-start justify-between gap-2">
@@ -13,7 +15,7 @@ export function ShopCard({ shop, lang: _lang }: { shop: ShopListItem; lang: stri
           {shop.dist_km != null && (
             <p className="text-sm font-medium text-accent">{shop.dist_km < 1 ? `${Math.round(shop.dist_km * 1000)}m` : `${shop.dist_km.toFixed(1)}km`}</p>
           )}
-          <p className="text-xs text-text-light mt-0.5">{shop.product_count} Produkte</p>
+          <p className="text-xs text-text-light mt-0.5">{shop.product_count} {tr.products}</p>
         </div>
       </div>
     </Link>

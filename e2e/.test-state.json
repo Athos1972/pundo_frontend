@@ -26,10 +26,10 @@
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNCwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzcyNzQyMTF9.E-LCGu-Isl9xsNixjBrqukfCRTl8yZOQroFgC0t3mPk",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNCwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzczMDA0MjR9.kH0YY04WResr4NZuJXi3QiZFQ4Lb0Z6R1mYKfG1b3TQ",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1777274211.493,
+        "expires": 1777300424.55,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"

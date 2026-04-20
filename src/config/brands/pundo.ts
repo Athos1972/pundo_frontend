@@ -58,6 +58,12 @@ export const pundoConfig: BrandConfig = {
     communityCard: false,
   },
 
+  nav: [
+    { key: 'nav_shops', href: '/shops' },
+    { key: 'nav_guides', href: '/guides' },
+    { key: 'nav_for_shops', href: '/for-shops' },
+  ],
+
   legal: {
     appName: 'Pundo',
     domain: 'pundo.cy',

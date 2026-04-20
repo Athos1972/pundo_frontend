@@ -7,6 +7,7 @@ import { t } from '@/lib/translations'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideCard } from '@/components/guides/GuideCard'
+import { BackButton } from '@/components/ui/BackButton'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -46,9 +47,7 @@ export default async function GuideDetailPage({ params }: Props) {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-      <Link href="/guides" className="text-sm text-accent">
-        {tr.guide_back}
-      </Link>
+      <BackButton fallback="/guides" />
 
       <header className="space-y-2">
         <span className="inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
@@ -59,7 +58,11 @@ export default async function GuideDetailPage({ params }: Props) {
       </header>
 
       <article className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-accent">
-        <MDXRemote source={content} components={mdxComponents} />
+        <MDXRemote
+          source={content}
+          components={mdxComponents}
+          options={{ blockJS: false, blockDangerousJS: false }}
+        />
       </article>
 
       {related.length > 0 && (

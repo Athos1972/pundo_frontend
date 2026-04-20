@@ -18,9 +18,12 @@ const manualOrigins = process.env.ALLOWED_DEV_ORIGINS
   ? process.env.ALLOWED_DEV_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
   : []
 
+// Local brand testing: allow all brand domains mapped in /etc/hosts
+const LOCAL_BRAND_DOMAINS = ['naidivse.com', 'naidivse.cy', 'rusky.app']
+
 const config: NextConfig = {
   output: 'standalone',
-  allowedDevOrigins: [...new Set([...getLanIPs(), ...manualOrigins])],
+  allowedDevOrigins: [...new Set([...getLanIPs(), ...manualOrigins, ...LOCAL_BRAND_DOMAINS])],
   async rewrites() {
     return [
       {

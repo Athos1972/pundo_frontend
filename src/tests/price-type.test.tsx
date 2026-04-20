@@ -220,7 +220,7 @@ describe('OfferList sorting', () => {
 
 describe('ProductCard price_type rendering', () => {
   const base = {
-    id: 1, slug: 'dog-toys', name: 'Dog Toys', brand: null,
+    id: 1, slug: 'dog-toys', names: { en: 'Dog Toys' }, brand: null,
     category_id: null, thumbnail_url: null, images: [], best_offer: null,
   }
 

@@ -86,7 +86,7 @@ const makeOffer = (overrides?: Partial<OfferDetail>): OfferDetail => ({
 const makeProduct = (overrides?: Partial<ProductListItem>): ProductListItem => ({
   id: 1,
   slug: 'royal-canin-adult-2kg',
-  name: 'Royal Canin Adult 2kg',
+  names: { en: 'Royal Canin Adult 2kg', de: 'Royal Canin Adult 2kg' },
   brand: 'Royal Canin',
   category_id: 10,
   thumbnail_url: null,

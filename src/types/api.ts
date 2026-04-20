@@ -137,3 +137,25 @@ export interface SpottedCreateResponse {
   status: 'pending'
   message: string
 }
+
+export interface SpottedUpload {
+  spotted_id: number
+  status: 'pending' | 'successful' | 'rejected'
+  created_at: string
+  shop?: {
+    shop_id: number
+    shop_name: string
+  }
+  product?: {
+    product_id: number
+    product_name: string
+  }
+  detected_price?: number | null
+  detected_currency?: string | null
+  error_reason?: string | null
+}
+
+export interface SpottedListResponse {
+  spotted: SpottedUpload[]
+  total: number
+}

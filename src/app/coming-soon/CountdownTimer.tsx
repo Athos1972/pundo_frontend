@@ -24,6 +24,7 @@ export function CountdownTimer({ labels }: { labels: CountdownLabels }) {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft> | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTime(getTimeLeft())
     const id = setInterval(() => setTime(getTimeLeft()), 1000)
     return () => clearInterval(id)

@@ -5,7 +5,7 @@
 
 import { cookies } from 'next/headers'
 import type { AuthUser, CustomerSession } from '@/types/customer'
-import type { Review, ReviewStats } from '@/types/api'
+import type { Review, ReviewStats, SpottedListResponse } from '@/types/api'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
 const BASE = `${BACKEND}/api/v1`
@@ -77,6 +77,10 @@ export async function getReviews(
   )
   if (!res.ok) return []
   return res.json() as Promise<Review[]>
+}
+
+export async function getSpottedUploads(lang: string): Promise<SpottedListResponse> {
+  return apiFetchCustomer<SpottedListResponse>('/customer/spotted', lang)
 }
 
 export async function getReviewStats(

@@ -41,7 +41,7 @@ vi.mock('@/lib/utils', async (importOriginal) => {
 
 describe('ProductCard image resolution', () => {
   const base = {
-    id: 1, slug: 'cat-food', name: 'Cat Food', brand: null,
+    id: 1, slug: 'cat-food', names: { en: 'Cat Food' }, brand: null,
     category_id: null, thumbnail_url: null, images: null, best_offer: null,
   }
 

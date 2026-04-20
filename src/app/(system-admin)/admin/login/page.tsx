@@ -6,6 +6,7 @@ import { tSysAdmin } from '@/lib/system-admin-translations'
 
 export default function AdminLoginPage() {
   const [tr, setTr] = useState(() => tSysAdmin(DEFAULT_LANG))
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setTr(tSysAdmin(getLangFromCookie())) }, [])
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')

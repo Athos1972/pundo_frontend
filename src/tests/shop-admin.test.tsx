@@ -206,8 +206,14 @@ describe('HoursEditor', () => {
 
 describe('ProductList', () => {
   const products = [
-    { id: 1, name: 'Cat Food 2kg', category_id: 10, price: '9.99', currency: 'EUR', unit: 'kg', available: true },
-    { id: 2, name: 'Dog Toys Set', category_id: 11, price: '14.99', currency: 'EUR', unit: 'pcs', available: false },
+    {
+      id: 1, name: 'Cat Food 2kg', category_id: 10, available: true,
+      price_tiers: [{ id: 1, unit: 'per_kg', steps: [{ id: 1, min_quantity: 1, price: '9.99', currency: 'EUR' }] }],
+    },
+    {
+      id: 2, name: 'Dog Toys Set', category_id: 11, available: false,
+      price_tiers: [{ id: 2, unit: 'per_piece', steps: [{ id: 2, min_quantity: 1, price: '14.99', currency: 'EUR' }] }],
+    },
   ]
 
   it('renders product names', async () => {

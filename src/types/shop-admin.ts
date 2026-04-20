@@ -33,14 +33,33 @@ export interface OpeningHours {
   second_close?: string
 }
 
+export interface PriceUnitOption {
+  code: string
+  label: string
+  sort_order: number
+}
+
+export interface PriceTierStep {
+  id?: number
+  min_quantity: number
+  max_quantity?: number
+  price: string
+  currency: string
+}
+
+export interface PriceTier {
+  id?: number
+  unit: string
+  unit_label_custom?: string
+  steps: PriceTierStep[]
+}
+
 export interface AdminProduct {
   id: number
   name: string
   category_id: number
-  price: string
-  currency: string
-  unit: string
   available: boolean
+  price_tiers: PriceTier[]
 }
 
 export interface AdminProductList {

@@ -12,6 +12,7 @@ import type {
   AdminOfferList,
   ApiKey,
   ImportStatus,
+  PriceUnitOption,
 } from '@/types/shop-admin'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
@@ -85,6 +86,16 @@ export async function getApiKeys(lang: string): Promise<ApiKey[]> {
 
 export async function getImportStatus(lang: string): Promise<ImportStatus> {
   return apiFetchAdmin<ImportStatus>('/import/status', lang)
+}
+
+export async function getAdminPriceUnits(lang: string): Promise<PriceUnitOption[]> {
+  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+  const res = await fetch(`${BACKEND}/api/v1/price-units`, {
+    headers: { 'Accept-Language': lang },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  return res.json() as Promise<PriceUnitOption[]>
 }
 
 // Categories are shared data needed for admin product forms.

@@ -47,7 +47,19 @@ export function ProductList({ initialItems, lang }: ProductListProps) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 truncate">{product.name}</p>
               <p className="text-xs text-gray-400">
-                {product.price} {product.currency} / {product.unit}
+                {product.price_tiers.length > 0
+                  ? (() => {
+                      const firstTier = product.price_tiers[0]
+                      const lowestStep = firstTier.steps.reduce(
+                        (min, s) => (parseFloat(s.price) < parseFloat(min.price) ? s : min),
+                        firstTier.steps[0],
+                      )
+                      const unitLabel = firstTier.unit === 'custom'
+                        ? (firstTier.unit_label_custom ?? firstTier.unit)
+                        : firstTier.unit
+                      return `ab ${lowestStep.price} ${lowestStep.currency}/${unitLabel}`
+                    })()
+                  : '—'}
                 {' · '}
                 <span className={product.available ? 'text-green-600' : 'text-gray-400'}>
                   {product.available ? tr.available : 'unavailable'}

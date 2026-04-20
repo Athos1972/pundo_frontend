@@ -208,10 +208,12 @@ describe('ProductList', () => {
     id,
     name: `Product ${id}`,
     category_id: 1,
-    price: '9.99',
-    currency: 'EUR',
-    unit: 'kg',
     available: true,
+    price_tiers: [{
+      id: 1,
+      unit: 'per_kg',
+      steps: [{ id: 1, min_quantity: 1, price: '9.99', currency: 'EUR' }],
+    }],
   })
 
   it('shows no_results when list is empty', async () => {

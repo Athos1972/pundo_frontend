@@ -6,21 +6,78 @@ import { useRouter } from 'next/navigation'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from './FormField'
 import { showToast } from './Toast'
-import type { AdminProduct } from '@/types/shop-admin'
+import { PriceTierEditor } from './PriceTierEditor'
+import type { AdminProduct, PriceTier, PriceUnitOption } from '@/types/shop-admin'
 
 interface Category { id: number; name: string }
 
 interface ProductFormProps {
   product?: AdminProduct
   categories: Category[]
+  priceUnits: PriceUnitOption[]
   lang: string
 }
 
-export function ProductForm({ product, categories, lang }: ProductFormProps) {
+async function saveTiers(productId: number, originalTiers: PriceTier[], draftTiers: PriceTier[]) {
+  const originalIds = new Set(originalTiers.map((t) => t.id).filter(Boolean))
+  const draftIds = new Set(draftTiers.map((t) => t.id).filter(Boolean))
+
+  // Delete tiers that were removed
+  for (const id of originalIds) {
+    if (!draftIds.has(id)) {
+      await fetch(`/api/shop-admin/products/${productId}/price-tiers/${id}`, { method: 'DELETE' })
+    }
+  }
+
+  for (const tier of draftTiers) {
+    const body = {
+      unit: tier.unit,
+      unit_label_custom: tier.unit === 'custom' ? (tier.unit_label_custom ?? null) : null,
+      steps: tier.steps.map((s) => ({
+        min_quantity: s.min_quantity,
+        max_quantity: s.max_quantity ?? null,
+        price: s.price,
+        currency: s.currency,
+      })),
+    }
+
+    if (tier.id) {
+      // Update existing tier
+      await fetch(`/api/shop-admin/products/${productId}/price-tiers/${tier.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    } else {
+      // Create new tier
+      await fetch(`/api/shop-admin/products/${productId}/price-tiers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    }
+  }
+}
+
+function tiersAreValid(tiers: PriceTier[]): boolean {
+  for (const tier of tiers) {
+    if (!tier.unit) return false
+    if (tier.unit === 'custom' && !tier.unit_label_custom?.trim()) return false
+    if (tier.steps.length === 0) return false
+    for (const step of tier.steps) {
+      if (!step.price || parseFloat(step.price) <= 0) return false
+      if (step.max_quantity !== undefined && step.max_quantity < step.min_quantity) return false
+    }
+  }
+  return true
+}
+
+export function ProductForm({ product, categories, priceUnits, lang }: ProductFormProps) {
   const tr = tAdmin(lang)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [tiers, setTiers] = useState<PriceTier[]>(product?.price_tiers ?? [])
 
   const isEdit = !!product
 
@@ -30,33 +87,35 @@ export function ProductForm({ product, categories, lang }: ProductFormProps) {
 
     const newErrors: Record<string, string> = {}
     if (!data.get('name')) newErrors.name = tr.required
-    if (!data.get('price')) newErrors.price = tr.required
+    if (tiers.length > 0 && !tiersAreValid(tiers)) newErrors.tiers = tr.error_generic
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
     setErrors({})
 
     startTransition(async () => {
       try {
-        const body = {
+        const productBody = {
           name: data.get('name'),
-          category_id: Number(data.get('category_id')),
-          price: data.get('price'),
-          currency: data.get('currency') || 'EUR',
-          unit: data.get('unit') || 'pcs',
+          category_id: data.get('category_id') ? Number(data.get('category_id')) : null,
           available: data.get('available') === 'on',
         }
+
         const url = isEdit ? `/api/shop-admin/products/${product!.id}` : '/api/shop-admin/products'
         const res = await fetch(url, {
           method: isEdit ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify(productBody),
         })
-        if (res.ok) {
-          showToast(tr.saved, 'success')
-          router.push('/shop-admin/products')
-          router.refresh()
-        } else {
-          showToast(tr.error_generic, 'error')
-        }
+
+        if (!res.ok) { showToast(tr.error_generic, 'error'); return }
+
+        const saved = await res.json() as { id: number }
+        const productId = saved.id
+
+        await saveTiers(productId, product?.price_tiers ?? [], tiers)
+
+        showToast(tr.saved, 'success')
+        router.push('/shop-admin/products')
+        router.refresh()
       } catch {
         showToast(tr.error_generic, 'error')
       }
@@ -64,7 +123,7 @@ export function ProductForm({ product, categories, lang }: ProductFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-white rounded-xl border border-gray-200 p-6 max-w-lg">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 bg-white rounded-xl border border-gray-200 p-6 max-w-2xl">
       <FormField
         label={tr.product_name}
         name="name"
@@ -84,32 +143,15 @@ export function ProductForm({ product, categories, lang }: ProductFormProps) {
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </FormField>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          label={tr.price}
-          name="price"
-          type="text"
-          inputMode="decimal"
-          required
-          defaultValue={product?.price ?? ''}
-          error={errors.price}
-        />
-        <FormField
-          label={tr.currency}
-          name="currency"
-          type="text"
-          maxLength={3}
-          placeholder="EUR"
-          defaultValue={product?.currency ?? 'EUR'}
-        />
-      </div>
-      <FormField
-        label={tr.unit}
-        name="unit"
-        type="text"
-        placeholder="kg, pcs, l…"
-        defaultValue={product?.unit ?? ''}
+
+      <PriceTierEditor
+        tiers={tiers}
+        onChange={setTiers}
+        priceUnits={priceUnits}
+        lang={lang}
       />
+      {errors.tiers && <p className="text-xs text-red-500">{errors.tiers}</p>}
+
       <label className="flex items-center gap-2 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -119,6 +161,7 @@ export function ProductForm({ product, categories, lang }: ProductFormProps) {
         />
         <span className="text-sm text-gray-700">{tr.available}</span>
       </label>
+
       <div className="flex gap-3 pt-2">
         <button
           type="submit"

@@ -6,10 +6,11 @@ import { ProfileTab } from './ProfileTab'
 import { SecurityTab } from './SecurityTab'
 import { ReviewsTab } from './ReviewsTab'
 import { DangerTab } from './DangerTab'
+import { FavoritesTab } from './FavoritesTab'
 import type { AuthUser, LinkedAccountsResponse } from '@/types/customer'
 import type { Review } from '@/types/api'
 
-type Tab = 'profile' | 'security' | 'reviews' | 'danger'
+type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'danger'
 
 interface Props {
   initialUser: AuthUser
@@ -31,6 +32,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, lang }: Prop
     { id: 'profile', label: tr.account_tab_profile },
     { id: 'security', label: tr.account_tab_security },
     { id: 'reviews', label: tr.account_tab_reviews },
+    { id: 'favorites', label: tr.favorites_tab },
     { id: 'danger', label: tr.account_tab_danger },
   ]
 
@@ -105,6 +107,15 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, lang }: Prop
           {activeTab === 'reviews' && (
             <ReviewsTab reviews={reviews} lang={lang} />
           )}
+        </div>
+
+        <div
+          role="tabpanel"
+          id="tabpanel-favorites"
+          aria-labelledby="tab-favorites"
+          hidden={activeTab !== 'favorites'}
+        >
+          {activeTab === 'favorites' && <FavoritesTab lang={lang} />}
         </div>
 
         <div

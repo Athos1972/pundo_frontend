@@ -5,6 +5,17 @@ vi.mock('next/link', () => ({
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) =>
     <a href={href} className={className}>{children}</a>,
 }))
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}))
+vi.mock('@/components/auth/SessionProvider', () => ({
+  useSession: () => ({ user: null, is_authenticated: false }),
+}))
+vi.mock('@/components/favorites/FavoritesProvider', () => ({
+  useFavorites: () => ({ favoriteIds: new Set(), isFavorite: () => false, toggleFavorite: vi.fn(), isLoading: false }),
+}))
 
 // ─── getRelatedProducts — api.ts ──────────────────────────────────────────────
 

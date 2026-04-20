@@ -112,6 +112,27 @@ describe('ProductCard image resolution', () => {
     render(<ProductCard item={{ ...base, brand: 'Royal Canin' }} lang="en" />)
     expect(screen.getByText('Royal Canin')).toBeInTheDocument()
   })
+
+  it('renders horizontal variant with image on left', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const item = {
+      ...base,
+      names: { en: 'Horizontal Item' },
+      images: { thumb: null, card: '/img/horiz.webp', carousel: null, detail: null, orig: null },
+      best_offer: {
+        price: '9.99', currency: 'EUR', price_type: 'fixed', price_note: null,
+        shop_name: 'Horiz Shop', shop_slug: 'horiz-shop', is_available: true,
+        crawled_at: '2026-01-01T00:00:00Z',
+      },
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { container } = render(<ProductCard item={item as any} lang="en" variant="horizontal" />)
+    expect(screen.getByText('Horizontal Item')).toBeInTheDocument()
+    // Horizontal layout: image container has fixed 120x120 width class
+    expect(container.querySelector('.w-\\[120px\\]')).toBeInTheDocument()
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/img/horiz.webp')
+    expect(screen.getByText(/9\.99/)).toBeInTheDocument()
+  })
 })
 
 // ─── HoursEditor: save and second slot ───────────────────────────────────────

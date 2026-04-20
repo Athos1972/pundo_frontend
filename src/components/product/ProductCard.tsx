@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
 import { formatPriceOrLabel, pickImg } from '@/lib/utils'
+import { FavoriteButton } from '@/components/product/FavoriteButton'
 
 export function ProductCard({ item, lang, variant = 'vertical' }: { item: ProductListItem; lang: string; variant?: 'vertical' | 'horizontal' }) {
   const tr = t(lang)
@@ -18,7 +19,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
     return (
       <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors flex">
         {/* Image — fixed 120×120px square on the left */}
-        <div className="w-[120px] h-[120px] shrink-0 bg-surface-alt flex items-center justify-center overflow-hidden">
+        <div className="w-[120px] h-[120px] shrink-0 bg-surface-alt flex items-center justify-center overflow-hidden relative">
           {imgSrc && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -28,6 +29,9 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
               onError={(e) => { e.currentTarget.style.display = 'none' }}
             />
           )}
+          <div className="absolute top-1 right-1 rtl:right-auto rtl:left-1">
+            <FavoriteButton productId={item.id} lang={lang} size="sm" />
+          </div>
         </div>
 
         {/* Text content to the right of the image */}
@@ -60,7 +64,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
   return (
     <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors">
       {/* Image — primary visual element, full card width */}
-      <div className="w-full h-40 bg-surface-alt flex items-center justify-center overflow-hidden">
+      <div className="w-full h-40 bg-surface-alt flex items-center justify-center overflow-hidden relative">
         {imgSrc && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,6 +74,9 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
+        <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2">
+          <FavoriteButton productId={item.id} lang={lang} size="sm" />
+        </div>
       </div>
 
       {/* Text content below the image */}

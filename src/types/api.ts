@@ -67,11 +67,19 @@ export interface OpeningHoursRaw {
   specialDays?: OpeningHoursSpecialDay[];
 }
 
+export interface ShopTypeRead {
+  id: number
+  canonical: string
+  google_types: string[]
+  translations: { de?: string | null; ru?: string | null; el?: string | null; ar?: string | null; he?: string | null }
+}
+
 export interface ShopDetailResponse extends ShopListItem {
   top_products: TopProduct[];
   spoken_languages?: string[];
   opening_hours_raw?: OpeningHoursRaw | null;
   description?: string | null;
+  shop_type?: ShopTypeRead | null;
 }
 
 export interface CategoryItem {
@@ -158,4 +166,92 @@ export interface SpottedUpload {
 export interface SpottedListResponse {
   spotted: SpottedUpload[]
   total: number
+}
+
+// ─── Community Votes (F3500 + F3400) ─────────────────────────────────────────
+
+export type AttributeType =
+  | 'language_en' | 'language_de' | 'language_el'
+  | 'language_ru' | 'language_ar' | 'language_he'
+  | 'parking' | 'price_level' | 'delivery'
+  | 'click_collect' | 'reservation_required' | 'terrace'
+
+export interface VoteAggregateItem {
+  attribute_type: AttributeType
+  weighted_avg: number
+  vote_count: number
+  my_value: number | null
+}
+
+export interface ShopVotesResponse {
+  shop_id: number
+  aggregates: VoteAggregateItem[]
+}
+
+export interface VoteUpsertResponse {
+  vote_id: number
+  shop_id: number
+  attribute_type: string
+  value: number
+  is_new: boolean
+  credits_awarded: number
+  new_credit_total: number
+}
+
+// ─── Trust Profile (F3200) ────────────────────────────────────────────────────
+
+export interface BadgeOut {
+  badge_type: string
+  awarded_at: string
+}
+
+export interface TrustProfileResponse {
+  user_id: number
+  trust_level: number
+  credits: number
+  badges: BadgeOut[]
+}
+
+// ─── Favorites & Alerts ───────────────────────────────────────────────────────
+
+export type AlertInterval = 'sofort' | 'täglich' | 'wöchentlich' | 'nie'
+
+export interface FavoriteListItem {
+  id: number
+  product_id: number
+  product_slug: string
+  product_name: string
+  brand: string | null
+  image_url: string | null
+  best_offer_price: string | null
+  best_offer_currency: string
+  best_offer_shop: string | null
+  best_offer_dist_km: number | null
+  alert_interval: AlertInterval | null
+}
+
+export interface FavoriteListResponse {
+  items: FavoriteListItem[]
+  total: number
+  page: number
+  limit: number
+}
+
+export interface FavoriteStatusResponse {
+  is_favorite: boolean
+  favorite_id: number | null
+  alert_interval: AlertInterval | null
+}
+
+export interface NotificationSettings {
+  default_alert_interval: AlertInterval
+}
+
+export interface SimilaritySearchQuota {
+  used_today: number
+  limit_daily: number
+  used_week: number
+  limit_weekly: number
+  used_month: number
+  limit_monthly: number
 }

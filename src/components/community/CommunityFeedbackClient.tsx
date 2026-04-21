@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { VoteAggregateItem, AttributeType } from '@/types/api'
-import type { Translations } from '@/lib/translations'
+import { t } from '@/lib/translations'
 import { submitVote, deleteVote } from '@/lib/community-api'
 import { LanguageVotePanel } from './LanguageVotePanel'
 import { ResponsiveLabelPanel } from './ResponsiveLabelPanel'
@@ -14,12 +14,12 @@ interface Props {
   initialAggregates: VoteAggregateItem[]
   isAuthenticated: boolean
   lang: string
-  tr: Translations
 }
 
 export function CommunityFeedbackClient({
-  shopId, shopTypeCanonical, initialAggregates, isAuthenticated, lang, tr,
+  shopId, shopTypeCanonical, initialAggregates, isAuthenticated, lang,
 }: Props) {
+  const tr = t(lang)
   const [aggregates, setAggregates] = useState<VoteAggregateItem[]>(initialAggregates)
   const [submitting, setSubmitting] = useState<AttributeType | null>(null)
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null)

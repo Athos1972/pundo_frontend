@@ -155,3 +155,150 @@ describe('community translations coverage', () => {
     })
   })
 })
+
+// ── LanguageVotePanel ─────────────────────────────────────────────────────────
+
+import { LanguageVotePanel } from '@/components/community/LanguageVotePanel'
+import { ResponsiveLabelPanel } from '@/components/community/ResponsiveLabelPanel'
+import type { VoteAggregateItem } from '@/types/api'
+
+describe('LanguageVotePanel', () => {
+  const baseAgg: VoteAggregateItem[] = [
+    { attribute_type: 'language_de', weighted_avg: 4.2, vote_count: 3, my_value: null },
+  ]
+
+  it('shows LanguageTag pills for existing votes', () => {
+    render(
+      <LanguageVotePanel
+        aggregates={baseAgg}
+        isAuthenticated={false}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    expect(screen.getByText(/DE/)).toBeInTheDocument()
+    expect(screen.getByText(/4\.2/)).toBeInTheDocument()
+  })
+
+  it('does not show sliders when not authenticated', () => {
+    const { container } = render(
+      <LanguageVotePanel
+        aggregates={baseAgg}
+        isAuthenticated={false}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    // No star buttons should be visible
+    expect(container.querySelectorAll('button[aria-label$="stars"]')).toHaveLength(0)
+  })
+
+  it('shows sliders when authenticated', () => {
+    const { container } = render(
+      <LanguageVotePanel
+        aggregates={[]}
+        isAuthenticated={true}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    // 6 languages × 5 stars = 30 buttons
+    expect(container.querySelectorAll('button')).toHaveLength(30)
+  })
+
+  it('calls onVote when star clicked (authenticated)', async () => {
+    const onVote = vi.fn().mockResolvedValue(undefined)
+    render(
+      <LanguageVotePanel
+        aggregates={[]}
+        isAuthenticated={true}
+        onVote={onVote}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    // Click the 4-star button for the first language row (English = first)
+    const stars = screen.getAllByLabelText('4 stars')
+    fireEvent.click(stars[0])
+    expect(onVote).toHaveBeenCalledWith('language_en', 4)
+  })
+})
+
+// ── ResponsiveLabelPanel ──────────────────────────────────────────────────────
+
+describe('ResponsiveLabelPanel', () => {
+  it('returns null when no votes and not authenticated', () => {
+    const { container } = render(
+      <ResponsiveLabelPanel
+        aggregates={[]}
+        shopTypeCanonical={null}
+        isAuthenticated={false}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('shows label buttons when authenticated', () => {
+    render(
+      <ResponsiveLabelPanel
+        aggregates={[]}
+        shopTypeCanonical={null}
+        isAuthenticated={true}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    // parking, price_level, delivery are generic — all visible
+    expect(screen.getByText(tr_en.community_vote_parking)).toBeInTheDocument()
+    expect(screen.getByText(tr_en.community_vote_price_level)).toBeInTheDocument()
+    expect(screen.getByText(tr_en.community_vote_delivery)).toBeInTheDocument()
+  })
+
+  it('shows restaurant-specific labels for restaurant shop type', () => {
+    render(
+      <ResponsiveLabelPanel
+        aggregates={[]}
+        shopTypeCanonical="restaurant"
+        isAuthenticated={true}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    expect(screen.getByText(tr_en.community_vote_terrace)).toBeInTheDocument()
+    expect(screen.getByText(tr_en.community_vote_reservation_required)).toBeInTheDocument()
+  })
+
+  it('shows existing vote result to unauthenticated user', () => {
+    const agg: VoteAggregateItem[] = [
+      { attribute_type: 'parking', weighted_avg: 1.0, vote_count: 2, my_value: null },
+    ]
+    render(
+      <ResponsiveLabelPanel
+        aggregates={agg}
+        shopTypeCanonical={null}
+        isAuthenticated={false}
+        onVote={async () => {}}
+        onDelete={async () => {}}
+        submitting={null}
+        tr={tr_en}
+      />
+    )
+    expect(screen.getByText(tr_en.community_vote_parking)).toBeInTheDocument()
+    expect(screen.getByText(/✓/)).toBeInTheDocument()
+  })
+})

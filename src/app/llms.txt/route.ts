@@ -48,6 +48,17 @@ Nutzer können Shops und Produkte bewerten und kommentieren.
 - Nutzer können Shops und Produkte mit Sternebewertungen (1–5) und Kommentaren bewerten
 - Bewertungen sind öffentlich sichtbar auf Shop- und Produkt-Detailseiten
 
+### Community Votes (F3200-3500)
+- Eingeloggte Nutzer können Shops community-basierte Attribute vergeben: Sprachen (1–5 Sterne), Parkplatz, Preislevel, Lieferung, Click&Collect, Terrasse, Reservierungspflicht
+- Attribute sind nach Shop-Typ gefiltert (z. B. Terrasse nur für Restaurants/Cafés/Bars)
+- Aggregierte Ergebnisse (weighted_avg) öffentlich sichtbar; Abstimmung nur für eingeloggte Nutzer
+
+### Trust-System & Gamification (F3200)
+- Eingeloggte Nutzer erhalten Trust-Punkte (Credits) und Trust-Level (1–3) durch Community-Aktivitäten (Votes, Reviews)
+- Trust-Level beeinflusst Gewichtung der Community-Votes (weighted_avg)
+- Badges für besondere Beiträge: island_hero, local_legend, walker
+- Trust-Profil im Nutzerkonto sichtbar
+
 ### Favoriten & Preisbenachrichtigungen
 - Eingeloggte Nutzer können Produkte als Favoriten speichern (Herzchen-Icon auf Produktkarten)
 - Favoriten-Verwaltung im Nutzerkonto: Alert-Intervalle pro Favorit (sofort / täglich / wöchentlich / nie)
@@ -67,7 +78,7 @@ RTL-Layout für Arabisch und Hebräisch.
 - /admin — System-Administration (nicht öffentlich)
 - /shop-admin — Shop-Betreiber-Portal: Registrierung, Approval-Flow, Dashboard zur Verwaltung von Angeboten und Produkten (Login erforderlich)
 - /api — Backend-API-Proxy (nicht öffentlich)
-- /account — Nutzerkonto (Login erforderlich): Profil, Sicherheit, Reviews, Favoriten
+- /account — Nutzerkonto (Login erforderlich): Profil, Sicherheit, Reviews, Favoriten, Trust-Profil
 - /auth — Authentifizierung
 
 ## Technisches

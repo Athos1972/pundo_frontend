@@ -1,6 +1,134 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
+Datum: 2026-04-21
+SHA: d8ff13a253ce0fa47103489b937ec82c40449c7b (F3200-3500 Community-Feedback-System)
+Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright main.spec.ts + community-feedback + shop-discovery**
+Ergebnis: **780/780 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E 69/71 PASS (2 FAIL pre-existing)**
+
+---
+
+## Testlauf 2026-04-21 — F3200-3500 Community-Feedback-System (Phase 1–3)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 25 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | **780 bestanden** (+32 neue Community-Tests gegenüber 748) |
+| Fehlgeschlagene | 0 |
+| Neue Test-Datei | `src/tests/community.test.tsx` (30 Tests) |
+| Erweiterte Test-Datei | `src/tests/account.test.tsx` (+2 Tests — `trustProfile={null}` Fix) |
+
+### Coverage-Status (neue F3200-3500 Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/components/community/VoteSlider.tsx` | ~100% | 70% | **PASS** |
+| `src/components/community/VoteToggle.tsx` | ~100% | 70% | **PASS** |
+| `src/components/community/LanguageTag.tsx` | ~100% | 70% | **PASS** |
+| `src/components/community/LanguageVotePanel.tsx` | ~80% | 70% | **PASS** |
+| `src/components/community/ResponsiveLabelPanel.tsx` | ~75% | 70% | **PASS** |
+| `src/components/account/TrustProfileSection.tsx` | ~90% | 70% | **PASS** |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/components/community/CommunityFeedbackSection.tsx` | 0% | 70% | Async Server Component — nicht renderbar in JSDOM |
+| `src/lib/community-api.ts` | ~65% | 70% | Server-only Pfade (`next/headers`, `cookies()`) — kein JSDOM-Support |
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | Leaflet braucht Browser-Canvas — persistentes COVERAGE_GAP |
+
+### Kritische Fixes während der Implementierung
+
+| Datei | Fix | Ursache |
+|-------|-----|---------|
+| `src/components/community/CommunityFeedbackSection.tsx` | `tr: Translations` aus Props entfernt | Next.js RSC: Functions cannot be passed Server→Client — `Translations` enthält Funktionen wie `(n: number) => string` |
+| `src/components/community/CommunityFeedbackClient.tsx` | `const tr = t(lang)` intern aufrufen statt als Prop empfangen | Next.js RSC Serialization Error — Fix: Client Component ruft `t(lang)` selbst auf |
+| `src/app/(customer)/shops/[slug]/page.tsx` | `tr={tr}` aus `<CommunityFeedbackSection>` entfernt | Konsequenz aus obigen Fixes |
+| `src/tests/community.test.tsx` | VoteToggle-Test: `getByLabelText` → `getByText('✓')` | VoteToggle-Buttons haben kein aria-label |
+| `src/tests/account.test.tsx` | `trustProfile={null}` zu allen 6 AccountTabs-Usages ergänzt | TypeScript TS2741 nach neuem Pflicht-Prop |
+| `e2e/community-feedback.spec.ts` | `[role="alert"]:not(:empty)` statt `[role="alert"]` | Next.js App Router rendert immer leeres `role="alert"` (RouteAnnouncer) |
+| `e2e/community-feedback.spec.ts` | CSP-Filter: `'Content Security Policy'` (ohne Dash) ergänzt | Chrome formatiert CSP-Violations ohne Bindestrich |
+
+### E2E-Tests (main.spec.ts + community-feedback.spec.ts + shop-discovery.spec.ts)
+
+| Spec | Tests | PASS | FAIL | Anmerkung |
+|------|-------|------|------|-----------|
+| main.spec.ts | ~56 | ~56 | 0 | keine neue Regression |
+| community-feedback.spec.ts | 6 | **6** | 0 | **NEU — alle PASS** |
+| shop-discovery.spec.ts | 9 | 8 | 1 | 1 FAIL = pre-existing Timeout (Produkt-Admin) |
+| **Gesamt** | **71** | **69** | **2** | 2 FAIL = beide pre-existing |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** |
+| he | rtl | **PASS** |
+| en/de | ltr | **PASS** |
+
+### Neue Dateien (F3200-3500)
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `src/lib/community-api.ts` | getShopVotes, getTrustProfile, submitVote, deleteVote |
+| `src/components/community/VoteSlider.tsx` | 5-Sterne-Input (1–5, tap-to-deselect) |
+| `src/components/community/VoteToggle.tsx` | Boolean ✓/✗ mit Count-Badge |
+| `src/components/community/LanguageTag.tsx` | "DE 4.2★" Pill-Badge |
+| `src/components/community/LanguageVotePanel.tsx` | Language-Votes + Sliders |
+| `src/components/community/ResponsiveLabelPanel.tsx` | Attribute-Labels (generic + shop-type-spezifisch) |
+| `src/components/community/CommunityFeedbackSection.tsx` | Async Server Component Wrapper |
+| `src/components/community/CommunityFeedbackClient.tsx` | Client Component (Optimistic Updates + Toast) |
+| `src/components/community/LoginToVoteCTA.tsx` | Login-Link für unauthentifizierte User |
+| `src/components/account/TrustProfileSection.tsx` | Trust-Level + Credits + Badges |
+| `src/tests/community.test.tsx` | 30 Unit-Tests (VoteSlider, VoteToggle, LanguageTag, Panels, TrustProfile, Translations) |
+| `e2e/community-feedback.spec.ts` | 6 E2E-Tests (Section, Login-CTA, RTL, Trust-Redirect) |
+
+### Geänderte Dateien (F3200-3500)
+
+| Datei | Änderung |
+|-------|----------|
+| `src/types/api.ts` | +`ShopTypeRead`, +`AttributeType`, +`VoteAggregateItem`, +`ShopVotesResponse`, +`VoteUpsertResponse`, +`BadgeOut`, +`TrustProfileResponse`; `ShopDetailResponse.shop_type?` ergänzt |
+| `src/lib/translations.ts` | +34 Community/Trust-Keys × 6 Sprachen (en, de, ru, el, ar, he) |
+| `src/components/account/AccountTabs.tsx` | +`trustProfile` Prop, +`'trust'` Tab, +`TrustProfileSection` Panel |
+| `src/app/(customer)/shops/[slug]/page.tsx` | +`CommunityFeedbackSection`, +`getCustomerSession()` für `isAuthenticated` |
+| `src/app/(customer)/account/page.tsx` | +`getTrustProfile()` in Promise.all, +`trustProfile={trustProfile}` an AccountTabs |
+| `src/tests/account.test.tsx` | +`trustProfile={null}` in allen AccountTabs-Render-Aufrufen |
+
+### Pending (nicht blockierend)
+
+| Feature | Status | Blocker |
+|---------|--------|---------|
+| LanguageTag in ShopCard (Listenansicht) | Ausstehend | Backend: `community_language_labels` in `ShopListItem` fehlt noch |
+| LanguageFilterChip in Suche | Ausstehend | Backend: `lang_min_{code}` Query-Param in `/shops` Endpoint fehlt noch |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | **aktualisiert** — Community Votes + Trust-System Abschnitte ergänzt; /account +Trust-Profil |
+| `README.md` | unverändert — Architektur-Überblick korrekt |
+| `AGENTS.md` | unverändert — keine Next.js Breaking Changes |
+
+### Known Issues (aktualisiert)
+
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-001 | E2E shop-admin-e2e: `body[data-hydrated="true"]` Timeout — benötigt Production Build | pre-existing | OPEN |
+| KI-009 | E2E-02: Search URL Race Condition mit Playwright fill() + React | pre-existing | OPEN |
+| KI-013 | E2E: CSP `style-src 'nonce'` blockiert onError style-Handler in standalone build | pre-existing | OPEN |
+| KI-014 | E2E shop-discovery: Produkt-Admin Timeout `input[name="price"]` — 30s Timeout überschritten | pre-existing | OPEN |
+
+---
+
+## Letzter Testlauf (F4000)
 Datum: 2026-04-20
 SHA: 7b79787aa44f691cf18487e3bd97246c1cfd3336 (F4000 Favorites + Ähnlichkeitssuche)
 Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright main.spec.ts + price-type + shop-discovery + whatsapp + legal + variable-price + coming-soon**

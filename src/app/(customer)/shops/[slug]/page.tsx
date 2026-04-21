@@ -192,7 +192,6 @@ export default async function ShopPage({ params }: Props) {
           shopTypeCanonical={shop.shop_type?.canonical ?? null}
           isAuthenticated={session.is_authenticated}
           lang={lang}
-          tr={tr}
         />
 
         {/* Reviews */}

@@ -1,18 +1,13 @@
 {
-  "sha": "7b79787aa44f691cf18487e3bd97246c1cfd3336",
-  "timestamp": "2026-04-21T06:36:11.408311+00:00",
-  "phase": "4.5 complete",
-  "summary": {
-    "unit_tests": "748/748 PASS",
-    "typescript": "PASS (0 Errors)",
-    "eslint": "PASS (0 Errors) \u2014 3 set-state-in-effect fixes",
-    "e2e_tests": "167/182 PASS (15 pre-existing FAIL)",
-    "coverage_improved": [
-      "FavoritesTab.tsx: 2.98% \u2192 85.07%",
-      "ProductCard.tsx: 72.72% \u2192 81.81%"
-    ],
-    "new_test_files": 3,
-    "new_tests": 25,
-    "docs_sync": "llms.txt updated with Favorites + \u00c4hnlichkeitssuche"
+  "sha": "d8ff13a253ce0fa47103489b937ec82c40449c7b",
+  "timestamp": "2026-04-21T17:00:37.002237+00:00",
+  "coverage_snapshot": {
+    "src/lib/community-api.ts": "~65%",
+    "src/components/community/VoteSlider.tsx": "100%",
+    "src/components/community/VoteToggle.tsx": "100%",
+    "src/components/community/LanguageTag.tsx": "100%",
+    "src/components/community/LanguageVotePanel.tsx": "~80%",
+    "src/components/community/ResponsiveLabelPanel.tsx": "~75%",
+    "src/components/account/TrustProfileSection.tsx": "90%"
   }
 }

@@ -48,6 +48,15 @@ Nutzer können Shops und Produkte bewerten und kommentieren.
 - Nutzer können Shops und Produkte mit Sternebewertungen (1–5) und Kommentaren bewerten
 - Bewertungen sind öffentlich sichtbar auf Shop- und Produkt-Detailseiten
 
+### Favoriten & Preisbenachrichtigungen
+- Eingeloggte Nutzer können Produkte als Favoriten speichern (Herzchen-Icon auf Produktkarten)
+- Favoriten-Verwaltung im Nutzerkonto: Alert-Intervalle pro Favorit (sofort / täglich / wöchentlich / nie)
+- Globale Benachrichtigungseinstellung übersteuerbar pro Favorit
+
+### Ähnlichkeitssuche (Homesick)
+- Nutzer können per Freitexteingabe ähnliche Produkte suchen (semantische Suche)
+- Rate-limitiert: tägliches Kontingent pro Nutzer sichtbar im Modal
+
 ## Sprachen
 
 Pundo unterstützt: Englisch (en), Deutsch (de), Griechisch (el), Russisch (ru), Arabisch (ar), Hebräisch (he).
@@ -58,7 +67,7 @@ RTL-Layout für Arabisch und Hebräisch.
 - /admin — System-Administration (nicht öffentlich)
 - /shop-admin — Shop-Betreiber-Portal: Registrierung, Approval-Flow, Dashboard zur Verwaltung von Angeboten und Produkten (Login erforderlich)
 - /api — Backend-API-Proxy (nicht öffentlich)
-- /account — Nutzerkonto (Login erforderlich)
+- /account — Nutzerkonto (Login erforderlich): Profil, Sicherheit, Reviews, Favoriten
 - /auth — Authentifizierung
 
 ## Technisches

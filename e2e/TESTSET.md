@@ -97,13 +97,13 @@ Ergebnis: **748/748 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Error
 | `src/tests/related-products.test.tsx` | +Mocks für next/navigation, SessionProvider, FavoritesProvider |
 | `src/tests/coverage-gaps.test.tsx` | +horizontal variant Test für ProductCard |
 
-### Docs-Sync
+### Docs-Sync (Phase 4.5)
 
 | Dokument | Status |
 |----------|--------|
-| `llms.txt/route.ts` | Prüfung → siehe Phase 4.5 unten |
-| `README.md` | unverändert |
-| `AGENTS.md` | unverändert |
+| `llms.txt/route.ts` | **aktualisiert** — Favoriten + Ähnlichkeitssuche (Homesick) ergänzt |
+| `README.md` | unverändert — keine Architektur-Änderungen |
+| `AGENTS.md` | unverändert — keine Next.js Breaking Changes |
 
 ### Known Issues (aktualisiert)
 

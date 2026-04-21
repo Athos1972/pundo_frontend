@@ -15,6 +15,8 @@ import { GlobeIcon } from '@/components/ui/GlobeIcon'
 import { buildWhatsAppUrl, getHostname } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
+import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
+import { getCustomerSession } from '@/lib/customer-api'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -59,6 +61,8 @@ export default async function ShopPage({ params }: Props) {
   } catch {
     notFound()
   }
+
+  const session = await getCustomerSession(lang)
 
   const topProducts = shop.top_products.length > 0
     ? (await searchProducts({ shop_id: shop.id, limit: 10 }, lang)).items
@@ -181,6 +185,15 @@ export default async function ShopPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* Community Feedback */}
+        <CommunityFeedbackSection
+          shopId={shop.id}
+          shopTypeCanonical={shop.shop_type?.canonical ?? null}
+          isAuthenticated={session.is_authenticated}
+          lang={lang}
+          tr={tr}
+        />
 
         {/* Reviews */}
         <ReviewSection entityType="shop" entityId={shop.id} lang={lang} tr={tr} />

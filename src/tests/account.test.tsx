@@ -152,6 +152,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={[]}
+        trustProfile={null}
         lang="en"
       />
     )
@@ -167,6 +168,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={[]}
+        trustProfile={null}
         lang="en"
       />
     )
@@ -180,6 +182,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={[]}
+        trustProfile={null}
         lang="en"
       />
     )
@@ -195,6 +198,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={[]}
+        trustProfile={null}
         lang="en"
       />
     )
@@ -209,6 +213,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={mockReviews}
+        trustProfile={null}
         lang="en"
       />
     )
@@ -222,6 +227,7 @@ describe('AccountTabs', () => {
         initialUser={mockUser}
         linkedAccounts={mockLinkedAccounts}
         reviews={[]}
+        trustProfile={null}
         lang="de"
       />
     )

@@ -1,10 +1,14 @@
 {
-  "sha": "140ec698b4fdc2bca9b358657473ca7a06698454",
-  "timestamp": "2026-04-20T13:23:42.039672+00:00",
+  "sha": "7b79787aa44f691cf18487e3bd97246c1cfd3336",
+  "timestamp": "2026-04-20T19:30:07.586981+00:00",
   "coverage_snapshot": {
-    "api/coming-soon/route.ts": "83.33",
-    "components/layout": "94.59",
-    "config/brands": "77.77",
-    "translations.ts": "40.57"
+    "FavoritesProvider.tsx": "95.34%",
+    "FavoriteButton.tsx": "95%+",
+    "SearchSimilarModal.tsx": "82.75%",
+    "FavoritesTab.tsx": "85.07%",
+    "ProductCard.tsx": "81.81%",
+    "AccountTabs.tsx": "80%",
+    "api.ts": "100%",
+    "utils.ts": "100%"
   }
 }

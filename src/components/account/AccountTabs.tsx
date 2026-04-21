@@ -8,18 +8,20 @@ import { ReviewsTab } from './ReviewsTab'
 import { DangerTab } from './DangerTab'
 import { FavoritesTab } from './FavoritesTab'
 import type { AuthUser, LinkedAccountsResponse } from '@/types/customer'
-import type { Review } from '@/types/api'
+import type { Review, TrustProfileResponse } from '@/types/api'
+import { TrustProfileSection } from './TrustProfileSection'
 
-type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'danger'
+type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'trust' | 'danger'
 
 interface Props {
   initialUser: AuthUser
   linkedAccounts: LinkedAccountsResponse | null
   reviews: Review[]
+  trustProfile: TrustProfileResponse | null
   lang: string
 }
 
-export function AccountTabs({ initialUser, linkedAccounts, reviews, lang }: Props) {
+export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang }: Props) {
   const tr = t(lang)
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [user, setUser] = useState<AuthUser>(initialUser)
@@ -33,6 +35,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, lang }: Prop
     { id: 'security', label: tr.account_tab_security },
     { id: 'reviews', label: tr.account_tab_reviews },
     { id: 'favorites', label: tr.favorites_tab },
+    { id: 'trust', label: tr.trust_tab },
     { id: 'danger', label: tr.account_tab_danger },
   ]
 
@@ -116,6 +119,20 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, lang }: Prop
           hidden={activeTab !== 'favorites'}
         >
           {activeTab === 'favorites' && <FavoritesTab lang={lang} />}
+        </div>
+
+        <div
+          role="tabpanel"
+          id="tabpanel-trust"
+          aria-labelledby="tab-trust"
+          hidden={activeTab !== 'trust'}
+        >
+          {activeTab === 'trust' && trustProfile && (
+            <TrustProfileSection profile={trustProfile} tr={tr} />
+          )}
+          {activeTab === 'trust' && !trustProfile && (
+            <p className="text-sm text-text-muted">{tr.error_generic}</p>
+          )}
         </div>
 
         <div

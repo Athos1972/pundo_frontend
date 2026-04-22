@@ -287,6 +287,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} credits earned`,
     trust_level_label: (n: number) => `Level ${n}`,
+    // Shop card & filters
+    shop_open_now: 'Open now',
+    filter_all: 'All',
+    shop_reviews_count: (n: number) => `${n} review${n === 1 ? '' : 's'}`,
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -576,6 +580,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} Credits gesammelt`,
     trust_level_label: (n: number) => `Level ${n}`,
+    // Shop card & filters
+    shop_open_now: 'Jetzt geöffnet',
+    filter_all: 'Alle',
+    shop_reviews_count: (n: number) => `${n} Bewertung${n === 1 ? '' : 'en'}`,
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -865,6 +873,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} кредитов заработано`,
     trust_level_label: (n: number) => `Уровень ${n}`,
+    // Shop card & filters
+    shop_open_now: 'Открыто',
+    filter_all: 'Все',
+    shop_reviews_count: (n: number) => `${n} отзыв${(n % 10 === 1 && n % 100 !== 11) ? '' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'а' : 'ов'}`,
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1154,6 +1166,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} πόντοι κερδήθηκαν`,
     trust_level_label: (n: number) => `Επίπεδο ${n}`,
+    // Shop card & filters
+    shop_open_now: 'Ανοιχτό τώρα',
+    filter_all: 'Όλα',
+    shop_reviews_count: (n: number) => `${n} αξιολόγηση${n === 1 ? '' : 'ς'}`,
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1443,6 +1459,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} نقطة مكتسبة`,
     trust_level_label: (n: number) => `المستوى ${n}`,
+    // Shop card & filters
+    shop_open_now: 'مفتوح الآن',
+    filter_all: 'الكل',
+    shop_reviews_count: (n: number) => `${n} تقييم`,
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1732,6 +1752,10 @@ export const translations = {
     trust_badge_walker: 'Walker',
     trust_credits_earned: (n: number) => `${n} נקודות נצברו`,
     trust_level_label: (n: number) => `רמה ${n}`,
+    // Shop card & filters
+    shop_open_now: 'פתוח עכשיו',
+    filter_all: 'הכל',
+    shop_reviews_count: (n: number) => `${n} ביקורת${n === 1 ? '' : 'ות'}`,
   },
 } as const;
 

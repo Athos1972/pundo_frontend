@@ -17,6 +17,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
 import { getCustomerSession } from '@/lib/customer-api'
+import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -78,8 +79,18 @@ export default async function ShopPage({ params }: Props) {
         <BackButton />
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-extrabold text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{shop.name}</h1>
-          {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
+            <ShopAvatar
+              favicon_url={shop.favicon_url}
+              name={shop.name}
+              shopId={shop.id}
+              size="lg"
+            />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-extrabold text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{shop.name}</h1>
+              {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
+            </div>
+          </div>
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
           <div className="flex items-center gap-3 flex-wrap mt-2">
             {shop.whatsapp_number && (

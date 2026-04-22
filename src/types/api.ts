@@ -50,6 +50,13 @@ export interface ShopListItem {
   phone: string | null; whatsapp_number: string | null; whatsapp_url: string | null; website: string | null;
   opening_hours: Record<string, unknown> | null;
   status: string; product_count: number; last_scraped: string | null;
+  // Enriched fields (backend v2) — optional for backward compat with test mocks
+  review_stats?: { average_stars: number; total_count: number } | null;
+  shop_type?: ShopTypeRead | null;
+  spoken_languages?: string[] | null;
+  language_votes?: VoteAggregateItem[];
+  is_open_now?: boolean | null;
+  favicon_url?: string | null;
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }
@@ -76,10 +83,9 @@ export interface ShopTypeRead {
 
 export interface ShopDetailResponse extends ShopListItem {
   top_products: TopProduct[];
-  spoken_languages?: string[];
   opening_hours_raw?: OpeningHoursRaw | null;
   description?: string | null;
-  shop_type?: ShopTypeRead | null;
+  // shop_type and spoken_languages are now part of ShopListItem (enriched fields)
 }
 
 export interface CategoryItem {

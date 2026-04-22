@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from '@/components/shop-admin/FormField'
-import { LanguageSelector } from '@/components/shop-admin/LanguageSelector'
+import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
 import type { AdminShop } from '@/types/shop-admin'

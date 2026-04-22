@@ -4,33 +4,57 @@ import { t } from '@/lib/translations'
 import { StarRatingDisplay } from '@/components/reviews/StarRatingDisplay'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
-/** Short language code badges from community votes. Only shown when vote_count ≥ 1. */
-function LanguageBadges({ shop, lang }: { shop: ShopListItem; lang: string }) {
+function ParkingIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <path d="M9 17V7h4a3 3 0 0 1 0 6H9" />
+    </svg>
+  )
+}
+
+function DeliveryIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="1" y="3" width="15" height="13" rx="1" />
+      <path d="M16 8h4l3 3v5h-7V8z" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  )
+}
+
+function GlobeIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  )
+}
+
+/** Language badges: shows all spoken_languages codes, adds star rating from community votes when available. */
+function LanguageBadges({ shop }: { shop: ShopListItem }) {
   const spoken = shop.spoken_languages ?? []
   const votes = shop.language_votes ?? []
   if (spoken.length === 0) return null
 
-  const badges = spoken
-    .map(code => {
-      const vote = votes.find(v => v.attribute_type === `language_${code}`)
-      if (!vote || vote.vote_count < 1) return null
-      return { code, avg: vote.weighted_avg }
-    })
-    .filter((b): b is { code: string; avg: number } => b !== null)
-
-  if (badges.length === 0) return null
-
   return (
     <div className="flex flex-wrap gap-1 mt-2 rtl:flex-row-reverse">
-      {badges.map(({ code, avg }) => (
-        <span
-          key={code}
-          className="inline-flex items-center gap-0.5 text-xs bg-surface-alt border border-border px-1.5 py-0.5 rounded-full text-text-muted"
-        >
-          <span className="uppercase font-semibold tracking-wide">{code}</span>
-          <StarRatingDisplay stars={avg} size="sm" />
-        </span>
-      ))}
+      {spoken.map(code => {
+        const vote = votes.find(v => v.attribute_type === `language_${code.toLowerCase()}`)
+        const hasVote = vote && vote.vote_count >= 1
+        return (
+          <span
+            key={code}
+            className="inline-flex items-center gap-0.5 text-xs bg-surface-alt border border-border px-1.5 py-0.5 rounded-full text-text-muted"
+          >
+            <span className="uppercase font-semibold tracking-wide">{code}</span>
+            {hasVote && <StarRatingDisplay stars={vote!.weighted_avg} size="sm" />}
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -48,6 +72,7 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
     : null
 
   const hasRating = shop.review_stats != null && shop.review_stats.total_count > 0
+  const showAttrs = shop.has_parking === true || shop.has_own_delivery === true || shop.is_online_only === true
 
   return (
     <Link
@@ -121,8 +146,23 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             </span>
           </div>
 
-          {/* Row 5: Language badges */}
-          <LanguageBadges shop={shop} lang={lang} />
+          {/* Row 5: Parking / Delivery / Online-only icons */}
+          {showAttrs && (
+            <div className="flex items-center gap-2 mt-1.5 text-text-muted rtl:flex-row-reverse">
+              {shop.has_parking === true && (
+                <span title={tr.filter_has_parking}><ParkingIcon /></span>
+              )}
+              {shop.has_own_delivery === true && (
+                <span title={tr.filter_has_delivery}><DeliveryIcon /></span>
+              )}
+              {shop.is_online_only === true && (
+                <span title={tr.filter_online_only}><GlobeIcon /></span>
+              )}
+            </div>
+          )}
+
+          {/* Row 6: Language badges */}
+          <LanguageBadges shop={shop} />
         </div>
       </div>
     </Link>

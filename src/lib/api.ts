@@ -61,6 +61,7 @@ export async function getShops(
   params: {
     q?: string; lat?: number; lng?: number; limit?: number; offset?: number; status?: string;
     shop_type_id?: number; open_now?: boolean; max_dist_km?: number;
+    spoken_languages?: string; has_parking?: boolean; has_own_delivery?: boolean; is_online_only?: boolean;
   } = {},
   lang: string
 ): Promise<ShopListResponse> {
@@ -74,6 +75,10 @@ export async function getShops(
   if (params.shop_type_id != null) qs.set('shop_type_id', String(params.shop_type_id));
   if (params.open_now) qs.set('open_now', 'true');
   if (params.max_dist_km != null) qs.set('max_dist_km', String(params.max_dist_km));
+  if (params.spoken_languages) qs.set('spoken_languages', params.spoken_languages);
+  if (params.has_parking != null) qs.set('has_parking', String(params.has_parking));
+  if (params.has_own_delivery != null) qs.set('has_own_delivery', String(params.has_own_delivery));
+  if (params.is_online_only != null) qs.set('is_online_only', String(params.is_online_only));
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
 }

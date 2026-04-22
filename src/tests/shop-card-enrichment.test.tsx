@@ -183,7 +183,7 @@ describe('ShopCard', () => {
     expect(screen.getByText('el')).toBeInTheDocument()
   })
 
-  it('hides badge for a language whose vote_count=0', () => {
+  it('shows all spoken_languages badges regardless of vote_count', () => {
     const shop: ShopListItem = {
       ...baseShop,
       spoken_languages: ['en', 'ru'],
@@ -194,24 +194,24 @@ describe('ShopCard', () => {
     }
     render(<ShopCard shop={shop} lang="en" />)
     expect(screen.getByText('en')).toBeInTheDocument()
-    expect(screen.queryByText('ru')).not.toBeInTheDocument()
+    // ru has vote_count=0 but is still shown because it is in spoken_languages
+    expect(screen.getByText('ru')).toBeInTheDocument()
   })
 
   it('hides all language badges when spoken_languages is null', () => {
     const shop = { ...baseShop, spoken_languages: null, language_votes: [] }
     render(<ShopCard shop={shop} lang="en" />)
-    // no badge codes visible
     expect(screen.queryByText('en')).not.toBeInTheDocument()
   })
 
-  it('hides badge for spoken language with no matching vote entry', () => {
+  it('shows badge for spoken language with no vote entry at all', () => {
     const shop: ShopListItem = {
       ...baseShop,
       spoken_languages: ['en'],
-      language_votes: [], // no votes at all
+      language_votes: [], // no votes — badge still shown
     }
     render(<ShopCard shop={shop} lang="en" />)
-    expect(screen.queryByText('en')).not.toBeInTheDocument()
+    expect(screen.getByText('en')).toBeInTheDocument()
   })
 })
 

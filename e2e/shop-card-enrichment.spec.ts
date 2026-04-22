@@ -333,3 +333,78 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
     await expect(avatar).toBeVisible()
   })
 })
+
+// ─── E2E-S7: Neue Filter-Chips (Parking, Delivery, Online-only, Sprache) ──────
+
+test.describe('E2E-S7: Neue Filter-Chips', () => {
+  test('Parking-Chip sichtbar (EN)', async ({ page }) => {
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: 'Parking' })).toBeVisible()
+  })
+
+  test('Delivery-Chip sichtbar (EN)', async ({ page }) => {
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: 'Delivery' })).toBeVisible()
+  })
+
+  test('Online-only-Chip sichtbar (EN)', async ({ page }) => {
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: 'Online only' })).toBeVisible()
+  })
+
+  test('Parking-Chip sichtbar (DE: Parkplatz)', async ({ page }) => {
+    await setLang(page, 'de')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: 'Parkplatz' })).toBeVisible()
+  })
+
+  test('Parking-Chip toggle: kein Crash beim Klick', async ({ page }) => {
+    const errors: string[] = []
+    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: 'Parking' }).click()
+    await page.waitForLoadState('networkidle')
+    expect(errors.filter(e => !e.includes('favicon'))).toHaveLength(0)
+  })
+
+  test('alle 6 Sprach-Chips sichtbar', async ({ page }) => {
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    for (const code of ['EL', 'EN', 'DE', 'RU', 'AR', 'HE']) {
+      await expect(page.getByRole('button', { name: code })).toBeVisible()
+    }
+  })
+
+  test('Sprach-Chip toggle: kein Crash beim Klick (EL)', async ({ page }) => {
+    const errors: string[] = []
+    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
+    await setLang(page, 'en')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: 'EL' }).click()
+    await page.waitForLoadState('networkidle')
+    expect(errors.filter(e => !e.includes('favicon'))).toHaveLength(0)
+  })
+
+  test('Filter-Chips RTL: Chips-Zeile hat rtl:flex-row-reverse bei ar', async ({ page }) => {
+    await setLang(page, 'ar')
+    await page.goto('/shops')
+    await page.waitForLoadState('networkidle')
+    // Check the chip row containing the parking button
+    const parkingBtn = page.getByRole('button', { name: 'موقف سيارات' })
+    await expect(parkingBtn).toBeVisible()
+    const parent = parkingBtn.locator('..')
+    const cls = await parent.getAttribute('class') ?? ''
+    expect(cls).toContain('rtl:flex-row-reverse')
+  })
+})

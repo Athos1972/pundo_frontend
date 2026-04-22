@@ -11,6 +11,7 @@ import { OpeningHoursEditor } from './OpeningHoursEditor'
 import { LocationEditor } from './LocationEditor'
 import { showToast } from './Toast'
 import { SocialLinksEditor } from '@/components/ui/SocialLinksEditor'
+import { LanguageSelector } from '@/components/ui/LanguageSelector'
 
 interface ShopFormProps {
   shop: SysAdminShop | null  // null = create mode
@@ -42,6 +43,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [hasParking, setHasParking] = useState(shop?.has_parking ?? false)
   const [hasOwnDelivery, setHasOwnDelivery] = useState(shop?.has_own_delivery ?? false)
   const [sellsLiveAnimals, setSellsLiveAnimals] = useState(shop?.sells_live_animals ?? false)
+  const [spokenLanguages, setSpokenLanguages] = useState<string[]>(shop?.spoken_languages ?? [])
   const [socialLinks, setSocialLinks] = useState<Record<string, string> | null>(shop?.social_links ?? null)
   const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -77,6 +79,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       email: email.trim() || null,
       webshop_url: webshopUrl.trim() || null,
       postal_code: postalCode.trim() || null,
+      spoken_languages: spokenLanguages,
       is_online_only: isOnlineOnly,
       has_parking: hasParking,
       has_own_delivery: hasOwnDelivery,
@@ -200,6 +203,12 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         platformNameLabel={tr.social_platform_name}
         urlLabel={tr.social_platform_url}
         disabled={isPending}
+      />
+
+      <LanguageSelector
+        value={spokenLanguages}
+        onChange={setSpokenLanguages}
+        label={tr.spoken_languages}
       />
 
       <div className="grid grid-cols-2 gap-4">

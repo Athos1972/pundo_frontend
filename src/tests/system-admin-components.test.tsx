@@ -591,3 +591,44 @@ describe('CategoryTreeView', () => {
     expect(screen.queryByText('Cat Food')).toBeNull()
   })
 })
+
+// ─── LanguageSelector (ui/) ───────────────────────────────────────────────────
+
+import { LanguageSelector } from '@/components/ui/LanguageSelector'
+
+describe('LanguageSelector', () => {
+  it('renders a button for each of the 6 supported languages', () => {
+    render(<LanguageSelector value={[]} onChange={vi.fn()} label="Spoken languages" />)
+    const buttons = screen.getAllByRole('button')
+    expect(buttons.length).toBe(6)
+  })
+
+  it('sets aria-pressed=true for selected languages', () => {
+    render(<LanguageSelector value={['EN', 'DE']} onChange={vi.fn()} label="Spoken languages" />)
+    const enBtn = screen.getByText('EN').closest('button')!
+    const deBtn = screen.getByText('DE').closest('button')!
+    const elBtn = screen.getByText('EL').closest('button')!
+    expect(enBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(deBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(elBtn.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('calls onChange with language added when unselected button clicked', () => {
+    const onChange = vi.fn()
+    render(<LanguageSelector value={['EN']} onChange={onChange} label="Spoken languages" />)
+    fireEvent.click(screen.getByText('DE'))
+    expect(onChange).toHaveBeenCalledWith(['EN', 'DE'])
+  })
+
+  it('calls onChange with language removed when selected button clicked', () => {
+    const onChange = vi.fn()
+    render(<LanguageSelector value={['EN', 'DE']} onChange={onChange} label="Spoken languages" />)
+    fireEvent.click(screen.getByText('EN'))
+    expect(onChange).toHaveBeenCalledWith(['DE'])
+  })
+
+  it('renders label text', () => {
+    render(<LanguageSelector value={[]} onChange={vi.fn()} label="Gesprochene Sprachen" />)
+    expect(screen.getByText('Gesprochene Sprachen')).toBeDefined()
+  })
+})

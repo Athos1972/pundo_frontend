@@ -64,6 +64,7 @@ export interface SysAdminShop {
   is_online_only: boolean
   sells_live_animals?: boolean | null
   images?: unknown[] | null
+  spoken_languages?: string[] | null
   shop_type_id: number | null
   source?: string | null
   created_at: string

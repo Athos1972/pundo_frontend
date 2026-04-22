@@ -291,6 +291,9 @@ export const translations = {
     shop_open_now: 'Open now',
     filter_all: 'All',
     shop_reviews_count: (n: number) => `${n} review${n === 1 ? '' : 's'}`,
+    filter_has_parking: 'Parking',
+    filter_has_delivery: 'Delivery',
+    filter_online_only: 'Online only',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -584,6 +587,9 @@ export const translations = {
     shop_open_now: 'Jetzt geöffnet',
     filter_all: 'Alle',
     shop_reviews_count: (n: number) => `${n} Bewertung${n === 1 ? '' : 'en'}`,
+    filter_has_parking: 'Parkplatz',
+    filter_has_delivery: 'Lieferung',
+    filter_online_only: 'Nur online',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -877,6 +883,9 @@ export const translations = {
     shop_open_now: 'Открыто',
     filter_all: 'Все',
     shop_reviews_count: (n: number) => `${n} отзыв${(n % 10 === 1 && n % 100 !== 11) ? '' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'а' : 'ов'}`,
+    filter_has_parking: 'Парковка',
+    filter_has_delivery: 'Доставка',
+    filter_online_only: 'Только онлайн',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1170,6 +1179,9 @@ export const translations = {
     shop_open_now: 'Ανοιχτό τώρα',
     filter_all: 'Όλα',
     shop_reviews_count: (n: number) => `${n} αξιολόγηση${n === 1 ? '' : 'ς'}`,
+    filter_has_parking: 'Χώρος στάθμευσης',
+    filter_has_delivery: 'Παράδοση',
+    filter_online_only: 'Μόνο online',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1463,6 +1475,9 @@ export const translations = {
     shop_open_now: 'مفتوح الآن',
     filter_all: 'الكل',
     shop_reviews_count: (n: number) => `${n} تقييم`,
+    filter_has_parking: 'موقف سيارات',
+    filter_has_delivery: 'توصيل',
+    filter_online_only: 'أونلاين فقط',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1756,6 +1771,9 @@ export const translations = {
     shop_open_now: 'פתוח עכשיו',
     filter_all: 'הכל',
     shop_reviews_count: (n: number) => `${n} ביקורת${n === 1 ? '' : 'ות'}`,
+    filter_has_parking: 'חניה',
+    filter_has_delivery: 'משלוח',
+    filter_online_only: 'אונליין בלבד',
   },
 } as const;
 

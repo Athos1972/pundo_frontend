@@ -148,27 +148,29 @@ export default async function ShopPage({ params }: Props) {
               </ul>
             ) : shop.opening_hours ? (
               <div className="space-y-1">
-                {(['mon','tue','wed','thu','fri','sat','sun','ph'] as const)
-                  .filter(key => key in shop.opening_hours!)
-                  .map(key => {
-                    const hours = shop.opening_hours![key]
-                    let displayText = tr.closed
-                    if (hours) {
-                      if (typeof hours === 'object' && 'open' in hours && 'close' in hours) {
-                        displayText = `${(hours as any).open} – ${(hours as any).close}`
-                      } else if (typeof hours === 'string') {
-                        displayText = hours
-                      }
-                    }
-                    return (
-                      <div key={key} className="flex justify-between text-sm">
-                        <span className="text-text-muted">{tr.days[key]}</span>
-                        <span className={hours ? 'text-text' : 'text-text-light'}>
-                          {displayText}
-                        </span>
-                      </div>
-                    )
-                  })}
+                {(['mon','tue','wed','thu','fri','sat','sun'] as const).map((dayKey, idx) => {
+                  // OpeningHoursEditor saves with numeric keys '0'-'6' (Mon-Sun)
+                  const numKey = String(idx)
+                  const oh = shop.opening_hours!
+                  const hours = (numKey in oh ? oh[numKey] : oh[dayKey]) as
+                    { open?: string; close?: string; closed?: boolean } | null | undefined
+                  if (hours === undefined) return null
+                  const isClosed = !hours || (hours as { closed?: boolean }).closed === true
+                  return (
+                    <div key={dayKey} className="flex justify-between text-sm">
+                      <span className="text-text-muted">{tr.days[dayKey]}</span>
+                      <span className={isClosed ? 'text-text-light' : 'text-text'}>
+                        {isClosed ? tr.closed : `${hours!.open} – ${hours!.close}`}
+                      </span>
+                    </div>
+                  )
+                }).filter(Boolean)}
+                {'ph' in shop.opening_hours && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-muted">{tr.days['ph']}</span>
+                    <span className="text-text-light">{tr.closed}</span>
+                  </div>
+                )}
               </div>
             ) : null}
             {(shop.opening_hours_raw?.specialDays?.length ?? 0) > 0 && (

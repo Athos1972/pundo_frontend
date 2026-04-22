@@ -1,8 +1,12 @@
+'use client'
+
 import Link from 'next/link'
 import type { ShopListItem } from '@/types/api'
 import { t } from '@/lib/translations'
 import { StarRatingDisplay } from '@/components/reviews/StarRatingDisplay'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { ReviewsPopover } from '@/components/ui/ReviewsPopover'
 
 function ParkingIcon() {
   return (
@@ -34,8 +38,18 @@ function GlobeIcon() {
   )
 }
 
-/** Language badges: shows all spoken_languages codes, adds star rating from community votes when available. */
-function LanguageBadges({ shop }: { shop: ShopListItem }) {
+const LANG_NAME_KEYS: Record<string, keyof ReturnType<typeof t>> = {
+  en: 'community_vote_language_en',
+  de: 'community_vote_language_de',
+  el: 'community_vote_language_el',
+  ru: 'community_vote_language_ru',
+  ar: 'community_vote_language_ar',
+  he: 'community_vote_language_he',
+}
+
+/** Language badges with tooltips showing full language name */
+function LanguageBadges({ shop, lang }: { shop: ShopListItem; lang: string }) {
+  const tr = t(lang)
   const spoken = shop.spoken_languages ?? []
   const votes = shop.language_votes ?? []
   if (spoken.length === 0) return null
@@ -45,14 +59,15 @@ function LanguageBadges({ shop }: { shop: ShopListItem }) {
       {spoken.map(code => {
         const vote = votes.find(v => v.attribute_type === `language_${code.toLowerCase()}`)
         const hasVote = vote && vote.vote_count >= 1
+        const nameKey = LANG_NAME_KEYS[code.toLowerCase()]
+        const fullName = nameKey ? (tr[nameKey] as string) : undefined
         return (
-          <span
-            key={code}
-            className="inline-flex items-center gap-0.5 text-xs bg-surface-alt border border-border px-1.5 py-0.5 rounded-full text-text-muted"
-          >
-            <span className="uppercase font-semibold tracking-wide">{code}</span>
-            {hasVote && <StarRatingDisplay stars={vote!.weighted_avg} size="sm" />}
-          </span>
+          <Tooltip key={code} content={fullName ?? code}>
+            <span className="inline-flex items-center gap-0.5 text-xs bg-surface-alt border border-border px-1.5 py-0.5 rounded-full text-text-muted cursor-default">
+              <span className="uppercase font-semibold tracking-wide">{code}</span>
+              {hasVote && <StarRatingDisplay stars={vote!.weighted_avg} size="sm" />}
+            </span>
+          </Tooltip>
         )
       })}
     </div>
@@ -66,7 +81,6 @@ function formatDist(km: number): string {
 export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
   const tr = t(lang)
 
-  // Shop type: prefer translated name, fall back to canonical
   const shopTypeName = shop.shop_type
     ? (shop.shop_type.translations[lang as keyof typeof shop.shop_type.translations] ?? shop.shop_type.canonical)
     : null
@@ -80,22 +94,12 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
       className="block bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors"
     >
       <div className="flex gap-3 items-start">
-        {/* Avatar (favicon or fallback initial) */}
-        <ShopAvatar
-          name={shop.name}
-          shopId={shop.id}
-          size="md"
-        />
+        <ShopAvatar name={shop.name} shopId={shop.id} size="md" />
 
-        {/* Card content */}
         <div className="flex-1 min-w-0">
           {/* Row 1: Name + Distance */}
           <div className="flex items-start justify-between gap-2">
-            <p
-              className="font-bold text-text truncate font-heading"
-            >
-              {shop.name ?? 'Shop'}
-            </p>
+            <p className="font-bold text-text truncate font-heading">{shop.name ?? 'Shop'}</p>
             {shop.dist_km != null && (
               <span className="flex-shrink-0 text-sm font-medium text-accent">
                 {formatDist(shop.dist_km)}
@@ -129,15 +133,27 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             </div>
           )}
 
-          {/* Row 4: Rating + product count */}
+          {/* Row 4: Rating (with Reviews Popover) + product count */}
           <div className="flex items-center justify-between gap-2 mt-1.5 rtl:flex-row-reverse">
             {hasRating ? (
-              <div className="flex items-center gap-1.5">
-                <StarRatingDisplay stars={shop.review_stats!.average_stars} size="sm" />
-                <span className="text-xs text-text-muted">
-                  {tr.shop_reviews_count(shop.review_stats!.total_count)}
-                </span>
-              </div>
+              <ReviewsPopover
+                shopId={shop.id}
+                shopSlug={shop.slug}
+                lang={lang}
+                trigger={
+                  <button
+                    type="button"
+                    onClick={e => e.preventDefault()}
+                    className="flex items-center gap-1.5 cursor-pointer"
+                    aria-label={tr.shop_reviews_count(shop.review_stats!.total_count)}
+                  >
+                    <StarRatingDisplay stars={shop.review_stats!.average_stars} size="sm" />
+                    <span className="text-xs text-text-muted">
+                      {tr.shop_reviews_count(shop.review_stats!.total_count)}
+                    </span>
+                  </button>
+                }
+              />
             ) : (
               <span />
             )}
@@ -146,23 +162,29 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             </span>
           </div>
 
-          {/* Row 5: Parking / Delivery / Online-only icons */}
+          {/* Row 5: Parking / Delivery / Online-only icons with tooltips */}
           {showAttrs && (
             <div className="flex items-center gap-2 mt-1.5 text-text-muted rtl:flex-row-reverse">
               {shop.has_parking === true && (
-                <span title={tr.filter_has_parking}><ParkingIcon /></span>
+                <Tooltip content={tr.filter_has_parking}>
+                  <span className="cursor-default"><ParkingIcon /></span>
+                </Tooltip>
               )}
               {shop.has_own_delivery === true && (
-                <span title={tr.filter_has_delivery}><DeliveryIcon /></span>
+                <Tooltip content={tr.filter_has_delivery}>
+                  <span className="cursor-default"><DeliveryIcon /></span>
+                </Tooltip>
               )}
               {shop.is_online_only === true && (
-                <span title={tr.filter_online_only}><GlobeIcon /></span>
+                <Tooltip content={tr.filter_online_only}>
+                  <span className="cursor-default"><GlobeIcon /></span>
+                </Tooltip>
               )}
             </div>
           )}
 
           {/* Row 6: Language badges */}
-          <LanguageBadges shop={shop} />
+          <LanguageBadges shop={shop} lang={lang} />
         </div>
       </div>
     </Link>

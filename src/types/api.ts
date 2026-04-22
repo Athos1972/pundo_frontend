@@ -96,6 +96,20 @@ export interface CategoryItem {
 }
 export interface CategoryListResponse { items: CategoryItem[]; }
 
+// ─── Shop Review Preview (for Reviews Popover) ───────────────────────────────
+
+export interface ShopReviewPreview {
+  id: number
+  user_display_name: string
+  stars: 1 | 2 | 3 | 4 | 5
+  comment: string | null
+  created_at: string
+}
+
+export interface ShopReviewsResponse {
+  reviews: ShopReviewPreview[]
+}
+
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 
 export interface ReviewPhoto {

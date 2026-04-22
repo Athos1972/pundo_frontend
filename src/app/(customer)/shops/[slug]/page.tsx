@@ -126,7 +126,7 @@ export default async function ShopPage({ params }: Props) {
           </div>
           {shop.spoken_languages && shop.spoken_languages.length > 0 && (
             <div className="mt-3">
-              <LanguageChips languages={shop.spoken_languages} label={tr.spoken_languages} />
+              <LanguageChips languages={shop.spoken_languages} label={tr.spoken_languages} lang={lang} />
             </div>
           )}
         </div>
@@ -215,7 +215,7 @@ export default async function ShopPage({ params }: Props) {
         />
 
         {/* Reviews */}
-        <ReviewSection entityType="shop" entityId={shop.id} lang={lang} tr={tr} />
+        <ReviewSection entityType="shop" entityId={shop.id} lang={lang} tr={tr} isAuthenticated={session.is_authenticated} />
       </div>
       <script
         type="application/ld+json"

@@ -13,6 +13,7 @@ import { PriceHistory } from '@/components/ui/PriceHistory'
 import { BackButton } from '@/components/ui/BackButton'
 import { PriceFilterToggle } from '@/components/ui/PriceFilterToggle'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
+import { getCustomerSession } from '@/lib/customer-api'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -63,9 +64,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const tr = t(lang)
 
   // Fetch product + related in parallel; related failure must not break the page.
-  const [productResult, relatedResult] = await Promise.allSettled([
+  const [productResult, relatedResult, session] = await Promise.allSettled([
     getProduct(slug, lang),
     getRelatedProducts(slug, lang),
+    getCustomerSession(lang),
   ])
 
   if (productResult.status === 'rejected') notFound()
@@ -74,6 +76,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const relatedItems = relatedResult.status === 'fulfilled'
     ? relatedResult.value.items.filter(p => p.slug !== slug)
     : []
+  const isAuthenticated = session.status === 'fulfilled' && session.value.is_authenticated
 
   const siteUrl = getSiteUrl()
   const name = product.names[lang] ?? product.names.en ?? slug
@@ -127,7 +130,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         />
 
         {/* Reviews */}
-        <ReviewSection entityType="product" entityId={product.id} lang={lang} tr={tr} />
+        <ReviewSection entityType="product" entityId={product.id} lang={lang} tr={tr} isAuthenticated={isAuthenticated} />
       </div>
       <script
         type="application/ld+json"

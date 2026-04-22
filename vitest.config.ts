@@ -11,6 +11,10 @@ export default defineConfig({
     exclude: ['e2e/**', 'node_modules/**'],
   },
   resolve: {
-    alias: { '@': '/Users/bb_studio_2025/dev/github/pundo_frontend/src' },
+    alias: {
+      '@': '/Users/bb_studio_2025/dev/github/pundo_frontend/src',
+      '@radix-ui/react-tooltip': '/Users/bb_studio_2025/dev/github/pundo_frontend/src/tests/__mocks__/radix-tooltip.tsx',
+      '@radix-ui/react-popover': '/Users/bb_studio_2025/dev/github/pundo_frontend/src/tests/__mocks__/radix-popover.tsx',
+    },
   },
 })

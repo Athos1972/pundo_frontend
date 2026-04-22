@@ -2,6 +2,7 @@ import type {
   ProductListResponse, ProductDetailResponse,
   ShopListResponse, ShopDetailResponse,
   CategoryListResponse,
+  ShopReviewPreview,
 } from '@/types/api';
 
 // Server Components (SSR/Node.js) brauchen absolute URLs — BACKEND_URL wird
@@ -99,4 +100,20 @@ export async function getCategories(
   if (params.only_with_products) qs.set('only_with_products', 'true');
   const q = qs.toString();
   return apiFetch<CategoryListResponse>(`/categories${q ? `?${q}` : ''}`, lang);
+}
+
+export async function getShopReviews(
+  shopId: number,
+  lang: string,
+  limit = 3
+): Promise<ShopReviewPreview[]> {
+  try {
+    const data = await apiFetch<{ reviews: ShopReviewPreview[] }>(
+      `/shops/${shopId}/reviews?limit=${limit}`,
+      lang
+    );
+    return data.reviews ?? [];
+  } catch {
+    return [];
+  }
 }

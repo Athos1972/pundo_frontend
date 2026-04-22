@@ -306,6 +306,13 @@ Empfehlung an E2E-Tester:
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
 - Dokumentation immer auf Letztstand halten README.md
 - Wenn sich wesentliche Änderungen ergeben maintaine den SKILL.md im /architect dieses Projekts
+- **Tooltip-Pflicht für UI-Elemente (PFLICHT):**
+  - Jede neue Komponente mit Icons (ohne sichtbares Label) → `<Tooltip content={tr.key}>` wrappen
+  - Jede neue Komponente mit Sprach-Code-Badges (EL, EN, etc.) → Tooltip mit `community_vote_language_XX` key
+  - Jede neue VoteToggle/Vote-Schaltfläche → Tooltip auf ✓ und ✗ Buttons via `vote_yes_tooltip` / `vote_no_tooltip`
+  - Tooltip-Komponente: `src/components/ui/Tooltip.tsx` (Radix-basiert)
+  - `TooltipProvider` ist in `src/app/(customer)/layout.tsx` — kein erneutes Wrappen nötig
+  - Radix UI Mocks für Tests: global via `vitest.config.ts` Alias auf `src/tests/__mocks__/radix-tooltip.tsx` / `radix-popover.tsx`
 - **Shop-Admin Clean Boundary (PFLICHT, keine Ausnahmen):**
   - `src/components/shop-admin/` → darf NUR aus `src/components/ui/` importieren, nicht aus `map/`, `product/`, `search/`, `shop/`
   - `src/lib/shop-admin-api.ts` → separates File, nicht in `api.ts` mischen

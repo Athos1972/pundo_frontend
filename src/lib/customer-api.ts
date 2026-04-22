@@ -79,6 +79,21 @@ export async function getReviews(
   return res.json() as Promise<Review[]>
 }
 
+export async function getMyReview(
+  entityType: 'product' | 'shop',
+  entityId: number,
+  lang: string,
+): Promise<Review | null> {
+  try {
+    return await apiFetchCustomer<Review>(
+      `/customer/reviews/mine?entity_type=${entityType}&entity_id=${entityId}`,
+      lang,
+    )
+  } catch {
+    return null
+  }
+}
+
 export async function getSpottedUploads(lang: string): Promise<SpottedListResponse> {
   return apiFetchCustomer<SpottedListResponse>('/customer/spotted', lang)
 }

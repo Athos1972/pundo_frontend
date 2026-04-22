@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Translations } from '@/lib/translations'
-import { getReviews, getReviewStats } from '@/lib/customer-api'
+import { getReviews, getReviewStats, getMyReview } from '@/lib/customer-api'
+import type { Review } from '@/types/api'
 import { ReviewList } from './ReviewList'
 import { ReviewStats } from './ReviewStats'
 import { ReviewForm } from './ReviewForm'
@@ -10,9 +11,14 @@ interface Props {
   entityId: number
   lang: string
   tr: Translations
+  isAuthenticated?: boolean
 }
 
-export async function ReviewSection({ entityType, entityId, lang, tr }: Props) {
+export async function ReviewSection({ entityType, entityId, lang, tr, isAuthenticated }: Props) {
+  const myReview: Review | null = isAuthenticated
+    ? await getMyReview(entityType, entityId, lang)
+    : null
+
   return (
     <section className="bg-surface border border-border rounded-xl p-4 mt-4" aria-label={tr.reviews_title}>
       <h2
@@ -35,7 +41,7 @@ export async function ReviewSection({ entityType, entityId, lang, tr }: Props) {
 
       <div className="mb-6">
         <h3 className="text-sm font-medium text-text mb-3">{tr.reviews_write}</h3>
-        <ReviewForm entityType={entityType} entityId={entityId} lang={lang} />
+        <ReviewForm entityType={entityType} entityId={entityId} lang={lang} existingReview={myReview} />
       </div>
 
       <Suspense fallback={<ReviewListSkeleton />}>

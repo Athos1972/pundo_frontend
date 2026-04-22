@@ -1,10 +1,26 @@
+'use client'
+
+import { Tooltip } from '@/components/ui/Tooltip'
+import { t } from '@/lib/translations'
+
+const LANG_NAME_KEYS: Record<string, keyof ReturnType<typeof t>> = {
+  en: 'community_vote_language_en',
+  de: 'community_vote_language_de',
+  el: 'community_vote_language_el',
+  ru: 'community_vote_language_ru',
+  ar: 'community_vote_language_ar',
+  he: 'community_vote_language_he',
+}
+
 interface LanguageChipsProps {
   languages: string[]
   label: string
+  lang?: string
 }
 
-export function LanguageChips({ languages, label }: LanguageChipsProps) {
+export function LanguageChips({ languages, label, lang = 'en' }: LanguageChipsProps) {
   if (languages.length === 0) return null
+  const tr = t(lang)
 
   return (
     <div>
@@ -14,15 +30,20 @@ export function LanguageChips({ languages, label }: LanguageChipsProps) {
         aria-label={label}
         role="list"
       >
-        {languages.map((lang) => (
-          <span
-            key={lang}
-            role="listitem"
-            className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-alt text-text-muted cursor-default select-none"
-          >
-            {lang.toUpperCase()}
-          </span>
-        ))}
+        {languages.map((code) => {
+          const nameKey = LANG_NAME_KEYS[code.toLowerCase()]
+          const fullName = nameKey ? (tr[nameKey] as string) : undefined
+          return (
+            <Tooltip key={code} content={fullName ?? code}>
+              <span
+                role="listitem"
+                className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-alt text-text-muted cursor-default select-none"
+              >
+                {code.toUpperCase()}
+              </span>
+            </Tooltip>
+          )
+        })}
       </div>
     </div>
   )

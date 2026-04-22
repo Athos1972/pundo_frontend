@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
-import type { CreateReviewRequest } from '@/types/api'
+import type { CreateReviewRequest, Review } from '@/types/api'
 import { useSession } from '@/components/auth/SessionProvider'
 import { StarRatingInput } from './StarRatingInput'
 import { PhotoUploader } from './PhotoUploader'
@@ -14,14 +14,16 @@ interface Props {
   entityType: 'product' | 'shop'
   entityId: number
   lang: string
+  existingReview?: Review | null
 }
 
-export function ReviewForm({ entityType, entityId, lang }: Props) {
+export function ReviewForm({ entityType, entityId, lang, existingReview }: Props) {
   const tr = t(lang)
   const session = useSession()
   const router = useRouter()
-  const [stars, setStars] = useState(0)
-  const [comment, setComment] = useState('')
+  const isEdit = existingReview != null
+  const [stars, setStars] = useState(existingReview?.stars ?? 0)
+  const [comment, setComment] = useState(existingReview?.comment ?? '')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [submittedReviewId, setSubmittedReviewId] = useState<number | null>(null)
@@ -56,24 +58,24 @@ export function ReviewForm({ entityType, entityId, lang }: Props) {
     setError('')
     setLoading(true)
 
-    const body: CreateReviewRequest = {
-      entity_type: entityType,
-      entity_id: entityId,
-      stars,
-      comment: comment.trim() || undefined,
-    }
-
     try {
-      const res = await fetch('/api/customer/customer/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
-        body: JSON.stringify(body),
-      })
+      const res = isEdit
+        ? await fetch(`/api/customer/customer/reviews/${existingReview.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
+            body: JSON.stringify({ stars, comment: comment.trim() || undefined }),
+          })
+        : await fetch('/api/customer/customer/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
+            body: JSON.stringify({
+              entity_type: entityType,
+              entity_id: entityId,
+              stars,
+              comment: comment.trim() || undefined,
+            } satisfies CreateReviewRequest),
+          })
 
-      if (res.status === 409) {
-        setError(tr.reviews_already_reviewed)
-        return
-      }
       if (!res.ok) {
         setError(tr.error_generic)
         return
@@ -119,7 +121,7 @@ export function ReviewForm({ entityType, entityId, lang }: Props) {
         disabled={loading || stars === 0}
         className="self-start px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-60"
       >
-        {loading ? tr.reviews_saving : tr.reviews_submit}
+        {loading ? tr.reviews_saving : isEdit ? tr.reviews_update : tr.reviews_submit}
       </button>
     </form>
   )

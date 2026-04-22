@@ -2,9 +2,155 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-22
-SHA: 5d9d85ea23fdd1a239e6cb8ebf60bde656e38cb5 (spoken_languages im Admin-Shop-Formular)
-Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright (full suite)**
-Ergebnis: **841/841 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E-Setup intermittierend (bekannter Bug, siehe Known Issues)**
+SHA: 907ad6b1ad65944a12d1e9892031acc2696ee83e
+Feature: Shop-Filter-Erweiterung (has_parking, has_own_delivery, is_online_only, spoken_languages)
+Ergebnis: **841/841 Unit-Tests PASS | TypeScript PASS | ESLint PASS | E2E 33/33 PASS (shop-card-enrichment.spec.ts)**
+
+---
+
+## Testlauf 2026-04-22 — Shop-Filter-Erweiterung (F-Shops-Filter)
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 27 Warnings (alle pre-existing) |
+
+### Geänderte Dateien
+
+| Datei | Änderung |
+|-------|---------|
+| `src/types/api.ts` | `has_parking`, `has_own_delivery`, `is_online_only` zu `ShopListItem` |
+| `src/lib/api.ts` | `getShops()` um 4 neue Filter-Params erweitert |
+| `src/lib/translations.ts` | `filter_has_parking`, `filter_has_delivery`, `filter_online_only` in allen 6 Sprachen |
+| `src/components/shop/ShopCard.tsx` | Icons für Parking/Delivery/Online-only; LanguageBadges zeigt alle spoken_languages |
+| `src/app/(customer)/shops/ShopsContent.tsx` | Filter-Chips für booleans + spoken_languages Multi-Select |
+| `src/app/(customer)/shops/[slug]/page.tsx` | TypeScript-Fix: `let displayText: string` + `as { open: string; close: string }` |
+
+### Unit-Tests
+
+| Ergebnis | Dateien |
+|----------|---------|
+| **841/841 PASS** | 38 Test-Dateien |
+
+Angepasste Tests (2) in `src/tests/shop-card-enrichment.test.tsx`:
+- `shows all spoken_languages badges regardless of vote_count` — Behavior-Änderung: alle Sprachen anzeigen
+- `shows badge for spoken language with no vote entry at all` — Behavior-Änderung
+
+### E2E-Tests (shop-card-enrichment.spec.ts → Port 3500/8500)
+
+| Spec | Tests | PASS | FAIL |
+|------|-------|------|------|
+| shop-card-enrichment.spec.ts | **33** | **33** | 0 |
+
+#### E2E-S7 Detail (neue Tests)
+
+| Test | Status |
+|------|--------|
+| Parking-Chip sichtbar (EN) | PASS |
+| Delivery-Chip sichtbar (EN) | PASS |
+| Online-only-Chip sichtbar (EN) | PASS |
+| Parking-Chip sichtbar (DE: Parkplatz) | PASS |
+| Parking-Chip toggle: kein Crash | PASS |
+| alle 6 Sprach-Chips sichtbar | PASS |
+| Sprach-Chip toggle: kein Crash (EL) | PASS |
+| Filter-Chips RTL: rtl:flex-row-reverse bei ar | PASS |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** |
+| he | rtl | **PASS** |
+| en/de/el/ru | ltr | **PASS** |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `src/app/(customer)/shops/[slug]/page.tsx` | `let displayText: string` + explizites Cast | TypeScript literal type narrowing durch `as const` |
+| `src/app/(customer)/shops/ShopsContent.tsx` | `eslint-disable-next-line react-hooks/set-state-in-effect` | ESLint Plugin v7 Regel |
+| `e2e/shop-card-enrichment.spec.ts` | `data-testid="spoken-lang-filter"` scope, `exact: true` | Playwright strict-mode: LanguageSwitcher hatte gleiche Button-Texte |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | Leaflet braucht Browser-Canvas |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| `llms.txt/route.ts` | prüfen (Phase 4.5 — kein Signal erkannt, keine API-Änderung für llms.txt relevant) |
+| `README.md` | unverändert |
+| `AGENTS.md` | unverändert |
+
+### Known Issues
+
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-01 | `shop-discovery.spec.ts`: 3 pre-existing Tests schlagen fehl (Admin-Daten fehlen in Test-DB) | pre-existing | OPEN |
+| KI-02 | DB-Deadlock in `prepare_e2e_db.py` — intermittierend, löst sich nach ~15s Wartezeit | pre-existing | OPEN |
+
+---
+
+## Testlauf 2026-04-22 — Shoptyp-Dropdown alphabetisch sortiert
+Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint**
+Ergebnis: **841/841 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E-Setup geblockt (KI-01: DB-Deadlock, pre-existing)**
+
+---
+
+## Testlauf 2026-04-22 — Shoptyp-Dropdown alphabetisch sortieren
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 27 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Ergebnis | Dateien |
+|----------|---------|
+| **841/841 PASS** | 38 Test-Dateien |
+
+Keine neuen Tests nötig: Änderung ist `Array.prototype.sort()` auf bestehendem Daten-Array in Server Component — keine neue UI-Logik.
+
+### Coverage-Status (neue/geänderte Module)
+
+| Modul | Typ | Status |
+|-------|-----|--------|
+| `src/app/(system-admin)/admin/(portal)/shops/[id]/edit/page.tsx` | Server Component | Sortier-Logik — TypeScript-Check ausreichend |
+
+### E2E-Tests
+
+| Test | Status | Hinweis |
+|------|--------|---------|
+| E2E-Setup (global-setup) | **BLOCKED** | KI-01: DB-Deadlock bei TRUNCATE in `prepare_e2e_db.py` — pre-existing |
+| Admin Shop Edit — Shoptyp-Dropdown | **NICHT AUSFÜHRBAR** | Erfordert Admin-Auth; KI-01 verhindert Seeding |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `src/app/(system-admin)/admin/(portal)/shops/[id]/edit/page.tsx` | `.slice().sort((a, b) => localeCompare(..., lang))` nach `getAllShopTypes()` | Shoptypen alphabetisch in Anzeigesprache sortieren |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| llms.txt/route.ts | kein Signal — nur Sortierreihenfolge geändert, keine API-Änderung |
+| README.md | unverändert |
+| AGENTS.md | unverändert |
+
+### Known Issues
+
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-01 | `global-setup.ts`: `prepare_e2e_db.py` TRUNCATE schlägt mit DB-Deadlock fehl — Admin-E2E-Tests nicht ausführbar | 2026-04-22 | OPEN |
 
 ---
 

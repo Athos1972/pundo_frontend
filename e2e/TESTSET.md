@@ -2,9 +2,73 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-22
-SHA: 4dfcace65882504f20fd40cef5b02eb6952c11b3 (F1600 Favicon Binary Storage + Bug-Fixes)
-Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright community-feedback + shop-card-enrichment**
-Ergebnis: **836/836 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E 31/31 PASS (0 neue Failures)**
+SHA: 5d9d85ea23fdd1a239e6cb8ebf60bde656e38cb5 (spoken_languages im Admin-Shop-Formular)
+Konfiguration: **Unit-Tests (Vitest) + TypeScript + ESLint + Playwright (full suite)**
+Ergebnis: **841/841 Unit-Tests PASS ✓ | TypeScript PASS | ESLint PASS (0 Errors) | E2E-Setup intermittierend (bekannter Bug, siehe Known Issues)**
+
+---
+
+## Testlauf 2026-04-22 — spoken_languages im Admin-Shop-Formular
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (src/) | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 27 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Ergebnis | Dateien |
+|----------|---------|
+| **841/841 PASS** | 38 Test-Dateien |
+
+Neue Tests (5):
+- `src/tests/system-admin-components.test.tsx` — `LanguageSelector`-Suite (+5 Tests)
+
+### Coverage-Status (neue/geänderte Module)
+
+| Modul | Typ | Status |
+|-------|-----|--------|
+| `src/components/ui/LanguageSelector.tsx` | UI Component | Abgedeckt (5 Unit-Tests) |
+| `src/components/system-admin/ShopForm.tsx` | Client Component | via Unit-Tests (FormField, LanguageSelector) |
+| `src/types/system-admin.ts` | Typ-Erweiterung | TypeScript-Check |
+| `src/lib/system-admin-translations.ts` | Translations | TypeScript-Check |
+
+### E2E-Tests
+
+| Test | Status | Hinweis |
+|------|--------|---------|
+| E2E-Setup (global-setup) | **INTERMITTIEREND** | siehe Known Issue KI-01 |
+| E2E-20: Admin Shop — Spoken Languages | **NEU HINZUGEFÜGT** | wartet auf stabilen Setup |
+| Coming-Soon-Tests | PRE-EXISTING FAIL | nicht durch diesen PR eingeführt |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `src/types/system-admin.ts` | `spoken_languages?: string[] \| null` zu `SysAdminShop` | Typ fehlte |
+| `src/components/ui/LanguageSelector.tsx` | NEU (aus shop-admin/ extrahiert) | Clean Boundary |
+| `src/components/shop-admin/LanguageSelector.tsx` | Re-Export auf `ui/` | Clean Boundary |
+| `src/app/(shop-admin)/.../ProfileForm.tsx` | Import-Pfad auf `ui/` | Clean Boundary |
+| `src/components/system-admin/ShopForm.tsx` | State + UI + Payload für `spoken_languages` | Feature |
+| `src/lib/system-admin-translations.ts` | `spoken_languages` EN + DE | Feature |
+| `e2e/admin.spec.ts` | E2E-20: 3 neue Tests für Sprach-Auswahl | Neue Test-Abdeckung |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-01 | `global-setup.ts` schlägt intermittierend bei `seed_admin.py` fehl ("admin_users doesn't exist"). Ursache: Race-Condition zwischen `prepare_e2e_db.py` (alembic Migrations) und dem ersten `adminLogin()`-Aufruf. Workaround: Playwright-Tests manuell mit `prepare_e2e_db.py`-Vorlauf starten. | 2026-04-22 |
+| KI-02 | Coming-Soon-Tests (Countdown, RTL-dir, Erfolgsmeldung) schlagen fehl. Pre-existing, nicht durch diesen PR eingeführt. | pre-existing |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| llms.txt/route.ts | kein Signal — übersprungen |
+| README.md | kein Signal — übersprungen |
+| AGENTS.md | kein Signal — übersprungen |
 
 ---
 

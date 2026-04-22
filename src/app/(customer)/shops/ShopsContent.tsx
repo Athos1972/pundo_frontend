@@ -169,7 +169,7 @@ export function ShopsContent({ lang }: { lang: string }) {
         </div>
 
         {/* Spoken-language multi-select chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 rtl:flex-row-reverse scrollbar-hide">
+        <div data-testid="spoken-lang-filter" className="flex gap-2 overflow-x-auto pb-1 rtl:flex-row-reverse scrollbar-hide">
           {SPOKEN_LANGS.map(code => (
             <button
               key={code}

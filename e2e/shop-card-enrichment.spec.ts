@@ -381,8 +381,11 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     await setLang(page, 'en')
     await page.goto('/shops')
     await page.waitForLoadState('networkidle')
+    // Scope to spoken-lang-filter to avoid matching the LanguageSwitcher buttons (EN/DE/RU conflict)
+    const filterRow = page.locator('[data-testid="spoken-lang-filter"]')
+    await expect(filterRow).toBeVisible()
     for (const code of ['EL', 'EN', 'DE', 'RU', 'AR', 'HE']) {
-      await expect(page.getByRole('button', { name: code, exact: true })).toBeVisible()
+      await expect(filterRow.getByRole('button', { name: code, exact: true })).toBeVisible()
     }
   })
 

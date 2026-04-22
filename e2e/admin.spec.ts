@@ -386,3 +386,51 @@ test.describe('E2E-19: Admin URL Structure', () => {
     expect([200, 307, 404]).toContain(resp?.status())
   })
 })
+
+
+// ── E2E-20: Admin Shop Edit — Spoken Languages ────────────────────────────────
+
+test.describe('E2E-20: Admin Shop Edit — Spoken Languages', () => {
+  test('LanguageSelector renders all 6 language buttons on shop edit page', async ({ page }) => {
+    const loggedIn = await loginAdminViaForm(page)
+    if (!loggedIn) {
+      test.skip()
+      return
+    }
+    // Navigate to any shop's edit page (shop 91 exists in test DB copied from prod)
+    await page.goto('/admin/shops/91/edit')
+    await page.waitForLoadState('networkidle')
+
+    // All 6 language buttons must be visible
+    for (const lang of ['EN', 'DE', 'EL', 'RU', 'AR', 'HE']) {
+      await expect(page.getByRole('button', { name: lang })).toBeVisible()
+    }
+  })
+
+  test('language button toggles aria-pressed on click', async ({ page }) => {
+    const loggedIn = await loginAdminViaForm(page)
+    if (!loggedIn) {
+      test.skip()
+      return
+    }
+    await page.goto('/admin/shops/91/edit')
+    await page.waitForLoadState('networkidle')
+
+    const enBtn = page.getByRole('button', { name: 'EN' })
+    const before = await enBtn.getAttribute('aria-pressed')
+    await enBtn.click()
+    const after = await enBtn.getAttribute('aria-pressed')
+    expect(after).not.toBe(before)
+  })
+
+  test('label "Spoken languages" is visible on shop edit page', async ({ page }) => {
+    const loggedIn = await loginAdminViaForm(page)
+    if (!loggedIn) {
+      test.skip()
+      return
+    }
+    await page.goto('/admin/shops/91/edit')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByText('Spoken languages')).toBeVisible()
+  })
+})

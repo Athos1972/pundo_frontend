@@ -22,6 +22,7 @@ interface ShopFormProps {
 export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [isImpersonating, setIsImpersonating] = useState(false)
   const isEdit = shop != null
 
   // For EN name editing — stored internally as a plain string, sent as {en: ...}
@@ -51,6 +52,25 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   function handleLocationChange(newLat: number, newLng: number) {
     setLat(newLat)
     setLng(newLng)
+  }
+
+  async function handleImpersonate() {
+    if (!shop) return
+    setIsImpersonating(true)
+    try {
+      const res = await fetch(`/api/admin/shops/${shop.id}/impersonate`, { method: 'POST' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        const detail = (body as { detail?: string }).detail
+        showToast(detail === 'No shop owner found for this shop' ? tr.error_no_shop_owner : tr.error_generic, 'error')
+        return
+      }
+      router.push('/shop-admin/dashboard')
+    } catch {
+      showToast(tr.error_backend, 'error')
+    } finally {
+      setIsImpersonating(false)
+    }
   }
 
   function validate() {
@@ -309,6 +329,17 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         >
           {tr.cancel}
         </button>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={handleImpersonate}
+            disabled={isPending || isImpersonating}
+            className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium
+              rounded-lg disabled:opacity-50 transition-colors"
+          >
+            {isImpersonating ? tr.entering_shop_admin : tr.enter_shop_admin}
+          </button>
+        )}
       </div>
     </form>
   )

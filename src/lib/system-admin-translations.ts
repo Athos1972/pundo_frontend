@@ -157,6 +157,10 @@ const sysAdminTranslations = {
     clear: 'Clear',
     expand_all: 'Expand all',
     collapse_all: 'Collapse all',
+    // Impersonation
+    enter_shop_admin: 'Manage shop operations',
+    entering_shop_admin: 'Opening…',
+    error_no_shop_owner: 'No shop owner assigned to this shop.',
   },
   de: {
     // Auth
@@ -312,6 +316,10 @@ const sysAdminTranslations = {
     clear: 'Leeren',
     expand_all: 'Alle aufklappen',
     collapse_all: 'Alle zuklappen',
+    // Impersonation
+    enter_shop_admin: 'Shop-Betrieb verwalten',
+    entering_shop_admin: 'Öffne…',
+    error_no_shop_owner: 'Diesem Shop ist kein Inhaber zugeordnet.',
   },
 }
 

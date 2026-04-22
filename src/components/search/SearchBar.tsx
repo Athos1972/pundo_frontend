@@ -6,6 +6,7 @@ import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
 import { fmtPrice } from '@/lib/utils'
+import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
 interface Props {
   placeholder: string
@@ -209,12 +210,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                         globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                       }`}
                     >
-                      {/* Storefront icon */}
-                      <div className="w-8 h-8 flex-shrink-0 bg-accent-light rounded-lg flex items-center justify-center">
-                        <svg viewBox="0 0 16 16" className="w-4 h-4 text-accent" fill="none">
-                          <path d="M2 6 3 3h10l1 3M2 6v7h12V6M2 6h12M6 13V9h4v4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
+                      <ShopAvatar name={shop.name} shopId={shop.id} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-text truncate">{shop.name ?? shop.slug}</p>
                         {subtitle && <p className="text-xs text-text-muted truncate">{subtitle}</p>}

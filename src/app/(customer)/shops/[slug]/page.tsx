@@ -81,13 +81,12 @@ export default async function ShopPage({ params }: Props) {
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
             <ShopAvatar
-              favicon_url={shop.favicon_url}
               name={shop.name}
               shopId={shop.id}
               size="lg"
             />
             <div className="min-w-0">
-              <h1 className="text-2xl font-extrabold text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{shop.name}</h1>
+              <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>
               {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
             </div>
           </div>
@@ -140,7 +139,7 @@ export default async function ShopPage({ params }: Props) {
         {/* Opening hours */}
         {(shop.opening_hours_raw || shop.opening_hours) && (
           <div className="bg-surface border border-border rounded-xl p-4">
-            <h2 className="font-bold text-sm text-text mb-3" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.opening_hours}</h2>
+            <h2 className="font-bold text-sm text-text mb-3 font-heading">{tr.opening_hours}</h2>
             {shop.opening_hours_raw?.weekdayDescriptions ? (
               <ul className="space-y-1">
                 {shop.opening_hours_raw.weekdayDescriptions.map((line, i) => (
@@ -184,7 +183,7 @@ export default async function ShopPage({ params }: Props) {
         {topProducts.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-sm text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.products}</h2>
+              <h2 className="font-bold text-sm text-text font-heading">{tr.products}</h2>
               <Link href={`/search?shop_id=${shop.id}`} className="text-xs text-accent hover:underline">
                 Alle →
               </Link>

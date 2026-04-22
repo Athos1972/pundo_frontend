@@ -31,7 +31,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       setIsLoading(true)
       try {
-        const r = await fetch('/api/customer/favorites?limit=200&page=1')
+        const r = await fetch('/api/customer/customer/favorites?limit=100&page=1')
         if (r.ok) {
           const data = await r.json()
           if (data?.items) {
@@ -57,7 +57,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         else next.add(productId)
         return next
       })
-      const res = await fetch(`/api/customer/favorites/${productId}`, {
+      const res = await fetch(`/api/customer/customer/favorites/${productId}`, {
         method: wasFavorite ? 'DELETE' : 'POST',
       })
       if (!res.ok) {

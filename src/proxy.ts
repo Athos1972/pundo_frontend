@@ -113,7 +113,7 @@ export const config = {
   matcher: [
     {
       source:
-        '/((?!api/v1|brand_logos|product_images|review_photos|_next|favicon.ico|manifest.webmanifest).*)',
+        '/((?!_next|api|brand_logos|product_images|review_photos|favicon.ico|manifest.webmanifest).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

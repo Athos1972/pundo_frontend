@@ -57,7 +57,6 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
       <div className="flex gap-3 items-start">
         {/* Avatar (favicon or fallback initial) */}
         <ShopAvatar
-          favicon_url={shop.favicon_url}
           name={shop.name}
           shopId={shop.id}
           size="md"
@@ -68,8 +67,7 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
           {/* Row 1: Name + Distance */}
           <div className="flex items-start justify-between gap-2">
             <p
-              className="font-bold text-text truncate"
-              style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+              className="font-bold text-text truncate font-heading"
             >
               {shop.name ?? 'Shop'}
             </p>

@@ -27,14 +27,14 @@ export function TrustProfileSection({ profile, tr }: Props) {
       <div className="flex gap-4">
         <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
           <p className="text-xs text-text-muted mb-1">{tr.trust_level}</p>
-          <p className="text-3xl font-extrabold text-accent" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
+          <p className="text-3xl font-extrabold text-accent font-heading">
             {profile.trust_level}
           </p>
           <p className="text-xs text-text-muted mt-1">{tr.trust_level_label(profile.trust_level)}</p>
         </div>
         <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
           <p className="text-xs text-text-muted mb-1">{tr.trust_credits}</p>
-          <p className="text-3xl font-extrabold text-accent" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
+          <p className="text-3xl font-extrabold text-accent font-heading">
             {profile.credits}
           </p>
           <p className="text-xs text-text-muted mt-1">{tr.trust_credits_earned(profile.credits)}</p>

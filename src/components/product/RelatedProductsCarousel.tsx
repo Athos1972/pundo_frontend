@@ -27,8 +27,7 @@ export function RelatedProductsCarousel({ items, lang, title }: Props) {
   return (
     <section aria-label={title} className="mt-4">
       <h2
-        className="font-bold text-sm text-text mb-3"
-        style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+        className="font-bold text-sm text-text mb-3 font-heading"
       >
         {title}
       </h2>

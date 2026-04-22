@@ -24,7 +24,7 @@ export function FavoritesTab({ lang }: Props) {
 
   const loadFavorites = useCallback(async (p = 1) => {
     setIsLoading(true)
-    const res = await fetch(`/api/customer/favorites?page=${p}&limit=20`)
+    const res = await fetch(`/api/customer/customer/favorites?page=${p}&limit=20`)
     if (res.ok) {
       const data = await res.json()
       if (p === 1) {
@@ -39,7 +39,7 @@ export function FavoritesTab({ lang }: Props) {
   }, [])
 
   useEffect(() => {
-    fetch('/api/customer/auth/notification-settings')
+    fetch('/api/customer/customer/auth/notification-settings')
       .then((r) => (r.ok ? r.json() : null))
       .then((data: NotificationSettings | null) => {
         if (data) setGlobalInterval(data.default_alert_interval)
@@ -49,7 +49,7 @@ export function FavoritesTab({ lang }: Props) {
 
   async function saveGlobalSettings() {
     setIsSavingGlobal(true)
-    const res = await fetch('/api/customer/auth/notification-settings', {
+    const res = await fetch('/api/customer/customer/auth/notification-settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ default_alert_interval: globalInterval }),
@@ -71,7 +71,7 @@ export function FavoritesTab({ lang }: Props) {
     setFavorites((prev) =>
       prev.map((f) => (f.id === favoriteId ? { ...f, alert_interval: newInterval } : f))
     )
-    await fetch(`/api/customer/favorites/${favoriteId}`, {
+    await fetch(`/api/customer/customer/favorites/${favoriteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interval: newInterval }),
@@ -81,7 +81,7 @@ export function FavoritesTab({ lang }: Props) {
   async function deleteFavorite(favoriteId: number) {
     const fav = favorites.find((f) => f.id === favoriteId)
     if (!fav) return
-    const res = await fetch(`/api/customer/favorites/${fav.product_id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/customer/customer/favorites/${fav.product_id}`, { method: 'DELETE' })
     if (res.ok) {
       setFavorites((prev) => prev.filter((f) => f.id !== favoriteId))
       setTotal((n) => n - 1)
@@ -143,7 +143,7 @@ export function FavoritesTab({ lang }: Props) {
                       src={fav.image_url}
                       alt=""
                       className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      onError={(e) => { e.currentTarget.classList.add('hidden') }}
                     />
                   )}
                 </div>

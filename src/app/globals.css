@@ -237,6 +237,13 @@ h1, h2, h3, .font-display {
   margin-top: 10px;
 }
 
+/* Heading font utility — replaces inline style={{ fontFamily: 'var(--font-heading)...' }} */
+/* Using a CSS class avoids CSP style-src violations from inline styles.
+   Uses brand font variable with fallback, matching the h1/h2/h3 global rule. */
+.font-heading {
+  font-family: var(--brand-font-heading, var(--font-heading)), system-ui, sans-serif;
+}
+
 /* Hide scrollbar but keep scrollability */
 .scrollbar-none {
   scrollbar-width: none;

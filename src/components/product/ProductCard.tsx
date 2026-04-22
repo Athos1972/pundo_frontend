@@ -36,7 +36,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
 
         {/* Text content to the right of the image */}
         <div className="p-3 flex flex-col justify-center min-w-0">
-          <p className="font-bold text-text text-sm leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
+          <p className="font-bold text-text text-sm leading-snug line-clamp-2 font-heading">
             <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
               {productName}
             </Link>
@@ -81,7 +81,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
 
       {/* Text content below the image */}
       <div className="p-3">
-        <p className="font-bold text-text text-sm leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>
+        <p className="font-bold text-text text-sm leading-snug line-clamp-2 font-heading">
           {/* Stretched link covers the whole card */}
           <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
             {productName}

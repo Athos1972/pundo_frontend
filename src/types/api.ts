@@ -56,7 +56,6 @@ export interface ShopListItem {
   spoken_languages?: string[] | null;
   language_votes?: VoteAggregateItem[];
   is_open_now?: boolean | null;
-  favicon_url?: string | null;
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }

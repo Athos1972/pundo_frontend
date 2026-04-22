@@ -16,8 +16,7 @@ export async function ReviewSection({ entityType, entityId, lang, tr }: Props) {
   return (
     <section className="bg-surface border border-border rounded-xl p-4 mt-4" aria-label={tr.reviews_title}>
       <h2
-        className="font-bold text-sm text-text mb-2"
-        style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+        className="font-bold text-sm text-text mb-2 font-heading"
       >
         {tr.reviews_title}
       </h2>

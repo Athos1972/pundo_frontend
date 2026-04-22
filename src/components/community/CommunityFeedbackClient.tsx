@@ -104,8 +104,7 @@ export function CommunityFeedbackClient({
   return (
     <section className="bg-surface border border-border rounded-xl p-4 mt-4 space-y-4" aria-label={tr.community_votes_title}>
       <h2
-        className="font-bold text-sm text-text rtl:text-right"
-        style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+        className="font-bold text-sm text-text rtl:text-right font-heading"
       >
         {tr.community_votes_title}
       </h2>

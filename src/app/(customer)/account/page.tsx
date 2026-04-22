@@ -33,8 +33,7 @@ export default async function AccountPage() {
 
         <div className="bg-surface border border-border rounded-2xl p-5 mb-6">
           <h1
-            className="text-xl font-extrabold text-text mb-1"
-            style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+            className="text-xl font-extrabold text-text mb-1 font-heading"
           >
             {user.display_name}
           </h1>

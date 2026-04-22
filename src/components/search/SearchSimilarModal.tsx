@@ -30,7 +30,7 @@ export function SearchSimilarModal({ lang, isOpen, onClose }: Props) {
     }
     setTimeout(() => textareaRef.current?.focus(), 50)
     if (session.is_authenticated) {
-      fetch('/api/customer/similarity-search/quota')
+      fetch('/api/customer/customer/similarity-search/quota')
         .then((r) => (r.ok ? r.json() : null))
         .then((data: SimilaritySearchQuota | null) => {
           if (data) setQuota({ used_today: data.used_today, limit_daily: data.limit_daily })
@@ -54,7 +54,7 @@ export function SearchSimilarModal({ lang, isOpen, onClose }: Props) {
     }
     if (query.trim().length < 3) return
     setState('loading')
-    const res = await fetch('/api/customer/similarity-search/submit', {
+    const res = await fetch('/api/customer/customer/similarity-search/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: query.trim() }),

@@ -95,7 +95,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             <ProductHeroImage src={firstImgUrl} origSrc={origImgUrl} alt={name} />
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-extrabold text-text leading-tight" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{name}</h1>
+            <h1 className="text-xl font-extrabold text-text leading-tight font-heading">{name}</h1>
             {product.brand && <p className="text-sm text-text-muted mt-1">{product.brand.name}</p>}
             {product.category && <p className="text-xs text-text-light mt-0.5">{product.category.name}</p>}
             {sizeStr && <p className="text-xs text-text-light mt-0.5">{sizeStr}</p>}
@@ -105,7 +105,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Price history */}
         {product.price_history.length >= 2 && (
           <div className="bg-surface border border-border rounded-xl p-4 mb-4">
-            <h2 className="font-bold text-sm text-text mb-3" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.price_history}</h2>
+            <h2 className="font-bold text-sm text-text mb-3 font-heading">{tr.price_history}</h2>
             <PriceHistory items={product.price_history} />
           </div>
         )}
@@ -113,7 +113,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Offers */}
         <div className="bg-surface border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-sm text-text" style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}>{tr.all_offers}</h2>
+            <h2 className="font-bold text-sm text-text font-heading">{tr.all_offers}</h2>
             <PriceFilterToggle />
           </div>
           <OfferList offers={visibleOffers} lang={lang} productName={name} />

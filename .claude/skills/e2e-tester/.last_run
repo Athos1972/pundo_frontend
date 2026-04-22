@@ -1,13 +1,5 @@
 {
-  "sha": "d8ff13a253ce0fa47103489b937ec82c40449c7b",
-  "timestamp": "2026-04-21T17:00:37.002237+00:00",
-  "coverage_snapshot": {
-    "src/lib/community-api.ts": "~65%",
-    "src/components/community/VoteSlider.tsx": "100%",
-    "src/components/community/VoteToggle.tsx": "100%",
-    "src/components/community/LanguageTag.tsx": "100%",
-    "src/components/community/LanguageVotePanel.tsx": "~80%",
-    "src/components/community/ResponsiveLabelPanel.tsx": "~75%",
-    "src/components/account/TrustProfileSection.tsx": "90%"
-  }
+  "sha": "4dfcace65882504f20fd40cef5b02eb6952c11b3",
+  "timestamp": "2026-04-22T13:13:05.973308+00:00",
+  "coverage_snapshot": {}
 }

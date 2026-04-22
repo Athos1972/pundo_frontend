@@ -49,8 +49,7 @@ export default async function SpottedAccountPage() {
     <main className="min-h-screen bg-bg px-4 py-8">
       <div className="max-w-lg mx-auto">
         <h1
-          className="text-2xl font-extrabold text-text mb-6"
-          style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+          className="text-2xl font-extrabold text-text mb-6 font-heading"
         >
           {tr.spotted_account_title}
         </h1>

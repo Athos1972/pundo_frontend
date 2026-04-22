@@ -52,12 +52,15 @@ test.describe('Community-Feedback: Shop-Detailseite', () => {
     await page.waitForLoadState('networkidle')
 
     // Keine JS-Fehler (Next.js hydration errors etc.)
-    // Exclude known false-positives: favicons, browser extensions, CSP inline-style warnings (pre-existing)
+    // Exclude known false-positives: favicons, browser extensions, CSP inline-style warnings,
+    // and Next.js dev-server HMR WebSocket reconnects (transient after server restart)
     const relevantErrors = consoleErrors.filter(e =>
       !e.includes('favicon') &&
       !e.includes('Extension') &&
       !e.includes('Content-Security-Policy') &&
-      !e.includes('Content Security Policy') // Chrome formats CSP violations without dashes
+      !e.includes('Content Security Policy') && // Chrome formats CSP violations without dashes
+      !e.includes('webpack-hmr') &&             // Next.js HMR WebSocket — dev-only, not a real error
+      !e.includes('WebSocket')                  // WS reconnect noise after server restart
     )
     expect(relevantErrors).toHaveLength(0)
   })

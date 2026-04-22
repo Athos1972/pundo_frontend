@@ -7,11 +7,9 @@ import { useState } from 'react'
 export type ShopAvatarSize = 'sm' | 'md' | 'lg'
 
 interface ShopAvatarProps {
-  /** External favicon URL from backend — null triggers fallback immediately */
-  favicon_url?: string | null
   /** Shop name — used for fallback initial and alt text */
   name: string | null
-  /** Shop ID — determines fallback background colour deterministically */
+  /** Shop ID — used to build the favicon API URL and for fallback colour */
   shopId: number
   /** Visual size: sm=32px, md=40px, lg=80px (default: md) */
   size?: ShopAvatarSize
@@ -40,6 +38,13 @@ const SIZE_CLASSES: Record<ShopAvatarSize, string> = {
   lg: 'w-20 h-20 text-2xl font-bold',
 }
 
+/** Maps the component size variant to the backend ?size= query parameter. */
+const SIZE_TO_API: Record<ShopAvatarSize, 'small' | 'medium' | 'large'> = {
+  sm: 'small',
+  md: 'medium',
+  lg: 'large',
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function colourClass(shopId: number): string {
@@ -54,19 +59,27 @@ function fallbackInitial(name: string | null): string {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function ShopAvatar({ favicon_url, name, shopId, size = 'md', className = '' }: ShopAvatarProps) {
+/**
+ * Renders a shop's favicon via the backend binary endpoint.
+ * Falls back to a coloured circle with the shop's first initial when the
+ * image fails (HTTP 204 No Content, 404, or network error).
+ *
+ * Favicon endpoint: GET /api/v1/shops/{shopId}/favicon?size=small|medium|large
+ */
+export function ShopAvatar({ name, shopId, size = 'md', className = '' }: ShopAvatarProps) {
   const [imgError, setImgError] = useState(false)
 
   const sizeClass = SIZE_CLASSES[size]
   const base = `rounded-full flex-shrink-0 overflow-hidden ${sizeClass} ${className}`
 
-  // Show image when URL available and not yet broken
-  if (favicon_url && !imgError) {
+  const faviconUrl = `/api/v1/shops/${shopId}/favicon?size=${SIZE_TO_API[size]}`
+
+  if (!imgError) {
     return (
       <div className={base}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={favicon_url}
+          src={faviconUrl}
           alt={name ?? ''}
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}

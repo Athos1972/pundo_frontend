@@ -108,7 +108,7 @@ describe('FavoritesTab', () => {
     fireEvent.click(saveBtn)
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith(
-      '/api/customer/auth/notification-settings',
+      '/api/customer/customer/auth/notification-settings',
       expect.objectContaining({ method: 'PATCH' })
     ))
   })

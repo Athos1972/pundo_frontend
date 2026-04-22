@@ -22,8 +22,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
     <main className="min-h-screen bg-bg flex items-center justify-center px-4">
       <div className="w-full max-w-sm bg-surface border border-border rounded-2xl p-6 shadow-sm">
         <h1
-          className="text-2xl font-extrabold text-text mb-6"
-          style={{ fontFamily: 'var(--font-heading), system-ui, sans-serif' }}
+          className="text-2xl font-extrabold text-text mb-6 font-heading"
         >
           {auth_verify_email}
         </h1>

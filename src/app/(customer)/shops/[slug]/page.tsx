@@ -152,11 +152,19 @@ export default async function ShopPage({ params }: Props) {
                   .filter(key => key in shop.opening_hours!)
                   .map(key => {
                     const hours = shop.opening_hours![key]
+                    let displayText = tr.closed
+                    if (hours) {
+                      if (typeof hours === 'object' && 'open' in hours && 'close' in hours) {
+                        displayText = `${(hours as any).open} – ${(hours as any).close}`
+                      } else if (typeof hours === 'string') {
+                        displayText = hours
+                      }
+                    }
                     return (
                       <div key={key} className="flex justify-between text-sm">
                         <span className="text-text-muted">{tr.days[key]}</span>
                         <span className={hours ? 'text-text' : 'text-text-light'}>
-                          {hours ? String(hours) : tr.closed}
+                          {displayText}
                         </span>
                       </div>
                     )

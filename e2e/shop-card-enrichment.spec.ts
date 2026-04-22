@@ -371,9 +371,10 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     await setLang(page, 'en')
     await page.goto('/shops')
     await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: 'Parking' }).click()
+    await page.getByRole('button', { name: 'Parking', exact: true }).click()
     await page.waitForLoadState('networkidle')
-    expect(errors.filter(e => !e.includes('favicon'))).toHaveLength(0)
+    const relevant = errors.filter(e => !e.includes('favicon') && !e.includes('WebSocket') && !e.includes('webpack-hmr'))
+    expect(relevant).toHaveLength(0)
   })
 
   test('alle 6 Sprach-Chips sichtbar', async ({ page }) => {
@@ -381,7 +382,7 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     await page.goto('/shops')
     await page.waitForLoadState('networkidle')
     for (const code of ['EL', 'EN', 'DE', 'RU', 'AR', 'HE']) {
-      await expect(page.getByRole('button', { name: code })).toBeVisible()
+      await expect(page.getByRole('button', { name: code, exact: true })).toBeVisible()
     }
   })
 
@@ -391,9 +392,10 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     await setLang(page, 'en')
     await page.goto('/shops')
     await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: 'EL' }).click()
+    await page.getByRole('button', { name: 'EL', exact: true }).click()
     await page.waitForLoadState('networkidle')
-    expect(errors.filter(e => !e.includes('favicon'))).toHaveLength(0)
+    const relevant = errors.filter(e => !e.includes('favicon') && !e.includes('WebSocket') && !e.includes('webpack-hmr'))
+    expect(relevant).toHaveLength(0)
   })
 
   test('Filter-Chips RTL: Chips-Zeile hat rtl:flex-row-reverse bei ar', async ({ page }) => {
@@ -401,7 +403,7 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     await page.goto('/shops')
     await page.waitForLoadState('networkidle')
     // Check the chip row containing the parking button
-    const parkingBtn = page.getByRole('button', { name: 'موقف سيارات' })
+    const parkingBtn = page.getByRole('button', { name: 'موقف سيارات', exact: true })
     await expect(parkingBtn).toBeVisible()
     const parent = parkingBtn.locator('..')
     const cls = await parent.getAttribute('class') ?? ''

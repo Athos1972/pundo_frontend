@@ -85,7 +85,7 @@ npm run test -- --watch   # Watch-Mode
 npm run test -- --coverage  # Mit Coverage-Report
 ```
 
-144 Tests in `src/tests/` — kein Backend nötig, kein Browser.
+876 Tests in 41 Dateien unter `src/tests/` — kein Backend nötig, kein Browser.
 
 ### E2E-Tests (Playwright)
 
@@ -96,18 +96,18 @@ Kurzversion:
 **Port-Konvention (PFLICHT — niemals mischen):**
 | Umgebung | Backend | Frontend |
 |---|---|---|
-| Produktion / Dev | 8001 | 3000 |
-| E2E-Tests | **8002** | **3002** |
+| Produktion / Dev | 8000 | 3000 |
+| E2E-Tests | **8500** | **3500** |
 
 Das Test-Backend wird **automatisch** gestartet — kein manueller Start nötig.  
-Port 8001 wird explizit abgelehnt (Schutz vor versehentlichem Zugriff auf Produktion).
+Port 8000 wird explizit abgelehnt (Schutz vor versehentlichem Zugriff auf Produktion).
 
 ```bash
-# E2E-Tests — Backend startet automatisch auf Port 8002
-npx playwright test
+# E2E-Tests — Backend startet automatisch auf Port 8500
+npm run test:e2e
 
 # Oder mit explizitem Backend-Port:
-BACKEND_URL=http://localhost:8002 npx playwright test
+BACKEND_URL=http://localhost:8500 npx playwright test
 ```
 
 ---
@@ -128,9 +128,9 @@ BACKEND_URL=http://localhost:8002 npx playwright test
 
 | Variable | Default | Beschreibung |
 |---|---|---|
-| `BACKEND_URL` | **Pflicht** | Test-Backend-URL — muss auf Port 8002 zeigen (8001 = Produktion, wird abgelehnt) |
-| `FRONTEND_URL` | `http://localhost:3002` | Frontend-URL für Playwright `baseURL` |
-| `E2E_FRONTEND_PORT` | `3002` | Port für den E2E-Frontend-Server |
+| `BACKEND_URL` | **Pflicht** | Test-Backend-URL — muss auf Port 8500 zeigen (8000 = Produktion, wird abgelehnt) |
+| `FRONTEND_URL` | `http://localhost:3500` | Frontend-URL für Playwright `baseURL` |
+| `E2E_FRONTEND_PORT` | `3500` | Port für den E2E-Frontend-Server |
 | `BACKEND_REPO` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | Pfad zum Backend-Repo |
 | `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | Bearer-Token für Admin-Approve-API |
 
@@ -238,7 +238,7 @@ Server Components rufen `BACKEND_URL` direkt auf (kein Rewrite-Overhead).
 Unterstützte Sprachen: **en, de, ru, el, ar, he**  
 RTL-Sprachen (automatisches `dir="rtl"` im HTML): **ar, he**
 
-Sprachauswahl wird im Cookie `pundo_lang` (1 Jahr, SameSite=Lax) gespeichert.  
+Sprachauswahl wird im Cookie `app_lang` (1 Jahr, SameSite=Lax) gespeichert.  
 Server Components lesen die Sprache via `getLangServer()` aus dem Request-Cookie.
 
 Vollständige Dokumentation: [`docs/i18n.md`](./docs/i18n.md)

@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 const tr = t('en')
 
-const SESSION_AUTH = { user: { id: 1, email: 'x@x.com', display_name: 'X', avatar_url: null }, is_authenticated: true }
+const SESSION_AUTH = { user: { id: 1, email: 'x@x.com', display_name: 'X', avatar_url: undefined, is_verified: true, provider: 'email' as const, created_at: '2024-01-01T00:00:00Z' }, is_authenticated: true }
 const SESSION_ANON = { user: null, is_authenticated: false }
 
 const EXISTING_REVIEW: Review = {

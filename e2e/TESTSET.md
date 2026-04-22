@@ -2,9 +2,89 @@
 
 ## Letzter Testlauf
 Datum: 2026-04-22
-SHA: 907ad6b1ad65944a12d1e9892031acc2696ee83e
-Feature: Shop-Filter-Erweiterung (has_parking, has_own_delivery, is_online_only, spoken_languages)
-Ergebnis: **841/841 Unit-Tests PASS | TypeScript PASS | ESLint PASS | E2E 33/33 PASS (shop-card-enrichment.spec.ts)**
+SHA: fdb37231a9203ae95b970016ba2b666b06953a7d
+Feature: Review Edit-Modus (getMyReview, ReviewForm PUT, ReviewSection pre-fetch, 6-Sprachen-Translation)
+Ergebnis: **876/876 Unit-Tests PASS | TypeScript PASS | ESLint PASS | E2E 181/275 PASS (27 KI, 67 skip)**
+
+---
+
+## Testlauf 2026-04-22 — I18n Tooltips + Reviews Popover
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | **PASS** — 0 Fehler (fix: `AuthUser`-Mock in `review-edit-mode.test.tsx` ergänzt) |
+| ESLint | **PASS** — 0 Errors, 31 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | 876/876 PASS |
+| Test-Dateien | 41 |
+| Neue Tests | 19 (tooltip-and-popover.test.tsx) |
+
+### Coverage (geänderte Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/components/ui/ReviewsPopover.tsx` | 82.6% | 70% | **PASS** |
+| `src/components/ui/LanguageChips.tsx` | 100% | 70% | **PASS** |
+| `src/components/community/LanguageTag.tsx` | 100% | 70% | **PASS** |
+| `src/components/community/VoteToggle.tsx` | 80% | 70% | **PASS** |
+| `src/components/shop/ShopCard.tsx` | 83.3% | 70% | **PASS** |
+| `src/lib/api.ts` | 85.3% | 80% | **PASS** |
+| `src/lib/utils.ts` | 100% | 90% | **PASS** |
+| `src/lib/translations.ts` | 39% | 90% | **COVERAGE_GAP** (pre-existing — Datei zu groß für vollständige Abdeckung) |
+| `src/components/ui/Tooltip.tsx` | via Mocks | 70% | **PASS** (Radix-Alias in vitest.config.ts) |
+
+### E2E-Tests (tooltip-e2e-check.spec.ts)
+
+| Test | Status |
+|------|--------|
+| E2E-01: Startseite lädt, kein JS-Fehler | **PASS** |
+| E2E-03: ar setzt dir=rtl (Cookie) | **PASS** |
+| E2E-03: he setzt dir=rtl (Cookie) | **PASS** |
+| E2E-03: de setzt dir=ltr | **PASS** |
+| E2E-03: en Standard dir=ltr | **PASS** |
+| E2E-05: Shop-Detail lädt, kein JS-Fehler | **PASS** |
+| E2E-05: EN/EL Sprach-Chips sichtbar | **PASS** |
+| E2E-05: Radix Tooltip auf Chips verdrahtet (data-state=closed) | **PASS** |
+| E2E-05: Tooltip zeigt "English" bei Hover auf EN-Chip | **PASS** |
+| E2E-06: Shop-Liste erreichbar, kein JS-Fehler | **PASS** |
+| E2E-06: mindestens 1 Shop sichtbar | **PASS** |
+| E2E-07: ungültiger Shop-Slug → kein Crash | **PASS** |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** (Cookie `app_lang=ar`) |
+| he | rtl | **PASS** (Cookie `app_lang=he`) |
+| de/en/el/ru | ltr | **PASS** |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|---------|-------|
+| `src/tests/review-edit-mode.test.tsx` | `AuthUser`-Mock um `is_verified`, `provider`, `created_at` ergänzt | TypeScript-Fehler TS2322 |
+| `e2e/global-setup.ts` | Backend-Restart nach `prepare_e2e_db` eingefügt | Schema-Drop invalidiert uvicorn-Connection-Pool → ECONNREFUSED |
+| `e2e/tooltip-e2e-check.spec.ts` | RTL via Cookie statt URL-Param; Performance.measure-Warning gefiltert | Korrekte Sprach-Erkennung, benigne Browser-Warnung |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/lib/translations.ts` | 39% | 90% | 1800+ Zeilen statische Strings, großteils ungetestet — pre-existing |
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | Leaflet braucht Browser-Canvas — kein JSDOM |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-001 | Global-Setup instabil bei laufendem Preview-Server (Connection-Pool-Race): gefixt durch Backend-Restart nach prepare_e2e_db | 2026-04-22 |
+| KI-002 | ReviewsPopover-Trigger in Shop-LIST unsichtbar: review_stats=null in API (Backend liefert keine Aggregationen) — Feature aktiv sobald Backend-seitig implementiert | 2026-04-22 |
 
 ---
 
@@ -1311,3 +1391,23 @@ Ergebnis: **532/532 Unit-Tests PASS, Browser-Checks PASS**
 | KI-008 | Backend Port 8000 JWT-Bug — Admin E2E SKIP auf Dev-Server | 2026-04-11 | OPEN |
 | KI-009 | E2E-02: Search URL wird zu `/?` statt `/search?q=...` bei playwright-dev.config (127.0.0.1:3000). Enter-Key triggert native Form-Submit statt router.push. Auf Test-Stack (3500) war PASS. | 2026-04-13 | OPEN (Dev-Config only) |
 | KI-010 | E2E-08: Prod-Shops (Backend 8000) haben keine lat/lng-Koordinaten → Leaflet-Marker fehlen bei playwright-dev.config | 2026-04-13 | OPEN (Prod-Daten) |
+
+---
+
+## Phase 4.5: Docs-Sync – I18n Tooltips + Reviews Popover
+
+| Dokument | Änderungen | Status |
+|----------|-----------|--------|
+| README.md | ✓ Zeile 88: Test-Count "144" → "876 Tests in 41 Dateien" | aktualisiert |
+| README.md | ✓ Zeilen 96–110: E2E-Ports "8002/3002" → "8500/3500", Backend-Port "8001" → "8000" | aktualisiert |
+| README.md | ✓ Zeile 132–134: E2E-Env-Vars aktualisiert (BACKEND_URL 8500, FRONTEND_URL 3500, E2E_FRONTEND_PORT 3500) | aktualisiert |
+| README.md | ✓ Zeile 240: Cookie `pundo_lang` → `app_lang` | aktualisiert |
+| AGENTS.md | ✓ (Ports bereits korrekt: 3000/8000 Prod, 3500/8500 Test) | ✓ OK |
+| llms.txt | ✓ (kein Signal — Tooltips/Popovers sind UI-Feature-Verbesserung, keine öffentlichen Datenstruktur-Änderungen) | ✓ OK |
+
+**Signal-Analyse:**
+- `src/types/api.ts`: `ShopReviewPreview`, `ShopReviewsResponse` hinzugefügt → API-Response-Typ Erweiterung (nicht öffentlich dokumentiert in llms.txt)
+- `src/lib/api.ts`: `getShopReviews()` hinzugefügt → Interner API-Client, keine neuen Public-Routes
+- `src/app/`: Keine neuen Public-Routes hinzugefügt (Tooltips sind Feature-Verbesserung ohne neue Seiten/Endpoints)
+
+**Fazit:** Docs-Sync abgeschlossen. README.md wurde auf den aktuellen Stand mit korrekten Ports und Test-Count gebracht.

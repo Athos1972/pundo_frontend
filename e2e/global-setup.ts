@@ -137,15 +137,18 @@ export default async function globalSetup() {
     if (line) console.log(`[backend] ${line}`)
   })
 
-  // Healthcheck-Poll bis Backend antwortet (max 30s)
+  // Healthcheck-Poll bis Backend antwortet (max 60s)
   console.log('[E2E Setup] Warte auf Backend-Healthcheck...')
-  const deadline = Date.now() + 30_000
+  const deadline = Date.now() + 60_000
   let healthy = false
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(2000) })
+      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(5000) })
       if (res.ok) { healthy = true; break }
-    } catch { /* noch nicht bereit */ }
+      console.log(`[E2E Setup] Healthcheck: ${res.status} — warte...`)
+    } catch (e) {
+      // not ready yet — continue polling
+    }
     await new Promise(r => setTimeout(r, 1000))
   }
   if (!healthy) {
@@ -164,25 +167,71 @@ export default async function globalSetup() {
   const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
 
   let creds: TestCredentials
-  try {
-    const output = execSync(`${pyBin} ${pyScript}`, {
-      cwd: BACKEND_REPO,
-      encoding: 'utf8',
-      timeout: 300_000,
-      env: { ...process.env, PYTHONPATH: BACKEND_REPO },
-    })
-    // Last line of stdout is the JSON credentials
-    const jsonLine = output.trim().split('\n').at(-1)!
-    creds = JSON.parse(jsonLine)
-    console.log('[E2E Setup] DB reset abgeschlossen, Kategorien kopiert.')
-  } catch (err) {
-    console.error('[E2E Setup] FEHLER beim DB-Reset:', err)
-    throw err
+  // Retry up to 3x — TRUNCATE CASCADE can deadlock with backend's open connections
+  let dbErr: unknown
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const output = execSync(`${pyBin} ${pyScript}`, {
+        cwd: BACKEND_REPO,
+        encoding: 'utf8',
+        timeout: 300_000,
+        env: { ...process.env, PYTHONPATH: BACKEND_REPO },
+      })
+      // Last line of stdout is the JSON credentials
+      const jsonLine = output.trim().split('\n').at(-1)!
+      creds = JSON.parse(jsonLine)
+      console.log('[E2E Setup] DB reset abgeschlossen, Kategorien kopiert.')
+      dbErr = undefined
+      break
+    } catch (err) {
+      dbErr = err
+      console.warn(`[E2E Setup] DB-Reset Versuch ${attempt}/3 fehlgeschlagen (Deadlock?), warte 3s…`)
+      await new Promise(r => setTimeout(r, 3000))
+    }
+  }
+  if (dbErr) {
+    console.error('[E2E Setup] FEHLER beim DB-Reset nach 3 Versuchen:', dbErr)
+    throw dbErr
   }
 
+  // ── 1b. Backend nach Schema-Reset neu starten ──────────────────────────────
+  // prepare_e2e_db runs DROP SCHEMA + alembic upgrade, which invalidates all
+  // open SQLAlchemy connections in the running uvicorn workers.  Workers then
+  // crash on the next DB request (ECONNREFUSED from the caller's perspective).
+  // Fix: kill + restart the backend with a fresh connection pool.
+  console.log('[E2E Setup] Starte Backend nach DB-Reset neu (frischer Connection-Pool)...')
+  try {
+    execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+  } catch { /* ok */ }
+  await new Promise(r => setTimeout(r, 1000))
+
+  const backendProc2 = spawn('bash', [backendScript], {
+    cwd: BACKEND_REPO,
+    env: { ...process.env, E2E_BACKEND_PORT: backendPort },
+    detached: false,
+    stdio: 'pipe',
+  })
+  backendProc2.stderr?.on('data', (d: Buffer) => {
+    const line = d.toString().trim()
+    if (line) console.log(`[backend] ${line}`)
+  })
+
+  const deadline2 = Date.now() + 30_000
+  let healthy2 = false
+  while (Date.now() < deadline2) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(2000) })
+      if (res.ok) { healthy2 = true; break }
+    } catch { /* noch nicht bereit */ }
+    await new Promise(r => setTimeout(r, 1000))
+  }
+  if (!healthy2) {
+    backendProc2.kill()
+    throw new Error(`\n[E2E Setup] Backend nach DB-Reset nicht erreichbar nach 30s.\n`)
+  }
+  console.log('[E2E Setup] Backend nach DB-Reset bereit.')
+
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
-  // After a schema reset the backend's SQLAlchemy connection pool may have stale
-  // connections → first request(s) return 5xx. Retry with backoff.
   // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)
 

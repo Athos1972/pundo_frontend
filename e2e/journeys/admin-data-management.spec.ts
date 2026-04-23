@@ -158,7 +158,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
     // ── Setup: Brand without logo ─────────────────────────────────────────────
     ctx.fixtures.push({ name: `${PREFIX}-brand-without-logo`, id: null, built: false, deleted: false, type: 'brand' })
     const brandRes = await apiFetch('POST', '/api/v1/admin/brands', {
-      name: `${PREFIX}-brand-without-logo`,
+      slug: `${PREFIX}-brand-without-logo`,
+      names: { en: `${PREFIX}-brand-without-logo` },
     }, adminHeaders())
 
     if (brandRes.ok) {
@@ -172,7 +173,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
     if (ctx.logoUploadSupported) {
       // Logo-Upload: Multipart form — creation only, logo upload in test step
       const brandWithLogoRes = await apiFetch('POST', '/api/v1/admin/brands', {
-        name: `${PREFIX}-brand-with-logo`,
+        slug: `${PREFIX}-brand-with-logo`,
+        names: { en: `${PREFIX}-brand-with-logo` },
       }, adminHeaders())
       if (brandWithLogoRes.ok) {
         ctx.brandWithLogoId = (brandWithLogoRes.data as { id: number }).id
@@ -182,7 +184,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
     } else {
       // Create brand without logo — skip logo upload in test
       const brandWithLogoRes = await apiFetch('POST', '/api/v1/admin/brands', {
-        name: `${PREFIX}-brand-with-logo`,
+        slug: `${PREFIX}-brand-with-logo`,
+        names: { en: `${PREFIX}-brand-with-logo` },
       }, adminHeaders())
       if (brandWithLogoRes.ok) {
         ctx.brandWithLogoId = (brandWithLogoRes.data as { id: number }).id

@@ -18,6 +18,7 @@ export interface AdminShop {
   address: string | null
   location: { lat: number; lng: number } | null
   spoken_languages: string[]
+  phone?: string | null
   whatsapp_number: string | null
   website_url: string | null
   webshop_url: string | null

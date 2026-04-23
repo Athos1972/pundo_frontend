@@ -82,7 +82,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                 />
 
                 {/* Second slot */}
-                {slot.second_open !== undefined ? (
+                {slot.second_open != null ? (
                   <>
                     <span className="text-gray-300 mx-1">|</span>
                     <input

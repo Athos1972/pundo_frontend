@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from '@/components/shop-admin/FormField'
+import { LogoUpload } from '@/components/shop-admin/LogoUpload'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
@@ -23,12 +24,14 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
     shop?.social_links ?? null
   )
   const [socialLinksValid, setSocialLinksValid] = useState(true)
+  const [logoUrl, setLogoUrl] = useState<string | null>(shop?.logo_url ?? null)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!socialLinksValid) return
     const data = new FormData(e.currentTarget)
 
+    const phone = (data.get('phone') as string).trim() || null
     const whatsapp = (data.get('whatsapp_number') as string).trim() || null
     const website = (data.get('website_url') as string).trim() || null
     const webshop = (data.get('webshop_url') as string).trim() || null
@@ -41,9 +44,10 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
           body: JSON.stringify({
             name: data.get('name'),
             description: data.get('description'),
-            logo_url: data.get('logo_url') || null,
+            logo_url: logoUrl,
             address: data.get('address'),
             spoken_languages: spokenLanguages,
+            phone: phone,
             whatsapp_number: whatsapp,
             website_url: website,
             webshop_url: webshop,
@@ -77,12 +81,13 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         rows={3}
         defaultValue={shop?.description ?? ''}
       />
-      <FormField
-        label={tr.logo_url}
-        name="logo_url"
-        type="url"
-        placeholder="https://..."
-        defaultValue={shop?.logo_url ?? ''}
+      <LogoUpload
+        currentLogoUrl={logoUrl}
+        lang={lang}
+        onLogoUploaded={(url) => {
+          setLogoUrl(url)
+          showToast(tr.logo_upload_success, 'success')
+        }}
       />
       <FormField
         label={tr.address}
@@ -94,6 +99,13 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         value={spokenLanguages}
         onChange={setSpokenLanguages}
         label={tr.spoken_languages}
+      />
+      <FormField
+        label={tr.phone}
+        name="phone"
+        type="tel"
+        placeholder="+35799123456"
+        defaultValue={shop?.phone ?? ''}
       />
       <FormField
         label={tr.whatsapp_number}

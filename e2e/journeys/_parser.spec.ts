@@ -67,14 +67,14 @@ describe('parseCatalog — Seed-Datei', () => {
     expect(entries).toHaveLength(5)
   })
 
-  it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status approved', () => {
+  it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
     const entries = loadAllJourneys()
 
     // P1 entries come first; shop-owner-full-lifecycle and shop-owner-lifecycle are both P1
     // sorted by id: shop-owner-full-lifecycle < shop-owner-lifecycle
     const p1Entries = entries.filter((e) => e.priority === 'P1')
     expect(p1Entries.length).toBe(2)
-    expect(p1Entries[0].status).toBe('approved')
+    expect(p1Entries[0].status).toBe('implemented')
   })
 
   it('shop-owner-lifecycle hat korrekte id und touches-modules', () => {
@@ -82,7 +82,7 @@ describe('parseCatalog — Seed-Datei', () => {
     const entries = parseCatalog(markdown)
 
     expect(entries[0].id).toBe('shop-owner-lifecycle')
-    expect(entries[0].status).toBe('approved')
+    expect(entries[0].status).toBe('implemented')
   })
 
   it('customer-discovery hat korrekte id und touches-modules', () => {
@@ -90,14 +90,14 @@ describe('parseCatalog — Seed-Datei', () => {
     const entries = parseCatalog(markdown)
 
     expect(entries[0].id).toBe('customer-discovery')
-    expect(entries[0].touchesModules).toContain('src/app/search/**')
+    expect(entries[0].touchesModules).toContain('src/app/(customer)/search/**')
   })
 
-  it('kein Eintrag hat status implemented (AC-10)', () => {
+  it('alle Einträge haben status implemented (AC-10: alle Journeys deployed)', () => {
     const entries = loadAllJourneys()
 
     const implemented = entries.filter((e) => e.status === 'implemented')
-    expect(implemented).toHaveLength(0)
+    expect(implemented).toHaveLength(entries.length)
   })
 
   it('touchesRoles wird korrekt geparst', () => {
@@ -254,12 +254,12 @@ describe('findOverlap — Jaccard-Index', () => {
   const existingEntries = loadAllJourneys()
 
   it('findet Überlappung >= 50% und liefert matching entry', () => {
-    // shop-owner-lifecycle hat: src/app/shop-admin/**, src/app/shops/[id]/**, src/lib/shop-admin-api.ts
-    // Proposed teilt 2 von 3 Modulen → Jaccard = 2/(3+1-2) = 2/2 = 1.0 … nein: union = {3 original + 1 extra} = 4, intersect = 2 → 2/4 = 0.5
+    // shop-owner-lifecycle hat: src/app/(shop-admin)/**, src/app/(customer)/shops/[id]/**, src/lib/shop-admin-api.ts
+    // Proposed teilt 2 von 3 Modulen → union = {3 original + 1 extra} = 4, intersect = 2 → 2/4 = 0.5
     const proposed = {
       touchesModules: [
-        'src/app/shop-admin/**',
-        'src/app/shops/[id]/**',
+        'src/app/(shop-admin)/**',
+        'src/app/(customer)/shops/[id]/**',
         'src/components/ui/**', // extra module not in existing
       ],
     }

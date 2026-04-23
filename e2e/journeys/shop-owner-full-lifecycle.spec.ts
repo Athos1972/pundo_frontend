@@ -647,12 +647,15 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
       return
     }
 
-    await page.goto(BASE_URL + `/shops/${ctx.shopASlug}?lang=ar`)
+    const cookieDomain = new URL(BASE_URL).hostname
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
+    await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
     await page.waitForLoadState('networkidle')
 
     const htmlDir = await page.locator('html').getAttribute('dir')
     logStep(13, 'RTL: html dir-Attribut', 'dir=rtl', String(htmlDir), htmlDir === 'rtl' ? 'PASS' : 'FAIL')
     expect(htmlDir, 'RTL: html[dir] ist nicht rtl für lang=ar').toBe('rtl')
+    await page.context().clearCookies()
   })
 
   test('Schritt 14 — RTL: product-fixed Detailseite mit lang=ar', async ({ page }) => {
@@ -662,12 +665,15 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
       return
     }
 
-    await page.goto(BASE_URL + `/products/${ctx.productFixedSlug}?lang=ar`)
+    const cookieDomain = new URL(BASE_URL).hostname
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
+    await page.goto(BASE_URL + `/products/${ctx.productFixedSlug}`)
     await page.waitForLoadState('networkidle')
 
     const htmlDir = await page.locator('html').getAttribute('dir')
     logStep(14, 'RTL: product-fixed dir-Attribut', 'dir=rtl', String(htmlDir), htmlDir === 'rtl' ? 'PASS' : 'FAIL')
     expect(htmlDir, 'RTL: html[dir] ist nicht rtl für lang=ar').toBe('rtl')
+    await page.context().clearCookies()
   })
 
   // ── PHASE 3: Deaktivierung ─────────────────────────────────────────────────

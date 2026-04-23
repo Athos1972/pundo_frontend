@@ -88,6 +88,18 @@ export async function getShop(slug: string, lang: string): Promise<ShopDetailRes
   return apiFetch<ShopDetailResponse>(`/shops/by-slug/${slug}`, lang);
 }
 
+export interface SitemapSlugsResponse {
+  products: { slug: string }[];
+  shops: { slug: string; last_scraped: string | null }[];
+}
+
+// Wird ausschliesslich von sitemap.ts aufgerufen — liefert alle product/shop
+// slugs in einem Request, damit die Sitemap-Regeneration nicht ~320 paginierte
+// Calls ins Backend ballert. Siehe auch: ingestor/api/sitemap.py.
+export async function getSitemapSlugs(): Promise<SitemapSlugsResponse> {
+  return apiFetch<SitemapSlugsResponse>('/sitemap/slugs', 'en');
+}
+
 export async function getCategories(
   params: { parent_id?: number; taxonomy_type?: string; q?: string; limit?: number; only_with_products?: boolean } = {},
   lang: string

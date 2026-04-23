@@ -1,10 +1,13 @@
 /**
  * Journey Catalog Parser
  *
- * Parses and serializes e2e/journeys/CATALOG.md.
+ * Parses and serializes e2e/journeys/CATALOG.md and individual <id>.md files.
  * Pure logic — no browser, no Next.js, no new npm dependencies.
  * Used by agents to read/write the catalog programmatically.
  */
+
+import { readdirSync, readFileSync } from 'fs'
+import { join } from 'path'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -454,6 +457,47 @@ export function serializeCatalog(entries: JourneyEntry[], header: string): strin
   }
 
   return parts.join('\n').trimEnd() + '\n'
+}
+
+// ---------------------------------------------------------------------------
+// parseCatalogDirectory
+// ---------------------------------------------------------------------------
+
+/**
+ * Read all individual `<id>.md` journey files in a directory, parse each one,
+ * and return all entries sorted by priority (P1 first) then id.
+ *
+ * Skips: CATALOG.md, CATALOG_SCHEMA.md, README.md, _archive.md, any file
+ * whose basename starts with `_`.
+ */
+export function parseCatalogDirectory(dirPath: string): JourneyEntry[] {
+  const EXCLUDED = new Set(['CATALOG.md', 'CATALOG_SCHEMA.md', 'README.md'])
+
+  const files = readdirSync(dirPath).filter((name) => {
+    if (!name.endsWith('.md')) return false
+    if (EXCLUDED.has(name)) return false
+    if (name.startsWith('_')) return false
+    return true
+  })
+
+  const entries: JourneyEntry[] = []
+
+  for (const file of files) {
+    const content = readFileSync(join(dirPath, file), 'utf-8')
+    const parsed = parseCatalog(content)
+    if (parsed.length > 0) {
+      entries.push(parsed[0])
+    }
+  }
+
+  const PRIORITY_ORDER: Record<string, number> = { P1: 0, P2: 1, P3: 2 }
+
+  return entries.sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority] ?? 99
+    const pb = PRIORITY_ORDER[b.priority] ?? 99
+    if (pa !== pb) return pa - pb
+    return a.id.localeCompare(b.id)
+  })
 }
 
 // ---------------------------------------------------------------------------

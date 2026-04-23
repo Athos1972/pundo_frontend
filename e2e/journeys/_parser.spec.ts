@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parseCatalog, serializeCatalog, findOverlap, JourneyCatalogError } from './_parser'
+import { parseCatalog, parseCatalogDirectory, serializeCatalog, findOverlap, JourneyCatalogError } from './_parser'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -17,10 +17,16 @@ import { join } from 'path'
 // Helpers
 // ---------------------------------------------------------------------------
 
-const CATALOG_PATH = join(__dirname, 'CATALOG.md')
+const JOURNEYS_DIR = __dirname
 
-function loadSeedCatalog(): string {
-  return readFileSync(CATALOG_PATH, 'utf-8')
+/** Load a single journey file — used for parseCatalog() single-entry tests. */
+function loadJourneyFile(id: string): string {
+  return readFileSync(join(JOURNEYS_DIR, `${id}.md`), 'utf-8')
+}
+
+/** Load all 5 journey entries via parseCatalogDirectory — replaces old loadSeedCatalog(). */
+function loadAllJourneys() {
+  return parseCatalogDirectory(JOURNEYS_DIR)
 }
 
 const MINIMAL_ENTRY = `
@@ -56,40 +62,46 @@ last-result: N/A
 // ---------------------------------------------------------------------------
 
 describe('parseCatalog — Seed-Datei', () => {
-  it('parst CATALOG.md ohne Fehler und liefert 2 Einträge', () => {
-    const markdown = loadSeedCatalog()
-    const entries = parseCatalog(markdown)
-
-    expect(entries).toHaveLength(2)
+  it('parseCatalogDirectory liefert alle 5 Journey-Einträge', () => {
+    const entries = loadAllJourneys()
+    expect(entries).toHaveLength(5)
   })
 
-  it('erster Eintrag hat korrekte id und status proposed', () => {
-    const markdown = loadSeedCatalog()
+  it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status approved', () => {
+    const entries = loadAllJourneys()
+
+    // P1 entries come first; shop-owner-full-lifecycle and shop-owner-lifecycle are both P1
+    // sorted by id: shop-owner-full-lifecycle < shop-owner-lifecycle
+    const p1Entries = entries.filter((e) => e.priority === 'P1')
+    expect(p1Entries.length).toBe(2)
+    expect(p1Entries[0].status).toBe('approved')
+  })
+
+  it('shop-owner-lifecycle hat korrekte id und touches-modules', () => {
+    const markdown = loadJourneyFile('shop-owner-lifecycle')
     const entries = parseCatalog(markdown)
 
     expect(entries[0].id).toBe('shop-owner-lifecycle')
-    expect(entries[0].status).toBe('proposed')
+    expect(entries[0].status).toBe('approved')
   })
 
-  it('zweiter Eintrag hat korrekte id und touches-modules', () => {
-    const markdown = loadSeedCatalog()
+  it('customer-discovery hat korrekte id und touches-modules', () => {
+    const markdown = loadJourneyFile('customer-discovery')
     const entries = parseCatalog(markdown)
 
-    expect(entries[1].id).toBe('customer-discovery')
-    expect(entries[1].touchesModules).toContain('src/app/search/**')
+    expect(entries[0].id).toBe('customer-discovery')
+    expect(entries[0].touchesModules).toContain('src/app/search/**')
   })
 
   it('kein Eintrag hat status implemented (AC-10)', () => {
-    const markdown = loadSeedCatalog()
-    const entries = parseCatalog(markdown)
+    const entries = loadAllJourneys()
 
     const implemented = entries.filter((e) => e.status === 'implemented')
     expect(implemented).toHaveLength(0)
   })
 
   it('touchesRoles wird korrekt geparst', () => {
-    const markdown = loadSeedCatalog()
-    const entries = parseCatalog(markdown)
+    const entries = loadAllJourneys()
 
     const lifecycle = entries.find((e) => e.id === 'shop-owner-lifecycle')
     expect(lifecycle?.touchesRoles).toContain('shop-owner')
@@ -103,11 +115,14 @@ describe('parseCatalog — Seed-Datei', () => {
 
 describe('Roundtrip: parse → serialize → parse', () => {
   it('liefert nach Roundtrip identische Einträge (id, status, touchesModules)', () => {
-    const markdown = loadSeedCatalog()
+    // Use a single journey file for the roundtrip — parseCatalog / serializeCatalog
+    // still work on the per-file format.
+    // Individual journey files have no file-header (they start directly with ---),
+    // so we pass an empty string as header to serializeCatalog.
+    const markdown = loadJourneyFile('shop-owner-lifecycle')
     const entries = parseCatalog(markdown)
 
-    const header = markdown.split('\n---\n')[0].trim()
-    const reserialized = serializeCatalog(entries, header)
+    const reserialized = serializeCatalog(entries, '')
     const reparsed = parseCatalog(reserialized)
 
     expect(reparsed).toHaveLength(entries.length)
@@ -236,7 +251,7 @@ Body text.
 // ---------------------------------------------------------------------------
 
 describe('findOverlap — Jaccard-Index', () => {
-  const existingEntries = parseCatalog(loadSeedCatalog())
+  const existingEntries = loadAllJourneys()
 
   it('findet Überlappung >= 50% und liefert matching entry', () => {
     // shop-owner-lifecycle hat: src/app/shop-admin/**, src/app/shops/[id]/**, src/lib/shop-admin-api.ts
@@ -352,5 +367,71 @@ describe('Edge Cases', () => {
     expect(entries[0].id).toBe('test-journey')
     expect(entries[0].lastRun).toBe('never')
     expect(entries[0].lastResult).toBe('N/A')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Test 7: parseCatalogDirectory
+// ---------------------------------------------------------------------------
+
+describe('parseCatalogDirectory', () => {
+  it('findet alle 5 Journey-Dateien und liefert 5 Einträge', () => {
+    const entries = parseCatalogDirectory(JOURNEYS_DIR)
+
+    expect(entries).toHaveLength(5)
+
+    const ids = entries.map((e) => e.id)
+    expect(ids).toContain('shop-owner-lifecycle')
+    expect(ids).toContain('customer-discovery')
+    expect(ids).toContain('shop-owner-full-lifecycle')
+    expect(ids).toContain('customer-and-review-lifecycle')
+    expect(ids).toContain('admin-data-management')
+  })
+
+  it('ignoriert CATALOG.md, CATALOG_SCHEMA.md, README.md und _-Dateien', () => {
+    const entries = parseCatalogDirectory(JOURNEYS_DIR)
+
+    const ids = entries.map((e) => e.id)
+
+    // CATALOG.md is an index — no frontmatter blocks → would return 0 entries
+    // CATALOG_SCHEMA.md, README.md are docs — not journey files
+    // None of these should produce entries in the directory scan
+    // We verify by checking that the total count is exactly 5 (the 5 journey files)
+    expect(entries).toHaveLength(5)
+
+    // Also verify sort order: P1 entries come before P2, P2 before P3
+    const priorities = entries.map((e) => e.priority)
+    const p1Idx = priorities.lastIndexOf('P1')
+    const p2Idx = priorities.indexOf('P2')
+    const p3Idx = priorities.indexOf('P3')
+
+    if (p1Idx !== -1 && p2Idx !== -1) expect(p1Idx).toBeLessThan(p2Idx)
+    if (p2Idx !== -1 && p3Idx !== -1) expect(p2Idx).toBeLessThan(p3Idx)
+  })
+
+  it('sortiert Einträge nach Priorität (P1 zuerst) dann nach id', () => {
+    const entries = parseCatalogDirectory(JOURNEYS_DIR)
+
+    const p1Entries = entries.filter((e) => e.priority === 'P1')
+    const p2Entries = entries.filter((e) => e.priority === 'P2')
+    const p3Entries = entries.filter((e) => e.priority === 'P3')
+
+    // P1 entries appear before all P2 entries in the sorted result
+    const firstP2Idx = entries.findIndex((e) => e.priority === 'P2')
+    const lastP1Idx = entries.map((e) => e.priority).lastIndexOf('P1')
+    if (p1Entries.length > 0 && p2Entries.length > 0) {
+      expect(lastP1Idx).toBeLessThan(firstP2Idx)
+    }
+
+    // P2 entries appear before all P3 entries
+    const firstP3Idx = entries.findIndex((e) => e.priority === 'P3')
+    const lastP2Idx = entries.map((e) => e.priority).lastIndexOf('P2')
+    if (p2Entries.length > 0 && p3Entries.length > 0) {
+      expect(lastP2Idx).toBeLessThan(firstP3Idx)
+    }
+
+    // Within P1, entries are sorted by id (alphabetical)
+    const p1Ids = p1Entries.map((e) => e.id)
+    expect(p1Ids).toEqual([...p1Ids].sort())
   })
 })

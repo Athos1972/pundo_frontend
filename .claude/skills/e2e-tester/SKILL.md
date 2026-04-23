@@ -117,8 +117,9 @@ ls e2e/journeys/CATALOG.md || echo "Kein Katalog vorhanden — Phase 0.5 übersp
 ```
 
 ```typescript
-// Intern (per parseCatalog aus e2e/journeys/_parser.ts):
-const catalog = parseCatalog(readFileSync('e2e/journeys/CATALOG.md', 'utf-8'))
+// Intern (per parseCatalogDirectory aus e2e/journeys/_parser.ts):
+// Liest alle <id>.md-Dateien im Verzeichnis — CATALOG.md ist nur Index
+const catalog = parseCatalogDirectory('e2e/journeys')
 const implemented = catalog.filter(e => e.status === 'implemented')
 
 // mustRun: Einträge deren touches-modules sich mit dem Phase-0-Diff schneiden

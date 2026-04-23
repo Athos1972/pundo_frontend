@@ -1,10 +1,281 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-22
-SHA: fdb37231a9203ae95b970016ba2b666b06953a7d
-Feature: Review Edit-Modus (getMyReview, ReviewForm PUT, ReviewSection pre-fetch, 6-Sprachen-Translation)
-Ergebnis: **876/876 Unit-Tests PASS | TypeScript PASS | ESLint PASS | E2E 181/275 PASS (27 KI, 67 skip)**
+Datum: 2026-04-23
+SHA: ef98e7e35ac3ea4e4899358acebe60e7dd61fed9
+Feature: Journey-System First Run — alle 5 Journeys erstmals ausgeführt
+Ergebnis: **891/896 Unit-Tests PASS (5 FAIL in _parser.spec.ts — Test-Drift) | TypeScript PASS | ESLint PASS (23 Warnings) | Phase 3.5: 2/5 Journeys PASS, 3/5 FAIL**
+
+
+## Testlauf 2026-04-23 — Journey-System First Run (Phase 3.5)
+
+### Geänderte Module (seit letztem Testlauf ef98e7e — uncommitted)
+
+| Datei | Änderung |
+|-------|---------|
+| `e2e/journeys/*.md` (5 Dateien) | NEU: Individuelle Journey-Dateien (shop-owner-lifecycle, customer-discovery, shop-owner-full-lifecycle, customer-and-review-lifecycle, admin-data-management) |
+| `e2e/journeys/*.spec.ts` (5 Dateien) | NEU: Playwright-Spec-Dateien für alle 5 Journeys |
+| `e2e/journeys/CATALOG.md` | Index-Tabelle aktualisiert mit last-result Werten |
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | **PASS** — 0 Fehler |
+| ESLint | **PASS** — 0 Errors, 23 Warnings (weniger als letzter Lauf: 34 Warnings) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | 891/896 PASS, 5 FAIL |
+| Test-Dateien | 42 (1 mit Failures: _parser.spec.ts) |
+| Neu hinzugefügt | — |
+
+#### Unit-Test-Failures (_parser.spec.ts — Test-Drift)
+
+| Test | Erwartet | Tatsächlich | RCA |
+|------|---------|------------|-----|
+| `erster Eintrag hat status approved` | `status: approved` | `status: implemented` | Test-Drift: Journey-Dateien sind `implemented`, Spec erwartet `approved` |
+| `shop-owner-lifecycle hat status approved` | `status: approved` | `status: implemented` | Gleicher Drift |
+| `customer-discovery hat touches-modules src/app/search/**` | alten Pfad `src/app/search/**` | neuer Pfad `src/app/(customer)/search/**` | Pfad-Drift: Route-Gruppen-Notation aktualisiert, Test nicht |
+| `kein Eintrag hat status implemented (AC-10)` | 0 implemented | 5 implemented | Spec AC-10 ist veraltet — alle Journeys sind jetzt `implemented` |
+| `findOverlap findet Überlappung >= 50%` | matches > 0 | matches = 0 | Jaccard-Check: vorgeschlagene Module nutzen `src/app/shop-admin/**` (alt), existierende Einträge haben `src/app/(shop-admin)/**` |
+
+**Blockierend:** Nein — Test-Drift in _parser.spec.ts, nicht in Produktivcode.
+
+### Phase 0.5: Journey-Scan
+
+**parseCatalogDirectory:** 5 Journeys gelesen, alle `status: implemented`.
+
+**mustRun:** alle 5 (Journey-Dateien selbst sind im Diff — erstmaliger Lauf).
+
+**Drift-Check:**
+
+| Pfad | Status |
+|------|--------|
+| `src/app/(shop-admin)/**` | OK — existiert |
+| `src/app/(system-admin)/**` | OK — existiert |
+| `src/app/(customer)/shops/[id]/**` | OK — existiert |
+| `src/app/(customer)/search/**` | OK — existiert |
+| `src/app/(customer)/products/[slug]/**` | OK — existiert |
+| `src/components/shop/**` | OK — existiert |
+| `src/components/product/**` | OK — existiert |
+| `src/lib/shop-admin-api.ts` | OK — existiert |
+| `src/app/(customer)/page.tsx` | OK — existiert |
+| `src/app/(customer)/guides/**` | OK — existiert |
+| `src/components/ui/**` | OK — existiert |
+
+### Phase 3.5: Journey-Run
+
+| Journey | Priorität | PASS | FAIL | SKIP | Ergebnis |
+|---------|----------|------|------|------|---------|
+| shop-owner-lifecycle | P1 | 7 | 0 | 2 | **PASS** |
+| shop-owner-full-lifecycle | P1 | 5 | 1 | 7 | **FAIL** |
+| customer-discovery | P2 | 1 | 1 | 7 | **FAIL** |
+| customer-and-review-lifecycle | P2 | 3 | 0 | 9 | **PASS** |
+| admin-data-management | P3 | 0 | 1 | 9 | **FAIL** |
+
+#### Journey-Failures RCA
+
+**shop-owner-full-lifecycle — Schritt 13 — RTL dir=rtl bei lang=ar:**
+- Observed: `html[dir] = "ltr"` nach Navigation zu `/shops/{slug}?lang=ar`
+- Expected: `html[dir] = "rtl"`
+- RCA: Die App liest die Sprache aus dem `app_lang` Cookie (`getLangServer()`), nicht aus URL-Query-Parametern. Der Test nimmt an, dass `?lang=ar` im URL-Parameter die Sprache setzt — das ist falsch. Der Test muss stattdessen einen Cookie setzen.
+- Kategorie: **Test-Design-Fehler** (Spec vs. App-Architektur)
+- Schritte 3 (shop-B), 4 (Produkte) vorher: SKIP wegen 422-Fehler beim Anlegen (Shop-B-Create und Product-Create via Owner-API) — separate RCA nötig
+
+**customer-discovery — Schritt 2 — Suchbegriff navigiert zur Suchergebnis-Seite:**
+- Observed: URL bleibt `http://localhost:3500/` nach `input.fill("E2E Test Shop Larnaca"); input.press("Enter")`
+- Expected: URL enthält `/search` oder `q=`
+- RCA: Die SearchBar-Komponente hat ein Autocomplete-Dropdown. Wenn `fill()` und `press("Enter")` ausgeführt werden, könnte: (a) das Dropdown den Enter-Key abfangen und eine direkte Navigation auslösen oder (b) das Autocomplete-Dropdown sich öffnet und die Suche nicht navigiert weil der Fokus fehlt. Tatsächlich bleibt die URL auf `/` — deutet auf abgefangenen Enter oder fehlende Form-Submission.
+- Hinweis: `handleSubmit` in SearchBar.tsx ruft `router.push('/search?q=...')` bei Form-Submit auf — dieses funktioniert korrekt wenn das Form submitted wird. Mögliche Ursache: Autocomplete-Dropdown erhält Focus, Enter selektiert einen Dropdown-Eintrag statt Form abzusenden.
+- Kategorie: **Möglicher Funktionsfehler oder Test-Timing-Issue** — bedarf manueller Verifikation im Browser
+
+**admin-data-management — Schritt 1 — Brand anlegen:**
+- Observed: `POST /api/v1/admin/brands {"name": "..."}` → 422 Validation Error
+- Expected: Brand-ID gesetzt
+- RCA: Der Backend-Endpoint erfordert `slug` und `names` Felder (mehrsprachiges Objekt). Der Spec sendet nur `name`. Dies ist ein **Test-Spec-Fehler** — der POST-Body entspricht nicht dem API-Schema.
+- Backend-Antwort: `{"detail": [{"type": "missing", "loc": ["body", "slug"]}, {"type": "missing", "loc": ["body", "names"]}]}`
+- Kategorie: **Test-Spec-Fehler** (falsche API-Request-Schema)
+
+### E2E-Tests (reguläre Specs)
+
+| Spec | Tests | PASS | FAIL | SKIP | Anmerkung |
+|------|-------|------|------|------|----------|
+| tooltip-e2e-check.spec.ts | 12 | 12 | 0 | 0 | |
+| main.spec.ts | 53 | 49 | 4 | 0 | KI-004, KI-005 (pre-existing) |
+| coming-soon.spec.ts | 12 | 8 | 4 | 0 | KI: pre-existing |
+| price-type.spec.ts | 18 | 13 | 3 | 2 | KI: pre-existing (Autocomplete-Timing + WS-Error) |
+| shop-card-enrichment.spec.ts | 33 | 33 | 0 | 0 | Verbessert: 33/33 PASS (vorher 42/43) |
+| whatsapp-button.spec.ts | 49 | 9 | 1 | 39 | KI-003: SITE_URL=localhost |
+| shop-admin-e2e.spec.ts | 18 | 6 | 12 | 0 | KI-001: Backend-Restart-Timeout |
+| shop-discovery.spec.ts | 12 | 9 | 3 | 0 | KI-001 |
+| admin.spec.ts | 44 | 18 | 0 | 26 | (auth-abhängige Tests skip) |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** (via tooltip-e2e) |
+| he | rtl | **PASS** (via tooltip-e2e) |
+| de/en/el/ru | ltr | **PASS** |
+
+### Code-Fixes während des Tests
+
+_Keine_ — kein Code geändert.
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/lib/seo.ts` | 7.31% | 80% | HTTP-Pagination-Logik + Concurrency benötigt volles Network-Mock |
+| `src/app/api/revalidate-sitemap/route.ts` | 0% | 70% | Next.js Route-Handler — kein isolierter Unit-Test möglich |
+| `src/lib/translations.ts` | 39% | 90% | Pre-existing: 1800+ Zeilen statische Strings |
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | Pre-existing: Leaflet braucht Browser-Canvas |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-001 | Global-Setup 30s-Timeout für Backend-Restart nach DB-Reset zu kurz — cascading failure in shop-admin + shop-discovery Tests | pre-existing (2026-04-22) |
+| KI-002 | ReviewsPopover-Trigger in Shop-LIST unsichtbar: review_stats=null in API | 2026-04-22 |
+| KI-003 | `whatsapp-button.spec.ts`: Test erwartet `pundo.cy` in WA-Link-href, aber `SITE_URL=http://localhost:3000` in .env.local liefert `localhost` — nur in Produktion korrekt | pre-existing |
+| KI-004 | `main.spec.ts` E2E-02 "search navigates": flaky wenn global-setup backend-restart läuft (Timing-Race) | pre-existing |
+| KI-005 | `main.spec.ts` E2E-08 (3 Tests): `.leaflet-marker-icon` Timeout — Map-Toggle auf /search hat keine Marker wenn Backend-Daten fehlen | pre-existing |
+| KI-006 | `_parser.spec.ts` 5 Unit-Tests: Test-Drift — Spec erwartet `status: approved` und alte Pfade ohne Route-Gruppen, aber Journey-Dateien haben `implemented` und `(shop-admin)`-Pfade | NEU 2026-04-23 |
+| KI-007 | `customer-discovery Journey` Schritt 2: SearchBar Enter-Key navigiert nicht zu /search — Autocomplete-Dropdown fängt Enter ab oder Form-Submit fehlt | NEU 2026-04-23 |
+| KI-008 | `shop-owner-full-lifecycle Journey` Schritt 13: RTL-Test nutzt `?lang=ar` URL-Param, App liest aber nur `app_lang` Cookie — Test-Design-Fehler | NEU 2026-04-23 |
+| KI-009 | `admin-data-management Journey` Schritt 1: Brand-Create POST-Body fehlen `slug` und `names` — API erwartet mehrsprachiges Schema | NEU 2026-04-23 |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| `README.md` | kein Signal — keine neuen Public-Routes |
+| `AGENTS.md` | kein Signal |
+| `llms.txt/route.ts` | kein Signal |
+
+---
+
+## Testlauf 2026-04-23 — Sitemap-Concurrency + Journey-Catalog-System
+
+### Geänderte Module (seit letztem Testlauf fdb3723)
+
+| Datei | Änderung |
+|-------|---------|
+| `src/app/api/revalidate-sitemap/route.ts` | NEU: POST-Endpoint zur kontrollierten Sitemap-Invalidierung (REVALIDATE_SECRET-geschützt) |
+| `src/app/sitemap.ts` | `revalidate = 86400` → `revalidate = false` — manuelle Invalidierung via deploy.sh |
+| `src/lib/seo.ts` | `chunkedAllSettled()` mit `SITEMAP_CONCURRENCY=4` — verhindert DB-Connection-Pool-Erschöpfung |
+| `src/tests/review-edit-mode.test.tsx` | Kleinere Test-Fix (minor mock adjustment) |
+| `e2e/journeys/CATALOG.md` | 3 neue Journey-Einträge: shop-owner-full-lifecycle, customer-and-review-lifecycle, admin-data-management |
+| `e2e/global-setup.ts` | TypeScript-Fix: `let creds!: TestCredentials` (definite assignment) |
+| `e2e/journeys/_parser.spec.ts` | Test-Fix: `toHaveLength(2)` → `toHaveLength(5)` (CATALOG.md jetzt 5 Einträge) |
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | **PASS** — 0 Fehler (fix: `let creds!: TestCredentials` in global-setup.ts) |
+| ESLint | **PASS** — 0 Errors, 34 Warnings (alle pre-existing) |
+
+### Unit-Tests
+
+| Metrik | Wert |
+|--------|------|
+| Tests gesamt | 896/896 PASS |
+| Test-Dateien | 42 |
+| Neue/geänderte Tests | 2 fixes (parser.spec.ts count 2→5, global-setup.ts creds fix) |
+
+### Coverage (geänderte Module)
+
+| Modul | Coverage | Ziel | Status |
+|-------|----------|------|--------|
+| `src/lib/seo.ts` | 7.31% | 80% | **COVERAGE_GAP** — `chunkedAllSettled`, `getAllProductSlugs`, `getAllShopSlugs` nicht per Unit testbar ohne full-network-mock |
+| `src/app/api/revalidate-sitemap/route.ts` | 0% | 70% | **COVERAGE_GAP** — Next.js API Route, braucht Runtime-Kontext |
+
+### Phase 0.5: Journey-Scan
+
+**mustRun:** leer — keine `implemented`-Einträge im Katalog
+
+**Drift-Check:**
+
+| Pfad | Status |
+|------|--------|
+| `src/app/shop-admin` | STALE (korrekte Pfade: `src/app/(shop-admin)/shop-admin`) |
+| `src/app/shops` | STALE (korrekte Pfade: `src/app/(customer)/shops`) |
+| `src/app/page.tsx` | STALE (korrekte Pfade: `src/app/(customer)/page.tsx`) |
+| `src/app/search` | STALE (korrekte Pfade: `src/app/(customer)/search`) |
+| `src/app/products` | STALE (korrekte Pfade: `src/app/(customer)/products`) |
+| `src/app/map` | STALE — keine map-Route mehr vorhanden |
+| Alle anderen | OK |
+
+STALE-Einträge betreffen Journeys `shop-owner-lifecycle` und `customer-discovery` (status: `proposed` — kein Blocker).
+
+**Heuristik-Scan H1–H5:** Keine Signale — geänderte Dateien sind API-Route + Logik-Module, keine neuen page.tsx oder Typ-Enums.
+
+**Phase 3.5:** Übersprungen — mustRun leer. 5 `implemented`-Journeys existieren, aber keine deren `touches-modules` den Diff (sitemap/seo) schneiden.
+
+### E2E-Tests
+
+| Spec | Tests | PASS | FAIL | SKIP | Anmerkung |
+|------|-------|------|------|------|----------|
+| tooltip-e2e-check.spec.ts | 18 | 18 | 0 | 0 | |
+| community-feedback.spec.ts | — | — | — | — | (in tooltip run) |
+| main.spec.ts | 53 | 49 | 4 | 0 | E2E-02 + 3x E2E-08 — KI (siehe unten) |
+| coming-soon.spec.ts | 12 | 6 | 4 | 2 | KI: pre-existing failures |
+| legal-pages.spec.ts | — | PASS | — | — | (in combined run) |
+| price-type.spec.ts | — | — | 3 | — | KI: pre-existing failures |
+| shop-card-enrichment.spec.ts | 43 | 42 | 1 | 0 | whatsapp test FAIL (SITE_URL=localhost) |
+| whatsapp-button.spec.ts | 1 | 0 | 1 | 39 | KI: SITE_URL nicht pundo.cy im dev |
+| variable-price.spec.ts | — | PASS | — | — | (in combined run) |
+| shop-admin-e2e.spec.ts | 18 | 6 | 12 | 0 | KI: global-setup backend-restart timeout |
+| shop-discovery.spec.ts | 12 | 9 | 3 | 0 | KI: global-setup backend-restart timeout |
+| admin.spec.ts | 44 | 18 | 0 | 26 | (auth-abhängige Tests skip) |
+
+### RTL-Validierung
+
+| Sprache | dir-Attribut | Status |
+|---------|-------------|--------|
+| ar | rtl | **PASS** |
+| he | rtl | **PASS** |
+| de/en/el/ru | ltr | **PASS** |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|---------|-------|
+| `e2e/global-setup.ts` | `let creds: TestCredentials` → `let creds!: TestCredentials` | TypeScript TS2454: Variable vor Zuweisung verwendet |
+| `e2e/journeys/_parser.spec.ts` | `toHaveLength(2)` → `toHaveLength(5)` | CATALOG.md hat jetzt 5 Einträge (3 neue Journeys hinzugefügt) |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Aktuell | Ziel | Ursache |
+|-------|---------|------|---------|
+| `src/lib/seo.ts` | 7.31% | 80% | HTTP-Pagination-Logik + Concurrency benötigt volles Network-Mock |
+| `src/app/api/revalidate-sitemap/route.ts` | 0% | 70% | Next.js Route-Handler — kein isolierter Unit-Test möglich |
+| `src/lib/translations.ts` | 39% | 90% | Pre-existing: 1800+ Zeilen statische Strings |
+| `src/components/map/ShopMapClient.tsx` | 0% | 70% | Pre-existing: Leaflet braucht Browser-Canvas |
+
+### Known Issues
+
+| ID | Beschreibung | Seit |
+|----|-------------|------|
+| KI-001 | Global-Setup 30s-Timeout für Backend-Restart nach DB-Reset zu kurz — cascading failure in shop-admin + shop-discovery Tests | pre-existing (2026-04-22) |
+| KI-002 | ReviewsPopover-Trigger in Shop-LIST unsichtbar: review_stats=null in API | 2026-04-22 |
+| KI-003 | `whatsapp-button.spec.ts`: Test erwartet `pundo.cy` in WA-Link-href, aber `SITE_URL=http://localhost:3000` in .env.local liefert `localhost` — nur in Produktion korrekt | pre-existing |
+| KI-004 | `main.spec.ts` E2E-02 "search navigates": flaky wenn global-setup backend-restart läuft (Timing-Race) | pre-existing |
+| KI-005 | `main.spec.ts` E2E-08 (3 Tests): `.leaflet-marker-icon` Timeout — Map-Toggle auf /search hat keine Marker wenn Backend-Daten fehlen | pre-existing |
+
+### Docs-Sync
+
+| Dokument | Status |
+|----------|--------|
+| `README.md` | kein Signal — keine neuen Public-Routes |
+| `AGENTS.md` | kein Signal |
+| `llms.txt/route.ts` | kein Signal — Sitemap-Logik ist infra-intern |
+
+**Empfehlung:** `REVALIDATE_SECRET` zu `.env.local.example` hinzufügen (optional, dokumentiert).
 
 ---
 

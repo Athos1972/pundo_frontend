@@ -9,13 +9,37 @@
 
 ## 1. Dateistruktur
 
-`CATALOG.md` besteht aus:
-1. Einem einmaligen **Datei-Header** (H1 + Beschreibung + SCHEMA_VERSION-Kommentar)
-2. Beliebig vielen **Journey-Einträgen**, jeweils:
-   - YAML-Frontmatter-Block (zwischen `---`-Trennern)
-   - Markdown-Body (`### Journey: <title>` + Prosa)
+Das Journey-Catalog-System besteht aus zwei Ebenen:
 
-Trenner zwischen Einträgen: Zeile mit exakt `---` auf Spaltenanfang.
+### 1a. Index: `CATALOG.md`
+
+`CATALOG.md` ist der **reine Index** aller Journeys:
+- Datei-Header (H1 + Beschreibung + SCHEMA_VERSION-Kommentar)
+- Eine Markdown-Tabelle mit einer Zeile pro Journey (ID, Title, Status, Priority, Last Result)
+- Keine Frontmatter-Blöcke — nur der Index
+
+Agents und Menschen nutzen `CATALOG.md` als Übersicht und navigieren von dort zu den Einzeldateien.
+
+### 1b. Journey-Dateien: `<id>.md`
+
+Jede Journey lebt in einer eigenen Datei `e2e/journeys/<id>.md`:
+1. YAML-Frontmatter-Block (zwischen `---`-Trennern) — vollständiges Schema wie bisher
+2. Markdown-Body (`### Journey: <title>` + Prosa)
+
+Dateiname = Journey-`id` (kebab-case, stabil). Niemals umbenennen — lieber `deprecated` + neue Datei.
+
+Trenner zwischen Frontmatter und Body: Zeile mit exakt `---` auf Spaltenanfang.
+
+### Erlaubte Dateien im Verzeichnis
+
+| Datei | Typ | Geparst von `parseCatalogDirectory`? |
+|---|---|---|
+| `CATALOG.md` | Index | nein (explizit ausgeschlossen) |
+| `CATALOG_SCHEMA.md` | Dokumentation | nein |
+| `README.md` | Dokumentation | nein |
+| `_archive.md` | Archiv | nein (`_`-Prefix) |
+| `_parser.ts` / `_parser.spec.ts` | Code | nein (kein `.md`) |
+| `<id>.md` | Journey-Datei | **ja** |
 
 ---
 

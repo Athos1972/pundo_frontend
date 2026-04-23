@@ -16,7 +16,10 @@ type Props = {
 export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeLabels }: Props) {
   const [selected, setSelected] = useState('')
 
-  const categories = [...new Set(guides.map((g) => g.category))]
+  const categories = [...new Set(guides.map((g) => g.category))].map((cat) => ({
+    value: cat,
+    label: categoryLabels[cat] ?? cat,
+  }))
   const filtered = selected ? guides.filter((g) => g.category === selected) : guides
 
   return (

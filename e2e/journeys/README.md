@@ -11,7 +11,11 @@ Du (Bernhard) bestätigst jeden Vorschlag mit `j` oder lehnst ihn mit `n` ab.
 ### Katalog ansehen
 
 ```bash
+# Index (alle Journeys auf einen Blick)
 cat e2e/journeys/CATALOG.md
+
+# Details einer einzelnen Journey
+cat e2e/journeys/shop-owner-lifecycle.md
 ```
 
 ### Einen Journey-Testlauf starten (nach Implementation)
@@ -74,7 +78,7 @@ Katalogeintrag anlegen? (j/n)
 
 Wenn du eine vorgeschlagene Journey genehmigen willst, ohne dass ein Agent gerade aktiv ist:
 
-1. Öffne `CATALOG.md`
+1. Öffne die Journey-Datei, z.B. `e2e/journeys/shop-owner-lifecycle.md`
 2. Ändere `status: proposed` → `status: approved`
 3. Aktualisiere `status-changed-at` auf jetzt (ISO-8601 UTC)
 4. Setze `status-changed-by-spec: ad-hoc`
@@ -89,32 +93,44 @@ Beim nächsten `/coder`-Lauf wird er die `approved`-Journey automatisch implemen
 Falls ein Agent "JourneyCatalogError" meldet:
 
 ```
-JourneyCatalogError: Missing required field 'status' at line 12
+JourneyCatalogError: Missing required field 'status' at line 12 (id: shop-owner-lifecycle)
 ```
 
-1. Öffne `CATALOG.md`
-2. Suche den Eintrag bei Zeile 12
+1. Öffne die entsprechende Journey-Datei, z.B. `e2e/journeys/shop-owner-lifecycle.md`
+2. Suche den Frontmatter-Block bei der genannten Zeile
 3. Füge das fehlende Pflichtfeld hinzu (siehe CATALOG_SCHEMA.md §2 für alle Pflichtfelder)
 4. Führe zur Verifikation aus: `npx vitest run e2e/journeys/_parser.spec.ts`
 
 ---
 
-## Fixture-Konventionen
-
-Journey-Fixtures (Test-Daten) werden in `e2e/journeys/fixtures/` abgelegt:
+## Dateistruktur
 
 ```
 e2e/journeys/
+├── CATALOG.md                         # Index-Tabelle aller Journeys (kein Frontmatter)
+├── CATALOG_SCHEMA.md                  # Schema-Referenz + Regeln für Agents
+├── README.md                          (diese Datei)
+├── _parser.ts                         # TypeScript-Parser (Vitest, kein Playwright)
+├── _parser.spec.ts                    # Parser-Tests (Vitest)
+├── shop-owner-lifecycle.md            # Journey-Datei (Frontmatter + Body)
+├── customer-discovery.md
+├── shop-owner-full-lifecycle.md
+├── customer-and-review-lifecycle.md
+├── admin-data-management.md
 ├── fixtures/
-│   ├── shop-owner.json     # Testdaten für Shop-Owner-Lifecycle
-│   └── products.json       # Produktdaten für Customer-Discovery
-├── CATALOG.md
-├── CATALOG_SCHEMA.md
-├── README.md               (diese Datei)
-├── _parser.ts              # TypeScript-Parser (Vitest, kein Playwright)
-├── _parser.spec.ts         # Parser-Tests (Vitest)
-└── <id>.spec.ts            # Journey-Tests (Playwright, erst wenn implemented)
+│   ├── shop-owner.json                # Testdaten für Shop-Owner-Lifecycle
+│   └── products.json                  # Produktdaten für Customer-Discovery
+└── <id>.spec.ts                       # Journey-Tests (Playwright, erst wenn implemented)
 ```
+
+**Zwei-Ebenen-Layout:**
+- `CATALOG.md` ist der reine Index (Tabelle). Keine Frontmatter-Blöcke darin.
+- Jede Journey hat eine eigene `<id>.md`-Datei mit YAML-Frontmatter + Markdown-Body.
+- `parseCatalogDirectory()` liest alle `<id>.md`-Dateien automatisch ein.
+
+## Fixture-Konventionen
+
+Journey-Fixtures (Test-Daten) werden in `e2e/journeys/fixtures/` abgelegt.
 
 Fixture-Format: JSON-Array, kompatibel mit Backend-Fixture-Loader.
 

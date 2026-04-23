@@ -17,32 +17,50 @@ export function ReviewModerationTable({ reviews: initial, tr }: Props) {
   const [reviews, setReviews] = useState(initial)
   const [pendingId, setPendingId] = useState<number | null>(null)
   const [reason, setReason] = useState<ReasonKey>('spam')
+  const [errorById, setErrorById] = useState<Record<number, string | null>>({})
 
   async function handleInvalidate(id: number) {
     if (!window.confirm(tr.reviews_confirm_invalidate)) return
-    const res = await fetch(`/api/customer/admin/reviews/${id}/invalidate`, {
+    // T1: Use /api/admin/... proxy — attaches admin_token cookie, not customer_token.
+    // This ensures the mutation reaches POST /api/v1/admin/reviews/{id}/invalidate on the backend,
+    // consistent with the read path used by the SSR loader (reviews/page.tsx).
+    // WARNING (R3): admin proxy only carries admin_token; shop_owner_token users may get 401.
+    // See 02-architecture.md open question Q2 for follow-up.
+    const res = await fetch(`/api/admin/reviews/${id}/invalidate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: tr[`reviews_reason_${reason}` as keyof ShopAdminTranslations] }),
+      // T2: Send the key ('spam' | 'offensive' | 'legal' | 'other') instead of a
+      // localised string so the backend stores a language-independent value.
+      // TODO: confirm reason payload format with backend (see T5 in 02-architecture.md)
+      body: JSON.stringify({ reason }),
     })
     if (res.ok) {
       setReviews((prev) =>
         prev.map((r) => r.id === id ? { ...r, is_visible: false } : r)
       )
+      setErrorById((prev) => ({ ...prev, [id]: null }))
+    } else {
+      setErrorById((prev) => ({ ...prev, [id]: tr.reviews_action_failed }))
     }
     setPendingId(null)
   }
 
   async function handleRestore(id: number) {
     if (!window.confirm(tr.reviews_confirm_restore)) return
-    const res = await fetch(`/api/customer/admin/reviews/${id}/restore`, {
+    // T1: Use /api/admin/... proxy — attaches admin_token cookie, not customer_token.
+    const res = await fetch(`/api/admin/reviews/${id}/restore`, {
       method: 'POST',
     })
     if (res.ok) {
       setReviews((prev) =>
         prev.map((r) => r.id === id ? { ...r, is_visible: true } : r)
       )
+      setErrorById((prev) => ({ ...prev, [id]: null }))
+    } else {
+      setErrorById((prev) => ({ ...prev, [id]: tr.reviews_action_failed }))
     }
+    // T3: reset pendingId after restore too (was missing before)
+    setPendingId(null)
   }
 
   if (reviews.length === 0) {
@@ -136,6 +154,11 @@ export function ReviewModerationTable({ reviews: initial, tr }: Props) {
               {tr.reviews_audit_log}
             </a>
           </div>
+
+          {/* T3: Inline error feedback — shown per-review, no toast framework needed */}
+          {errorById[review.id] && (
+            <p className="text-xs text-red-600 mt-2">{errorById[review.id]}</p>
+          )}
         </article>
       ))}
     </div>

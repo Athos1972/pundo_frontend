@@ -98,6 +98,11 @@ export async function getAdminPriceUnits(lang: string): Promise<PriceUnitOption[
   return res.json() as Promise<PriceUnitOption[]>
 }
 
+// Note: uploadShopLogo is intentionally NOT in this server-side file.
+// Client-side logo uploads go directly through fetch('/api/shop-admin/shop/logo')
+// in LogoUpload.tsx — same pattern as ImportPanel.tsx.
+// The catch-all proxy at /api/shop-admin/[...path]/route.ts handles auth attachment.
+
 // Categories are shared data needed for admin product forms.
 // Fetched via the public /categories endpoint (no auth required).
 export async function getAdminCategories(lang: string): Promise<{ id: number; name: string }[]> {

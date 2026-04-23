@@ -151,6 +151,7 @@ export const translations = {
     page_title_for_shops: 'pundo for Shops',
     page_title_shops: 'Shops',
     shops_empty: 'No shops found.',
+    shops_load_error: 'Could not load shops.',
     // Reviews hint
     reviews_how_it_works_toggle: 'How do reviews work?',
     reviews_how_it_works_body: 'Any registered user can rate a product or shop with 1–5 stars and optionally add a comment and up to 5 photos. Photos are moderated before publication. Reviews marked as inappropriate are reviewed by our team.',
@@ -453,6 +454,7 @@ export const translations = {
     page_title_for_shops: 'pundo für Shops',
     page_title_shops: 'Shops',
     shops_empty: 'Keine Shops gefunden.',
+    shops_load_error: 'Shops konnten nicht geladen werden.',
     // Reviews hint
     reviews_how_it_works_toggle: 'Wie funktionieren Bewertungen?',
     reviews_how_it_works_body: 'Jeder registrierte Nutzer kann ein Produkt oder einen Shop mit 1–5 Sternen bewerten und optional einen Kommentar und bis zu 5 Fotos hinzufügen. Fotos werden vor der Veröffentlichung moderiert. Unangemessene Bewertungen werden von unserem Team geprüft.',
@@ -755,6 +757,7 @@ export const translations = {
     page_title_for_shops: 'pundo для магазинов',
     page_title_shops: 'Магазины',
     shops_empty: 'Магазины не найдены.',
+    shops_load_error: 'Не удалось загрузить магазины.',
     // Reviews hint
     reviews_how_it_works_toggle: 'Как работают отзывы?',
     reviews_how_it_works_body: 'Любой зарегистрированный пользователь может оценить товар или магазин от 1 до 5 звёзд и добавить комментарий и до 5 фото. Фото проходят модерацию перед публикацией.',

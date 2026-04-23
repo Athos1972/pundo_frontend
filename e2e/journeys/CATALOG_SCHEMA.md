@@ -205,3 +205,64 @@ Der e2e-tester listet in Phase 0.5 explizit skipped-Einträge, die älter als 90
 > "Folgende N skipped-Journeys sind >90 Tage alt. Archivieren? (j/n)"
 
 Archivieren = Verschieben nach `e2e/journeys/_archive.md`, nicht Löschen.
+
+---
+
+## Journey-Prinzipien (Pflicht für alle Agents)
+
+### 1. Test-Daten-Matrix statt "Alles-in-einem"
+
+Wenn UI-Zustände sich gegenseitig ausschließen (z.B. Shop mit/ohne Logo, Produkt mit/ohne Foto), legt der Coder **separate benannte Fixtures** an — keine faule "Einheitslösung". Jede Fixture hat einen eindeutigen Namen und einen klar definierten Zweck (was wird damit geprüft?).
+
+Format im Runbook:
+| Fixture-Name | Was wird aufgebaut | Was wird damit geprüft |
+|---|---|---|
+| `shop-maximal` | Alle Flags true, alle Felder befüllt | Maximale UI-Befüllung, keine leeren Slots |
+| `shop-minimal` | Nur Pflichtfelder | Fallbacks, Default-Rendering |
+
+### 2. Kein Schöntesten (No Beautification)
+
+Wenn ein Journey-Test **FAIL** liefert:
+
+1. **STOPP** — Assertion NICHT verändern, bevor RCA abgeschlossen ist.
+2. **RCA dokumentieren** im Test-Report:
+   - Ist der Testfall falsch? (z.B. falscher Selektor, falsche Erwartung) → Testfix mit Begründung
+   - Ist die Funktionalität fehlerhaft? → Finding-Eintrag, kein Testfix
+3. **Erst nach RCA** darf der Testfall angepasst werden — und nur wenn er nachweislich falsch war.
+4. Findings werden in TESTSET.md unter `### Findings (unresolved)` eingetragen mit:
+   - Journey-ID, Schritt-Nummer, Expected, Actual, Datum, Screenshot-Pfad
+
+### 3. Human-readable Reports
+
+Jeder Journey-Lauf schreibt einen Report, der **ohne Code-Kenntnisse** nachvollziehbar ist:
+
+#### Report-Format pro Journey
+
+```
+## Journey: <title> — <PASS|FAIL|SKIP>
+Datum: YYYY-MM-DD HH:MM UTC
+Dauer: Xs
+
+### Aufgebaute Test-Daten
+| Fixture | ID/Slug | Aufgebaut am | Status |
+|---|---|---|---|
+| shop-maximal | shop-e2e-abc123 | :8500 | OK |
+
+### Schritt-für-Schritt-Protokoll
+| # | Beschreibung | Erwartet | Tatsächlich | Status |
+|---|---|---|---|---|
+| 1 | ShopCard zeigt Parking-Icon | Icon mit data-testid=parking-icon sichtbar | gefunden | PASS |
+| 7 | Tooltip auf Parking-Icon | "Parkplatz vorhanden" erscheint beim Hover | nicht gefunden | FAIL |
+
+### Findings (FAIL-Einträge)
+| Schritt | Erwartet | Tatsächlich | RCA | Screenshot |
+|---|---|---|---|---|
+| 7 | Tooltip erscheint | Kein Tooltip | Tooltip-Provider fehlt auf ShopCard | test-results/... |
+
+### Aufräumen
+| Fixture | Gelöscht | Status |
+|---|---|---|
+| shop-maximal | ja | OK |
+```
+
+Dieser Report wird in `e2e/journeys/reports/<journey-id>-<datum>.md` gespeichert.

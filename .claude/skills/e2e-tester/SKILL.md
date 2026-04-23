@@ -35,6 +35,9 @@ Browser-E2E-Tests durch.
 - Akzeptanzkriterien müssen MESSBAR sein (Selektor, URL, Text, CSS-Eigenschaft).
 - Kein automatisches Commit — User committet manuell.
 - Nicht blockieren bei Coverage-Unterschreitung — dokumentieren und weitermachen.
+- **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
+- **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
+- **Test-Daten-Matrix:** Gegenseitig ausschließende Zustände bekommen eigene Fixtures. Nie Zustände "zusammenpappen" um einen Test zu vereinfachen.
 
 ---
 
@@ -97,6 +100,110 @@ Geänderte Module: [Liste]
 Zugehörige Tests:  [Liste – vorhanden / fehlt]
 Ungetestete Module (unter Schwellwert): [Liste]
 ```
+
+---
+
+## Phase 0.5: Journey-Scan
+
+**Kommt nach Phase 0 (Scope-Ermittlung), vor Phase 1 (Statische Prüfung).**
+
+Lädt den Journey-Katalog, bestimmt welche Journeys laufen müssen, scannt proaktiv nach fehlenden Journeys und fragt den User.
+
+### Schritt 1: Katalog laden und mustRun-Liste aufbauen
+
+```bash
+# Katalog prüfen
+ls e2e/journeys/CATALOG.md || echo "Kein Katalog vorhanden — Phase 0.5 überspringen"
+```
+
+```typescript
+// Intern (per parseCatalog aus e2e/journeys/_parser.ts):
+const catalog = parseCatalog(readFileSync('e2e/journeys/CATALOG.md', 'utf-8'))
+const implemented = catalog.filter(e => e.status === 'implemented')
+
+// mustRun: Einträge deren touches-modules sich mit dem Phase-0-Diff schneiden
+const mustRun = implemented.filter(entry =>
+  entry.touchesModules.some(glob => diffIncludes(glob, phase0Diff))
+)
+```
+
+Wenn kein CATALOG.md existiert: `"Journey-Scan: kein Katalog gefunden — Phase 0.5 übersprungen"` in Abschlussbericht, weiter mit Phase 1.
+
+### Schritt 2: Drift-Check (AC-9)
+
+Für jeden Katalog-Eintrag (alle Status): prüfe den statischen Pfadpräfix jedes `touches-modules`-Globs.
+
+```bash
+# Beispiel: Glob "src/app/shop-admin/**" → statischer Präfix "src/app/shop-admin"
+ls src/app/shop-admin 2>/dev/null || echo "STALE: src/app/shop-admin"
+```
+
+- Bei fehlendem Pfad: Warnung `"Stale touches-modules in <journey-id>: <glob> existiert nicht mehr"` sammeln.
+- Stale Einträge zählen **konservativ als "muss laufen"** (nicht still übergehen) + Warnung im Abschlussbericht.
+- Drift-Warnings sind **kein Blocker** — dokumentieren und weitermachen.
+
+### Schritt 3: Heuristik-Scan — Neue Journeys proaktiv erkennen
+
+Scanne den Phase-0-Diff mit diesen Heuristiken:
+
+| # | Muster / Trigger | Vorschlags-Typ | Default `touches-modules` |
+|---|---|---|---|
+| H1 | Neue `src/app/<segment>/page.tsx` (außerhalb `api/`, `shop-admin/`, `admin/`) | `public-route-visibility-<segment>` | `src/app/<segment>/**`, `src/lib/api.ts` |
+| H2 | Neue Datei in `src/app/shop-admin/**` oder `src/app/admin/**` mit `page.tsx` | `role-boundary-<segment>` | `src/app/<segment>/**`, `src/lib/shop-admin-api.ts` |
+| H3 | Neues Status-Enum in `src/types/**/*.ts` (Regex: `status:\s*'[^']+'(\s*\|\s*'[^']+'){1,}`) | `state-transition-<Type>-<field>` | Alle `src/app/**/*` + `src/lib/**/*` die den Typ importieren |
+| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` | `src/lib/shop-admin-api.ts`, `src/app/shop-admin/**`, `src/app/shops/[id]/**` |
+| H5 | Neue API-Typ-Änderung via `src/types/api.ts` sichtbar (neues Feld/Enum) | `cross-role-<feature>` | `src/types/api.ts` |
+
+**Nicht-Trigger:** Tests, `.md`-Dateien, reine Tailwind-Klassen-Änderungen, `node_modules`.
+
+### Schritt 4: Deduplizierung
+
+Vor jedem Neu-Vorschlag: Jaccard-Overlap gegen alle Katalog-Einträge prüfen (nutze `findOverlap` aus `e2e/journeys/_parser.ts`):
+
+- `overlap >= 0.50` + Eintrag `proposed/approved/implemented` → **Merge-Vorschlag** statt Neu
+- `overlap >= 0.50` + Eintrag `skipped/deprecated` → **Unterdrücken**, nur mit Hinweis: `"früher abgelehnt am <datum>, Grund: <skip-reason>. Neu vorschlagen? j/n"`
+- `overlap < 0.50` → **Neuer Vorschlag**
+
+### Schritt 5: Max-3-Regel & Priorisierung
+
+Zeige pro Testlauf **maximal 3** Vorschläge. Priorisierung (Score, höchste zuerst):
+
+| Score | Kriterium |
+|-------|-----------|
+| +3 | `touches-roles` umfasst ≥ 2 Rollen |
+| +2 | Heuristik H3 (State-Transition) |
+| +1 | Heuristik H1 (neue öffentliche Route) |
+| +1 | Heuristik H4 (Write-to-Read) |
+
+Gleichstand → alphabetisch nach vorgeschlagener `id`.
+Überschuss → in `.claude/skills/e2e-tester/.journey_backlog` (eine ID pro Zeile) parken.
+
+**Skipped-Einträge älter als 90 Tage** separat listen:
+> "Folgende N skipped-Journeys sind >90 Tage alt. Archivieren? (j/n)"
+> Archivieren = Verschieben nach `e2e/journeys/_archive.md` (nicht löschen).
+
+### Schritt 6: User-Frage-Template
+
+```
+Journey-Scan-Ergebnis:
+  mustRun: [<id>, ...] (N Journeys — laufen in Phase 3.5)
+  Drift-Warnings: [<id>: <glob>] (kein Blocker)
+
+Mögliche fehlende Journeys:
+
+  1. id: <vorgeschlagene-id>
+     Grund: H1 — neue page.tsx in src/app/<segment>/
+     touches-modules: [src/app/<segment>/**, src/lib/api.ts]
+     Katalogeintrag anlegen als `approved`? (j/n)
+
+  2. ...
+
+  (Weitere N Vorschläge im .journey_backlog geparkt)
+```
+
+- User antwortet `j` → Eintrag als `approved` in CATALOG.md schreiben (User hat bestätigt → kein Zwischenschritt über `proposed`). Coder implementiert `.spec.ts` im nächsten Spec-Lauf.
+- User antwortet `n` → Eintrag als `skipped` schreiben mit `skip-reason: "Beim Testlauf <datum> abgelehnt"`.
+- Phase 0.5 schreibt **nur** nach User-Bestätigung — außer `last-run`/`last-result` (das macht Phase 4).
 
 ---
 
@@ -383,6 +490,79 @@ test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 3. Root Cause analysieren (nicht nur Symptom)
 4. Max 3 Versuche pro Fehler — dann KNOWN_ISSUE dokumentieren
 5. Weiter mit nächstem Test
+
+---
+
+## Phase 3.5: Journey-Run
+
+**Kommt nach Phase 3 (Browser-E2E-Tests), vor Phase 4 (Qualitäts-Gate).**
+
+Führt alle `implemented`-Journeys aus der `mustRun`-Liste (aus Phase 0.5) aus. Nur `implemented`-Einträge werden ausgeführt — niemals `proposed`, `approved`, `skipped` oder `deprecated`.
+
+### Schritt 1: mustRun-Journeys ausführen
+
+```bash
+# Für jeden Eintrag in mustRun:
+for journey_id in "${MUST_RUN[@]}"; do
+  spec_file=$(grep -A1 "id: $journey_id" e2e/journeys/CATALOG.md | grep spec-file | awk '{print $2}')
+  if [ -f "$spec_file" ]; then
+    npx playwright test "$spec_file"
+  else
+    echo "STALE spec-file: $spec_file für Journey $journey_id nicht gefunden → FAIL"
+  fi
+done
+```
+
+Wenn `mustRun` leer ist: `"Phase 3.5: Keine mustRun-Journeys — übersprungen"` in Abschlussbericht.
+
+### Schritt 2: Ergebnis pro Journey erfassen
+
+| Ergebnis | Bedingung |
+|----------|-----------|
+| `PASS` | Playwright exit code 0 |
+| `FAIL` | Playwright exit code != 0 oder `spec-file` fehlt trotz `status: implemented` |
+| `SKIP` | Journey in mustRun aber explizit via `test.skip` in spec-file |
+
+**Stale spec-file** (Datei fehlt trotz `status: implemented`):
+- Ergebnis: `FAIL`
+- Warnung im Abschlussbericht: `"Stale spec-file in <journey-id>: <pfad> existiert nicht"`
+- User-Entscheidung für Korrektur: Status zurück auf `approved`? (j/n)
+
+### Schritt 3: last-run-Updates (OHNE User-Rückfrage)
+
+Phase 4 schreibt für jeden gelaufenen Journey-Eintrag in CATALOG.md **ohne User-Bestätigung**:
+
+```yaml
+last-run: 2026-04-23T15:30:00Z     # jetzt, ISO-8601 UTC
+last-result: PASS                    # oder FAIL / SKIP
+last-run-sha: abc1234               # aktueller git-SHA
+```
+
+Das ist die einzige Katalog-Mutation, die **keine User-Bestätigung** erfordert.
+
+### Journey-Report schreiben
+
+Nach jedem Journey-Lauf schreibt der Tester einen Human-readable Report nach dem Format aus `CATALOG_SCHEMA.md §Journey-Prinzipien`:
+
+- Datei: `e2e/journeys/reports/<journey-id>-<YYYY-MM-DD>.md`
+- Enthält: Aufgebaute Fixtures mit IDs, Schritt-für-Schritt-Protokoll (Expected/Actual/Status), Findings-Tabelle, Cleanup-Status
+- Dieser Report ist für manuelle Tester lesbar — keine Code-Kenntnisse nötig
+
+### RCA-Pflicht bei FAIL
+
+Wenn ein Journey-Schritt FAIL liefert:
+1. Screenshot und Trace automatisch gespeichert (Playwright-Standard)
+2. Assertion wird NICHT verändert
+3. Tester dokumentiert in Finding: Expected, Actual, mögliche Ursache
+4. Tester fragt User: "Step X failed. RCA: [mögliche Ursache]. Ist das ein Test-Fehler oder ein Funktions-Fehler? (test-fix/finding)"
+5. Bei `finding`: Eintrag in TESTSET.md unter `### Findings (unresolved)`, Katalog-`last-result: FAIL`
+6. Bei `test-fix`: Testfall mit Begründung korrigieren, dann erneut laufen
+
+### Was Phase 3.5 NICHT macht
+
+- **Niemals** `status` eines Eintrags ändern (außer FAIL-Korrektur bei stale spec-file — und nur mit User-Bestätigung).
+- **Niemals** `proposed`, `skipped` oder `deprecated`-Einträge ausführen.
+- **Keine neuen Journey-Vorschläge** anlegen (das ist Phase 0.5).
 
 ---
 

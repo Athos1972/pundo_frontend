@@ -247,6 +247,48 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 
 ---
 
+## Journey-Deltas (Katalog-Validierung)
+
+**Dieser Abschnitt ist bei JEDEM Architektur-Spec verpflichtend.** Er kommt nach dem normalen Architekturabschnitt, vor der Task-Liste.
+
+### Schritt-für-Schritt
+
+1. **Lies** `e2e/journeys/CATALOG.md`. Filtere Einträge, deren `touches-modules` sich mit den in §1 dieses Architektur-Specs genannten Modulen schneiden.
+
+2. **Validiere** jeden vom Designer als `proposed` markierten Journey-Eintrag zu diesem Spec:
+   - Stimmt jeder `touches-modules`-Glob mit der realen Modulstruktur überein? (`ls`-Check auf den ersten nicht-Wildcard-Teil des Globs)
+   - Wenn nicht: Korrektur im Vorschlag formulieren.
+
+3. **Drift-Check** auf bestehenden Einträgen (AC-9):
+   - Für jeden Glob: `ls`-Check auf den statischen Präfix (vor `/**` oder `[param]`).
+   - Bei fehlendem Pfad: `"Stale touches-modules in <journey-id>: <glob> existiert nicht mehr"` + Fix-Vorschlag.
+   - Stale Einträge zählen konservativ als "muss laufen" bis der Fix bestätigt ist.
+
+4. **Eigene Vorschläge** (Phase 1 — eingeschränkt):
+   - Phase 1: Nur Drift-Korrekturen und Validierung. Keine neuen Architekt-Heuristiken (verschoben auf Iteration 2).
+   - Expliziter Hinweis im Abschnitt: "Keine zusätzlichen Vorschläge dieser Iteration."
+
+5. **Schreibe Abschnitt "Journey-Deltas"** in `02-architecture.md` mit:
+   - (a) Validierte Designer-Vorschläge (korrekt / mit Korrekturbedarf)
+   - (b) Drift-Fixes (falls vorhanden)
+   - (c) Explizitem Hinweis zu eigenen Vorschlägen (Phase 1: keine)
+
+6. **User-Bestätigung** nach bekanntem Muster:
+   ```
+   Folgende Journey-Katalog-Anpassungen schlage ich vor:
+   - [Delta-Beschreibung] — Bestätigen? (j/n)
+   ```
+   Warte auf Antwort bevor du CATALOG.md schreibst.
+
+### Was der Architect NICHT darf
+
+- **Niemals** `status: implemented` setzen — das ist ausschließlich Coder-Recht.
+- **Niemals** `last-run` / `last-result` ändern — das ist ausschließlich e2e-tester-Recht.
+- **Niemals** Katalog-Einträge ohne User-Bestätigung mutieren (außer als Vorschlag im Spec).
+- **Darf** primär `touches-modules` korrigieren (Drift-Fix nach User-Bestätigung).
+
+---
+
 ## Bekannte Trade-offs & Architektur-Entscheidungen
 
 | Entscheidung | Begründung | Alternative wenn... |

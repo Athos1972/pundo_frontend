@@ -1,7 +1,12 @@
 import type { MetadataRoute } from 'next'
 import { getSiteUrl, getAllProductSlugs, getAllShopSlugs } from '@/lib/seo'
 
-export const revalidate = 86400
+// Kein automatisches Revalidate. Die Sitemap-Regeneration zieht ~125
+// Backend-Requests (siehe seo.ts) — das wollen wir kontrolliert per Deploy
+// triggern, nicht zufaellig durch einen Bot-Crawl. deploy.sh ruft nach
+// erfolgreichem Hochfahren POST /api/revalidate-sitemap (Header
+// x-revalidate-secret) und holt /sitemap.xml einmal vor.
+export const revalidate = false
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl()

@@ -1,0 +1,5 @@
+# Journey-Backlog — e2e-tester
+# Überschüssige Journey-Vorschläge (mehr als 3 pro Lauf) werden hier geparkt.
+# Format: eine Journey-ID pro Zeile.
+# Beim nächsten Testlauf werden diese erneut geprüft (Dedup + Max-3-Regel).
+# Diese Datei ist absichtlich in Git — sie ist keine temporäre Datei.

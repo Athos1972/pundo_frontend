@@ -30,6 +30,9 @@ const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort
 
 export default defineConfig({
   testDir: './e2e',
+  // Exclude files with `_` prefix — those are Vitest unit tests (e.g. _parser.spec.ts),
+  // not Playwright browser tests. Journey spec files (without `_`) are included via testDir.
+  testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
   globalSetup: './e2e/global-setup.ts',
   // Limit parallelism to avoid overloading the standalone Next.js server under concurrent requests
   workers: 3,

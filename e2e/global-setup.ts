@@ -166,7 +166,7 @@ export default async function globalSetup() {
   const pyBin = `${BACKEND_REPO}/.venv/bin/python`
   const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
 
-  let creds: TestCredentials
+  let creds!: TestCredentials
   // Retry up to 3x — TRUNCATE CASCADE can deadlock with backend's open connections
   let dbErr: unknown
   for (let attempt = 1; attempt <= 3; attempt++) {

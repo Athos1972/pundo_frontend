@@ -68,7 +68,7 @@ function splitIntoBlocks(markdown: string): { header: string; rawBlocks: string[
 
   // The first `---` starts the first frontmatter block.
   // Everything before the first `---` is the file header.
-  let headerLines: string[] = []
+  const headerLines: string[] = []
   let i = 0
 
   while (i < lines.length) {
@@ -484,8 +484,8 @@ export function findOverlap(
   for (const entry of catalog) {
     const entrySet = new Set(entry.touchesModules.map(normalize))
 
-    const intersection = new Set([...proposedSet].filter((m) => entrySet.has(m)))
-    const union = new Set([...proposedSet, ...entrySet])
+    const intersection = new Set(Array.from(proposedSet).filter((m) => entrySet.has(m)))
+    const union = new Set([...Array.from(proposedSet), ...Array.from(entrySet)])
 
     if (union.size === 0) continue
 

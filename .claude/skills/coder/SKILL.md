@@ -68,7 +68,8 @@ Lese mindestens:
 1. **Verstehen:** Lies bestehenden Code in den betroffenen Modulen
 2. **Typen zuerst:** TypeScript-Interfaces in `src/types/api.ts` ergänzen/anpassen
 3. **Implementieren:** Ändere/ergänze die Source-Files
-4. **Tests schreiben:** Schreibe Unit-Tests (siehe Abschnitt 2)
+4. **Journey-Implementierung:** Katalog prüfen, `approved`-Journeys für diesen Spec implementieren (siehe Abschnitt 1.5)
+5. **Tests schreiben:** Schreibe Unit-Tests (siehe Abschnitt 2)
 5. **Tests laufen lassen:** Alle neuen Tests müssen grün sein
 6. **TypeScript prüfen:** `npx tsc --noEmit` — keine Fehler erlaubt
 7. **Lint prüfen:** `npm run lint` — keine Fehler erlaubt
@@ -91,6 +92,55 @@ Lese mindestens:
 // Nutze für: onClick, onChange, useEffect, useSearchParams, useRouter
 // Browser-APIs: window, localStorage, navigator.geolocation
 ```
+
+---
+
+## 1.5 Journey-Implementierung
+
+**Nach** Typen-Ergänzung (`src/types/`), **vor** Unit-Tests: Katalog prüfen und ggf. Journey-Spec-Files anlegen.
+
+### Schritt-für-Schritt
+
+1. **Lies** `e2e/journeys/CATALOG.md`.
+
+2. **Filtere** Einträge mit **`status: approved`** UND **`proposed-in-spec == <aktueller-spec-slug>`**.
+
+3. **Für jeden Treffer:**
+   - (a) Lege/aktualisiere `e2e/journeys/<id>.spec.ts` nach dem im Body der Journey festgehaltenen Runbook.
+   - (b) Schreibe Test-Schritte deterministisch: Port **3500** (Frontend) + **8500** (Backend), Fixture-Setup im `beforeAll`.
+   - (c) Flippe im Frontmatter von `CATALOG.md`:
+     ```
+     status: implemented
+     spec-file: e2e/journeys/<id>.spec.ts
+     status-changed-at: <jetzt ISO-8601 UTC>
+     status-changed-by-spec: <aktueller-spec-slug>
+     ```
+
+4. **Wenn keine `approved`-Einträge gefunden:** Schreibe in `03-implementation.md` "Keine approved-Journeys für diesen Spec — Journey-Implementierung übersprungen."
+
+#### Fixture-Prinzipien bei Journey-Implementierung
+
+- **Separate Fixtures für ausschließende Zustände:** Wenn ein UI-Element in zwei Zuständen vorkommen kann (mit/ohne Foto, mit/ohne Logo, offen/geschlossen), lege **zwei benannte Fixtures** an — nicht eine "Alles-Fixture".
+- **Fixture-Naming:** `<journey-prefix>-<fixture-zweck>`, z.B. `e2e-lifecycle-shop-maximal`, `e2e-lifecycle-shop-minimal`
+- **Fixture-Tabelle im Spec:** Jede Journey-Spec beginnt mit einem Kommentar-Block der alle Fixtures mit Zweck listet (für manuelle Nachvollziehbarkeit).
+
+#### Report-Generierung
+
+Die Journey-Spec schreibt am Ende einen Human-readable Report nach `e2e/journeys/reports/<id>-<datum>.md`. Format: siehe CATALOG_SCHEMA.md §Journey-Prinzipien. Playwright-Hook: `test.afterAll` schreibt den Report — auch bei Failure.
+
+#### RCA-Pflicht
+
+Wenn beim Entwickeln einer Journey-Spec ein Test-Schritt nicht grün wird:
+1. Prüfe zuerst: Ist die Erwartung korrekt? (Hast du den richtigen Selektor, die richtige URL, den richtigen API-Endpunkt?)
+2. Prüfe dann: Liefert das Backend die erwarteten Daten?
+3. Dokumentiere die Ursache im Spec-Kommentar, bevor du die Assertion anpasst.
+4. Wenn die Funktionalität fehlerhaft ist: Lass den Test FAIL und vermerke es in der Journey-Übergabe an den e2e-tester.
+
+### Was der Coder NICHT darf
+
+- **Niemals** Einträge mit `status: proposed`, `skipped` oder `deprecated` berühren. Diese werden wortlos übersprungen.
+- **Niemals** selbst neue Journey-Vorschläge anlegen. Der Coder ist **reiner Konsument** des Katalogs.
+- **Niemals** einen `proposed`-Eintrag direkt auf `implemented` setzen (Pflicht-Zwischenschritt: `approved`).
 
 ---
 
@@ -285,6 +335,8 @@ ESLint: fehlerfrei / X Warnings
 Backend-Änderungen nötig: Ja / Nein
   Falls Ja: <was genau, welcher Endpunkt>
   → pundo_main_backend: /architect dann /coder
+
+Journeys implementiert: [IDs oder "keine approved-Journeys für diesen Spec"]
 
 Empfehlung an E2E-Tester:
   - Welche Seiten/Flows sind besonders relevant?

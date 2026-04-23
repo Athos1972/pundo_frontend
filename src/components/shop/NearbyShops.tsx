@@ -50,9 +50,10 @@ export function NearbyShops({ lang }: { lang: string }) {
   }
 
   if (status === 'error') {
+    const tr = t(lang)
     return (
       <p className="text-sm text-text-muted py-4">
-        {t(lang).backend_unreachable}{' '}
+        {errorMsg.startsWith('API ') ? tr.shops_load_error : tr.backend_unreachable}{' '}
         <span className="text-text-light text-xs font-mono">{errorMsg}</span>
       </p>
     )

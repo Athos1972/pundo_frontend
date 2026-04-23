@@ -1060,6 +1060,7 @@ export const translations = {
     page_title_for_shops: 'pundo για Καταστήματα',
     page_title_shops: 'Καταστήματα',
     shops_empty: 'Δεν βρέθηκαν καταστήματα.',
+    shops_load_error: 'Αδυναμία φόρτωσης καταστημάτων.',
     // Reviews hint
     reviews_how_it_works_toggle: 'Πώς λειτουργούν οι αξιολογήσεις;',
     reviews_how_it_works_body: 'Κάθε εγγεγραμμένος χρήστης μπορεί να αξιολογήσει με 1–5 αστέρια και να προσθέσει σχόλιο και έως 5 φωτογραφίες. Οι φωτογραφίες ελέγχονται πριν τη δημοσίευση.',
@@ -1362,6 +1363,7 @@ export const translations = {
     page_title_for_shops: 'pundo للمتاجر',
     page_title_shops: 'المتاجر',
     shops_empty: 'لم يتم العثور على متاجر.',
+    shops_load_error: 'تعذّر تحميل المتاجر.',
     // Reviews hint
     reviews_how_it_works_toggle: 'كيف تعمل التقييمات؟',
     reviews_how_it_works_body: 'يمكن لأي مستخدم مسجّل تقييم منتج أو متجر بـ 1–5 نجوم وإضافة تعليق وما يصل إلى 5 صور. تُراجَع الصور قبل النشر.',
@@ -1664,6 +1666,7 @@ export const translations = {
     page_title_for_shops: 'pundo לחנויות',
     page_title_shops: 'חנויות',
     shops_empty: 'לא נמצאו חנויות.',
+    shops_load_error: 'לא ניתן לטעון את החנויות.',
     // Reviews hint
     reviews_how_it_works_toggle: 'איך ביקורות עובדות?',
     reviews_how_it_works_body: 'כל משתמש רשום יכול לדרג מוצר או חנות ב-1–5 כוכבים ולהוסיף תגובה ועד 5 תמונות. התמונות עוברות בקרה לפני פרסום.',

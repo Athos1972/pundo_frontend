@@ -212,7 +212,7 @@ export function ShopsContent({ lang }: { lang: string }) {
 
       {!loading && errorMsg && (
         <p className="text-sm text-text-muted py-4">
-          {tr.backend_unreachable}{' '}
+          {errorMsg.startsWith('API ') ? tr.shops_load_error : tr.backend_unreachable}{' '}
           <span className="text-text-light text-xs font-mono">{errorMsg}</span>
         </p>
       )}

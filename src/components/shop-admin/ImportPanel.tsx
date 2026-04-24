@@ -4,6 +4,7 @@
 import { useState, useTransition, useRef } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
+import { FieldCatalog } from './FieldCatalog'
 import type { ImportStatus, ImportUploadResult } from '@/types/shop-admin'
 
 interface ImportPanelProps {
@@ -21,6 +22,14 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
   const [isPendingSync, startSyncTransition] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
 
+  function _mapUploadError(detail: string | undefined): string {
+    if (!detail) return tr.error_generic
+    if (detail.startsWith('Unsupported file format')) return tr.upload_error_unsupported_format
+    if (detail.startsWith('xls file could not be read')) return tr.upload_error_xls_unreadable
+    if (detail.startsWith('File too large')) return tr.upload_error_too_large
+    return tr.error_generic
+  }
+
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -35,7 +44,8 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
           setUploadResult(result)
           showToast(tr.upload_success.replace('{n}', String(result.imported)), 'success')
         } else {
-          showToast(tr.error_generic, 'error')
+          const body = await res.json().catch(() => null)
+          showToast(_mapUploadError(body?.detail), 'error')
         }
       } catch {
         showToast(tr.error_generic, 'error')
@@ -110,7 +120,16 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
       {/* Excel / CSV Upload */}
       <section className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
         <h2 className="text-base font-semibold text-gray-800">{tr.upload_label}</h2>
-        <p className="text-xs text-gray-400">.xlsx, .csv — {tr.download_template}</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">{tr.upload_formats_hint}</p>
+          <a
+            href="/api/shop-admin/import/template"
+            download
+            className="text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+          >
+            {tr.download_template}
+          </a>
+        </div>
 
         <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl py-8 px-4 cursor-pointer transition-colors
           ${isPendingUpload ? 'border-gray-200 bg-gray-50 cursor-wait' : 'border-gray-300 hover:border-accent'}`}>
@@ -121,7 +140,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
           <input
             ref={fileRef}
             type="file"
-            accept=".xlsx,.csv"
+            accept=".xlsx,.xls,.csv"
             className="sr-only"
             onChange={handleUpload}
             disabled={isPendingUpload}
@@ -129,11 +148,16 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
           />
         </label>
 
+        <FieldCatalog lang={lang} />
+
         {uploadResult && (
           <div className={`rounded-lg px-4 py-3 text-sm ${uploadResult.errors.length > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
             <p className="font-medium">{tr.upload_success.replace('{n}', String(uploadResult.imported))}</p>
             {uploadResult.errors.length > 0 && (
               <>
+                {uploadResult.errors.some((e) => e.message.includes('missing required column: name')) && (
+                  <p className="text-amber-800 mt-1 text-xs font-medium">{tr.upload_hint_see_catalog}</p>
+                )}
                 <p className="text-amber-700 mt-1">{tr.upload_errors.replace('{n}', String(uploadResult.errors.length))}</p>
                 <ul className="mt-2 text-xs text-amber-600 space-y-0.5 max-h-32 overflow-y-auto">
                   {uploadResult.errors.map((err) => (

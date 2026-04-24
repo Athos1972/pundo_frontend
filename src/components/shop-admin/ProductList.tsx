@@ -2,6 +2,7 @@
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
@@ -44,6 +45,22 @@ export function ProductList({ initialItems, lang }: ProductListProps) {
       <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
         {items.map((product) => (
           <div key={product.id} className="flex items-center gap-3 px-4 py-3">
+            {/* Thumbnail — first photo or placeholder */}
+            <div className="relative w-12 h-12 shrink-0 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+              {product.images?.[0]?.url ? (
+                <Image
+                  src={product.images[0].url}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center text-gray-200 text-xl select-none">
+                  &#128247;
+                </span>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 truncate">{product.name}</p>
               <p className="text-xs text-gray-400">

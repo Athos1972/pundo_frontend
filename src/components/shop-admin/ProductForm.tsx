@@ -1,13 +1,14 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { FormField } from './FormField'
 import { showToast } from './Toast'
 import { PriceTierEditor } from './PriceTierEditor'
-import type { AdminProduct, PriceTier, PriceUnitOption } from '@/types/shop-admin'
+import { ProductPhotoUpload } from './ProductPhotoUpload'
+import type { AdminProduct, AdminProductImage, PriceTier, PriceUnitOption } from '@/types/shop-admin'
 
 interface Category { id: number; name: string }
 
@@ -81,6 +82,16 @@ export function ProductForm({ product, categories, priceUnits, lang }: ProductFo
 
   const isEdit = !!product
 
+  // Image state
+  const [images, setImages] = useState<AdminProductImage[]>(product?.images ?? [])
+  // Original image ids for edit-mode diff (to detect removals)
+  const originalImageIds = useRef<Set<number>>(new Set((product?.images ?? []).map((img) => img.id)))
+  // Pending files for create-mode
+  const pendingFilesRef = useRef<File[]>([])
+  const handlePendingFilesChange = useCallback((files: File[]) => {
+    pendingFilesRef.current = files
+  }, [])
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const data = new FormData(e.currentTarget)
@@ -113,6 +124,41 @@ export function ProductForm({ product, categories, priceUnits, lang }: ProductFo
 
         await saveTiers(productId, product?.price_tiers ?? [], tiers)
 
+        if (!isEdit) {
+          // Create-mode: upload any pending files sequentially
+          for (const file of pendingFilesRef.current) {
+            try {
+              const form = new FormData()
+              form.append('file', file)
+              await fetch(`/api/shop-admin/products/${productId}/images`, {
+                method: 'POST',
+                body: form,
+              })
+              // Errors are non-fatal; product is saved, photos are optional
+            } catch {
+              // non-fatal
+            }
+          }
+        } else {
+          // Edit-mode: delete removed images
+          const currentIds = new Set(images.map((img) => img.id))
+          for (const origId of originalImageIds.current) {
+            if (!currentIds.has(origId)) {
+              await fetch(`/api/shop-admin/products/${productId}/images/${origId}`, {
+                method: 'DELETE',
+              }).catch(() => { /* non-fatal */ })
+            }
+          }
+          // Reorder if there are images
+          if (images.length > 0) {
+            await fetch(`/api/shop-admin/products/${productId}/images/reorder`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order: images.map((img) => img.id) }),
+            }).catch(() => { /* non-fatal */ })
+          }
+        }
+
         showToast(tr.saved, 'success')
         router.push('/shop-admin/products')
         router.refresh()
@@ -143,6 +189,15 @@ export function ProductForm({ product, categories, priceUnits, lang }: ProductFo
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </FormField>
+
+      {/* Product photos — between category and pricing */}
+      <ProductPhotoUpload
+        productId={isEdit ? product!.id : undefined}
+        images={images}
+        onChange={setImages}
+        onPendingFilesChange={handlePendingFilesChange}
+        lang={lang}
+      />
 
       <PriceTierEditor
         tiers={tiers}

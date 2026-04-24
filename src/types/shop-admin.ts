@@ -55,12 +55,19 @@ export interface PriceTier {
   steps: PriceTierStep[]
 }
 
+export interface AdminProductImage {
+  id: number
+  url: string          // primary display URL (card variant)
+  sort_order: number
+}
+
 export interface AdminProduct {
   id: number
   name: string
   category_id: number
   available: boolean
   price_tiers: PriceTier[]
+  images?: AdminProductImage[]  // product photos, ordered by sort_order (backend defaults to [])
 }
 
 export interface AdminProductList {

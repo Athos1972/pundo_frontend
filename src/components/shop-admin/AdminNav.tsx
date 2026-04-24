@@ -66,7 +66,7 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
     { href: '/shop-admin/dashboard', label: tr.nav_dashboard, icon: '⊞' },
     { href: '/shop-admin/profile', label: tr.nav_profile, icon: '🏪' },
     { href: '/shop-admin/hours', label: tr.nav_hours, icon: '🕐' },
-    { href: '/shop-admin/products', label: tr.nav_products, icon: '📦' },
+    // nav_products removed — all product management is now in /offers (unified Item+Offer model)
     { href: '/shop-admin/offers', label: tr.nav_offers, icon: '🏷️' },
     { href: '/shop-admin/import', label: tr.nav_import, icon: '⬆' },
     { href: '/shop-admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },

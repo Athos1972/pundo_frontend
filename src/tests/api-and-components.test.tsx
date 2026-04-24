@@ -275,14 +275,21 @@ describe('ProductList', () => {
 // ─── OfferList ────────────────────────────────────────────────────────────────
 
 describe('OfferList (shop-admin)', () => {
-  const makeOffer = (id: number, archived = false) => ({
+  const makeOffer = (id: number, archived = false): import('@/types/shop-admin').AdminOffer => ({
     id,
+    shop_listing_id: 100 + id,
     title: `Offer ${id}`,
     description: 'Test',
-    price: '5.00',
+    price_type: 'fixed',
+    price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: '5.00', currency: 'EUR' }] }],
+    currency: 'EUR',
     valid_from: '2026-01-01',
     valid_until: '2026-12-31',
+    source: 'shop_manual',
+    offer_url: null,
     archived,
+    crawled_at: null,
+    created_at: '2026-01-01T00:00:00Z',
   })
 
   it('shows active tab by default', async () => {

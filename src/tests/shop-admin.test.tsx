@@ -120,13 +120,15 @@ describe('Middleware route matching', () => {
 // ─── AdminNav ─────────────────────────────────────────────────────────────────
 
 describe('AdminNav', () => {
-  it('renders all nav items', async () => {
+  it('renders all nav items (products removed — now merged in offers)', async () => {
     const { AdminNav } = await import('@/components/shop-admin/AdminNav')
     const { tAdmin } = await import('@/lib/shop-admin-translations')
     const tr = tAdmin('en')
     render(<AdminNav tr={tr} ownerName="Test Owner" />)
     expect(screen.getAllByText(tr.nav_dashboard).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(tr.nav_products).length).toBeGreaterThan(0)
+    // nav_products removed — products management merged into /shop-admin/offers
+    expect(screen.queryAllByText(tr.nav_products).length).toBe(0)
+    expect(screen.getAllByText(tr.nav_offers).length).toBeGreaterThan(0)
     expect(screen.getAllByText(tr.nav_api_keys).length).toBeGreaterThan(0)
   })
 
@@ -250,12 +252,24 @@ describe('ProductList', () => {
 // ─── OfferList tabs ───────────────────────────────────────────────────────────
 
 describe('OfferList', () => {
-  const active = [
-    { id: 1, title: 'Summer Sale', description: '', price: '5.00', valid_from: '2026-06-01', valid_until: '2026-08-31', archived: false },
-  ]
-  const expired = [
-    { id: 2, title: 'Winter Sale', description: '', price: '3.00', valid_from: '2025-12-01', valid_until: '2026-01-31', archived: true },
-  ]
+  const makeOffer = (id: number, title: string, archived: boolean, valid_until: string): import('@/types/shop-admin').AdminOffer => ({
+    id,
+    shop_listing_id: 100 + id,
+    title,
+    description: null,
+    price_type: 'fixed',
+    price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: '5.00', currency: 'EUR' }] }],
+    currency: 'EUR',
+    valid_from: '2026-01-01',
+    valid_until,
+    source: 'shop_manual',
+    offer_url: null,
+    archived,
+    crawled_at: null,
+    created_at: '2026-01-01T00:00:00Z',
+  })
+  const active = [makeOffer(1, 'Summer Sale', false, '2026-08-31')]
+  const expired = [makeOffer(2, 'Winter Sale', true, '2026-01-31')]
 
   it('shows active offers by default', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')

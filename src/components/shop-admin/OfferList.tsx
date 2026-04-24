@@ -5,12 +5,37 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
-import type { AdminOffer } from '@/types/shop-admin'
+import type { AdminOffer, ItemSource } from '@/types/shop-admin'
 
 interface OfferListProps {
   activeItems: AdminOffer[]
   expiredItems: AdminOffer[]
   lang: string
+}
+
+function sourceBadge(source: ItemSource | undefined, tr: ReturnType<typeof tAdmin>) {
+  const label = source === 'scraper' ? tr.source_scraper
+    : source === 'shop_manual' ? tr.source_shop_manual
+    : source === 'shop_upload' ? tr.source_shop_upload
+    : source === 'spotted' ? tr.source_spotted
+    : source === 'admin' ? tr.source_admin
+    : (source ?? '')
+  const cls = source === 'scraper' ? 'bg-gray-100 text-gray-500'
+    : source === 'shop_manual' ? 'bg-green-100 text-green-700'
+    : source === 'shop_upload' ? 'bg-blue-100 text-blue-700'
+    : source === 'spotted' ? 'bg-purple-100 text-purple-700'
+    : source === 'admin' ? 'bg-yellow-100 text-yellow-700'
+    : 'bg-gray-100 text-gray-500'
+  return <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${cls}`}>{label}</span>
+}
+
+function formatDateRange(from: string | null, until: string | null): string {
+  if (!from && !until) return '–'
+  const f = from ? from.slice(0, 10) : ''
+  const u = until ? until.slice(0, 10) : ''
+  if (f && u) return `${f} – ${u}`
+  if (f) return `from ${f}`
+  return `until ${u}`
 }
 
 function isExpired(offer: AdminOffer): boolean {
@@ -61,9 +86,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
   function handleDelete(id: number) {
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/shop-admin/offers/${id}`, {
-          method: 'DELETE',
-        })
+        const res = await fetch(`/api/shop-admin/offers/${id}`, { method: 'DELETE' })
         if (res.ok) {
           setActive((prev) => prev.filter((o) => o.id !== id))
           setExpired((prev) => prev.filter((o) => o.id !== id))
@@ -78,6 +101,20 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
       }
       setDeleteConfirmId(null)
     })
+  }
+
+  function getDisplayName(offer: AdminOffer): string {
+    // Prefer item name from shop_listing if embedded, fall back to title
+    return offer.title ?? `Offer #${offer.id}`
+  }
+
+  function getPriceDisplay(offer: AdminOffer): string {
+    if (offer.price_type === 'on_request') return 'on request'
+    if (offer.price_type === 'free') return 'free'
+    const tier = offer.price_tiers?.[0]
+    const step = tier?.steps?.[0]
+    if (step?.price) return `${step.price} ${step.currency}`
+    return ''
   }
 
   return (
@@ -105,10 +142,13 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
           {items.map((offer) => (
             <div key={offer.id} className="flex items-start gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800">{offer.title}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-medium text-gray-800">{getDisplayName(offer)}</p>
+                  {sourceBadge(offer.source, tr)}
+                </div>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {offer.valid_from} – {offer.valid_until}
-                  {offer.price && ` · ${offer.price}`}
+                  {formatDateRange(offer.valid_from, offer.valid_until)}
+                  {getPriceDisplay(offer) && ` · ${getPriceDisplay(offer)}`}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -116,7 +156,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   href={`/shop-admin/offers/${offer.id}/edit`}
                   className="text-xs text-accent hover:underline"
                 >
-                  {tr.edit}
+                  {offer.source === 'scraper' ? tr.edit : tr.edit}
                 </Link>
                 {tab === 'active' && (
                   confirmId === offer.id ? (

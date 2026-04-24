@@ -9,6 +9,8 @@ import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
 import type { AdminShop, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory } from '@/types/shop-admin'
 
+const FIXED_PLATFORM_KEYS = new Set(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x'])
+
 interface ProfileFormProps {
   shop: AdminShop | null
   lang: string
@@ -81,14 +83,16 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
           const body = await res.json().catch(() => null)
           if (body?.error === 'social_link_blocked') {
             const blocked = body as SocialLinkBlockedError
-            setServerErrors((prev) => ({
-              ...prev,
-              [blocked.key]: {
-                category: blocked.category,
-                resolved_host: blocked.resolved_host,
-                via_shortener: blocked.via_shortener,
-              },
-            }))
+            const errorEntry: SocialLinkFieldError = {
+              category: blocked.category,
+              resolved_host: blocked.resolved_host,
+              via_shortener: blocked.via_shortener,
+            }
+            setServerErrors((prev) => {
+              const updates: Record<string, SocialLinkFieldError> = { [blocked.key]: errorEntry }
+              if (!FIXED_PLATFORM_KEYS.has(blocked.key)) updates['other'] = errorEntry
+              return { ...prev, ...updates }
+            })
             showToast(tr.social_blocked_toast, 'error')
           } else {
             showToast(tr.error_generic, 'error')

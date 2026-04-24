@@ -62,6 +62,16 @@ export function FieldCatalog({ lang }: FieldCatalogProps) {
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono text-gray-700">true</code>
               </td>
             </tr>
+            <tr>
+              <td className="py-1.5 pe-3">
+                <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono">image_url</code>
+              </td>
+              <td className="py-1.5 pe-3 text-gray-500">{tr.field_catalog_required_no}</td>
+              <td className="py-1.5 pe-3 text-gray-600">{tr.field_image_url_desc}</td>
+              <td className="py-1.5">
+                <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono text-gray-700">https://example.com/product.jpg</code>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

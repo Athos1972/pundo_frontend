@@ -1,32 +1,32 @@
 'use client'
 
 import { useState } from 'react'
-import type { SysAdminShopOwnerOffer } from '@/types/system-admin'
+import type { SysAdminOffer } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { SimpleEntityForm } from '@/components/system-admin/SimpleEntityForm'
 
 interface Props {
-  offer: SysAdminShopOwnerOffer
+  offer: SysAdminOffer
   tr: SysAdminTranslations
 }
 
 export function ShopOwnerOfferEditForm({ offer, tr }: Props) {
   const [values, setValues] = useState({
-    title: offer.title,
+    title: offer.title ?? '',
     description: offer.description ?? '',
-    price: offer.price ?? '',
     valid_from: offer.valid_from ?? '',
     valid_until: offer.valid_until ?? '',
+    offer_url: offer.offer_url ?? '',
   })
 
   return (
     <SimpleEntityForm
       fields={[
-        { name: 'title', label: tr.offer_title, required: true },
+        { name: 'title', label: tr.offer_title },
         { name: 'description', label: tr.offer_desc, as: 'textarea', rows: 3 },
-        { name: 'price', label: tr.price },
         { name: 'valid_from', label: tr.valid_from, type: 'date' },
         { name: 'valid_until', label: tr.valid_until, type: 'date' },
+        { name: 'offer_url', label: 'Offer URL', type: 'url' },
       ]}
       values={values}
       onChange={(name, value) => setValues((v) => ({ ...v, [name]: value }))}

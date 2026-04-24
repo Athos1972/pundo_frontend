@@ -23,9 +23,9 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
 
   const columns: Column[] = [
     { key: 'id', label: tr.id },
-    { key: 'shop_id', label: tr.shop },
+    { key: 'shop_listing_id', label: 'Shop Listing' },
     { key: 'title', label: tr.offer_title },
-    { key: 'price', label: tr.price },
+    { key: 'source', label: 'Source' },
     { key: 'valid_from', label: tr.valid_from },
     { key: 'valid_until', label: tr.valid_until },
     {

@@ -26,9 +26,9 @@ touches-states:
   - Shop.status:inactive
 status-changed-at: 2026-04-23T15:00:00Z
 status-changed-by-spec: journey-catalog-system-20260423
-last-run: 2026-04-23T13:44:00Z
-last-result: FAIL
-last-run-sha: ef98e7e35ac3ea4e4899358acebe60e7dd61fed9
+last-run: 2026-04-24T14:00:00Z
+last-result: PASS
+last-run-sha: bc4e8ac89c083856c0eb12e76a581461f768787b
 ---
 
 ### Journey: Shop-Owner Full Lifecycle + UI-Kombinations-Matrix

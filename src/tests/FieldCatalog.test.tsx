@@ -22,6 +22,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('renders field names for German', async () => {
@@ -33,6 +34,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('renders field names for Greek', async () => {
@@ -44,6 +46,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('renders field names for Russian', async () => {
@@ -55,6 +58,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('renders field names for Arabic', async () => {
@@ -66,6 +70,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('renders field names for Hebrew', async () => {
@@ -77,6 +82,7 @@ describe('FieldCatalog', () => {
     expect(codeTexts).toContain('name')
     expect(codeTexts).toContain('category')
     expect(codeTexts).toContain('available')
+    expect(codeTexts).toContain('image_url')
   })
 
   it('RTL: code elements have dir="ltr" for Arabic', async () => {
@@ -111,11 +117,11 @@ describe('FieldCatalog', () => {
     expect(screen.getByText('Required')).toBeInTheDocument()
   })
 
-  it('shows Optional for category and available', async () => {
+  it('shows Optional for category, available, and image_url', async () => {
     const { FieldCatalog } = await import('@/components/shop-admin/FieldCatalog')
     render(<FieldCatalog lang="en" />)
     const optionalBadges = screen.getAllByText('Optional')
-    expect(optionalBadges).toHaveLength(2)
+    expect(optionalBadges).toHaveLength(3)
   })
 
   it('falls back to English for unknown lang', async () => {

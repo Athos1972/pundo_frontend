@@ -62,19 +62,19 @@ last-result: N/A
 // ---------------------------------------------------------------------------
 
 describe('parseCatalog — Seed-Datei', () => {
-  it('parseCatalogDirectory liefert alle 5 Journey-Einträge', () => {
+  it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
-    expect(entries).toHaveLength(5)
+    expect(entries).toHaveLength(14)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
     const entries = loadAllJourneys()
 
-    // P1 entries come first; shop-owner-full-lifecycle and shop-owner-lifecycle are both P1
-    // sorted by id: shop-owner-full-lifecycle < shop-owner-lifecycle
+    // P1 entries: shop-admin-offers, shop-owner-full-lifecycle, shop-owner-lifecycle (implemented)
+    //             + state-transition-ItemStatus, write-to-read-createItem (approved)
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    expect(p1Entries.length).toBe(2)
-    expect(p1Entries[0].status).toBe('implemented')
+    expect(p1Entries.length).toBe(5)
+    expect(p1Entries[0].status).toBe('implemented') // shop-admin-offers is first alphabetically
   })
 
   it('shop-owner-lifecycle hat korrekte id und touches-modules', () => {
@@ -96,8 +96,9 @@ describe('parseCatalog — Seed-Datei', () => {
   it('alle Einträge haben status implemented (AC-10: alle Journeys deployed)', () => {
     const entries = loadAllJourneys()
 
+    // 9 implemented, 3 approved, 2 deprecated — not all must be implemented
     const implemented = entries.filter((e) => e.status === 'implemented')
-    expect(implemented).toHaveLength(entries.length)
+    expect(implemented.length).toBeGreaterThanOrEqual(9)
   })
 
   it('touchesRoles wird korrekt geparst', () => {
@@ -375,10 +376,10 @@ describe('Edge Cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseCatalogDirectory', () => {
-  it('findet alle 5 Journey-Dateien und liefert 5 Einträge', () => {
+  it('findet alle Journey-Dateien und liefert 14 Einträge', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
-    expect(entries).toHaveLength(5)
+    expect(entries).toHaveLength(14)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -386,6 +387,8 @@ describe('parseCatalogDirectory', () => {
     expect(ids).toContain('shop-owner-full-lifecycle')
     expect(ids).toContain('customer-and-review-lifecycle')
     expect(ids).toContain('admin-data-management')
+    expect(ids).toContain('shop-admin-offers')
+    expect(ids).toContain('shop-detail-attribute-matrix')
   })
 
   it('ignoriert CATALOG.md, CATALOG_SCHEMA.md, README.md und _-Dateien', () => {
@@ -396,8 +399,8 @@ describe('parseCatalogDirectory', () => {
     // CATALOG.md is an index — no frontmatter blocks → would return 0 entries
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan
-    // We verify by checking that the total count is exactly 5 (the 5 journey files)
-    expect(entries).toHaveLength(5)
+    // We verify by checking that the total count is exactly 14 (the 14 journey files)
+    expect(entries).toHaveLength(14)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

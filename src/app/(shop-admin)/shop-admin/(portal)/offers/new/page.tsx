@@ -1,16 +1,15 @@
 import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { OfferForm } from '@/components/shop-admin/OfferForm'
-import { getAdminProducts } from '@/lib/shop-admin-api'
+import { getAdminPriceUnits } from '@/lib/shop-admin-api'
 
 export default async function NewOfferPage() {
   const lang = await getLangServer()
   const tr = tAdmin(lang)
 
-  let products: { id: number; name: string }[] = []
+  let priceUnits: Awaited<ReturnType<typeof getAdminPriceUnits>> = []
   try {
-    const data = await getAdminProducts(lang)
-    products = data.items.map((p) => ({ id: p.id, name: p.name }))
+    priceUnits = await getAdminPriceUnits(lang)
   } catch {
     // Backend not yet available
   }
@@ -18,7 +17,7 @@ export default async function NewOfferPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-gray-900">{tr.add_offer}</h1>
-      <OfferForm products={products} lang={lang} />
+      <OfferForm priceUnits={priceUnits} lang={lang} />
     </div>
   )
 }

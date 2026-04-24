@@ -8,8 +8,12 @@ import type {
   ShopOwner,
   AdminShop,
   OpeningHours,
-  AdminProductList,
   AdminOfferList,
+  AdminShopListingList,
+  AdminShopListing,
+  AdminItem,
+  ItemSearchResult,
+  ItemType,
   ApiKey,
   ImportStatus,
   PriceUnitOption,
@@ -56,16 +60,56 @@ export async function getOpeningHours(lang: string): Promise<OpeningHours[]> {
   return apiFetchAdmin<OpeningHours[]>('/shop/hours', lang)
 }
 
-export async function getAdminProducts(
+// ─── Items ───────────────────────────────────────────────────────────────────
+
+/** Search items (for ItemPickerModal) — GET /api/v1/shop-owner/items */
+export async function searchItems(
+  params: { q?: string; ean?: string; limit?: number },
   lang: string,
-  params: { q?: string; limit?: number; offset?: number } = {},
-): Promise<AdminProductList> {
+): Promise<ItemSearchResult[]> {
+  const qs = new URLSearchParams()
+  if (params.q) qs.set('q', params.q)
+  if (params.ean) qs.set('ean', params.ean)
+  if (params.limit != null) qs.set('limit', String(params.limit))
+  const q = qs.toString()
+  return apiFetchAdmin<ItemSearchResult[]>(`/items${q ? `?${q}` : ''}`, lang)
+}
+
+/** Create a new item — POST /api/v1/shop-owner/items */
+export async function createItem(
+  data: { name_de: string; item_type: ItemType; category_id: number; ean?: string; brand_id?: number },
+  lang: string,
+): Promise<AdminItem> {
+  return apiFetchAdmin<AdminItem>('/items', lang, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+// ─── ShopListings ─────────────────────────────────────────────────────────────
+
+/** List shop listings for the authenticated shop — GET /api/v1/shop-owner/shop-listings */
+export async function getAdminShopListings(
+  params: { q?: string; limit?: number; offset?: number },
+  lang: string,
+): Promise<AdminShopListingList> {
   const qs = new URLSearchParams()
   if (params.q) qs.set('q', params.q)
   if (params.limit != null) qs.set('limit', String(params.limit))
   if (params.offset != null) qs.set('offset', String(params.offset))
   const q = qs.toString()
-  return apiFetchAdmin<AdminProductList>(`/products${q ? `?${q}` : ''}`, lang)
+  return apiFetchAdmin<AdminShopListingList>(`/shop-listings${q ? `?${q}` : ''}`, lang)
+}
+
+/** Create a ShopListing after item selection — POST /api/v1/shop-owner/shop-listings */
+export async function createShopListing(
+  data: { item_id: number; sku?: string; shop_url?: string },
+  lang: string,
+): Promise<AdminShopListing> {
+  return apiFetchAdmin<AdminShopListing>('/shop-listings', lang, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function getAdminOffers(

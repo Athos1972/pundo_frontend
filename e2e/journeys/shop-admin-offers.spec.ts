@@ -767,9 +767,10 @@ test.describe.serial('Shop-Admin Offers — Full Matrix', () => {
     await page.waitForTimeout(2000)
 
     if (capturedBody) {
+      const body = capturedBody as Record<string, unknown>
       expect(
-        capturedBody.price,
-        `REGRESSION: OfferForm sent price="${capturedBody.price}" instead of null — the price:'' bug is back`
+        body['price'],
+        `REGRESSION: OfferForm sent price="${body['price']}" instead of null — the price:'' bug is back`
       ).toBeNull()
     } else {
       // Couldn't capture body (maybe form redirected too fast)

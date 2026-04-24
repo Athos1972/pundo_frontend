@@ -375,8 +375,16 @@ export default async function globalSetup() {
   const storageState = await context.storageState()
   await browser.close()
 
-  // ── 5. State + Credentials speichern ──────────────────────────────────────
-  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState }
+  // ── 5. Admin-Token für System-Admin-Tests holen ───────────────────────────
+  let adminToken: string | null = null
+  try {
+    adminToken = await adminLogin()
+  } catch (err) {
+    console.warn('[E2E Setup] Admin-Token konnte nicht ermittelt werden (System-Admin-Tests werden geskippt):', err)
+  }
+
+  // ── 6. State + Credentials speichern ──────────────────────────────────────
+  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState, adminToken }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
   console.log(`[E2E Setup] State gespeichert: ${STATE_FILE}`)
   console.log('[E2E Setup] Setup abgeschlossen.\n')

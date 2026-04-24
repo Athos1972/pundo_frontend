@@ -118,6 +118,26 @@ Falls eine Anforderung Backend-Änderungen erfordert:
 - **Backend-Skills:** `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
 - Immer explizit kommunizieren: „Für dieses Feature braucht es Backend-Änderungen: [was genau]"
 
+### ⚠️ PFLICHT: Backend-Architect bei Backend-Änderungen
+
+Wenn `02-architecture.md` Backend-Anforderungen enthält (neue Endpoints, DB-Schema-Änderungen, Migration, Worker-Umbau): **automatisch den Backend-Architect anstoßen**.
+
+Vorgehen:
+1. Frontend-`02-architecture.md` fertigschreiben
+2. Sofort danach: Backend-Architect-Agent starten mit:
+   - Design-Dokument (`01-design.md`) als Basis
+   - Frontend-Architektur-Dokument (`02-architecture.md`, Abschnitt "Backend-Anforderungen") als Kontext
+   - Ziel: `specs/<feature-slug>/02-backend-architecture.md` im Frontend-Repo (gemeinsamer Spec-Hub)
+   - Backend-Architect-Skill: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/architect/SKILL.md`
+3. Dem User mitteilen, dass Backend-Architect parallel läuft
+
+**Erkennungsmerkmale für Backend-Änderungen** (mindestens eines trifft zu):
+- Neue API-Endpoints nötig
+- DB-Schema ändert sich (neue Tabellen, Spalten, Constraints)
+- Bestehende Endpoints ändern ihre Payload-Shape
+- Background-Worker müssen umgebaut werden
+- Alembic-Migration nötig
+
 ---
 
 ## Datenpfade & Datenfluss

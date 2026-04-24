@@ -1,7 +1,7 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
 import { FieldCatalog } from './FieldCatalog'
@@ -29,6 +29,34 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
     if (detail.startsWith('File too large')) return tr.upload_error_too_large
     return tr.error_generic
   }
+
+  // Auto-poll for image download status after upload with pending images
+  useEffect(() => {
+    if (!uploadResult?.image_download_pending) return
+
+    let cancelled = false
+
+    async function pollStatus() {
+      try {
+        const res = await fetch('/api/shop-admin/import/status')
+        if (!cancelled && res.ok) {
+          const data: ImportStatus = await res.json()
+          setStatus(data)
+        }
+      } catch { /* ignore */ }
+    }
+
+    const t1 = setTimeout(async () => {
+      await pollStatus()
+      const t2 = setTimeout(pollStatus, 8000)
+      return () => clearTimeout(t2)
+    }, 3000)
+
+    return () => {
+      cancelled = true
+      clearTimeout(t1)
+    }
+  }, [uploadResult])
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -166,6 +194,32 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
                 </ul>
               </>
             )}
+          </div>
+        )}
+
+        {/* Info block: image downloads pending */}
+        {(uploadResult?.image_download_pending ?? 0) > 0 && (
+          <div className="rounded-lg px-4 py-3 text-sm bg-blue-50 border border-blue-200">
+            <p>{tr.image_download_pending.replace('{n}', String(uploadResult!.image_download_pending))}</p>
+          </div>
+        )}
+
+        {/* Amber banner: image download errors */}
+        {(status.image_download_errors?.length ?? 0) > 0 && (
+          <div className="rounded-lg px-4 py-3 text-sm bg-amber-50 border border-amber-200">
+            <p className="font-medium">
+              {tr.image_download_errors_title.replace('{n}', String(status.image_download_errors!.length))}
+            </p>
+            <details>
+              <summary className="cursor-pointer text-amber-700 mt-1">{tr.image_download_errors_detail_toggle}</summary>
+              <ul className="mt-2 text-xs space-y-1">
+                {status.image_download_errors!.map((err, i) => (
+                  <li key={i}>
+                    {err.product_name} · <code dir="ltr">{err.url}</code> · {err.reason}
+                  </li>
+                ))}
+              </ul>
+            </details>
           </div>
         )}
       </section>

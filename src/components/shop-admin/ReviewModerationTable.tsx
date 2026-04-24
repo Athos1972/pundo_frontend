@@ -30,8 +30,7 @@ export function ReviewModerationTable({ reviews: initial, tr }: Props) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // T2: Send the key ('spam' | 'offensive' | 'legal' | 'other') instead of a
-      // localised string so the backend stores a language-independent value.
-      // TODO: confirm reason payload format with backend (see T5 in 02-architecture.md)
+      // localised string — backend accepts Optional[str], key is language-independent.
       body: JSON.stringify({ reason }),
     })
     if (res.ok) {

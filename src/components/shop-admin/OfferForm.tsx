@@ -36,12 +36,13 @@ export function OfferForm({ offer, products, lang }: OfferFormProps) {
     startTransition(async () => {
       try {
         const productId = data.get('product_id')
+        const priceRaw = data.get('price')
         const body = {
           title: data.get('title'),
-          description: data.get('description') || '',
-          price: data.get('price') || '',
-          valid_from: data.get('valid_from'),
-          valid_until: data.get('valid_until'),
+          description: data.get('description') || null,
+          price: priceRaw ? priceRaw : null,
+          valid_from: data.get('valid_from') || null,
+          valid_until: data.get('valid_until') || null,
           ...(productId ? { product_id: Number(productId) } : {}),
         }
         const url = isEdit ? `/api/shop-admin/offers/${offer!.id}` : '/api/shop-admin/offers'

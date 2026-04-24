@@ -13,12 +13,22 @@ interface OfferListProps {
   lang: string
 }
 
+function isExpired(offer: AdminOffer): boolean {
+  if (!offer.valid_until) return false
+  return new Date(offer.valid_until) < new Date()
+}
+
+function isDeletable(offer: AdminOffer): boolean {
+  return offer.archived || isExpired(offer)
+}
+
 export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
   const tr = tAdmin(lang)
   const [tab, setTab] = useState<'active' | 'expired'>('active')
   const [active, setActive] = useState(activeItems)
   const [expired, setExpired] = useState(expiredItems)
   const [confirmId, setConfirmId] = useState<number | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const items = tab === 'active' ? active : expired
@@ -45,6 +55,28 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
         showToast(tr.error_generic, 'error')
       }
       setConfirmId(null)
+    })
+  }
+
+  function handleDelete(id: number) {
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/shop-admin/offers/${id}`, {
+          method: 'DELETE',
+        })
+        if (res.ok) {
+          setActive((prev) => prev.filter((o) => o.id !== id))
+          setExpired((prev) => prev.filter((o) => o.id !== id))
+          showToast(tr.delete, 'success')
+        } else if (res.status === 409) {
+          showToast(tr.offer_delete_active_error, 'error')
+        } else {
+          showToast(tr.error_generic, 'error')
+        }
+      } catch {
+        showToast(tr.error_generic, 'error')
+      }
+      setDeleteConfirmId(null)
     })
   }
 
@@ -106,6 +138,32 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                       className="text-xs text-gray-400 hover:text-orange-500"
                     >
                       {tr.archive}
+                    </button>
+                  )
+                )}
+                {isDeletable(offer) && (
+                  deleteConfirmId === offer.id ? (
+                    <span className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleDelete(offer.id)}
+                        disabled={isPending}
+                        className="text-xs text-white bg-red-600 px-2 py-0.5 rounded hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {tr.delete}
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="text-xs text-gray-400"
+                      >
+                        {tr.cancel}
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteConfirmId(offer.id)}
+                      className="text-xs text-gray-400 hover:text-red-600"
+                    >
+                      {tr.delete}
                     </button>
                   )
                 )}

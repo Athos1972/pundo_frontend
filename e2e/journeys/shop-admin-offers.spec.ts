@@ -19,9 +19,9 @@
  *   - Post-action API verification via fetch() to BACKEND_URL
  *   - Customer-facing checks navigate to /shops/[slug]
  *
- * FINDINGS documented inline:
- *   - B4: PATCH product_id: null is silently ignored by backend (cannot unlink product)
- *   - D1: Customer shop page /shops/[slug] does not render shop_owner_offers section
+ * Fixes verified (2026-04-23):
+ *   - B4: PATCH product_id: null now correctly unlinks product (backend model_fields_set fix)
+ *   - D1: Customer shop page /shops/[slug] now renders active offers section (new endpoint + UI)
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -488,14 +488,10 @@ test.describe.serial('Shop-Admin Offers — Full Matrix', () => {
     expect(updated?.product_id, 'B3: product_id not updated').toBe(ctx.productId)
   })
 
-  test('B4 — [FINDING] Unlink product via PATCH product_id: null → documents backend behavior', async () => {
-    // FINDING: This test is annotated with test.fail() because the backend has a confirmed bug:
-    // patch_offer() uses `if body.product_id is not None:` — null values are silently ignored.
-    // PATCH { product_id: null } does NOT unlink the product.
-    // Fix required in backend: use model_fields_set (Pydantic v2) to distinguish null from missing.
-    // test.fail() means: this test PASSES when the assertion fails (expected failure),
-    // and would FAIL if the bug is fixed (then test.fail() should be removed).
-    test.fail()
+  test('B4 — Unlink product via PATCH product_id: null → product_id becomes null', async () => {
+    // FIX verified (2026-04-23): Backend patch_offer() now uses model_fields_set (Pydantic v2)
+    // so PATCH { product_id: null } correctly unlinks the product.
+    // test.fail() removed — this test should now PASS.
 
     if (!ctx.productId) {
       test.skip(true, 'productId not available')
@@ -517,20 +513,13 @@ test.describe.serial('Shop-Admin Offers — Full Matrix', () => {
 
     expect(initialProductId, 'B4: product_id not set after creation').toBe(ctx.productId)
 
-    ctx.findings.push(
-      'B4: PATCH /api/v1/shop-owner/offers/{id} with product_id: null does NOT unlink the product. ' +
-      `product_id remains ${initialProductId}. ` +
-      'Backend patch_offer() uses `if body.product_id is not None:` — null is silently skipped. ' +
-      'Fix: use `if "product_id" in body.model_fields_set:` (Pydantic v2) to distinguish null from missing.'
-    )
-
     // Attempt to unlink via PATCH product_id: null
     const patchRes = await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { product_id: null }, token)
     expect(patchRes.status).toBe(200)
     const updatedProductId = (patchRes.data as { product_id: number | null }).product_id
 
-    // This assertion is EXPECTED TO FAIL (hence test.fail() above):
-    expect(updatedProductId, '[FINDING B4] PATCH product_id: null should set product_id to null — backend bug').toBeNull()
+    // FIX: product_id should now be null after PATCH
+    expect(updatedProductId, 'B4: PATCH product_id: null should set product_id to null').toBeNull()
   })
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -668,11 +657,10 @@ test.describe.serial('Shop-Admin Offers — Full Matrix', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   test('D1 — Active offer visibility on customer shop detail page /shops/[slug]', async ({ page }) => {
-    // FINDING: The customer shop detail page (/shops/[slug]) does not render shop_owner_offers.
-    // The shop page source (src/app/(customer)/shops/[slug]/page.tsx) has no offers section.
-    // Per spec D1: active offers should be visible to customers on the shop detail page.
-    // This is a missing feature, not a bug in existing code. test.fail() documents this gap.
-    test.fail()
+    // FIX verified (2026-04-23): Customer shop page now fetches and renders active offers.
+    // New endpoint GET /api/v1/shops/by-slug/{slug}/offers added to backend.
+    // Offers section added to src/app/(customer)/shops/[slug]/page.tsx.
+    // test.fail() removed — this test should now PASS.
 
     if (!ctx.shopSlug) {
       test.skip(true, 'shopSlug not available — cannot test customer-facing page')

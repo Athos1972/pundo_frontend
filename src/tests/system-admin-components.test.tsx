@@ -106,10 +106,15 @@ describe('OpeningHoursEditor', () => {
   })
 
   it('initialises from provided value', () => {
-    const value = {
-      '0': { open: '08:00', close: '20:00', closed: false },
-      '6': { open: '00:00', close: '00:00', closed: true },
-    }
+    const value = [
+      { day: 0, open: '08:00', close: '20:00', closed: false },
+      { day: 1, open: '09:00', close: '18:00', closed: false },
+      { day: 2, open: '09:00', close: '18:00', closed: false },
+      { day: 3, open: '09:00', close: '18:00', closed: false },
+      { day: 4, open: '09:00', close: '18:00', closed: false },
+      { day: 5, open: '09:00', close: '18:00', closed: false },
+      { day: 6, open: '00:00', close: '00:00', closed: true },
+    ]
     render(
       <OpeningHoursEditor
         value={value}

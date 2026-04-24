@@ -15,16 +15,15 @@ export interface PaginatedResponse<T> {
   offset: number
 }
 
-// Opening Hours
+// Opening Hours — list format: [{day: 0, ...}, ..., {day: 6, ...}], day 0=Mon..6=Sun
 export interface DayHours {
+  day: number
   open: string
   close: string
   closed: boolean
   second_open?: string
   second_close?: string
 }
-/** Keys "0"–"6" = Mon–Sun */
-export type OpeningHoursMap = Record<string, DayHours>
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 /** Extract a display name from a multilingual names dict (en → de → first → fallback). */
@@ -57,7 +56,7 @@ export interface SysAdminShop {
   website_url: string | null
   webshop_url?: string | null
   social_links?: Record<string, string> | null
-  opening_hours: OpeningHoursMap | null
+  opening_hours: DayHours[] | null
   delivery_services?: unknown[] | null
   has_parking?: boolean | null
   has_own_delivery?: boolean | null

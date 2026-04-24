@@ -301,6 +301,8 @@ export const translations = {
     filter_has_parking: 'Parking',
     filter_has_delivery: 'Delivery',
     filter_online_only: 'Online only',
+    shop_offers: 'Current offers',
+    shop_offer_valid_until: 'Valid until',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -604,6 +606,8 @@ export const translations = {
     filter_has_parking: 'Parkplatz',
     filter_has_delivery: 'Lieferung',
     filter_online_only: 'Nur online',
+    shop_offers: 'Aktuelle Angebote',
+    shop_offer_valid_until: 'Gültig bis',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -907,6 +911,8 @@ export const translations = {
     filter_has_parking: 'Парковка',
     filter_has_delivery: 'Доставка',
     filter_online_only: 'Только онлайн',
+    shop_offers: 'Актуальные акции',
+    shop_offer_valid_until: 'Действует до',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1210,6 +1216,8 @@ export const translations = {
     filter_has_parking: 'Χώρος στάθμευσης',
     filter_has_delivery: 'Παράδοση',
     filter_online_only: 'Μόνο online',
+    shop_offers: 'Τρέχουσες προσφορές',
+    shop_offer_valid_until: 'Ισχύει έως',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1513,6 +1521,8 @@ export const translations = {
     filter_has_parking: 'موقف سيارات',
     filter_has_delivery: 'توصيل',
     filter_online_only: 'أونلاين فقط',
+    shop_offers: 'العروض الحالية',
+    shop_offer_valid_until: 'صالح حتى',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1816,6 +1826,8 @@ export const translations = {
     filter_has_parking: 'חניה',
     filter_has_delivery: 'משלוח',
     filter_online_only: 'אונליין בלבד',
+    shop_offers: 'מבצעים נוכחיים',
+    shop_offer_valid_until: 'בתוקף עד',
   },
 } as const;
 

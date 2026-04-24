@@ -86,6 +86,38 @@ test.use({
 
 // ─── API-Helpers (direkt gegen Backend 8500) ──────────────────────────────────
 
+const ADMIN_EMAIL = 'e2e-admin@pundo-e2e.io'
+const ADMIN_PASSWORD = 'E2eAdminPassword!99'
+
+async function adminLogin(): Promise<string> {
+  const { execSync } = await import('child_process')
+  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
+  try {
+    execSync(
+      `${pyBin} scripts/seed_admin.py --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD}`,
+      { cwd: BACKEND_REPO, stdio: 'pipe' }
+    )
+  } catch { /* admin may already exist */ }
+  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
+  })
+  if (!res.ok) throw new Error(`Admin-Login fehlgeschlagen: ${res.status}`)
+  const match = (res.headers.get('set-cookie') ?? '').match(/admin_token=([^;]+)/)
+  if (!match) throw new Error('admin_token cookie nicht gefunden')
+  return match[1]
+}
+
+async function adminPatchShop(adminToken: string, shopId: number, body: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/admin/shops/${shopId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`PATCH /admin/shops/${shopId} → ${res.status}: ${await res.text()}`)
+}
+
 function ownerAuthHeader(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
 }
@@ -821,5 +853,99 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
     for (let i = 0; i < 7; i++) {
       expect(hours[i].closed, `Tag ${i} closed korrekt nach Revert`).toBe(originalHours[i].closed)
     }
+  })
+})
+
+// ─── Szenario C: Cross-Role — Admin schreibt Öffnungszeiten, Shop-Owner liest ──
+//
+// Dieser Test deckt den Bug ab, der am 2026-04-24 gefunden wurde:
+// Admin speichert opening_hours im Dict-Format {"0": {...}, ...} via /admin/shops/{id}.
+// Shop-Owner liest GET /shop-owner/shop/hours → muss dieselben Daten sehen, NICHT 7× closed.
+//
+// Beide Formate werden getestet:
+//   C1 — List-Format  (aktuelles Admin-Frontend-Format nach der Migration)
+//   C2 — Dict-Format  (Legacy-Format, braucht Compat-Shim im Backend)
+
+test.describe.serial('Szenario C — Cross-Role: Admin schreibt Öffnungszeiten, Shop-Owner liest', () => {
+  const state = loadTestState()
+  let ownerToken = ''
+  let adminToken = ''
+  let hoursBeforeTest: Array<Record<string, unknown>> = []
+
+  test.beforeAll(async () => {
+    ownerToken = await getOwnerToken(state.email, state.password)
+    adminToken = await adminLogin()
+    // Snapshot für Cleanup
+    hoursBeforeTest = await getOpeningHours(ownerToken)
+  })
+
+  test.afterAll(async () => {
+    if (!ownerToken || hoursBeforeTest.length === 0) return
+    try {
+      await putOpeningHours(ownerToken, hoursBeforeTest)
+    } catch (err) { console.error('[Szenario C] Öffnungszeiten-Revert Fehler:', err) }
+  })
+
+  // ── C1: Admin schreibt List-Format → Shop-Owner liest korrekte Daten ─────
+
+  test('C1 — API: Admin PATCH mit List-Format → Shop-Owner GET gibt dieselben Zeiten zurück', async () => {
+    if (!state.shopId) test.skip()
+    const written = [
+      { day: 0, open: '08:00', close: '17:00', closed: false },
+      { day: 1, open: '08:00', close: '17:00', closed: false },
+      { day: 2, open: '08:00', close: '17:00', closed: false },
+      { day: 3, open: '08:00', close: '17:00', closed: false },
+      { day: 4, open: '08:00', close: '17:00', closed: false },
+      { day: 5, open: '09:00', close: '13:00', closed: false },
+      { day: 6, open: '00:00', close: '00:00', closed: true },
+    ]
+    await adminPatchShop(adminToken, state.shopId!, { opening_hours: written })
+
+    const read = await getOpeningHours(ownerToken)
+    expect(read, '7 Tage vorhanden').toHaveLength(7)
+
+    const allClosed = read.every(h => h.closed === true)
+    expect(allClosed, 'Nicht alle Tage geschlossen — Bug wäre: Admin-Schreiben wird ignoriert').toBe(false)
+
+    for (let i = 0; i < 5; i++) {
+      expect(read[i].closed, `Tag ${i} offen`).toBe(false)
+      expect(read[i].open, `Tag ${i} open=08:00`).toBe('08:00')
+      expect(read[i].close, `Tag ${i} close=17:00`).toBe('17:00')
+    }
+    expect(read[5].closed, 'Sa offen').toBe(false)
+    expect(read[5].open, 'Sa open=09:00').toBe('09:00')
+    expect(read[6].closed, 'So geschlossen').toBe(true)
+  })
+
+  // ── C2: Admin schreibt Legacy-Dict-Format → Compat-Shim → korrekte Daten ─
+
+  test('C2 — API: Admin PATCH mit Legacy-Dict-Format → Compat-Shim liefert korrekte Zeiten', async () => {
+    if (!state.shopId) test.skip()
+    // Simuliert Daten die vor der DB-Migration in der DB standen.
+    // Dict-Format mit gemischten Keys wie sie Shop 91 hatte ("ph", "fri" etc. werden ignoriert).
+    const legacyDict = {
+      '0': { open: '09:00', close: '18:00' },
+      '1': { open: '09:00', close: '18:00' },
+      '2': { open: '09:00', close: '18:00' },
+      '3': { open: '09:00', close: '18:00' },
+      '4': { open: '09:00', close: '18:00' },
+      '5': { open: '09:00', close: '13:00', closed: false },
+      '6': { closed: true },
+      'ph': null,
+      'mon': null,
+    }
+    await adminPatchShop(adminToken, state.shopId!, { opening_hours: legacyDict })
+
+    const read = await getOpeningHours(ownerToken)
+    expect(read, '7 Tage vorhanden').toHaveLength(7)
+
+    const allClosed = read.every(h => h.closed === true)
+    expect(allClosed, 'Compat-Shim muss Dict-Format korrekt konvertieren — Bug wäre: alle geschlossen').toBe(false)
+
+    for (let i = 0; i < 5; i++) {
+      expect(read[i].closed, `Tag ${i} offen (Default closed=false)`).toBe(false)
+      expect(read[i].open, `Tag ${i} open=09:00`).toBe('09:00')
+    }
+    expect(read[6].closed, 'So geschlossen').toBe(true)
   })
 })

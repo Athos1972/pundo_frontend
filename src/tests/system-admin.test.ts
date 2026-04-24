@@ -61,9 +61,9 @@ describe('tSysAdmin', () => {
 })
 
 describe('system-admin types', () => {
-  it('DayHours defaults compile correctly', () => {
-    // Type-level sanity — if this file compiles, types are correct
-    const day = { open: '09:00', close: '18:00', closed: false }
+  it('DayHours has day field', () => {
+    const day: import('@/types/system-admin').DayHours = { day: 0, open: '09:00', close: '18:00', closed: false }
+    expect(day.day).toBe(0)
     expect(day.closed).toBe(false)
   })
 })

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
-import { getShop, searchProducts } from '@/lib/api'
+import { getShop, searchProducts, getShopOffers } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
@@ -65,9 +66,13 @@ export default async function ShopPage({ params }: Props) {
 
   const session = await getCustomerSession(lang)
 
-  const topProducts = shop.top_products.length > 0
-    ? (await searchProducts({ shop_id: shop.id, limit: 10 }, lang)).items
-    : []
+  const [topProductsResult, offers] = await Promise.all([
+    shop.top_products.length > 0
+      ? searchProducts({ shop_id: shop.id, limit: 10 }, lang).then(r => r.items)
+      : Promise.resolve([]),
+    getShopOffers(slug, lang),
+  ])
+  const topProducts = topProductsResult
 
   const pins = shop.location
     ? [{ id: shop.id, name: shop.name ?? 'Shop', lat: shop.location.lat, lng: shop.location.lng }]
@@ -80,11 +85,23 @@ export default async function ShopPage({ params }: Props) {
         {/* Header */}
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
-            <ShopAvatar
-              name={shop.name}
-              shopId={shop.id}
-              size="lg"
-            />
+            {shop.images?.[0]?.url ? (
+              <div className="shrink-0">
+                <Image
+                  src={shop.images[0].url}
+                  alt={shop.name ?? 'Shop logo'}
+                  width={96}
+                  height={96}
+                  className="rounded-xl object-cover bg-surface border border-border"
+                />
+              </div>
+            ) : (
+              <ShopAvatar
+                name={shop.name}
+                shopId={shop.id}
+                size="lg"
+              />
+            )}
             <div className="min-w-0">
               <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>
               {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
@@ -186,6 +203,36 @@ export default async function ShopPage({ params }: Props) {
                 </ul>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Active shop offers */}
+        {offers.length > 0 && (
+          <div>
+            <h2 className="font-bold text-sm text-text font-heading mb-3">{tr.shop_offers}</h2>
+            <div className="space-y-2">
+              {offers.map(offer => (
+                <div key={offer.id} className="bg-surface border border-border rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-text text-sm">{offer.title}</p>
+                    {offer.price && (
+                      <span className="text-sm font-bold text-accent shrink-0">
+                        {offer.price} {offer.currency}
+                      </span>
+                    )}
+                  </div>
+                  {offer.description && (
+                    <p className="text-sm text-text-muted mt-1">{offer.description}</p>
+                  )}
+                  {offer.valid_until && (
+                    <p className="text-xs text-text-light mt-2">
+                      {tr.shop_offer_valid_until}{' '}
+                      {new Date(offer.valid_until).toLocaleDateString(lang, { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

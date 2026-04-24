@@ -1,10 +1,10 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-23
-SHA: ef98e7e35ac3ea4e4899358acebe60e7dd61fed9
-Feature: Journey-System First Run — alle 5 Journeys erstmals ausgeführt
-Ergebnis: **891/896 Unit-Tests PASS (5 FAIL in _parser.spec.ts — Test-Drift) | TypeScript PASS | ESLint PASS (23 Warnings) | Phase 3.5: 2/5 Journeys PASS, 3/5 FAIL**
+Datum: 2026-04-24
+SHA: b6d9446dce0a0f1913c13bcfb02efaaa7f06e8d6
+Feature: 2026-04-23-review-invalidate-bug — ReviewModerationTable Proxy-Fix + Fehlerfeedback
+Ergebnis: **12/12 Unit-Tests PASS | TypeScript PASS | ESLint PASS (44 Warnings, 0 Errors) | API-Integration: alle 6 AC PASS | Phase 3.5: keine mustRun-Journeys | Verdict: SHIP**
 
 
 ## Testlauf 2026-04-23 — Journey-System First Run (Phase 3.5)

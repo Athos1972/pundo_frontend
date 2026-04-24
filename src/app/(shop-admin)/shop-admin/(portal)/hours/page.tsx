@@ -21,8 +21,9 @@ export default async function HoursPage() {
   try {
     const fetched = await getOpeningHours(lang)
     if (fetched.length === 7) hours = fetched
-  } catch {
-    // Backend not yet available, use defaults
+  } catch (err) {
+    console.error('[HoursPage] Failed to fetch opening hours:', err)
+    // Falls back to defaults
   }
 
   return (

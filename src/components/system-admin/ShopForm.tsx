@@ -3,8 +3,22 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import type { SysAdminShop, SysAdminShopType, OpeningHoursMap } from '@/types/system-admin'
+import type { SysAdminShop, SysAdminShopType, DayHours } from '@/types/system-admin'
 import { pickName } from '@/types/system-admin'
+
+// Normalizes legacy dict format {"0": {...}} → list format [{day: 0, ...}].
+// Needed for shops whose opening_hours predate the DB migration.
+function normalizeOpeningHours(raw: unknown): DayHours[] | null {
+  if (!raw) return null
+  if (Array.isArray(raw)) return raw as DayHours[]
+  if (typeof raw === 'object') {
+    return Object.entries(raw as Record<string, unknown>)
+      .filter(([k, v]) => /^\d$/.test(k) && v !== null && typeof v === 'object')
+      .map(([k, v]) => ({ day: parseInt(k, 10), ...(v as Omit<DayHours, 'day'>) }))
+      .sort((a, b) => a.day - b.day)
+  }
+  return null
+}
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { OpeningHoursEditor } from './OpeningHoursEditor'
@@ -36,7 +50,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [shopTypeId, setShopTypeId] = useState<string>(String(shop?.shop_type_id ?? ''))
   const [lat, setLat] = useState<number | null>(shop?.lat ?? null)
   const [lng, setLng] = useState<number | null>(shop?.lng ?? null)
-  const [openingHours, setOpeningHours] = useState<OpeningHoursMap | null>(shop?.opening_hours ?? null)
+  const [openingHours, setOpeningHours] = useState<DayHours[] | null>(() => normalizeOpeningHours(shop?.opening_hours))
   const [email, setEmail] = useState(shop?.email ?? '')
   const [webshopUrl, setWebshopUrl] = useState(shop?.webshop_url ?? '')
   const [postalCode, setPostalCode] = useState(shop?.postal_code ?? '')

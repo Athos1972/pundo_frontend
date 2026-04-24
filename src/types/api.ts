@@ -88,6 +88,17 @@ export interface ShopDetailResponse extends ShopListItem {
   opening_hours_raw?: OpeningHoursRaw | null;
   description?: string | null;
   // shop_type and spoken_languages are now part of ShopListItem (enriched fields)
+  images?: Array<{ url: string }> | null;
+}
+
+export interface ShopOffer {
+  id: number
+  title: string
+  description?: string | null
+  price?: string | null
+  currency: string
+  valid_from?: string | null
+  valid_until?: string | null
 }
 
 export interface CategoryItem {

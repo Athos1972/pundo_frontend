@@ -10,16 +10,22 @@ import type {
   SysAdminShop,
   SysAdminShopType,
   SysAdminShopOwner,
-  SysAdminProduct,
-  SysAdminProductAttribute,
+  SysAdminItem,
+  SysAdminItemAttribute,
   SysAdminCategory,
   SysAdminCategoryAttributeDef,
   SysAdminCategoryTranslation,
   SysAdminBrand,
   SysAdminOffer,
-  SysAdminShopOwnerOffer,
   SysAdminApiKey,
+  SysAdminSocialLinkRule,
+  SocialLinkRuleCategory,
 } from '@/types/system-admin'
+
+// Keep deprecated aliases available in this file so existing callers still compile
+type SysAdminProduct = SysAdminItem
+type SysAdminProductAttribute = SysAdminItemAttribute
+type SysAdminShopOwnerOffer = SysAdminOffer
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
 const BASE = `${BACKEND}/api/v1/admin`
@@ -194,4 +200,16 @@ export async function getAllShops(): Promise<SysAdminShop[]> {
 export async function getAllProducts(): Promise<SysAdminProduct[]> {
   const res = await getProducts({ limit: 1000 })
   return res.items
+}
+
+// ─── Social-Link Rules ────────────────────────────────────────────────────────
+
+export async function getSocialLinkRules(
+  params: { q?: string; category?: SocialLinkRuleCategory; source?: string; limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<SysAdminSocialLinkRule>> {
+  return apiFetch<PaginatedResponse<SysAdminSocialLinkRule>>(`/social-link-rules${buildQs(params)}`)
+}
+
+export async function getSocialLinkRuleCategories(): Promise<{ categories: SocialLinkRuleCategory[] }> {
+  return apiFetch<{ categories: SocialLinkRuleCategory[] }>('/social-link-rules/categories')
 }

@@ -2,6 +2,12 @@
 // IMPORTANT: Keep this file separate from src/types/api.ts (Clean Boundary rule)
 // These types must NEVER be imported from customer-facing code.
 
+// ─── Shared Enums ────────────────────────────────────────────────────────────
+
+export type ItemType   = 'product' | 'service'
+export type ItemSource = 'scraper' | 'admin' | 'shop_manual' | 'shop_upload' | 'spotted'
+export type ItemStatus = 'active' | 'inactive'
+
 export interface ShopOwner {
   id: number
   email: string
@@ -55,35 +61,108 @@ export interface PriceTier {
   steps: PriceTierStep[]
 }
 
-export interface AdminProductImage {
+// ─── Item (global catalogue) ──────────────────────────────────────────────────
+
+export interface AdminItemPhoto {
   id: number
-  url: string          // primary display URL (card variant)
+  item_id: number
+  contributed_by_shop_id: number | null
+  url: string
+  thumbnail_url: string | null
   sort_order: number
 }
 
+export interface AdminItem {
+  id: number
+  slug: string
+  item_type: ItemType
+  names: Record<string, string>
+  descriptions: Record<string, string> | null
+  category_id: number
+  brand_id: number | null
+  ean: string | null
+  status: ItemStatus
+  source: ItemSource
+  photos: AdminItemPhoto[]
+  created_at: string
+}
+
+// Lightweight variant for Item Picker search results
+export interface ItemSearchResult {
+  id: number
+  slug: string
+  item_type: ItemType
+  name: string           // localised, single string
+  category_id: number
+  ean: string | null
+  photo_url: string | null
+}
+
+// ─── ShopListing (junction) ───────────────────────────────────────────────────
+
+export interface AdminShopListing {
+  id: number
+  item_id: number
+  shop_id: number
+  item: AdminItem          // embedded by backend in list responses
+  available: boolean
+  source: ItemSource
+  sku: string | null
+  shop_url: string | null
+  created_at: string
+}
+
+export interface AdminShopListingList {
+  items: AdminShopListing[]
+  total: number
+}
+
+// ─── Offer (unified: price + optional promotional period) ────────────────────
+
+export type PriceType = 'fixed' | 'on_request' | 'free' | 'variable'
+
+export interface AdminOffer {
+  id: number
+  shop_listing_id: number
+  title: string | null
+  description: string | null
+  price_type: PriceType
+  price_tiers: PriceTier[]
+  currency: string
+  valid_from: string | null
+  valid_until: string | null
+  source: ItemSource
+  offer_url: string | null
+  archived: boolean
+  crawled_at: string | null
+  created_at: string
+}
+
+// Keep backward-compat alias so any remaining usage of `offer.title` (non-null) still works
+// but the canonical type has title as string | null per the new unified model.
+
+// ─── Deprecated types — kept for compilation of legacy components not yet removed ─
+/** @deprecated Use AdminShopListing + AdminOffer instead */
+export interface AdminProductImage {
+  id: number
+  url: string
+  sort_order: number
+}
+
+/** @deprecated Use AdminShopListing + AdminOffer instead */
 export interface AdminProduct {
   id: number
   name: string
   category_id: number
   available: boolean
   price_tiers: PriceTier[]
-  images?: AdminProductImage[]  // product photos, ordered by sort_order (backend defaults to [])
+  images?: AdminProductImage[]
 }
 
+/** @deprecated Use AdminShopListingList instead */
 export interface AdminProductList {
   items: AdminProduct[]
   total: number
-}
-
-export interface AdminOffer {
-  id: number
-  title: string
-  description: string
-  price: string
-  valid_from: string
-  valid_until: string
-  product_id?: number
-  archived: boolean
 }
 
 export interface AdminOfferList {
@@ -104,16 +183,25 @@ export interface ApiKeyCreated extends ApiKey {
   key: string
 }
 
+export interface ImageDownloadError {
+  product_name: string
+  url: string
+  reason: string
+}
+
 export interface ImportStatus {
   google_sheet_url?: string
   last_sync?: string
   last_sync_status?: 'ok' | 'error'
   last_sync_message?: string
+  image_download_errors?: ImageDownloadError[]
+  last_image_download_at?: string
 }
 
 export interface ImportUploadResult {
   imported: number
   errors: { row: number; message: string }[]
+  image_download_pending?: number
 }
 
 // ─── Review Moderation (admin-only, never imported by customer code) ──────────
@@ -156,4 +244,29 @@ export interface AuditLogEntry {
   moderation_confidence: number | null
   reason: string | null
   timestamp: string
+}
+
+// ─── Social-Link Moderation ───────────────────────────────────────────────────
+
+export type SocialLinkBlockCategory =
+  | 'adult'
+  | 'gambling'
+  | 'hate'
+  | 'illegal'
+  | 'malware'
+  | 'shortener_unresolvable'
+  | 'custom'
+
+export interface SocialLinkBlockedError {
+  error: 'social_link_blocked'
+  key: string
+  category: SocialLinkBlockCategory
+  resolved_host?: string | null
+  via_shortener?: boolean
+}
+
+export interface SocialLinkFieldError {
+  category: SocialLinkBlockCategory
+  resolved_host?: string | null
+  via_shortener?: boolean
 }

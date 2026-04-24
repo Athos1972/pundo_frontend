@@ -73,6 +73,7 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
     { href: '/admin/offers', label: tr.nav_offers, icon: '💰' },
     { href: '/admin/shop-owner-offers', label: tr.nav_so_offers, icon: '🛍' },
     { href: '/admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },
+    { href: '/admin/social-link-rules', label: tr.nav_social_link_rules, icon: '🛡' },
   ]
 
   const closeMobile = () => setMobileOpen(false)

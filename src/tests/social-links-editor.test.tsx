@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SocialLinksEditor } from '@/components/ui/SocialLinksEditor'
+import type { SocialLinkFieldError } from '@/types/shop-admin'
 
 const DEFAULT_PROPS = {
   value: null,
@@ -138,5 +139,95 @@ describe('SocialLinksEditor', () => {
     inputs.forEach((input) => {
       expect(input.disabled).toBe(true)
     })
+  })
+})
+
+describe('SocialLinksEditor — server-error rendering', () => {
+  const serverErrors: Record<string, SocialLinkFieldError> = {
+    facebook: { category: 'adult' },
+  }
+  const errorLabels = { adult: 'Adult content is not permitted.' }
+
+  it('renders server error message under the correct platform field', () => {
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={serverErrors}
+        errorLabels={errorLabels}
+      />
+    )
+    expect(screen.getByText('Adult content is not permitted.')).toBeDefined()
+  })
+
+  it('does not render server error for other platforms', () => {
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={serverErrors}
+        errorLabels={errorLabels}
+      />
+    )
+    const errors = screen.queryAllByText('Adult content is not permitted.')
+    expect(errors.length).toBe(1)
+  })
+
+  it('applies red border class when server error is present', () => {
+    const { container } = render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={serverErrors}
+        errorLabels={errorLabels}
+      />
+    )
+    const redInputs = container.querySelectorAll('input.border-red-400')
+    expect(redInputs.length).toBeGreaterThan(0)
+  })
+
+  it('calls onServerErrorDismiss with the correct key when the field changes', () => {
+    const onServerErrorDismiss = vi.fn()
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={serverErrors}
+        errorLabels={errorLabels}
+        onServerErrorDismiss={onServerErrorDismiss}
+      />
+    )
+    const inputs = screen.getAllByPlaceholderText('https://...') as HTMLInputElement[]
+    fireEvent.change(inputs[0], { target: { value: 'https://facebook.com/new' } })
+    expect(onServerErrorDismiss).toHaveBeenCalledWith('facebook')
+  })
+
+  it('renders via_shortener template with resolved_host substituted', () => {
+    const shortenerErrors: Record<string, SocialLinkFieldError> = {
+      instagram: {
+        category: 'adult',
+        via_shortener: true,
+        resolved_host: 'badsite.com',
+      },
+    }
+    const template = 'The short link resolves to \u2068{host}\u2069, which is not allowed.'
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={shortenerErrors}
+        errorLabels={errorLabels}
+        errorViaShortenerTemplate={template}
+      />
+    )
+    expect(
+      screen.getByText('The short link resolves to \u2068badsite.com\u2069, which is not allowed.')
+    ).toBeDefined()
+  })
+
+  it('does not render server error after onServerErrorDismiss clears it (no errors passed)', () => {
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        serverErrors={{}}
+        errorLabels={errorLabels}
+      />
+    )
+    expect(screen.queryByText('Adult content is not permitted.')).toBeNull()
   })
 })

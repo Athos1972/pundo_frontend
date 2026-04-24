@@ -89,12 +89,12 @@ export interface SysAdminShopOwner {
   shop_id: number
 }
 
-// ─── Products ──────────────────────────────────────────────────────────────────
-export interface SysAdminProduct {
+// ─── Items (was: Products) ─────────────────────────────────────────────────────
+export interface SysAdminItem {
   id: number
   slug: string
-  item_type?: string
-  status?: string
+  item_type: string
+  status: string
   names: Record<string, string>
   descriptions?: Record<string, string> | null
   brand_id: number | null
@@ -102,9 +102,12 @@ export interface SysAdminProduct {
   ean?: string | null
 }
 
-export interface SysAdminProductAttribute {
+/** @deprecated Use SysAdminItem instead */
+export type SysAdminProduct = SysAdminItem
+
+export interface SysAdminItemAttribute {
   id: number
-  product_id: number
+  item_id: number
   attribute_key: string
   attribute_value: unknown
   source: string | null
@@ -112,6 +115,9 @@ export interface SysAdminProductAttribute {
   created_at: string
   updated_at: string
 }
+
+/** @deprecated Use SysAdminItemAttribute instead */
+export type SysAdminProductAttribute = SysAdminItemAttribute
 
 // ─── Categories ────────────────────────────────────────────────────────────────
 export interface SysAdminCategory {
@@ -163,34 +169,48 @@ export interface SysAdminBrand {
   updated_at: string
 }
 
-// ─── Offers (scraped/admin-managed) ───────────────────────────────────────────
+// ─── Offers (unified — covers both scraped and shop-owner offers) ─────────────
 export interface SysAdminOffer {
   id: number
-  product_id: number
-  shop_id: number
-  price: string | null
-  price_type: string
-  price_note: string | null
-  currency: string
-  stock_status: string
-  is_available: boolean
-  sku: string | null
-  url: string | null
-  image_url?: string | null
-  crawled_at: string
-}
-
-// ─── Shop-Owner Offers ─────────────────────────────────────────────────────────
-export interface SysAdminShopOwnerOffer {
-  id: number
-  shop_id: number
-  title: string
+  shop_listing_id: number
+  title: string | null
   description: string | null
-  price: string | null
+  price_type: string
+  price_tiers: unknown[]   // JSONB — same shape as AdminOffer.price_tiers in shop-admin.ts
+  currency: string
   valid_from: string | null
   valid_until: string | null
-  product_id: number | null
+  source: string
+  offer_url: string | null
   archived: boolean
+  crawled_at: string | null
+  created_at: string
+}
+
+/** @deprecated SysAdminShopOwnerOffer is replaced by the unified SysAdminOffer */
+export type SysAdminShopOwnerOffer = SysAdminOffer
+
+// ─── Social-Link Rules ────────────────────────────────────────────────────────
+
+export type SocialLinkRuleCategory =
+  | 'adult' | 'gambling' | 'hate' | 'illegal' | 'malware' | 'custom'
+
+export type SocialLinkRuleSource = 'external' | 'admin'
+
+export interface SysAdminSocialLinkRule {
+  id: number
+  host: string
+  category: SocialLinkRuleCategory
+  source: SocialLinkRuleSource
+  note: string | null
+  external_batch_id: string | null
+  created_at: string
+}
+
+export interface SysAdminSocialLinkRuleCreate {
+  host: string
+  category: SocialLinkRuleCategory
+  note?: string | null
 }
 
 // ─── API Keys ─────────────────────────────────────────────────────────────────

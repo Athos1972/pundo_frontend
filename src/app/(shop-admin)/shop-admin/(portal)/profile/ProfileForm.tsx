@@ -7,7 +7,7 @@ import { LogoUpload } from '@/components/shop-admin/LogoUpload'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
-import type { AdminShop } from '@/types/shop-admin'
+import type { AdminShop, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory } from '@/types/shop-admin'
 
 interface ProfileFormProps {
   shop: AdminShop | null
@@ -25,6 +25,26 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
   )
   const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(shop?.logo_url ?? null)
+  const [serverErrors, setServerErrors] = useState<Record<string, SocialLinkFieldError>>({})
+
+  const errorLabels: Partial<Record<SocialLinkBlockCategory, string>> = {
+    adult: tr.social_blocked_adult,
+    gambling: tr.social_blocked_gambling,
+    hate: tr.social_blocked_hate,
+    illegal: tr.social_blocked_illegal,
+    malware: tr.social_blocked_malware,
+    shortener_unresolvable: tr.social_blocked_shortener_unresolvable,
+    custom: tr.social_blocked_generic,
+  }
+
+  function handleServerErrorDismiss(key: string) {
+    setServerErrors((prev) => {
+      if (!(key in prev)) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -55,7 +75,24 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
           }),
         })
         if (res.ok) {
+          setServerErrors({})
           showToast(tr.saved, 'success')
+        } else if (res.status === 422) {
+          const body = await res.json().catch(() => null)
+          if (body?.error === 'social_link_blocked') {
+            const blocked = body as SocialLinkBlockedError
+            setServerErrors((prev) => ({
+              ...prev,
+              [blocked.key]: {
+                category: blocked.category,
+                resolved_host: blocked.resolved_host,
+                via_shortener: blocked.via_shortener,
+              },
+            }))
+            showToast(tr.social_blocked_toast, 'error')
+          } else {
+            showToast(tr.error_generic, 'error')
+          }
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -138,6 +175,10 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         otherLabel={tr.social_platform_other}
         platformNameLabel={tr.social_platform_name}
         urlLabel={tr.social_platform_url}
+        serverErrors={serverErrors}
+        errorLabels={errorLabels}
+        errorViaShortenerTemplate={tr.social_blocked_via_shortener}
+        onServerErrorDismiss={handleServerErrorDismiss}
       />
       <button
         type="submit"

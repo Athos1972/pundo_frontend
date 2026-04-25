@@ -1,4 +1,4 @@
-import type { BrandConfig } from './index'
+import type { BrandConfig } from './types'
 
 export const naidivseConfig: BrandConfig = {
   slug: 'naidivse',

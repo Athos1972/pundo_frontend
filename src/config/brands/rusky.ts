@@ -1,4 +1,4 @@
-import type { BrandConfig } from './index'
+import type { BrandConfig } from './types'
 
 // Placeholder — Assets und finale Theme-Werte werden ergänzt sobald
 // Domain und Design für rusky-in-cyprus.de feststeht.

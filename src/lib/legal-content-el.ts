@@ -1,4 +1,4 @@
-import type { LegalContentByLang } from './legal-content'
+import type { LegalContentByLang } from './legal-types'
 
 export const legalContentEl: LegalContentByLang = {
   imprint: {

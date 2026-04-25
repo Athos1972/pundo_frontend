@@ -2,6 +2,7 @@
 id: shop-admin-offer-product
 title: Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix)
 status: deprecated
+skip-reason: "Spec deleted — used old shop_owner_products API (product_id/price); scenarios migrated to shop-admin-offers.spec.ts as XS1/XS2/AR1/SP1-SP4/DT1/DT2"
 spec-file: e2e/journeys/shop-admin-offers.spec.ts
 priority: P2
 owner-agent: coder

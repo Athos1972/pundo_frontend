@@ -2,6 +2,7 @@
 id: shop-admin-product-offer-ui
 title: Shop-Admin Produkt + Angebot anlegen (UI Golden Path)
 status: deprecated
+skip-reason: "Spec deleted — tested /shop-admin/products/new (now redirect-only) and old product_id/price schema; replaced by shop-admin-offers.spec.ts groups A and D"
 spec-file: e2e/journeys/shop-admin-offers.spec.ts
 priority: P2
 owner-agent: coder

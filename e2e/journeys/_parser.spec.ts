@@ -64,16 +64,18 @@ last-result: N/A
 describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
-    expect(entries).toHaveLength(14)
+    // Updated 2026-04-25: +2 entries (shop-owner-onboarding, social-link-moderation)
+    expect(entries).toHaveLength(16)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
     const entries = loadAllJourneys()
 
     // P1 entries: shop-admin-offers, shop-owner-full-lifecycle, shop-owner-lifecycle (implemented)
+    //             + shop-owner-onboarding, social-link-moderation (implemented, added 2026-04-25)
     //             + state-transition-ItemStatus, write-to-read-createItem (approved)
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    expect(p1Entries.length).toBe(5)
+    expect(p1Entries.length).toBe(7)
     expect(p1Entries[0].status).toBe('implemented') // shop-admin-offers is first alphabetically
   })
 
@@ -96,7 +98,8 @@ describe('parseCatalog — Seed-Datei', () => {
   it('alle Einträge haben status implemented (AC-10: alle Journeys deployed)', () => {
     const entries = loadAllJourneys()
 
-    // 9 implemented, 3 approved, 2 deprecated — not all must be implemented
+    // 9 implemented, 3 approved, 4 deprecated — not all must be implemented
+    // Updated 2026-04-25: shop-owner-onboarding + social-link-moderation = 9 implemented
     const implemented = entries.filter((e) => e.status === 'implemented')
     expect(implemented.length).toBeGreaterThanOrEqual(9)
   })
@@ -376,10 +379,11 @@ describe('Edge Cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseCatalogDirectory', () => {
-  it('findet alle Journey-Dateien und liefert 14 Einträge', () => {
+  it('findet alle Journey-Dateien und liefert 16 Einträge', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
-    expect(entries).toHaveLength(14)
+    // Updated 2026-04-25: +2 entries (shop-owner-onboarding, social-link-moderation)
+    expect(entries).toHaveLength(16)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -399,8 +403,9 @@ describe('parseCatalogDirectory', () => {
     // CATALOG.md is an index — no frontmatter blocks → would return 0 entries
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan
-    // We verify by checking that the total count is exactly 14 (the 14 journey files)
-    expect(entries).toHaveLength(14)
+    // We verify by checking that the total count is exactly 16 (the 16 journey files)
+    // Updated 2026-04-25: +2 new entries (shop-owner-onboarding, social-link-moderation)
+    expect(entries).toHaveLength(16)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

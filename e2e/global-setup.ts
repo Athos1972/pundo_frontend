@@ -109,6 +109,28 @@ async function adminLogin(): Promise<string> {
 }
 
 export default async function globalSetup() {
+  // ── E2E_REUSE_STATE: Schnellpfad für lokale Entwicklung ───────────────────
+  // Wenn E2E_REUSE_STATE=1 gesetzt ist UND ein frisches .test-state.json existiert
+  // (< 8h alt), werden alle Kill/Restart-Schritte übersprungen.
+  // Verwendung: E2E_REUSE_STATE=1 npx playwright test ...
+  // NUR wenn Backend + Frontend bereits laufen und DB nicht zurückgesetzt wurde.
+  if (process.env.E2E_REUSE_STATE === '1') {
+    if (fs.existsSync(STATE_FILE)) {
+      const stat = fs.statSync(STATE_FILE)
+      const ageMs = Date.now() - stat.mtimeMs
+      if (ageMs < 8 * 60 * 60 * 1000) {
+        console.log(`\n[E2E Setup] E2E_REUSE_STATE=1 — verwende bestehenden State (${Math.round(ageMs / 60000)}min alt).`)
+        console.log('[E2E Setup] Überspringe DB-Reset und Server-Restart.')
+        console.log('[E2E Setup] Setup übersprungen (Reuse-Modus).\n')
+        return
+      } else {
+        console.log('[E2E Setup] E2E_REUSE_STATE=1 aber State ist > 8h alt — normales Setup läuft.')
+      }
+    } else {
+      console.log('[E2E Setup] E2E_REUSE_STATE=1 aber kein State gefunden — normales Setup läuft.')
+    }
+  }
+
   // ── 0a. Test-Frontend auf Port 3500 killen und neu starten ─────────────────
   // Stellt sicher, dass der Frontend-Server immer den aktuellen Code lädt.
   // Next.js HMR ist für Playwright unzuverlässig — Neustart ist die sichere Methode.

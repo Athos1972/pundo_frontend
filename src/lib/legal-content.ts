@@ -6,20 +6,9 @@ import { legalContentRu } from './legal-content-ru'
 import { legalContentEl } from './legal-content-el'
 import { legalContentAr } from './legal-content-ar'
 import { legalContentHe } from './legal-content-he'
+import type { LegalContent, LegalPage } from './legal-types'
 
-export type LegalPage = 'imprint' | 'privacy' | 'terms' | 'about' | 'contact'
-
-export type LegalSection = {
-  heading?: string
-  body: string
-}
-
-export type LegalContent = {
-  title: string
-  sections: LegalSection[]
-}
-
-export type LegalContentByLang = Record<LegalPage, LegalContent>
+export type { LegalPage, LegalSection, LegalContent, LegalContentByLang } from './legal-types'
 
 function applyBrandSubstitutions(
   content: LegalContent,

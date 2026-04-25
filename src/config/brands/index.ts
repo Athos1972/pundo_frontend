@@ -7,81 +7,9 @@
 
 import { pundoConfig } from './pundo'
 import { naidivseConfig } from './naidivse'
+import type { BrandConfig } from './types'
 
-export interface BrandConfig {
-  slug: string
-  name: string
-  domains: string[]
-
-  assets: {
-    logoSvg: string
-    logoDarkSvg?: string
-    logoPng: string
-    favicon: string
-    splashSvg: string
-    ogImage: string
-  }
-
-  theme: {
-    accent: string
-    accentLight: string
-    accentDark: string
-    bg: string
-    surface: string
-    surfaceAlt: string
-    border: string
-    text: string
-    textMuted: string
-    textLight: string
-    success: string
-    themeColor: string
-  }
-
-  fonts: {
-    // CSS-Variablen-Referenzen, z.B. 'var(--font-space-grotesk)'
-    heading: string
-    body: string
-  }
-
-  pwa: {
-    name: string
-    shortName: string
-  }
-
-  meta: {
-    title: string
-    description: string
-    siteUrl: string
-    ogImage: string
-    heroTitle: string
-    heroText: string
-    heroTagline?: string
-  }
-
-  analytics: {
-    plausibleDomain?: string
-    plausibleHost: string
-  }
-
-  features: {
-    socialFeed: boolean
-    catsfirst: boolean
-    communityCard: boolean
-  }
-
-  community?: {
-    telegramName: string
-    telegramUrl: string
-    memberCount?: string
-  }
-
-  nav?: Array<{ key: string; href: string }>
-
-  legal: {
-    appName: string
-    domain: string
-  }
-}
+export type { BrandConfig } from './types'
 
 const ALL_BRANDS: BrandConfig[] = [pundoConfig, naidivseConfig]
 

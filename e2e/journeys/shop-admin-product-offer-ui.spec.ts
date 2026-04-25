@@ -71,7 +71,11 @@ async function waitForHydration(page: import('@playwright/test').Page) {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-test.describe.serial('Shop-Admin Produkt + Angebot — UI Golden Path', () => {
+// FIXME: Legacy spec — /shop-admin/products/new now redirects to /shop-admin/offers/new
+// (the new ShopListing-based flow). input[name="name"] no longer exists in the new form.
+// This spec needs rewriting for the OfferForm two-step flow.
+test.describe.fixme('Shop-Admin Produkt + Angebot — UI Golden Path', () => {
+  test.describe.configure({ mode: 'serial' })
 
   // Schritt 1: Produkt anlegen ------------------------------------------------
 

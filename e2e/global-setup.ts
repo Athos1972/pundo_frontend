@@ -47,6 +47,7 @@ async function apiPost(path: string, body: unknown, headers: Record<string, stri
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     const text = await res.text()
@@ -60,6 +61,7 @@ async function apiPatch(path: string, body?: unknown, headers: Record<string, st
     method: 'PATCH',
     headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
     body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     const text = await res.text()
@@ -94,6 +96,7 @@ async function adminLogin(): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     const text = await res.text()
@@ -106,7 +109,46 @@ async function adminLogin(): Promise<string> {
 }
 
 export default async function globalSetup() {
-  // ── 0. Test-Backend auf Port 8002 killen und neu starten ───────────────────
+  // ── 0a. Test-Frontend auf Port 3500 killen und neu starten ─────────────────
+  // Stellt sicher, dass der Frontend-Server immer den aktuellen Code lädt.
+  // Next.js HMR ist für Playwright unzuverlässig — Neustart ist die sichere Methode.
+  console.log(`\n[E2E Setup] Starte Test-Frontend neu (Port ${frontendPort})...`)
+  try {
+    execSync(`lsof -ti TCP:${frontendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+    console.log(`[E2E Setup] Altes Frontend auf Port ${frontendPort} beendet.`)
+  } catch { /* kein Prozess lief — ok */ }
+  await new Promise(r => setTimeout(r, 500))
+
+  const frontendProc = spawn('npm', ['run', 'dev:test'], {
+    cwd: path.join(__dirname, '..'),
+    detached: false,
+    stdio: 'pipe',
+  })
+  frontendProc.stderr?.on('data', (d: Buffer) => {
+    const line = d.toString().trim()
+    if (line && !line.includes('ExperimentalWarning')) console.log(`[frontend] ${line}`)
+  })
+
+  console.log('[E2E Setup] Warte auf Frontend-Healthcheck...')
+  const feDeadline = Date.now() + 120_000
+  let feHealthy = false
+  while (Date.now() < feDeadline) {
+    try {
+      const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
+      if (res.ok || res.status === 404 || res.status === 308) { feHealthy = true; break }
+    } catch { /* noch nicht bereit */ }
+    await new Promise(r => setTimeout(r, 2000))
+  }
+  if (!feHealthy) {
+    frontendProc.kill()
+    throw new Error(
+      `\n[E2E Setup] Test-Frontend auf ${FRONTEND_URL} antwortet nach 120s nicht.\n` +
+      `  Prüfe ob 'npm run dev:test' im Frontend-Repo funktioniert.\n`
+    )
+  }
+  console.log('[E2E Setup] Test-Frontend bereit.')
+
+  // ── 0b. Test-Backend auf Port 8500 killen und neu starten ──────────────────
   const backendPort = new URL(BACKEND_URL).port || '8500'
   console.log(`\n[E2E Setup] Starte Test-Backend neu (Port ${backendPort})...`)
 
@@ -143,7 +185,7 @@ export default async function globalSetup() {
   let healthy = false
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(5000) })
+      const res = await fetch(`${BACKEND_URL}/api/v1/categories`, { signal: AbortSignal.timeout(5000) })
       if (res.ok) { healthy = true; break }
       console.log(`[E2E Setup] Healthcheck: ${res.status} — warte...`)
     } catch (e) {
@@ -220,7 +262,7 @@ export default async function globalSetup() {
   let healthy2 = false
   while (Date.now() < deadline2) {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(2000) })
+      const res = await fetch(`${BACKEND_URL}/api/v1/categories`, { signal: AbortSignal.timeout(2000) })
       if (res.ok) { healthy2 = true; break }
     } catch { /* noch nicht bereit */ }
     await new Promise(r => setTimeout(r, 1000))
@@ -322,6 +364,7 @@ export default async function globalSetup() {
     // Get shop_id from owner record (shop_owners.shop_id is a direct FK)
     const ownerRes = await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
       headers: { Cookie: `admin_token=${adminToken}` },
+      signal: AbortSignal.timeout(30_000),
     })
     if (ownerRes.ok) {
       const ownerData = await ownerRes.json()

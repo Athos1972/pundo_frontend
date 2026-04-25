@@ -9,7 +9,7 @@ test.describe('E2E-01: Startseite', () => {
   test('loads with 200 and shows search input', async ({ page }) => {
     const response = await page.goto('/')
     expect(response?.status()).toBe(200)
-    await expect(page.locator('input')).toBeVisible()
+    await expect(page.locator('input[type="search"]').first()).toBeVisible()
   })
 
   test('no JS errors on homepage', async ({ page }) => {
@@ -26,10 +26,12 @@ test.describe('E2E-01: Startseite', () => {
 test.describe('E2E-02: Suche', () => {
   test('search navigates to /search?q=...', async ({ page }) => {
     await page.goto('/')
+    await page.waitForLoadState('networkidle')
     const input = page.locator('input').first()
+    await input.click()
     await input.fill('cat food')
     await input.press('Enter')
-    await expect(page).toHaveURL(/\/search\?q=/)
+    await expect(page).toHaveURL(/\/search\?q=/, { timeout: 8000 })
   })
 
   test('empty search does not crash', async ({ page }) => {

@@ -27,8 +27,8 @@ test.describe('Coming-Soon — Inhalt und Layout', () => {
   test('Countdown-Zahlen erscheinen nach Interval', async ({ page }) => {
     // Countdown startet mit 00 und tickt nach 1s — wir warten kurz
     await page.waitForTimeout(1200)
-    // Mindestens eine Zahl > 0 (12 Tage bis Launch)
-    const digits = await page.locator('.tabular-nums').allTextContents()
+    // Mindestens eine Zahl > 0 (Tage bis Launch); Komponente nutzt CSS-Klasse .cs-num
+    const digits = await page.locator('.cs-num').allTextContents()
     const values = digits.map(Number)
     expect(values.some(v => v > 0)).toBe(true)
   })
@@ -73,7 +73,7 @@ test.describe('Coming-Soon — E-Mail API', () => {
 test.describe('Coming-Soon — RTL (Arabisch)', () => {
   test('dir=rtl auf main-Element bei app_lang=ar Cookie', async ({ page, context }) => {
     await context.addCookies([
-      { name: 'app_lang', value: 'ar', domain: 'localhost', path: '/' },
+      { name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' },
     ])
     await page.goto('/coming-soon')
     const dir = await page.locator('main').getAttribute('dir')
@@ -82,7 +82,7 @@ test.describe('Coming-Soon — RTL (Arabisch)', () => {
 
   test('Arabischer Tagline-Text sichtbar', async ({ page, context }) => {
     await context.addCookies([
-      { name: 'app_lang', value: 'ar', domain: 'localhost', path: '/' },
+      { name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' },
     ])
     await page.goto('/coming-soon')
     await expect(page.getByText('اعثر على كل شيء.')).toBeVisible()

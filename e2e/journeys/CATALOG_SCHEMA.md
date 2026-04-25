@@ -133,10 +133,24 @@ Der e2e-tester (Phase 0.5) und designer/architect können diese Heuristiken anwe
 | H1 | Neue `src/app/<segment>/page.tsx` (außerhalb `api/`, `shop-admin/`, `admin/`) | `public-route-visibility-<segment>` | `src/app/<segment>/**`, `src/lib/api.ts` |
 | H2 | Neue Datei in `src/app/shop-admin/**` oder `src/app/admin/**` mit `page.tsx` | `role-boundary-<segment>` | `src/app/<segment>/**`, `src/lib/shop-admin-api.ts` |
 | H3 | Neues Status-Enum in `src/types/**/*.ts` (Regex: `status:\s*'[^']+'(\s*\|\s*'[^']+'){1,}`) | `state-transition-<Type>-<field>` | Alle `src/app/**/*` + `src/lib/**/*` die den Typ importieren |
-| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` | `src/lib/shop-admin-api.ts`, `src/app/shop-admin/**`, `src/app/shops/[id]/**` |
+| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` — **Pflicht-ACs: siehe §5a** | `src/lib/shop-admin-api.ts`, `src/app/shop-admin/**`, `src/app/shops/[id]/**` |
 | H5 | Neue API-Typ-Änderung via Backend-Schema sichtbar (`.env` / `src/types/api.ts`) | `cross-role-<feature>` | `src/types/api.ts` |
 
 **Nicht-Trigger:** Tests, Storybook, `node_modules`, `.md`-Änderungen, reine Tailwind-Klassen-Änderungen ohne Logik.
+
+---
+
+## 5a. Pflicht-ACs für write-to-read-Journeys (H4)
+
+Wenn eine Journey per Heuristik H4 angelegt wird (neue `create*`/`update*`/`delete*`-Funktion), muss ihr Body **mindestens diese drei Akzeptanzkriterien** enthalten. Ohne sie ist der Body unvollständig und der Coder darf die Journey nicht auf `implemented` setzen.
+
+| AC | Name | Was muss getestet werden |
+|----|------|--------------------------|
+| AC-1 | **Happy Path Create + GET-Verify** | Schreiboperation (POST/PATCH) mit allen Pflichtfeldern → 201/200; anschließend GET-Liste prüfen ob das Objekt erscheint (End-to-End: Write → Read) |
+| AC-2 | **Existing-Dependency Reuse (409-Fall)** | Wenn die Schreiboperation eine abhängige Ressource voraussetzt (z.B. ShopListing), muss der Test auch den Fall abdecken, dass diese Ressource bereits existiert (409) — und die Hauptoperation trotzdem erfolgreich ist |
+| AC-3 | **Feld-Edgecase** | Mindestens ein nicht-triviales Feld wird mit einem Grenzwert getestet: Dezimalzahl mit lokalem Trennzeichen (Komma statt Punkt), Leerstring bei optionalem Feld, maximale Feldlänge oder Null-Wert |
+
+**Hintergrund:** Fehlende AC-2/AC-3 haben in der Vergangenheit dazu geführt, dass Backend-Bugs (Decimal-Serialisierung, falsche 409-Antwort-Struktur) erst in der Produktion aufgetaucht sind.
 
 ---
 

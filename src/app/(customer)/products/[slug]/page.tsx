@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? ` — ${firstOffer.price} €`
       : ''
     const description = product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined
-    const relativeImg = product.images?.card ?? toRelativeImageUrl(product.thumbnail_url)
+    const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()
     return {
       title: `${name}${priceDisplay}`,
@@ -83,7 +83,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const sizeStr = formatSizeAttr(product.attributes?.size)
 
   const firstImgUrl = pickImg(product.images, 'detail', product.thumbnail_url)
-  const origImgUrl  = product.images?.orig ?? firstImgUrl ?? undefined
+  const origImgUrl  = toRelativeImageUrl(product.images?.orig) ?? firstImgUrl ?? undefined
   const visibleOffers = withPrice
     ? product.offers.filter(o => o.price_type === 'fixed')
     : product.offers

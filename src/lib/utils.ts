@@ -81,7 +81,7 @@ export function pickImg(
   variant: keyof ProductImages,
   fallback?: string | null,
 ): string | null {
-  return images?.[variant] ?? toRelativeImageUrl(fallback) ?? null
+  return toRelativeImageUrl(images?.[variant]) ?? toRelativeImageUrl(fallback) ?? null
 }
 
 /**

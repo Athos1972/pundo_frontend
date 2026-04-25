@@ -118,6 +118,8 @@ Lese mindestens:
 
 4. **Wenn keine `approved`-Einträge gefunden:** Schreibe in `03-implementation.md` "Keine approved-Journeys für diesen Spec — Journey-Implementierung übersprungen."
 
+> **Shipping-Gate:** Ein Feature gilt erst als `implemented` wenn alle `approved`-Journeys, deren `touches-modules` sich mit den geänderten Dateien überschneiden, ebenfalls auf `implemented` gesetzt sind (d.h. eine lauffähige `.spec.ts` existiert). Journeys, die aus H4 (write-to-read) stammen, müssen außerdem die drei Pflicht-ACs aus `CATALOG_SCHEMA.md §5a` enthalten — sonst bleibt der Status `approved` und der Handoff an den e2e-tester ist blockiert.
+
 #### Fixture-Prinzipien bei Journey-Implementierung
 
 - **Separate Fixtures für ausschließende Zustände:** Wenn ein UI-Element in zwei Zuständen vorkommen kann (mit/ohne Foto, mit/ohne Logo, offen/geschlossen), lege **zwei benannte Fixtures** an — nicht eine "Alles-Fixture".
@@ -175,6 +177,22 @@ export default defineConfig({
 ```typescript
 import '@testing-library/jest-dom'
 ```
+
+### Pflicht: Transformationsfunktionen mit realistischen Backend-Daten testen
+
+Jede Funktion die Backend-Daten vor der UI-Darstellung verarbeitet (URL-Umformung, Preis-Formatierung, Datum-Parsing, Feld-Auswahl), **muss** mit realistischen Backend-Outputs getestet werden — nicht nur mit idealisierten Fixtures.
+
+**Regel:** Teste immer den schmutzigen Fall (wie der Backend ihn tatsächlich liefert), nicht nur den sauberen.
+
+Beispiele für realistische Inputs:
+- URLs: `"http://localhost:8000/product_images/abc.jpg"` (absolut, anderer Port) statt `"/product_images/abc.jpg"`
+- Preise: `"3.0000"` (4 Dezimalstellen) statt `"3.00"`
+- Felder: `null` und `undefined` explizit als Inputs testen, auch wenn TypeScript sie optional markiert
+- Externe CDN-URLs (Brandfetch, Cloudinary): Wenn eine Funktion diese akzeptiert, muss sie auch mit einer Domain-fremden URL getestet werden und das Ergebnis muss klar definiert sein
+
+**Wenn du eine Transformation-Funktion änderst oder neu verwendest:** Prüfe ob ein Unit-Test existiert, der den echten Backend-Output als Input nutzt. Fehlt er — schreibe ihn.
+
+---
 
 ### Entscheidungsmatrix: Mock vs. Real
 

@@ -146,7 +146,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
 
     // Check endpoint availability
     const brandCheckRes = await apiFetch('GET', '/api/v1/admin/brands?limit=1', undefined, adminHeaders())
-    const logoUploadCheckRes = await apiFetch('POST', '/api/v1/admin/brands/logo', undefined, adminHeaders())
+    // Probe using dummy ID=0 so we hit the actual {id}/logo route pattern (not /brands/logo which is a different route)
+    const logoUploadCheckRes = await apiFetch('POST', '/api/v1/admin/brands/0/logo', undefined, adminHeaders())
     ctx.logoUploadSupported = logoUploadCheckRes.status !== 404
 
     const catAdminCheckRes = await apiFetch('GET', '/api/v1/admin/categories?limit=1', undefined, adminHeaders())
@@ -200,6 +201,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
       const catParentRes = await apiFetch('POST', '/api/v1/admin/categories', {
         name: `${PREFIX}-category-parent`,
         parent_id: null,
+        taxonomy_type: 'google',
+        external_id: `${PREFIX}-parent`,
       }, adminHeaders())
       if (catParentRes.ok) {
         ctx.categoryParentId = (catParentRes.data as { id: number }).id
@@ -214,6 +217,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
       const catChildRes = await apiFetch('POST', '/api/v1/admin/categories', {
         name: `${PREFIX}-category-child`,
         parent_id: ctx.categoryParentId,
+        taxonomy_type: 'google',
+        external_id: `${PREFIX}-child`,
       }, adminHeaders())
       if (catChildRes.ok) {
         ctx.categoryChildId = (catChildRes.data as { id: number }).id

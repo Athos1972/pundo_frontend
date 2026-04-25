@@ -5,7 +5,7 @@ import { searchProducts, getCategories, getShops } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
-import { fmtPrice } from '@/lib/utils'
+import { fmtPrice, toRelativeImageUrl } from '@/lib/utils'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
 interface Props {
@@ -246,7 +246,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
                         {item.thumbnail_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={item.thumbnail_url}
+                            src={toRelativeImageUrl(item.thumbnail_url) ?? ''}
                             alt=""
                             className="w-full h-full object-cover"
                             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}

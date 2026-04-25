@@ -7,14 +7,13 @@
  *   Test-Frontend: 3500, Test-Backend: 8500, DB: pundo_test
  *
  * Setup:
- *   - Uses the global-setup test owner (e2e/.test-state.json)
- *   - Admin credentials from ADMIN_EMAIL / ADMIN_PASSWORD env vars
+ *   - Uses global-setup (e2e/.test-state.json) for shop-owner + admin tokens
+ *   - global-setup seeds admin, restarts backend, resets pundo_test DB
  *
- * NOTE: Backend social-link-moderation endpoints are NOT yet implemented.
- * Tests that require the backend are marked BLOCKED (test.skip with reason).
- * Frontend-only tests (UI structure, translations) use page.route mocking
- * to simulate the 422 social_link_blocked response and validate the
- * frontend error-handling code.
+ * Failure policy:
+ *   - beforeAll throws if backend is reachable but social-link-moderation
+ *     feature is missing → hard FAIL, never silent skip
+ *   - Admin-token missing → explicit skip with SETUP REQUIRED notice
  */
 
 import { test, expect } from '@playwright/test'
@@ -39,21 +38,20 @@ interface TestState {
   ownerId: number
   shopId: number
   shopSlug: string | null
+  adminToken: string | null
   storageState: { cookies: unknown[]; origins: unknown[] }
 }
 
 function loadState(): TestState {
   const stateFile = path.join(__dirname, '..', '.test-state.json')
   if (!fs.existsSync(stateFile)) {
-    throw new Error('[social-link-moderation] .test-state.json not found — run global-setup first')
+    throw new Error('[social-link-moderation] .test-state.json not found — run: npx playwright test --global-setup')
   }
   return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
 }
 
 const STATE = loadState()
 
-// ─── Use shop-owner storage state ────────────────────────────────────────────
-// This injects the shop_owner_token cookie so profile pages are accessible.
 test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -65,73 +63,10 @@ function shopOwnerToken(): string {
   return cookies.find((c) => c.name === 'shop_owner_token')?.value ?? ''
 }
 
-async function adminLogin(): Promise<string | null> {
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@test.example'
-  const adminPassword = process.env.ADMIN_PASSWORD ?? 'testpassword'
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: adminEmail, password: adminPassword }),
-    })
-    if (!res.ok) return null
-    const cookieHeader = res.headers.get('set-cookie') ?? ''
-    const match = cookieHeader.match(/admin_token=([^;]+)/)
-    return match ? match[1] : null
-  } catch {
-    return null
-  }
-}
-
-async function socialLinkRulesEndpointExists(adminToken: string): Promise<boolean> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/admin/social-link-rules?limit=1`, {
-      headers: { Cookie: `admin_token=${adminToken}` },
-    })
-    return res.status !== 404
-  } catch {
-    return false
-  }
-}
-
-async function backendValidatesSocialLinks(token: string): Promise<boolean> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${token}` },
-      body: JSON.stringify({ social_links: { __e2e_probe__: 'https://onlyfans.com/test' } }),
-    })
-    if (res.status === 422) {
-      const body = await res.json().catch(() => ({}))
-      const isBlocked = body?.error === 'social_link_blocked'
-      // Restore: clear the link if saved
-      if (!isBlocked) {
-        await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${token}` },
-          body: JSON.stringify({ social_links: null }),
-        })
-      }
-      return isBlocked
-    }
-    // Backend accepted it (not yet validating) — restore
-    await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${token}` },
-      body: JSON.stringify({ social_links: null }),
-    })
-    return false
-  } catch {
-    return false
-  }
-}
-
 // ─── Shared context populated in beforeAll ────────────────────────────────────
 
 const ctx = {
-  adminToken: null as string | null,
-  hasSocialLinkRulesEndpoint: false,
-  backendValidates: false,
+  adminToken: STATE.adminToken as string | null,
   ownerToken: '',
 }
 
@@ -140,17 +75,60 @@ const ctx = {
 test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
   test.beforeAll(async () => {
-    // Health check
-    const health = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`)
-    if (!health.ok) throw new Error(`Backend not reachable: ${health.status}`)
+    // ── 1. Backend erreichbar? ────────────────────────────────────────────────
+    let healthOk = false
+    for (let i = 0; i < 10; i++) {
+      try {
+        const r = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(3000) })
+        if (r.ok) { healthOk = true; break }
+      } catch { /* retry */ }
+      await new Promise(r => setTimeout(r, 1000))
+    }
+    if (!healthOk) {
+      throw new Error(
+        `[social-link-moderation] Backend auf ${BACKEND_URL} nicht erreichbar nach 10s.\n` +
+        `  Starte das Test-Backend: cd pundo_main_backend && ./scripts/start_test_server.sh`
+      )
+    }
 
     ctx.ownerToken = shopOwnerToken()
-    ctx.adminToken = await adminLogin()
 
-    if (ctx.adminToken) {
-      ctx.hasSocialLinkRulesEndpoint = await socialLinkRulesEndpointExists(ctx.adminToken)
+    // ── 2. Prüfe ob Backend social-link-moderation kennt ─────────────────────
+    // Sende onlyfans.com — wenn Backend 200 zurückgibt, ist das Feature nicht deployed.
+    const probeRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
+      body: JSON.stringify({ social_links: { __e2e_probe__: 'https://onlyfans.com/test' } }),
+    })
+    if (probeRes.status === 200 || probeRes.status === 204) {
+      // Aufräumen
+      await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
+        body: JSON.stringify({ social_links: null }),
+      })
+      throw new Error(
+        `[social-link-moderation] FEATURE FEHLT: Backend akzeptiert onlyfans.com ohne 422.\n` +
+        `  Das social-link-moderation Feature ist auf dem laufenden Server (${BACKEND_URL}) nicht aktiv.\n` +
+        `  Lösung: Test-Backend neu starten damit die neuen Backend-Änderungen geladen werden:\n` +
+        `    cd pundo_main_backend && ./scripts/start_test_server.sh\n` +
+        `  Oder global-setup laufen lassen: npx playwright test (startet Backend automatisch neu)`
+      )
     }
-    ctx.backendValidates = await backendValidatesSocialLinks(ctx.ownerToken)
+    if (probeRes.status !== 422) {
+      throw new Error(
+        `[social-link-moderation] Unerwarteter HTTP-Status ${probeRes.status} vom Backend beim Feature-Check.`
+      )
+    }
+
+    // ── 3. Admin-Token prüfen ─────────────────────────────────────────────────
+    if (!ctx.adminToken) {
+      console.warn(
+        `\n⚠️  [social-link-moderation] SETUP REQUIRED: Kein admin_token in .test-state.json.\n` +
+        `   System-Admin-Tests (AC6) werden übersprungen.\n` +
+        `   Fix: global-setup neu ausführen — npx playwright test\n`
+      )
+    }
   })
 
   // ─── AC1 — Direkter Block: onlyfans.com ────────────────────────────────────
@@ -217,11 +195,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     ).toBe(true)
   })
 
-  test('AC1 — Real backend: onlyfans.com blocked (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC1-real: Backend /api/v1/shop-owner/shop does not validate social links yet')
-      return
-    }
+  test('AC1 — Real backend: onlyfans.com blocked', async () => {
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
@@ -229,17 +203,15 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     })
     expect(res.status).toBe(422)
     const body = await res.json()
-    expect(body.error).toBe('social_link_blocked')
-    expect(body.category).toBe('adult')
+    // Backend wraps error in detail: {error, category, ...}
+    const errorPayload = body.detail ?? body
+    expect(errorPayload.error).toBe('social_link_blocked')
+    expect(errorPayload.category).toBe('adult')
   })
 
   // ─── AC2 — Zulässiger Link: xing.com ───────────────────────────────────────
 
-  test('AC2 — xing.com accepted (BLOCKED — backend not validating yet)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC2: Backend social-link validation not implemented — cannot verify xing.com is accepted without also verifying onlyfans.com is rejected')
-      return
-    }
+  test('AC2 — xing.com accepted', async () => {
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
@@ -296,22 +268,22 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     expect(hasShortenerMsg, 'AC3: Frontend must show via_shortener error message with resolved host').toBe(true)
   })
 
-  test('AC3 — Real backend: tinyurl→pornhub blocked (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC3-real: Backend shortener resolution not implemented')
-      return
-    }
-    // NOTE: If real shortener can't be resolved in test env, workaround is to
-    // block tinyurl.com host itself. Here we test the declared API contract.
+  test('AC3 — Real backend: tinyurl shortener is blocked or unresolvable', async () => {
+    // NOTE: The slug 'pornhub-redirect' actually redirects to an unrelated site (bmsce.ac.in),
+    // not to pornhub. We use a guaranteed-non-existent slug instead:
+    // tinyurl.com returns 404 for unknown slugs → final host stays tinyurl.com == apex
+    // → backend triggers shortener_unresolvable (fail-closed). The test accepts both
+    // 'adult' (if we hit a blocked domain) and 'shortener_unresolvable' (if resolution fails).
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
-      body: JSON.stringify({ social_links: { mylink: 'https://tinyurl.com/pornhub-redirect' } }),
+      body: JSON.stringify({ social_links: { mylink: 'https://tinyurl.com/pundo-e2e-test-nonexistent-xyz9999' } }),
     })
     expect(res.status).toBe(422)
     const body = await res.json()
-    expect(body.error).toBe('social_link_blocked')
-    expect(['adult', 'shortener_unresolvable']).toContain(body.category)
+    const errorPayload = body.detail ?? body
+    expect(errorPayload.error).toBe('social_link_blocked')
+    expect(['adult', 'shortener_unresolvable']).toContain(errorPayload.category)
   })
 
   // ─── AC4 — Unresolvbarer Shortener → fail-closed ───────────────────────────
@@ -357,11 +329,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     expect(hasUnresolvableMsg, 'AC4: Frontend must show shortener-unresolvable message').toBe(true)
   })
 
-  test('AC4 — Real backend: unresolvable shortener rejected (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC4-real: Backend shortener resolution not implemented')
-      return
-    }
+  test('AC4 — Real backend: unresolvable shortener rejected', async () => {
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
@@ -372,11 +340,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
   // ─── AC5 — Subdomain-Normalisierung ────────────────────────────────────────
 
-  test('AC5 — Subdomain normalization: www.onlyfans.com and m.onlyfans.com blocked (BLOCKED)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC5: Backend social-link validation not implemented — subdomain check is backend logic')
-      return
-    }
+  test('AC5 — Subdomain normalization: www.onlyfans.com and m.onlyfans.com blocked', async () => {
     for (const url of ['https://www.onlyfans.com/test', 'https://m.onlyfans.com/test']) {
       const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
         method: 'PATCH',
@@ -385,7 +349,8 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       })
       expect(res.status, `AC5: ${url} should be blocked`).toBe(422)
       const body = await res.json()
-      expect(body.error).toBe('social_link_blocked')
+      const errorPayload = body.detail ?? body
+      expect(errorPayload.error).toBe('social_link_blocked')
     }
   })
 
@@ -506,9 +471,9 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     expect(hasValidationError, 'AC6: Invalid host should show inline error').toBe(true)
   })
 
-  test('AC6 — CRUD: create rule → verify in list → delete (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.hasSocialLinkRulesEndpoint) {
-      test.skip(true, 'AC6-crud: Backend /admin/social-link-rules endpoint not yet implemented')
+  test('AC6 — CRUD: create rule → verify in list → blocks shop-save → delete', async () => {
+    if (!ctx.adminToken) {
+      test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
       return
     }
     const testHost = `e2e-block-${UUID}.example`
@@ -530,7 +495,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     expect((list.items?.length ?? list.total ?? 0)).toBeGreaterThan(0)
 
     // Verify it blocks shop-save
-    if (ctx.backendValidates) {
+    {
       const shopRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
@@ -559,11 +524,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     }
   })
 
-  test('AC7 — facebook.com not a false-positive (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC7-false-positive: Backend social-link validation not implemented')
-      return
-    }
+  test('AC7 — facebook.com not a false-positive', async () => {
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Cookie: `shop_owner_token=${ctx.ownerToken}` },
@@ -684,11 +645,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
   // ─── AC9 — Performance ─────────────────────────────────────────────────────
 
-  test('AC9 — Performance: shop save completes within 5s (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.backendValidates) {
-      test.skip(true, 'AC9: Backend social-link validation not implemented — cannot measure real shortener timeout')
-      return
-    }
+  test('AC9 — Performance: shop save completes within 5s', async () => {
     const start = Date.now()
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {
       method: 'PATCH',
@@ -702,9 +659,9 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
   // ─── AC10 — Kein rückwirkendes Delete ──────────────────────────────────────
 
-  test('AC10 — Existing link persists after blocklist expansion (BLOCKED — backend not implemented)', async () => {
-    if (!ctx.hasSocialLinkRulesEndpoint || !ctx.backendValidates) {
-      test.skip(true, 'AC10: Backend not implemented — both blocklist CRUD and social-link validation required')
+  test('AC10 — Existing link persists after blocklist expansion', async () => {
+    if (!ctx.adminToken) {
+      test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
       return
     }
     const testHost = `e2e-existing-${UUID}.example`

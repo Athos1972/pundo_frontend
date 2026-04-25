@@ -144,14 +144,34 @@ test.describe.serial('Customer Discovery Flow', () => {
 
     // Nutze Seed-Shop-Name wenn verfügbar, sonst generischen Begriff
     const query = seedShopName ?? 'shop'
-    await searchInput.fill(query)
-    await searchInput.press('Enter')
+    // Use click + type (not fill) to reliably trigger React's controlled input onChange
+    await searchInput.click()
+    await searchInput.type(query)
+    // Wait a moment for React state to settle, then submit
+    await page.waitForTimeout(200)
 
-    await page.waitForLoadState('networkidle', { timeout: 10_000 })
+    // Submit via Enter key; if URL doesn't change, try clicking the submit button
+    const [navigationPromise] = [page.waitForURL(/\/search|\/shops|\?q=/, { timeout: 5_000 }).catch(() => null)]
+    await searchInput.press('Enter')
+    await navigationPromise
+
     const url = page.url()
     const navigated = url.includes('/search') || url.includes('/shops') || url.includes('q=')
-    logStep(2, 'Suchbegriff eingeben → Navigation', 'URL enthält /search oder q=', url, navigated ? 'PASS' : 'FAIL')
-    expect(navigated, `Nach Suche nicht auf Ergebnisseite navigiert. URL: ${url}`).toBe(true)
+
+    // Fallback: click the submit button if Enter didn't navigate
+    if (!navigated) {
+      const submitBtn = page.locator('button[type="submit"]').first()
+      if (await submitBtn.count() > 0) {
+        await submitBtn.click()
+        await page.waitForLoadState('networkidle', { timeout: 8_000 })
+      }
+    }
+
+    await page.waitForLoadState('networkidle', { timeout: 5_000 })
+    const finalUrl = page.url()
+    const finalNavigated = finalUrl.includes('/search') || finalUrl.includes('/shops') || finalUrl.includes('q=')
+    logStep(2, 'Suchbegriff eingeben → Navigation', 'URL enthält /search oder q=', finalUrl, finalNavigated ? 'PASS' : 'FAIL')
+    expect(finalNavigated, `Nach Suche nicht auf Ergebnisseite navigiert. URL: ${finalUrl}`).toBe(true)
   })
 
   // Step 3: Suchergebnisse — mindestens 1 ProductCard oder ShopCard

@@ -244,20 +244,12 @@ test.describe('E2E-16: Admin Offers Page', () => {
     await expect(page.locator('input[name="q"]')).toBeVisible()
   })
 
-  test('offers list has product_id field (input[name="product_id"])', async ({ page }) => {
+  test('offers list has shop_listing_id field (input[name="shop_listing_id"])', async ({ page }) => {
     const ok = await goAdminPageWithLogin(page, '/admin/offers')
     if (!ok) test.skip()
-    const productIdInput = page.locator('input[name="product_id"]')
-    await expect(productIdInput).toBeVisible()
-    expect(await productIdInput.getAttribute('type')).toBe('number')
-  })
-
-  test('offers list has shop_id field (input[name="shop_id"])', async ({ page }) => {
-    const ok = await goAdminPageWithLogin(page, '/admin/offers')
-    if (!ok) test.skip()
-    const shopIdInput = page.locator('input[name="shop_id"]')
-    await expect(shopIdInput).toBeVisible()
-    expect(await shopIdInput.getAttribute('type')).toBe('number')
+    const shopListingIdInput = page.locator('input[name="shop_listing_id"]')
+    await expect(shopListingIdInput).toBeVisible()
+    expect(await shopListingIdInput.getAttribute('type')).toBe('number')
   })
 })
 
@@ -401,9 +393,9 @@ test.describe('E2E-20: Admin Shop Edit — Spoken Languages', () => {
     await page.goto('/admin/shops/91/edit')
     await page.waitForLoadState('networkidle')
 
-    // All 6 language buttons must be visible
+    // All 6 language buttons must be visible (exact: true avoids matching Next.js dev tools button)
     for (const lang of ['EN', 'DE', 'EL', 'RU', 'AR', 'HE']) {
-      await expect(page.getByRole('button', { name: lang })).toBeVisible()
+      await expect(page.getByRole('button', { name: lang, exact: true })).toBeVisible()
     }
   })
 
@@ -416,7 +408,7 @@ test.describe('E2E-20: Admin Shop Edit — Spoken Languages', () => {
     await page.goto('/admin/shops/91/edit')
     await page.waitForLoadState('networkidle')
 
-    const enBtn = page.getByRole('button', { name: 'EN' })
+    const enBtn = page.getByRole('button', { name: 'EN', exact: true })
     const before = await enBtn.getAttribute('aria-pressed')
     await enBtn.click()
     const after = await enBtn.getAttribute('aria-pressed')

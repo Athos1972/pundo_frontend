@@ -189,57 +189,42 @@ test.describe('Öffnungszeiten', () => {
 })
 
 // ─── Produkte ────────────────────────────────────────────────────────────────
+// Nach dem Unified Item & Offer Model sind /shop-admin/products/* auf
+// /shop-admin/offers/* umgeleitet.
 
 test.describe('Produkte CRUD', () => {
-  const TEST_PRODUCT = 'E2E Testprodukt Olivenöl'
-
-  test('Produkt anlegen', async ({ page }) => {
+  test('Produkt-Routen leiten zu Angebote weiter', async ({ page }) => {
+    // /shop-admin/products/new → /shop-admin/offers/new
     await page.goto('/shop-admin/products/new')
-    await waitHydrated(page)
-    await page.locator('input[name="name"]').fill(TEST_PRODUCT)
-    // Select first real category (index 1, after the "—" placeholder at index 0)
-    await page.locator('select[name="category_id"]').selectOption({ index: 1 })
-    // Add a price tier via PriceTierEditor
-    await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first().click()
-    // Select a unit (first non-empty option)
-    await page.locator('select').last().selectOption({ index: 1 })
-    // Fill in the price for the first step
-    await page.locator('input[inputmode="decimal"]').last().fill('4.99')
-    // Submit via role
-    await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-    // Nach erfolgreichem Anlegen zurück zur Produktliste
-    await expect(page).toHaveURL(/\/shop-admin\/products$/, { timeout: 15_000 })
-    await expect(page.getByText(TEST_PRODUCT).first()).toBeVisible()
-  })
+    await page.waitForLoadState('networkidle')
+    await expect(page).toHaveURL(/\/shop-admin\/offers\/new/, { timeout: 8_000 })
 
-  test('Produkt bearbeiten', async ({ page }) => {
+    // /shop-admin/products → /shop-admin/offers
     await page.goto('/shop-admin/products')
-    await waitHydrated(page)
-    // Edit-Link des ersten Produkts klicken
-    const editLink = page.getByRole('link', { name: /edit|bearbeiten/i }).first()
-    await editLink.click()
-    await expect(page).toHaveURL(/\/edit/)
-    await waitHydrated(page)
-    const nameInput = page.locator('input[name="name"]')
-    await nameInput.fill(`${TEST_PRODUCT} (bearbeitet)`)
-    await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-    await expect(page).toHaveURL(/\/shop-admin\/products$/, { timeout: 15_000 })
-    await expect(page.getByText(/bearbeitet/)).toBeVisible()
-  })
-
-  test('Produkt löschen', async ({ page }) => {
-    await page.goto('/shop-admin/products')
-    await waitHydrated(page)
-    // Click Delete → wait for Cancel button (confirms React committed the confirm state) → click Delete again
-    await page.getByRole('button', { name: /delete|löschen/i }).first().click()
-    await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
-    await page.getByRole('button', { name: /delete|löschen/i }).first().click()
-    // Produkt verschwindet aus Liste
-    await expect(page.getByText(/bearbeitet/)).not.toBeVisible({ timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
+    await expect(page).toHaveURL(/\/shop-admin\/offers/, { timeout: 8_000 })
   })
 })
 
 // ─── Angebote ────────────────────────────────────────────────────────────────
+
+// Helper: Wählt ein Item via ItemPickerModal aus (Schritt 1 des OfferForm)
+async function selectItemViaModal(page: Page, searchQuery: string) {
+  // "Select item"-Button in Step 1 klicken (gestrichelte Umrandung — border-dashed)
+  await page.locator('button.border-dashed').click()
+  // Warten bis der Modal-Text-Such-Input sichtbar ist (placeholder "…")
+  const textSearch = page.locator('input[placeholder="…"]')
+  await textSearch.waitFor({ state: 'visible', timeout: 10_000 })
+  await textSearch.fill(searchQuery)
+  // Debounce (300ms) + API-Aufruf abwarten
+  await page.waitForTimeout(1000)
+  // Ersten Treffer in der Ergebnisliste klicken
+  const firstResult = page.locator('ul li button').first()
+  await firstResult.waitFor({ state: 'visible', timeout: 10_000 })
+  await firstResult.click()
+  // Modal schließt sich; OfferForm wechselt automatisch zu Schritt 2
+  await page.waitForTimeout(500)
+}
 
 test.describe('Angebote CRUD', () => {
   const TEST_OFFER = 'E2E Sommer-Angebot 2026'
@@ -247,10 +232,20 @@ test.describe('Angebote CRUD', () => {
   test('Angebot anlegen', async ({ page }) => {
     await page.goto('/shop-admin/offers/new')
     await waitHydrated(page)
-    await page.locator('input[name="title"]').fill(TEST_OFFER)
-    await page.locator('input[name="price"]').fill('3.50')
+
+    // Schritt 1: Item über den Picker auswählen
+    await selectItemViaModal(page, 'avicentra')
+
+    // Schritt 2 erscheint automatisch nach der Item-Auswahl
+    // Preis-Typ auf "on_request" setzen (kein PriceTierEditor nötig)
+    await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
+    await page.locator('select').first().selectOption('on_request')
+
+    // Aktionszeitraum und Titel befüllen
     await page.locator('input[name="valid_from"]').fill('2026-06-01')
     await page.locator('input[name="valid_until"]').fill('2026-08-31')
+    await page.locator('input[name="title"]').fill(TEST_OFFER)
+
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
     await expect(page.getByText(TEST_OFFER)).toBeVisible()
@@ -259,13 +254,13 @@ test.describe('Angebote CRUD', () => {
   test('Angebot archivieren', async ({ page }) => {
     await page.goto('/shop-admin/offers')
     await waitHydrated(page)
-    // Click Archive → wait for Cancel button → click Archive to confirm
+    // Archive → Cancel sichtbar abwarten → Archive bestätigen
     await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
     await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
     // Angebot verschwindet aus Active-Tab
     await expect(page.getByText(TEST_OFFER)).not.toBeVisible({ timeout: 10_000 })
-    // Im Expired-Tab sichtbar (use .first() to avoid strict mode if duplicates)
+    // Im Expired-Tab sichtbar
     await page.getByRole('button', { name: /expired|abgelaufen/i }).click()
     await expect(page.getByText(TEST_OFFER).first()).toBeVisible()
   })

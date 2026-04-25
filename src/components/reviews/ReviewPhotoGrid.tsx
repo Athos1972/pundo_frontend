@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import type { ReviewPhoto } from '@/types/api'
+import { toRelativeImageUrl } from '@/lib/utils'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 
@@ -17,7 +18,7 @@ export function ReviewPhotoGrid({ photos }: Props) {
   const approved = photos.filter((p) => p.status === 'approved')
   if (approved.length === 0) return null
 
-  const slides = approved.map((p) => ({ src: p.url }))
+  const slides = approved.map((p) => ({ src: toRelativeImageUrl(p.url) ?? p.url }))
 
   return (
     <>
@@ -31,7 +32,7 @@ export function ReviewPhotoGrid({ photos }: Props) {
             aria-label={`Photo ${i + 1}`}
           >
             <Image
-              src={photo.thumbnail_url ?? photo.url}
+              src={toRelativeImageUrl(photo.thumbnail_url) ?? toRelativeImageUrl(photo.url) ?? ''}
               alt=""
               width={64}
               height={64}

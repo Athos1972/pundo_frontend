@@ -47,10 +47,94 @@ Browser-E2E-Tests durch.
 Phase 0:   Scope-Ermittlung     (git diff → was wurde geändert?)
 Phase 1:   Statische Prüfung    (TypeScript + ESLint → fehlerfrei?)
 Phase 2:   Unit-Tests           (Vitest → Coverage-Lücken schließen)
-Phase 3:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
-Phase 4:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
-Phase 4.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
+Phase 3:   Visual Smoke-Test    (Pflicht — immer, unabhängig vom Scope)
+Phase 4:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
+Phase 5:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
+Phase 5.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
 ```
+
+---
+
+## Phase 3: Visual Smoke-Test (PFLICHT — läuft immer)
+
+**Warum Pflicht?** Feature-Tests prüfen nur was gerade geändert wurde. Regressions entstehen durch Seiteneffekte. Der Smoke-Test läuft IMMER, unabhängig davon was im Diff steht.
+
+**Was er prüft:** Seiten die echte Daten rendern — nicht nur ob Routen erreichbar sind, sondern ob die gerendereten Daten korrekt sichtbar sind.
+
+```typescript
+// e2e/journeys/smoke.spec.ts — dieser Test läuft bei JEDEM e2e-tester-Aufruf
+import { test, expect } from '@playwright/test'
+
+const SMOKE_PRODUCTS = [
+  'ferplast-ferplast-sport-g8-200-black-leash',  // hat lokale product_images
+]
+
+test.describe('Visual Smoke-Test', () => {
+
+  test('Produktseite: Bilder laden, Carousel hat Items', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 })
+
+    // Redirect-Trap: CDN-Hotlink-Block oder kaputte URLs auffangen
+    const suspiciousRedirects: string[] = []
+    page.on('response', r => {
+      if (r.status() >= 300 && r.status() < 400) {
+        const loc = r.headers()['location'] ?? ''
+        if (loc.includes('docs.') || loc.includes('guidelines') || loc.includes('error')) {
+          suspiciousRedirects.push(`${r.url()} → ${loc}`)
+        }
+      }
+    })
+
+    await page.goto(`/products/${SMOKE_PRODUCTS[0]}`)
+    await page.waitForLoadState('networkidle')
+
+    // Bilder: mind. 1 muss tatsächlich geladen sein (naturalWidth > 0)
+    const loadedImages = await page.evaluate(() =>
+      [...document.images].filter(i => i.complete && i.naturalWidth > 0).length
+    )
+    expect(loadedImages, 'Keine Bilder geladen (alle broken)').toBeGreaterThan(0)
+
+    // Carousel: DOM-Anzahl bei Tablet-Breite
+    const carouselItems = page.locator('[aria-label*="product"] [role="listitem"], [role="list"] [role="listitem"]')
+    const count = await carouselItems.count()
+    if (count > 0) {
+      // mind. 2 Items im DOM wenn Carousel vorhanden
+      expect(count, 'Carousel hat weniger als 2 Items').toBeGreaterThanOrEqual(2)
+      // und mind. 2 sichtbar im Tablet-Viewport
+      const visible = await page.evaluate(() => {
+        const list = document.querySelector('[role="list"]')
+        if (!list) return 0
+        const lr = list.getBoundingClientRect()
+        return [...list.querySelectorAll('[role="listitem"]')]
+          .filter(el => el.getBoundingClientRect().left < lr.right - 50).length
+      })
+      expect(visible, 'Bei Tablet-Breite sind weniger als 2 Cards sichtbar').toBeGreaterThanOrEqual(2)
+    }
+
+    // Keine CDN-Hotlink-Redirects
+    expect(suspiciousRedirects, `Suspicious redirects: ${suspiciousRedirects.join(', ')}`).toHaveLength(0)
+  })
+
+  test('Suchergebnisse: ProductCards mit Inhalt', async ({ page }) => {
+    await page.goto('/search?q=leash')
+    await page.waitForLoadState('networkidle')
+
+    const cards = page.locator('[data-testid="product-card"], .product-card, [role="article"]')
+    // Weniger strikt: einfach prüfen dass mind. 1 Ergebnis-Item existiert
+    const productLinks = page.locator('a[href^="/products/"]')
+    await expect(productLinks.first()).toBeVisible()
+
+    // Bilder in den Suchergebnissen
+    const loadedImages = await page.evaluate(() =>
+      [...document.images].filter(i => i.complete && i.naturalWidth > 0).length
+    )
+    expect(loadedImages, 'Suchergebnisse: keine Bilder geladen').toBeGreaterThan(0)
+  })
+
+})
+```
+
+**Wenn der Smoke-Test FAIL ist:** Stoppe sofort, analysiere Root Cause. Kein Feature-Test-Weiter ohne grünen Smoke.
 
 ---
 
@@ -202,7 +286,7 @@ Mögliche fehlende Journeys:
   (Weitere N Vorschläge im .journey_backlog geparkt)
 ```
 
-- User antwortet `j` → Eintrag als `approved` in CATALOG.md schreiben (User hat bestätigt → kein Zwischenschritt über `proposed`). Coder implementiert `.spec.ts` im nächsten Spec-Lauf.
+- User antwortet `j` → Eintrag als `approved` in CATALOG.md und als `<id>.md` schreiben. Für H4-Journeys (write-to-read): Body muss die drei Pflicht-ACs aus `CATALOG_SCHEMA.md §5a` enthalten (AC-1 Happy Path, AC-2 Existing-Dependency, AC-3 Feld-Edgecase) — andernfalls ist der Body unvollständig und der Coder darf nicht auf `implemented` setzen. Coder implementiert `.spec.ts` im nächsten Spec-Lauf.
 - User antwortet `n` → Eintrag als `skipped` schreiben mit `skip-reason: "Beim Testlauf <datum> abgelehnt"`.
 - Phase 0.5 schreibt **nur** nach User-Bestätigung — außer `last-run`/`last-result` (das macht Phase 4).
 
@@ -362,6 +446,47 @@ curl -s http://localhost:8500/api/v1/health 2>&1 | head -3 || echo "Test-Backend
 
 ---
 
+## Grundprinzip: DOM-Präsenz ≠ Korrekte Darstellung
+
+**"Sichtbar" bedeutet nicht "korrekt geladen".** Ein `<img>`-Element existiert im DOM, auch wenn das Bild broken ist. Ein `<p>`-Element ist da, auch wenn es leer ist. Ein Link ist klickbar, auch wenn er auf eine 404-Seite zeigt.
+
+E2E-Tests prüfen **Observable Outcomes** — was der User tatsächlich sieht, nicht was im DOM steht.
+
+| Datenkategorie | DOM-Prüfung (reicht nicht) | Observable-Outcome-Prüfung (Pflicht) |
+|---|---|---|
+| Bilder | `img` existiert | `img.naturalWidth > 0` — Bild wurde tatsächlich geladen |
+| Text-Felder | Element vorhanden | `textContent` nicht leer, enthält erwarteten Wert |
+| Preise | Preiscontainer sichtbar | Enthält gültiges Format (Zahl + Währung) |
+| Links | `<a>` vorhanden | Href nicht leer, kein 404 bei navigation |
+| Network-Requests | Request wurde gemacht | Response-Status 200 (kein Redirect zu Docs/Error-Pages) |
+
+**Broken-Image-Check in Playwright:**
+```typescript
+// Prüft ob mindestens eine erwartete Bild-Gruppe tatsächlich lädt
+const images = page.locator('img[src]')
+const count = await images.count()
+if (count > 0) {
+  const loaded = await page.evaluate(() =>
+    [...document.images].filter(i => i.complete && i.naturalWidth > 0).length
+  )
+  expect(loaded).toBeGreaterThan(0) // mind. 1 Bild geladen (kein komplett-broken)
+}
+```
+
+**Network-Redirect-Check:**
+```typescript
+// Fängt 3xx-Redirects auf unerwartete Ziele ab (z.B. CDN-Hotlinking-Block)
+page.on('response', r => {
+  if (r.status() >= 300 && r.status() < 400) {
+    const location = r.headers()['location'] ?? ''
+    expect(location).not.toContain('guidelines') // Brandfetch-Block-Muster
+    expect(location).not.toContain('docs.')
+  }
+})
+```
+
+---
+
 ### E2E-01: Startseite lädt korrekt
 
 ```bash
@@ -433,10 +558,32 @@ test('Deutsche Sprache setzt dir=ltr', async ({ page }) => {
 | # | Prüfung | Kriterium |
 |---|---------|-----------|
 | 1 | Route erreichbar | `/products/[slug]` gibt 200 oder sinnvolles 404 |
-| 2 | Produkt-Daten angezeigt | Name, Bild (oder Fallback), Preise sichtbar |
+| 2 | Produkt-Daten angezeigt | Name, Bild geladen (`img.naturalWidth > 0`) oder expliziter Fallback-Container sichtbar, Preise sichtbar |
 | 3 | OfferList angezeigt | Mindestens 1 Angebot oder leerer Zustand |
 | 4 | Back-Button funktioniert | Klick navigiert zurück |
 | 5 | Kein JS-Fehler | Console ohne Errors |
+| 6 | Related-Products-Carousel | `[role="listitem"]` Count ≥ 1; bei Tablet-Breite (768px) mind. 2 Cards im sichtbaren Bereich (`getBoundingClientRect().right < carouselWidth`) |
+
+```typescript
+// Carousel-Check: DOM-Anzahl UND sichtbare Cards bei Tablet
+test('Related-Products-Carousel zeigt mehrere Items', async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 })
+  await page.goto('/products/ferplast-ferplast-sport-g8-200-black-leash') // Produkt mit bekannten related items
+
+  const items = page.locator('[role="list"] [role="listitem"]')
+  await expect(items).toHaveCountGreaterThan(1) // mind. 2 im DOM
+
+  // Sichtbare Cards im Viewport zählen
+  const visibleCount = await page.evaluate(() => {
+    const list = document.querySelector('[role="list"]')
+    if (!list) return 0
+    const listRect = list.getBoundingClientRect()
+    return [...list.querySelectorAll('[role="listitem"]')]
+      .filter(el => el.getBoundingClientRect().left < listRect.right - 50).length
+  })
+  expect(visibleCount).toBeGreaterThanOrEqual(2)
+})
+```
 
 ---
 
@@ -751,9 +898,86 @@ Neue Zeile unter dem Abschlussbericht:
 
 ---
 
+## Phase 5: Produktions-Migration (nur bei SHIP-Verdict)
+
+**Trigger:** Verdict aus Phase 4 ist `SHIP` — alle Tests auf 3500/8500 grün.
+**Nie ausführen bei:** `FIX` oder `ESCALATE`.
+
+### Schritt 1: Prüfen ob Backend-Migrations ausstehen
+
+```bash
+BACKEND_REPO="/Users/bb_studio_2025/dev/github/pundo_main_backend"
+cd "$BACKEND_REPO"
+
+# Aktuellen Stand der Produktions-DB ermitteln
+CURRENT=$(.venv/bin/alembic current 2>&1 | grep -v INFO | tr -d ' ')
+
+# Verfügbarer Head
+HEAD=$(.venv/bin/alembic heads 2>&1 | grep -v INFO | awk '{print $1}')
+
+echo "DB aktuell: $CURRENT | Alembic head: $HEAD"
+```
+
+Wenn `CURRENT == HEAD (head)`: keine Migration nötig → Phase 5 übersprungen, im Bericht vermerken.
+
+Wenn `CURRENT != HEAD`: Migrations ausstehend → weiter mit Schritt 2.
+
+### Schritt 2: Migration prüfen (nur additive erlaubt)
+
+```bash
+# Zeige SQL-Preview der ausstehenden Migration(en)
+.venv/bin/alembic upgrade head --sql 2>&1 | head -60
+```
+
+Prüfe den Output auf:
+- `CREATE TABLE` / `CREATE INDEX` / `INSERT` → **sicher, fortfahren**
+- `DROP TABLE` / `DROP COLUMN` / `ALTER TABLE ... DROP` → **STOPP** — destruktive Migration, nicht automatisch anwenden, User benachrichtigen
+
+Bei destruktiver Migration: Verdict bleibt SHIP für Tests, aber Phase 5 gibt `MIGRATION_MANUAL` zurück:
+```
+⚠️  Phase 5: MIGRATION_MANUAL
+    Ausstehende Migration enthält destruktive Operationen (DROP).
+    Bitte manuell prüfen und mit: alembic upgrade head ausführen.
+```
+
+### Schritt 3: Migration anwenden
+
+```bash
+cd "$BACKEND_REPO"
+.venv/bin/alembic upgrade head 2>&1
+```
+
+Erwarteter Output: `Running upgrade <from> -> <to>, <description>`
+
+Verifizieren:
+```bash
+.venv/bin/alembic current 2>&1 | grep -v INFO
+# Muss "(head)" enthalten
+```
+
+### Schritt 4: Im Bericht dokumentieren
+
+```
+### Phase 5: Produktions-Migration
+| Schritt | Ergebnis |
+|---------|----------|
+| Migrations ausstehend | ja / nein |
+| Migrationstyp | additiv / destruktiv / keine |
+| Angewendet | <revision-id> → <revision-id> / übersprungen / MIGRATION_MANUAL |
+| DB-Stand nach Migration | <revision-id> (head) |
+```
+
+**Was Phase 5 NICHT macht:**
+- Produktions-Server (Port 3000/8000) neu starten — das bleibt dem User vorbehalten
+- Migrations auf `pundo_test` anwenden — das macht `prepare_e2e_db.py` automatisch
+- Bei Fehler weitermachen — bei unerwartetem Alembic-Fehler: `MIGRATION_MANUAL` + Fehlermeldung ausgeben
+
+---
+
 ## Wichtige Hinweise
 
 - **NIEMALS Produktivdaten verändern.** Kein Schreiben in Produktiv-DB.
+- **Ausnahme Phase 5:** Alembic-Migrations auf `pundo` sind explizit erlaubt, aber nur additiv und nur nach SHIP-Verdict.
 - **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Produktiv: 3000/8000. Niemals direkt auf Produktiv testen.
 - **AGENTS.md lesen:** Next.js 16.2.2 hat Breaking Changes — Docs prüfen!
 - **RTL-Flag muss explizit gesetzt sein** — niemals raten.

@@ -25,6 +25,8 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   const contentType = request.headers.get('content-type')
   if (contentType) headers['Content-Type'] = contentType
   if (token) headers['Authorization'] = `Bearer ${token}`
+  const acceptLang = request.headers.get('accept-language')
+  if (acceptLang) headers['Accept-Language'] = acceptLang
 
   const hasBody = !['GET', 'HEAD'].includes(request.method)
   const body = hasBody ? await request.blob() : undefined

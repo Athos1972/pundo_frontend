@@ -250,42 +250,66 @@ test.describe('Shop-Produkt via Admin anlegen', () => {
     })(),
   })
 
-  const PRODUCT_NAME = 'E2E Geo-Test Olivenöl'
+  const TEST_OFFER_TITLE = 'E2E Geo-Test Olivenöl Angebot'
 
   test('Produkt anlegen und via API abrufen', async ({ page }) => {
     const state = loadStorageState()
 
-    // Produkt im Shop-Admin anlegen
-    await page.goto('/shop-admin/products/new')
+    // Angebot mit neuem Item anlegen — neuer Unified Flow (Produkte → Angebote)
+    await page.goto('/shop-admin/offers/new')
     await page.waitForLoadState('networkidle')
-    await page.locator('input[name="name"]').fill(PRODUCT_NAME)
-    // Select first available category (required by backend)
-    const categorySelect = page.locator('select[name="category_id"]')
-    if (await categorySelect.isVisible()) {
-      const opts = await categorySelect.locator('option').count()
-      if (opts > 1) await categorySelect.selectOption({ index: 1 })
-    }
-    await page.locator('input[name="price"]').fill('5.99')
-    await page.locator('input[name="unit"]').fill('l')
-    await page.locator('button[type="submit"]').click()
-    // Use $ anchor to distinguish /shop-admin/products from /shop-admin/products/new
-    await expect(page).toHaveURL(/\/shop-admin\/products$/, { timeout: 10_000 })
-    await expect(page.getByText(PRODUCT_NAME)).toBeVisible()
+    await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 })
+
+    // Step 1: "Select item" Button klicken (gestrichelte Umrandung — border-dashed)
+    await page.locator('button.border-dashed').click()
+
+    // Im Modal: Text-Suche (placeholder "…") → erstes Ergebnis auswählen
+    const textSearch = page.locator('input[placeholder="…"]')
+    await textSearch.waitFor({ state: 'visible', timeout: 10_000 })
+    await textSearch.fill('avicentra')
+    // Debounce (300ms) + API abwarten
+    await page.waitForTimeout(1000)
+    const firstResult = page.locator('ul li button').first()
+    await firstResult.waitFor({ state: 'visible', timeout: 10_000 })
+    await firstResult.click()
+    // Modal schließt sich, Step 2 erscheint automatisch
+    await page.waitForTimeout(500)
+
+    // Step 2: Preis-Typ auf "on_request" setzen
+    await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
+    await page.locator('select').first().selectOption('on_request')
+
+    // Angebots-Titel setzen (für API-Verifikation)
+    await page.locator('input[name="title"]').fill(TEST_OFFER_TITLE)
+    await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
+    await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
 
     // Kurze Pause für DB-Commit
     await page.waitForTimeout(500)
 
-    // Via API prüfen: Produkt gehört dem Shop des Test-Owners
-    const shop = await fetchShopByOwner(state.ownerId)
-    if (shop?.slug ?? shop?.id) {
-      const shopId = shop.id
-      const res = await fetch(`${BACKEND_URL}/api/v1/shops/${shopId}/products`)
+    // Via API prüfen: Angebot gehört dem e2e-Shop
+    // fetchShopByOwner kann mehrere Shops zurückgeben wenn owner_id=1 auf Produktionsdaten zeigt.
+    // Bevorzuge den e2e-Shop-Slug aus dem test-state oder suche per Name.
+    const savedSlug = (state as Record<string, unknown>).shopSlug as string | null ?? null
+    let targetSlug: string | null = savedSlug
+
+    if (!targetSlug) {
+      // Suche per Shop-Name — findet den e2e-registrierten Shop
+      const searchRes = await fetch(`${BACKEND_URL}/api/v1/shops?q=${encodeURIComponent(state.shop_name)}&limit=20`)
+      if (searchRes.ok) {
+        const data = await searchRes.json()
+        const items = (Array.isArray(data) ? data : data?.items ?? []) as ShopRecord[]
+        const eShop = items.find(s => s.slug?.includes('e2e')) ?? items[0] ?? null
+        targetSlug = eShop?.slug ?? null
+      }
+    }
+
+    if (targetSlug) {
+      const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${targetSlug}/offers`)
       if (res.ok) {
-        const products = await res.json()
-        const found = (Array.isArray(products) ? products : products?.items ?? []).some(
-          (p: { name?: string }) => (p.name ?? '').includes('Olivenöl')
-        )
-        expect(found, 'Produkt nicht in API gefunden').toBe(true)
+        const offers: Array<{ title?: string | null }> = await res.json()
+        const found = offers.some((o) => (o.title ?? '').includes('Olivenöl'))
+        expect(found, 'Angebot nicht in API gefunden').toBe(true)
       }
     }
   })

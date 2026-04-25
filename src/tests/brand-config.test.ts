@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getBrandConfig, buildThemeCss } from '@/config/brands'
 import { pundoConfig } from '@/config/brands/pundo'
-import { ruskyConfig } from '@/config/brands/rusky'
 import { naidivseConfig } from '@/config/brands/naidivse'
 
 describe('getBrandConfig — Domain-Lookup', () => {
@@ -11,14 +10,6 @@ describe('getBrandConfig — Domain-Lookup', () => {
 
   it('www.pundo.cy → pundo brand (www stripped)', () => {
     expect(getBrandConfig('www.pundo.cy').slug).toBe('pundo')
-  })
-
-  it('rusky-in-cyprus.de → rusky brand', () => {
-    expect(getBrandConfig('rusky-in-cyprus.de').slug).toBe('rusky')
-  })
-
-  it('www.rusky-in-cyprus.de → rusky brand', () => {
-    expect(getBrandConfig('www.rusky-in-cyprus.de').slug).toBe('rusky')
   })
 
   it('unbekannte Domain → pundo Fallback', () => {
@@ -31,10 +22,6 @@ describe('getBrandConfig — Domain-Lookup', () => {
 
   it('Slug direkt: "pundo" → pundo brand', () => {
     expect(getBrandConfig('pundo').slug).toBe('pundo')
-  })
-
-  it('Slug direkt: "rusky" → rusky brand', () => {
-    expect(getBrandConfig('rusky').slug).toBe('rusky')
   })
 
   it('naidivse.com → naidivse brand', () => {
@@ -51,7 +38,7 @@ describe('getBrandConfig — Domain-Lookup', () => {
 })
 
 describe('BrandConfig — Vollständigkeit', () => {
-  const brands = [pundoConfig, ruskyConfig, naidivseConfig]
+  const brands = [pundoConfig, naidivseConfig]
 
   for (const brand of brands) {
     it(`${brand.slug}: alle Pflichtfelder vorhanden`, () => {
@@ -87,20 +74,8 @@ describe('buildThemeCss', () => {
     expect(css).toContain('#D4622A')
   })
 
-  it('enthält rusky-Primärfarbe für rusky brand', () => {
-    const css = buildThemeCss(ruskyConfig)
-    expect(css).toContain(ruskyConfig.theme.accent)
-  })
-
-  it('pundo und rusky haben unterschiedliche Primärfarben', () => {
-    const pundoCss = buildThemeCss(pundoConfig)
-    const ruskyCss = buildThemeCss(ruskyConfig)
-    expect(pundoCss).not.toBe(ruskyCss)
-  })
-
   it('kein XSS-Risiko: Farb-Werte enthalten nur #hex', () => {
     const css = buildThemeCss(pundoConfig)
-    // CSS-Werte dürfen kein <script> oder </style> enthalten
     expect(css).not.toContain('<')
     expect(css).not.toContain('>')
   })
@@ -109,10 +84,6 @@ describe('buildThemeCss', () => {
 describe('Brand Feature Flags', () => {
   it('pundo hat socialFeed: false', () => {
     expect(pundoConfig.features.socialFeed).toBe(false)
-  })
-
-  it('rusky hat socialFeed: true', () => {
-    expect(ruskyConfig.features.socialFeed).toBe(true)
   })
 
   it('naidivse hat socialFeed: false', () => {

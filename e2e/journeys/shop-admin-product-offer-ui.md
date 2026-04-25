@@ -1,8 +1,8 @@
 ---
 id: shop-admin-product-offer-ui
 title: Shop-Admin Produkt + Angebot anlegen (UI Golden Path)
-status: implemented
-spec-file: e2e/journeys/shop-admin-product-offer-ui.spec.ts
+status: deprecated
+spec-file: e2e/journeys/shop-admin-offers.spec.ts
 priority: P2
 owner-agent: coder
 proposed-in-spec: shop-admin-offers-catalogued-20260424
@@ -24,8 +24,12 @@ last-result: N/A
 last-run-sha: bc4e8ac89c083856c0eb12e76a581461f768787b
 ---
 
-### Journey: Shop-Admin Produkt + Angebot — UI Golden Path
+### DEPRECATED — Migriert nach `shop-admin-offers.spec.ts`
 
-**Ziel:** Vollständiger UI-Flow: Neues Produkt anlegen → Angebot mit Preis → Angebot ohne Preis → Angebot mit Produkt verknüpft. Kunde sieht alle Varianten korrekt auf der Shop-Seite.
+**Datum:** 2026-04-25
+**Grund:** `shop-admin-product-offer-ui.spec.ts` gelöscht. Der einzige `describe.fixme`-Block
+testete `/shop-admin/products/new` (jetzt Redirect-only) und das alte `product_id`/`price`-Schema.
 
-**Tests:** UI-P1 (Produkt anlegen), UI-O1 (Angebot mit Preis), UI-O2 (ohne Preis), UI-O3 (Produkt verknüpft).
+**Was ersetzt UI-P1/UI-O1/UI-O2/UI-O3:**
+- Angebote anlegen via UI: `shop-admin-offers.spec.ts` Gruppe A (A1–A6) und REGRESSION
+- Kundensicht: `shop-admin-offers.spec.ts` Gruppe D (D1, D2) und SP4

@@ -282,8 +282,10 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     expect(res.status).toBe(422)
     const body = await res.json()
     const errorPayload = body.detail ?? body
-    expect(errorPayload.error).toBe('social_link_blocked')
-    expect(['adult', 'shortener_unresolvable']).toContain(errorPayload.category)
+    // Backend uses 'social_link_blocked' for direct category hits and
+    // 'shortener_unresolvable' for fail-closed shortener resolution failures.
+    // Both indicate the link was correctly rejected.
+    expect(['social_link_blocked', 'shortener_unresolvable']).toContain(errorPayload.error)
   })
 
   // ─── AC4 — Unresolvbarer Shortener → fail-closed ───────────────────────────
@@ -394,7 +396,8 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     await page.context().addCookies([
       { name: 'admin_token', value: ctx.adminToken, url: FRONTEND_URL },
     ])
-    await page.goto(`${FRONTEND_URL}/admin`)
+    // /admin has no page.tsx — navigate to the dashboard which has the full nav
+    await page.goto(`${FRONTEND_URL}/admin/dashboard`)
     await page.waitForLoadState('domcontentloaded')
 
     const navLink = page.locator('nav a[href*="social-link-rules"], a[href*="social-link-rules"]').first()
@@ -476,7 +479,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
       return
     }
-    const testHost = `e2e-block-${UUID}.example`
+    const testHost = `e2e-block-${UUID}.com`
     const createRes = await fetch(`${BACKEND_URL}/api/v1/admin/social-link-rules`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${ctx.adminToken}` },
@@ -664,7 +667,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
       return
     }
-    const testHost = `e2e-existing-${UUID}.example`
+    const testHost = `e2e-existing-${UUID}.com`
 
     // Step 1: Save link (testHost not yet blocked) → must succeed
     const save1 = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop`, {

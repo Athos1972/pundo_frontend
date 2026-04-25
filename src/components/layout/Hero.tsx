@@ -49,7 +49,7 @@ export function Hero({ brand, categories, lang }: Props) {
 
   const catGrid = categories.slice(0, 6)
 
-  const slug = brand.slug as 'pundo' | 'naidivse' | 'rusky'
+  const slug = brand.slug as 'pundo' | 'naidivse'
   const titleKey = `hero_title_${slug}` as keyof typeof tr
   const taglineKey = `hero_tagline_${slug}` as keyof typeof tr
   const painPointKey = `hero_pain_point_${slug === 'naidivse' ? 'naidivse' : 'pundo'}` as keyof typeof tr

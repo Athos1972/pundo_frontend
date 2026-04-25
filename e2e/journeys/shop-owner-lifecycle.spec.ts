@@ -281,9 +281,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   test('Schritt 4 — Shop ist nach Approval aktiv', async ({ request }) => {
     // Expected: shop status active
     if (!ctx.shopId || !ctx.adminToken) {
-      logStep(4, 'Shop-Status prüfen', 'status: active', 'shopId nicht verfügbar', 'SKIP')
-      test.skip(true, 'shopId nicht gesetzt — Geocoding-Schritt fehlgeschlagen')
-      return
+      throw new Error('PREREQUISITE BROKEN: shopId or adminToken not set — beforeAll setup must have failed')
     }
     const res = await request.get(`${BACKEND_URL}/api/v1/admin/shops/${ctx.shopId}`, {
       headers: { Cookie: `admin_token=${ctx.adminToken}` },
@@ -297,9 +295,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   // Step 5: Produkt anlegen (via Owner-Frontend-API oder Admin)
   test('Schritt 5 — Produkt anlegen', async ({ request }) => {
     if (!ctx.shopId || !ctx.adminToken) {
-      logStep(5, 'Produkt anlegen', '1 Produkt angelegt', 'shopId fehlt', 'SKIP')
-      test.skip(true, 'shopId nicht gesetzt')
-      return
+      throw new Error('PREREQUISITE BROKEN: shopId or adminToken not set — beforeAll setup must have failed')
     }
 
     // Erst Kategorien holen
@@ -358,6 +354,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
     if (!hasSearch) {
       logStep(6, 'Guest sucht Shop', 'Suchfeld sichtbar', 'Suchfeld nicht gefunden', 'SKIP')
+      // INTENTIONAL SKIP — search field is optional UI element (may not exist on all pages/layouts)
       test.skip(true, 'Reason: Suchfeld nicht gefunden auf der Startseite')
       return
     }
@@ -372,6 +369,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
     // Suche findet ggf. nichts wenn kein Produkt angelegt — kein hartes FAIL
     if (found === 0) {
+      // INTENTIONAL SKIP — shop may not appear in search without products (expected backend behavior)
       test.skip(true, 'Reason: Shop ohne Produkt ggf. nicht in Suche sichtbar — kein Backend-Feature-Bug')
     }
     expect(found).toBeGreaterThan(0)
@@ -380,9 +378,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   // Step 7: Shop-Detailseite
   test('Schritt 7 — Shop-Detailseite als Guest erreichbar', async ({ page }) => {
     if (!ctx.shopSlug) {
-      logStep(7, 'Shop-Detailseite aufrufen', 'Seite lädt', 'shopSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopSlug nicht gesetzt')
-      return
+      throw new Error('PREREQUISITE BROKEN: shopSlug not set — beforeAll setup must have failed')
     }
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
@@ -399,9 +395,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   // Step 8: Shop deaktivieren
   test('Schritt 8 — Shop deaktivieren (status: inactive)', async ({ request }) => {
     if (!ctx.shopId || !ctx.adminToken) {
-      logStep(8, 'Shop deaktivieren', 'status: inactive gesetzt', 'shopId fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopId nicht gesetzt')
-      return
+      throw new Error('PREREQUISITE BROKEN: shopId or adminToken not set — beforeAll setup must have failed')
     }
     const res = await request.patch(`${BACKEND_URL}/api/v1/admin/shops/${ctx.shopId}`, {
       data: { status: 'inactive' },
@@ -415,9 +409,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   // Step 9: Nach Deaktivierung nicht mehr sichtbar
   test('Schritt 9 — Shop nach Deaktivierung nicht mehr in Suche', async ({ page }) => {
     if (!ctx.shopSlug) {
-      logStep(9, 'Shop nach Deaktivierung unsichtbar', 'Shop nicht in Suche', 'shopSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopSlug fehlt')
-      return
+      throw new Error('PREREQUISITE BROKEN: shopSlug not set — beforeAll setup must have failed')
     }
 
     // Kurze Wartezeit für Cache-Invalidierung

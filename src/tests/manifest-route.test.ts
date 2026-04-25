@@ -16,14 +16,6 @@ describe('manifest.webmanifest Route', () => {
     expect(body.theme_color).toBe('#D4622A')
   })
 
-  it('rusky-in-cyprus.de → Rusky-Manifest', async () => {
-    const res = await GET(makeRequest('rusky-in-cyprus.de'))
-    const body = await res.json()
-    expect(body.name).toContain('Rusky')
-    expect(body.short_name).toBe('Rusky')
-    expect(body.theme_color).toBe('#CC2200')
-  })
-
   it('unbekannte Domain → Pundo-Fallback', async () => {
     const res = await GET(makeRequest('unknown.com'))
     const body = await res.json()

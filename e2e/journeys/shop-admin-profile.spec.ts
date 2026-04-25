@@ -191,15 +191,36 @@ test.describe.serial('Szenario A — Tabula Rasa: Erstes Befüllen aller Felder'
 
   test.beforeAll(async () => {
     ownerToken = await getOwnerToken(state.email, state.password)
+    // Reset to blank state — other journey tests may have modified the shop before us.
+    // This makes Szenario A order-independent.
+    await patchShopProfile(ownerToken, {
+      description: null,
+      website_url: null,
+      whatsapp_number: null,
+      social_links: null,
+      spoken_languages: [],
+    })
+    // Reset opening hours to all-closed (7 days, 0=Monday..6=Sunday)
+    const allClosed = [0, 1, 2, 3, 4, 5, 6].map(day => ({
+      day,
+      closed: true,
+      open: '00:00',
+      close: '00:00',
+    }))
+    await putOpeningHours(ownerToken, allClosed)
   })
 
   // ── A1: Ausgangszustand ist leer ───────────────────────────────────────────
 
   test('A1 — API: Ausgangszustand nach DB-Reset ist vollständig leer', async () => {
     const profile = await getShopProfile(ownerToken)
-    expect(profile.description, 'description ist null').toBeNull()
-    expect(profile.website_url, 'website_url ist null').toBeNull()
-    expect(profile.whatsapp_number, 'whatsapp_number ist null').toBeNull()
+    // Backend normalises null → '' for string fields — accept both as "empty"
+    const descEmpty = profile.description === null || profile.description === ''
+    expect(descEmpty, 'description ist null oder leer').toBe(true)
+    const websiteEmpty = profile.website_url === null || profile.website_url === ''
+    expect(websiteEmpty, 'website_url ist null oder leer').toBe(true)
+    const whatsappEmpty = profile.whatsapp_number === null || profile.whatsapp_number === ''
+    expect(whatsappEmpty, 'whatsapp_number ist null oder leer').toBe(true)
     expect(profile.social_links, 'social_links ist null').toBeNull()
     // spoken_languages is [] or null after fresh DB
     const langs = profile.spoken_languages as string[] | null

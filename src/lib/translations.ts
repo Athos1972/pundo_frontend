@@ -197,7 +197,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'Discover what Cyprus really has.',
     hero_title_naidivse: 'Find everything Cyprus really has.',
-    hero_title_rusky: 'Find Everything. Nearby.',
     hero_tagline_pundo: 'Shops, artisans & hidden gems — in your language.',
     hero_tagline_naidivse: 'Cyprus — in your language.',
     hero_pain_point_pundo: "The island has more to offer than Google shows. Pundo collects local shops, artisans, service providers and hidden gems — and makes them findable. Whether you speak English, German, Russian or Greek. We're still growing, but just start searching.",
@@ -502,7 +501,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'Finde, was Zypern wirklich hat.',
     hero_title_naidivse: 'Finde alles, was Zypern wirklich hat.',
-    hero_title_rusky: 'Finde alles. In der Nähe.',
     hero_tagline_pundo: 'Shops, Handwerker & Geheimtipps — in deiner Sprache.',
     hero_tagline_naidivse: 'Zypern — in deiner Sprache.',
     hero_pain_point_pundo: 'Die Insel hat mehr zu bieten, als Google dir zeigt. Pundo sammelt lokale Shops, Handwerker, Dienstleister und Geheimtipps — und macht sie auffindbar. Egal ob du Englisch, Deutsch, Russisch oder Griechisch sprichst. Wir sind noch am Wachsen, aber fang einfach an zu suchen.',
@@ -807,7 +805,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'Найди, что на самом деле есть на Кипре.',
     hero_title_naidivse: 'Найди всё, что есть на Кипре на самом деле.',
-    hero_title_rusky: 'Найди всё. Рядом.',
     hero_tagline_pundo: 'Магазины, мастера и тайные места — на твоём языке.',
     hero_tagline_naidivse: 'Кипр — на твоём языке.',
     hero_pain_point_pundo: 'На острове больше, чем показывает Google. Pundo собирает местные магазины, мастеров, сервисы и тайные места — и делает их находимыми. Неважно, говоришь ли ты по-английски, по-немецки, по-русски или по-гречески. Мы ещё растём, но просто начни искать.',
@@ -1112,7 +1109,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'Ανακάλυψε τι έχει πραγματικά η Κύπρος.',
     hero_title_naidivse: 'Βρες όλα όσα έχει πραγματικά η Κύπρος.',
-    hero_title_rusky: 'Βρες τα πάντα. Κοντά σου.',
     hero_tagline_pundo: 'Καταστήματα, τεχνίτες & κρυφοί θησαυροί — στη γλώσσα σου.',
     hero_tagline_naidivse: 'Κύπρος — στη γλώσσα σου.',
     hero_pain_point_pundo: 'Το νησί έχει να προσφέρει περισσότερα από ό,τι σου δείχνει η Google. Το Pundo συλλέγει τοπικά καταστήματα, τεχνίτες, παρόχους υπηρεσιών και κρυμμένους θησαυρούς — και τους κάνει εύκολα ανιχνεύσιμους. Μιλάς αγγλικά, γερμανικά, ρωσικά ή ελληνικά; Μεγαλώνουμε ακόμα, αλλά απλά ξεκίνα να ψάχνεις.',
@@ -1417,7 +1413,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'اكتشف ما تمتلكه قبرص حقاً.',
     hero_title_naidivse: 'اكتشف كل ما تمتلكه قبرص حقاً.',
-    hero_title_rusky: 'اعثر على كل شيء. بالقرب منك.',
     hero_tagline_pundo: 'محلات، حرفيون ونصائح خفية — بلغتك.',
     hero_tagline_naidivse: 'قبرص — بلغتك.',
     hero_pain_point_pundo: 'الجزيرة لديها أكثر مما تُظهره Google. يجمع Pundo المحلات المحلية، الحرفيين، مزودي الخدمات والأماكن الخفية — ويجعلها قابلة للاكتشاف. سواء كنت تتحدث الإنجليزية، الألمانية، الروسية أو اليونانية. ما زلنا في طور النمو، لكن ابدأ البحث الآن.',
@@ -1722,7 +1717,6 @@ export const translations = {
     // Hero
     hero_title_pundo: 'גלה מה יש באמת בקפריסין.',
     hero_title_naidivse: 'גלה את כל מה שיש באמת בקפריסין.',
-    hero_title_rusky: 'מצא הכל. בקרבת מקום.',
     hero_tagline_pundo: 'חנויות, בעלי מלאכה וטיפים נסתרים — בשפה שלך.',
     hero_tagline_naidivse: 'קפריסין — בשפה שלך.',
     hero_pain_point_pundo: 'לאי יש יותר מה שגוגל מציג. Pundo אוסף חנויות מקומיות, בעלי מלאכה, ספקי שירות וטיפים נסתרים — ועושה אותם ניתנים לחיפוש. בין אם אתה מדבר אנגלית, גרמנית, רוסית או יוונית. אנחנו עדיין גדלים, אך פשוט התחל לחפש.',

@@ -19,6 +19,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -224,80 +225,94 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     })
 
     if (!regRes.ok) {
-      // Try login if already registered
+      // Try login if already registered (idempotent re-run)
       const loginRes = await apiFetch('POST', '/api/v1/shop-owner/login', {
         email: ctx.ownerEmail,
         password: ctx.ownerPassword,
       })
-      if (loginRes.ok) {
-        ctx.ownerId = (loginRes.data as { id: number }).id
+      if (!loginRes.ok) {
+        throw new Error(
+          `SETUP BROKEN: Register returned ${regRes.status} and fallback login also failed: ${loginRes.status}. ` +
+          `Body: ${JSON.stringify(regRes.data)}`
+        )
       }
+      ctx.ownerId = (loginRes.data as { id: number }).id
     } else {
       ctx.ownerId = (regRes.data as { id: number }).id
     }
-    if (ctx.ownerId) {
-      ctx.fixtures[0].id = ctx.ownerId
-      ctx.fixtures[0].built = true
+    if (!ctx.ownerId) {
+      throw new Error('SETUP BROKEN: ownerId is null after register + login attempts')
     }
+    ctx.fixtures[0].id = ctx.ownerId
+    ctx.fixtures[0].built = true
 
     // Step 2: Admin approves owner
-    if (ctx.ownerId) {
-      await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.ownerId}`, { status: 'approved' }, adminHeaders())
-    }
+    await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.ownerId}`, { status: 'approved' }, adminHeaders())
 
     // Step 3: Owner login → get token + first shop (shop-A)
     const ownerLoginRes = await apiFetch('POST', '/api/v1/shop-owner/login', {
       email: ctx.ownerEmail,
       password: ctx.ownerPassword,
     })
-    if (ownerLoginRes.ok) {
-      const d = ownerLoginRes.data as { token?: string; access_token?: string; id?: number }
-      ctx.ownerToken = d.token ?? d.access_token ?? null
-      if (!ctx.ownerId) ctx.ownerId = d.id ?? null
+    if (!ownerLoginRes.ok) {
+      throw new Error(`SETUP BROKEN: Owner login after approval failed: ${ownerLoginRes.status}`)
     }
+    const ownerLoginData = ownerLoginRes.data as { token?: string; access_token?: string; id?: number }
+    ctx.ownerToken = ownerLoginData.token ?? ownerLoginData.access_token ?? null
+    if (!ctx.ownerId) ctx.ownerId = ownerLoginData.id ?? null
 
     // Get owner's existing shop (shop-A, created during registration)
-    if (ctx.ownerId) {
-      const ownerDetailRes = await apiFetch('GET', `/api/v1/admin/shop-owners/${ctx.ownerId}`, undefined, adminHeaders())
-      if (ownerDetailRes.ok) {
-        const ownerData = ownerDetailRes.data as { shop_id?: number }
-        if (ownerData.shop_id) {
-          ctx.shopAId = ownerData.shop_id
-          ctx.fixtures.push({ name: `${PREFIX}-shop-A`, id: ctx.shopAId, slug: null, built: true, deleted: false, type: 'shop' })
-
-          // Set geo + enriched fields for shop-A (maximal)
-          const shopAData = await apiFetch('PATCH', `/api/v1/admin/shops/${ctx.shopAId}`, {
-            lat: 34.9177,
-            lng: 33.6273,
-            has_parking: true,
-            has_own_delivery: true,
-            is_online_only: false,
-          }, adminHeaders())
-          ctx.shopASlug = (shopAData.data as { slug?: string })?.slug ?? null
-          if (ctx.shopASlug) ctx.fixtures[ctx.fixtures.length - 1].slug = ctx.shopASlug
-        }
-      }
+    const ownerDetailRes = await apiFetch('GET', `/api/v1/admin/shop-owners/${ctx.ownerId}`, undefined, adminHeaders())
+    if (!ownerDetailRes.ok) {
+      throw new Error(`SETUP BROKEN: GET /api/v1/admin/shop-owners/${ctx.ownerId} returned ${ownerDetailRes.status}`)
     }
+    const ownerData = ownerDetailRes.data as { shop_id?: number }
+    if (!ownerData.shop_id) {
+      throw new Error(`SETUP BROKEN: owner ${ctx.ownerId} has no shop_id — registration may not have created a shop`)
+    }
+    ctx.shopAId = ownerData.shop_id
+    ctx.fixtures.push({ name: `${PREFIX}-shop-A`, id: ctx.shopAId, slug: null, built: true, deleted: false, type: 'shop' })
+
+    // Set geo + enriched fields for shop-A (maximal)
+    const shopAData = await apiFetch('PATCH', `/api/v1/admin/shops/${ctx.shopAId}`, {
+      lat: 34.9177,
+      lng: 33.6273,
+      has_parking: true,
+      has_own_delivery: true,
+      is_online_only: false,
+    }, adminHeaders())
+    if (!shopAData.ok) {
+      throw new Error(`SETUP BROKEN: PATCH shop-A geo returned ${shopAData.status}`)
+    }
+    ctx.shopASlug = (shopAData.data as { slug?: string })?.slug ?? null
+    if (!ctx.shopASlug) {
+      throw new Error('SETUP BROKEN: shop-A has no slug after PATCH')
+    }
+    ctx.fixtures[ctx.fixtures.length - 1].slug = ctx.shopASlug
 
     // Step 3b: Create shop-B (minimal) via admin
-    const shopBRes = await apiFetch('POST', '/api/v1/admin/shops', {
-      name: `${PREFIX}-shop-B`,
-      address_raw: 'Mackenzie Beach, Larnaca, Cyprus',
-      owner_id: ctx.ownerId,
+    // NOTE: buildAdminShopPayload ensures the payload matches AdminShopCreate exactly —
+    // no "name", "address_raw", or "owner_id" fields (those do not exist in the schema).
+    const shopBRes = await apiFetch('POST', '/api/v1/admin/shops', buildAdminShopPayload({
+      slug: `${PREFIX}-shop-b`,
+      names: { en: `${PREFIX} Shop B (minimal)` },
+      address_line1: 'Mackenzie Beach, Larnaca',
+      city: 'Larnaca',
       lat: 34.9050,
       lng: 33.6183,
-    }, adminHeaders())
+    }), adminHeaders())
 
-    if (shopBRes.ok) {
-      const shopB = shopBRes.data as { id: number; slug?: string }
-      ctx.shopBId = shopB.id
-      ctx.shopBSlug = shopB.slug ?? null
-      ctx.fixtures.push({ name: `${PREFIX}-shop-B`, id: ctx.shopBId, slug: ctx.shopBSlug, built: true, deleted: false, type: 'shop' })
-    } else {
-      // Admin shop create may not exist — shop-B is optional for UI coverage
-      console.warn(`[lifecycle] Shop-B create returned ${shopBRes.status} — skipping shop-B fixture`)
-      ctx.fixtures.push({ name: `${PREFIX}-shop-B`, id: null, slug: null, built: false, deleted: false, type: 'shop' })
+    if (!shopBRes.ok) {
+      const errText = JSON.stringify(shopBRes.data)
+      throw new Error(
+        `SETUP BROKEN: POST /api/v1/admin/shops returned ${shopBRes.status}: ${errText}. ` +
+        'Check payload vs. AdminShopCreate schema (slug + names are required).'
+      )
     }
+    const shopB = shopBRes.data as { id: number; slug?: string }
+    ctx.shopBId = shopB.id
+    ctx.shopBSlug = shopB.slug ?? null
+    ctx.fixtures.push({ name: `${PREFIX}-shop-B`, id: ctx.shopBId, slug: ctx.shopBSlug, built: true, deleted: false, type: 'shop' })
 
     // Step 3c: Create 4 products for shop-A
     const shopIdForProducts = ctx.shopAId
@@ -437,59 +452,32 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 3 — Shop-B angelegt (minimal)', async () => {
-    const shopBBuilt = ctx.fixtures.find(f => f.name === `${PREFIX}-shop-B`)?.built ?? false
-    logStep(3, 'Shop-B angelegt (minimal)', 'shopBId gesetzt', shopBBuilt ? String(ctx.shopBId) : 'nicht angelegt (Admin-Create optional)', shopBBuilt ? 'PASS' : 'SKIP')
-    // Shop-B ist optional — SKIP wenn Admin-Create nicht existiert, kein FAIL
-    if (!shopBBuilt) {
-      test.skip(true, 'Reason: Admin-Create für Shop-B nicht verfügbar (POST /api/v1/admin/shops fehlgeschlagen)')
-    }
+    // beforeAll throws if shop-B creation fails — if we reach here, shopBId is set
+    expect(ctx.shopBId, 'PREREQUISITE BROKEN: shopBId not set — beforeAll should have thrown').not.toBeNull()
+    logStep(3, 'Shop-B angelegt (minimal)', 'shopBId gesetzt', String(ctx.shopBId), 'PASS')
   })
 
   test('Schritt 4 — Alle 4 Produkte angelegt', async () => {
     const productFixtures = ctx.fixtures.filter(f => f.type === 'product')
     const builtCount = productFixtures.filter(f => f.built).length
     logStep(4, 'Alle 4 Produkte angelegt', '4 Produkte', `${builtCount} angelegt`, builtCount >= 1 ? 'PASS' : 'FAIL')
-
-    if (builtCount === 0) {
-      test.skip(true, 'Reason: Kein Produkt angelegt — Admin-Product-Create-Endpoint nicht verfügbar?')
-      return
-    }
     expect(builtCount, 'Mindestens 1 Produkt muss angelegt sein').toBeGreaterThan(0)
   })
 
   // ── PHASE 2: Öffentliche Sichtbarkeit ─────────────────────────────────────
 
   test('Schritt 5 — Shop-A erscheint in Suche', async ({ page }) => {
-    if (!ctx.shopASlug && !ctx.shopAId) {
-      logStep(5, 'Shop-A in Suche', 'Shop-A sichtbar', 'shopASlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopASlug nicht verfügbar')
-      return
-    }
-
-    // Direkt-Aufruf der Shop-Seite ist zuverlässiger als Suche (Suche benötigt ggf. Indexierung)
-    if (ctx.shopASlug) {
-      await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-      await page.waitForLoadState('networkidle')
-      const url = page.url()
-      const is404 = url.includes('404') || url.includes('not-found')
-      logStep(5, 'Shop-A Detailseite erreichbar', 'Kein 404', url, !is404 ? 'PASS' : 'FAIL')
-      expect(is404, `Shop-A Detailseite liefert 404`).toBe(false)
-    } else {
-      // Via API direkt prüfen
-      const res = await fetch(`${BACKEND_URL}/api/v1/shops/${ctx.shopAId}`)
-      const ok = res.ok
-      logStep(5, 'Shop-A via API sichtbar', 'HTTP 200', String(res.status), ok ? 'PASS' : 'FAIL')
-      expect(ok).toBe(true)
-    }
+    // shopASlug is guaranteed by beforeAll (throws if missing)
+    await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
+    await page.waitForLoadState('networkidle')
+    const url = page.url()
+    const is404 = url.includes('404') || url.includes('not-found')
+    logStep(5, 'Shop-A Detailseite erreichbar', 'Kein 404', url, !is404 ? 'PASS' : 'FAIL')
+    expect(is404, `Shop-A Detailseite liefert 404`).toBe(false)
   })
 
   test('Schritt 6 — ShopCard shop-A: Icons und Badges prüfen', async ({ page }) => {
-    if (!ctx.shopASlug) {
-      logStep(6, 'ShopCard shop-A Icons', 'Icons sichtbar', 'shopASlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopASlug nicht verfügbar')
-      return
-    }
-
+    // shopASlug guaranteed by beforeAll
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
     await page.waitForLoadState('networkidle')
 
@@ -511,12 +499,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 7 — ShopCard shop-B: Fallback-Avatar, keine Icons', async ({ page }) => {
-    if (!ctx.shopBSlug) {
-      logStep(7, 'Shop-B minimal Checks', 'Fallback-Avatar sichtbar', 'shopBSlug fehlt (shop-B nicht angelegt)', 'SKIP')
-      test.skip(true, 'Reason: shop-B nicht angelegt — Schritt übersprungen')
-      return
-    }
-
+    // shopBSlug guaranteed by beforeAll (throws if shop-B creation failed)
     await page.goto(BASE_URL + `/shops/${ctx.shopBSlug}`)
     await page.waitForLoadState('networkidle')
 
@@ -527,12 +510,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 8 — Produktliste shop-A: alle 4 Produkte mit price_type-Labels', async ({ page }) => {
-    if (!ctx.shopASlug) {
-      logStep(8, 'Produktliste shop-A', '4 Produkte mit Labels', 'shopASlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopASlug fehlt')
-      return
-    }
-
+    // shopASlug guaranteed by beforeAll
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
     await page.waitForLoadState('networkidle')
 
@@ -554,11 +532,8 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 9 — Produktdetail product-fixed: Preis und Available-Badge', async ({ page }) => {
-    if (!ctx.productFixedSlug) {
-      logStep(9, 'product-fixed Detailseite', 'Preis + Available-Badge', 'productFixedSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: productFixedSlug nicht verfügbar')
-      return
-    }
+    // productFixedSlug may still be null if admin/products endpoint is not available
+    if (!ctx.productFixedSlug) throw new Error('PREREQUISITE BROKEN: productFixedSlug not set — product creation must have failed')
 
     await page.goto(BASE_URL + `/products/${ctx.productFixedSlug}`)
     await page.waitForLoadState('networkidle')
@@ -575,11 +550,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 10 — Produktdetail product-on-request: On-Request-Label', async ({ page }) => {
-    if (!ctx.productOnRequestSlug) {
-      logStep(10, 'product-on-request Detailseite', 'On-Request-Label', 'Slug fehlt', 'SKIP')
-      test.skip(true, 'Reason: productOnRequestSlug nicht verfügbar')
-      return
-    }
+    if (!ctx.productOnRequestSlug) throw new Error('PREREQUISITE BROKEN: productOnRequestSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productOnRequestSlug}`)
     await page.waitForLoadState('networkidle')
@@ -596,11 +567,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 11 — Produktdetail product-free: Free-Label', async ({ page }) => {
-    if (!ctx.productFreeSlug) {
-      logStep(11, 'product-free Detailseite', 'Free-Label', 'Slug fehlt', 'SKIP')
-      test.skip(true, 'Reason: productFreeSlug nicht verfügbar')
-      return
-    }
+    if (!ctx.productFreeSlug) throw new Error('PREREQUISITE BROKEN: productFreeSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productFreeSlug}`)
     await page.waitForLoadState('networkidle')
@@ -616,11 +583,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 12 — Produktdetail product-variable: PriceHistory-Chart', async ({ page }) => {
-    if (!ctx.productVariableSlug) {
-      logStep(12, 'product-variable Detailseite', 'PriceHistory-Chart', 'Slug fehlt', 'SKIP')
-      test.skip(true, 'Reason: productVariableSlug nicht verfügbar')
-      return
-    }
+    if (!ctx.productVariableSlug) throw new Error('PREREQUISITE BROKEN: productVariableSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productVariableSlug}`)
     await page.waitForLoadState('networkidle')
@@ -641,12 +604,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   // ── RTL-Test ───────────────────────────────────────────────────────────────
 
   test('Schritt 13 — RTL: Shop-A Detailseite mit lang=ar (dir=rtl)', async ({ page }) => {
-    if (!ctx.shopASlug) {
-      logStep(13, 'RTL-Test Shop-A', 'html[dir=rtl]', 'shopASlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopASlug fehlt')
-      return
-    }
-
+    // shopASlug guaranteed by beforeAll
     const cookieDomain = new URL(BASE_URL).hostname
     await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
@@ -659,11 +617,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 14 — RTL: product-fixed Detailseite mit lang=ar', async ({ page }) => {
-    if (!ctx.productFixedSlug) {
-      logStep(14, 'RTL-Test product-fixed', 'html[dir=rtl]', 'productFixedSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: productFixedSlug fehlt')
-      return
-    }
+    if (!ctx.productFixedSlug) throw new Error('PREREQUISITE BROKEN: productFixedSlug not set')
 
     const cookieDomain = new URL(BASE_URL).hostname
     await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
@@ -679,12 +633,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   // ── PHASE 3: Deaktivierung ─────────────────────────────────────────────────
 
   test('Schritt 15 — Shop-A deaktivieren (status: inactive)', async ({ request }) => {
-    if (!ctx.shopAId) {
-      logStep(15, 'Shop-A deaktivieren', 'HTTP 2xx', 'shopAId fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopAId fehlt')
-      return
-    }
-
+    // shopAId guaranteed by beforeAll
     const res = await request.patch(`${BACKEND_URL}/api/v1/admin/shops/${ctx.shopAId}`, {
       data: { status: 'inactive' },
       headers: adminHeaders(),
@@ -695,12 +644,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   })
 
   test('Schritt 16 — Shop-A nach Deaktivierung: 404 oder "nicht verfügbar"', async ({ page }) => {
-    if (!ctx.shopASlug) {
-      logStep(16, 'Shop-A nach Deaktivierung', '404 oder unsichtbar', 'shopASlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: shopASlug fehlt')
-      return
-    }
-
+    // shopASlug guaranteed by beforeAll
     // Kurze Wartezeit
     await page.waitForTimeout(500)
 

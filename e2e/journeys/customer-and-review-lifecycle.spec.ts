@@ -246,6 +246,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
   test('Schritt 1 — Customer registriert sich', async () => {
     if (!ctx.customerAuthSupported) {
       logStep(1, 'Customer registriert sich', 'HTTP 201 oder 200', 'Endpoint /api/v1/customer/register nicht gefunden (404)', 'SKIP')
+      // INTENTIONAL SKIP — /api/v1/customer/register endpoint does not exist yet (Customer-Auth not implemented)
       test.skip(true, 'Reason: /api/v1/customer/register Endpoint existiert nicht (404) — Customer-Auth nicht implementiert')
       return
     }

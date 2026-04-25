@@ -26,6 +26,10 @@ const shopAdminTranslations = {
     verify_title: 'Verifying your email…',
     verify_success: 'Email verified! Your account is now under review.',
     verify_error: 'This verification link is invalid or has expired.',
+    // Check email
+    check_email_title: 'Check your inbox',
+    check_email_desc: 'We\'ve sent a verification link to your email address. Please click the link to activate your account.',
+    check_email_hint: 'No email? Check your spam folder or contact support.',
     // Nav
     nav_dashboard: 'Dashboard',
     nav_profile: 'Shop Profile',
@@ -277,6 +281,10 @@ const shopAdminTranslations = {
     verify_title: 'E-Mail wird verifiziert…',
     verify_success: 'E-Mail bestätigt! Dein Konto wird nun geprüft.',
     verify_error: 'Dieser Verifikationslink ist ungültig oder abgelaufen.',
+    // Check email
+    check_email_title: 'E-Mail prüfen',
+    check_email_desc: 'Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Klicke auf den Link um dein Konto zu aktivieren.',
+    check_email_hint: 'Keine E-Mail? Prüfe deinen Spam-Ordner oder kontaktiere den Support.',
     nav_dashboard: 'Dashboard',
     nav_profile: 'Shop-Profil',
     nav_hours: 'Öffnungszeiten',
@@ -519,6 +527,10 @@ const shopAdminTranslations = {
     verify_title: 'Επαλήθευση email…',
     verify_success: 'Το email επαληθεύτηκε! Ο λογαριασμός σου βρίσκεται υπό έλεγχο.',
     verify_error: 'Ο σύνδεσμος επαλήθευσης είναι άκυρος ή έχει λήξει.',
+    // Check email
+    check_email_title: 'Έλεγξε τα εισερχόμενά σου',
+    check_email_desc: 'Στείλαμε έναν σύνδεσμο επαλήθευσης στη διεύθυνση email σου. Κάνε κλικ στον σύνδεσμο για να ενεργοποιήσεις τον λογαριασμό σου.',
+    check_email_hint: 'Δεν έλαβες email; Έλεγξε τον φάκελο ανεπιθύμητης αλληλογραφίας ή επικοινώνησε με την υποστήριξη.',
     nav_dashboard: 'Πίνακας',
     nav_profile: 'Προφίλ καταστήματος',
     nav_hours: 'Ώρες λειτουργίας',
@@ -761,6 +773,10 @@ const shopAdminTranslations = {
     verify_title: 'Подтверждение email…',
     verify_success: 'Email подтверждён! Ваш аккаунт находится на проверке.',
     verify_error: 'Эта ссылка для подтверждения недействительна или устарела.',
+    // Check email
+    check_email_title: 'Проверьте почту',
+    check_email_desc: 'Мы отправили ссылку для подтверждения на ваш email. Нажмите на ссылку, чтобы активировать аккаунт.',
+    check_email_hint: 'Не получили письмо? Проверьте папку «Спам» или обратитесь в поддержку.',
     nav_dashboard: 'Панель',
     nav_profile: 'Профиль магазина',
     nav_hours: 'Часы работы',
@@ -1003,6 +1019,10 @@ const shopAdminTranslations = {
     verify_title: 'جارٍ التحقق من البريد الإلكتروني…',
     verify_success: 'تم التحقق من البريد الإلكتروني! حسابك قيد المراجعة الآن.',
     verify_error: 'رابط التحقق غير صالح أو منتهي الصلاحية.',
+    // Check email
+    check_email_title: 'تحقق من بريدك الوارد',
+    check_email_desc: 'لقد أرسلنا رابط تحقق إلى عنوان بريدك الإلكتروني. انقر على الرابط لتفعيل حسابك.',
+    check_email_hint: 'لم تستلم البريد الإلكتروني؟ تحقق من مجلد البريد العشوائي أو تواصل مع الدعم.',
     nav_dashboard: 'لوحة التحكم',
     nav_profile: 'ملف المتجر',
     nav_hours: 'ساعات العمل',
@@ -1245,6 +1265,10 @@ const shopAdminTranslations = {
     verify_title: 'מאמת אימייל…',
     verify_success: 'האימייל אומת! החשבון שלך נמצא כעת בבדיקה.',
     verify_error: 'קישור האימות אינו תקף או שפג תוקפו.',
+    // Check email
+    check_email_title: 'בדוק את תיבת הדואר שלך',
+    check_email_desc: 'שלחנו קישור אימות לכתובת האימייל שלך. לחץ על הקישור כדי להפעיל את החשבון שלך.',
+    check_email_hint: 'לא קיבלת אימייל? בדוק את תיקיית הספאם או פנה לתמיכה.',
     nav_dashboard: 'לוח בקרה',
     nav_profile: 'פרופיל החנות',
     nav_hours: 'שעות פתיחה',

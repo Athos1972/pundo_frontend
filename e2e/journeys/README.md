@@ -180,6 +180,89 @@ Die Datei ist absichtlich im Git — du kannst sie lesen und verwalten.
 
 ---
 
+## Skip vs. Throw — Wann ist welcher Skip erlaubt?
+
+Dieses Prinzip gilt verbindlich für alle Journey-Specs in diesem Verzeichnis.
+
+### Erlaubt: Bewusster Skip für optionale Features
+
+```typescript
+// INTENTIONAL SKIP — optionales Feature, das noch nicht implementiert ist
+test.skip(true, 'Logo-Upload nicht implementiert — optionales Feature')
+
+// INTENTIONAL SKIP — Endpoint existiert nicht in dieser Umgebung
+test.skip(true, 'Reason: /api/v1/customer/register Endpoint existiert nicht (404) — Customer-Auth nicht implementiert')
+```
+
+Solche Skips sind erlaubt, wenn das Feature tatsächlich optional oder noch nicht vorhanden ist.
+Der Kommentar muss erklären *warum* es optional ist.
+
+### Verboten: Stiller Skip bei kaputter Prerequisite
+
+```typescript
+// FALSCH — verschleiert Setup-Fehler:
+if (!ctx.shopId) {
+  test.skip(true, 'shopId fehlt')
+  return
+}
+```
+
+Wenn `ctx.shopId` null ist, weil das Setup fehlschlug, soll das sauber rot werden — nicht still überspringen.
+
+### Richtig: throw bei Setup-Fehler
+
+```typescript
+// RICHTIG — schreit laut:
+if (!ctx.shopId) {
+  throw new Error('PREREQUISITE BROKEN: shopId not set — beforeAll setup must have failed')
+}
+
+// Oder direkt im beforeAll:
+if (!shopBRes.ok) {
+  throw new Error(
+    `SETUP BROKEN: POST /api/v1/admin/shops returned ${shopBRes.status}: ${JSON.stringify(shopBRes.data)}`
+  )
+}
+```
+
+### Vorher / Nachher (aus T3 — shop-owner-full-lifecycle.spec.ts)
+
+**Vorher (schlechter Pattern):**
+```typescript
+// beforeAll:
+if (!shopBRes.ok) {
+  console.warn(`Shop-B create returned ${shopBRes.status} — skipping`)
+  ctx.fixtures.push({ name: 'shop-B', built: false })
+}
+
+// Test:
+if (!ctx.shopBId) {
+  test.skip(true, 'Reason: shop-B nicht angelegt')
+  return
+}
+```
+
+**Nachher (korrekter Pattern):**
+```typescript
+// beforeAll:
+if (!shopBRes.ok) {
+  throw new Error(
+    `SETUP BROKEN: POST /api/v1/admin/shops returned ${shopBRes.status}: ${JSON.stringify(shopBRes.data)}`
+  )
+}
+
+// Test: kein Guard mehr nötig — beforeAll wirft oder shopBId ist gesetzt
+await page.goto(BASE_URL + `/shops/${ctx.shopBSlug}`)
+```
+
+### Referenz-Implementierung
+
+Siehe `e2e/journeys/shop-owner-full-lifecycle.spec.ts` — das ist das Pilot-File für diese Konvention.
+Für intentionale Skips in `customer-and-review-lifecycle.spec.ts` (Endpoint nicht vorhanden)
+siehe den `// INTENTIONAL SKIP`-Kommentar.
+
+---
+
 ## Known Limitations (Phase 1)
 
 - **Keine automatische CI-Integration.** Journey-Tests laufen nur lokal.

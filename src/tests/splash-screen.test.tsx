@@ -31,11 +31,11 @@ describe('SplashScreen', () => {
     expect(img?.getAttribute('src')).toBe('/brands/pundo/splash-outro.svg')
   })
 
-  it('zeigt rusky-Splash wenn rusky-Brand-Pfad übergeben', async () => {
-    const { container } = render(<SplashScreen splashSvg="/brands/rusky/splash-outro.svg" />)
+  it('zeigt naidivse-Splash wenn naidivse-Brand-Pfad übergeben', async () => {
+    const { container } = render(<SplashScreen splashSvg="/brands/naidivse/splash-outro.svg" />)
     await act(async () => { vi.advanceTimersByTime(10) })
     const img = container.querySelector('img')
-    expect(img?.getAttribute('src')).toBe('/brands/rusky/splash-outro.svg')
+    expect(img?.getAttribute('src')).toBe('/brands/naidivse/splash-outro.svg')
   })
 
   it('setzt app_splash in sessionStorage nach Anzeige', async () => {

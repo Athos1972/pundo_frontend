@@ -1,40 +1,38 @@
 import { describe, it, expect } from 'vitest'
 import { getLegalContentForBrand } from '@/lib/legal-content'
 import { pundoConfig } from '@/config/brands/pundo'
-import { ruskyConfig } from '@/config/brands/rusky'
+import { naidivseConfig } from '@/config/brands/naidivse'
 
 describe('getLegalContentForBrand', () => {
   it('pundo brand → kein Substitution, Original-Inhalte', () => {
     const content = getLegalContentForBrand('imprint', 'de', pundoConfig)
-    // Pundo-Inhalte bleiben unverändert
     const allText = content.sections.map((s) => s.body).join(' ')
     expect(allText).toContain('Pundo')
     expect(allText).toContain('pundo.cy')
   })
 
-  it('rusky brand → "Pundo" wird durch brand.legal.appName ersetzt', () => {
-    const content = getLegalContentForBrand('imprint', 'de', ruskyConfig)
+  it('naidivse brand → "Pundo" wird durch brand.legal.appName ersetzt', () => {
+    const content = getLegalContentForBrand('imprint', 'de', naidivseConfig)
     const allText = [
       content.title,
       ...content.sections.map((s) => `${s.heading ?? ''} ${s.body}`),
     ].join(' ')
-    // "Pundo" darf nicht mehr vorkommen (als eigenständiges Wort)
     expect(allText).not.toMatch(/\bPundo\b/)
-    expect(allText).toContain(ruskyConfig.legal.appName)
+    expect(allText).toContain(naidivseConfig.legal.appName)
   })
 
-  it('rusky brand → "pundo.cy" wird durch brand.legal.domain ersetzt', () => {
-    const content = getLegalContentForBrand('imprint', 'de', ruskyConfig)
+  it('naidivse brand → "pundo.cy" wird durch brand.legal.domain ersetzt', () => {
+    const content = getLegalContentForBrand('imprint', 'de', naidivseConfig)
     const allText = content.sections.map((s) => s.body).join(' ')
     expect(allText).not.toContain('pundo.cy')
-    expect(allText).toContain(ruskyConfig.legal.domain)
+    expect(allText).toContain(naidivseConfig.legal.domain)
   })
 
-  it('rusky brand → "info@pundo.cy" wird durch brand.legal.domain ersetzt', () => {
-    const content = getLegalContentForBrand('imprint', 'de', ruskyConfig)
+  it('naidivse brand → "info@pundo.cy" wird durch brand.legal.domain ersetzt', () => {
+    const content = getLegalContentForBrand('imprint', 'de', naidivseConfig)
     const allText = content.sections.map((s) => s.body).join(' ')
     expect(allText).not.toContain('info@pundo.cy')
-    expect(allText).toContain(`info@${ruskyConfig.legal.domain}`)
+    expect(allText).toContain(`info@${naidivseConfig.legal.domain}`)
   })
 
   it('funktioniert für alle Legal-Pages und Sprachen', () => {
@@ -51,15 +49,14 @@ describe('getLegalContentForBrand', () => {
   })
 
   it('section headings werden ebenfalls substituiert', () => {
-    // Finde eine Section mit heading die "Pundo" enthält
     const pundoContent = getLegalContentForBrand('imprint', 'de', pundoConfig)
     const pundoHeadingWithPundo = pundoContent.sections.find((s) =>
       s.heading?.includes('Pundo'),
     )
-    if (!pundoHeadingWithPundo) return // kein solcher heading existiert → skip
+    if (!pundoHeadingWithPundo) return
 
-    const ruskyContent = getLegalContentForBrand('imprint', 'de', ruskyConfig)
-    const ruskyHeadings = ruskyContent.sections.map((s) => s.heading ?? '')
-    expect(ruskyHeadings.some((h) => h.includes('Pundo'))).toBe(false)
+    const naidivseContent = getLegalContentForBrand('imprint', 'de', naidivseConfig)
+    const naidivseHeadings = naidivseContent.sections.map((s) => s.heading ?? '')
+    expect(naidivseHeadings.some((h) => h.includes('Pundo'))).toBe(false)
   })
 })

@@ -197,9 +197,9 @@ Leaflet manipuliert `window` und `document` — daher wird `ShopMapClient` mit `
 
 ### Multi-Brand / White-Label
 
-Das System unterstützt mehrere Marken (pundo.cy, rusky-in-cyprus.de, …) aus einem einzigen Next.js-Deployment.
+Das System unterstützt mehrere Marken (pundo.cy, naidivse.com, …) aus einem einzigen Next.js-Deployment.
 
-- **Brand-Erkennung:** `src/proxy.ts` liest den `Host`-Header und setzt `x-brand-slug` (z. B. `pundo`, `rusky`)
+- **Brand-Erkennung:** `src/proxy.ts` liest den `Host`-Header und setzt `x-brand-slug` (z. B. `pundo`, `naidivse`)
 - **Brand-Config:** `src/config/brands/index.ts` — `getBrandConfig(host)` O(1) Map-Lookup, `getBrandFromHeaders()` für Server Components, `buildThemeCss()` für CSS-Variablen-Injection
 - **Theming:** `:root { --color-accent: … }` wird server-seitig in `<head>` injiziert — kein Client-Flash
 - **Assets:** `public/brands/<slug>/logo.svg`, `splash-outro.svg` etc. — Pfade aus BrandConfig

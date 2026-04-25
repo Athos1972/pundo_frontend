@@ -1,8 +1,8 @@
 ---
 id: shop-admin-offer-product
 title: Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix)
-status: implemented
-spec-file: e2e/journeys/shop-admin-offer-product.spec.ts
+status: deprecated
+spec-file: e2e/journeys/shop-admin-offers.spec.ts
 priority: P2
 owner-agent: coder
 proposed-in-spec: shop-admin-offers-catalogued-20260424
@@ -25,8 +25,18 @@ last-result: N/A
 last-run-sha: bc4e8ac89c083856c0eb12e76a581461f768787b
 ---
 
-### Journey: Shop-Admin Angebot + Produkt-Verknüpfung
+### DEPRECATED — Migriert nach `shop-admin-offers.spec.ts`
 
-**Ziel:** Vollständige API-Level-Matrix für Offer+Product-Workflows: Ablauf-Sichtbarkeit (A), Mehrfach-Angebote + Cross-Shop-Isolation (B), Price-History (C), Edge Cases (D), Backend-Validation FK-Guard (E).
+**Datum:** 2026-04-25
+**Grund:** Spec-Datei `shop-admin-offer-product.spec.ts` wurde gelöscht. Die enthaltenen `describe.fixme`-Blöcke
+verwendeten das alte `shop_owner_products`-API (product_id, price=). Dieses API existiert nicht mehr.
 
-**RCA (2026-04-24):** `product_id`-FK-Violation (HTTP 500) → Backend-Fix: `_validate_product_ownership()` gibt jetzt HTTP 422 zurück. Beide POST und PATCH validieren Product Ownership.
+**Relevante Szenarien migriert nach `shop-admin-offers.spec.ts`:**
+- Cross-Shop-Isolation (XS1, XS2)
+- Archivierte Angebote (AR1)
+- Staffelpreise (SP1–SP4)
+- Datum-Edgecases (DT1, DT2)
+
+**Nicht mehr relevant (gelöscht):**
+- G3/G4/G5: Altes `price=`-Feld (neues Schema hat `price_tiers[]`)
+- UI-P1/UI-O1/UI-O2/UI-O3: `/shop-admin/products/new` ist Redirect-only

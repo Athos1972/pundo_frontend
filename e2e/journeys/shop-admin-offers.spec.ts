@@ -791,3 +791,452 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     if (created) ctx.createdOfferIds.push(created.id)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MIGRATED FROM LEGACY: shop-admin-offer-product.spec.ts
+//
+// These scenarios were in a fixme block (shop_owner_products-based API).
+// Migrated to new ShopListing/UnifiedOffer API (shop_listing_id + price_tiers).
+//
+// Covers: Cross-Shop-Isolation, Preis-Edgecases, archivierte Angebote,
+//         Staffelpreise, Datum-Edgecases.
+//
+// Two-Shop setup: uses buildAdminShopPayload for Shop-B creation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
+import { randomUUID } from 'crypto'
+
+const LEGACY_UUID = randomUUID().slice(0, 8)
+const LEGACY_PREFIX = `e2e-legacy-${LEGACY_UUID}`
+
+// ─── Two-shop context ─────────────────────────────────────────────────────────
+
+interface TwoShopCtx {
+  /** Shop A — the "main" e2e shop owner from .test-state.json */
+  shopAToken: string | null
+  shopAListingId: number | null
+  shopASlug: string | null
+  /** Shop B — a second shop created via admin API for isolation tests */
+  shopBId: number | null
+  shopBSlug: string | null
+  shopBOwnerId: number | null
+  shopBOwnerToken: string | null
+  shopBListingId: number | null
+  adminToken: string | null
+  createdOfferIds: number[]
+}
+
+const twoShopCtx: TwoShopCtx = {
+  shopAToken: null,
+  shopAListingId: null,
+  shopASlug: STATE.shopSlug ?? null,
+  shopBId: null,
+  shopBSlug: null,
+  shopBOwnerId: null,
+  shopBOwnerToken: null,
+  shopBListingId: null,
+  adminToken: null,
+  createdOfferIds: [],
+}
+
+async function getAdminToken(): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
+  })
+  if (!res.ok) throw new Error(`[two-shop] Admin login failed: ${res.status}`)
+  const cookieHeader = res.headers.get('set-cookie') ?? ''
+  const match = cookieHeader.match(/admin_token=([^;]+)/)
+  if (!match) throw new Error('[two-shop] admin_token cookie not found')
+  return match[1]
+}
+
+async function adminFetch(
+  method: string,
+  path: string,
+  body?: unknown,
+  adminTok?: string
+): Promise<{ ok: boolean; status: number; data: unknown }> {
+  const tok = adminTok ?? twoShopCtx.adminToken
+  const res = await fetch(`${BACKEND_URL}${path}`, {
+    method,
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      Cookie: `admin_token=${tok}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  let data: unknown = {}
+  try { if (res.status !== 204) data = await res.json() } catch { /* empty */ }
+  return { ok: res.ok, status: res.status, data }
+}
+
+async function shopOwnerLogin(email: string, password: string): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) throw new Error(`[two-shop] Shop owner login failed (${email}): ${res.status}`)
+  const cookieHeader = res.headers.get('set-cookie') ?? ''
+  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
+  if (!match) throw new Error('[two-shop] shop_owner_token cookie not found')
+  return match[1]
+}
+
+async function registerAndApprove(
+  email: string,
+  password: string,
+  name: string,
+  shopName: string,
+  shopAddress: string,
+  adminTok: string
+): Promise<{ ownerId: number; shopId: number; token: string }> {
+  let ownerId: number | null = null
+
+  const regRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, name, shop_name: shopName, shop_address: shopAddress }),
+  })
+  if (regRes.ok) {
+    const reg = await regRes.json() as { id?: number }
+    ownerId = reg.id ?? null
+  } else if (regRes.status === 400) {
+    console.log(`[two-shop] ${email} already registered`)
+  } else {
+    throw new Error(`[two-shop] Registration failed for ${email}: ${regRes.status}`)
+  }
+
+  if (!ownerId) {
+    const listRes = await adminFetch('GET', '/api/v1/admin/shop-owners?limit=100', undefined, adminTok)
+    const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
+    const found = owners.find(o => o.email === email)
+    if (found) ownerId = found.id
+  }
+  if (!ownerId) throw new Error(`[two-shop] Could not find owner ID for ${email}`)
+
+  const approveRes = await adminFetch('PATCH', `/api/v1/admin/shop-owners/${ownerId}`, { status: 'approved' }, adminTok)
+  const shopId = (approveRes.data as { shop_id?: number })?.shop_id ?? 0
+
+  const token = await shopOwnerLogin(email, password)
+  return { ownerId, shopId, token }
+}
+
+// ─── Today helpers ────────────────────────────────────────────────────────────
+
+const TODAY_ISO = new Date().toISOString().slice(0, 10)
+
+function daysFromToday(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+// ─── Suite: Cross-Shop Isolation ──────────────────────────────────────────────
+
+test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staffelpreise', () => {
+
+  test.beforeAll(async () => {
+    // ── Admin login ────────────────────────────────────────────────────────────
+    twoShopCtx.adminToken = await getAdminToken()
+
+    // ── Shop A: use existing e2e owner from .test-state.json ──────────────────
+    twoShopCtx.shopAToken = await getOwnerToken()
+    // ShopListing for Shop A (item_id=1, e2e-vet-consultation-larnaca)
+    twoShopCtx.shopAListingId = await getOrCreateShopListing(twoShopCtx.shopAToken, 1)
+    if (!twoShopCtx.shopAListingId) {
+      throw new Error('SETUP BROKEN: Could not create ShopListing for Shop A (item_id=1)')
+    }
+
+    // ── Shop B: register a second owner + shop ────────────────────────────────
+    const shopBEmail = `${LEGACY_PREFIX}-shopb@pundo-e2e.io`
+    const shopBPassword = 'ShopBLegacy!99'
+
+    const shopBData = await registerAndApprove(
+      shopBEmail,
+      shopBPassword,
+      `E2E Legacy Shop B ${LEGACY_UUID}`,
+      `${LEGACY_PREFIX}-shop-B`,
+      'Mackenzie Beach, Larnaca, Cyprus',
+      twoShopCtx.adminToken
+    )
+    twoShopCtx.shopBOwnerId = shopBData.ownerId
+    twoShopCtx.shopBOwnerToken = shopBData.token
+
+    // Retrieve shop B details + set geo so slug is returned
+    const ownerDetailRes = await adminFetch(
+      'GET',
+      `/api/v1/admin/shop-owners/${twoShopCtx.shopBOwnerId}`
+    )
+    if (!ownerDetailRes.ok) {
+      throw new Error(`SETUP BROKEN: Could not get shop-B owner detail: ${ownerDetailRes.status}`)
+    }
+    const ownerDetail = ownerDetailRes.data as { shop_id?: number }
+    if (!ownerDetail.shop_id) {
+      throw new Error('SETUP BROKEN: Shop B owner has no shop_id')
+    }
+    twoShopCtx.shopBId = ownerDetail.shop_id
+
+    // Set geo for shop B
+    const patchRes = await adminFetch('PATCH', `/api/v1/admin/shops/${twoShopCtx.shopBId}`, {
+      lat: 34.9050,
+      lng: 33.6183,
+    })
+    twoShopCtx.shopBSlug = (patchRes.data as { slug?: string })?.slug ?? null
+
+    // ShopListing for Shop B
+    twoShopCtx.shopBListingId = await getOrCreateShopListing(twoShopCtx.shopBOwnerToken, 1)
+    if (!twoShopCtx.shopBListingId) {
+      throw new Error('SETUP BROKEN: Could not create ShopListing for Shop B (item_id=1)')
+    }
+  })
+
+  test.afterAll(async () => {
+    if (!twoShopCtx.adminToken) return
+
+    // Archive + delete created offers
+    if (twoShopCtx.shopAToken) {
+      for (const id of twoShopCtx.createdOfferIds) {
+        await apiPatch(`/api/v1/shop-owner/offers/${id}`, { archived: true }, twoShopCtx.shopAToken).catch(() => {})
+        await apiDelete(`/api/v1/shop-owner/offers/${id}`, twoShopCtx.shopAToken).catch(() => {})
+      }
+    }
+
+    // Reject shop B owner
+    if (twoShopCtx.shopBOwnerId) {
+      await adminFetch('PATCH', `/api/v1/admin/shop-owners/${twoShopCtx.shopBOwnerId}`, { status: 'rejected' }).catch(() => {})
+    }
+  })
+
+  // ── Cross-Shop Isolation ───────────────────────────────────────────────────
+
+  test('XS1 — POST offer with ShopListing from OTHER shop → 403 or 422 (isolation enforced)', async () => {
+    // Shop A owner tries to use Shop B's shop_listing_id — must be rejected
+    const shopAToken = twoShopCtx.shopAToken!
+    const shopBListingId = twoShopCtx.shopBListingId!
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: shopBListingId,
+      price_type: 'on_request',
+      price_tiers: [],
+      valid_from: TODAY_ISO,
+      valid_until: daysFromToday(30),
+      title: 'XS1 Cross-shop injection attempt',
+    }, shopAToken)
+
+    // Backend must reject this — either 403 (forbidden) or 422 (validation)
+    expect([403, 422], `XS1: cross-shop shop_listing_id must be rejected (got ${res.status})`).toContain(res.status)
+    console.log(`[XS1] Backend rejected cross-shop attempt with: ${res.status}`)
+  })
+
+  test('XS2 — Shop B offer NOT visible on Shop A customer page', async ({ page }) => {
+    if (!twoShopCtx.shopASlug || !twoShopCtx.shopBListingId || !twoShopCtx.shopBOwnerToken) {
+      throw new Error('PREREQUISITE BROKEN: shopASlug or shopB context missing')
+    }
+
+    // Create an active offer for Shop B
+    const offerRes = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: twoShopCtx.shopBListingId,
+      price_type: 'on_request',
+      price_tiers: [],
+      valid_from: '2025-01-01',
+      valid_until: '2026-12-31',
+      title: 'XS2 Shop-B Offer Must Not Appear on Shop-A Page',
+    }, twoShopCtx.shopBOwnerToken)
+    expect(offerRes.status, 'XS2 setup: create Shop-B offer').toBe(201)
+
+    // Navigate to Shop A page — must NOT show Shop B's offer
+    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.waitForLoadState('networkidle')
+
+    const body = await page.locator('body').innerText()
+    expect(
+      body.includes('XS2 Shop-B Offer Must Not Appear on Shop-A Page'),
+      'XS2: Shop-B offer must NOT appear on Shop-A customer page'
+    ).toBe(false)
+  })
+
+  // ── Archivierte Angebote ───────────────────────────────────────────────────
+
+  test('AR1 — Archived offer is NOT visible on customer shop page', async ({ page }) => {
+    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
+      throw new Error('PREREQUISITE BROKEN: shopA context missing')
+    }
+
+    const token = twoShopCtx.shopAToken
+
+    // Create an active offer
+    const offerRes = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: twoShopCtx.shopAListingId,
+      price_type: 'free',
+      price_tiers: [],
+      valid_from: '2025-01-01',
+      valid_until: '2026-12-31',
+      title: 'AR1 Archived Must Be Hidden From Customer',
+    }, token)
+    expect(offerRes.status, 'AR1 setup: create offer').toBe(201)
+    const offerId = (offerRes.data as { id: number }).id
+    twoShopCtx.createdOfferIds.push(offerId)
+
+    // Archive it
+    await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
+
+    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.waitForLoadState('networkidle')
+
+    const body = await page.locator('body').innerText()
+    expect(
+      body.includes('AR1 Archived Must Be Hidden From Customer'),
+      'AR1: archived offer must NOT be visible on customer shop page'
+    ).toBe(false)
+  })
+
+  // ── Staffelpreise (price_tiers) ────────────────────────────────────────────
+
+  test('SP1 — Offer with fixed price tier (per_piece, 1 step) → 201', async () => {
+    const token = twoShopCtx.shopAToken!
+    const listingId = twoShopCtx.shopAListingId!
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: listingId,
+      price_type: 'fixed',
+      price_tiers: [{ unit: 'per_piece', min_qty: 1, price: 49.99 }],
+      valid_from: TODAY_ISO,
+      valid_until: daysFromToday(30),
+      title: 'SP1 Single Price Tier',
+    }, token)
+    expect(res.status, 'SP1: offer with 1 price tier must return 201').toBe(201)
+    const offer = res.data as { id: number; price_tiers?: unknown[] }
+    twoShopCtx.createdOfferIds.push(offer.id)
+    if ((offer.price_tiers ?? []).length > 0) {
+      expect(offer.price_tiers!.length, 'SP1: 1 price tier must be stored').toBe(1)
+    }
+  })
+
+  test('SP2 — Offer with multiple price tier steps → 201', async () => {
+    const token = twoShopCtx.shopAToken!
+    const listingId = twoShopCtx.shopAListingId!
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: listingId,
+      price_type: 'fixed',
+      price_tiers: [
+        { unit: 'per_m2', min_qty: 1, price: 15.00 },
+        { unit: 'per_m2', min_qty: 11, price: 12.00 },
+        { unit: 'per_m2', min_qty: 51, price: 10.00 },
+      ],
+      valid_from: TODAY_ISO,
+      valid_until: daysFromToday(30),
+      title: 'SP2 Three Tier Steps (per_m2)',
+    }, token)
+    expect(res.status, 'SP2: offer with 3 price tier steps must return 201').toBe(201)
+    const offer = res.data as { id: number; price_tiers?: unknown[] }
+    twoShopCtx.createdOfferIds.push(offer.id)
+    if ((offer.price_tiers ?? []).length > 0) {
+      expect(offer.price_tiers!.length, 'SP2: all 3 tier steps must be stored').toBe(3)
+    }
+  })
+
+  test('SP3 — Offer with on_request price_type: no price_tiers required → 201', async () => {
+    const token = twoShopCtx.shopAToken!
+    const listingId = twoShopCtx.shopAListingId!
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: listingId,
+      price_type: 'on_request',
+      price_tiers: [],
+      title: 'SP3 On Request No Tiers',
+    }, token)
+    expect(res.status, 'SP3: on_request offer without dates must return 201').toBe(201)
+    const offer = res.data as { id: number }
+    twoShopCtx.createdOfferIds.push(offer.id)
+  })
+
+  test('SP4 — Offer price_tiers visible on customer shop page', async ({ page }) => {
+    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
+      throw new Error('PREREQUISITE BROKEN: shopA context missing')
+    }
+
+    const token = twoShopCtx.shopAToken
+    const listingId = twoShopCtx.shopAListingId
+
+    // Create an active offer with price tiers
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: listingId,
+      price_type: 'fixed',
+      price_tiers: [{ unit: 'per_piece', min_qty: 1, price: 29.99 }],
+      valid_from: '2025-01-01',
+      valid_until: '2026-12-31',
+      title: 'SP4 Customer Visible Price Tier Offer',
+    }, token)
+    expect(res.status, 'SP4 setup: create offer with price tier').toBe(201)
+    const offerId = (res.data as { id: number }).id
+    twoShopCtx.createdOfferIds.push(offerId)
+
+    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.waitForLoadState('networkidle')
+
+    const url = page.url()
+    expect(url, 'SP4: shop page must not 404').not.toContain('not-found')
+    expect(url, 'SP4: shop page must not 404').not.toContain('404')
+
+    // The offer title should appear on the page
+    const body = await page.locator('body').innerText()
+    expect(
+      body.includes('SP4 Customer Visible Price Tier Offer'),
+      'SP4: offer with price tiers must appear on customer shop page'
+    ).toBe(true)
+  })
+
+  // ── Datum-Edgecases ────────────────────────────────────────────────────────
+
+  test('DT1 — Offer without valid_from and valid_until (timeless) → 201', async () => {
+    const token = twoShopCtx.shopAToken!
+    const listingId = twoShopCtx.shopAListingId!
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: listingId,
+      price_type: 'on_request',
+      price_tiers: [],
+      title: 'DT1 Timeless Offer',
+      // NO valid_from, NO valid_until
+    }, token)
+    expect(res.status, 'DT1: offer without dates must return 201 (both optional)').toBe(201)
+    const offer = res.data as { id: number; valid_from: unknown; valid_until: unknown }
+    twoShopCtx.createdOfferIds.push(offer.id)
+    expect(offer.valid_from, 'DT1: valid_from must be null in response').toBeNull()
+    expect(offer.valid_until, 'DT1: valid_until must be null in response').toBeNull()
+  })
+
+  test('DT2 — Expired offer (valid_until in past) NOT shown on customer shop page', async ({ page }) => {
+    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
+      throw new Error('PREREQUISITE BROKEN: shopA context missing')
+    }
+
+    const token = twoShopCtx.shopAToken
+
+    const res = await apiPost('/api/v1/shop-owner/offers', {
+      shop_listing_id: twoShopCtx.shopAListingId,
+      price_type: 'free',
+      price_tiers: [],
+      valid_from: '2026-01-01',
+      valid_until: '2026-03-31',  // expired (past date)
+      title: 'DT2 Expired Offer Must Not Show',
+    }, token)
+    expect(res.status, 'DT2 setup: create expired offer').toBe(201)
+    const offerId = (res.data as { id: number }).id
+    twoShopCtx.createdOfferIds.push(offerId)
+
+    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.waitForLoadState('networkidle')
+
+    const body = await page.locator('body').innerText()
+    expect(
+      body.includes('DT2 Expired Offer Must Not Show'),
+      'DT2: expired offer must NOT appear on customer shop page'
+    ).toBe(false)
+  })
+})

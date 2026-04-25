@@ -1,10 +1,15 @@
 {
-  "sha": "bc4e8ac89c083856c0eb12e76a581461f768787b",
-  "timestamp": "2026-04-24T14:00:00.000000+00:00",
+  "sha": "6a64fd3bd0b7bb7ca6957c539bd03673d0cb764b",
+  "timestamp": "2026-04-25T09:35:00Z",
+  "result": "PASS",
+  "passed": 120,
+  "skipped": 59,
+  "failed": 0,
   "coverage_snapshot": {
     "src/components/shop-admin/FieldCatalog.tsx": 100,
     "src/components/shop-admin/ImportPanel.tsx": 95,
     "src/lib/shop-admin-translations.ts": 100,
     "src/components/shop-admin/OfferForm.tsx": 82
-  }
+  },
+  "notes": "Vollständiger Journey-Lauf. Alle 120 Tests grün. 59 skipped = fixme-Legacy (shop-admin-offer-product, shop-admin-product-offer-ui) + optionale Features (logo-upload, guide-admin, shop-card-enrichment)."
 }

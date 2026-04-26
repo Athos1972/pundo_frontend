@@ -1,15 +1,15 @@
 ## Journey: Admin Data Management Sweep — FAIL
-Datum: 2026-04-25 18:33 UTC
+Datum: 2026-04-25 19:12 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-adm-7f919f03-brand-without-logo | 3497 | OK |
-| e2e-adm-7f919f03-brand-with-logo | 3498 | OK |
-| e2e-adm-7f919f03-category-parent | 8458 | OK |
-| e2e-adm-7f919f03-category-child | 8459 | OK |
-| e2e-adm-7f919f03-guide-published | N/A | FEHLER/SKIP |
-| e2e-adm-7f919f03-pending-owner | 3 | OK |
+| e2e-adm-e4f974ff-brand-without-logo | 3497 | OK |
+| e2e-adm-e4f974ff-brand-with-logo | 3498 | OK |
+| e2e-adm-e4f974ff-category-parent | 8458 | OK |
+| e2e-adm-e4f974ff-category-child | 8459 | OK |
+| e2e-adm-e4f974ff-guide-published | N/A | FEHLER/SKIP |
+| e2e-adm-e4f974ff-pending-owner | 3 | OK |
 
 ### Endpoint-Unterstützung
 - Logo-Upload: nein (404)
@@ -31,9 +31,9 @@ Datum: 2026-04-25 18:33 UTC
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-adm-7f919f03-brand-without-logo | best-effort | OK |
-| e2e-adm-7f919f03-brand-with-logo | best-effort | OK |
-| e2e-adm-7f919f03-category-parent | best-effort | OK |
-| e2e-adm-7f919f03-category-child | best-effort | OK |
-| e2e-adm-7f919f03-guide-published | best-effort | OK |
-| e2e-adm-7f919f03-pending-owner | best-effort | OK |
+| e2e-adm-e4f974ff-brand-without-logo | best-effort | OK |
+| e2e-adm-e4f974ff-brand-with-logo | best-effort | OK |
+| e2e-adm-e4f974ff-category-parent | best-effort | OK |
+| e2e-adm-e4f974ff-category-child | best-effort | OK |
+| e2e-adm-e4f974ff-guide-published | best-effort | OK |
+| e2e-adm-e4f974ff-pending-owner | best-effort | OK |

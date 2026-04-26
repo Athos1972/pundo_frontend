@@ -1,23 +1,23 @@
 ## Journey: Shop-Owner Lifecycle — PASS
-Datum: 2026-04-25 18:34 UTC
+Datum: 2026-04-25 19:10 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-sol-owner-20671b6b | 5 | OK |
-| e2e-sol-product-20671b6b | N/A | FEHLER |
+| e2e-sol-owner-d15eab5b | 4 | OK |
+| e2e-sol-product-d15eab5b | N/A | FEHLER |
 
 ### Schritt-für-Schritt-Protokoll
 | # | Beschreibung | Erwartet | Tatsächlich | Status |
 |---|---|---|---|---|
-| 1 | Shop-Owner registriert | ownerId gesetzt | 5 | PASS |
+| 1 | Shop-Owner registriert | ownerId gesetzt | 4 | PASS |
 | 2 | Owner approved via Admin | status: approved | via API gesetzt | PASS |
 | 3 | Owner-Login | Token oder Session vorhanden | vorhanden | PASS |
 | 4 | Shop-Status prüfen | status: active oder is_active: true | active | PASS |
 | 5 | Produkt anlegen | Produkt angelegt | HTTP 422 — kein Admin-Create-Endpoint | SKIP |
 | 5 | Produkt anlegen | Produkt angelegt | Error: Test is skipped: Reason: Admin product create returned 422 — endpoint may not exist | SKIP |
-| 6 | Guest sucht Shop | "e2e-sol-shop-20671b6b" in Ergebnissen | nicht gefunden (noch kein Produkt) | SKIP |
-| 7 | Shop-Detailseite zeigt Shop-Name | "e2e-sol-shop-20671b6b" sichtbar | gefunden | PASS |
+| 6 | Guest sucht Shop | "e2e-sol-shop-d15eab5b" in Ergebnissen | nicht gefunden (noch kein Produkt) | SKIP |
+| 7 | Shop-Detailseite zeigt Shop-Name | "e2e-sol-shop-d15eab5b" sichtbar | gefunden | PASS |
 | 8 | Shop deaktivieren | HTTP 2xx | HTTP 200 | PASS |
 | 9 | Inaktiver Shop — Direktaufruf | 404 oder "nicht verfügbar" | Shop noch sichtbar | SKIP |
 | 10 | Fixtures-Verifikation | Owner-Fixture angelegt | ja | PASS |
@@ -28,5 +28,5 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-sol-owner-20671b6b | ja | OK |
-| e2e-sol-product-20671b6b | nein | OFFEN |
+| e2e-sol-owner-d15eab5b | ja | OK |
+| e2e-sol-product-d15eab5b | nein | OFFEN |

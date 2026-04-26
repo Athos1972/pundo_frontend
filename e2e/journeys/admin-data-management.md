@@ -19,9 +19,9 @@ touches-states:
   - Guide.status:published
 status-changed-at: 2026-04-23T15:00:00Z
 status-changed-by-spec: journey-catalog-system-20260423
-last-run: 2026-04-24T14:00:00Z
+last-run: 2026-04-25T19:51:00Z
 last-result: FAIL
-last-run-sha: bc4e8ac89c083856c0eb12e76a581461f768787b
+last-run-sha: f10484b574a297b5e0ce06ecf09c79c3c9fdfda0
 ---
 
 ### Journey: Admin Data Management Sweep

@@ -21,9 +21,9 @@ touches-states:
   - ShopOwner.email_verified:true
 status-changed-at: 2026-04-25T18:00:00Z
 status-changed-by-spec: e2e-blind-spots-20260425
-last-run: 2026-04-25T18:00:00Z
+last-run: 2026-04-25T19:51:00Z
 last-result: PASS
-last-run-sha: HEAD
+last-run-sha: f10484b574a297b5e0ce06ecf09c79c3c9fdfda0
 ---
 
 # Journey: shop-owner-onboarding

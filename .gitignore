@@ -44,3 +44,6 @@ next-env.d.ts
 
 # signup data
 data/naidivse-signups.txt
+
+# Specs migrated to Obsidian vault on 2026-04-25 (Pundo-Plattform)
+specs/

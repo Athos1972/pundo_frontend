@@ -315,68 +315,68 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     ctx.fixtures.push({ name: `${PREFIX}-shop-B`, id: ctx.shopBId, slug: ctx.shopBSlug, built: true, deleted: false, type: 'shop' })
 
     // Step 3c: Create 4 products for shop-A
+    // T1: Use new AdminProductCreate schema: slug + names (multilingual), no shop_id/price/currency
+    // T2: After each Item-create, create a ShopListing via admin/shop-owner-products (best-effort)
     const shopIdForProducts = ctx.shopAId
     if (shopIdForProducts) {
       const productDefs = [
         {
           key: 'fixed' as const,
           name: `${PREFIX}-product-fixed`,
-          priceType: 'fixed',
           available: true,
-          price: '9.99',
-          currency: 'EUR',
         },
         {
           key: 'on_request' as const,
           name: `${PREFIX}-product-on-request`,
-          priceType: 'on_request',
           available: false,
-          price: null,
-          currency: 'EUR',
         },
         {
           key: 'free' as const,
           name: `${PREFIX}-product-free`,
-          priceType: 'free',
           available: true,
-          price: '0',
-          currency: 'EUR',
         },
         {
           key: 'variable' as const,
           name: `${PREFIX}-product-variable`,
-          priceType: 'variable',
           available: true,
-          price: '5.00',
-          currency: 'EUR',
         },
       ]
 
       for (const def of productDefs) {
-        const body: Record<string, unknown> = {
-          name: def.name,
-          shop_id: shopIdForProducts,
-          available: def.available,
-          price_type: def.priceType,
+        // T1: New Item schema — slug + names, no shop_id/price_type/price/currency
+        const itemSlug = `${PREFIX}-product-${def.key}`
+        const itemBody: Record<string, unknown> = {
+          slug: itemSlug,
+          names: { en: def.name },
+          source: 'admin',
         }
-        if (ctx.categoryId) body.category_id = ctx.categoryId
-        if (def.price !== null) body.price = def.price
-        body.currency = def.currency
+        if (ctx.categoryId) itemBody.category_id = ctx.categoryId
 
-        ctx.fixtures.push({ name: def.name, id: null, slug: null, built: false, deleted: false, type: 'product' })
-        const prodRes = await apiFetch('POST', '/api/v1/admin/products', body, adminHeaders())
+        ctx.fixtures.push({ name: def.name, id: null, slug: itemSlug, built: false, deleted: false, type: 'product' })
+        const prodRes = await apiFetch('POST', '/api/v1/admin/products', itemBody, adminHeaders())
         if (prodRes.ok) {
           const prod = prodRes.data as { id: number; slug?: string }
           const fixIdx = ctx.fixtures.findIndex(f => f.name === def.name)
           ctx.fixtures[fixIdx].id = prod.id
-          ctx.fixtures[fixIdx].slug = prod.slug ?? null
+          ctx.fixtures[fixIdx].slug = prod.slug ?? itemSlug
           ctx.fixtures[fixIdx].built = true
-          if (def.key === 'fixed') ctx.productFixedSlug = prod.slug ?? null
-          if (def.key === 'on_request') ctx.productOnRequestSlug = prod.slug ?? null
-          if (def.key === 'free') ctx.productFreeSlug = prod.slug ?? null
-          if (def.key === 'variable') ctx.productVariableSlug = prod.slug ?? null
+          if (def.key === 'fixed') ctx.productFixedSlug = prod.slug ?? itemSlug
+          if (def.key === 'on_request') ctx.productOnRequestSlug = prod.slug ?? itemSlug
+          if (def.key === 'free') ctx.productFreeSlug = prod.slug ?? itemSlug
+          if (def.key === 'variable') ctx.productVariableSlug = prod.slug ?? itemSlug
+
+          // T2: Best-effort ShopListing so shop-A lists this product (Schritt 8)
+          const shopListingRes = await apiFetch('POST', '/api/v1/admin/shop-owner-products', {
+            shop_id: shopIdForProducts,
+            name: def.name,
+            available: def.available,
+            ...(ctx.categoryId ? { category_id: ctx.categoryId } : {}),
+          }, adminHeaders())
+          if (!shopListingRes.ok) {
+            console.warn(`[lifecycle] ShopListing create (${def.key}) returned ${shopListingRes.status}: ${JSON.stringify(shopListingRes.data)}`)
+          }
         } else {
-          console.warn(`[lifecycle] Product create (${def.key}) returned ${prodRes.status}`)
+          console.warn(`[lifecycle] Product create (${def.key}) returned ${prodRes.status}: ${JSON.stringify(prodRes.data)}`)
         }
       }
     }

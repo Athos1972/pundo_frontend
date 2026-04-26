@@ -105,11 +105,13 @@ test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
       return
     }
 
-    // Ersten Shop mit whatsapp-Feld finden
+    // Ersten Shop mit whatsapp-Feld finden (bevorzugt ohne phone, damit tel:-Assertion klar ist)
     const shopsRes = await fetch('http://localhost:8500/api/v1/shops?limit=50')
     if (!shopsRes.ok) { test.skip(); return }
     const shops = await shopsRes.json()
-    const shopWithWa = shops.items?.find((s: { whatsapp_url: string | null; slug: string }) => s.whatsapp_url)
+    type ShopItem = { whatsapp_url: string | null; phone: string | null; slug: string }
+    const shopWithWaOnly = shops.items?.find((s: ShopItem) => s.whatsapp_url && !s.phone)
+    const shopWithWa = shopWithWaOnly ?? shops.items?.find((s: ShopItem) => s.whatsapp_url)
     if (!shopWithWa) {
       console.log('[WhatsApp E2E] Kein Shop mit whatsapp_url in Test-DB — Test übersprungen')
       test.skip()
@@ -127,12 +129,15 @@ test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
     expect(href).toMatch(/^https:\/\/wa\.me\/\d+\?text=/)
     // Kein führendes + in der Nummer
     expect(href).not.toMatch(/wa\.me\/\+/)
-    // URL-encoded text enthält Hostname
-    expect(href).toContain('pundo.cy')
+    // URL-encoded text enthält irgendeinen Hostnamen (SITE_URL aus .env.local, nicht hardcoded pundo.cy)
+    const decodedText = decodeURIComponent(href?.split('?text=')[1] ?? '')
+    expect(decodedText).toMatch(/on \S+/)
 
-    // Kein tel:-Link wenn whatsapp gesetzt
-    const telLink = page.locator('a[href^="tel:"]')
-    await expect(telLink).not.toBeVisible()
+    // tel:-Link nur versteckt wenn Shop kein phone hat (UI zeigt beide wenn beides gesetzt)
+    if (!shopWithWa.phone) {
+      const telLink = page.locator('a[href^="tel:"]')
+      await expect(telLink).not.toBeVisible()
+    }
   })
 
   test('Shop ohne whatsapp aber mit phone: nur tel:-Link sichtbar', async ({ page }) => {

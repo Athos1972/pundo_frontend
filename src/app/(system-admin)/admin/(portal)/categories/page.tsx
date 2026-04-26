@@ -6,6 +6,7 @@ import { CategoryTreeView } from '@/components/system-admin/CategoryTreeView'
 import { EntityTable } from '@/components/system-admin/EntityTable'
 
 const LIMIT = 50
+const TREE_LIMIT = 1000
 
 interface PageProps {
   searchParams: Promise<{ page?: string; q?: string; id?: string; taxonomy_type?: string; view?: string }>
@@ -27,10 +28,14 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
   } catch { /* handled below */ }
 
   let allCategoriesForTree: Awaited<ReturnType<typeof getCategories>>['items'] = []
+  let treeTruncated = false
+  let allDataTotal = 0
   if (view === 'tree') {
     try {
-      const allData = await getCategories({ q: q || undefined, id: idQ ? Number(idQ) : undefined, taxonomy_type: taxonomyType || undefined, limit: 2000, offset: 0 })
+      const allData = await getCategories({ q: q || undefined, id: idQ ? Number(idQ) : undefined, taxonomy_type: taxonomyType || undefined, limit: TREE_LIMIT, offset: 0 })
       allCategoriesForTree = allData.items
+      allDataTotal = allData.total
+      treeTruncated = allData.total > allData.items.length
     } catch { /* handled */ }
   }
 
@@ -74,13 +79,16 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
             className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm
               focus:outline-none focus:ring-2 focus:ring-slate-600"
           />
-          <input
+          <select
             name="taxonomy_type"
             defaultValue={taxonomyType}
-            placeholder={tr.taxonomy_type}
             className="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm
-              focus:outline-none focus:ring-2 focus:ring-slate-600"
-          />
+              focus:outline-none focus:ring-2 focus:ring-slate-600 bg-white"
+          >
+            <option value="">{tr.taxonomy_all}</option>
+            <option value="google">{tr.taxonomy_google}</option>
+            <option value="unspsc">{tr.taxonomy_unspsc}</option>
+          </select>
           <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 rounded-lg">↵</button>
         </form>
         <div className="flex gap-1">
@@ -100,12 +108,21 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       </div>
 
       {view === 'tree' ? (
-        <CategoryTreeView
-          categories={allCategoriesForTree}
-          editLabel={tr.edit}
-          expandAllLabel={tr.expand_all}
-          collapseAllLabel={tr.collapse_all}
-        />
+        <>
+          {treeTruncated && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
+              {tr.tree_truncated
+                .replace('{shown}', String(allCategoriesForTree.length))
+                .replace('{total}', String(allDataTotal))}
+            </p>
+          )}
+          <CategoryTreeView
+            categories={allCategoriesForTree}
+            editLabel={tr.edit}
+            expandAllLabel={tr.expand_all}
+            collapseAllLabel={tr.collapse_all}
+          />
+        </>
       ) : (
         <EntityTable
           columns={[

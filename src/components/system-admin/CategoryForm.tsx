@@ -32,15 +32,18 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
   // external_id is the human-editable key for categories
   const [externalId, setExternalId] = useState(category?.external_id ?? '')
   const [parentId, setParentId] = useState(String(category?.parent_id ?? ''))
-  const [taxonomyType, setTaxonomyType] = useState(category?.taxonomy_type ?? 'product')
+  const [taxonomyType, setTaxonomyType] = useState(category?.taxonomy_type ?? '')
   const [translations, setTranslations] = useState<SysAdminCategoryTranslation[]>(initTr)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [attrDefs, setAttrDefs] = useState<SysAdminCategoryAttributeDef[]>(initAttrDefs)
   const [attrDefDraft, setAttrDefDraft] = useState<AttrDefDraft | null>(null)
 
+  const VALID_TAXONOMY_TYPES = ['google', 'unspsc']
+
   function validate() {
     const e: Record<string, string> = {}
     if (!externalId.trim()) e.external_id = 'External ID is required'
+    if (!taxonomyType.trim()) e.taxonomy_type = tr.error_required
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -138,12 +141,22 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
         </FormField>
 
         <FormField
+          as="select"
           label={tr.taxonomy_type}
           name="taxonomy_type"
           value={taxonomyType}
           onChange={(e) => setTaxonomyType(e.target.value)}
           disabled={isPending}
-        />
+          required
+          error={errors.taxonomy_type}
+        >
+          <option value="">— select —</option>
+          <option value="google">Google</option>
+          <option value="unspsc">UNSPSC</option>
+          {taxonomyType && !VALID_TAXONOMY_TYPES.includes(taxonomyType) && (
+            <option value={taxonomyType}>{taxonomyType} (legacy)</option>
+          )}
+        </FormField>
       </div>
 
       {isEdit && (

@@ -157,6 +157,12 @@ const sysAdminTranslations = {
     clear: 'Clear',
     expand_all: 'Expand all',
     collapse_all: 'Collapse all',
+    // Category taxonomy filter
+    taxonomy_all: 'All',
+    taxonomy_google: 'Google',
+    taxonomy_unspsc: 'UNSPSC',
+    tree_truncated: 'Showing first {shown} of {total} categories. Filter by taxonomy type to see all.',
+    error_required: 'Required',
     // Impersonation
     enter_shop_admin: 'Manage shop operations',
     entering_shop_admin: 'Opening…',
@@ -338,6 +344,12 @@ const sysAdminTranslations = {
     clear: 'Leeren',
     expand_all: 'Alle aufklappen',
     collapse_all: 'Alle zuklappen',
+    // Category taxonomy filter
+    taxonomy_all: 'Alle',
+    taxonomy_google: 'Google',
+    taxonomy_unspsc: 'UNSPSC',
+    tree_truncated: 'Zeige erste {shown} von {total} Kategorien. Filter nach Taxonomie-Typ um alle zu sehen.',
+    error_required: 'Pflichtfeld',
     // Impersonation
     enter_shop_admin: 'Shop-Betrieb verwalten',
     entering_shop_admin: 'Öffne…',

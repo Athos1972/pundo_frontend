@@ -227,11 +227,23 @@ export default async function globalSetup() {
   console.log('[E2E Setup] Bereite pundo_test Datenbank vor...')
 
   // ── 1. DB reset + Kategorien kopieren ──────────────────────────────────────
+  // WICHTIG: Backend VOR dem DB-Reset stoppen, damit kein offener Connection-Pool
+  // die TRUNCATE-Locks blockiert (→ Deadlock). uvicorn spawnt 4 worker-Prozesse —
+  // lsof findet nur den Listener, die Worker sind eigenständige Kindprozesse.
+  // Deshalb: pkill -9 -f auf das komplette Uvicorn-Kommando.
+  console.log('[E2E Setup] Stoppe Backend + alle Uvicorn-Worker vor DB-Reset...')
+  try {
+    execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+    execSync(`pkill -9 -f "uvicorn ingestor.api.main:app.*${backendPort}" 2>/dev/null || true`, { stdio: 'pipe' })
+    await new Promise(r => setTimeout(r, 2000)) // Warten bis Worker-Prozesse terminiert und PG-Verbindungen geschlossen
+    console.log('[E2E Setup] Backend + Worker gestoppt, alle DB-Verbindungen freigegeben.')
+  } catch { /* ok */ }
+
   const pyBin = `${BACKEND_REPO}/.venv/bin/python`
   const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
 
   let creds!: TestCredentials
-  // Retry up to 3x — TRUNCATE CASCADE can deadlock with backend's open connections
+  // Retry up to 3x — safeguard if OS-level connections take a moment to close
   let dbErr: unknown
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {

@@ -302,6 +302,8 @@ export const translations = {
     filter_online_only: 'Online only',
     shop_offers: 'Current offers',
     shop_offer_valid_until: 'Valid until',
+    search: 'Search',
+    shop_search_placeholder: 'Search shops...',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -606,6 +608,8 @@ export const translations = {
     filter_online_only: 'Nur online',
     shop_offers: 'Aktuelle Angebote',
     shop_offer_valid_until: 'Gültig bis',
+    search: 'Suchen',
+    shop_search_placeholder: 'Shops suchen...',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -910,6 +914,8 @@ export const translations = {
     filter_online_only: 'Только онлайн',
     shop_offers: 'Актуальные акции',
     shop_offer_valid_until: 'Действует до',
+    search: 'Поиск',
+    shop_search_placeholder: 'Поиск магазинов...',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1214,6 +1220,8 @@ export const translations = {
     filter_online_only: 'Μόνο online',
     shop_offers: 'Τρέχουσες προσφορές',
     shop_offer_valid_until: 'Ισχύει έως',
+    search: 'Αναζήτηση',
+    shop_search_placeholder: 'Αναζήτηση καταστημάτων...',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1518,6 +1526,8 @@ export const translations = {
     filter_online_only: 'أونلاين فقط',
     shop_offers: 'العروض الحالية',
     shop_offer_valid_until: 'صالح حتى',
+    search: 'بحث',
+    shop_search_placeholder: 'البحث عن متاجر...',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1822,6 +1832,8 @@ export const translations = {
     filter_online_only: 'אונליין בלבד',
     shop_offers: 'מבצעים נוכחיים',
     shop_offer_valid_until: 'בתוקף עד',
+    search: 'חיפוש',
+    shop_search_placeholder: 'חיפוש חנויות...',
   },
 } as const;
 

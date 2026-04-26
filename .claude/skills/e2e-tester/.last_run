@@ -1,10 +1,11 @@
 {
-  "sha": "f10484b574a297b5e0ce06ecf09c79c3c9fdfda0",
-  "timestamp": "2026-04-25T19:51:09.144430+00:00",
+  "sha": "42d8ba2dff737a5a24640af1d8f4fee8cb88d776",
+  "timestamp": "2026-04-26T14:45:00.000000+00:00",
+  "feature": "B2250-001 Mobile UI Shop-Suche",
+  "verdict": "SHIP",
   "coverage_snapshot": {
-    "statements": 70.31,
-    "branches": 67.43,
-    "functions": 62.23,
-    "lines": 72.28
+    "unit_tests": 990,
+    "smoke_tests": "8/8",
+    "journey_customer_discovery": "8/9 (1 optional skip)"
   }
 }

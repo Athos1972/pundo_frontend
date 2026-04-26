@@ -23,6 +23,11 @@ export function ShopsContent({ lang }: { lang: string }) {
   const [coords, setCoords] = useState<Coords | null>(null)
   const geoResolved = useRef(false)
 
+  // Search
+  const [q, setQ] = useState('')
+  const [debouncedQ, setDebouncedQ] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Filter state
   const [shopTypeId, setShopTypeId] = useState<number | null>(null)
   const [openNow, setOpenNow] = useState(false)
@@ -59,6 +64,14 @@ export function ShopsContent({ lang }: { lang: string }) {
     }
   }, [])
 
+  // ── Debounce search query ────────────────────────────────────────────────────
+  function handleQChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    setQ(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedQ(value), 300)
+  }
+
   // ── Fetch shops when coords or filters change ────────────────────────────────
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -69,6 +82,7 @@ export function ShopsContent({ lang }: { lang: string }) {
     const params: Parameters<typeof getShops>[0] = {
       limit: 50,
       status: 'active',
+      ...(debouncedQ && { q: debouncedQ }),
       ...(coords && { lat: coords.lat, lng: coords.lng }),
       ...(shopTypeId != null && { shop_type_id: shopTypeId }),
       ...(openNow && { open_now: true }),
@@ -99,7 +113,7 @@ export function ShopsContent({ lang }: { lang: string }) {
         setErrorMsg(err instanceof Error ? err.message : String(err))
         setLoading(false)
       })
-  }, [coords, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang])
+  }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang])
 
   // ── Helper: type display name ─────────────────────────────────────────────────
   function typeLabel(st: ShopTypeRead): string {
@@ -118,6 +132,25 @@ export function ShopsContent({ lang }: { lang: string }) {
 
       {/* ── Filter bar ── */}
       <div className="space-y-3">
+
+        {/* Search field */}
+        <div className="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
+          <input
+            type="search"
+            value={q}
+            onChange={handleQChange}
+            placeholder={tr.shop_search_placeholder}
+            aria-label={tr.search}
+            className="w-full h-11 pl-10 rtl:pl-4 rtl:pr-10 pr-4 rounded-xl border border-border bg-surface text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/40 text-sm"
+          />
+        </div>
 
         {/* Shop-type pills */}
         {allShopTypes.length > 0 && (

@@ -31,6 +31,7 @@ Browser-E2E-Tests durch.
 - NIEMALS Secrets hardcoden.
 - Produktivdaten nur lesen, niemals verändern.
 - **Test-Umgebung zuerst:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Erst nach erfolgreichem Test-Lauf darf die Produktiv-Datenbank (Port 8000) berührt werden.
+- **Pflicht-Voraussetzung für E2E/Smoke-Tests: BEIDE Dienste müssen laufen — Frontend (3500) UND Backend (8500).** Es gibt keine "nur-Frontend"-Tests. Ist das Backend down, sofort starten (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) oder beim User nachfragen — NICHT versuchen, Tests ohne Backend durchzuführen.
 - **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
 - Akzeptanzkriterien müssen MESSBAR sein (Selektor, URL, Text, CSS-Eigenschaft).
 - Kein automatisches Commit — User committet manuell.
@@ -431,15 +432,26 @@ export default defineConfig({
 })
 ```
 
-### Vorbedingungs-Check
+### Vorbedingungs-Check (BLOCKIEREND — vor jedem E2E/Smoke-Lauf)
 
 ```bash
 # Test-Frontend läuft? (Port 3500)
-curl -s http://localhost:3500 | head -5 || echo "Test-Frontend nicht erreichbar — starten: npm run dev -- --port 3500"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3500/ || echo "BLOCKED: Test-Frontend nicht erreichbar"
 
 # Test-Backend läuft? (Port 8500)
-curl -s http://localhost:8500/api/v1/health 2>&1 | head -3 || echo "Test-Backend nicht erreichbar — pundo_main_backend auf Port 8500 starten"
+curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit=1" || echo "BLOCKED: Test-Backend nicht erreichbar"
 ```
+
+> **⚠️ PFLICHT:** Beide Dienste müssen 200 zurückgeben, BEVOR irgendein Playwright-Test startet.
+> Es gibt KEINE "nur-Frontend"-Tests — der Smoke-Test prüft auch datengetriebene Seiten.
+>
+> Wenn ein Dienst down ist:
+> - **Backend down:** `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && ./scripts/start_test_server.sh &`
+>   Warten bis Uvicorn "Application startup complete" meldet, dann health-Check wiederholen.
+> - **Frontend down:** `lsof -ti:3500 | xargs kill -9 2>/dev/null; npm run dev:test &`
+>   Warten bis "Ready in Xms" erscheint.
+>
+> **NIEMALS mit down-Dienst testen — Tests enden mit ERR_ABORTED und maskieren echte Fehler.**
 
 > **⚠️ Umgebungsregel:** E2E-Tests laufen IMMER auf Port 3500 (Frontend) + 8500 (Backend).
 > Port 3000/8000 ist Produktiv — dort wird erst deployed/getestet nach grünem Test-Lauf.

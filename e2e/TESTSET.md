@@ -1,10 +1,10 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-04-24
-SHA: bc4e8ac89c083856c0eb12e76a581461f768787b
-Feature: 2026-04-24-unified-item-offer-model — Unified Item/ShopListing/UnifiedOffer Datenmodell
-Ergebnis: **981/981 Unit-Tests PASS | TypeScript PASS | ESLint PASS (46 Warnings, 0 Errors) | Browser E2E: 49/53 PASS (4 pre-existing) | mustRun Journeys: 3/5 PASS (2 FAIL: admin pre-existing, shop-admin-offers F1-Backend) | Verdict: SHIP (mit Findings F1–F4)**
+Datum: 2026-04-26
+SHA: 42d8ba2dff737a5a24640af1d8f4fee8cb88d776
+Feature: B2250-001 — Mobile UI: Shops-Link + Shop-Suchfeld fehlten
+Ergebnis: **990/990 Unit-Tests PASS | TypeScript PASS | ESLint PASS (49 Warnings, 0 Errors) | Smoke-Tests: 8/8 PASS | Journey customer-discovery: 8/9 PASS (1 optional skip) | Verdict: SHIP**
 
 ---
 

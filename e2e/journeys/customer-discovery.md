@@ -10,7 +10,7 @@ touches-modules:
   - src/app/(customer)/page.tsx
   - src/app/(customer)/search/**
   - src/app/(customer)/products/[slug]/**
-  - src/app/(customer)/shops/[id]/**
+  - src/app/(customer)/shops/[slug]/**
   - src/app/(customer)/map/**
   - src/lib/api.ts
 touches-roles:
@@ -20,9 +20,9 @@ touches-states:
   - Product.availability:available
 status-changed-at: 2026-04-23T15:00:00Z
 status-changed-by-spec: journey-catalog-system-20260423
-last-run: 2026-04-25T19:51:00Z
+last-run: 2026-04-26T14:45:00Z
 last-result: PASS
-last-run-sha: f10484b574a297b5e0ce06ecf09c79c3c9fdfda0
+last-run-sha: 42d8ba2dff737a5a24640af1d8f4fee8cb88d776
 ---
 
 ### Journey: Customer Discovery Flow

@@ -72,4 +72,41 @@ export function CostTable({ rows }: { rows: CostTableRow[] }) {
   )
 }
 
-export const mdxComponents = { InfoBox, StepList, CostTable }
+type ComparisonRow = {
+  label: string
+  col1: string
+  col2: string
+}
+
+export function ComparisonTable({
+  headers,
+  rows,
+}: {
+  headers: [string, string, string]
+  rows: ComparisonRow[]
+}) {
+  return (
+    <div className="my-4 overflow-x-auto rounded-xl border border-gray-100">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
+            <th className="px-4 py-2 font-medium">{headers[0]}</th>
+            <th className="px-4 py-2 font-medium">{headers[1]}</th>
+            <th className="px-4 py-2 font-medium">{headers[2]}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-gray-100 last:border-0">
+              <td className="px-4 py-2 font-medium text-gray-800">{row.label}</td>
+              <td className="px-4 py-2 text-gray-600">{row.col1}</td>
+              <td className="px-4 py-2 text-gray-600">{row.col2}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable }

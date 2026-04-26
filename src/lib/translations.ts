@@ -194,6 +194,7 @@ export const translations = {
     guides_filter_all: 'All',
     category_behörden: 'Authorities',
     category_mobilität: 'Mobility',
+    category_haustiere: 'Pets',
     // Hero
     hero_title_pundo: 'Discover what Cyprus really has.',
     hero_title_naidivse: 'Find everything Cyprus really has.',
@@ -500,6 +501,7 @@ export const translations = {
     guides_filter_all: 'Alle',
     category_behörden: 'Behörden',
     category_mobilität: 'Mobilität',
+    category_haustiere: 'Haustiere',
     // Hero
     hero_title_pundo: 'Finde, was Zypern wirklich hat.',
     hero_title_naidivse: 'Finde alles, was Zypern wirklich hat.',
@@ -806,6 +808,7 @@ export const translations = {
     guides_filter_all: 'Все',
     category_behörden: 'Органы власти',
     category_mobilität: 'Транспорт',
+    category_haustiere: 'Домашние животные',
     // Hero
     hero_title_pundo: 'Найди, что на самом деле есть на Кипре.',
     hero_title_naidivse: 'Найди всё, что есть на Кипре на самом деле.',
@@ -1112,6 +1115,7 @@ export const translations = {
     guides_filter_all: 'Όλα',
     category_behörden: 'Αρχές',
     category_mobilität: 'Μεταφορές',
+    category_haustiere: 'Κατοικίδια',
     // Hero
     hero_title_pundo: 'Ανακάλυψε τι έχει πραγματικά η Κύπρος.',
     hero_title_naidivse: 'Βρες όλα όσα έχει πραγματικά η Κύπρος.',
@@ -1418,6 +1422,7 @@ export const translations = {
     guides_filter_all: 'الكل',
     category_behörden: 'السلطات',
     category_mobilität: 'التنقل',
+    category_haustiere: 'الحيوانات الأليفة',
     // Hero
     hero_title_pundo: 'اكتشف ما تمتلكه قبرص حقاً.',
     hero_title_naidivse: 'اكتشف كل ما تمتلكه قبرص حقاً.',
@@ -1724,6 +1729,7 @@ export const translations = {
     guides_filter_all: 'הכל',
     category_behörden: 'רשויות',
     category_mobilität: 'ניידות',
+    category_haustiere: 'חיות מחמד',
     // Hero
     hero_title_pundo: 'גלה מה יש באמת בקפריסין.',
     hero_title_naidivse: 'גלה את כל מה שיש באמת בקפריסין.',

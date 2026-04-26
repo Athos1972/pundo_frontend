@@ -38,6 +38,7 @@ export default async function GuideDetailPage({ params }: Props) {
   const categoryLabels: Record<string, string> = {
     behörden: tr.category_behörden,
     mobilität: tr.category_mobilität,
+    haustiere: tr.category_haustiere,
   }
 
   const allGuides = getGuides(lang)
@@ -57,7 +58,7 @@ export default async function GuideDetailPage({ params }: Props) {
         <p className="text-sm text-gray-400">{tr.guide_readtime(Number(meta.readtime))}</p>
       </header>
 
-      <article className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-accent">
+      <article className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-accent prose-h2:mt-8 prose-h3:mt-6">
         <MDXRemote
           source={content}
           components={mdxComponents}

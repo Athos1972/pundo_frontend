@@ -27,6 +27,7 @@ export function useInfiniteScroll({
 
   useEffect(() => {
     if (typeof IntersectionObserver !== 'undefined') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR hydration-safe pattern: must differ from server render
       setIsSupported(true)
     }
   }, [])

@@ -19,6 +19,7 @@ export default async function GuidesIndexPage() {
   const categoryLabels: Record<string, string> = {
     behörden: tr.category_behörden,
     mobilität: tr.category_mobilität,
+    haustiere: tr.category_haustiere,
   }
 
   return (

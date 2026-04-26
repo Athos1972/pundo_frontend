@@ -76,7 +76,6 @@ export function ShopsContent({ lang }: { lang: string }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setErrorMsg(null)
 
     const params: Parameters<typeof getShops>[0] = {

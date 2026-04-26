@@ -20,8 +20,16 @@ export function useInfiniteScroll({
   isLoading,
   rootRef,
 }: UseInfiniteScrollOptions): UseInfiniteScrollResult {
-  const [isSupported] = useState(() => typeof IntersectionObserver !== 'undefined')
+  // Start `false` so SSR and first client render match — avoids hydration mismatch.
+  // Flip to `true` post-mount when IntersectionObserver is available.
+  const [isSupported, setIsSupported] = useState(false)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (typeof IntersectionObserver !== 'undefined') {
+      setIsSupported(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (!isSupported || !hasMore || isLoading) return

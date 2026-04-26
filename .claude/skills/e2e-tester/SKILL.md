@@ -52,6 +52,7 @@ Phase 3:   Visual Smoke-Test    (Pflicht — immer, unabhängig vom Scope)
 Phase 4:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
 Phase 5:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
 Phase 5.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
+Phase 5.6: Issue-Update         (Bug/Feature-Datei im Obsidian-Vault — PFLICHT)
 ```
 
 ---
@@ -907,6 +908,64 @@ Neue Zeile unter dem Abschlussbericht:
 | README.md         | aktualisiert / unverändert / übersprungen / kein Signal |
 | AGENTS.md         | aktualisiert / unverändert / übersprungen / kein Signal |
 ```
+
+---
+
+## Phase 5.6: Issue-Update im Obsidian-Vault (PFLICHT)
+
+**Trigger:** Jeder Testlauf, der ein Bug-Issue oder Feature-Spec aus dem Vault als Auslöser hatte.
+**Vault-Pfad:** `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/`
+
+### Wann
+
+- Bug-Fix (`FG/Bugs/B*-*.md`) → Issue-Datei aktualisieren
+- Feature-Implementierung (`FG/F*.md`) → Status/last-tested ergänzen
+
+### Was eintragen
+
+**Frontmatter:**
+```yaml
+status: fixed              # oder verified, in-progress (bei FIX-Verdict)
+fixed: YYYY-MM-DD          # Datum des erfolgreichen e2e-Laufs
+fixed-sha: <git-sha>       # commit-SHA der Lösung
+verdict: SHIP              # oder FIX / ESCALATE
+```
+
+**Body — neuer Abschnitt am Ende:**
+```markdown
+---
+
+## Fix-Verlauf (YYYY-MM-DD)
+
+**Root Cause:** <kurze Analyse>
+
+**Lösung:**
+1. **`<datei>`** — <was geändert wurde>
+2. ...
+
+**Test-Ergebnis (e2e-tester):**
+- TypeScript: PASS · ESLint: 0 Errors
+- Unit-Tests: <n>/<n>
+- Smoke-Tests: <n>/<n>
+- Journey <name>: <n>/<n>
+- **Verdict: <SHIP|FIX|ESCALATE>**
+
+**Test-Report:** `e2e/journeys/reports/<journey>-YYYY-MM-DD-<issue-id>.md`
+```
+
+### Verdict-Mapping
+
+| Verdict | Issue-Status |
+|---------|-------------|
+| SHIP | `status: fixed` (Bug) / `status: verified` (Feature) |
+| FIX | `status: in-progress` + Findings-Liste im Body |
+| ESCALATE | `status: blocked` + Begründung im Body |
+
+### Negativ-Regel
+
+Nicht verändern, wenn:
+- Der Testlauf nicht aus einem konkreten Issue ausgelöst wurde (z.B. Routine-Smoke ohne Feature-Bezug)
+- Der User explizit "nicht im Vault eintragen" sagt
 
 ---
 

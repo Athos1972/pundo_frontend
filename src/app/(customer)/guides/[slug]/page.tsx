@@ -58,7 +58,7 @@ export default async function GuideDetailPage({ params }: Props) {
         <p className="text-sm text-gray-400">{tr.guide_readtime(Number(meta.readtime))}</p>
       </header>
 
-      <article className="prose prose-sm max-w-none prose-headings:font-semibold prose-a:text-accent prose-h2:mt-8 prose-h3:mt-6">
+      <article className="guide-content max-w-none">
         <MDXRemote
           source={content}
           components={mdxComponents}

@@ -10,6 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
+.claude/*.lock
+
 # testing
 /coverage
 
@@ -47,3 +49,4 @@ data/naidivse-signups.txt
 
 # Specs migrated to Obsidian vault on 2026-04-25 (Pundo-Plattform)
 specs/
+/.claude/scheduled_tasks.lock

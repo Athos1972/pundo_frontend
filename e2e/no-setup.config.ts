@@ -11,8 +11,8 @@ const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
 const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
 
 export default defineConfig({
-  testDir: './e2e',
-  testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
+  testDir: '.',
+  testIgnore: ['**/_*.spec.ts', '**/_*.ts'],
   // Kein globalSetup — .test-state.json muss bereits vorhanden sein
   workers: 2,
   use: {

@@ -7,7 +7,7 @@ import { LogoUpload } from '@/components/shop-admin/LogoUpload'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
-import type { AdminShop, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory } from '@/types/shop-admin'
+import type { AdminShop, SocialLinksMap, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory } from '@/types/shop-admin'
 
 const FIXED_PLATFORM_KEYS = new Set(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x'])
 
@@ -22,7 +22,7 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
   const [spokenLanguages, setSpokenLanguages] = useState<string[]>(
     shop?.spoken_languages ?? []
   )
-  const [socialLinks, setSocialLinks] = useState<Record<string, string> | null>(
+  const [socialLinks, setSocialLinks] = useState<SocialLinksMap | null>(
     shop?.social_links ?? null
   )
   const [socialLinksValid, setSocialLinksValid] = useState(true)

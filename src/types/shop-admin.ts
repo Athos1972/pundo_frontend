@@ -28,16 +28,36 @@ export interface AdminShop {
   whatsapp_number: string | null
   website_url: string | null
   webshop_url: string | null
-  social_links: Record<string, string> | null
+  social_links: SocialLinksMap | null
 }
 
 export interface OpeningHours {
   day: 0 | 1 | 2 | 3 | 4 | 5 | 6
-  open: string
-  close: string
+  open?: string | null         // "HH:MM" — undefined/null when closed=true
+  close?: string | null
   closed: boolean
-  second_open?: string
-  second_close?: string
+  second_open?: string | null
+  second_close?: string | null
+}
+
+// ─── Social Links ─────────────────────────────────────────────────────────────
+
+/** Custom social link stored under the "other" key. */
+export interface CustomSocialLink {
+  key: string   // user-supplied platform name, e.g. "xing"
+  url: string
+}
+
+/** Canonical wire format. Mirrors Python SocialLinks dict[str, str | CustomSocialLink]. */
+export type SocialLinksMap = {
+  [platform: string]: string | CustomSocialLink | CustomSocialLink[] | undefined
+  facebook?: string
+  instagram?: string
+  tiktok?: string
+  youtube?: string
+  linkedin?: string
+  x?: string
+  other?: CustomSocialLink | CustomSocialLink[]
 }
 
 export interface PriceUnitOption {

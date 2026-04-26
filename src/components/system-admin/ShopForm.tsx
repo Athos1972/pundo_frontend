@@ -4,6 +4,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SysAdminShop, SysAdminShopType, DayHours } from '@/types/system-admin'
+import type { SocialLinksMap } from '@/types/shop-admin'
 import { pickName } from '@/types/system-admin'
 
 // Normalizes legacy dict format {"0": {...}} → list format [{day: 0, ...}].
@@ -59,7 +60,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   const [hasOwnDelivery, setHasOwnDelivery] = useState(shop?.has_own_delivery ?? false)
   const [sellsLiveAnimals, setSellsLiveAnimals] = useState(shop?.sells_live_animals ?? false)
   const [spokenLanguages, setSpokenLanguages] = useState<string[]>(shop?.spoken_languages ?? [])
-  const [socialLinks, setSocialLinks] = useState<Record<string, string> | null>(shop?.social_links ?? null)
+  const [socialLinks, setSocialLinks] = useState<SocialLinksMap | null>((shop?.social_links ?? null) as SocialLinksMap | null)
   const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
 

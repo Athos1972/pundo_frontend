@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { SocialLinkBlockCategory, SocialLinkFieldError } from '@/types/shop-admin'
+import type { SocialLinkBlockCategory, SocialLinkFieldError, SocialLinksMap, CustomSocialLink } from '@/types/shop-admin'
 
 const FIXED_PLATFORMS = [
   { key: 'facebook',  label: 'Facebook' },
@@ -12,9 +12,92 @@ const FIXED_PLATFORMS = [
   { key: 'x',         label: 'X / Twitter' },
 ] as const
 
+const FIXED_KEYS = new Set(FIXED_PLATFORMS.map((p) => p.key))
+
+// ─── Wire adapters ────────────────────────────────────────────────────────────
+
+/**
+ * Converts wire format (SocialLinksMap) to the editor's internal flat state.
+ * Returns { flat: Record<string,string>, customKey: string, customUrl: string }
+ */
+function fromWire(value: SocialLinksMap | null): {
+  flat: Record<string, string>
+  customKey: string
+  customUrl: string
+} {
+  if (!value) return { flat: {}, customKey: '', customUrl: '' }
+
+  const flat: Record<string, string> = {}
+  let customKey = ''
+  let customUrl = ''
+
+  for (const [k, v] of Object.entries(value)) {
+    if (FIXED_KEYS.has(k as never)) {
+      if (typeof v === 'string') {
+        flat[k] = v
+      } else if (v !== undefined) {
+        // Defensive: fixed-key has non-string value (crawler artefact) — skip, warn
+        console.warn(`[SocialLinksEditor] Fixed platform key "${k}" has unexpected non-string value:`, v)
+      }
+    } else if (k === 'other') {
+      // Canonical custom-link format: { key, url } or [{ key, url }, ...]
+      if (Array.isArray(v)) {
+        if (v.length > 1) {
+          console.warn('[SocialLinksEditor] Multiple "other" entries found — using first, ignoring rest:', v.slice(1))
+        }
+        const first = v[0] as CustomSocialLink | undefined
+        if (first && typeof first.key === 'string' && typeof first.url === 'string') {
+          customKey = first.key
+          customUrl = first.url
+        }
+      } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+        const link = v as CustomSocialLink
+        if (typeof link.key === 'string' && typeof link.url === 'string') {
+          customKey = link.key
+          customUrl = link.url
+        }
+      }
+    } else {
+      // Legacy: unknown top-level key (e.g. { xing: "https://..." }) — treat as custom slot
+      if (typeof v === 'string') {
+        customKey = k
+        customUrl = v
+      } else if (v !== undefined) {
+        console.warn(`[SocialLinksEditor] Unknown key "${k}" has non-string value — skipping:`, v)
+      }
+    }
+  }
+
+  return { flat, customKey, customUrl }
+}
+
+/**
+ * Converts the editor's internal flat state back to wire format.
+ * Custom entry is wrapped under "other": { key, url } — never stored flat.
+ */
+function toWire(
+  flat: Record<string, string>,
+  customKey: string,
+  customUrl: string,
+): SocialLinksMap | null {
+  const result: SocialLinksMap = {}
+
+  for (const [k, v] of Object.entries(flat)) {
+    if (v) result[k] = v
+  }
+
+  if (customKey && customUrl) {
+    result.other = { key: customKey, url: customUrl }
+  }
+
+  return Object.keys(result).length ? result : null
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export interface SocialLinksEditorProps {
-  value: Record<string, string> | null
-  onChange: (v: Record<string, string> | null) => void
+  value: SocialLinksMap | null
+  onChange: (v: SocialLinksMap | null) => void
   onValidChange?: (isValid: boolean) => void
   titleLabel: string
   otherLabel: string
@@ -41,15 +124,10 @@ export function SocialLinksEditor({
   errorViaShortenerTemplate,
   onServerErrorDismiss,
 }: SocialLinksEditorProps) {
-  const [otherKey, setOtherKey] = useState<string>(() => {
-    if (!value) return ''
-    const known = new Set(FIXED_PLATFORMS.map((p) => p.key))
-    return Object.keys(value).find((k) => !known.has(k as never)) ?? ''
-  })
-  const [otherUrl, setOtherUrl] = useState<string>(() => {
-    if (!value || !otherKey) return ''
-    return value[otherKey] ?? ''
-  })
+  const initial = fromWire(value)
+  const [flat, setFlat] = useState<Record<string, string>>(initial.flat)
+  const [otherKey, setOtherKey] = useState<string>(initial.customKey)
+  const [otherUrl, setOtherUrl] = useState<string>(initial.customUrl)
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
   function buildServerErrorMessage(fieldKey: string): string | null {
@@ -62,32 +140,18 @@ export function SocialLinksEditor({
     return null
   }
 
-  function updateLinks(key: string, url: string) {
-    const base: Record<string, string> = {}
-    for (const p of FIXED_PLATFORMS) {
-      const existing = value?.[p.key]
-      if (existing) base[p.key] = existing
-    }
-    if (otherKey && otherUrl) base[otherKey] = otherUrl
-
-    if (url) {
-      base[key] = url
-    } else {
-      delete base[key]
-    }
-
-    onChange(Object.keys(base).length ? base : null)
-  }
-
   function handleFixedChange(key: string, url: string) {
     onServerErrorDismiss?.(key)
     const invalid = url && !isValidUrl(url)
-    setUrlErrors((e) => {
-      const next = invalid ? { ...e, [key]: 'Invalid URL' } : (({ [key]: _, ...rest }) => rest)(e)
-      onValidChange?.(Object.keys(next).length === 0)
-      return next
-    })
-    updateLinks(key, url)
+    const nextErrors = invalid
+      ? { ...urlErrors, [key]: 'Invalid URL' }
+      : (({ [key]: _, ...rest }) => rest)(urlErrors)
+    setUrlErrors(nextErrors)
+    onValidChange?.(Object.keys(nextErrors).length === 0)
+
+    const nextFlat = url ? { ...flat, [key]: url } : (({ [key]: _, ...rest }) => rest)(flat)
+    setFlat(nextFlat)
+    onChange(toWire(nextFlat, otherKey, otherUrl))
   }
 
   function handleOtherChange(newKey: string, newUrl: string) {
@@ -98,22 +162,14 @@ export function SocialLinksEditor({
     onServerErrorDismiss?.(prevKey || 'other')
     if (newKey !== prevKey) onServerErrorDismiss?.(newKey)
 
-    const base: Record<string, string> = {}
-    for (const p of FIXED_PLATFORMS) {
-      const existing = value?.[p.key]
-      if (existing) base[p.key] = existing
-    }
-    if (prevKey && prevKey !== newKey) delete base[prevKey]
-    if (newKey && newUrl) base[newKey] = newUrl
-
     const invalid = newUrl && !isValidUrl(newUrl)
-    setUrlErrors((e) => {
-      const next = invalid ? { ...e, other: 'Invalid URL' } : (({ other: _, ...rest }) => rest)(e)
-      onValidChange?.(Object.keys(next).length === 0)
-      return next
-    })
+    const nextErrors = invalid
+      ? { ...urlErrors, other: 'Invalid URL' }
+      : (({ other: _, ...rest }) => rest)(urlErrors)
+    setUrlErrors(nextErrors)
+    onValidChange?.(Object.keys(nextErrors).length === 0)
 
-    onChange(Object.keys(base).length ? base : null)
+    onChange(toWire(flat, newKey, newUrl))
   }
 
   return (
@@ -130,7 +186,7 @@ export function SocialLinksEditor({
                 <input
                   type="url"
                   placeholder="https://..."
-                  defaultValue={value?.[key] ?? ''}
+                  defaultValue={flat[key] ?? ''}
                   disabled={disabled}
                   onChange={(e) => handleFixedChange(key, e.target.value)}
                   className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2

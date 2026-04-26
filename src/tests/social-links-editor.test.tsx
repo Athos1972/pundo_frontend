@@ -122,7 +122,7 @@ describe('SocialLinksEditor', () => {
     expect(onChange).toHaveBeenCalledWith(null)
   })
 
-  it('other field: key + valid URL → included in onChange payload', () => {
+  it('other field: key + valid URL → wrapped under "other" key in onChange payload', () => {
     const onChange = vi.fn()
     render(<SocialLinksEditor {...DEFAULT_PROPS} onChange={onChange} />)
     const platformNameInput = screen.getByPlaceholderText('Platform name')
@@ -130,7 +130,8 @@ describe('SocialLinksEditor', () => {
     fireEvent.change(platformNameInput, { target: { value: 'snapchat' } })
     fireEvent.change(urlInput, { target: { value: 'https://snapchat.com/add/me' } })
     const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
-    expect(lastCall).toMatchObject({ snapchat: 'https://snapchat.com/add/me' })
+    // T7: custom links are now wrapped under canonical "other" key
+    expect(lastCall).toMatchObject({ other: { key: 'snapchat', url: 'https://snapchat.com/add/me' } })
   })
 
   it('disabled prop disables all inputs', () => {
@@ -138,6 +139,77 @@ describe('SocialLinksEditor', () => {
     const inputs = screen.getAllByRole('textbox') as HTMLInputElement[]
     inputs.forEach((input) => {
       expect(input.disabled).toBe(true)
+    })
+  })
+})
+
+// ─── T7: Wire round-trip tests ────────────────────────────────────────────────
+
+describe('SocialLinksEditor — fromWire / toWire round-trip (T7)', () => {
+  it('reads other={key,url} from wire and populates custom-slot fields', () => {
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        value={{ other: { key: 'xing', url: 'https://xing.com/myprofile' } }}
+      />
+    )
+    const platformNameInput = screen.getByPlaceholderText('Platform name') as HTMLInputElement
+    expect(platformNameInput.value).toBe('xing')
+    const urlInput = screen.getAllByPlaceholderText(/URL: https/)[0] as HTMLInputElement
+    expect(urlInput.value).toBe('https://xing.com/myprofile')
+  })
+
+  it('round-trip: wire in → edit URL → wire out keeps "other" wrapper', () => {
+    const onChange = vi.fn()
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        onChange={onChange}
+        value={{ other: { key: 'xing', url: 'https://xing.com/old' } }}
+      />
+    )
+    const urlInput = screen.getAllByPlaceholderText(/URL: https/)[0]
+    fireEvent.change(urlInput, { target: { value: 'https://xing.com/new' } })
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(lastCall).toMatchObject({ other: { key: 'xing', url: 'https://xing.com/new' } })
+  })
+
+  it('legacy: top-level custom key (flat) is treated as custom slot and re-wrapped on save', () => {
+    const onChange = vi.fn()
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        onChange={onChange}
+        value={{ pinterest: 'https://pinterest.com/test' }}
+      />
+    )
+    // Editor should show the legacy key in the platform-name input
+    const platformNameInput = screen.getByPlaceholderText('Platform name') as HTMLInputElement
+    expect(platformNameInput.value).toBe('pinterest')
+    // Trigger a URL change to fire onChange — value is re-wrapped under "other"
+    const urlInput = screen.getAllByPlaceholderText(/URL: https/)[0]
+    fireEvent.change(urlInput, { target: { value: 'https://pinterest.com/test2' } })
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    // Re-wrapped under "other" on first interaction
+    expect(lastCall).toMatchObject({ other: { key: 'pinterest', url: 'https://pinterest.com/test2' } })
+  })
+
+  it('wire with both fixed + other fields round-trips correctly', () => {
+    const onChange = vi.fn()
+    render(
+      <SocialLinksEditor
+        {...DEFAULT_PROPS}
+        onChange={onChange}
+        value={{ facebook: 'https://fb.com/shop', other: { key: 'xing', url: 'https://xing.com/x' } }}
+      />
+    )
+    // Trigger a change on facebook to fire onChange
+    const inputs = screen.getAllByPlaceholderText('https://...') as HTMLInputElement[]
+    fireEvent.change(inputs[0], { target: { value: 'https://fb.com/shop2' } })
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(lastCall).toMatchObject({
+      facebook: 'https://fb.com/shop2',
+      other: { key: 'xing', url: 'https://xing.com/x' },
     })
   })
 })

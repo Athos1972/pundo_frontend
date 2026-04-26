@@ -22,11 +22,32 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
 
   function handleSave() {
     startTransition(async () => {
+      // T2: 7-day guard — backend requires exactly 7 slots
+      if (hours.length !== 7) {
+        showToast(tr.error_seven_days, 'error')
+        return
+      }
+
+      // T2: Payload cleanup — closed days send only {day, closed:true}; no time fields
+      const payload = hours.map((h) =>
+        h.closed
+          ? { day: h.day, closed: true }
+          : {
+              day: h.day,
+              closed: false,
+              open: h.open,
+              close: h.close,
+              ...(h.second_open
+                ? { second_open: h.second_open, second_close: h.second_close }
+                : {}),
+            }
+      )
+
       try {
         const res = await fetch('/api/shop-admin/shop/hours', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(hours),
+          body: JSON.stringify(payload),
         })
         if (res.ok) {
           showToast(tr.saved, 'success')
@@ -67,16 +88,16 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                 <span className="text-gray-400">{tr.open_from}</span>
                 <input
                   type="time"
-                  value={slot.open}
-                  onChange={(e) => updateDay(slot.day, { open: e.target.value })}
+                  value={slot.open ?? '09:00'}
+                  onChange={(e) => updateDay(slot.day, { open: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
                   aria-label={`${tr.days[idx]} open from`}
                 />
                 <span className="text-gray-400">{tr.open_until}</span>
                 <input
                   type="time"
-                  value={slot.close}
-                  onChange={(e) => updateDay(slot.day, { close: e.target.value })}
+                  value={slot.close ?? '18:00'}
+                  onChange={(e) => updateDay(slot.day, { close: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
                   aria-label={`${tr.days[idx]} close at`}
                 />

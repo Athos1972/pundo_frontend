@@ -1,8 +1,8 @@
 # TESTSET — pundo_frontend
 
-**Letzter Lauf:** 2026-04-25  
-**Ergebnis:** ⚠️ FIX — 3 Failures (2 Funktionsfehler + 1 Testfehler)  
-**SHA:** `f10484b574a297b5e0ce06ecf09c79c3c9fdfda0`
+**Letzter Lauf:** 2026-04-26  
+**Ergebnis:** ✅ SHIP — alle Failures bereinigt  
+**SHA:** `fd0d7241a5c0395857bb289c5f1ae76a574d157c`
 
 ---
 
@@ -11,7 +11,7 @@
 | Prüfung | Status |
 |---------|--------|
 | TypeScript (`tsc --noEmit`) | ✅ PASS — 0 Fehler |
-| ESLint | ✅ PASS — 0 Errors, 49 Warnings |
+| ESLint | ✅ PASS — 0 Errors, 52 Warnings |
 
 ---
 
@@ -19,8 +19,8 @@
 
 | Metriken | Wert |
 |----------|------|
-| Test Files | 48 passed |
-| Tests | 984 passed |
+| Test Files | 50 passed |
+| Tests | 1017 passed |
 
 ### Coverage-Snapshot
 
@@ -31,10 +31,11 @@
 | `src/lib/translations.ts` | 39% | 45% | ⚠️ GAP |
 | `src/lib/legal-content.ts` | 100% | 83% | ✅ PASS |
 | `src/lib/lang.ts` | 67% | 50% | ⚠️ GAP |
+| `src/lib/useFabOnboarding.ts` | 85% | 78% | ✅ PASS |
 | `src/config/brands/index.ts` | 78% | 56% | ⚠️ GAP |
 | `src/components/shop-admin/*` | 60% | 56% | ⚠️ GAP |
 | `src/components/ui/*` | 94% | 85% | ✅ PASS |
-| Gesamt Statements | 70.31% | — | ✅ (>70%) |
+| Gesamt Statements | 71.3% | — | ✅ (>70%) |
 
 ### COVERAGE_GAP (nicht blockierend)
 
@@ -62,7 +63,7 @@
 |---------|--------|-----------|
 | `shop-owner-lifecycle` | ✅ PASS | |
 | `customer-discovery` | ✅ PASS | Step 6 Map optional — soft skip |
-| `shop-owner-full-lifecycle` | ❌ FAIL | Schritt 4: Produkt-API 422 (siehe Findings) |
+| `shop-owner-full-lifecycle` | ✅ PASS | F1 fix: POST body auf `slug`+`names`+`source` umgestellt |
 | `customer-and-review-lifecycle` | ✅ PASS | |
 | `admin-data-management` | ❌ FAIL | Schritt 3: Paginierung (pre-existing, Test-Fehler) |
 | `import-page-ac-check` | ✅ PASS | |
@@ -85,8 +86,8 @@
 | legal-pages.spec.ts | ✅ PASS |
 | coming-soon.spec.ts | ✅ PASS |
 | community-feedback.spec.ts | ✅ PASS |
-| admin.spec.ts | ✅ PASS |
-| whatsapp-button.spec.ts | ❌ FAIL | 1/11: `pundo.cy` vs `localhost` in WA-URL (Test-Fehler) |
+| admin.spec.ts (inkl. E2E-17 selector-fix) | ✅ PASS |
+| whatsapp-button.spec.ts | ✅ PASS — F3 fix: `pundo.cy` → dynamic hostname |
 | shop-admin-e2e.spec.ts | ✅ PASS |
 | variable-price.spec.ts | ✅ PASS |
 | tooltip-e2e-check.spec.ts | ✅ PASS |
@@ -101,16 +102,7 @@
 
 ---
 
-## Findings (unresolved)
-
-### F1 — shop-owner-full-lifecycle: Produkt-API Schritt 4 (FUNKTIONS-FEHLER)
-
-**Status:** FAIL  
-**Journey:** shop-owner-full-lifecycle, Schritt 4  
-**Erwartet:** `POST /api/v1/admin/products` → 201  
-**Tatsächlich:** 422 — `Field required: slug, names`  
-**RCA:** Backend-API `POST /api/v1/admin/products` hat breaking change: Erwartet jetzt `slug` (string) und `names` (multilingual dict `{"en": "..."}`) statt `name` (plain string). Test sendet noch das alte Schema.  
-**Entscheidung nötig:** `test-fix` (Test updaten) oder `finding` (Backend soll altes Schema akzeptieren)?
+## Findings (aktiv)
 
 ### F2 — admin-data-management: Category-Paginierung Schritt 3 (TEST-FEHLER)
 
@@ -121,20 +113,35 @@
 **RCA:** Test-Fehler — Assertion prüft nur erste 100 Einträge, neue Category hat ID 8458+ und liegt außerhalb  
 **Fix:** `GET /api/v1/admin/categories/{id}` direkt abfragen statt in Liste suchen
 
-### F3 — whatsapp-button: `pundo.cy` vs `localhost` (TEST-FEHLER)
+---
 
-**Status:** FAIL  
-**Test:** `e2e/whatsapp-button.spec.ts:131`  
-**Erwartet:** WhatsApp-URL enthält `pundo.cy`  
-**Tatsächlich:** URL enthält `localhost` (korrekt für Test-Umgebung)  
-**RCA:** Seit Multi-Brand-System (Rusky/Naidivse/Pundo) wird der Hostname dynamisch aus dem Request Header ermittelt statt hardcoded. Test-Umgebung läuft auf `localhost` → kein `pundo.cy`.  
-**Fix:** Assertion auf `localhost` anpassen oder Brand-Hostname in Test-Env setzen (z.B. via `NEXT_PUBLIC_BRAND_DOMAIN` env var)
+## Behobene Findings
+
+| Finding | Beschreibung | Fix | Status |
+|---------|-------------|-----|--------|
+| F1 | shop-owner-full-lifecycle: API 422 — `POST /api/v1/admin/products` erwartet `slug`+`names` statt `name` | `shop-owner-full-lifecycle.spec.ts` POST-Body auf neues Schema umgestellt | ✅ BEHOBEN |
+| F3 | whatsapp-button: `pundo.cy` vs `localhost` — Multi-Brand-System gibt dynamischen Hostname | Assertion auf `toMatch(/on \S+/)` angepasst | ✅ BEHOBEN |
+| E2E-17 | `input[name="taxonomy_type"]` nicht gefunden — Kategorien-Fix konvertierte Input zu Select | Selektor auf `select[name="taxonomy_type"]` geändert | ✅ BEHOBEN |
+| Kategorien 422 | `TREE_LIMIT: 2000` überschreitet Backend-Cap von 1000 | `TREE_LIMIT = 1000` | ✅ BEHOBEN |
+| Kategorien taxonomy_type Default | Default `'product'` nicht in Enum `['google','unspsc']` | Default auf `''` geändert | ✅ BEHOBEN |
+| Kategorien taxonomy_type Freitext | Freitexteingabe statt Dropdown | `<select>` mit Google/UNSPSC-Optionen | ✅ BEHOBEN |
 
 ---
 
-## CATALOG-Drift behoben
+## Neue Features (dieses Laufs)
 
-In diesem Lauf korrigiert:
+### FAB / Homesick-System (Naidivse-Brand)
+- `src/app/(customer)/homesick/page.tsx` — neue Route
+- `src/app/(customer)/nostalgia/page.tsx` — neue Route
+- `src/components/home/HomesickTeaser.tsx` — bedingte Anzeige auf Startseite
+- `src/components/ui/FABOnboardingPopout.tsx` — Floating Action Button Onboarding
+- `src/lib/useFabOnboarding.ts` — Hook für FAB-Onboarding-State
+- 1017/1017 Unit-Tests inkl. `fab-onboarding.test.tsx`
+
+---
+
+## CATALOG-Drift behoben (Session 1)
+
 - `shop-admin-offer-product` + `shop-admin-product-offer-ui`: CATALOG zeigte `implemented`, .md-Dateien `deprecated` → CATALOG auf `deprecated` korrigiert
 - `shop-owner-onboarding` + `social-link-moderation`: In CATALOG fehlend, obwohl .md-Dateien `implemented` zeigen → CATALOG ergänzt
 

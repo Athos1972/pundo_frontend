@@ -18,9 +18,9 @@ touches-states:
   - Offer.status:archived
 status-changed-at: 2026-04-24T14:00:00Z
 status-changed-by-spec: unified-item-offer-model
-last-run: 2026-04-25T19:51:00Z
+last-run: 2026-04-26T21:15:00Z
 last-result: PASS
-last-run-sha: f10484b574a297b5e0ce06ecf09c79c3c9fdfda0
+last-run-sha: fd0d7241a5c0395857bb289c5f1ae76a574d157c
 ---
 
 ### Journey: Shop-Admin Angebote CRUD

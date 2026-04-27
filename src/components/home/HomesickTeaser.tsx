@@ -37,7 +37,7 @@ export function HomesickTeaser({ brand: _brand, lang, variant = 'section' }: Hom
 
         <button
           onClick={() => setOpen(true)}
-          className="self-start bg-white text-accent-dark font-medium text-sm px-5 py-2.5 rounded-full hover:bg-surface-alt transition-colors active:scale-95 transition-transform"
+          className="self-start bg-white text-accent-dark font-medium text-sm px-5 py-2.5 rounded-full hover:bg-surface-alt active:scale-95 transition"
         >
           {tr.homesick_teaser_cta}
         </button>

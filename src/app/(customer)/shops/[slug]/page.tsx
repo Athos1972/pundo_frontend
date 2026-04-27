@@ -148,9 +148,11 @@ export default async function ShopPage({ params }: Props) {
           )}
         </div>
 
-        {/* Map */}
+        {/* Map — isolate creates a new stacking context so Leaflet's z-indices don't bleed above FABs */}
         {pins.length > 0 && (
-          <ShopMapClient shops={pins} className="w-full h-48 rounded-xl overflow-hidden" lang={lang} zoom={17} />
+          <div className="isolate">
+            <ShopMapClient shops={pins} className="w-full h-48 rounded-xl overflow-hidden" lang={lang} zoom={17} />
+          </div>
         )}
 
         {/* Opening hours */}

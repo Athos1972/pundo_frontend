@@ -118,8 +118,8 @@ export function SpottedGlobalButton({ lang, brandSlug }: Props) {
   }
 
   return (
-    // FAB is now visible on all breakpoints (md:hidden removed per F4010)
-    <div>
+    // Spotted requires camera — mobile only
+    <div className="md:hidden">
       {/* Floating Action Button with onboarding popout */}
       {state === 'idle' && (
         <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-40">

@@ -269,7 +269,7 @@ test.describe('E2E-17: Admin Categories Page', () => {
     if (!ok) test.skip()
     await expect(page.locator('input[name="q"]')).toBeVisible()
     await expect(page.locator('input[name="id"]')).toBeVisible()
-    await expect(page.locator('input[name="taxonomy_type"]')).toBeVisible()
+    await expect(page.locator('select[name="taxonomy_type"]')).toBeVisible()
   })
 
   test('categories page shows Tree/Table toggle links', async ({ page }) => {

@@ -20,6 +20,7 @@ export default async function GuidesIndexPage() {
     behörden: tr.category_behörden,
     mobilität: tr.category_mobilität,
     haustiere: tr.category_haustiere,
+    gesundheit: tr.category_gesundheit,
   }
 
   return (

@@ -21,6 +21,8 @@
 
 /.idea/
 
+test-results/
+
 # production
 /build
 

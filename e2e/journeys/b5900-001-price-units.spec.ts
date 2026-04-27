@@ -54,16 +54,23 @@ test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', 
 
   expect(token, 'Login fehlgeschlagen').not.toBe('')
 
+  // Fetch a valid item_id from the products API (item_id: 1 does not exist in test DB)
+  const itemsRes = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(5000) })
+  const itemsBody = await itemsRes.json() as { items?: Array<{ id: number }> }
+  const itemId = itemsBody.items?.[0]?.id
+  if (!itemId) { test.skip(true, 'No items in test DB'); return }
+  console.log(`[AC-2] Using item_id=${itemId} for ShopListing`)
+
   // ShopListing + Offer via API
   const slR = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ item_id: 1 }),
+    body: JSON.stringify({ item_id: itemId }),
   })
   const slBody = await slR.json() as { id?: number; shop_listing_id?: number; detail?: { shop_listing_id?: number } }
   const shopListingId = slBody.id ?? slBody.shop_listing_id ?? slBody.detail?.shop_listing_id
 
-  if (!shopListingId) { test.skip(true, 'ShopListing not available'); return }
+  if (!shopListingId) { test.skip(true, `ShopListing not available (response: ${JSON.stringify(slBody)})`); return }
 
   const ofR = await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers`, {
     method: 'POST',

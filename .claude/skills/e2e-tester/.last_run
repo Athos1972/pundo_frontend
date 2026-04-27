@@ -1,11 +1,11 @@
 {
-  "sha": "42d8ba2dff737a5a24640af1d8f4fee8cb88d776",
-  "timestamp": "2026-04-26T14:45:00.000000+00:00",
-  "feature": "B2250-001 Mobile UI Shop-Suche",
+  "sha": "b32d15879d19f52a6dfd5c476ae986c7609ee66e",
+  "timestamp": "2026-04-26T19:32:43Z",
+  "feature": "B5900-001 Produktanlage hängt bei Mengeneinheiten",
   "verdict": "SHIP",
   "coverage_snapshot": {
-    "unit_tests": 990,
+    "unit_tests": "990/990",
     "smoke_tests": "8/8",
-    "journey_customer_discovery": "8/9 (1 optional skip)"
+    "journey_b5900_001": "2/2"
   }
 }

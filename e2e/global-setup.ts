@@ -261,7 +261,15 @@ export default async function globalSetup() {
       break
     } catch (err) {
       dbErr = err
-      console.warn(`[E2E Setup] DB-Reset Versuch ${attempt}/3 fehlgeschlagen (Deadlock?), warte 3s…`)
+      // Surface the root error message — typical cases: alembic UniqueViolation
+      // on pg_type_typname_nsp_index, deadlock on DROP SCHEMA, lingering backend
+      // connection holding locks. test_helpers.py has its own retry+terminate
+      // logic; this outer loop is the last safety net.
+      const msg = err instanceof Error ? err.message : String(err)
+      const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString().trim() ?? ''
+      const detail = stderr.split('\n').slice(-3).join(' | ').slice(0, 240) || msg.slice(0, 240)
+      console.warn(`[E2E Setup] DB-Reset Versuch ${attempt}/3 fehlgeschlagen: ${detail}`)
+      console.warn(`[E2E Setup] Warte 3s vor erneutem Versuch…`)
       await new Promise(r => setTimeout(r, 3000))
     }
   }

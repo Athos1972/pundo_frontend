@@ -6,6 +6,7 @@ import { Hero } from '@/components/layout/Hero'
 import { CommunityCard } from '@/components/community/CommunityCard'
 import { GuidesTeaser } from '@/components/guides/GuidesTeaser'
 import { NearbyShops } from '@/components/shop/NearbyShops'
+import { HomesickTeaser } from '@/components/home/HomesickTeaser'
 
 export default async function HomePage() {
   const lang = await getLangServer()
@@ -21,6 +22,8 @@ export default async function HomePage() {
       <Hero brand={brand} categories={categoriesData.items} lang={lang} />
 
       {brand.features.communityCard && <CommunityCard brand={brand} />}
+
+      {brand.features.homesickTeaser && <HomesickTeaser brand={brand} lang={lang} />}
 
       <section className="py-10">
         <div className="max-w-6xl mx-auto px-6">

@@ -114,8 +114,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Header />
               {children}
               <Footer />
-              <SpottedGlobalButton lang={lang} />
-              <SearchSimilarButton lang={lang} />
+              <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
+              <SearchSimilarButton lang={lang} brandSlug={brand.slug} />
             </FavoritesProvider>
           </SessionProvider>
         </TooltipProvider>

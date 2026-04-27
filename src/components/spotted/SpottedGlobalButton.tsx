@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useSession } from '@/components/auth/SessionProvider'
 import { extractGPS } from '@/lib/exif'
 import { t } from '@/lib/translations'
+import { FABOnboardingPopout } from '@/components/ui/FABOnboardingPopout'
+import { useFabOnboarding } from '@/lib/useFabOnboarding'
 import { CameraView } from './CameraView'
 import { AuthModal } from './AuthModal'
 import type { SpottedCreateResponse } from '@/types/api'
@@ -19,15 +21,29 @@ type UploadState =
 
 interface Props {
   lang: string
+  brandSlug: string
 }
 
-export function SpottedGlobalButton({ lang }: Props) {
+export function SpottedGlobalButton({ lang, brandSlug }: Props) {
   const tr = t(lang)
   const session = useSession()
   const [state, setState] = useState<UploadState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [pendingCoords, setPendingCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+
+  // Brand-specific timing: naidivse = 5 s / no auto-dismiss; pundo = 7 s / 8 s auto-dismiss
+  const isNaidivse = brandSlug === 'naidivse'
+  const delayMs = isNaidivse ? 5000 : 7000
+  const autoDismissMs = isNaidivse ? undefined : 8000
+
+  const { visible: onboardingVisible, dismiss: dismissOnboarding } = useFabOnboarding({
+    storageKey: 'fab_spotted_onboarding_shown',
+    delayMs,
+    autoDismissMs,
+  })
+
+  const pulseClass = isNaidivse && onboardingVisible ? 'animate-pulse' : ''
 
   async function handleCapture(file: File) {
     setState('idle') // close camera overlay while processing
@@ -96,21 +112,48 @@ export function SpottedGlobalButton({ lang }: Props) {
     setPendingCoords(null)
   }
 
+  function handleFabClick() {
+    dismissOnboarding()
+    setState('camera_open')
+  }
+
   return (
-    // md:hidden — FAB is mobile-only
-    <div className="md:hidden">
-      {/* Floating Action Button */}
+    // FAB is now visible on all breakpoints (md:hidden removed per F4010)
+    <div>
+      {/* Floating Action Button with onboarding popout */}
       {state === 'idle' && (
-        <button
-          onClick={() => setState('camera_open')}
-          className="fixed bottom-20 end-4 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-          aria-label={tr.spotted_button_label}
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-        </button>
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-40">
+          <div className="relative">
+            <FABOnboardingPopout
+              text={tr.fab_spotted_onboarding_text}
+              visible={onboardingVisible}
+              onDismiss={dismissOnboarding}
+              dismissLabel={tr.fab_dismiss_label}
+            />
+
+            {/* Mobile: round; Desktop (md+): pill with label */}
+            <button
+              onClick={handleFabClick}
+              className={[
+                'flex items-center justify-center gap-2 bg-accent text-white shadow-lg active:scale-95 transition-transform',
+                'w-14 h-14 rounded-full',
+                'md:w-auto md:h-14 md:rounded-full md:px-4',
+                pulseClass,
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              aria-label={tr.spotted_button_label}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span className="hidden md:inline text-sm font-medium whitespace-nowrap">
+                {tr.fab_spotted_label}
+              </span>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Camera overlay */}

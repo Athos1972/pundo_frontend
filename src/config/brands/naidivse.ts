@@ -58,6 +58,7 @@ export const naidivseConfig: BrandConfig = {
     socialFeed: false,
     catsfirst: true,
     communityCard: true,
+    homesickTeaser: true,
   },
 
   community: {
@@ -70,6 +71,7 @@ export const naidivseConfig: BrandConfig = {
     { key: 'nav_shops', href: '/shops' },
     { key: 'nav_guides', href: '/guides' },
     { key: 'nav_community', href: '/community' },
+    { key: 'nav_homesick', href: '/nostalgia' },
   ],
 
   legal: {

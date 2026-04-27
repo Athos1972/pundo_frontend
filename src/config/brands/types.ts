@@ -65,6 +65,7 @@ export interface BrandConfig {
     socialFeed: boolean
     catsfirst: boolean
     communityCard: boolean
+    homesickTeaser: boolean
   }
 
   community?: {

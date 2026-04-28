@@ -127,7 +127,7 @@ Vorgehen:
 2. Sofort danach: Backend-Architect-Agent starten mit:
    - Design-Dokument (`01-design.md`) als Basis
    - Frontend-Architektur-Dokument (`02-architecture.md`, Abschnitt "Backend-Anforderungen") als Kontext
-   - Ziel: `specs/<feature-slug>/02-backend-architecture.md` im Frontend-Repo (gemeinsamer Spec-Hub)
+   - Ziel: `specs/<feature-slug>/02-backend-architecture.md` im **Vault** (gemeinsamer Spec-Hub: `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/20 Features/<FGx>/<Feature>/specs/<feature-slug>/`)
    - Backend-Architect-Skill: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/architect/SKILL.md`
 3. Dem User mitteilen, dass Backend-Architect parallel läuft
 

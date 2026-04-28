@@ -63,7 +63,12 @@ export default async function GuideDetailPage({ params }: Props) {
         <MDXRemote
           source={content}
           components={mdxComponents}
-          options={{ blockJS: false, blockDangerousJS: false }}
+          // T19 (F6990 Phase 2, M8): All guides in content/guides/ are static
+          // Markdown/MDX files checked into the repo. A grep audit (2026-04-28)
+          // confirmed zero <script> tags, zero JS imports, zero export statements
+          // and zero JS expressions in any of the 36 MDX files. Guards are safe
+          // to enable. Re-audit before adding any guide that uses JSX side-effects.
+          options={{ blockJS: true, blockDangerousJS: true }}
         />
       </article>
 

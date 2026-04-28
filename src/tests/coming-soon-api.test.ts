@@ -25,6 +25,7 @@ function makeReq(body: unknown) {
 
 describe('POST /api/coming-soon', () => {
   beforeEach(() => {
+    mockFetch.mockClear()
     vi.mocked(verifyTurnstile).mockResolvedValue(true)
     mockFetch.mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {

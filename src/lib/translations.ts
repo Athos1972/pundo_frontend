@@ -317,6 +317,37 @@ export const translations = {
     homesick_teaser_text: 'Our AI finds similar products available in Cyprus — just describe what you\'re looking for.',
     homesick_teaser_cta: 'Find similar',
     nav_homesick: 'Homesick',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'Recently viewed',
+    recently_viewed_tab_products: 'Products',
+    recently_viewed_tab_shops: 'Shops',
+    recently_viewed_empty: 'Nothing viewed yet.',
+    recently_viewed_clear: 'Clear list',
+    recently_viewed_clear_confirm: 'Clear the entire list?',
+    activity_feed_heading_naidivse: 'Fresh finds',
+    activity_feed_empty_soon: 'Activity coming soon...',
+    activity_feed_expand: 'Show more',
+    activity_feed_collapse: 'Show less',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `Someone searched for ${args.term ?? '...'} in ${args.city}` : `Someone searched for ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `Someone compared prices for ${args.product_name ?? '...'} in ${args.city}` : `Someone compared prices for ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `Someone spotted ${args.product_name ?? '...'} at ${args.shop_name}` : `Someone spotted ${args.product_name ?? '...'}`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `Someone activated Homesick mode in ${args.city}` : 'Someone activated Homesick mode',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `Someone is browsing ${args.category_name ?? '...'} in ${args.city}` : `Someone is browsing ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `Someone noted a language at ${args.shop_name ?? '...'}`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `Someone set a price alert for ${args.product_name ?? '...'}`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `Someone discovered ${args.shop_name ?? '...'} in ${args.city}` : `Someone discovered ${args.shop_name ?? '...'}`,
+    time_just_now: 'just now',
+    time_minutes_ago: (n: number) => `${n} min ago`,
+    time_hours_ago: (n: number) => `${n}h ago`,
+    live_dot_aria: 'Live feed',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -636,6 +667,37 @@ export const translations = {
     homesick_teaser_text: 'Unsere KI findet ähnliche Produkte in Zypern — beschreibe einfach, wonach du suchst.',
     homesick_teaser_cta: 'Ähnliches finden',
     nav_homesick: 'Heimweh',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'Zuletzt gesehen',
+    recently_viewed_tab_products: 'Produkte',
+    recently_viewed_tab_shops: 'Shops',
+    recently_viewed_empty: 'Noch nichts angesehen.',
+    recently_viewed_clear: 'Liste leeren',
+    recently_viewed_clear_confirm: 'Gesamte Liste leeren?',
+    activity_feed_heading_naidivse: 'Frische Funde',
+    activity_feed_empty_soon: 'Aktivität folgt bald...',
+    activity_feed_expand: 'Mehr anzeigen',
+    activity_feed_collapse: 'Weniger anzeigen',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `Jemand sucht ${args.term ?? '...'} in ${args.city}` : `Jemand sucht ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `Jemand vergleicht Preise für ${args.product_name ?? '...'} in ${args.city}` : `Jemand vergleicht Preise für ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `Jemand hat ${args.product_name ?? '...'} bei ${args.shop_name} gespottet` : `Jemand hat ${args.product_name ?? '...'} gespottet`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `Jemand hat Heimweh-Modus in ${args.city} aktiviert` : 'Jemand hat Heimweh-Modus aktiviert',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `Jemand sucht nach ${args.category_name ?? '...'} in ${args.city}` : `Jemand sucht nach ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `Jemand hat eine Sprache bei ${args.shop_name ?? '...'} vermerkt`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `Jemand hat Preisalarm für ${args.product_name ?? '...'} gesetzt`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `Jemand hat ${args.shop_name ?? '...'} in ${args.city} entdeckt` : `Jemand hat ${args.shop_name ?? '...'} entdeckt`,
+    time_just_now: 'gerade eben',
+    time_minutes_ago: (n: number) => `vor ${n} Min.`,
+    time_hours_ago: (n: number) => `vor ${n} Std.`,
+    live_dot_aria: 'Live-Feed',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -955,6 +1017,37 @@ export const translations = {
     homesick_teaser_text: 'Наш AI найдёт похожие товары на Кипре — просто опиши, что ищешь.',
     homesick_teaser_cta: 'Найти похожее',
     nav_homesick: 'Ностальгия',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'Недавно просмотренные',
+    recently_viewed_tab_products: 'Продукты',
+    recently_viewed_tab_shops: 'Магазины',
+    recently_viewed_empty: 'Вы ещё ничего не просматривали.',
+    recently_viewed_clear: 'Очистить список',
+    recently_viewed_clear_confirm: 'Очистить весь список?',
+    activity_feed_heading_naidivse: 'Свежие находки',
+    activity_feed_empty_soon: 'Активность скоро появится...',
+    activity_feed_expand: 'Показать больше',
+    activity_feed_collapse: 'Свернуть',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `Кто-то ищет ${args.term ?? '...'} в ${args.city}` : `Кто-то ищет ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `Кто-то сравнивает цены на ${args.product_name ?? '...'} в ${args.city}` : `Кто-то сравнивает цены на ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `Кто-то нашёл ${args.product_name ?? '...'} в ${args.shop_name}` : `Кто-то нашёл ${args.product_name ?? '...'}`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `Кто-то активировал режим «Ностальгия» в ${args.city}` : 'Кто-то активировал режим «Ностальгия»',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `Кто-то ищет ${args.category_name ?? '...'} в ${args.city}` : `Кто-то ищет ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `Кто-то отметил язык в ${args.shop_name ?? '...'}`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `Кто-то установил оповещение о цене на ${args.product_name ?? '...'}`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `Кто-то открыл ${args.shop_name ?? '...'} в ${args.city}` : `Кто-то открыл ${args.shop_name ?? '...'}`,
+    time_just_now: 'только что',
+    time_minutes_ago: (n: number) => `${n} мин назад`,
+    time_hours_ago: (n: number) => `${n} ч назад`,
+    live_dot_aria: 'Прямой эфир',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1274,6 +1367,37 @@ export const translations = {
     homesick_teaser_text: 'Το AI μας βρίσκει παρόμοια προϊόντα στην Κύπρο — απλά περίγραψε τι ψάχνεις.',
     homesick_teaser_cta: 'Βρες παρόμοιο',
     nav_homesick: 'Νοσταλγία',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'Προβλήθηκαν πρόσφατα',
+    recently_viewed_tab_products: 'Προϊόντα',
+    recently_viewed_tab_shops: 'Καταστήματα',
+    recently_viewed_empty: 'Δεν έχετε δει τίποτα ακόμα.',
+    recently_viewed_clear: 'Εκκαθάριση λίστας',
+    recently_viewed_clear_confirm: 'Εκκαθάριση ολόκληρης της λίστας;',
+    activity_feed_heading_naidivse: 'Φρέσκες ανακαλύψεις',
+    activity_feed_empty_soon: 'Δραστηριότητα σύντομα...',
+    activity_feed_expand: 'Περισσότερα',
+    activity_feed_collapse: 'Λιγότερα',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `Κάποιος ψάχνει ${args.term ?? '...'} στη ${args.city}` : `Κάποιος ψάχνει ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `Κάποιος συγκρίνει τιμές για ${args.product_name ?? '...'} στη ${args.city}` : `Κάποιος συγκρίνει τιμές για ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `Κάποιος εντόπισε ${args.product_name ?? '...'} στο ${args.shop_name}` : `Κάποιος εντόπισε ${args.product_name ?? '...'}`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `Κάποιος ενεργοποίησε τη Νοσταλγία στη ${args.city}` : 'Κάποιος ενεργοποίησε τη Νοσταλγία',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `Κάποιος αναζητά ${args.category_name ?? '...'} στη ${args.city}` : `Κάποιος αναζητά ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `Κάποιος σημείωσε γλώσσα στο ${args.shop_name ?? '...'}`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `Κάποιος έθεσε ειδοποίηση τιμής για ${args.product_name ?? '...'}`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `Κάποιος ανακάλυψε ${args.shop_name ?? '...'} στη ${args.city}` : `Κάποιος ανακάλυψε ${args.shop_name ?? '...'}`,
+    time_just_now: 'μόλις τώρα',
+    time_minutes_ago: (n: number) => `πριν ${n} λεπτά`,
+    time_hours_ago: (n: number) => `πριν ${n} ώρες`,
+    live_dot_aria: 'Ζωντανή ροή',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1593,6 +1717,37 @@ export const translations = {
     homesick_teaser_text: 'يجد الذكاء الاصطناعي منتجات مشابهة في قبرص — فقط صف ما تبحث عنه.',
     homesick_teaser_cta: 'ابحث عن مشابه',
     nav_homesick: 'حنين',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'شوهد مؤخراً',
+    recently_viewed_tab_products: 'المنتجات',
+    recently_viewed_tab_shops: 'المتاجر',
+    recently_viewed_empty: 'لم تشاهد أي شيء بعد.',
+    recently_viewed_clear: 'مسح القائمة',
+    recently_viewed_clear_confirm: 'مسح القائمة بالكامل؟',
+    activity_feed_heading_naidivse: 'اكتشافات جديدة',
+    activity_feed_empty_soon: 'النشاط قادم قريباً...',
+    activity_feed_expand: 'عرض المزيد',
+    activity_feed_collapse: 'عرض أقل',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `شخص ما يبحث عن ${args.term ?? '...'} في ${args.city}` : `شخص ما يبحث عن ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `شخص ما يقارن أسعار ${args.product_name ?? '...'} في ${args.city}` : `شخص ما يقارن أسعار ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `شخص ما وجد ${args.product_name ?? '...'} في ${args.shop_name}` : `شخص ما وجد ${args.product_name ?? '...'}`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `شخص ما فعّل وضع الحنين في ${args.city}` : 'شخص ما فعّل وضع الحنين',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `شخص ما يتصفح ${args.category_name ?? '...'} في ${args.city}` : `شخص ما يتصفح ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `شخص ما سجّل لغة في ${args.shop_name ?? '...'}`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `شخص ما ضبط تنبيه سعر لـ ${args.product_name ?? '...'}`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `شخص ما اكتشف ${args.shop_name ?? '...'} في ${args.city}` : `شخص ما اكتشف ${args.shop_name ?? '...'}`,
+    time_just_now: 'الآن',
+    time_minutes_ago: (n: number) => `منذ ${n} د`,
+    time_hours_ago: (n: number) => `منذ ${n} س`,
+    live_dot_aria: 'البث المباشر',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -1912,6 +2067,37 @@ export const translations = {
     homesick_teaser_text: 'ה-AI שלנו מוצא מוצרים דומים בקפריסין — פשוט תאר מה אתה מחפש.',
     homesick_teaser_cta: 'מצא דומה',
     nav_homesick: 'געגועים',
+    // F4700 — Recently Viewed & Activity Feed
+    recently_viewed_heading: 'נצפה לאחרונה',
+    recently_viewed_tab_products: 'מוצרים',
+    recently_viewed_tab_shops: 'חנויות',
+    recently_viewed_empty: 'עדיין לא צפית בשום דבר.',
+    recently_viewed_clear: 'נקה רשימה',
+    recently_viewed_clear_confirm: 'לנקות את כל הרשימה?',
+    activity_feed_heading_naidivse: 'ממצאים טריים',
+    activity_feed_empty_soon: 'פעילות בקרוב...',
+    activity_feed_expand: 'הצג עוד',
+    activity_feed_collapse: 'הצג פחות',
+    activity_event_search_performed: (args: { term?: string; city?: string }) =>
+      args.city ? `מישהו מחפש ${args.term ?? '...'} ב${args.city}` : `מישהו מחפש ${args.term ?? '...'}`,
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
+      args.city ? `מישהו משווה מחירים של ${args.product_name ?? '...'} ב${args.city}` : `מישהו משווה מחירים של ${args.product_name ?? '...'}`,
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
+      args.shop_name ? `מישהו מצא ${args.product_name ?? '...'} ב${args.shop_name}` : `מישהו מצא ${args.product_name ?? '...'}`,
+    activity_event_homesick_activated: (args: { city?: string }) =>
+      args.city ? `מישהו הפעיל מצב געגועים ב${args.city}` : 'מישהו הפעיל מצב געגועים',
+    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
+      args.city ? `מישהו מחפש ${args.category_name ?? '...'} ב${args.city}` : `מישהו מחפש ${args.category_name ?? '...'}`,
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
+      `מישהו ציין שפה ב${args.shop_name ?? '...'}`,
+    activity_event_price_alert_set: (args: { product_name?: string }) =>
+      `מישהו הגדיר התראת מחיר עבור ${args.product_name ?? '...'}`,
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
+      args.city ? `מישהו גילה את ${args.shop_name ?? '...'} ב${args.city}` : `מישהו גילה את ${args.shop_name ?? '...'}`,
+    time_just_now: 'עכשיו',
+    time_minutes_ago: (n: number) => `לפני ${n} ד'`,
+    time_hours_ago: (n: number) => `לפני ${n} ש'`,
+    live_dot_aria: 'שידור חי',
   },
 } as const;
 

@@ -14,6 +14,7 @@ import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
 import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
 import { SearchSimilarButton } from '@/components/search/SearchSimilarButton'
 import { TooltipProvider } from '@/components/ui/Tooltip'
+import { BottomTabBar } from '@/components/layout/BottomTabBar'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -116,6 +117,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Footer />
               <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
               <SearchSimilarButton lang={lang} brandSlug={brand.slug} />
+              <BottomTabBar lang={lang} recentlyViewed={brand.features.recentlyViewed} />
             </FavoritesProvider>
           </SessionProvider>
         </TooltipProvider>

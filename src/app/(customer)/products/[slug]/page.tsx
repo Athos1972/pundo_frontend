@@ -14,6 +14,7 @@ import { BackButton } from '@/components/ui/BackButton'
 import { PriceFilterToggle } from '@/components/ui/PriceFilterToggle'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { getCustomerSession } from '@/lib/customer-api'
+import { TrackProductView } from '@/components/recently-viewed/TrackProductView'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -88,8 +89,22 @@ export default async function ProductPage({ params, searchParams }: Props) {
     ? product.offers.filter(o => o.price_type === 'fixed')
     : product.offers
 
+  const firstOffer = product.offers[0]
+  const priceDisplay = firstOffer?.price_type === 'fixed' && firstOffer.price
+    ? `${firstOffer.price} €`
+    : null
+
   return (
     <main className="min-h-screen bg-bg">
+      <TrackProductView
+        product={{
+          id: product.id,
+          slug: product.slug ?? slug,
+          name,
+          image_url: firstImgUrl ?? null,
+          price_display: priceDisplay,
+        }}
+      />
       <div className="max-w-2xl mx-auto px-4 py-6">
         <BackButton />
         {/* Hero */}

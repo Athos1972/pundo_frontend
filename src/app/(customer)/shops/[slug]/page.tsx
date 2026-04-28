@@ -19,6 +19,7 @@ import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
 import { getCustomerSession } from '@/lib/customer-api'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
+import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -78,8 +79,20 @@ export default async function ShopPage({ params }: Props) {
     ? [{ id: shop.id, name: shop.name ?? 'Shop', lat: shop.location.lat, lng: shop.location.lng }]
     : []
 
+  // Derive city from address (best-effort)
+  const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
+
   return (
     <main className="min-h-screen bg-bg">
+      <TrackShopView
+        shop={{
+          id: shop.id,
+          slug: slug,
+          name: shop.name ?? slug,
+          image_url: shop.images?.[0]?.url ?? null,
+          city: cityHint,
+        }}
+      />
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <BackButton />
         {/* Header */}

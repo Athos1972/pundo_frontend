@@ -23,8 +23,8 @@ test.describe('Open Redirect Protection', () => {
     await page.getByLabel(/password/i).fill(SHOP_OWNER_PASSWORD)
     await page.getByRole('button', { name: /sign in/i }).click()
 
-    // Wait for navigation to complete
-    await page.waitForURL(/\/shop-admin\//, { timeout: 10_000 })
+    // Wait until we leave the login page (avoids false match on /shop-admin/login)
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10_000 })
 
     const url = new URL(page.url())
 
@@ -43,7 +43,8 @@ test.describe('Open Redirect Protection', () => {
     await page.getByLabel(/password/i).fill(SHOP_OWNER_PASSWORD)
     await page.getByRole('button', { name: /sign in/i }).click()
 
-    await page.waitForURL(/\/shop-admin\//, { timeout: 10_000 })
+    // Wait until we leave the login page (avoids false match on /shop-admin/login)
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10_000 })
 
     const url = new URL(page.url())
     expect(url.pathname).toBe('/shop-admin/dashboard')
@@ -56,7 +57,8 @@ test.describe('Open Redirect Protection', () => {
     await page.getByLabel(/password/i).fill(SHOP_OWNER_PASSWORD)
     await page.getByRole('button', { name: /sign in/i }).click()
 
-    await page.waitForURL(/\/shop-admin\//, { timeout: 10_000 })
+    // Wait for the specific target path (not just any /shop-admin/ page)
+    await page.waitForURL('**/shop-admin/products', { timeout: 10_000 })
 
     const url = new URL(page.url())
     expect(url.pathname).toBe('/shop-admin/products')

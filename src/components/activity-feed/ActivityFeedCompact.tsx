@@ -25,9 +25,12 @@ export function ActivityFeedCompact({ events, lang }: ActivityFeedCompactProps) 
 
   useEffect(() => {
     if (events.length <= 1 || expanded) return
+    // 5200ms: swap fires while the outgoing item is still fully opaque
+    // (fade-out starts at 90% of the 6s animation = 5400ms), so there is
+    // no visible black-out between items.
     const id = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % events.length)
-    }, 6000)
+    }, 5200)
     return () => clearInterval(id)
   }, [events.length, expanded])
 

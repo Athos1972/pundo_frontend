@@ -345,10 +345,12 @@ h1, h2, h3, .font-display {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Fade cycle for compact 1-line cycler */
+/* Fade cycle for compact 1-line cycler.
+   Starts at opacity 1 so a newly-mounted item is immediately visible —
+   eliminates the ~200ms black-out between outgoing and incoming items.
+   The item fades out only at the very end (90–100%). */
 @keyframes fade-cycle {
-  0%   { opacity: 0; }
-  10%  { opacity: 1; }
+  0%   { opacity: 1; }
   90%  { opacity: 1; }
   100% { opacity: 0; }
 }

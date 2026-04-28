@@ -1,20 +1,18 @@
 // @vitest-environment node
-import { describe, it, expect, vi } from 'vitest'
+// T14 — Tests for refactored /api/coming-soon route (Turnstile + backend proxy)
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock fs — muss vor dem Route-Import stehen
-vi.mock('fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs')>()
-  return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      mkdir: vi.fn().mockResolvedValue(undefined),
-      appendFile: vi.fn().mockResolvedValue(undefined),
-    },
-  }
-})
+// Mock verifyTurnstile before importing the route
+vi.mock('@/lib/turnstile-server', () => ({
+  verifyTurnstile: vi.fn().mockResolvedValue(true),
+}))
+
+// Mock global fetch for backend proxy calls
+const mockFetch = vi.fn()
+global.fetch = mockFetch as unknown as typeof fetch
 
 const { POST } = await import('@/app/api/coming-soon/route')
+const { verifyTurnstile } = await import('@/lib/turnstile-server')
 
 function makeReq(body: unknown) {
   const raw = typeof body === 'string' ? body : JSON.stringify(body)
@@ -26,8 +24,18 @@ function makeReq(body: unknown) {
 }
 
 describe('POST /api/coming-soon', () => {
-  it('gibt 200 zurück bei gültiger E-Mail', async () => {
-    const res = await POST(makeReq({ email: 'test@example.com' }))
+  beforeEach(() => {
+    vi.mocked(verifyTurnstile).mockResolvedValue(true)
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+  })
+
+  it('gibt 200 zurück bei gültiger E-Mail und bestandenem Turnstile', async () => {
+    const res = await POST(makeReq({ email: 'test@example.com', turnstile_token: 'valid-token' }))
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.ok).toBe(true)
@@ -39,24 +47,41 @@ describe('POST /api/coming-soon', () => {
   })
 
   it('gibt 400 bei E-Mail ohne @ zurück', async () => {
-    const res = await POST(makeReq({ email: 'kein-at-zeichen' }))
+    const res = await POST(makeReq({ email: 'kein-at-zeichen', turnstile_token: 'token' }))
     expect(res.status).toBe(400)
   })
 
   it('gibt 400 bei zu langer E-Mail zurück', async () => {
-    const res = await POST(makeReq({ email: 'a'.repeat(255) + '@example.com' }))
+    const res = await POST(makeReq({ email: 'a'.repeat(255) + '@example.com', turnstile_token: 'token' }))
     expect(res.status).toBe(400)
   })
 
-  it('schreibt E-Mail in Datei', async () => {
-    const { promises: fs } = await import('fs')
-    vi.mocked(fs.appendFile).mockClear()
-    await POST(makeReq({ email: 'signup@naidivse.com' }))
-    expect(fs.appendFile).toHaveBeenCalledWith(
-      expect.stringContaining('naidivse-signups.txt'),
-      'signup@naidivse.com\n',
-      'utf8',
+  it('gibt 400 zurück wenn Turnstile fehlschlägt', async () => {
+    vi.mocked(verifyTurnstile).mockResolvedValueOnce(false)
+    const res = await POST(makeReq({ email: 'test@example.com', turnstile_token: 'bad-token' }))
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toBe('captcha_failed')
+  })
+
+  it('leitet an Backend weiter mit email und turnstile_token', async () => {
+    await POST(makeReq({ email: 'relay@example.com', turnstile_token: 'tok123' }))
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/coming-soon'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      }),
     )
+    const callBody = JSON.parse(mockFetch.mock.calls[0][1].body as string)
+    expect(callBody.email).toBe('relay@example.com')
+    expect(callBody.turnstile_token).toBe('tok123')
+  })
+
+  it('gibt 502 zurück wenn Backend nicht erreichbar', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('connection refused'))
+    const res = await POST(makeReq({ email: 'test@example.com', turnstile_token: 'tok' }))
+    expect(res.status).toBe(502)
   })
 })
 
@@ -85,6 +110,6 @@ describe('coming_soon Übersetzungen', () => {
 
   it('AR tagline enthält Arabisch', async () => {
     const { t } = await import('@/lib/translations')
-    expect(t('ar').coming_soon_tagline).toMatch(/[\u0600-\u06FF]/)
+    expect(t('ar').coming_soon_tagline).toMatch(/[؀-ۿ]/)
   })
 })

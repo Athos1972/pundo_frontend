@@ -10,6 +10,17 @@ vi.mock('next/link', () => ({
     <a href={href} className={className}>{children}</a>,
 }))
 
+// TurnstileWidget: in tests call onToken immediately so forms are not blocked by CAPTCHA
+vi.mock('@/components/security/TurnstileWidget', async () => {
+  const { useEffect } = await import('react')
+  return {
+    TurnstileWidget: ({ onToken }: { onToken: (token: string) => void }) => {
+      useEffect(() => { onToken('test-bypass-token') }, [onToken])
+      return null
+    },
+  }
+})
+
 // ContactForm takes lang: string and calls t() internally
 
 // ── Translation key coverage ──────────────────────────────────────────────────

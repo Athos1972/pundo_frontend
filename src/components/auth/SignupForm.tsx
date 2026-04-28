@@ -1,10 +1,12 @@
 'use client'
+// T16 — SignupForm with Turnstile CAPTCHA (F6990 Phase 2)
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { GoogleOAuthButton } from './GoogleOAuthButton'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 
 interface Props {
   lang: string
@@ -18,6 +20,11 @@ export function SignupForm({ lang }: Props) {
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+
+  const handleToken = useCallback((token: string) => {
+    setTurnstileToken(token)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,17 +35,31 @@ export function SignupForm({ lang }: Props) {
       return
     }
 
+    if (!turnstileToken) {
+      setError(tr.turnstile_required)
+      return
+    }
+
     setLoading(true)
     try {
       const res = await fetch('/api/customer/customer/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
-        body: JSON.stringify({ email, password, display_name: displayName }),
+        body: JSON.stringify({ email, password, display_name: displayName, turnstile_token: turnstileToken }),
       })
 
-      const data = await res.json() as { detail?: string | Array<{ field?: string; message?: string }> }
+      const data = await res.json() as {
+        detail?: string | Array<{ field?: string; message?: string }>
+        error?: string
+      }
 
       if (!res.ok) {
+        // Turnstile failed at frontend proxy level
+        if (data?.error === 'captcha_failed') {
+          setError(tr.turnstile_failed)
+          return
+        }
+
         // Parse backend error — disposable email or duplicate
         if (Array.isArray(data.detail)) {
           const emailErr = data.detail.find((d) => d.field === 'email')
@@ -116,6 +137,8 @@ export function SignupForm({ lang }: Props) {
         />
         <p className="text-xs text-text-muted mt-1">{tr.auth_password_min}</p>
       </div>
+
+      <TurnstileWidget onToken={handleToken} />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

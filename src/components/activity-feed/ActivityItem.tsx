@@ -59,10 +59,8 @@ export function ActivityItem({ event, variant, lang, className = '' }: ActivityI
         `}
       >
         <div className="flex items-start gap-2">
-          <span className="text-base leading-none shrink-0" aria-hidden="true">{icon}</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-text leading-snug line-clamp-3">{text}</p>
-          </div>
+          <span className="text-base leading-none" aria-hidden="true">{icon}</span>
+          <p className="text-xs text-text leading-snug line-clamp-3">{text}</p>
         </div>
         <RelativeTime createdAt={event.created_at} lang={lang} />
       </div>

@@ -261,6 +261,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'Short link could not be verified — please enter the direct URL.',
     social_blocked_via_shortener: 'The short link resolves to \u2068{host}\u2069, which is not allowed.',
     social_blocked_toast: 'Please fix the highlighted social-media link.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Too many attempts. Please wait a minute.',
+    redirect_blocked: 'Redirect blocked for security reasons.',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -508,6 +511,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'Kurzlink konnte nicht geprüft werden — bitte direkte URL angeben.',
     social_blocked_via_shortener: 'Der Kurzlink verweist auf \u2068{host}\u2069, was nicht erlaubt ist.',
     social_blocked_toast: 'Bitte korrigiere den markierten Social-Media-Link.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Zu viele Versuche. Bitte warte eine Minute.',
+    redirect_blocked: 'Weiterleitung aus Sicherheitsgründen blockiert.',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -755,6 +761,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'Ο σύντομος σύνδεσμος δεν μπόρεσε να επαληθευτεί — εισάγετε απευθείας URL.',
     social_blocked_via_shortener: 'Ο σύντομος σύνδεσμος οδηγεί στο \u2068{host}\u2069, το οποίο δεν επιτρέπεται.',
     social_blocked_toast: 'Διορθώστε τον επισημασμένο σύνδεσμο κοινωνικών μέσων.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Πολλές προσπάθειες. Παρακαλώ περίμενε ένα λεπτό.',
+    redirect_blocked: 'Η ανακατεύθυνση αποκλείστηκε για λόγους ασφαλείας.',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -1002,6 +1011,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'Короткую ссылку не удалось проверить — укажите прямой URL.',
     social_blocked_via_shortener: 'Короткая ссылка ведёт на \u2068{host}\u2069, что не разрешено.',
     social_blocked_toast: 'Пожалуйста, исправьте выделенную ссылку на социальные сети.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Слишком много попыток. Подождите минуту.',
+    redirect_blocked: 'Перенаправление заблокировано в целях безопасности.',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -1249,6 +1261,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'تعذّر التحقق من الرابط المختصر — يرجى إدخال الرابط المباشر.',
     social_blocked_via_shortener: 'الرابط المختصر يؤدي إلى \u2068{host}\u2069، وهو غير مسموح به.',
     social_blocked_toast: 'يرجى تصحيح رابط التواصل الاجتماعي المميز.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'محاولات كثيرة جداً. يرجى الانتظار دقيقة.',
+    redirect_blocked: 'تم حظر إعادة التوجيه لأسباب أمنية.',
   },
   he: {
     register_title: 'רישום החנות',
@@ -1496,6 +1511,9 @@ const shopAdminTranslations = {
     social_blocked_shortener_unresolvable: 'לא ניתן לאמת את הקישור המקוצר — אנא הזן כתובת URL ישירה.',
     social_blocked_via_shortener: 'הקישור המקוצר מוביל אל \u2068{host}\u2069, שאינו מורשה.',
     social_blocked_toast: 'אנא תקן את קישור המדיה החברתית המסומן.',
+    // Security (T8 — Phase 1)
+    rate_limited: 'יותר מדי ניסיונות. אנא המתן דקה.',
+    redirect_blocked: 'ההפניה נחסמה מטעמי אבטחה.',
   },
 } as const
 

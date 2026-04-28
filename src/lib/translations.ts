@@ -349,6 +349,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `${n} min ago`,
     time_hours_ago: (n: number) => `${n}h ago`,
     live_dot_aria: 'Live feed',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Too many attempts. Please wait a minute.',
+    redirect_blocked: 'Redirect blocked for security reasons.',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -700,6 +703,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `vor ${n} Min.`,
     time_hours_ago: (n: number) => `vor ${n} Std.`,
     live_dot_aria: 'Live-Feed',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Zu viele Versuche. Bitte warte eine Minute.',
+    redirect_blocked: 'Weiterleitung aus Sicherheitsgründen blockiert.',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -1051,6 +1057,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `${n} мин назад`,
     time_hours_ago: (n: number) => `${n} ч назад`,
     live_dot_aria: 'Прямой эфир',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Слишком много попыток. Подождите минуту.',
+    redirect_blocked: 'Перенаправление заблокировано в целях безопасности.',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1402,6 +1411,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `πριν ${n} λεπτά`,
     time_hours_ago: (n: number) => `πριν ${n} ώρες`,
     live_dot_aria: 'Ζωντανή ροή',
+    // Security (T8 — Phase 1)
+    rate_limited: 'Πολλές προσπάθειες. Παρακαλώ περίμενε ένα λεπτό.',
+    redirect_blocked: 'Η ανακατεύθυνση αποκλείστηκε για λόγους ασφαλείας.',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1753,6 +1765,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `منذ ${n} د`,
     time_hours_ago: (n: number) => `منذ ${n} س`,
     live_dot_aria: 'البث المباشر',
+    // Security (T8 — Phase 1)
+    rate_limited: 'محاولات كثيرة جداً. يرجى الانتظار دقيقة.',
+    redirect_blocked: 'تم حظر إعادة التوجيه لأسباب أمنية.',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -2104,6 +2119,9 @@ export const translations = {
     time_minutes_ago: (n: number) => `לפני ${n} ד'`,
     time_hours_ago: (n: number) => `לפני ${n} ש'`,
     live_dot_aria: 'שידור חי',
+    // Security (T8 — Phase 1)
+    rate_limited: 'יותר מדי ניסיונות. אנא המתן דקה.',
+    redirect_blocked: 'ההפניה נחסמה מטעמי אבטחה.',
   },
 } as const;
 

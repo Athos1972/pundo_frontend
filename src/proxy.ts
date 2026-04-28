@@ -98,6 +98,7 @@ export function proxy(request: NextRequest) {
       request: { headers: requestHeaders },
     })
     rewriteResponse.headers.set('content-security-policy', csp)
+    setSecurityHeaders(rewriteResponse.headers)
     return rewriteResponse
   }
 
@@ -105,8 +106,25 @@ export function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   })
   response.headers.set('content-security-policy', csp)
+  setSecurityHeaders(response.headers)
 
   return response
+}
+
+// ---- T3: HTTP Security Headers -----------------------------------------------
+// Applied to every HTML response (both prod and dev), except HSTS which is
+// only set in production (HSTS over plain HTTP is ignored by browsers, but
+// we keep it explicit to match the spec). No `preload` yet — add in Phase 3
+// after subdomain inventory has been confirmed.
+function setSecurityHeaders(headers: Headers): void {
+  const isProd = process.env.NODE_ENV !== 'development'
+  if (isProd) {
+    headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
+  }
+  headers.set('X-Content-Type-Options', 'nosniff')
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()')
+  headers.set('X-Frame-Options', 'DENY')
 }
 
 export const config = {

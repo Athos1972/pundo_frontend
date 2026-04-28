@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import { t } from '@/lib/translations'
-import { eventToColorClasses, eventToHref } from '@/lib/activity-events'
+import { eventToColorClasses, eventToHref, eventVariant } from '@/lib/activity-events'
 import { RelativeTime } from './RelativeTime'
 import type { ActivityEvent } from '@/types/activity'
 
@@ -35,7 +35,7 @@ function getEventText(event: ActivityEvent, tr: ReturnType<typeof t>): string {
   const fn = tr[key]
   if (typeof fn === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (fn as (args: any) => string)(event.payload)
+    return (fn as (args: any) => string)({ ...event.payload, _v: eventVariant(event.id) })
   }
   return event.event_type
 }

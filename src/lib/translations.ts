@@ -329,22 +329,54 @@ export const translations = {
     activity_feed_empty_soon: 'Activity coming soon...',
     activity_feed_expand: 'Show more',
     activity_feed_collapse: 'Show less',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `Someone searched for ${args.term ?? '...'} in ${args.city}` : `Someone searched for ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `Someone compared prices for ${args.product_name ?? '...'} in ${args.city}` : `Someone compared prices for ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `Someone spotted ${args.product_name ?? '...'} at ${args.shop_name}` : `Someone spotted ${args.product_name ?? '...'}`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `Someone activated Homesick mode in ${args.city}` : 'Someone activated Homesick mode',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `Someone is browsing ${args.category_name ?? '...'} in ${args.city}` : `Someone is browsing ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `Someone noted a language at ${args.shop_name ?? '...'}`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `Someone set a price alert for ${args.product_name ?? '...'}`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `Someone discovered ${args.shop_name ?? '...'} in ${args.city}` : `Someone discovered ${args.shop_name ?? '...'}`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Searched: ${t} in ${c}` : `Searched: ${t}`
+      if (args._v === 2) return c ? `Looking for ${t} near ${c}` : `Looking for ${t}`
+      return c ? `A fellow expat searched for ${t} in ${c}` : `A fellow expat searched for ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return `Price check: ${p}`
+      if (args._v === 2) return c ? `${p} — prices compared in ${c}` : `${p} — prices compared`
+      return c ? `A fellow expat compared prices for ${p} in ${c}` : `A fellow expat compared prices for ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `Found: ${p} at ${s}` : `Spotted: ${p}`
+      if (args._v === 2) return s ? `${p} — at ${s}` : `${p} — just spotted`
+      return s ? `A fellow expat spotted ${p} at ${s}` : `A fellow expat spotted ${p}`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `Homesick search in ${c}` : 'Homesick search'
+      if (args._v === 2) return c ? `Searching for home in ${c}` : 'Searching for home'
+      return c ? `A fellow expat activated Homesick mode in ${c}` : 'A fellow expat activated Homesick mode'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Trending: ${cat} in ${c}` : `Trending: ${cat}`
+      if (args._v === 2) return `Browsing ${cat} nearby`
+      return c ? `A fellow expat is browsing ${cat} in ${c}` : `A fellow expat is browsing ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `Language tip: ${s}`
+      if (args._v === 2) return `Speaks your language: ${s}`
+      return `A fellow expat noted a language at ${s}`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `Price alert: ${p}`
+      if (args._v === 2) return `Watching price of ${p}`
+      return `A fellow expat set a price alert for ${p}`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `New: ${s} in ${c}` : `New shop found`
+      if (args._v === 2) return `Just discovered: ${s}`
+      return c ? `A fellow expat discovered ${s} in ${c}` : `A fellow expat discovered ${s}`
+    },
     time_just_now: 'just now',
     time_minutes_ago: (n: number) => `${n} min ago`,
     time_hours_ago: (n: number) => `${n}h ago`,
@@ -683,22 +715,54 @@ export const translations = {
     activity_feed_empty_soon: 'Aktivität folgt bald...',
     activity_feed_expand: 'Mehr anzeigen',
     activity_feed_collapse: 'Weniger anzeigen',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `Jemand sucht ${args.term ?? '...'} in ${args.city}` : `Jemand sucht ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `Jemand vergleicht Preise für ${args.product_name ?? '...'} in ${args.city}` : `Jemand vergleicht Preise für ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `Jemand hat ${args.product_name ?? '...'} bei ${args.shop_name} gespottet` : `Jemand hat ${args.product_name ?? '...'} gespottet`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `Jemand hat Heimweh-Modus in ${args.city} aktiviert` : 'Jemand hat Heimweh-Modus aktiviert',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `Jemand sucht nach ${args.category_name ?? '...'} in ${args.city}` : `Jemand sucht nach ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `Jemand hat eine Sprache bei ${args.shop_name ?? '...'} vermerkt`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `Jemand hat Preisalarm für ${args.product_name ?? '...'} gesetzt`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `Jemand hat ${args.shop_name ?? '...'} in ${args.city} entdeckt` : `Jemand hat ${args.shop_name ?? '...'} entdeckt`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Gesucht: ${t} in ${c}` : `Gesucht: ${t}`
+      if (args._v === 2) return c ? `Auf der Suche nach ${t} in ${c}` : `Auf der Suche nach ${t}`
+      return c ? `Ein Expat sucht ${t} in ${c}` : `Ein Expat sucht ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return `Preischeck: ${p}`
+      if (args._v === 2) return c ? `${p} — Preise verglichen in ${c}` : `${p} — Preise verglichen`
+      return c ? `Ein Expat vergleicht Preise für ${p} in ${c}` : `Ein Expat vergleicht Preise für ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `Gefunden: ${p} bei ${s}` : `Gespottet: ${p}`
+      if (args._v === 2) return s ? `${p} — entdeckt bei ${s}` : `${p} — gerade gespottet`
+      return s ? `Ein Expat hat ${p} bei ${s} gespottet` : `Ein Expat hat ${p} gespottet`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `Heimweh-Suche in ${c}` : 'Heimweh-Suche gestartet'
+      if (args._v === 2) return c ? `Sucht Heimisches in ${c}` : 'Sucht Heimisches'
+      return c ? `Ein Expat hat Heimweh-Modus in ${c} aktiviert` : 'Ein Expat hat Heimweh-Modus aktiviert'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Beliebt: ${cat} in ${c}` : `Beliebt: ${cat}`
+      if (args._v === 2) return c ? `${cat} — gefragt in ${c}` : `${cat} — gerade gesucht`
+      return c ? `Ein Expat sucht nach ${cat} in ${c}` : `Ein Expat sucht nach ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `Sprach-Tipp: ${s}`
+      if (args._v === 2) return `Spricht deine Sprache: ${s}`
+      return `Ein Expat hat eine Sprache bei ${s} vermerkt`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `Preisalarm: ${p}`
+      if (args._v === 2) return `Preis im Auge: ${p}`
+      return `Ein Expat hat Preisalarm für ${p} gesetzt`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Neu: ${s} in ${c}` : 'Neuer Shop entdeckt'
+      if (args._v === 2) return `Gerade entdeckt: ${s}`
+      return c ? `Ein Expat hat ${s} in ${c} entdeckt` : `Ein Expat hat ${s} entdeckt`
+    },
     time_just_now: 'gerade eben',
     time_minutes_ago: (n: number) => `vor ${n} Min.`,
     time_hours_ago: (n: number) => `vor ${n} Std.`,
@@ -1037,22 +1101,54 @@ export const translations = {
     activity_feed_empty_soon: 'Активность скоро появится...',
     activity_feed_expand: 'Показать больше',
     activity_feed_collapse: 'Свернуть',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `Кто-то ищет ${args.term ?? '...'} в ${args.city}` : `Кто-то ищет ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `Кто-то сравнивает цены на ${args.product_name ?? '...'} в ${args.city}` : `Кто-то сравнивает цены на ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `Кто-то нашёл ${args.product_name ?? '...'} в ${args.shop_name}` : `Кто-то нашёл ${args.product_name ?? '...'}`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `Кто-то активировал режим «Ностальгия» в ${args.city}` : 'Кто-то активировал режим «Ностальгия»',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `Кто-то ищет ${args.category_name ?? '...'} в ${args.city}` : `Кто-то ищет ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `Кто-то отметил язык в ${args.shop_name ?? '...'}`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `Кто-то установил оповещение о цене на ${args.product_name ?? '...'}`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `Кто-то открыл ${args.shop_name ?? '...'} в ${args.city}` : `Кто-то открыл ${args.shop_name ?? '...'}`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Ищут: ${t} в ${c}` : `Ищут: ${t}`
+      if (args._v === 2) return c ? `В поиске: ${t} в ${c}` : `В поиске: ${t}`
+      return c ? `Кто-то из наших ищет ${t} в ${c}` : `Кто-то из наших ищет ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return `Проверка цен: ${p}`
+      if (args._v === 2) return c ? `${p} — цены сравниваются в ${c}` : `${p} — цены сравниваются`
+      return c ? `Кто-то из наших сравнивает цены на ${p} в ${c}` : `Кто-то из наших сравнивает цены на ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `Найдено: ${p} в ${s}` : `Нашли: ${p}`
+      if (args._v === 2) return s ? `${p} — есть в ${s}` : `${p} — только что нашли`
+      return s ? `Кто-то из наших нашёл ${p} в ${s}` : `Кто-то из наших нашёл ${p}`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `Ностальгия в ${c}` : 'Поиск родного…'
+      if (args._v === 2) return c ? `Скучает по родному в ${c}` : 'Скучает по родному'
+      return c ? `Кто-то из наших включил «Ностальгию» в ${c}` : 'Кто-то из наших включил «Ностальгию»'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `В тренде: ${cat} в ${c}` : `Ищут: ${cat}`
+      if (args._v === 2) return c ? `${cat} — популярно в ${c}` : `${cat} — сейчас ищут`
+      return c ? `Кто-то из наших ищет ${cat} в ${c}` : `Кто-то из наших ищет ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `Подсказка: говорят по-вашему в ${s}`
+      if (args._v === 2) return `Говорят по-нашему: ${s}`
+      return `Кто-то из наших отметил язык в ${s}`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `Следят за ценой: ${p}`
+      if (args._v === 2) return `Оповещение о цене: ${p}`
+      return `Кто-то из наших следит за ценой на ${p}`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Новый магазин: ${s} в ${c}` : 'Новинка!'
+      if (args._v === 2) return `Только что нашли: ${s}`
+      return c ? `Кто-то из наших открыл ${s} в ${c}` : `Кто-то из наших открыл ${s}`
+    },
     time_just_now: 'только что',
     time_minutes_ago: (n: number) => `${n} мин назад`,
     time_hours_ago: (n: number) => `${n} ч назад`,
@@ -1391,22 +1487,54 @@ export const translations = {
     activity_feed_empty_soon: 'Δραστηριότητα σύντομα...',
     activity_feed_expand: 'Περισσότερα',
     activity_feed_collapse: 'Λιγότερα',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `Κάποιος ψάχνει ${args.term ?? '...'} στη ${args.city}` : `Κάποιος ψάχνει ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `Κάποιος συγκρίνει τιμές για ${args.product_name ?? '...'} στη ${args.city}` : `Κάποιος συγκρίνει τιμές για ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `Κάποιος εντόπισε ${args.product_name ?? '...'} στο ${args.shop_name}` : `Κάποιος εντόπισε ${args.product_name ?? '...'}`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `Κάποιος ενεργοποίησε τη Νοσταλγία στη ${args.city}` : 'Κάποιος ενεργοποίησε τη Νοσταλγία',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `Κάποιος αναζητά ${args.category_name ?? '...'} στη ${args.city}` : `Κάποιος αναζητά ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `Κάποιος σημείωσε γλώσσα στο ${args.shop_name ?? '...'}`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `Κάποιος έθεσε ειδοποίηση τιμής για ${args.product_name ?? '...'}`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `Κάποιος ανακάλυψε ${args.shop_name ?? '...'} στη ${args.city}` : `Κάποιος ανακάλυψε ${args.shop_name ?? '...'}`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Αναζήτηση: ${t} στη ${c}` : `Αναζητείται: ${t}`
+      if (args._v === 2) return c ? `Σε αναζήτηση: ${t} κοντά στη ${c}` : `Σε αναζήτηση: ${t}`
+      return c ? `Ένας expat ψάχνει ${t} στη ${c}` : `Ένας expat ψάχνει ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return `Σύγκριση τιμών: ${p}`
+      if (args._v === 2) return c ? `${p} — τιμές συγκρίνονται στη ${c}` : `${p} — τιμές συγκρίνονται`
+      return c ? `Ένας expat συγκρίνει τιμές για ${p} στη ${c}` : `Ένας expat συγκρίνει τιμές για ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `Βρέθηκε: ${p} στο ${s}` : `Εντοπίστηκε: ${p}`
+      if (args._v === 2) return s ? `${p} — υπάρχει στο ${s}` : `${p} — μόλις εντοπίστηκε`
+      return s ? `Ένας expat εντόπισε ${p} στο ${s}` : `Ένας expat εντόπισε ${p}`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `Νοσταλγία στη ${c}` : 'Αναζήτηση πατρίδας…'
+      if (args._v === 2) return c ? `Ψάχνει το σπίτι στη ${c}` : 'Ψάχνει το σπίτι'
+      return c ? `Ένας expat ενεργοποίησε τη Νοσταλγία στη ${c}` : 'Ένας expat ενεργοποίησε τη Νοσταλγία'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Τάση: ${cat} στη ${c}` : `Περιήγηση: ${cat}`
+      if (args._v === 2) return c ? `${cat} — δημοφιλές στη ${c}` : `${cat} — δημοφιλές`
+      return c ? `Ένας expat αναζητά ${cat} στη ${c}` : `Ένας expat αναζητά ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `Tip γλώσσας: ${s}`
+      if (args._v === 2) return `Μιλούν τη γλώσσα σου: ${s}`
+      return `Ένας expat σημείωσε γλώσσα στο ${s}`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `Ειδοποίηση τιμής: ${p}`
+      if (args._v === 2) return `Παρακολουθεί τιμή: ${p}`
+      return `Ένας expat έθεσε ειδοποίηση τιμής για ${p}`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `Νέο: ${s} στη ${c}` : 'Νέα ανακάλυψη!'
+      if (args._v === 2) return `Μόλις βρέθηκε: ${s}`
+      return c ? `Ένας expat ανακάλυψε ${s} στη ${c}` : `Ένας expat ανακάλυψε ${s}`
+    },
     time_just_now: 'μόλις τώρα',
     time_minutes_ago: (n: number) => `πριν ${n} λεπτά`,
     time_hours_ago: (n: number) => `πριν ${n} ώρες`,
@@ -1745,22 +1873,54 @@ export const translations = {
     activity_feed_empty_soon: 'النشاط قادم قريباً...',
     activity_feed_expand: 'عرض المزيد',
     activity_feed_collapse: 'عرض أقل',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `شخص ما يبحث عن ${args.term ?? '...'} في ${args.city}` : `شخص ما يبحث عن ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `شخص ما يقارن أسعار ${args.product_name ?? '...'} في ${args.city}` : `شخص ما يقارن أسعار ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `شخص ما وجد ${args.product_name ?? '...'} في ${args.shop_name}` : `شخص ما وجد ${args.product_name ?? '...'}`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `شخص ما فعّل وضع الحنين في ${args.city}` : 'شخص ما فعّل وضع الحنين',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `شخص ما يتصفح ${args.category_name ?? '...'} في ${args.city}` : `شخص ما يتصفح ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `شخص ما سجّل لغة في ${args.shop_name ?? '...'}`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `شخص ما ضبط تنبيه سعر لـ ${args.product_name ?? '...'}`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `شخص ما اكتشف ${args.shop_name ?? '...'} في ${args.city}` : `شخص ما اكتشف ${args.shop_name ?? '...'}`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `بحث: ${t} في ${c}` : `بحث: ${t}`
+      if (args._v === 2) return c ? `${t} — مطلوب في ${c}` : `${t} — مطلوب`
+      return c ? `أحد المغتربين يبحث عن ${t} في ${c}` : `أحد المغتربين يبحث عن ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `مقارنة أسعار: ${p} في ${c}` : `مقارنة أسعار: ${p}`
+      if (args._v === 2) return c ? `${p} — مقارنة في ${c}` : `${p} — تمت مقارنة الأسعار`
+      return c ? `أحد المغتربين يقارن أسعار ${p} في ${c}` : `أحد المغتربين يقارن أسعار ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `وُجد: ${p} ← ${s}` : `وُجد: ${p}`
+      if (args._v === 2) return s ? `${p} متاح في ${s}` : `${p} — تم رصده`
+      return s ? `أحد المغتربين وجد ${p} في ${s}` : `أحد المغتربين وجد ${p}`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `حنين للوطن في ${c}` : 'وضع الحنين مُفعَّل'
+      if (args._v === 2) return c ? `يبحث عن طعم البيت في ${c}` : 'يبحث عن طعم البيت'
+      return c ? `أحد المغتربين فعّل وضع الحنين في ${c}` : 'أحد المغتربين فعّل وضع الحنين'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `يتصفح: ${cat} في ${c}` : `يتصفح: ${cat}`
+      if (args._v === 2) return c ? `${cat} — في ${c}` : `${cat} — جارٍ التصفح`
+      return c ? `أحد المغتربين يتصفح ${cat} في ${c}` : `أحد المغتربين يتصفح ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `لغة مسجّلة: ${s}`
+      if (args._v === 2) return `${s} — يتحدثون لغتك`
+      return `أحد المغتربين سجّل لغة في ${s}`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `تنبيه سعر: ${p}`
+      if (args._v === 2) return `${p} — جارٍ مراقبة السعر`
+      return `أحد المغتربين ضبط تنبيه سعر لـ ${p}`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `اكتشاف: ${s} في ${c}` : `اكتشاف: ${s}`
+      if (args._v === 2) return c ? `${s} — وجهة جديدة في ${c}` : `${s} — وجهة جديدة`
+      return c ? `أحد المغتربين اكتشف ${s} في ${c}` : `أحد المغتربين اكتشف ${s}`
+    },
     time_just_now: 'الآن',
     time_minutes_ago: (n: number) => `منذ ${n} د`,
     time_hours_ago: (n: number) => `منذ ${n} س`,
@@ -2099,22 +2259,54 @@ export const translations = {
     activity_feed_empty_soon: 'פעילות בקרוב...',
     activity_feed_expand: 'הצג עוד',
     activity_feed_collapse: 'הצג פחות',
-    activity_event_search_performed: (args: { term?: string; city?: string }) =>
-      args.city ? `מישהו מחפש ${args.term ?? '...'} ב${args.city}` : `מישהו מחפש ${args.term ?? '...'}`,
-    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string }) =>
-      args.city ? `מישהו משווה מחירים של ${args.product_name ?? '...'} ב${args.city}` : `מישהו משווה מחירים של ${args.product_name ?? '...'}`,
-    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string }) =>
-      args.shop_name ? `מישהו מצא ${args.product_name ?? '...'} ב${args.shop_name}` : `מישהו מצא ${args.product_name ?? '...'}`,
-    activity_event_homesick_activated: (args: { city?: string }) =>
-      args.city ? `מישהו הפעיל מצב געגועים ב${args.city}` : 'מישהו הפעיל מצב געגועים',
-    activity_event_category_browsed: (args: { category_name?: string; city?: string }) =>
-      args.city ? `מישהו מחפש ${args.category_name ?? '...'} ב${args.city}` : `מישהו מחפש ${args.category_name ?? '...'}`,
-    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string }) =>
-      `מישהו ציין שפה ב${args.shop_name ?? '...'}`,
-    activity_event_price_alert_set: (args: { product_name?: string }) =>
-      `מישהו הגדיר התראת מחיר עבור ${args.product_name ?? '...'}`,
-    activity_event_shop_discovered: (args: { shop_name?: string; city?: string }) =>
-      args.city ? `מישהו גילה את ${args.shop_name ?? '...'} ב${args.city}` : `מישהו גילה את ${args.shop_name ?? '...'}`,
+    activity_event_search_performed: (args: { term?: string; city?: string; _v?: number }) => {
+      const t = args.term ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `חיפש: ${t} ב${c}` : `חיפש: ${t}`
+      if (args._v === 2) return c ? `${t} — מחפשים ב${c}` : `${t} — בחיפוש`
+      return c ? `גולה כמוך מחפש ${t} ב${c}` : `גולה כמוך מחפש ${t}`
+    },
+    activity_event_price_comparison_viewed: (args: { product_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `השוואת מחירים: ${p} ב${c}` : `השוואת מחירים: ${p}`
+      if (args._v === 2) return c ? `${p} — השוואה ב${c}` : `${p} — מחירים בבדיקה`
+      return c ? `גולה כמוך משווה מחירים של ${p} ב${c}` : `גולה כמוך משווה מחירים של ${p}`
+    },
+    activity_event_product_spotted: (args: { product_name?: string; shop_name?: string; city?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'; const s = args.shop_name
+      if (args._v === 1) return s ? `נמצא: ${p} ← ${s}` : `נמצא: ${p}`
+      if (args._v === 2) return s ? `${p} זמין ב${s}` : `${p} — זוהה`
+      return s ? `גולה כמוך מצא ${p} ב${s}` : `גולה כמוך מצא ${p}`
+    },
+    activity_event_homesick_activated: (args: { city?: string; _v?: number }) => {
+      const c = args.city
+      if (args._v === 1) return c ? `געגועים ב${c}` : 'מצב געגועים פעיל'
+      if (args._v === 2) return c ? `מחפש טעם של בית ב${c}` : 'מחפש טעם של בית'
+      return c ? `גולה כמוך הפעיל מצב געגועים ב${c}` : 'גולה כמוך הפעיל מצב געגועים'
+    },
+    activity_event_category_browsed: (args: { category_name?: string; city?: string; _v?: number }) => {
+      const cat = args.category_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `מחפש: ${cat} ב${c}` : `מחפש: ${cat}`
+      if (args._v === 2) return c ? `${cat} — ב${c}` : `${cat} — בגלישה`
+      return c ? `גולה כמוך מחפש ${cat} ב${c}` : `גולה כמוך מחפש ${cat}`
+    },
+    activity_event_shop_language_noted: (args: { shop_name?: string; language_code?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'
+      if (args._v === 1) return `שפה נרשמה: ${s}`
+      if (args._v === 2) return `${s} — מדברים את שפתך`
+      return `גולה כמוך ציין שפה ב${s}`
+    },
+    activity_event_price_alert_set: (args: { product_name?: string; _v?: number }) => {
+      const p = args.product_name ?? '...'
+      if (args._v === 1) return `התראת מחיר: ${p}`
+      if (args._v === 2) return `${p} — מחיר במעקב`
+      return `גולה כמוך הגדיר התראת מחיר עבור ${p}`
+    },
+    activity_event_shop_discovered: (args: { shop_name?: string; city?: string; _v?: number }) => {
+      const s = args.shop_name ?? '...'; const c = args.city
+      if (args._v === 1) return c ? `התגלה: ${s} ב${c}` : `התגלה: ${s}`
+      if (args._v === 2) return c ? `${s} — יעד חדש ב${c}` : `${s} — יעד חדש`
+      return c ? `גולה כמוך גילה את ${s} ב${c}` : `גולה כמוך גילה את ${s}`
+    },
     time_just_now: 'עכשיו',
     time_minutes_ago: (n: number) => `לפני ${n} ד'`,
     time_hours_ago: (n: number) => `לפני ${n} ש'`,

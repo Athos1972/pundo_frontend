@@ -25,13 +25,18 @@ export function ActivityFeedCompact({ events, lang }: ActivityFeedCompactProps) 
 
   useEffect(() => {
     if (events.length <= 1 || expanded) return
-    // 5200ms: swap fires while the outgoing item is still fully opaque
-    // (fade-out starts at 90% of the 6s animation = 5400ms), so there is
-    // no visible black-out between items.
-    const id = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % events.length)
-    }, 5200)
-    return () => clearInterval(id)
+    // Random delay between 5–11s per item so rotation feels organic, not robotic.
+    // Lower bound 5200ms keeps the swap inside the visible fade-out window (starts at 5400ms).
+    let id: ReturnType<typeof setTimeout>
+    const schedule = () => {
+      const delay = 5200 + Math.random() * 5800 // 5.2s – 11s
+      id = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % events.length)
+        schedule()
+      }, delay)
+    }
+    schedule()
+    return () => clearTimeout(id)
   }, [events.length, expanded])
 
   if (events.length === 0) return null

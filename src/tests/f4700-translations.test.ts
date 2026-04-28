@@ -90,7 +90,7 @@ describe('F4700 activity-events.ts', () => {
   it('eventToHref produces correct URLs', async () => {
     const { eventToHref } = await import('@/lib/activity-events')
     expect(eventToHref({
-      id: '1', event_type: 'search_performed', payload: { search_term: 'Nutella' }, created_at: ''
+      id: '1', event_type: 'search_performed', payload: { term: 'Nutella' }, created_at: ''
     })).toBe('/search?q=Nutella')
 
     expect(eventToHref({

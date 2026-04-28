@@ -30,7 +30,7 @@ function makeEvent(id: string, createdAt = '2026-04-27T10:00:00Z'): ActivityEven
   return {
     id,
     event_type: 'search_performed',
-    payload: { search_term: 'Pelmeni', city: 'Paphos' },
+    payload: { term: 'Pelmeni', city: 'Paphos' },
     created_at: createdAt,
   }
 }

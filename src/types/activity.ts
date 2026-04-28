@@ -28,7 +28,7 @@ export interface ActivityEventPayload {
   category_slug?: string
   category_name?: string
   city?: string
-  search_term?: string
+  term?: string
   language_code?: string
 }
 

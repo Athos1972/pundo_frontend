@@ -47,11 +47,19 @@ export function eventToColorClasses(event: ActivityEvent) {
 // URL builder — maps event payload to in-app navigation target
 // ---------------------------------------------------------------------------
 
+// Stable 0-2 variant index derived from event ID so the same event always
+// renders the same phrasing, but adjacent events in a feed look varied.
+export function eventVariant(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return Math.abs(h) % 3
+}
+
 export function eventToHref(event: ActivityEvent): string | null {
   const p = event.payload
   switch (event.event_type) {
     case 'search_performed':
-      if (p.search_term) return `/search?q=${encodeURIComponent(p.search_term)}`
+      if (p.term) return `/search?q=${encodeURIComponent(p.term)}`
       return '/search'
     case 'price_comparison_viewed':
       if (p.product_slug) return `/products/${p.product_slug}`
@@ -88,7 +96,7 @@ const ALLOWED_PAYLOAD_FIELDS = new Set<string>([
   'product_id', 'product_slug', 'product_name',
   'shop_id', 'shop_slug', 'shop_name',
   'category_id', 'category_slug', 'category_name',
-  'city', 'search_term', 'language_code',
+  'city', 'term', 'language_code',
 ])
 
 export function assertNoPii(payload: ActivityEventPayload): ActivityEventPayload {

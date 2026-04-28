@@ -25,7 +25,7 @@ export async function ActivityFeed({ brand, lang }: ActivityFeedProps) {
 
   // SSR initial fetch — 2s timeout, never blocks page render
   const initial = await getActivity(
-    { brand: brand.slug as 'pundo' | 'naidivse', limit: 20 },
+    { limit: 20 },
     lang,
     AbortSignal.timeout(2000)
   ).catch(() => ({ events: [], next_since: null }))
@@ -47,7 +47,6 @@ export async function ActivityFeed({ brand, lang }: ActivityFeedProps) {
             </h2>
           </div>
           <ActivityFeedClient
-            brand={brand.slug as 'pundo' | 'naidivse'}
             variant="livefeed"
             initialEvents={initial.events}
             initialNextSince={initial.next_since}
@@ -69,7 +68,6 @@ export async function ActivityFeed({ brand, lang }: ActivityFeedProps) {
     >
       <div className="max-w-6xl mx-auto">
         <ActivityFeedClient
-          brand={brand.slug as 'pundo' | 'naidivse'}
           variant="compact"
           initialEvents={initial.events}
           initialNextSince={initial.next_since}

@@ -335,14 +335,14 @@ h1, h2, h3, .font-display {
 
 /* Slide-in for livefeed new cards (LTR) */
 @keyframes slide-in-from-leading {
-  from { opacity: 0; transform: translateX(-20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { transform: translateX(-24px); }
+  to   { transform: translateX(0); }
 }
 
 /* Slide-in for livefeed new cards (RTL override) */
 @keyframes slide-in-from-trailing {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { transform: translateX(24px); }
+  to   { transform: translateX(0); }
 }
 
 /* Fade cycle for compact 1-line cycler.

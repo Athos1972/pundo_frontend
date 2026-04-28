@@ -28,20 +28,18 @@ export function ActivityFeedLiveFeed({ events, lang }: ActivityFeedLiveFeedProps
       style={{ scrollSnapType: 'x mandatory' }}
     >
       {events.map((event) => (
-        <ActivityItem
+        // Wrapper is the actual flex item — must own shrink-0 + width so the
+        // <a> inside doesn't collapse to min-content (~icon width) and clip text.
+        <div
           key={event.id}
-          event={event}
-          variant="card"
-          lang={lang}
-          className={[
-            // Desktop: 4 visible; Mobile: ~1.5 visible (scroll hint)
-            'w-[66vw] sm:w-[calc((100%-3*0.75rem)/4)]',
-            'shrink-0',
-            // animate-slide-in-from-leading runs once on mount (CSS animation)
-            // React re-mounts element when key changes (new event.id)
-            'animate-slide-in-from-leading',
-          ].join(' ')}
-        />
+          className="w-[66vw] sm:w-[calc((100%-3*0.75rem)/4)] shrink-0 animate-slide-in-from-leading"
+        >
+          <ActivityItem
+            event={event}
+            variant="card"
+            lang={lang}
+          />
+        </div>
       ))}
     </div>
   )

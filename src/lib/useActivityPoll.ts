@@ -14,12 +14,11 @@
 // =============================================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { ActivityEvent, BrandSlug } from '@/types/activity'
+import type { ActivityEvent } from '@/types/activity'
 import { getActivity } from '@/lib/activity-api'
 import { assertNoPii } from '@/lib/activity-events'
 
 export interface UseActivityPollOptions {
-  brand: BrandSlug
   lang: string
   initialEvents?: ActivityEvent[]
   initialNextSince?: string | null
@@ -51,7 +50,6 @@ function mergeEvents(
 }
 
 export function useActivityPoll({
-  brand,
   lang,
   initialEvents = [],
   initialNextSince = null,
@@ -96,7 +94,7 @@ export function useActivityPoll({
 
     try {
       const result = await getActivity(
-        { brand, limit: 20, since: nextSinceRef.current },
+        { limit: 5, since: nextSinceRef.current },
         lang,
         controller.signal
       )
@@ -127,7 +125,7 @@ export function useActivityPoll({
         setIsPolling(false)
       }
     }
-  }, [brand, lang, maxItems])
+  }, [lang, maxItems])
 
   const scheduleNext = useCallback(() => {
     clearTimer()

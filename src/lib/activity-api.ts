@@ -5,7 +5,7 @@
 // Works on both server (SSR) and client.
 // =============================================================================
 
-import type { ActivityResponse, BrandSlug } from '@/types/activity'
+import type { ActivityResponse } from '@/types/activity'
 
 const BASE =
   typeof window === 'undefined'
@@ -13,7 +13,6 @@ const BASE =
     : (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1')
 
 export interface GetActivityParams {
-  brand: BrandSlug
   limit?: number
   since?: string | null
 }
@@ -28,7 +27,6 @@ export async function getActivity(
   signal?: AbortSignal
 ): Promise<ActivityResponse> {
   const qs = new URLSearchParams()
-  qs.set('brand', params.brand)
   qs.set('limit', String(params.limit ?? 20))
   if (params.since) qs.set('since', params.since)
 

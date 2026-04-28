@@ -10,10 +10,9 @@
 import { useActivityPoll } from '@/lib/useActivityPoll'
 import { ActivityFeedLiveFeed } from './ActivityFeedLiveFeed'
 import { ActivityFeedCompact } from './ActivityFeedCompact'
-import type { ActivityEvent, BrandSlug } from '@/types/activity'
+import type { ActivityEvent } from '@/types/activity'
 
 interface ActivityFeedClientProps {
-  brand: BrandSlug
   variant: 'livefeed' | 'compact'
   initialEvents: ActivityEvent[]
   initialNextSince: string | null
@@ -21,14 +20,12 @@ interface ActivityFeedClientProps {
 }
 
 export function ActivityFeedClient({
-  brand,
   variant,
   initialEvents,
   initialNextSince,
   lang,
 }: ActivityFeedClientProps) {
   const { events } = useActivityPoll({
-    brand,
     lang,
     initialEvents,
     initialNextSince,

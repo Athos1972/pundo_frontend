@@ -25,6 +25,10 @@ const PUBLIC_SHOP_ADMIN_PATHS = [
   '/shop-admin/verify-email',
 ]
 
+// T17 — System-Admin Proxy-Gate (F6990 Phase 2, M7)
+// Public paths under /admin/ that do NOT require the admin_token cookie.
+const PUBLIC_ADMIN_PATHS = ['/admin/login']
+
 const buildCsp = (nonce: string, analyticsHost?: string): string => {
   const analyticsConnectSrc = analyticsHost ? ` ${analyticsHost}` : ''
   const analyticsScriptSrc = analyticsHost ? ` ${analyticsHost}` : ''
@@ -32,7 +36,7 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
 
   const directives = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}${analyticsScriptSrc}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}${analyticsScriptSrc} https://challenges.cloudflare.com`,
     // In dev: allow unsafe-inline without nonce (nonce + unsafe-inline doesn't work in CSP)
     // In prod: use nonce-only (strict)
     isDev ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}'`,
@@ -40,10 +44,11 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com`,
     `font-src 'self'`,
-    `connect-src 'self'${analyticsConnectSrc}`,
+    `connect-src 'self'${analyticsConnectSrc} https://challenges.cloudflare.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
+    `frame-src https://challenges.cloudflare.com`,
     `frame-ancestors 'none'`,
   ]
   // Only enforce HTTPS upgrade in production
@@ -60,7 +65,7 @@ export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const brand = getBrandConfig(host)
 
-  // ---- Job 2: shop-admin auth-gate --------------------------------------
+  // ---- Job 2a: shop-admin auth-gate -------------------------------------
   if (
     pathname.startsWith('/shop-admin') &&
     !PUBLIC_SHOP_ADMIN_PATHS.some((p) => pathname.startsWith(p))
@@ -70,6 +75,18 @@ export function proxy(request: NextRequest) {
       const loginUrl = new URL('/shop-admin/login', request.url)
       loginUrl.searchParams.set('next', pathname)
       return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // ---- Job 2b: system-admin auth-gate (T17 — F6990 Phase 2) ------------
+  // All /admin/** routes require the admin_token cookie, except the login page.
+  if (
+    pathname.startsWith('/admin') &&
+    !PUBLIC_ADMIN_PATHS.some((p) => pathname.startsWith(p))
+  ) {
+    const token = request.cookies.get('admin_token')
+    if (!token?.value) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
 

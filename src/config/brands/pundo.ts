@@ -57,6 +57,8 @@ export const pundoConfig: BrandConfig = {
     catsfirst: false,
     communityCard: false,
     homesickTeaser: false,
+    activityFeed: 'compact',
+    recentlyViewed: 'drawer',
   },
 
   nav: [

@@ -59,6 +59,8 @@ export const naidivseConfig: BrandConfig = {
     catsfirst: true,
     communityCard: true,
     homesickTeaser: true,
+    activityFeed: 'livefeed',
+    recentlyViewed: 'home',
   },
 
   community: {

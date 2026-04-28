@@ -66,6 +66,8 @@ export interface BrandConfig {
     catsfirst: boolean
     communityCard: boolean
     homesickTeaser: boolean
+    activityFeed: false | 'livefeed' | 'compact'   // F4700
+    recentlyViewed: 'hidden' | 'home' | 'drawer'   // F4700
   }
 
   community?: {

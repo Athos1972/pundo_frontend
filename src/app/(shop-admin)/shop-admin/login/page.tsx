@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getLangFromCookie } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
+import { sanitizeNextPath } from '@/lib/safe-redirect'
 import { FormField } from '@/components/shop-admin/FormField'
 import { Suspense } from 'react'
 
@@ -13,7 +14,8 @@ function LoginForm() {
   const tr = tAdmin(lang)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextPath = searchParams.get('next') ?? '/shop-admin/dashboard'
+  // T2 — Open Redirect fix: sanitize `next` param to same-origin /shop-admin/ paths only
+  const nextPath = sanitizeNextPath(searchParams.get('next'))
 
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})

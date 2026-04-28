@@ -384,6 +384,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Too many attempts. Please wait a minute.',
     redirect_blocked: 'Redirect blocked for security reasons.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: "If this email is not yet registered, we'll send you a confirmation email.",
+    invalid_logo_url: 'Please enter a valid https:// URL.',
+    turnstile_loading: 'Security check loading...',
+    turnstile_failed: 'Security check failed. Please reload the page.',
+    turnstile_required: 'Please complete the security check.',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -770,6 +776,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Zu viele Versuche. Bitte warte eine Minute.',
     redirect_blocked: 'Weiterleitung aus Sicherheitsgründen blockiert.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: 'Wenn diese E-Mail noch nicht registriert ist, senden wir dir eine Bestätigungsmail.',
+    invalid_logo_url: 'Bitte eine gültige https://-URL eingeben.',
+    turnstile_loading: 'Sicherheitsprüfung lädt...',
+    turnstile_failed: 'Sicherheitsprüfung fehlgeschlagen. Bitte Seite neu laden.',
+    turnstile_required: 'Bitte die Sicherheitsprüfung abschließen.',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -1156,6 +1168,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Слишком много попыток. Подождите минуту.',
     redirect_blocked: 'Перенаправление заблокировано в целях безопасности.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: 'Если этот адрес ещё не зарегистрирован, мы отправим письмо с подтверждением.',
+    invalid_logo_url: 'Пожалуйста, введите корректный URL, начинающийся с https://.',
+    turnstile_loading: 'Загрузка проверки безопасности...',
+    turnstile_failed: 'Проверка безопасности не пройдена. Пожалуйста, перезагрузите страницу.',
+    turnstile_required: 'Пожалуйста, пройдите проверку безопасности.',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1542,6 +1560,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Πολλές προσπάθειες. Παρακαλώ περίμενε ένα λεπτό.',
     redirect_blocked: 'Η ανακατεύθυνση αποκλείστηκε για λόγους ασφαλείας.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: 'Αν αυτό το email δεν είναι ακόμα εγγεγραμμένο, θα σου στείλουμε email επιβεβαίωσης.',
+    invalid_logo_url: 'Παρακαλώ εισάγετε έγκυρο URL που ξεκινά με https://.',
+    turnstile_loading: 'Φόρτωση ελέγχου ασφαλείας...',
+    turnstile_failed: 'Ο έλεγχος ασφαλείας απέτυχε. Παρακαλώ φορτώστε ξανά τη σελίδα.',
+    turnstile_required: 'Παρακαλώ ολοκληρώστε τον έλεγχο ασφαλείας.',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -1928,6 +1952,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'محاولات كثيرة جداً. يرجى الانتظار دقيقة.',
     redirect_blocked: 'تم حظر إعادة التوجيه لأسباب أمنية.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: 'إذا لم يكن هذا البريد مسجلاً بعد، سنرسل لك رسالة تأكيد.',
+    invalid_logo_url: 'يرجى إدخال عنوان URL صحيح يبدأ بـ https://.',
+    turnstile_loading: 'جارٍ تحميل التحقق الأمني...',
+    turnstile_failed: 'فشل التحقق الأمني. يرجى إعادة تحميل الصفحة.',
+    turnstile_required: 'يرجى إكمال التحقق الأمني.',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -2314,6 +2344,12 @@ export const translations = {
     // Security (T8 — Phase 1)
     rate_limited: 'יותר מדי ניסיונות. אנא המתן דקה.',
     redirect_blocked: 'ההפניה נחסמה מטעמי אבטחה.',
+    // Security (T20 — Phase 2)
+    signup_email_taken_generic: 'אם כתובת אימייל זו עדיין לא רשומה, נשלח לך אימייל אישור.',
+    invalid_logo_url: 'אנא הזן כתובת URL תקינה המתחילה ב-https://.',
+    turnstile_loading: 'בדיקת האבטחה נטענת...',
+    turnstile_failed: 'בדיקת האבטחה נכשלה. אנא טען מחדש את הדף.',
+    turnstile_required: 'אנא השלם את בדיקת האבטחה.',
   },
 } as const;
 

@@ -264,6 +264,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Too many attempts. Please wait a minute.',
     redirect_blocked: 'Redirect blocked for security reasons.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'Please enter a valid https:// URL.',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -514,6 +516,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Zu viele Versuche. Bitte warte eine Minute.',
     redirect_blocked: 'Weiterleitung aus Sicherheitsgründen blockiert.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'Bitte eine gültige https://-URL eingeben.',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -764,6 +768,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Πολλές προσπάθειες. Παρακαλώ περίμενε ένα λεπτό.',
     redirect_blocked: 'Η ανακατεύθυνση αποκλείστηκε για λόγους ασφαλείας.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'Παρακαλώ εισάγετε έγκυρο URL που ξεκινά με https://.',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -1014,6 +1020,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'Слишком много попыток. Подождите минуту.',
     redirect_blocked: 'Перенаправление заблокировано в целях безопасности.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'Пожалуйста, введите корректный URL, начинающийся с https://.',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -1264,6 +1272,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'محاولات كثيرة جداً. يرجى الانتظار دقيقة.',
     redirect_blocked: 'تم حظر إعادة التوجيه لأسباب أمنية.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'يرجى إدخال عنوان URL صحيح يبدأ بـ https://.',
   },
   he: {
     register_title: 'רישום החנות',
@@ -1514,6 +1524,8 @@ const shopAdminTranslations = {
     // Security (T8 — Phase 1)
     rate_limited: 'יותר מדי ניסיונות. אנא המתן דקה.',
     redirect_blocked: 'ההפניה נחסמה מטעמי אבטחה.',
+    // Security (T20 — Phase 2)
+    invalid_logo_url: 'אנא הזן כתובת URL תקינה המתחילה ב-https://.',
   },
 } as const
 

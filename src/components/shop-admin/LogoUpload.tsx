@@ -20,6 +20,7 @@ export function LogoUpload({ currentLogoUrl, lang, onLogoUploaded }: LogoUploadP
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showUrlInput, setShowUrlInput] = useState(false)
+  const [urlError, setUrlError] = useState<string | null>(null)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -130,21 +131,38 @@ export function LogoUpload({ currentLogoUrl, lang, onLogoUploaded }: LogoUploadP
       </button>
 
       {showUrlInput && (
-        <input
-          type="url"
-          placeholder="https://..."
-          defaultValue={preview && !preview.startsWith('blob:') ? preview : ''}
-          onChange={(e) => {
-            const val = e.target.value.trim()
-            if (val) {
+        <div className="flex flex-col gap-1">
+          <input
+            type="url"
+            placeholder="https://..."
+            defaultValue={preview && !preview.startsWith('blob:') ? preview : ''}
+            maxLength={2048}
+            onChange={(e) => {
+              const val = e.target.value.trim()
+              setUrlError(null)
+
+              if (!val) return
+
+              // T18: only https:// URLs, max 2048 chars, no data: or javascript:
+              if (val.length > 2048 || !val.startsWith('https://')) {
+                setUrlError(tr.invalid_logo_url)
+                return
+              }
+
               setPreview(val)
               onLogoUploaded(val)
-            }
-          }}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
-            focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-          aria-label={tr.logo_url}
-        />
+            }}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+              focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            aria-label={tr.logo_url}
+            aria-describedby={urlError ? 'logo-url-error' : undefined}
+          />
+          {urlError && (
+            <p id="logo-url-error" className="text-xs text-red-600" role="alert">
+              {urlError}
+            </p>
+          )}
+        </div>
       )}
     </div>
   )

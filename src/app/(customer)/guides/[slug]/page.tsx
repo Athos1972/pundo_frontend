@@ -63,12 +63,13 @@ export default async function GuideDetailPage({ params }: Props) {
         <MDXRemote
           source={content}
           components={mdxComponents}
-          // T19 (F6990 Phase 2, M8): All guides in content/guides/ are static
-          // Markdown/MDX files checked into the repo. A grep audit (2026-04-28)
-          // confirmed zero <script> tags, zero JS imports, zero export statements
-          // and zero JS expressions in any of the 36 MDX files. Guards are safe
-          // to enable. Re-audit before adding any guide that uses JSX side-effects.
-          options={{ blockJS: true, blockDangerousJS: true }}
+          // Guides in content/guides/ are trusted, statically checked-in MDX.
+          // They legitimately use JSX expression props like
+          // <CostTable rows={[...]} /> and <StepList steps={[...]} />, so
+          // blockJS must stay false — enabling it strips those props and the
+          // components crash on .map() of undefined, which Next.js renders as 404.
+          // blockDangerousJS still blocks eval/Function/process/require.
+          options={{ blockJS: false, blockDangerousJS: true }}
         />
       </article>
 

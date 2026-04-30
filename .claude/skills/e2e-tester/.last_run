@@ -1,12 +1,5 @@
 {
-  "sha": "fd0d7241a5c0395857bb289c5f1ae76a574d157c",
-  "timestamp": "2026-04-26T21:15:00Z",
-  "feature": "Session 3 — FAB/Homesick + Kategorien-Verwaltung + F1/F3 fixes",
-  "verdict": "SHIP",
-  "coverage_snapshot": {
-    "unit_tests": "1017/1017",
-    "smoke_tests": "2/2",
-    "e2e_standard": "107/107",
-    "journeys_implemented": "9/10 (admin-data-management pre-existing pagination bug)"
-  }
+  "sha": "9bf62e3f6fe071cd26fd5082877b310e10cc29cb",
+  "timestamp": "2026-04-30T16:00:41.355411+00:00",
+  "coverage_snapshot": {}
 }

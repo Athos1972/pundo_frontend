@@ -1,0 +1,25 @@
+{
+  "name": "pundo-smoketester",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production smoketest runner for pundo.cy and naidivse.cy",
+  "scripts": {
+    "test": "npx tsx src/runner.ts",
+    "validate-manifest": "vitest run tests/manifest.spec.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.44.0",
+    "js-yaml": "^4.1.0",
+    "nodemailer": "^6.9.0",
+    "zod": "^3.23.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/nodemailer": "^6.4.0",
+    "@types/node": "^20",
+    "typescript": "^5",
+    "vitest": "^2.0.0"
+  }
+}

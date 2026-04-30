@@ -1,0 +1,191 @@
+name: Production Smoketest
+
+# Triggers:
+#   1. Manual dispatch (workflow_dispatch) — also triggered by deploy workflow
+#   2. Schedule: every 6 hours as a safety net
+#   3. repository_dispatch from Hetzner deploy hook
+#
+# Required GitHub Secrets:
+#   # Secret: SMOKETEST_USER           — smoketest@pundo.cy
+#   # Secret: SMOKETEST_PASSWORD       — smoketest user password (rotated every 90 days)
+#   # Secret: SMOKETEST_SMTP_HOST      — Hetzner SMTP server hostname
+#   # Secret: SMOKETEST_SMTP_USER      — SMTP auth username
+#   # Secret: SMOKETEST_SMTP_PASSWORD  — SMTP auth password
+#   # Secret: SMOKETEST_MAIL_TO        — report recipient email
+#   # Secret: GITHUB_DEPLOY_TOKEN      — token for repository_dispatch from Hetzner
+
+on:
+  workflow_dispatch:
+    inputs:
+      brand:
+        description: Which brand(s) to test
+        type: choice
+        options:
+          - both
+          - pundo
+          - naidivse
+        default: both
+      sha:
+        description: Commit SHA of the deployment (for report footer, optional)
+        required: false
+
+  schedule:
+    # Every 6 hours — catches issues between deploys
+    - cron: '0 */6 * * *'
+
+  repository_dispatch:
+    # Triggered by Hetzner deploy hook via curl (see smoketests/README.md)
+    types: [post-deploy]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Run smoketests against production
+  # ---------------------------------------------------------------------------
+  smoketest:
+    name: Smoketest (${{ github.event.inputs.brand || github.event.client_payload.brand || 'both' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 8  # Hard cutoff: 5 min run + 3 min buffer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: smoketests/package-lock.json
+
+      - name: Install dependencies
+        working-directory: smoketests
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: smoketests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoketests
+        working-directory: smoketests
+        env:
+          # Auth
+          SMOKETEST_USER: ${{ secrets.SMOKETEST_USER }}
+          SMOKETEST_PASSWORD: ${{ secrets.SMOKETEST_PASSWORD }}
+          # SMTP (Hetzner Mail Service)
+          SMOKETEST_SMTP_HOST: ${{ secrets.SMOKETEST_SMTP_HOST }}
+          SMOKETEST_SMTP_USER: ${{ secrets.SMOKETEST_SMTP_USER }}
+          SMOKETEST_SMTP_PASSWORD: ${{ secrets.SMOKETEST_SMTP_PASSWORD }}
+          SMOKETEST_MAIL_TO: ${{ secrets.SMOKETEST_MAIL_TO }}
+          # Context
+          GITHUB_SHA: ${{ github.sha }}
+          DEPLOY_SHA: ${{ github.event.inputs.sha || github.event.client_payload.sha || '' }}
+          BRAND_FILTER: ${{ github.event.inputs.brand || github.event.client_payload.brand || 'both' }}
+        run: npx tsx src/runner.ts
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoketest-report-${{ github.run_id }}
+          path: smoketests/report/
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Manifest coverage check
+  #
+  # Compares customer routes in src/app/(customer)/ against manifest.yaml paths.
+  # Outputs a WARNING comment on the PR — NOT a hard fail.
+  # Some routes are intentionally not smokeable (admin, heavy-auth, etc.)
+  # ---------------------------------------------------------------------------
+  manifest-coverage:
+    name: Manifest Coverage Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    # Only run on PRs to avoid noise on scheduled/dispatch runs
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check manifest coverage
+        id: coverage
+        run: |
+          # Find all customer-facing page.tsx files
+          ROUTES=$(find src/app/\(customer\) -name "page.tsx" 2>/dev/null | \
+            sed 's|src/app/(customer)||' | \
+            sed 's|/page.tsx||' | \
+            sed 's|^\([^/]\)|/\1|' | \
+            sort)
+
+          # Extract paths from manifest.yaml
+          MANIFEST_PATHS=$(grep '^\s*path:' smoketests/manifest.yaml | \
+            awk '{print $2}' | \
+            sed "s|'||g;s|\"||g" | \
+            sed 's|\?.*||' | \
+            sort -u)
+
+          # Find routes not covered by manifest
+          MISSING=""
+          while IFS= read -r route; do
+            [ -z "$route" ] && continue
+            # Normalize: strip trailing slash, strip dynamic segments for comparison
+            NORMALIZED=$(echo "$route" | sed 's|/\[.*\]||g' | sed 's|/$||')
+            [ -z "$NORMALIZED" ] && continue
+
+            # Check if any manifest path covers this route (prefix match)
+            FOUND=0
+            while IFS= read -r mpath; do
+              MPATH_BASE=$(echo "$mpath" | sed 's|\?.*||')
+              if [[ "$NORMALIZED" == "$MPATH_BASE" ]] || [[ "$MPATH_BASE" == "$NORMALIZED" ]]; then
+                FOUND=1
+                break
+              fi
+            done <<< "$MANIFEST_PATHS"
+
+            if [ $FOUND -eq 0 ]; then
+              MISSING="$MISSING\n  - $route"
+            fi
+          done <<< "$ROUTES"
+
+          if [ -n "$MISSING" ]; then
+            echo "MISSING_ROUTES<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$MISSING" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "has_missing=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_missing=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR (if missing routes)
+        if: steps.coverage.outputs.has_missing == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const missing = `${{ steps.coverage.outputs.MISSING_ROUTES }}`;
+            const body = [
+              '## Smoketest Coverage Warning',
+              '',
+              'The following customer routes have no entry in `smoketests/manifest.yaml`:',
+              '',
+              missing.trim(),
+              '',
+              '**This is a warning, not a failure.** Some routes are intentionally not smokeable.',
+              '',
+              'Criterion: *Would failure of this section be noticed by a real user within 24 hours?*',
+              'If yes → add an entry to `smoketests/manifest.yaml`. If no → no action needed.',
+              '',
+              'See `smoketests/README.md` for manifest format.',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

@@ -41,7 +41,7 @@ export const naidivseConfig: BrandConfig = {
 
   meta: {
     title: 'Naidivse — найди·всё',
-    description: 'The multilingual product & shop locator for Cyprus — coming soon.',
+    description: 'Finde alles. In der Nähe. Zypern — in deiner Sprache.',
     siteUrl: 'https://naidivse.cy',
     ogImage: '/brands/naidivse/logo-horizontal.svg',
     heroTitle: 'Finde alles. In der Nähe.',

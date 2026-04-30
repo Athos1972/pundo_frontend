@@ -101,24 +101,6 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('content-security-policy', csp)
   requestHeaders.set('x-brand-slug', brand.slug)
 
-  // ---- Job 4: naidivse Coming-Soon-Rewrite --------------------------------
-  // In development, skip the rewrite so the full layout can be tested locally.
-  if (
-    brand.slug === 'naidivse' &&
-    process.env.NODE_ENV !== 'development' &&
-    pathname !== '/coming-soon' &&
-    !pathname.startsWith('/api/') &&
-    !pathname.startsWith('/_next/') &&
-    !pathname.startsWith('/brands/')
-  ) {
-    const rewriteResponse = NextResponse.rewrite(new URL('/coming-soon', request.url), {
-      request: { headers: requestHeaders },
-    })
-    rewriteResponse.headers.set('content-security-policy', csp)
-    setSecurityHeaders(rewriteResponse.headers)
-    return rewriteResponse
-  }
-
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   })

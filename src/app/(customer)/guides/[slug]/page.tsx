@@ -63,12 +63,14 @@ export default async function GuideDetailPage({ params }: Props) {
         <MDXRemote
           source={content}
           components={mdxComponents}
-          // Guides in content/guides/ are trusted, statically checked-in MDX.
-          // They legitimately use JSX expression props like
-          // <CostTable rows={[...]} /> and <StepList steps={[...]} />, so
-          // blockJS must stay false — enabling it strips those props and the
-          // components crash on .map() of undefined, which Next.js renders as 404.
-          // blockDangerousJS still blocks eval/Function/process/require.
+          // SECURITY NOTE (audited 2026-04-28, 36 files):
+          // blockJS stays false because guides use JSX expression props like
+          // <CostTable rows={[...]} /> — enabling blockJS strips those props and
+          // components crash on .map() of undefined (renders as 404).
+          // blockDangerousJS: true blocks eval/Function/process/require.
+          // TRUST BOUNDARY: guides live in content/guides/ (git-only, dev-controlled).
+          // Second line of defence: nonce-based CSP blocks inline scripts anyway.
+          // INVARIANT: if guides ever become user-editable (CMS/API), set blockJS: true FIRST.
           options={{ blockJS: false, blockDangerousJS: true }}
         />
       </article>

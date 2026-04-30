@@ -155,18 +155,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'How do reviews work?',
     reviews_how_it_works_body: 'Any registered user can rate a product or shop with 1–5 stars and optionally add a comment and up to 5 photos. Photos are moderated before publication. Reviews marked as inappropriate are reviewed by our team.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'Find everything.',
-    coming_soon_description: 'The English-language product & shop locator for Cyprus — launching soon.',
-    coming_soon_label: 'Launching',
-    coming_soon_days: 'days',
-    coming_soon_hours: 'hours',
-    coming_soon_minutes: 'min',
-    coming_soon_seconds: 'sec',
-    coming_soon_email_placeholder: 'Your email',
-    coming_soon_email_submit: 'Notify me',
-    coming_soon_email_success: "Done! We'll let you know.",
-    coming_soon_email_error: 'Something went wrong.',
     // Spotted-In
     spotted_button_label: 'Spot a price',
     spotted_error_no_gps: 'Location not found. Please enable GPS or location access.',
@@ -547,18 +535,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'Wie funktionieren Bewertungen?',
     reviews_how_it_works_body: 'Jeder registrierte Nutzer kann ein Produkt oder einen Shop mit 1–5 Sternen bewerten und optional einen Kommentar und bis zu 5 Fotos hinzufügen. Fotos werden vor der Veröffentlichung moderiert. Unangemessene Bewertungen werden von unserem Team geprüft.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'Finde alles.',
-    coming_soon_description: 'Der deutschsprachige Produkt- & Shop-Finder für Zypern — demnächst verfügbar.',
-    coming_soon_label: 'Öffnet am',
-    coming_soon_days: 'Tage',
-    coming_soon_hours: 'Stunden',
-    coming_soon_minutes: 'Min',
-    coming_soon_seconds: 'Sek',
-    coming_soon_email_placeholder: 'Deine E-Mail',
-    coming_soon_email_submit: 'Benachrichtigen',
-    coming_soon_email_success: 'Danke! Wir melden uns.',
-    coming_soon_email_error: 'Etwas ist schiefgelaufen.',
     // Spotted-In
     spotted_button_label: 'Preis spotten',
     spotted_error_no_gps: 'Standort nicht ermittelt. Bitte GPS oder Ortungsdienste aktivieren.',
@@ -939,18 +915,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'Как работают отзывы?',
     reviews_how_it_works_body: 'Любой зарегистрированный пользователь может оценить товар или магазин от 1 до 5 звёзд и добавить комментарий и до 5 фото. Фото проходят модерацию перед публикацией.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'Найди всё.',
-    coming_soon_description: 'Русскоязычный поиск товаров и магазинов на Кипре — скоро открытие.',
-    coming_soon_label: 'Открытие',
-    coming_soon_days: 'дней',
-    coming_soon_hours: 'часов',
-    coming_soon_minutes: 'мин',
-    coming_soon_seconds: 'сек',
-    coming_soon_email_placeholder: 'Ваш e-mail',
-    coming_soon_email_submit: 'Уведомить',
-    coming_soon_email_success: 'Готово! Мы напишем.',
-    coming_soon_email_error: 'Что-то пошло не так.',
     // Spotted-In
     spotted_button_label: 'Отметить цену',
     spotted_error_no_gps: 'Местоположение не найдено. Включите GPS или геолокацию.',
@@ -1331,18 +1295,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'Πώς λειτουργούν οι αξιολογήσεις;',
     reviews_how_it_works_body: 'Κάθε εγγεγραμμένος χρήστης μπορεί να αξιολογήσει με 1–5 αστέρια και να προσθέσει σχόλιο και έως 5 φωτογραφίες. Οι φωτογραφίες ελέγχονται πριν τη δημοσίευση.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'Βρες τα πάντα.',
-    coming_soon_description: 'Ο ελληνόφωνος εντοπιστής προϊόντων & καταστημάτων για την Κύπρο — σύντομα.',
-    coming_soon_label: 'Εκκίνηση',
-    coming_soon_days: 'μέρες',
-    coming_soon_hours: 'ώρες',
-    coming_soon_minutes: 'λεπτά',
-    coming_soon_seconds: 'δευτ',
-    coming_soon_email_placeholder: 'Το email σου',
-    coming_soon_email_submit: 'Ειδοποίησέ με',
-    coming_soon_email_success: 'Εντάξει! Θα σε ειδοποιήσουμε.',
-    coming_soon_email_error: 'Κάτι πήγε στραβά.',
     // Spotted-In
     spotted_button_label: 'Σημείωσε τιμή',
     spotted_error_no_gps: 'Η τοποθεσία δεν βρέθηκε. Ενεργοποιήστε GPS ή υπηρεσίες τοποθεσίας.',
@@ -1723,18 +1675,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'كيف تعمل التقييمات؟',
     reviews_how_it_works_body: 'يمكن لأي مستخدم مسجّل تقييم منتج أو متجر بـ 1–5 نجوم وإضافة تعليق وما يصل إلى 5 صور. تُراجَع الصور قبل النشر.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'اعثر على كل شيء.',
-    coming_soon_description: 'محدد المنتجات والمتاجر باللغة العربية لقبرص — قريبًا.',
-    coming_soon_label: 'الإطلاق',
-    coming_soon_days: 'أيام',
-    coming_soon_hours: 'ساعات',
-    coming_soon_minutes: 'دقائق',
-    coming_soon_seconds: 'ثانية',
-    coming_soon_email_placeholder: 'بريدك الإلكتروني',
-    coming_soon_email_submit: 'أعلمني',
-    coming_soon_email_success: 'تم! سنخبرك.',
-    coming_soon_email_error: 'حدث خطأ ما.',
     // Spotted-In
     spotted_button_label: 'رصد سعر',
     spotted_error_no_gps: 'لم يتم العثور على الموقع. يرجى تفعيل GPS أو خدمات الموقع.',
@@ -2115,18 +2055,6 @@ export const translations = {
     // Reviews hint
     reviews_how_it_works_toggle: 'איך ביקורות עובדות?',
     reviews_how_it_works_body: 'כל משתמש רשום יכול לדרג מוצר או חנות ב-1–5 כוכבים ולהוסיף תגובה ועד 5 תמונות. התמונות עוברות בקרה לפני פרסום.',
-    // Coming Soon (naidivse.com)
-    coming_soon_tagline: 'מצא הכל.',
-    coming_soon_description: 'מאתר המוצרים והחנויות בעברית לקפריסין — בקרוב.',
-    coming_soon_label: 'הפתיחה',
-    coming_soon_days: 'ימים',
-    coming_soon_hours: 'שעות',
-    coming_soon_minutes: 'דקות',
-    coming_soon_seconds: 'שניות',
-    coming_soon_email_placeholder: 'האימייל שלך',
-    coming_soon_email_submit: 'עדכן אותי',
-    coming_soon_email_success: '!בוצע. ניצור איתך קשר',
-    coming_soon_email_error: 'משהו השתבש.',
     // Spotted-In
     spotted_button_label: 'צלם מחיר',
     spotted_error_no_gps: 'המיקום לא נמצא. אנא הפעל GPS או שירותי מיקום.',

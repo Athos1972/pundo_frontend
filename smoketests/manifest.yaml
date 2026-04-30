@@ -1,0 +1,218 @@
+version: 1
+last_updated: "2026-04-30"
+last_updated_by: "coder"
+
+brands:
+  - id: pundo
+    base_url: https://pundo.cy
+  - id: naidivse
+    base_url: https://naidivse.cy
+
+languages: [en, de, el, ru, ar, he]
+
+checks:
+  # ---------------------------------------------------------------------------
+  # P0 — Critical: must pass or deployment is broken
+  # ---------------------------------------------------------------------------
+
+  - id: home-anon
+    phase: anonymous
+    path: /
+    per_language: true
+    priority: P0
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "header img"
+      - type: text-from-translations
+        key: hero_title
+      - type: no-console-errors
+
+  - id: guides-list
+    # Regression guard for 2026-04-29 incident: guides section went down undetected
+    phase: anonymous
+    path: /guides
+    per_language: true
+    priority: P0
+    timeout_ms: 15000
+    retries: 2
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-count-min
+        selector: "[data-guide-card]"
+        min: 1
+      - type: text-not-present
+        text: "Failed to"
+      - type: text-not-present
+        text: "500"
+
+  - id: guide-detail-sample
+    phase: anonymous
+    path: /guides
+    per_language: false
+    priority: P0
+    resolve_first_item: true
+    resolve_first_item_selector: "a[data-guide-card], a[href*='/guides/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "article h1"
+      - type: mdx-rendered
+
+  # ---------------------------------------------------------------------------
+  # P1 — High: core user flows
+  # ---------------------------------------------------------------------------
+
+  - id: rtl-arabic
+    phase: anonymous
+    path: /
+    per_language: false
+    languages: [ar]
+    priority: P1
+    timeout_ms: 10000
+    retries: 1
+    asserts:
+      - type: html-attribute
+        selector: "html"
+        attribute: dir
+        expected: rtl
+
+  - id: rtl-hebrew
+    phase: anonymous
+    path: /
+    per_language: false
+    languages: [he]
+    priority: P1
+    timeout_ms: 10000
+    retries: 1
+    asserts:
+      - type: html-attribute
+        selector: "html"
+        attribute: dir
+        expected: rtl
+
+  - id: protected-profile-blocks-anon
+    phase: negative-auth
+    path: /account
+    per_language: false
+    priority: P1
+    timeout_ms: 10000
+    retries: 1
+    asserts:
+      - type: redirect-to
+        location-contains: /auth/login
+
+  - id: login-flow
+    phase: authenticated
+    per_language: false
+    priority: P1
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: login-success
+        user-env: SMOKETEST_USER
+        password-env: SMOKETEST_PASSWORD
+
+  - id: profile-after-login
+    phase: authenticated
+    path: /account
+    per_language: false
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "[data-user-email]"
+
+  - id: cookie-banner-shows
+    phase: anonymous
+    path: /
+    per_language: false
+    fresh_session: true
+    priority: P1
+    timeout_ms: 10000
+    retries: 1
+    asserts:
+      - type: selector-visible
+        selector: "[data-cookie-banner]"
+
+  # ---------------------------------------------------------------------------
+  # P1 — Additional core routes
+  # ---------------------------------------------------------------------------
+
+  - id: search-anon
+    phase: anonymous
+    path: /search?q=test
+    per_language: false
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: no-console-errors
+
+  - id: shops-anon
+    phase: anonymous
+    path: /shops
+    per_language: false
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: no-console-errors
+
+  - id: shop-detail-sample
+    phase: anonymous
+    path: /shops
+    per_language: false
+    priority: P1
+    resolve_first_item: true
+    resolve_first_item_selector: "a[data-shop-card], a[href*='/shops/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "h1"
+
+  - id: product-detail-sample
+    phase: anonymous
+    path: /search?q=test
+    per_language: false
+    priority: P2
+    resolve_first_item: true
+    resolve_first_item_selector: "a[data-product-card], a[href*='/products/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "h1"
+
+  - id: language-switch-de-en
+    phase: anonymous
+    path: /
+    per_language: false
+    languages: [de]
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: text-from-translations
+        key: hero_title

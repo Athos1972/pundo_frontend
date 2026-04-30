@@ -28,3 +28,44 @@
 | [shop-detail-attribute-matrix](shop-detail-attribute-matrix.md) | Shop-Detail Attribut-Matrix (2 Datenvarianten) | approved | P2 | — |
 | [shop-admin-profile](shop-admin-profile.md) | Shop-Admin Profil — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-profile-phone-logo](shop-admin-profile-phone-logo.md) | Shop-Admin Phone + Logo — DEPRECATED | deprecated | P2 | — |
+
+## Smoketest Coverage
+
+> Single Source of Truth: [`smoketests/manifest.yaml`](../../smoketests/manifest.yaml)
+>
+> The smoketester (`smoketests/`) runs after every deployment against production (`pundo.cy`, `naidivse.cy`).
+> It is **orthogonal** to this e2e suite — it tests breadth against live data, not depth against fixtures.
+>
+> **e2e-tester hook:** When a new customer journey touches a top-level route
+> (`src/app/(customer)/**/page.tsx`), check whether the route has a manifest entry.
+> Criterion: *Would failure of this section be noticed by a real user within 24 hours?*
+> If yes → propose a manifest entry. If no → no action needed.
+
+| Journey ID | Smoketest-worthy? | Manifest entry |
+|---|---|---|
+| customer-discovery | **Yes** | `home-anon`, `search-anon`, `shops-anon` |
+| customer-and-review-lifecycle | Yes (read only) | `profile-after-login`, `login-flow` |
+| shop-owner-onboarding | No — writes + registers | — |
+| shop-owner-lifecycle | No — shop-admin scope, V1 scope | — |
+| shop-owner-full-lifecycle | No — shop-admin scope, V1 scope | — |
+| admin-data-management | No — admin area | — |
+| import-page-ac-check | No — admin area | — |
+| shop-admin-import-image-url | No — shop-admin area | — |
+| shop-admin-offers | No — shop-admin area | — |
+| social-link-moderation | No — admin area | — |
+| state-transition-ItemStatus | Conditional — read-side only | later (V1.1) |
+| write-to-read-createItem | No — writes data | — |
+| shop-detail-attribute-matrix | **Yes** | `shop-detail-sample` |
+
+**Manifest entries not tied to a journey (standalone smoke coverage):**
+
+| Manifest entry | Route | Priority | Notes |
+|---|---|---|---|
+| `guides-list` | `/guides` | P0 | Regression guard: 2026-04-29 incident |
+| `guide-detail-sample` | `/guides/<first>` | P0 | Dynamic resolve_first_item |
+| `rtl-arabic` | `/` (lang: ar) | P1 | html[dir=rtl] assertion |
+| `rtl-hebrew` | `/` (lang: he) | P1 | html[dir=rtl] assertion |
+| `protected-profile-blocks-anon` | `/account` | P1 | Negative-auth check |
+| `cookie-banner-shows` | `/` (fresh session) | P1 | Cookie consent UX |
+| `language-switch-de-en` | `/` (lang: de) | P1 | Lang cookie + translation text |
+| `product-detail-sample` | `/products/<first>` | P2 | Dynamic resolve_first_item |

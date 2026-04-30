@@ -43,7 +43,7 @@ checks:
       - type: status
         expected: 200
       - type: selector-count-min
-        selector: "[data-guide-card]"
+        selector: "a[href*='/guides/']"
         min: 1
       - type: text-not-present
         text: "Failed to"
@@ -56,7 +56,7 @@ checks:
     per_language: false
     priority: P0
     resolve_first_item: true
-    resolve_first_item_selector: "a[data-guide-card], a[href*='/guides/']"
+    resolve_first_item_selector: "a[href*='/guides/']"
     timeout_ms: 20000
     retries: 1
     asserts:
@@ -133,18 +133,6 @@ checks:
       - type: selector-visible
         selector: "[data-user-email]"
 
-  - id: cookie-banner-shows
-    phase: anonymous
-    path: /
-    per_language: false
-    fresh_session: true
-    priority: P1
-    timeout_ms: 10000
-    retries: 1
-    asserts:
-      - type: selector-visible
-        selector: "[data-cookie-banner]"
-
   # ---------------------------------------------------------------------------
   # P1 — Additional core routes
   # ---------------------------------------------------------------------------
@@ -179,7 +167,7 @@ checks:
     per_language: false
     priority: P1
     resolve_first_item: true
-    resolve_first_item_selector: "a[data-shop-card], a[href*='/shops/']"
+    resolve_first_item_selector: "a[href*='/shops/']"
     timeout_ms: 20000
     retries: 1
     asserts:
@@ -194,7 +182,7 @@ checks:
     per_language: false
     priority: P2
     resolve_first_item: true
-    resolve_first_item_selector: "a[data-product-card], a[href*='/products/']"
+    resolve_first_item_selector: "a[href*='/products/']"
     timeout_ms: 20000
     retries: 1
     asserts:

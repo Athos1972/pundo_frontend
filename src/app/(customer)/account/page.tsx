@@ -37,7 +37,7 @@ export default async function AccountPage() {
           >
             {user.display_name}
           </h1>
-          <p className="text-sm text-text-muted">{user.email}</p>
+          <p className="text-sm text-text-muted" data-user-email>{user.email}</p>
         </div>
 
         <AccountTabs

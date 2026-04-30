@@ -1,0 +1,32 @@
+# Gitleaks configuration for pundo_frontend
+# Default rules remain active (no useDefault = false)
+# See: https://github.com/gitleaks/gitleaks
+
+title = "pundo_frontend gitleaks config"
+
+[allowlist]
+  description = "Allowlist for test fixtures and publicly documented test keys"
+
+  # Cloudflare Turnstile publicly documented test keys:
+  #   Sitekey  1x00000000000000000000AA  — always passes (for testing)
+  #   Sitekey  1x00000000000000000000BB  — always blocks (for testing)
+  #   Sitekey  2x00000000000000000000AB  — forces challenge (for testing)
+  #   Secret   1x0000000000000000000000000000000AA — always passes
+  #   Secret   2x0000000000000000000000000000000AA — always passes (invisible)
+  # These are public test tokens from Cloudflare docs, not real secrets.
+  regexes = [
+    '''1x00000000000000000000A[AB]''',
+    '''2x00000000000000000000AB''',
+    '''1x0000000000000000000000000000000AA''',
+    '''2x0000000000000000000000000000000AA''',
+  ]
+
+  # The real NEXT_PUBLIC_ sitekey (0x4AAAAAADFKByTcndwlx0Ek) is a public key
+  # by design — it appears in HTML source visible to every browser.
+  # Allowlisted here to prevent false positives.
+  # Note: this is NOT a secret; secrets are loaded from .env (gitignored).
+  paths = [
+    '''src/tests/''',
+    '''e2e/''',
+    '''.env.local.example''',
+  ]

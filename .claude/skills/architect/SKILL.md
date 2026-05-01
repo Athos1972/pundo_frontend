@@ -104,11 +104,11 @@ pundo_frontend/
 
 ### API-Proxy (next.config.ts)
 ```
-Browser → /api/v1/:path*  →  http://localhost:8001/api/v1/:path*
-Browser → /brand_logos/:path*  →  http://localhost:8001/brand_logos/:path*
+Browser → /api/v1/:path*  →  http://localhost:8500/api/v1/:path*
+Browser → /brand_logos/:path*  →  http://localhost:8500/brand_logos/:path*
 ```
 
-- **BACKEND_URL** in `.env.local` konfigurierbar (Default: `http://localhost:8001`)
+- **BACKEND_URL** in `.env.local` konfigurierbar (Studio-Default: `http://localhost:8500`)
 - Kein CORS-Problem, da alles durch Next.js proxied wird
 - Alle Backend-API-Typen in `src/types/api.ts` spiegeln
 
@@ -148,7 +148,7 @@ Browser
   ↓ HTTP GET /search?q=Katzenfutter
   Next.js Server
   ↓ fetch('/api/v1/products?q=Katzenfutter')  [server-side]
-  Backend (pundo_main_backend, :8001)
+  Backend (pundo_main_backend, :8500 Studio / :8000 Hetzner)
   ↓ JSON Response
   React Server Component → HTML streamen
   Browser (hydration minimal)

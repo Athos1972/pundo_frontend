@@ -141,7 +141,12 @@ async function runCheck(
   const consoleErrors: string[] = []
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
-      consoleErrors.push(msg.text())
+      const text = msg.text()
+      // SRI integrity failure for the Cloudflare beacon is caused by our own
+      // route.fulfill() interception returning an empty body — not a real production
+      // issue (the beacon loads fine in production). Filter it out.
+      if (text.includes('cloudflareinsights.com') && text.includes('integrity')) return
+      consoleErrors.push(text)
     }
   })
   // Log 4xx/5xx responses to stdout for diagnostics (does not affect PASS/FAIL —

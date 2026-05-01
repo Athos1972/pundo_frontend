@@ -94,7 +94,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               id="plausible-tracker"
               defer
               data-domain={brand.analytics.plausibleDomain}
-              src={`${brand.analytics.plausibleHost}/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js`}
+              src={
+                brand.analytics.plausibleScriptSrc ??
+                `${brand.analytics.plausibleHost}/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js`
+              }
               strategy="afterInteractive"
               nonce={nonce}
             />
@@ -103,7 +106,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               strategy="afterInteractive"
               nonce={nonce}
               dangerouslySetInnerHTML={{
-                __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`,
+                __html: `window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};window.plausible.init=window.plausible.init||function(i){window.plausible.o=i||{}};window.plausible.init()`,
               }}
             />
           </>

@@ -59,6 +59,8 @@ export interface BrandConfig {
   analytics: {
     plausibleDomain?: string
     plausibleHost: string
+    /** Overrides the default script src — use for proxied/obfuscated Plausible scripts */
+    plausibleScriptSrc?: string
   }
 
   features: {

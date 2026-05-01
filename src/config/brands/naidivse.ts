@@ -50,8 +50,9 @@ export const naidivseConfig: BrandConfig = {
   },
 
   analytics: {
-    plausibleDomain: undefined,
+    plausibleDomain: 'naidivse.cy',
     plausibleHost: 'https://plausible.pundo.cy',
+    plausibleScriptSrc: 'https://plausible.pundo.cy/js/pa-8BR5fJSOFpwDfUZaiRcWi.js',
   },
 
   features: {

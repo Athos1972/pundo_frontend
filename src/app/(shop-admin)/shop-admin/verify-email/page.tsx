@@ -8,7 +8,7 @@ interface Props {
 
 async function verifyToken(token: string): Promise<{ ok: boolean }> {
   try {
-    const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+    const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
     const res = await fetch(`${BACKEND}/api/v1/shop-owner/verify-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

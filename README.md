@@ -21,7 +21,7 @@ Gebaut mit **Next.js 16 App Router**, **React 19**, **Tailwind CSS v4** und **Le
 ## Voraussetzungen
 
 - Node.js ≥ 20
-- Ein laufendes Pundo-Backend (API) — Standard: `http://localhost:8001`
+- Ein laufendes Pundo-Backend (API) — Standard: `http://localhost:8500` (Test-Backend)
 
 ---
 
@@ -46,7 +46,7 @@ cp .env.local.example .env.local
 NEXT_PUBLIC_API_URL=/api/v1
 
 # Server-seitige Backend-URL (nur serverseitig, nie im Browser)
-BACKEND_URL=http://localhost:8001
+BACKEND_URL=http://localhost:8500
 ```
 
 > **Hinweis:** Der Dev-Server leitet `/api/v1/*` automatisch an `BACKEND_URL` weiter.  
@@ -54,27 +54,21 @@ BACKEND_URL=http://localhost:8001
 
 ### 3. Dev-Server starten
 
-**Produktions-Instanz** (Port 3000, Backend 8000):
-```bash
-npm run dev
-```
-Öffne [http://localhost:3000](http://localhost:3000) im Browser.
+> **Studio-Konvention:** Dieses Repo läuft am Studio ausschließlich gegen das Test-Backend (Port 8500, DB `pundo_test`). Produktion läuft auf der Hetzner-Maschine. Siehe F6995.
 
-**Test-Instanz** (Port 3500, Backend 8500 — für lokale Entwicklung mit Testdaten):
 ```bash
 npm run dev:test
 ```
 Öffne [http://localhost:3500](http://localhost:3500) im Browser.
 
-> **Port-Konvention:** Produktion läuft auf 3000/8000, Tests auf 3500/8500. Niemals mischen.
+> **Port-Konvention (Plattform):** Produktion (Hetzner) läuft auf 3000/8000/`pundo`, Tests/Studio auf 3500/8500/`pundo_test`. Niemals mischen.
 
 ---
 
 ## Verfügbare Scripts
 
 ```bash
-npm run dev          # Dev-Server Produktion (Port 3000, Backend 8000)
-npm run dev:test     # Dev-Server Test (Port 3500, Backend 8500)
+npm run dev:test     # Dev-Server (Port 3500, Backend 8500, DB pundo_test) — einziger Dev-Befehl am Studio
 npm run build        # Produktions-Build
 npm run start        # Produktions-Server starten
 npm run lint         # ESLint
@@ -131,7 +125,7 @@ BACKEND_URL=http://localhost:8500 npx playwright test
 | `NEXT_PUBLIC_API_URL` | Client + Server | Nein¹ | Relative API-Basis, default `/api/v1` |
 | `ALLOWED_DEV_ORIGINS` | Server (dev only) | Nein | Komma-getrennte zusätzliche Dev-Origins |
 
-¹ Default: `BACKEND_URL=http://localhost:8001`, `NEXT_PUBLIC_API_URL=/api/v1`
+¹ Default: `BACKEND_URL=http://localhost:8500`, `NEXT_PUBLIC_API_URL=/api/v1`
 
 ### E2E-Tests
 

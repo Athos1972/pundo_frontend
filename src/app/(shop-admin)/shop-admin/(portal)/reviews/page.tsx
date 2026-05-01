@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import type { AdminReview } from '@/types/shop-admin'
 import { ReviewModerationTable } from '@/components/shop-admin/ReviewModerationTable'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 async function getAdminReviews(lang: string): Promise<AdminReview[]> {
   const store = await cookies()

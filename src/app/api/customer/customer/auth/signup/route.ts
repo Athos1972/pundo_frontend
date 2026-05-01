@@ -12,7 +12,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyTurnstile } from '@/lib/turnstile-server'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   let body: Record<string, unknown>

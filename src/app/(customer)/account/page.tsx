@@ -56,7 +56,7 @@ async function fetchMyReviews(lang: string): Promise<Review[]> {
   const { cookies } = await import('next/headers')
   const store = await cookies()
   const token = store.get('customer_token')?.value
-  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
   try {
     const res = await fetch(`${BACKEND}/api/v1/customer/reviews/mine`, {
@@ -77,7 +77,7 @@ async function fetchLinkedAccounts(lang: string): Promise<LinkedAccountsResponse
   const { cookies } = await import('next/headers')
   const store = await cookies()
   const token = store.get('customer_token')?.value
-  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
   try {
     const res = await fetch(`${BACKEND}/api/v1/customer/auth/linked-accounts`, {

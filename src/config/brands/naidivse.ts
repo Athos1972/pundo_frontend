@@ -73,7 +73,6 @@ export const naidivseConfig: BrandConfig = {
   nav: [
     { key: 'nav_shops', href: '/shops' },
     { key: 'nav_guides', href: '/guides' },
-    { key: 'nav_community', href: '/community' },
     { key: 'nav_homesick', href: '/nostalgia' },
   ],
 

@@ -11,7 +11,7 @@ import type {
 // Im Browser wird NEXT_PUBLIC_API_URL (relativ, geht durch Caddy/Next-Rewrite) verwendet.
 const BASE =
   typeof window === 'undefined'
-    ? `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1`
+    ? `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1`
     : (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1');
 
 async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Promise<T> {

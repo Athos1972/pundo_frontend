@@ -7,7 +7,7 @@ import { cookies } from 'next/headers'
 import type { AuthUser, CustomerSession } from '@/types/customer'
 import type { Review, ReviewStats, SpottedListResponse } from '@/types/api'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 const BASE = `${BACKEND}/api/v1`
 
 async function apiFetchCustomer<T>(

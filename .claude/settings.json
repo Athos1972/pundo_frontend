@@ -26,7 +26,7 @@
       "Bash(eslint:*)", "Bash(prettier:*)", "Bash(tsc:*)", "Bash(vitest:*)", "Bash(jest:*)",
       "Bash(playwright:*)", "Bash(cypress:*)",
 
-      "Bash(psql:*)", "Bash(pg_dump:*)", "Bash(pg_restore:*)",
+      "Bash(psql:*)", "Bash(pg_dump:*)", "Bash(pg_restore:*)", "Bash(PGPASSWORD=*)",
 
       "Bash(docker:*)", "Bash(docker-compose:*)", "Bash(docker compose:*)",
       "Bash(make:*)", "Bash(just:*)",

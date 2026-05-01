@@ -7,7 +7,7 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 interface RouteContext {
   params: Promise<{ path: string[] }>
@@ -41,9 +41,14 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   const responseHeaders = new Headers()
 
-  // Forward Set-Cookie so login/OAuth can set customer_token on the browser
+  // Forward Set-Cookie so login/OAuth can set customer_token on the browser.
+  // Strip Domain= attribute — the backend may set Domain=.pundo.cy which browsers
+  // reject when the proxy runs on naidivse.cy (cross-domain cookie).
   const setCookie = backendRes.headers.get('set-cookie')
-  if (setCookie) responseHeaders.set('set-cookie', setCookie)
+  if (setCookie) {
+    const stripped = setCookie.replace(/;\s*domain=[^;]*/i, '')
+    responseHeaders.set('set-cookie', stripped)
+  }
 
   const responseContentType = backendRes.headers.get('content-type')
   if (responseContentType) responseHeaders.set('content-type', responseContentType)

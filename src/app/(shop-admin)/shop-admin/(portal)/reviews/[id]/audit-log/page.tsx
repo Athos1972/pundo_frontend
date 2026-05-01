@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import type { AuditLogEntry } from '@/types/shop-admin'
 import Link from 'next/link'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 async function getAuditLog(reviewId: string, lang: string): Promise<AuditLogEntry[]> {
   const store = await cookies()

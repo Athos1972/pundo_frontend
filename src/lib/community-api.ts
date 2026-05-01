@@ -5,7 +5,7 @@
 
 import type { ShopVotesResponse, TrustProfileResponse, VoteUpsertResponse, AttributeType } from '@/types/api'
 
-const SERVER_BASE = `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1`
+const SERVER_BASE = `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1`
 const CLIENT_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1')
 
 function apiBase(): string {

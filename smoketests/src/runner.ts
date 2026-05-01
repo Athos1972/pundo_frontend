@@ -133,14 +133,23 @@ async function runCheck(
   }
 
   const page = await context.newPage()
-  // Block Cloudflare beacon — it triggers a CORS preflight that always fails
-  // because the smoketest's x-smoketest header is not in the beacon's ACAO list.
-  await page.route('**cloudflareinsights.com/**', route => route.abort())
+  // Suppress Cloudflare beacon — aborting causes net::ERR_FAILED console errors,
+  // so fulfill with an empty 204 instead. The beacon CORS preflight fails because
+  // x-smoketest is not in its ACAO list and we cannot change Cloudflare's policy.
+  await page.route('**cloudflareinsights.com/**', route => route.fulfill({ status: 204, body: '' }))
 
   const consoleErrors: string[] = []
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
       consoleErrors.push(msg.text())
+    }
+  })
+  // Log 4xx/5xx responses to stdout for diagnostics (does not affect PASS/FAIL —
+  // only browser-generated "Failed to load resource" messages go into consoleErrors)
+  page.on('response', (response) => {
+    const status = response.status()
+    if (status >= 400) {
+      console.warn(`  [net] HTTP ${status}: ${response.url()}`)
     }
   })
 

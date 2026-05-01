@@ -9,7 +9,7 @@ import type { ActivityResponse } from '@/types/activity'
 
 const BASE =
   typeof window === 'undefined'
-    ? `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1`
+    ? `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1`
     : (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1')
 
 export interface GetActivityParams {

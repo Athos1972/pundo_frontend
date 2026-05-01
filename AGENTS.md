@@ -40,6 +40,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - Wenn Testdaten fehlen aus pundo-datenbank in die pundo_test kopieren
 - Backend-Repo startet Test-Server mit `./scripts/start_test_server.sh` (Port 8500, DB: pundo_test)
 
+> **Studio-Hinweis (F6995, ab 2026-05-01):** Am Studio-MacBook gilt nur die Test-Zeile. Die Prod-Zeile (3000/8000/`pundo`) ist eine Plattform-Referenz für die Hetzner-Maschine — am Studio existiert weder DB `pundo` noch ein Backend auf `:8000`. `npm run dev` wurde entfernt; nur `npm run dev:test` ist gültig.
+
 **Restart-Regeln:**
 
 - Test-Instanzen (Port **3500** / **8500**) dürfen automatisch neu gestartet werden — kein Zögern

@@ -145,9 +145,13 @@ async function assertRedirectTo(
   response: Response | null,
   assert: Extract<Assert, { type: 'redirect-to' }>,
 ): Promise<AssertResult> {
-  // Check final URL after navigation (Playwright follows redirects)
-  const finalUrl = page.url()
   const locationContains = assert['location-contains']
+  // If not already at the target URL, wait up to 8 s for a client-side navigation
+  // (Next.js NEXT_REDIRECT fires after React hydration, which can take > 500 ms)
+  if (!page.url().includes(locationContains)) {
+    await page.waitForURL(url => url.toString().includes(locationContains), { timeout: 8_000 }).catch(() => {})
+  }
+  const finalUrl = page.url()
   const ok = finalUrl.includes(locationContains)
   return {
     ok,

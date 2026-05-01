@@ -19,7 +19,7 @@ import type {
   PriceUnitOption,
 } from '@/types/shop-admin'
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 const BASE = `${BACKEND}/api/v1/shop-owner`
 
 async function apiFetchAdmin<T>(
@@ -133,7 +133,7 @@ export async function getImportStatus(lang: string): Promise<ImportStatus> {
 }
 
 export async function getAdminPriceUnits(lang: string): Promise<PriceUnitOption[]> {
-  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
   const res = await fetch(`${BACKEND}/api/v1/price-units`, {
     headers: { 'Accept-Language': lang },
     cache: 'no-store',
@@ -150,7 +150,7 @@ export async function getAdminPriceUnits(lang: string): Promise<PriceUnitOption[
 // Categories are shared data needed for admin product forms.
 // Fetched via the public /categories endpoint (no auth required).
 export async function getAdminCategories(lang: string): Promise<{ id: number; name: string }[]> {
-  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8001'
+  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
   const res = await fetch(`${BACKEND}/api/v1/categories?limit=200`, {
     headers: { 'Accept-Language': lang },
     cache: 'no-store',

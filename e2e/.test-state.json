@@ -5,7 +5,7 @@
   "shop_address": "Finikoudes Beach, Larnaca, Cyprus",
   "fixtures": {
     "shop_slug": "e2e-test-shop-larnaca",
-    "shop_id": 2214,
+    "shop_id": 2215,
     "product_slugs": {
       "on_request": "e2e-vet-consultation-larnaca",
       "free": "e2e-free-pet-advice",
@@ -13,23 +13,23 @@
       "fixed": "e2e-premium-cat-food-1kg"
     },
     "product_ids": {
-      "e2e-vet-consultation-larnaca": 54069,
-      "e2e-free-pet-advice": 54070,
-      "e2e-bulk-dog-food": 54071,
-      "e2e-premium-cat-food-1kg": 54072
+      "e2e-vet-consultation-larnaca": 54848,
+      "e2e-free-pet-advice": 54849,
+      "e2e-bulk-dog-food": 54850,
+      "e2e-premium-cat-food-1kg": 54851
     }
   },
-  "ownerId": 1,
-  "shopId": 2215,
+  "ownerId": 2,
+  "shopId": 2216,
   "shopSlug": "e2e-test-shop-larnaca-1",
   "storageState": {
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzgyMzY0MzF9.72AxksPD-9LZbTI7SLkQMNtr1wrEXRnnAeddYDwBJ34",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwic2hvcF9pZCI6MjIxNiwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzgyNDUyNjl9.eX8l1ddwXVUb2fV57pBpQ7DibzC42snMJ94N0hKE3k8",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1778236431.35,
+        "expires": 1778245269.856,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"
@@ -37,5 +37,5 @@
     ],
     "origins": []
   },
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3NzgyMzY0MzJ9.rEYialn4Xu1um3jwu8VFNdxP6VtEnvfGBd_Wg4I8aU8"
+  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3NzgyNDUyNzF9.zvgqw-0hUmEZ6Bv_jjR2GLBTHe-Wl0IKjemESmX3y1c"
 }

@@ -47,7 +47,7 @@ export async function getDomains(lang: string, providerType: OnboardingProviderT
   try {
     const res = await fetch(`/api/shop-admin/onboarding/domains?lang=${lang}&type=${providerType}`)
     if (!res.ok) throw new Error('fetch failed')
-    const data = (await res.json()) as OnboardingDomain[]
+    const data = ((await res.json()) as { domains: OnboardingDomain[] }).domains
     cache.set(key, data)
     return data
   } catch {

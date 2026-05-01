@@ -37,7 +37,7 @@ describe('domains.ts', () => {
     ]
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => mockData,
+      json: async () => ({ domains: mockData }),
     }))
     const domains = await getDomains('en', 'dienstleister')
     expect(domains).toEqual(mockData)
@@ -47,7 +47,7 @@ describe('domains.ts', () => {
     const mockData: OnboardingDomain[] = [
       { slug: 'cached', label: 'Cached', specialties: [] },
     ]
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => mockData })
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ domains: mockData }) })
     vi.stubGlobal('fetch', mockFetch)
     await getDomains('de', 'haendler')
     await getDomains('de', 'haendler')
@@ -57,7 +57,7 @@ describe('domains.ts', () => {
   it('does not cache across different providerTypes', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => [] as OnboardingDomain[],
+      json: async () => ({ domains: [] as OnboardingDomain[] }),
     })
     vi.stubGlobal('fetch', mockFetch)
     await getDomains('de', 'handwerker')

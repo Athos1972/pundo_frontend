@@ -1872,3 +1872,49 @@ Ergebnis: **532/532 Unit-Tests PASS, Browser-Checks PASS**
 - `src/app/`: Keine neuen Public-Routes hinzugefügt (Tooltips sind Feature-Verbesserung ohne neue Seiten/Endpoints)
 
 **Fazit:** Docs-Sync abgeschlossen. README.md wurde auf den aktuellen Stand mit korrekten Ports und Test-Count gebracht.
+
+---
+
+## Testlauf 2026-05-01 — F5910 Backend E2E Verifikation
+
+### Feature
+`schnell-onboarding-mobil-20260501` — Backend-Endpoints live, E2E-Verifikation mit echtem Backend auf pundo_test.
+
+### Test-Ergebnisse
+
+| Phase | Ergebnis |
+|---|---|
+| Migration pundo_test (alembic upgrade head) | PASS — Stand: z9n0o1p2q3r4 |
+| Backend-Tests pytest (35 Tests) | 35/35 PASS |
+| Endpoint GET /onboarding/domains | PASS — 3 Domains, 1 Specialty |
+| Endpoint POST /onboarding | PASS — 201 + {user_id, shop_id, status:"pending"} |
+| Journey shop-owner-onboarding (Rerun) | 6/6 PASS — keine Regression |
+| Journey shop-owner-quick-onboarding (Erstlauf) | 1/6 PASS — 5 FAIL (FIX required) |
+
+### Failures
+
+| Test | Status | Root Cause |
+|---|---|---|
+| T1 — Domains-Chips laden | FAIL | Frontend-Bug: `domains.filter is not a function` in `src/lib/onboarding/domains.ts` (falscher JSON-Cast) |
+| T2 — Draft persistence Banner | FAIL | React Hydration Mismatch: `showDraftBanner` in useState-Initializer liest localStorage (nur Client) |
+| T3 — Draft discard | PASS | |
+| T4 — Conditional specialties | FAIL | Gleiche Ursache wie T1 |
+| T5 — Email conflict Login-Link | FAIL | Gleiche Ursache wie T1 |
+| T6 — Progress bar + i18n | FAIL | Test-Authoring: `?lang=de` ändert Sprache nicht — Cookie `app_lang=de` nötig |
+
+### Neue Specs
+
+| Datei | Status |
+|---|---|
+| `e2e/journeys/shop-owner-quick-onboarding.spec.ts` | Neu erstellt (6 Tests) |
+
+### Offene Backend-Lücken (dokumentiert, nicht blockierend)
+
+| Lücke | Status |
+|---|---|
+| `GOOGLE_SHOP_OWNER_REDIRECT_URI` fehlt in `.env.example` | OPEN — muss ergänzt werden |
+| Login NULL `password_hash` guard (OAuth-User + Email-Login = crash) | OPEN |
+
+### Verdict: FIX
+
+`src/lib/onboarding/domains.ts` Zeile 50 muss korrigiert werden (falscher Type-Cast der API-Response). Bis dahin ist Step 2 des Wizard-Flows für alle Nutzer kaputt.

@@ -1,7 +1,8 @@
 ---
 id: shop-owner-quick-onboarding
 title: Shop-Owner Schnell-Onboarding Wizard (F5910)
-status: approved
+status: implemented
+spec-file: e2e/journeys/shop-owner-quick-onboarding.spec.ts
 priority: P1
 owner-agent: coder
 proposed-in-spec: schnell-onboarding-mobil-20260501
@@ -16,15 +17,15 @@ touches-states:
   - OnboardingDraft:partial
   - OnboardingDraft:complete
   - ShopOwner.status:pending_email_verification
-status-changed-at: 2026-05-01T12:55:00Z
+status-changed-at: 2026-05-01T13:15:00Z
 status-changed-by-spec: schnell-onboarding-mobil-20260501
-last-run: 1970-01-01T00:00:00Z
-last-result: N/A
+last-run: 2026-05-01T13:10:00Z
+last-result: 1/6 PASS (5 FAIL — FIX required)
 ---
 
 # Journey: shop-owner-quick-onboarding
 
-**Status:** approved
+**Status:** implemented (spec.ts exists; 5/6 tests FAIL — FIX required)
 **Priority:** P1
 **Proposed in:** schnell-onboarding-mobil-20260501
 
@@ -42,8 +43,8 @@ F5910-specific acceptance criteria for the 6-step onboarding wizard:
 
 - Test backend at port 8500 running
 - Test frontend at port 3500 running
-- `pundo_test` DB seeded
-- Backend endpoint `POST /api/v1/shop-owner/onboarding` live (or MSW mock active)
+- `pundo_test` DB seeded with onboarding domains via Admin API
+- Backend endpoint `POST /api/v1/shop-owner/onboarding` live (confirmed 2026-05-01)
 
 ## Steps
 
@@ -95,3 +96,15 @@ F5910-specific acceptance criteria for the 6-step onboarding wizard:
 - Photo skip is always available (step 5 has "Überspringen" button)
 - OAuth resume (`?resume=oauth`) is covered in shop-owner-onboarding journey T1 variant
 - afterAll cleanup: delete any created shop_owners matching the test email prefix
+
+## Known Failures (2026-05-01)
+
+**T1/T4/T5 FAIL — CRITICAL:** `domains.filter is not a function` in `StepDomains.tsx`.
+Root cause: `src/lib/onboarding/domains.ts` line 50 casts API response as `OnboardingDomain[]`
+but backend returns `{ domains: OnboardingDomain[] }`. Fix: `(await res.json() as { domains: OnboardingDomain[] }).domains`.
+
+**T2 FAIL — HIGH:** React hydration mismatch: `showDraftBanner` in `useState` initializer
+reads `localStorage` which differs between SSR and client. Fix: move to `useEffect`.
+
+**T6 FAIL — TEST-AUTHORING:** `?lang=de` URL param does not switch UI language.
+Language comes from `app_lang` cookie. Fix spec to set cookie instead of URL param.

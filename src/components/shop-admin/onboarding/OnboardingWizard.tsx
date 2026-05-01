@@ -46,9 +46,17 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<Omit<OnboardingDraft, 'version' | 'expiresAt'>>(EMPTY_DRAFT)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  // Lazy init: read draft from localStorage synchronously during first render (no effect needed)
-  const [showDraftBanner, setShowDraftBanner] = useState(() => !resumeOAuth && loadDraft() !== null)
-  const [draftAge] = useState<number>(() => (!resumeOAuth ? (draftAgeMs() ?? 0) : 0))
+  // SSR-safe: start hidden, reveal on client after localStorage read (avoids hydration mismatch)
+  const [showDraftBanner, setShowDraftBanner] = useState(false)
+  const [draftAge, setDraftAge] = useState(0)
+
+  useEffect(() => {
+    if (resumeOAuth) return
+    if (loadDraft() !== null) {
+      setShowDraftBanner(true)
+      setDraftAge(draftAgeMs() ?? 0)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [emailTakenError, setEmailTakenError] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()

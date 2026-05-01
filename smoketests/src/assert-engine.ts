@@ -49,6 +49,8 @@ async function assertSelectorVisible(
 ): Promise<AssertResult> {
   try {
     const locator = page.locator(assert.selector)
+    // Wait up to 8 s for the element to attach — covers async server renders and hydration
+    await locator.first().waitFor({ state: 'attached', timeout: 8_000 }).catch(() => {})
     const count = await locator.count()
     if (count === 0) {
       return {
@@ -218,6 +220,8 @@ async function assertSelectorCountMin(
   assert: Extract<Assert, { type: 'selector-count-min' }>,
 ): Promise<AssertResult> {
   try {
+    // Wait up to 8 s for at least one element to appear before counting
+    await page.locator(assert.selector).first().waitFor({ state: 'attached', timeout: 8_000 }).catch(() => {})
     const count = await page.locator(assert.selector).count()
     const ok = count >= assert.min
     return {

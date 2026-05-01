@@ -345,32 +345,38 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
   // ── T6: Progress bar + i18n ─────────────────────────────────────────────────
 
-  test('T6 — Progress bar + i18n (EN + DE)', async ({ page }) => {
-    // — English —
-    await page.goto(BASE_URL + '/shop-admin/onboarding?lang=en')
-    await page.waitForLoadState('networkidle')
+  test('T6 — Progress bar + i18n (EN + DE)', async ({ context }) => {
+    // — English (app_lang cookie = en, or default) —
+    const enPage = await context.newPage()
+    await context.addCookies([{ name: 'app_lang', value: 'en', domain: 'localhost', path: '/' }])
+    await enPage.goto(BASE_URL + '/shop-admin/onboarding')
+    await enPage.waitForLoadState('networkidle')
 
-    // Progress text "Step 1 of 6"
-    const progressEN = page.locator('p', { hasText: /step 1 of 6/i })
+    // Progress text "Step 1 of 6" (rendered as <p> in wizard)
+    const progressEN = enPage.locator('p', { hasText: /step 1 of 6/i })
     await expect(progressEN.first(), 'T6: "Step 1 of 6" must be visible (EN)').toBeVisible({
       timeout: 10_000,
     })
 
-    // Tile label "Tradesperson" visible
-    const tradespersonTile = page.locator('button', { hasText: /tradesperson/i })
+    // Tile label "Tradesperson" visible (EN provider type label)
+    const tradespersonTile = enPage.locator('button', { hasText: /tradesperson/i })
     await expect(tradespersonTile.first(), 'T6: "Tradesperson" tile must be visible (EN)').toBeVisible()
+    await enPage.close()
 
-    // — German —
-    await page.goto(BASE_URL + '/shop-admin/onboarding?lang=de')
-    await page.waitForLoadState('networkidle')
+    // — German (app_lang cookie = de) —
+    const dePage = await context.newPage()
+    await context.addCookies([{ name: 'app_lang', value: 'de', domain: 'localhost', path: '/' }])
+    await dePage.goto(BASE_URL + '/shop-admin/onboarding')
+    await dePage.waitForLoadState('networkidle')
 
-    const progressDE = page.locator('p', { hasText: /schritt 1 von 6/i })
+    const progressDE = dePage.locator('p', { hasText: /schritt 1 von 6/i })
     await expect(progressDE.first(), 'T6: "Schritt 1 von 6" must be visible (DE)').toBeVisible({
       timeout: 10_000,
     })
 
-    const handwerkerTile = page.locator('button', { hasText: /^handwerker$/i })
+    const handwerkerTile = dePage.locator('button', { hasText: /^handwerker$/i })
     await expect(handwerkerTile.first(), 'T6: "Handwerker" tile must be visible (DE)').toBeVisible()
+    await dePage.close()
   })
 
 })

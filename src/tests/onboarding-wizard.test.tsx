@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { OnboardingWizard } from '@/components/shop-admin/onboarding/OnboardingWizard'
 
 // Mock next/navigation
@@ -55,21 +55,24 @@ describe('OnboardingWizard', () => {
     expect(screen.getByText('Restaurant / Bar')).toBeInTheDocument()
   })
 
-  it('next button disabled until a type is selected', () => {
+  it('auto-advances to step 2 after clicking a provider type tile', async () => {
+    vi.useFakeTimers()
     render(<OnboardingWizard lang="de" />)
-    const nextBtn = screen.getByText('Weiter')
-    expect(nextBtn).toBeDisabled()
     fireEvent.click(screen.getByText('Handwerker'))
-    expect(nextBtn).not.toBeDisabled()
+    // advance the 150 ms debounce and flush all pending async state updates
+    await act(async () => {
+      vi.advanceTimersByTime(200)
+    })
+    vi.useRealTimers()
+    expect(screen.getByText(/Was bietest Du an/i)).toBeInTheDocument()
   })
 
-  it('advances to step 2 after selecting a type and clicking next', async () => {
+  it('shows visual feedback (aria-pressed) when a tile is clicked', () => {
     render(<OnboardingWizard lang="de" />)
-    fireEvent.click(screen.getByText('Handwerker'))
-    fireEvent.click(screen.getByText('Weiter'))
-    await waitFor(() => {
-      expect(screen.getByText(/Was bietest Du an/i)).toBeInTheDocument()
-    })
+    const handwerkerBtn = screen.getByRole('button', { name: /Handwerker/i })
+    expect(handwerkerBtn).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(handwerkerBtn)
+    expect(handwerkerBtn).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('shows progress bar', () => {
@@ -81,7 +84,10 @@ describe('OnboardingWizard', () => {
     render(<OnboardingWizard lang="en" />)
     expect(screen.getByText(/What value do you bring/i)).toBeInTheDocument()
     expect(screen.getByText('Tradesperson')).toBeInTheDocument()
-    expect(screen.getByText('Next')).toBeInTheDocument()
+    // No "Next" button in step 1 — tiles auto-advance on click
+    expect(screen.queryByText('Next')).not.toBeInTheDocument()
+    // Close/back button is present on step 0
+    expect(screen.getByLabelText('Back')).toBeInTheDocument()
   })
 
   it('shows draft banner when a saved draft exists', async () => {

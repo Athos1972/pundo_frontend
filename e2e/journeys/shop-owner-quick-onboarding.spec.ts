@@ -101,17 +101,13 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     })
     expect(await tiles.count(), 'T1: must have exactly 4 provider-type tiles').toBe(4)
 
-    // Click "Handwerker" tile (aria-pressed changes to "true")
+    // Click "Handwerker" tile — auto-advances to step 2 after 150 ms
     const handwerkerTile = page.locator('button[aria-pressed]', {
       hasText: /handwerker|tradesperson/i,
     })
     await handwerkerTile.click()
     await expect(handwerkerTile).toHaveAttribute('aria-pressed', 'true')
-
-    // Click Next — step 2 (Domains) loads
-    const nextBtn = page.locator('button:not([disabled])', { hasText: /next|weiter/i }).first()
-    // Use the last "next" button (the large one at the bottom)
-    await page.locator('button', { hasText: /next|weiter/i }).last().click()
+    // No "Next" button on step 1 — auto-advance fires after 150 ms debounce
 
     // Domain chips must render — wait for elektriker chip (seeded in Step 3)
     const elektrikerChip = page.locator('button, [role="button"]', {
@@ -199,8 +195,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
       timeout: 15_000,
     })
     await handwerkerTile.first().click()
-
-    await page.locator('button', { hasText: /next|weiter/i }).last().click()
+    // Auto-advance: no "Next" button in step 1 — 150 ms timer fires automatically
 
     // Step 2: Wait for domain chips, select "elektriker" (has specialties)
     const elektrikerChip = page.locator('button', { hasText: /electrician|elektriker/i })
@@ -247,7 +242,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     })
     await expect(handwerkerTile.first()).toBeVisible({ timeout: 15_000 })
     await handwerkerTile.first().click()
-    await page.locator('button', { hasText: /next|weiter/i }).last().click()
+    // Auto-advance: tile click triggers step 2 after 150 ms
 
     // Step 2: Select maler (no specialties → goes straight to step 3)
     const malerChip = page.locator('button', { hasText: /painter|maler/i })

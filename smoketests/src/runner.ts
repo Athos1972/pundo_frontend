@@ -292,7 +292,8 @@ async function performLogin(
     // Extract session cookie
     const cookies = await context.cookies()
     const sessionCookie = cookies.find((c) =>
-      c.name === 'session' || c.name === 'access_token' || c.name.includes('auth'),
+      c.name === 'session' || c.name === 'access_token' ||
+      c.name === 'customer_token' || c.name.includes('auth'),
     )
 
     if (sessionCookie) {

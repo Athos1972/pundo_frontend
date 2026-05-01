@@ -16,9 +16,9 @@ const BASE =
 
 async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    next: { revalidate: 3600 },
     ...init,
     headers: { 'Accept-Language': lang, ...(init?.headers ?? {}) },
-    cache: 'no-store',
   });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   return res.json() as Promise<T>;
@@ -39,7 +39,7 @@ export async function searchProducts(
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.offset != null) qs.set('offset', String(params.offset));
   const q = qs.toString();
-  return apiFetch<ProductListResponse>(`/products${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
+  return apiFetch<ProductListResponse>(`/products${q ? `?${q}` : ''}`, lang);
 }
 
 export async function getProduct(slug: string, lang: string): Promise<ProductDetailResponse> {
@@ -82,7 +82,7 @@ export async function getShops(
   if (params.has_own_delivery != null) qs.set('has_own_delivery', String(params.has_own_delivery));
   if (params.is_online_only != null) qs.set('is_online_only', String(params.is_online_only));
   const q = qs.toString();
-  return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, { cache: 'no-store' });
+  return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
 }
 
 export async function getShop(slug: string, lang: string): Promise<ShopDetailResponse> {

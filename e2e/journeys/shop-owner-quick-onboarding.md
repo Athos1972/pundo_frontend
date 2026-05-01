@@ -19,13 +19,13 @@ touches-states:
   - ShopOwner.status:pending_email_verification
 status-changed-at: 2026-05-01T13:15:00Z
 status-changed-by-spec: schnell-onboarding-mobil-20260501
-last-run: 2026-05-01T13:10:00Z
-last-result: 1/6 PASS (5 FAIL — FIX required)
+last-run: 2026-05-01T18:25:00Z
+last-result: 6/6 PASS
 ---
 
 # Journey: shop-owner-quick-onboarding
 
-**Status:** implemented (spec.ts exists; 5/6 tests FAIL — FIX required)
+**Status:** implemented (6/6 PASS)
 **Priority:** P1
 **Proposed in:** schnell-onboarding-mobil-20260501
 

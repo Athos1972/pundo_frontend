@@ -197,6 +197,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     })
   }
 
+  function handleClose() {
+    try { router.back() } catch { router.push('/shop-admin/login') }
+  }
+
   if (showDraftBanner) {
     return (
       <div className="flex flex-col gap-6 p-6">
@@ -217,7 +221,23 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   return (
     <div className="flex flex-col gap-5" dir={rtl ? 'rtl' : 'ltr'}>
       <div className="flex flex-col gap-2 px-1">
-        <p className="text-xs text-gray-400 text-end rtl:text-start">{progressLabel}</p>
+        {/* Header row: back/close on step 0, progress label on the right */}
+        <div className="flex items-center justify-between">
+          {step === 0 ? (
+            <button
+              type="button"
+              onClick={handleClose}
+              aria-label={tr.onboarding_close}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors rtl:flex-row-reverse"
+            >
+              <span aria-hidden>←</span>
+              <span>{tr.onboarding_close}</span>
+            </button>
+          ) : (
+            <span />
+          )}
+          <p className="text-xs text-gray-400">{progressLabel}</p>
+        </div>
         <OnboardingProgress step={step + 1} total={TOTAL_STEPS} isRtl={rtl} />
       </div>
 
@@ -226,8 +246,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           <StepProviderType
             tr={tr}
             selected={draft.providerType}
-            onSelect={t => setDraft(d => ({ ...d, providerType: t }))}
-            onNext={() => handleStep1Next(draft.providerType!)}
+            onAutoSelect={handleStep1Next}
           />
         )}
         {step === 1 && draft.providerType && (

@@ -120,7 +120,7 @@ async function runCheck(
       const url = new URL(brand.base_url)
       await context.addCookies([
         {
-          name: 'session',
+          name: 'customer_token',
           value: loginCookie,
           domain: url.hostname,
           path: '/',
@@ -133,6 +133,10 @@ async function runCheck(
   }
 
   const page = await context.newPage()
+  // Block Cloudflare beacon — it triggers a CORS preflight that always fails
+  // because the smoketest's x-smoketest header is not in the beacon's ACAO list.
+  await page.route('**cloudflareinsights.com/**', route => route.abort())
+
   const consoleErrors: string[] = []
   page.on('console', (msg) => {
     if (msg.type() === 'error') {

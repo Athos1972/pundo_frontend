@@ -40,6 +40,7 @@ export default async function GuideDetailPage({ params }: Props) {
     mobilität: tr.category_mobilität,
     haustiere: tr.category_haustiere,
     gesundheit: tr.category_gesundheit,
+    wohnen: tr.category_wohnen,
   }
 
   const allGuides = getGuides(lang)

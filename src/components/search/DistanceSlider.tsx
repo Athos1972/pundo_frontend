@@ -27,7 +27,6 @@ export function DistanceSlider({
         onChange={e => onChange(Number(e.target.value))}
         // range inputs must always be LTR — browsers render them inconsistently in RTL
         dir="ltr"
-        style={{ direction: 'ltr' }}
         className="flex-1 accent-accent h-1.5"
         aria-label={tr.distance_label}
         aria-valuemin={MIN}

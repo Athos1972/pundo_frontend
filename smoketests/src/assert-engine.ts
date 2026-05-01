@@ -276,6 +276,11 @@ export async function resolveFirstItem(
   const fullUrl = `${baseUrl}${listPath}`
   await page.goto(fullUrl, { waitUntil: 'domcontentloaded' })
 
+  // Wait for client-side data to load (shop/product lists are fetched via useEffect).
+  // networkidle fires once pending XHR/fetch requests settle — typically after the
+  // first API response populates the list.
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {})
+
   // Try each selector variant (comma-separated)
   const selectors = selector.split(',').map((s) => s.trim())
   for (const sel of selectors) {

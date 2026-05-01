@@ -21,6 +21,7 @@ export default async function GuidesIndexPage() {
     mobilität: tr.category_mobilität,
     haustiere: tr.category_haustiere,
     gesundheit: tr.category_gesundheit,
+    wohnen: tr.category_wohnen,
   }
 
   return (

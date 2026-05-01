@@ -28,7 +28,7 @@ checks:
       - type: selector-visible
         selector: "header img"
       - type: text-from-translations
-        key: hero_title
+        key: footer_about
       - type: no-console-errors
 
   - id: guides-list
@@ -48,7 +48,7 @@ checks:
       - type: text-not-present
         text: "Failed to"
       - type: text-not-present
-        text: "500"
+        text: "Internal Server Error"
 
   - id: guide-detail-sample
     phase: anonymous
@@ -203,4 +203,4 @@ checks:
       - type: status
         expected: 200
       - type: text-from-translations
-        key: hero_title
+        key: footer_about

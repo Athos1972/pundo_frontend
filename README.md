@@ -54,23 +54,32 @@ BACKEND_URL=http://localhost:8001
 
 ### 3. Dev-Server starten
 
+**Produktions-Instanz** (Port 3000, Backend 8000):
 ```bash
 npm run dev
 ```
-
 Öffne [http://localhost:3000](http://localhost:3000) im Browser.
+
+**Test-Instanz** (Port 3500, Backend 8500 — für lokale Entwicklung mit Testdaten):
+```bash
+npm run dev:test
+```
+Öffne [http://localhost:3500](http://localhost:3500) im Browser.
+
+> **Port-Konvention:** Produktion läuft auf 3000/8000, Tests auf 3500/8500. Niemals mischen.
 
 ---
 
 ## Verfügbare Scripts
 
 ```bash
-npm run dev      # Entwicklungsserver (Turbopack, bindet auf 0.0.0.0)
-npm run build    # Produktions-Build
-npm run start    # Produktions-Server starten
-npm run lint     # ESLint
-npm run test     # Unit-Tests (Vitest)
-npm run test:e2e # E2E-Tests (Playwright)
+npm run dev          # Dev-Server Produktion (Port 3000, Backend 8000)
+npm run dev:test     # Dev-Server Test (Port 3500, Backend 8500)
+npm run build        # Produktions-Build
+npm run start        # Produktions-Server starten
+npm run lint         # ESLint
+npm run test         # Unit-Tests (Vitest)
+npm run test:e2e     # E2E-Tests (Playwright)
 ```
 
 ---

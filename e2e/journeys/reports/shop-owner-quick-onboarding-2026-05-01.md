@@ -3,7 +3,7 @@
 **Datum:** 2026-05-01
 **Tester:** e2e-tester skill
 **Spec-File:** `e2e/journeys/shop-owner-quick-onboarding.spec.ts`
-**Verdict: FIX — kritischer Frontend-Bug blockiert T1/T4/T5**
+**Verdict: ✅ SHIP — 6/6 PASS (nach Bug-Fixes)**
 
 ---
 
@@ -69,18 +69,31 @@ Keine Regression durch F5910 Backend-Implementierung.
 
 ---
 
-## Journey-Run: shop-owner-quick-onboarding (Erste Ausführung — Schritt 8)
+## Journey-Run: shop-owner-quick-onboarding (Final — 2026-05-01 18:25)
 
-**1/6 PASS, 5/6 FAIL**
+**6/6 PASS — 7.2s**
 
-| Test | Status | Root Cause |
+| Test | Status |
+|---|---|
+| T1 — GET /domains → Domains-Chips laden | ✅ PASS |
+| T2 — Draft persistence: Banner nach Reload | ✅ PASS |
+| T3 — Draft discard: "Neu beginnen" | ✅ PASS |
+| T4 — Conditional specialties | ✅ PASS |
+| T5 — Email conflict → Login-Link | ✅ PASS |
+| T6 — Progress bar + i18n | ✅ PASS |
+
+### Bug-Fixes die zum 6/6-Ergebnis geführt haben
+
+| Bug | Datei | Fix |
 |---|---|---|
-| T1 — GET /domains → Domains-Chips laden | **FAIL** | Frontend-Bug: `domains.filter is not a function` |
-| T2 — Draft persistence: Banner nach Reload | **FAIL** | React Hydration Mismatch (SSR vs localStorage) |
-| T3 — Draft discard: "Neu beginnen" | **PASS** | — |
-| T4 — Conditional specialties | **FAIL** | Frontend-Bug: selbe Ursache wie T1 |
-| T5 — Email conflict → Login-Link | **FAIL** | Frontend-Bug: selbe Ursache wie T1 |
-| T6 — Progress bar + i18n | **FAIL** | Test-Authoring: `?lang=de` ändert Sprache nicht (Cookie nötig) |
+| `domains.filter is not a function` | `src/lib/onboarding/domains.ts` | API-Response-Cast korrigiert: `res.json()` liefert `{domains:[]}`, nicht `[]` |
+| React Hydration Mismatch | `OnboardingWizard.tsx` | `showDraftBanner` und `draftAge` aus `useState()` in `useEffect()` verschoben |
+| Unit-Tests mockten altes API-Format | `onboarding-domains.test.ts` | Mock-Responses von `json: () => mockData` auf `json: () => ({domains: mockData})` |
+| T6 Sprach-Cookie | E2E-Spec | `?lang=de` → `context.addCookies([{name:'app_lang', value:'de'}])` |
+| T6 Selektor zu strikt | E2E-Spec | `/^handwerker$/i` → `/handwerker/i` (Button enthält Emoji-Prefix) |
+| **Payload camelCase→snake_case** | `src/lib/onboarding/onboardingApi.ts` | **Produktions-Bug**: Frontend sendete `providerType`/`domainSlugs`/`isB2cStorefront` — Backend erwartet snake_case; außerdem fehlten `shop_name`, `credentials.name`, `credentials.type`. Backend antwortete 422 statt 409. Fix: vollständige Payload-Transformation in `submitOnboarding()` |
+| Next.js Dev-Server hing | Infrastruktur | Prozess terminiert und neu gestartet |
+| Onboarding-Domains fehlten in pundo_test | `scripts/prepare_e2e_db.py` | `seed_onboarding_domains()` ergänzt (10 Domains, 1 Specialty Solaranlagen für Elektriker) |
 
 ---
 

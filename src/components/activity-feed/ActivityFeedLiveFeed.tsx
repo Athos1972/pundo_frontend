@@ -24,8 +24,7 @@ export function ActivityFeedLiveFeed({ events, lang }: ActivityFeedLiveFeedProps
 
   return (
     <div
-      className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-none pb-1"
-      style={{ scrollSnapType: 'x mandatory' }}
+      className="flex gap-3 overflow-x-auto scroll-smooth scrollbar-none pb-1 snap-x snap-mandatory"
     >
       {events.map((event) => (
         // Wrapper is the actual flex item — must own shrink-0 + width so the

@@ -137,8 +137,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
           onFocus={() => (hasCategories || hasShops || hasProducts) && setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full h-14 pl-5 pr-14 rounded-xl border border-border bg-surface text-text placeholder-text-light text-base shadow-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
-          style={{ colorScheme: 'light' }}
+          className="w-full h-14 pl-5 pr-14 rounded-xl border border-border bg-surface text-text placeholder-text-light text-base shadow-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition [color-scheme:light]"
         />
         <button
           type="submit"

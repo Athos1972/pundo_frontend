@@ -374,7 +374,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
       timeout: 10_000,
     })
 
-    const handwerkerTile = dePage.locator('button', { hasText: /^handwerker$/i })
+    const handwerkerTile = dePage.locator('button', { hasText: /handwerker/i })
     await expect(handwerkerTile.first(), 'T6: "Handwerker" tile must be visible (DE)').toBeVisible()
     await dePage.close()
   })

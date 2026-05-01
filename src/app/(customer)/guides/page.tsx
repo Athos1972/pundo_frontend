@@ -8,7 +8,14 @@ import { BackButton } from '@/components/ui/BackButton'
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
   const tr = t(lang)
-  return { title: `${tr.page_title_guides} — pundo` }
+  return {
+    title: `${tr.page_title_guides} — pundo`,
+    description: tr.guides_index_subtitle,
+    openGraph: {
+      title: tr.page_title_guides,
+      description: tr.guides_index_subtitle,
+    },
+  }
 }
 
 export default async function GuidesIndexPage() {

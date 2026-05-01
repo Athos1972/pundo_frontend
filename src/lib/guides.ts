@@ -40,6 +40,11 @@ export function getGuide(slug: string, lang: string): GuideContent | null {
   return readMdxFile(slug, lang) ?? readMdxFile(slug, 'en') ?? readMdxFile(slug, 'de')
 }
 
+export function getGuideLanguages(slug: string): string[] {
+  const LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he']
+  return LANGS.filter((lang) => fs.existsSync(path.join(GUIDES_DIR, slug, `${lang}.mdx`)))
+}
+
 export function getGuides(lang: string): GuideMeta[] {
   return getGuideSlugs()
     .map((slug) => getGuide(slug, lang)?.meta ?? null)

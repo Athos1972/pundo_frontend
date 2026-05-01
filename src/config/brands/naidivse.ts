@@ -41,12 +41,12 @@ export const naidivseConfig: BrandConfig = {
 
   meta: {
     title: 'Naidivse — найди·всё',
-    description: 'Finde alles. In der Nähe. Zypern — in deiner Sprache.',
+    description: 'Find everything Cyprus really has. Local shops, services and hidden gems — in your language.',
     siteUrl: 'https://naidivse.cy',
     ogImage: '/brands/naidivse/logo-horizontal.svg',
-    heroTitle: 'Finde alles. In der Nähe.',
-    heroTagline: 'Zypern — in deiner Sprache.',
-    heroText: 'Alle sind hier aus verschiedenen Gründen — und alle suchen verzweifelt nach dem Richtigen.',
+    heroTitle: 'Find everything Cyprus really has.',
+    heroTagline: 'Cyprus — in your language.',
+    heroText: "We all ended up here for different reasons. Naidivse helps you find what you're looking for.",
   },
 
   analytics: {

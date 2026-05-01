@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
+import { getGuide, getGuides, getGuideSlugs, getGuideLanguages } from '@/lib/guides'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideCard } from '@/components/guides/GuideCard'
 import { BackButton } from '@/components/ui/BackButton'
@@ -18,7 +18,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = await getLangServer()
   const guide = getGuide(slug, lang)
   if (!guide) return {}
-  return { title: `${guide.meta.title} — pundo` }
+
+  const { title, description } = guide.meta
+  const siteUrl = 'https://pundo.cy'
+  const availableLangs = getGuideLanguages(slug)
+
+  return {
+    title: `${title} — pundo`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+    },
+    alternates: {
+      canonical: `${siteUrl}/guides/${slug}`,
+      languages: Object.fromEntries(availableLangs.map((l) => [l, `${siteUrl}/guides/${slug}`])),
+    },
+  }
 }
 
 export function generateStaticParams() {
@@ -50,6 +67,27 @@ export default async function GuideDetailPage({ params }: Props) {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: meta.title,
+            description: meta.description,
+            inLanguage: lang,
+            author: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
+            publisher: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
+            breadcrumb: {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Guides', item: 'https://pundo.cy/guides' },
+                { '@type': 'ListItem', position: 2, name: meta.title },
+              ],
+            },
+          }),
+        }}
+      />
       <BackButton fallback="/guides" />
 
       <header className="space-y-2">

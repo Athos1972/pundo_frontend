@@ -11,13 +11,13 @@
   "dependencies": {
     "@playwright/test": "^1.44.0",
     "js-yaml": "^4.1.0",
-    "nodemailer": "^6.9.0",
+    "nodemailer": "^8.0.7",
     "zod": "^3.23.0",
     "tsx": "^4.19.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/nodemailer": "^6.4.0",
+    "@types/nodemailer": "^8.0.0",
     "@types/node": "^20",
     "typescript": "^5",
     "vitest": "^2.0.0"

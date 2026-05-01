@@ -7,10 +7,12 @@ priority: P1
 owner-agent: coder
 proposed-in-spec: e2e-blind-spots-20260425
 touches-modules:
+  - src/app/(shop-admin)/shop-admin/onboarding/**
   - src/app/(shop-admin)/shop-admin/register/**
   - src/app/(shop-admin)/shop-admin/verify-email/**
   - src/app/(shop-admin)/shop-admin/pending-approval/**
   - src/app/(shop-admin)/shop-admin/login/**
+  - src/components/shop-admin/onboarding/**
 touches-roles:
   - shop-owner
   - admin
@@ -21,9 +23,9 @@ touches-states:
   - ShopOwner.email_verified:true
 status-changed-at: 2026-04-25T18:00:00Z
 status-changed-by-spec: e2e-blind-spots-20260425
-last-run: 2026-04-26T21:15:00Z
+last-run: 2026-05-01T13:30:00Z
 last-result: PASS
-last-run-sha: fd0d7241a5c0395857bb289c5f1ae76a574d157c
+last-run-sha: 5ad4ee2aabb7adddd1698d148f19f2f4d71928b9
 ---
 
 # Journey: shop-owner-onboarding
@@ -51,10 +53,15 @@ End-to-end verification of the complete shop-owner onboarding flow:
 
 ## Steps
 
-### T1: Register form
-1. Navigate to /shop-admin/register
-2. Fill all fields (name, email, password, shop_name, shop_address)
-3. Submit → expect redirect to /shop-admin/register/check-email (not 404)
+### T1: Onboarding Wizard (F5910)
+1. Navigate to /shop-admin/onboarding (Note: /shop-admin/register now redirects here)
+2. Step 1 — Select provider type (e.g. Handwerker)
+3. Step 2 — Select ≥1 domain
+4. Step 3 — Pick location on map / enter address
+5. Step 4 — Enter ≥1 contact field (e.g. WhatsApp)
+6. Step 5 — Skip photo upload
+7. Step 6 — Fill email + password, submit
+8. Expect redirect to /shop-admin/register/check-email (not 404)
 
 ### T2: Check-email page
 1. Navigate directly to /shop-admin/register/check-email

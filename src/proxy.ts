@@ -22,6 +22,8 @@ import { getBrandConfig } from '@/config/brands'
 const PUBLIC_SHOP_ADMIN_PATHS = [
   '/shop-admin/login',
   '/shop-admin/register',
+  '/shop-admin/onboarding',
+  '/shop-admin/auth/callback',
   '/shop-admin/verify-email',
 ]
 

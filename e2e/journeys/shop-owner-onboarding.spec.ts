@@ -96,28 +96,36 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
 
   // ── Test 1: Register form UI ───────────────────────────────────────────────
 
-  test('T1 — Register-Formular ausfüllen + Submit → Redirect auf /register/check-email', async ({ page }) => {
+  test('T1 — /shop-admin/register redirects → Onboarding Wizard lädt → Owner via API anlegen', async ({ page }) => {
+    // 1. Verify /register now redirects to /onboarding (F5910)
     await page.goto(BASE_URL + '/shop-admin/register')
+    await page.waitForURL(/\/shop-admin\/onboarding/, { timeout: 10_000 })
+    expect(page.url(), '/register must redirect to /onboarding').toContain('/shop-admin/onboarding')
+
+    // 2. Wizard smoke: step 1 renders with 4 provider-type tiles
+    // Use aria-pressed (language-agnostic) — tiles start unselected (aria-pressed="false")
+    const typeTiles = page.locator('button[aria-pressed]')
+    await expect(typeTiles.first(), 'Step 1: at least one provider-type tile must render').toBeVisible({ timeout: 15_000 })
+    const tileCount = await typeTiles.count()
+    expect(tileCount, 'Step 1: must have exactly 4 provider-type tiles').toBe(4)
+
+    // 3. Register the owner via backend API so T3-T6 can test the verification flow.
+    //    (POST /api/v1/shop-owner/onboarding is not live yet — use legacy /register endpoint)
+    const regRes = await apiFetch('POST', '/api/v1/shop-owner/register', {
+      name: ctx.name,
+      email: ctx.email,
+      password: ctx.password,
+      shop_name: ctx.shopName,
+      shop_address: ctx.shopAddress,
+    })
+    expect([200, 201], 'Shop-owner registration via API must succeed').toContain(regRes.status)
+
+    // 4. Navigate to check-email page — it must render (no 404)
+    await page.goto(BASE_URL + '/shop-admin/register/check-email')
     await page.waitForLoadState('networkidle')
+    expect(page.url(), '/register/check-email must not 404').not.toContain('not-found')
 
-    // Fill the registration form
-    await page.fill('input[name="name"]', ctx.name)
-    await page.fill('input[name="email"]', ctx.email)
-    await page.fill('input[name="password"]', ctx.password)
-    await page.fill('input[name="shop_name"]', ctx.shopName)
-    await page.fill('input[name="shop_address"]', ctx.shopAddress)
-
-    await page.click('button[type="submit"]')
-
-    // Expect redirect to check-email (not 404!)
-    await page.waitForURL(/\/shop-admin\/register\/check-email/, { timeout: 15_000 })
-
-    const url = page.url()
-    expect(url, 'Must redirect to /register/check-email after submit').toContain('/register/check-email')
-    expect(url, '/register/check-email must not 404').not.toContain('not-found')
-    expect(url, '/register/check-email must not 404').not.toContain('404')
-
-    // Also confirm the admin knows about this owner (needed for ownerId)
+    // Resolve owner ID for cleanup
     ctx.adminToken = await getAdminToken()
     const listRes = await apiFetch('GET', '/api/v1/admin/shop-owners?limit=100', undefined, {
       Cookie: `admin_token=${ctx.adminToken}`,

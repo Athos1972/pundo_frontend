@@ -13,10 +13,10 @@
       "fixed": "e2e-premium-cat-food-1kg"
     },
     "product_ids": {
-      "e2e-vet-consultation-larnaca": 54063,
-      "e2e-free-pet-advice": 54064,
-      "e2e-bulk-dog-food": 54065,
-      "e2e-premium-cat-food-1kg": 54066
+      "e2e-vet-consultation-larnaca": 54069,
+      "e2e-free-pet-advice": 54070,
+      "e2e-bulk-dog-food": 54071,
+      "e2e-premium-cat-food-1kg": 54072
     }
   },
   "ownerId": 1,
@@ -26,10 +26,10 @@
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzgxNzA4MDR9.z5m-eCfWfcXpM6WLMcpcAYwrJivB9fxzKNYhizSEVJM",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzgyMzY0MzF9.72AxksPD-9LZbTI7SLkQMNtr1wrEXRnnAeddYDwBJ34",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1778170804.92,
+        "expires": 1778236431.35,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"
@@ -37,5 +37,5 @@
     ],
     "origins": []
   },
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3NzgxNzA4MDZ9.n817DE46aGz8xARInFAu3CafxwqmANHxBGjkHXn5RMc"
+  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3NzgyMzY0MzJ9.rEYialn4Xu1um3jwu8VFNdxP6VtEnvfGBd_Wg4I8aU8"
 }

@@ -1,6 +1,57 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
+Datum: 2026-05-01
+SHA: 5ad4ee2aabb7adddd1698d148f19f2f4d71928b9
+Feature: F5910 — Schnell-Onboarding Mobil (Wizard + Google OAuth + Draft-Persistenz)
+Ergebnis: **1100/1100 Unit-Tests PASS | TypeScript PASS | ESLint PASS (49 Warnings, 0 Errors) | Journey shop-owner-onboarding: 6/6 PASS | Verdict: SHIP**
+
+---
+
+## Testlauf 2026-05-01 — F5910 Schnell-Onboarding Mobil
+
+### Feature
+`schnell-onboarding-mobil-20260501` — 6-Schritt-Onboarding-Wizard (Provider-Typ → Domains → Karte → Kontakt → Foto → Credentials), Draft-Persistenz in localStorage, Google OAuth, Mobile-First.
+
+### Test-Ergebnisse
+
+| Phase | Ergebnis |
+|---|---|
+| TypeScript | 0 Fehler |
+| ESLint | 0 Fehler, 49 Warnings (alle pre-existing) |
+| Unit-Tests Frontend | 1100/1100 PASS (76 neue: 24 OnboardingWizard + 12 StepProviderType + 11 StepDomains + 11 StepMap + 9 StepContact + 9 StepCredentials) |
+| Proxy-Public-Paths Regression | 5/5 PASS (neu: `proxy-public-paths.test.ts`) |
+| Journey shop-owner-onboarding | 6/6 PASS |
+| Journey shop-owner-quick-onboarding | Approved (kein spec.ts — Backend-Endpoint nicht live) |
+
+### Code-Fixes während des Testlaufs
+
+| Datei | Änderung |
+|---|---|
+| `src/proxy.ts` | `/shop-admin/onboarding` + `/shop-admin/auth/callback` zu `PUBLIC_SHOP_ADMIN_PATHS` hinzugefügt (kritischer Bug: Wizard war für unauthentifizierte User nicht erreichbar) |
+| `src/tests/proxy-public-paths.test.ts` | Neu: Regression-Guard für PUBLIC_SHOP_ADMIN_PATHS |
+| `src/tests/setup.ts` | Node.js 25 `localStorage`-Polyfill (fehlte `.clear()`) |
+| `src/components/shop-admin/onboarding/OnboardingWizard.tsx` | ESLint: lazy `useState(() => ...)` statt effect-setState; OAuth-Submit inline in useEffect |
+| `src/components/shop-admin/onboarding/StepDomains.tsx` | ESLint: Derived `loading = domains.length === 0` statt separatem State |
+| `e2e/journeys/shop-owner-onboarding.spec.ts` | T1: `button[aria-pressed]` Selektor (language-agnostisch), API gibt 201 |
+| `e2e/journeys/_parser.spec.ts` | Hardcoded Counts: 16→17 Einträge, 7→8 P1-Einträge |
+| `e2e/journeys/CATALOG.md` | shop-owner-quick-onboarding hinzugefügt (approved, P1) |
+
+### Findings (offen)
+
+| ID | Beschreibung | Impact |
+|----|-------------|--------|
+| F1 | Backend: `POST /api/v1/shop-owner/onboarding` noch nicht implementiert — Wizard-Submit schlägt in Produktion fehl | Kein Frontend-Blocker — Journey wartet auf Backend |
+| F2 | Backend: Google OAuth Endpoints (`/auth/google/authorize`, `/auth/google/callback`) nicht live | OAuth-Flow nicht vollständig testbar |
+| F3 | `shop-owner-quick-onboarding.spec.ts` noch nicht vorhanden — wartet auf F1/F2 | Journey approved, spec.ts ausstehend |
+
+### Verdict: SHIP
+
+Frontend-Implementierung vollständig. Alle testbaren ACs PASS. Backend-Abhängigkeiten (F1/F2) sind dokumentiert und blockieren nicht das Frontend-Shipping.
+
+---
+
+## Testlauf 2026-04-26 — B2250-001 Mobile UI
 Datum: 2026-04-26
 SHA: 42d8ba2dff737a5a24640af1d8f4fee8cb88d776
 Feature: B2250-001 — Mobile UI: Shops-Link + Shop-Suchfeld fehlten

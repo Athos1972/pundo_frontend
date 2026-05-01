@@ -20,6 +20,7 @@
 | [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow | implemented | P2 | PASS |
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
+| [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | approved | P1 | — |
 | [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P2 | PASS |
 | [shop-admin-offer-product](shop-admin-offer-product.md) | Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix) — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-product-offer-ui](shop-admin-product-offer-ui.md) | Shop-Admin Produkt + Angebot anlegen (UI Golden Path) — DEPRECATED | deprecated | P2 | — |
@@ -46,6 +47,7 @@
 | customer-discovery | **Yes** | `home-anon`, `search-anon`, `shops-anon` |
 | customer-and-review-lifecycle | Yes (read only) | `profile-after-login`, `login-flow` |
 | shop-owner-onboarding | No — writes + registers | — |
+| shop-owner-quick-onboarding | No — writes + registers | — |
 | shop-owner-lifecycle | No — shop-admin scope, V1 scope | — |
 | shop-owner-full-lifecycle | No — shop-admin scope, V1 scope | — |
 | admin-data-management | No — admin area | — |

@@ -290,3 +290,60 @@ export interface SocialLinkFieldError {
   resolved_host?: string | null
   via_shortener?: boolean
 }
+
+// ─── Quick Onboarding (F5910) ─────────────────────────────────────────────────
+
+export type OnboardingProviderType = 'handwerker' | 'dienstleister' | 'haendler' | 'gastro'
+
+export interface OnboardingSpecialty {
+  slug: string
+  label: string
+}
+
+export interface OnboardingDomain {
+  slug: string
+  label: string
+  specialties: OnboardingSpecialty[]
+}
+
+export interface OnboardingContact {
+  phone?: string
+  whatsapp?: string
+  businessEmail?: string
+  instagram?: string
+  telegram?: string
+  facebook?: string
+  website?: string
+}
+
+export interface OnboardingLocation {
+  lat: number
+  lng: number
+  address: string
+  isB2cStorefront: boolean
+}
+
+export interface OnboardingDraft {
+  version: 1
+  expiresAt: number
+  providerType: OnboardingProviderType | null
+  domainSlugs: string[]
+  specialtySlugs: string[]
+  location: OnboardingLocation | null
+  contact: OnboardingContact
+}
+
+export interface OnboardingSubmitPayload {
+  providerType: OnboardingProviderType
+  domainSlugs: string[]
+  specialtySlugs: string[]
+  location: OnboardingLocation
+  contact: OnboardingContact
+  credentials: { email: string; password: string } | { type: 'google' }
+}
+
+export interface OnboardingSubmitResponse {
+  user_id: number
+  shop_id: number
+  status: string
+}

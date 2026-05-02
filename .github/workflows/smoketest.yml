@@ -2,8 +2,7 @@ name: Production Smoketest
 
 # Triggers:
 #   1. Manual dispatch (workflow_dispatch) — also triggered by deploy workflow
-#   2. Schedule: every 6 hours as a safety net
-#   3. repository_dispatch from Hetzner deploy hook
+#   2. repository_dispatch from Hetzner deploy hook
 #
 # Required GitHub Secrets:
 #   # Secret: SMOKETEST_USER           — smoketest@pundo.cy
@@ -28,10 +27,6 @@ on:
       sha:
         description: Commit SHA of the deployment (for report footer, optional)
         required: false
-
-  schedule:
-    # Every 6 hours — catches issues between deploys
-    - cron: '0 */6 * * *'
 
   repository_dispatch:
     # Triggered by Hetzner deploy hook via curl (see smoketests/README.md)

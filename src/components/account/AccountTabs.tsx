@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { t } from '@/lib/translations'
 import { ProfileTab } from './ProfileTab'
 import { SecurityTab } from './SecurityTab'
@@ -25,6 +27,8 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
   const tr = t(lang)
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [user, setUser] = useState<AuthUser>(initialUser)
+  const pathname = usePathname()
+  const isMcpActive = pathname?.includes('/account/mcp') ?? false
 
   function handleUserChange(updated: Partial<AuthUser>) {
     setUser((prev) => ({ ...prev, ...updated }))
@@ -38,6 +42,15 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
     { id: 'trust', label: tr.trust_tab },
     { id: 'danger', label: tr.account_tab_danger },
   ]
+
+  const tabButtonClass = (active: boolean, isDanger = false) =>
+    [
+      'text-sm font-medium px-3 py-2 rounded-lg whitespace-nowrap transition-colors text-start',
+      active ? 'bg-accent text-white' : 'text-text-muted hover:bg-surface-alt hover:text-text',
+      isDanger && !active ? 'text-red-500 hover:text-red-600' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -55,21 +68,18 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
             aria-controls={`tabpanel-${tab.id}`}
             id={`tab-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
-            className={[
-              'text-sm font-medium px-3 py-2 rounded-lg whitespace-nowrap transition-colors text-start',
-              activeTab === tab.id
-                ? 'bg-accent text-white'
-                : 'text-text-muted hover:bg-surface-alt hover:text-text',
-              tab.id === 'danger' && activeTab !== 'danger'
-                ? 'text-red-500 hover:text-red-600'
-                : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+            className={tabButtonClass(activeTab === tab.id, tab.id === 'danger')}
           >
             {tab.label}
           </button>
         ))}
+        {/* MCP / AI Agents — eigene Seite */}
+        <Link
+          href={`/${lang}/account/mcp`}
+          className={tabButtonClass(isMcpActive)}
+        >
+          {tr.account_tab_mcp}
+        </Link>
       </nav>
 
       {/* Tab panels */}

@@ -1,0 +1,80 @@
+---
+title: "Connect Pundo to Your AI Assistant"
+description: "Link Claude Desktop, Cursor or openclaw to your Pundo account — and let your AI assistant search for products and shops directly."
+category: "plattform"
+icon: "🤖"
+readtime: "4"
+slug: "pundo-mcp-server"
+lang: "en"
+published: true
+---
+
+# Connect Pundo to Your AI Assistant
+
+![A laptop with an open AI assistant next to a frappé on a sunny Larnaca terrace](/images/guides/pundo-mcp-server.png)
+
+You ask your AI assistant: "Where can I find Russian honey in Larnaca?" — and instead of a guess, it comes back with real shops and prices from Pundo. This isn't a future feature. It works today.
+
+## What is the Pundo MCP Server?
+
+MCP stands for **Model Context Protocol** — an open standard that lets AI agents pull data from external sources. Pundo runs its own MCP server at `mcp.pundo.cy`.
+
+In plain terms: your AI assistant can search Pundo directly, without you opening the app.
+
+<InfoBox type="info">
+  The MCP server provides read-only access — search for products, shops and categories. No ordering, no writing.
+</InfoBox>
+
+## Which AI agents are supported?
+
+The Pundo MCP server currently works with:
+
+<ComparisonTable
+  headers={["Agent", "Version", "Platform"]}
+  rows={[
+    { label: "Claude Desktop", col1: "All current", col2: "Mac, Windows" },
+    { label: "Cursor", col1: "0.40 and above", col2: "Mac, Windows, Linux" },
+    { label: "openclaw", col1: "All versions", col2: "Mac" },
+  ]}
+/>
+
+Any MCP-capable client with Streamable HTTP support will work — and the list keeps growing.
+
+## Connect in three steps
+
+No API key to copy, no technical setup required. All you need is a Pundo account.
+
+<StepList steps={[
+  "Open your AI agent (e.g. Claude Desktop) and go to Settings → MCP → Add Server",
+  "Enter the URL: https://mcp.pundo.cy — that's it",
+  "On first connection, a browser window opens. Log in with your Pundo account and click 'Allow'"
+]} />
+
+Once authorised, the connection is saved. You won't be asked to log in again.
+
+<InfoBox type="tip">
+  You can disconnect at any time under **My Account → AI Agents** — useful if you're passing on a device.
+</InfoBox>
+
+## What can you ask?
+
+Once Pundo is connected, your agent can handle questions like:
+
+- "Which shops in Larnaca sell organic olive oil?"
+- "How does the price of halloumi compare across different shops?"
+- "Show me pet food near me"
+- "Is there a Russian grocery store in Limassol?"
+
+The agent searches Pundo in real time and returns shop names, addresses and prices — right in the chat.
+
+## Usage limits
+
+The Pundo MCP server is free to use. There's a fair-use limit of **500 requests per day** per account — well above what normal use requires.
+
+<InfoBox type="info">
+  The limit applies per Pundo account, not per device. You can use the same account across multiple devices.
+</InfoBox>
+
+## Managing your connections
+
+Under **My Account → AI Agents** you can see which clients are connected and when they were last active. Disconnect any of them with a single click.

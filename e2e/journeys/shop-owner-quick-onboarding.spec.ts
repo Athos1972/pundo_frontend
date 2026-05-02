@@ -244,11 +244,19 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await handwerkerTile.first().click()
     // Auto-advance: tile click triggers step 2 after 150 ms
 
-    // Step 2: Select maler (no specialties → goes straight to step 3)
+    // Step 2: Select maler (may have specialties in seed — handle sub-step if it appears)
     const malerChip = page.locator('button', { hasText: /painter|maler/i })
     await expect(malerChip.first()).toBeVisible({ timeout: 10_000 })
     await malerChip.first().click()
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
+
+    // If specialties sub-step appeared instead of Step 3, click through it
+    const locationTitle = page.locator('h2', { hasText: /located|wo bist/i })
+    try {
+      await expect(locationTitle.first()).toBeVisible({ timeout: 2_000 })
+    } catch {
+      await page.locator('button', { hasText: /next|weiter/i }).last().click()
+    }
 
     // Step 3: Location — set address directly in the text field and pin via coordinates
     // The map is dynamically loaded; fill address field and force a pin via JS injection

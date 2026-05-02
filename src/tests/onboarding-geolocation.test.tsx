@@ -12,10 +12,11 @@
  * - GPS button click → pin placed + pinSource = 'gps' (AC-button)
  * - Translations: denied hint present in all 6 languages
  */
+import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { tAdmin } from '@/lib/shop-admin-translations'
-import { ZOOM_OVERVIEW, ZOOM_FALLBACK, ZOOM_STREET } from '@/components/shop-admin/onboarding/OnboardingMapInner'
+import { ZOOM_OVERVIEW, ZOOM_FALLBACK, ZOOM_STREET } from '@/components/shop-admin/onboarding/mapConstants'
 
 // ─── Mock next/dynamic (so OnboardingMapInner renders synchronously) ─────────
 vi.mock('next/dynamic', () => ({
@@ -35,40 +36,39 @@ const capturedProps: {
   initialZoom: unknown
 }[] = []
 
-vi.mock('@/components/shop-admin/onboarding/OnboardingMapInner', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/shop-admin/onboarding/OnboardingMapInner')>()
-  return {
-    ...actual,
-    OnboardingMapInner: (props: {
-      pin: unknown
-      pinSource: unknown
-      initialCenter: unknown
-      initialZoom: unknown
-      onPinDrop: (lat: number, lng: number) => void
-    }) => {
-      capturedProps.push({
-        pin: props.pin,
-        pinSource: props.pinSource,
-        initialCenter: props.initialCenter,
-        initialZoom: props.initialZoom,
-      })
-      return (
-        <div
-          data-testid="map"
-          data-pin={JSON.stringify(props.pin)}
-          data-pin-source={String(props.pinSource)}
-          data-initial-center={JSON.stringify(props.initialCenter)}
-          data-initial-zoom={String(props.initialZoom)}
-          onClick={(e) => {
-            // Allow tests to simulate map clicks
-            const rect = (e.target as HTMLElement).getBoundingClientRect()
-            props.onPinDrop(rect.left, rect.top)
-          }}
-        />
-      )
-    },
-  }
-})
+// Synchronous factory so import('./OnboardingMapInner') resolves in the same
+// microtask tick inside the next/dynamic mock — avoids the pre-load timing
+// issue that arose when StepLocation lost its static import of this module.
+vi.mock('@/components/shop-admin/onboarding/OnboardingMapInner', () => ({
+  OnboardingMapInner: (props: {
+    pin: unknown
+    pinSource: unknown
+    initialCenter: unknown
+    initialZoom: unknown
+    onPinDrop: (lat: number, lng: number) => void
+  }) => {
+    capturedProps.push({
+      pin: props.pin,
+      pinSource: props.pinSource,
+      initialCenter: props.initialCenter,
+      initialZoom: props.initialZoom,
+    })
+    return (
+      <div
+        data-testid="map"
+        data-pin={JSON.stringify(props.pin)}
+        data-pin-source={String(props.pinSource)}
+        data-initial-center={JSON.stringify(props.initialCenter)}
+        data-initial-zoom={String(props.initialZoom)}
+        onClick={(e) => {
+          // Allow tests to simulate map clicks
+          const rect = (e.target as HTMLElement).getBoundingClientRect()
+          props.onPinDrop(rect.left, rect.top)
+        }}
+      />
+    )
+  },
+}))
 
 // ─── Import StepLocation after mocks ─────────────────────────────────────────
 import { StepLocation } from '@/components/shop-admin/onboarding/StepLocation'

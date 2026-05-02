@@ -1,0 +1,80 @@
+---
+title: "Pundo mit KI-Agenten verbinden"
+description: "Verbinde Claude Desktop, Cursor oder openclaw mit deinem Pundo-Konto — und lass deinen KI-Assistenten direkt nach Produkten und Shops suchen."
+category: "plattform"
+icon: "🤖"
+readtime: "4"
+slug: "pundo-mcp-server"
+lang: "de"
+published: true
+---
+
+# Pundo mit KI-Agenten verbinden
+
+![Ein Laptop mit geöffnetem KI-Assistenten neben einem Frappé, sonnige Terrasse in Larnaca](/images/guides/pundo-mcp-server.png)
+
+Du fragst deinen KI-Assistenten: „Wo finde ich in Larnaca russischen Honig?" — und er antwortet nicht mit einer Vermutung, sondern mit echten Shops und Preisen aus Pundo. Das ist kein Zukunftsszenario. Das geht jetzt.
+
+## Was ist der Pundo MCP-Server?
+
+MCP steht für **Model Context Protocol** — ein offener Standard, damit KI-Agenten auf externe Datenquellen zugreifen können. Pundo bietet einen eigenen MCP-Server unter `mcp.pundo.cy` an.
+
+Das bedeutet: Dein KI-Assistent kann direkt in Pundo suchen, ohne dass du die App öffnen musst.
+
+<InfoBox type="info">
+  Der MCP-Server bietet Lesezugriff — Suche nach Produkten, Shops und Kategorien. Keine Bestellungen, kein Schreiben.
+</InfoBox>
+
+## Welche KI-Agenten werden unterstützt?
+
+Aktuell funktioniert der Pundo MCP-Server mit:
+
+<ComparisonTable
+  headers={["Agent", "Version", "Plattform"]}
+  rows={[
+    { label: "Claude Desktop", col1: "Alle aktuellen", col2: "Mac, Windows" },
+    { label: "Cursor", col1: "Ab 0.40", col2: "Mac, Windows, Linux" },
+    { label: "openclaw", col1: "Alle", col2: "Mac" },
+  ]}
+/>
+
+Jeder MCP-fähige Client mit Streamable HTTP Support funktioniert — die Liste wächst.
+
+## Verbinden in drei Schritten
+
+Kein API-Key kopieren, kein technisches Setup. Du brauchst nur deinen Pundo-Account.
+
+<StepList steps={[
+  "Öffne deinen KI-Agenten (z. B. Claude Desktop) und gehe zu Einstellungen → MCP → Server hinzufügen",
+  "Trage die URL ein: https://mcp.pundo.cy — das ist alles",
+  "Beim ersten Verbinden öffnet sich ein Browser-Fenster. Melde dich mit deinem Pundo-Konto an und klicke auf 'Erlauben'"
+]} />
+
+Nach dem Login ist die Verbindung gespeichert. Du wirst nicht wieder nach einem Passwort gefragt.
+
+<InfoBox type="tip">
+  Du kannst die Verbindung jederzeit unter **Mein Konto → KI-Agenten** trennen — zum Beispiel wenn du ein Gerät weitergibst.
+</InfoBox>
+
+## Was kannst du damit fragen?
+
+Sobald Pundo verbunden ist, versteht dein Agent Fragen wie:
+
+- „Welche Shops in Larnaca verkaufen Bio-Olivenöl?"
+- „Was kostet Halloumi im Vergleich zwischen verschiedenen Shops?"
+- „Zeig mir Tiernahrung in meiner Nähe"
+- „Gibt es einen russischen Lebensmittelladen in Limassol?"
+
+Der Agent sucht in Echtzeit in Pundo und gibt dir Shop-Name, Adresse und Preis — direkt im Chat.
+
+## Nutzungslimits
+
+Der Pundo MCP-Server ist kostenlos. Aktuell gilt ein Fair-Use-Limit von **500 Anfragen pro Tag** pro Account — mehr als genug für den normalen Gebrauch.
+
+<InfoBox type="info">
+  Das Limit gilt pro Pundo-Account, nicht pro Gerät. Du kannst den gleichen Account auf mehreren Geräten nutzen.
+</InfoBox>
+
+## Verbindung verwalten
+
+Unter **Mein Konto → KI-Agenten** siehst du, welche Clients verbunden sind und wann sie zuletzt aktiv waren. Von dort aus kannst du einzelne Verbindungen mit einem Klick trennen.

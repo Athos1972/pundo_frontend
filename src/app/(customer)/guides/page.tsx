@@ -30,6 +30,7 @@ export default async function GuidesIndexPage() {
     gesundheit: tr.category_gesundheit,
     wohnen: tr.category_wohnen,
     finanzen: tr.category_finanzen,
+    plattform: tr.category_plattform,
   }
 
   return (

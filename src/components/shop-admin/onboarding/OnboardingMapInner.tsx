@@ -15,12 +15,9 @@ const icon = L.icon({
   shadowSize: [41, 41],
 })
 
-// ─── Zoom constants ───────────────────────────────────────────────────────────
-export const ZOOM_OVERVIEW = 9   // GPS denied / timeout — country/region overview
-export const ZOOM_FALLBACK = 13  // GPS granted but inaccurate (accuracy > 1000m)
-export const ZOOM_STREET = 17    // GPS precise / draft-pin / address search result
+import { ZOOM_STREET, type PinSource } from './mapConstants'
 
-export type PinSource = 'click' | 'search' | 'gps' | 'initial' | null
+export type { PinSource }
 
 interface Props {
   pin: [number, number] | null

@@ -1,0 +1,6 @@
+2026-05-02T20:00:00+03:00
+SHA: 383c33f
+Feature: B5910-001 Nachtest
+Visual Smoke: 8/8 PASS
+Journey shop-owner-quick-onboarding: 5/6 PASS (T5 pre-existing spec-bug)
+Verdict: SHIP

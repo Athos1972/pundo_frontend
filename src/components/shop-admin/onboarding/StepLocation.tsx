@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { OnboardingLocation } from '@/types/shop-admin'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
-import { ZOOM_OVERVIEW, ZOOM_FALLBACK, ZOOM_STREET, type PinSource } from './OnboardingMapInner'
+import { ZOOM_OVERVIEW, ZOOM_FALLBACK, ZOOM_STREET, type PinSource } from './mapConstants'
 
 const OnboardingMapInner = dynamic(
   () => import('./OnboardingMapInner').then(m => ({ default: m.OnboardingMapInner })),

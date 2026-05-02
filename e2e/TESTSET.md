@@ -2,9 +2,43 @@
 
 ## Letzter Testlauf
 Datum: 2026-05-02
-SHA: f8a314f
-Feature: B5910-001 — Onboarding-Karte Geolokalisierung & Zoom
-Ergebnis: **14/14 neue Unit-Tests PASS | 1119/1119 Unit-Tests PASS | TypeScript sauber (geänderte Dateien) | ESLint sauber (geänderte Dateien) | Visual Smoke BLOCKED (Dev-Server-Überlastung, pre-existing) | Playwright Quick-Onboarding nicht auswertbar (Setup-Timeout) | AC-8-Regression per Unit-Test abgesichert | Verdict: SHIP**
+SHA: 383c33f
+Feature: B5910-001 Nachtest — Onboarding-Karte Geolokalisierung & Zoom (Visual Smoke + Playwright Journey)
+Ergebnis: **Visual Smoke 8/8 PASS | Journey shop-owner-quick-onboarding 5/6 PASS (T5 pre-existing spec-bug — maler-lackierer hat Specialties) | B5910-001 Verdict: SHIP**
+
+---
+
+## Nachtest 2026-05-02 — B5910-001 (Visual Smoke + Playwright Journey)
+
+### Anlass
+Vorheriger Lauf hatte Visual Smoke und Playwright Journey als BLOCKED (Dev-Server-Überlastung). Nachtest mit laufendem Dev-Server auf Port 3500 und Backend auf Port 8500.
+
+### Test-Ergebnisse
+
+| Phase | Ergebnis |
+|---|---|
+| Precondition: Port 3500 | HTTP 200 — OK |
+| Precondition: Port 8500 | HTTP 200 — OK |
+| Visual Smoke (8 Tests) | **8/8 PASS** |
+| Journey shop-owner-quick-onboarding T1 | **PASS** — Wizard + Domains-Chips geladen |
+| Journey shop-owner-quick-onboarding T2 | **PASS** — Draft-Banner + Resume |
+| Journey shop-owner-quick-onboarding T3 | **PASS** — Draft-Discard, leerer Wizard |
+| Journey shop-owner-quick-onboarding T4 | **PASS** — Elektriker Specialties Sub-Step |
+| Journey shop-owner-quick-onboarding T5 | **FAIL (pre-existing)** — maler-lackierer hat Specialties (aussen/innen/tapezieren) im Seed; Test nimmt an: keine Specialties → Skip zu Step 3. Kein Bezug zu B5910-001. |
+| Journey shop-owner-quick-onboarding T6 | **PASS** — Progress-Bar + i18n EN/DE |
+
+### Vorbedingung: DB-Seeding
+onboarding_domains war leer in pundo_test (prepare_e2e_db.py war seit letztem Backend-Neustart nicht gelaufen). Manuell nachgeholt via `python scripts/prepare_e2e_db.py` (seed_onboarding_domains Funktion direkt) — 44 Domains + 44 Specialties.
+
+### Findings
+
+| ID | Beschreibung | Bewertung |
+|----|-------------|-----------|
+| T5-BUG | `maler-lackierer` hat Specialties (aussen/innen/tapezieren) laut Seed-Katalog; T5-Spec nimmt an, er hat keine. Nach `Next`-Klick erscheint Specialties-Sub-Step statt Step 3 (Location) → Spec-Bug, nicht Application-Bug. Pre-existing — nicht durch B5910-001 verursacht. Fix: T5 soll Domain ohne Specialties nutzen (z.B. `umzug-transport`) oder explizit durch Sub-Step navigieren. | Nicht blockierend für B5910-001 |
+
+### Verdict: SHIP (B5910-001)
+
+AC-8 (Regression Quick-Onboarding Journey) bestätigt: T1–T4, T6 PASS. T5-Fehler ist ein pre-existing Spec-Bug ohne Bezug zu B5910-001 (betrifft Domain-Selektion in Step 2, nicht GPS/Zoom in Step 3). Visual Smoke 8/8 PASS. B5910-001 ist vollständig validiert.
 
 ---
 

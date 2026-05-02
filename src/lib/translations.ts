@@ -185,6 +185,7 @@ export const translations = {
     category_haustiere: 'Pets',
     category_gesundheit: 'Health',
     category_wohnen: 'Living',
+    category_finanzen: 'Finance',
     // Hero
     hero_title_pundo: 'Discover what Cyprus really has.',
     hero_title_naidivse: 'Find everything Cyprus really has.',
@@ -566,6 +567,7 @@ export const translations = {
     category_haustiere: 'Haustiere',
     category_gesundheit: 'Gesundheit',
     category_wohnen: 'Wohnen',
+    category_finanzen: 'Finanzen',
     // Hero
     hero_title_pundo: 'Finde, was Zypern wirklich hat.',
     hero_title_naidivse: 'Finde alles, was Zypern wirklich hat.',
@@ -947,6 +949,7 @@ export const translations = {
     category_haustiere: 'Домашние животные',
     category_gesundheit: 'Здоровье',
     category_wohnen: 'Быт',
+    category_finanzen: 'Финансы',
     // Hero
     hero_title_pundo: 'Найди, что на самом деле есть на Кипре.',
     hero_title_naidivse: 'Найди всё, что есть на Кипре на самом деле.',
@@ -1328,6 +1331,7 @@ export const translations = {
     category_haustiere: 'Κατοικίδια',
     category_gesundheit: 'Υγεία',
     category_wohnen: 'Κατοικία',
+    category_finanzen: 'Χρηματοοικονομικά',
     // Hero
     hero_title_pundo: 'Ανακάλυψε τι έχει πραγματικά η Κύπρος.',
     hero_title_naidivse: 'Βρες όλα όσα έχει πραγματικά η Κύπρος.',
@@ -1709,6 +1713,7 @@ export const translations = {
     category_haustiere: 'الحيوانات الأليفة',
     category_gesundheit: 'الصحة',
     category_wohnen: 'المعيشة',
+    category_finanzen: 'المالية',
     // Hero
     hero_title_pundo: 'اكتشف ما تمتلكه قبرص حقاً.',
     hero_title_naidivse: 'اكتشف كل ما تمتلكه قبرص حقاً.',
@@ -2090,6 +2095,7 @@ export const translations = {
     category_haustiere: 'חיות מחמד',
     category_gesundheit: 'בריאות',
     category_wohnen: 'מגורים',
+    category_finanzen: 'פיננסים',
     // Hero
     hero_title_pundo: 'גלה מה יש באמת בקפריסין.',
     hero_title_naidivse: 'גלה את כל מה שיש באמת בקפריסין.',

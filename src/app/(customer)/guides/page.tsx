@@ -29,6 +29,7 @@ export default async function GuidesIndexPage() {
     haustiere: tr.category_haustiere,
     gesundheit: tr.category_gesundheit,
     wohnen: tr.category_wohnen,
+    finanzen: tr.category_finanzen,
   }
 
   return (

@@ -7,6 +7,15 @@ export const DEFAULT_LANG: Lang = 'en';
 
 export const RTL_LANGS: ReadonlySet<Lang> = new Set(['ar', 'he']);
 
+export const LANG_NATIVE_NAMES: Record<Lang, string> = {
+  en: 'English',
+  de: 'Deutsch',
+  el: 'Ελληνικά',
+  ru: 'Русский',
+  ar: 'العربية',
+  he: 'עברית',
+};
+
 export function isRTL(lang: Lang): boolean {
   return RTL_LANGS.has(lang);
 }

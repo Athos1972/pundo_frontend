@@ -1,9 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type { OnboardingLocation } from '@/types/shop-admin'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
+import { ZOOM_OVERVIEW, ZOOM_FALLBACK, ZOOM_STREET, type PinSource } from './OnboardingMapInner'
 
 const OnboardingMapInner = dynamic(
   () => import('./OnboardingMapInner').then(m => ({ default: m.OnboardingMapInner })),
@@ -23,6 +24,8 @@ interface NominatimResult {
   lon: string
 }
 
+type GeoStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable'
+
 export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocationProps) {
   const [pin, setPin] = useState<[number, number] | null>(
     initialLocation ? [initialLocation.lat, initialLocation.lng] : null
@@ -34,6 +37,55 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
   const [searching, setSearching] = useState(false)
   const [reversing, setReversing] = useState(false)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ─── GPS state machine ─────────────────────────────────────────────────────
+  const [pinSource, setPinSource] = useState<PinSource>(initialLocation ? 'initial' : null)
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle')
+  const [geoCenter, setGeoCenter] = useState<[number, number] | null>(null)
+  const [geoZoom, setGeoZoom] = useState<number>(ZOOM_OVERVIEW)
+
+  // Ref guard against React 19 StrictMode double-mount
+  const hasRequestedGeoRef = useRef(false)
+
+  const requestGeolocation = useCallback(
+    (onSuccess?: (lat: number, lng: number) => void) => {
+      if (!window.isSecureContext) {
+        setGeoStatus('denied')
+        return
+      }
+      if (!navigator.geolocation) {
+        setGeoStatus('unavailable')
+        return
+      }
+      setGeoStatus('requesting')
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude
+          const lng = pos.coords.longitude
+          const accuracy = pos.coords.accuracy ?? 0
+          const zoom = accuracy > 1000 ? ZOOM_FALLBACK : ZOOM_STREET
+          setGeoCenter([lat, lng])
+          setGeoZoom(zoom)
+          setGeoStatus('granted')
+          if (onSuccess) onSuccess(lat, lng)
+        },
+        () => {
+          setGeoStatus('denied')
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 60_000 }
+      )
+    },
+    []
+  )
+
+  // Auto-request GPS on mount — only when no draft location exists
+  useEffect(() => {
+    if (initialLocation) return  // AC-5: Draft-Resume — no GPS request
+    if (hasRequestedGeoRef.current) return
+    hasRequestedGeoRef.current = true
+    requestGeolocation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     setReversing(true)
@@ -53,6 +105,7 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
 
   function handlePinDrop(lat: number, lng: number) {
     setPin([lat, lng])
+    setPinSource('click')
     reverseGeocode(lat, lng)
   }
 
@@ -75,9 +128,21 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
     const lat = parseFloat(s.lat)
     const lng = parseFloat(s.lon)
     setPin([lat, lng])
+    setPinSource('search')
     setAddress(s.display_name)
     setQuery('')
     setSuggestions([])
+  }
+
+  // GPS button handler — manual re-try. On success sets pin (active consent).
+  function handleGpsButtonClick() {
+    requestGeolocation((lat, lng) => {
+      // Only reached if GPS succeeds — this IS the user's active gesture
+      // so we set the pin (unlike the auto-mount flow which does not set pin)
+      setPin([lat, lng])
+      setPinSource('gps')
+      reverseGeocode(lat, lng)
+    })
   }
 
   function handleSubmit() {
@@ -85,13 +150,23 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
     onNext({ lat: pin[0], lng: pin[1], address, isB2cStorefront: isB2c })
   }
 
+  const isGeoRequesting = geoStatus === 'requesting'
+  const showGpsButton = geoStatus === 'denied' || geoStatus === 'unavailable'
+  const showGpsDeniedHint = geoStatus === 'denied' && !pin
+
   return (
     <div className="flex flex-col gap-5">
       <h2 className="text-xl font-bold text-gray-900">{tr.onboarding_step3_title}</h2>
 
       <p className="text-sm text-gray-500">{tr.onboarding_location_pin_hint}</p>
 
-      <OnboardingMapInner pin={pin} onPinDrop={handlePinDrop} />
+      <OnboardingMapInner
+        pin={pin}
+        pinSource={pinSource}
+        initialCenter={geoCenter}
+        initialZoom={geoZoom}
+        onPinDrop={handlePinDrop}
+      />
 
       {/* Address search */}
       <div className="relative">
@@ -122,6 +197,28 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
           </ul>
         )}
       </div>
+
+      {/* GPS button — visible when GPS is denied or unavailable */}
+      {showGpsButton && (
+        <button
+          type="button"
+          onClick={handleGpsButtonClick}
+          disabled={isGeoRequesting}
+          className="flex items-center gap-2 text-sm text-accent hover:text-accent-dark font-medium text-start rtl:text-end disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isGeoRequesting && (
+            <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin inline-block shrink-0" />
+          )}
+          {tr.onboarding_location_use_my_location}
+        </button>
+      )}
+
+      {/* Denied hint — shown when GPS is denied and no pin is set */}
+      {showGpsDeniedHint && (
+        <p className="text-xs text-gray-500 text-start rtl:text-end">
+          {tr.onboarding_location_geolocate_denied}
+        </p>
+      )}
 
       {/* Selected address display */}
       {address && (

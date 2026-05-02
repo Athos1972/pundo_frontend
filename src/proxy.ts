@@ -19,6 +19,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBrandConfig } from '@/config/brands'
 
+// Public SEO paths — these get a cacheable Cache-Control header so Googlebot
+// and CDNs can cache them (Next.js dynamic rendering emits private/no-store by default).
+const SEO_PUBLIC_EXACT = new Set(['/', '/about', '/contact', '/for-shops'])
+const SEO_PUBLIC_PREFIXES = [
+  '/products/',
+  '/shops/',
+  '/guides/',
+  '/categories/',
+  '/legal/',
+  '/help/',
+  '/search',
+  '/nostalgia',
+  '/homesick',
+]
+const SEO_CACHE = 'public, s-maxage=3600, stale-while-revalidate=86400'
+
 const PUBLIC_SHOP_ADMIN_PATHS = [
   '/shop-admin/login',
   '/shop-admin/register',
@@ -108,6 +124,11 @@ export function proxy(request: NextRequest) {
   })
   response.headers.set('content-security-policy', csp)
   setSecurityHeaders(response.headers)
+
+  // SEO cache-control for public content pages
+  if (SEO_PUBLIC_EXACT.has(pathname) || SEO_PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+    response.headers.set('Cache-Control', SEO_CACHE)
+  }
 
   return response
 }

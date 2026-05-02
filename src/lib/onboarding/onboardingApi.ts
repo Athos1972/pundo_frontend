@@ -60,8 +60,9 @@ export async function uploadOnboardingPhoto(file: File): Promise<void> {
 export async function startGoogleOAuth(provider: 'google' | 'facebook' | 'apple'): Promise<void> {
   const res = await fetch(`/api/shop-admin/auth/${provider}/authorize`)
   if (!res.ok) throw Object.assign(new Error('OAUTH_UNAVAILABLE'), { code: 'OAUTH_UNAVAILABLE' })
-  const data = await res.json() as { auth_url?: string }
-  if (data.auth_url) {
-    window.location.href = data.auth_url
-  }
+  const data = await res.json() as { auth_url?: string; google_auth_url?: string }
+  // TODO: remove google_auth_url fallback after backend deploy of oauth-button-onboarding-bug-20260502
+  const url = data.auth_url ?? data.google_auth_url
+  if (!url) throw Object.assign(new Error('OAUTH_NO_URL'), { code: 'OAUTH_NO_URL' })
+  window.location.href = url
 }

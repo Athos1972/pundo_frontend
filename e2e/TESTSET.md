@@ -1,10 +1,10 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-05-01
-SHA: 5ad4ee2aabb7adddd1698d148f19f2f4d71928b9
-Feature: F5910 — Schnell-Onboarding Mobil (Wizard + Google OAuth + Draft-Persistenz)
-Ergebnis: **1100/1100 Unit-Tests PASS | TypeScript PASS | ESLint PASS (49 Warnings, 0 Errors) | Journey shop-owner-onboarding: 6/6 PASS | Verdict: SHIP**
+Datum: 2026-05-02
+SHA: f6e03fd9e31f1d61ae9b3b40a6a7c5c54af6a87c
+Feature: oauth-button-onboarding-bug-20260502 — OAuth Key-Mismatch Fix
+Ergebnis: **12/12 Unit-Tests PASS | TypeScript PASS | ESLint PASS | E2E BLOCKED (pre-existing middleware/proxy Konflikt) | Verdict: SHIP**
 
 ---
 

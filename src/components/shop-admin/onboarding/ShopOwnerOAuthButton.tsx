@@ -28,8 +28,10 @@ const PROVIDER_ICONS: Record<OAuthProvider, React.ReactNode> = {
 export function ShopOwnerOAuthButton({ provider, tr, onUnavailable }: ShopOwnerOAuthButtonProps) {
   const [loading, setLoading] = useState(false)
   const [unavailable, setUnavailable] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleClick() {
+    setError(null)
     setLoading(true)
     try {
       await startGoogleOAuth(provider)
@@ -38,6 +40,8 @@ export function ShopOwnerOAuthButton({ provider, tr, onUnavailable }: ShopOwnerO
       if (code === 'OAUTH_UNAVAILABLE') {
         setUnavailable(true)
         onUnavailable?.()
+      } else {
+        setError(tr.onboarding_google_error)
       }
     } finally {
       setLoading(false)
@@ -58,6 +62,9 @@ export function ShopOwnerOAuthButton({ provider, tr, onUnavailable }: ShopOwnerO
       </button>
       {unavailable && (
         <p className="text-xs text-gray-400 text-center">{tr.onboarding_google_unavailable}</p>
+      )}
+      {error && (
+        <p className="text-xs text-red-600 text-center">{error}</p>
       )}
     </div>
   )

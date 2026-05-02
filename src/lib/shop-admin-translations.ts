@@ -314,6 +314,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'Google sign-in failed. Please try again.',
     onboarding_login_link: 'Sign in to existing account',
     onboarding_progress: 'Step {step} of {total}',
+    onboarding_location_geolocate_denied: 'Location access is off — search by address or tap the map',
+    onboarding_location_use_my_location: '📍 Use my location',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -614,6 +616,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
     onboarding_login_link: 'Am bestehenden Konto anmelden',
     onboarding_progress: 'Schritt {step} von {total}',
+    onboarding_location_geolocate_denied: 'Standortzugriff aus — Adresse suchen oder auf die Karte tippen',
+    onboarding_location_use_my_location: '📍 Meine Position verwenden',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -914,6 +918,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'Η σύνδεση Google απέτυχε. Παρακαλώ δοκίμασε ξανά.',
     onboarding_login_link: 'Σύνδεση σε υπάρχον λογαριασμό',
     onboarding_progress: 'Βήμα {step} από {total}',
+    onboarding_location_geolocate_denied: 'Η πρόσβαση τοποθεσίας είναι απενεργοποιημένη — αναζήτησε διεύθυνση ή πάτα στον χάρτη',
+    onboarding_location_use_my_location: '📍 Χρήση της θέσης μου',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -1214,6 +1220,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'Вход через Google не удался. Пожалуйста, попробуйте снова.',
     onboarding_login_link: 'Войти в существующий аккаунт',
     onboarding_progress: 'Шаг {step} из {total}',
+    onboarding_location_geolocate_denied: 'Доступ к местоположению отключён — найдите адрес или нажмите на карту',
+    onboarding_location_use_my_location: '📍 Использовать моё местоположение',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -1514,6 +1522,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.',
     onboarding_login_link: 'تسجيل الدخول إلى حساب موجود',
     onboarding_progress: 'الخطوة {step} من {total}',
+    onboarding_location_geolocate_denied: 'الوصول إلى الموقع متوقف — ابحث عن عنوان أو اضغط على الخريطة',
+    onboarding_location_use_my_location: '📍 استخدام موقعي',
   },
   he: {
     register_title: 'רישום החנות',
@@ -1814,6 +1824,8 @@ const shopAdminTranslations = {
     onboarding_error_oauth_failed: 'כניסת Google נכשלה. אנא נסה שוב.',
     onboarding_login_link: 'כניסה לחשבון קיים',
     onboarding_progress: 'שלב {step} מתוך {total}',
+    onboarding_location_geolocate_denied: 'גישה למיקום כבויה — חפש כתובת או לחץ על המפה',
+    onboarding_location_use_my_location: '📍 השתמש במיקום שלי',
   },
 } as const
 

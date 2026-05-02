@@ -15,10 +15,22 @@ const icon = L.icon({
   shadowSize: [41, 41],
 })
 
+// ─── Zoom constants ───────────────────────────────────────────────────────────
+export const ZOOM_OVERVIEW = 9   // GPS denied / timeout — country/region overview
+export const ZOOM_FALLBACK = 13  // GPS granted but inaccurate (accuracy > 1000m)
+export const ZOOM_STREET = 17    // GPS precise / draft-pin / address search result
+
+export type PinSource = 'click' | 'search' | 'gps' | 'initial' | null
+
 interface Props {
   pin: [number, number] | null
+  pinSource: PinSource
+  initialCenter: [number, number] | null
+  initialZoom: number
   onPinDrop: (lat: number, lng: number) => void
 }
+
+const DEFAULT_CENTER: [number, number] = [34.9, 33.63] // Cyprus
 
 function ClickHandler({ onPinDrop }: { onPinDrop: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -29,21 +41,55 @@ function ClickHandler({ onPinDrop }: { onPinDrop: (lat: number, lng: number) => 
   return null
 }
 
-function RecenterOnPin({ pin }: { pin: [number, number] | null }) {
+function RecenterOnPinOrCenter({
+  pin,
+  pinSource,
+  initialCenter,
+  initialZoom,
+}: {
+  pin: [number, number] | null
+  pinSource: PinSource
+  initialCenter: [number, number] | null
+  initialZoom: number
+}) {
   const map = useMap()
+
+  // React on pin changes
   useEffect(() => {
-    if (pin) map.setView(pin, map.getZoom())
-  }, [pin?.[0], pin?.[1]]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!pin) return
+    if (pinSource === 'search' || pinSource === 'gps' || pinSource === 'initial') {
+      map.setView(pin, ZOOM_STREET)
+    } else if (pinSource === 'click') {
+      // Keep the zoom the owner chose — only pan to pin
+      map.setView(pin, map.getZoom())
+    }
+    // pinSource === null: no action (initial render without pin)
+  }, [pin?.[0], pin?.[1], pinSource]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // React on initialCenter changes (no pin set — GPS granted without placing pin)
+  useEffect(() => {
+    if (pin) return // pin takes priority
+    if (initialCenter) {
+      map.setView(initialCenter, initialZoom)
+    }
+  }, [initialCenter?.[0], initialCenter?.[1], initialZoom]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
-const DEFAULT_CENTER: [number, number] = [34.9, 33.63] // Cyprus
+export function OnboardingMapInner({
+  pin,
+  pinSource,
+  initialCenter,
+  initialZoom,
+  onPinDrop,
+}: Props) {
+  const mapCenter = pin ?? initialCenter ?? DEFAULT_CENTER
 
-export function OnboardingMapInner({ pin, onPinDrop }: Props) {
   return (
     <MapContainer
-      center={pin ?? DEFAULT_CENTER}
-      zoom={13}
+      center={mapCenter}
+      zoom={initialZoom}
       style={{ height: '220px', width: '100%', borderRadius: '12px', cursor: 'crosshair' }}
       scrollWheelZoom={false}
     >
@@ -52,7 +98,12 @@ export function OnboardingMapInner({ pin, onPinDrop }: Props) {
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       <ClickHandler onPinDrop={onPinDrop} />
-      <RecenterOnPin pin={pin} />
+      <RecenterOnPinOrCenter
+        pin={pin}
+        pinSource={pinSource}
+        initialCenter={initialCenter}
+        initialZoom={initialZoom}
+      />
       {pin && <Marker position={pin} icon={icon} />}
     </MapContainer>
   )

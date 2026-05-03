@@ -1206,12 +1206,10 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     expect(url, 'SP4: shop page must not 404').not.toContain('not-found')
     expect(url, 'SP4: shop page must not 404').not.toContain('404')
 
-    // The offer title should appear on the page
-    const body = await page.locator('body').innerText()
-    expect(
-      body.includes('SP4 Customer Visible Price Tier Offer'),
-      'SP4: offer with price tiers must appear on customer shop page'
-    ).toBe(true)
+    // Wait for offer title to appear — Next.js streaming hydration may take a moment
+    // after 'load'. Using toContainText() with retry semantics instead of innerText()
+    // which reads the DOM snapshot once and can miss streamed content.
+    await expect(page.locator('body')).toContainText('SP4 Customer Visible Price Tier Offer', { timeout: 8000 })
   })
 
   // ── Datum-Edgecases ────────────────────────────────────────────────────────

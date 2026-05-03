@@ -1,8 +1,8 @@
 # TESTSET — pundo_frontend
 
-**Letzter Lauf:** 2026-04-30  
-**Feature:** Coming-Soon Naidivse deaktivieren (coming-soon-deaktivieren-20260430)  
-**Ergebnis:** ✅ SHIP — Unit-Tests grün, Playwright E2E 4/4 PASS  
+**Letzter Lauf:** 2026-05-03
+**Feature:** SP4-Fix: `getShopOffers` SSR-Cache + Assertion-Timing; guide-images Test-Mock korrigiert
+**Ergebnis:** ✅ SHIP — 64 Unit-Test-Dateien/1220 Tests PASS · 323 Playwright PASS · 37 vorbekannte Fails
 **SHA:** uncommitted
 
 ---
@@ -20,8 +20,8 @@
 
 | Metriken | Wert |
 |----------|------|
-| Test Files | 53 passed |
-| Tests | 1071 passed |
+| Test Files | 64 passed |
+| Tests | 1220 passed |
 
 ### Coverage-Snapshot
 
@@ -80,7 +80,7 @@
 | `admin-data-management` | ❌ FAIL | Schritt 3: Paginierung (pre-existing, Test-Fehler) |
 | `import-page-ac-check` | ✅ PASS | |
 | `shop-admin-import-image-url` | ✅ PASS | 1 skipped (async job) |
-| `shop-admin-offers` | ✅ PASS | |
+| `shop-admin-offers` | ✅ PASS | SP4 fix: `cache: 'no-store'` + `toContainText()` |
 | `shop-owner-onboarding` | ✅ PASS | |
 | `social-link-moderation` | ✅ PASS | |
 

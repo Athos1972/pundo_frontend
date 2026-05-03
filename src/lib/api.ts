@@ -117,7 +117,12 @@ export async function getCategories(
 
 export async function getShopOffers(slug: string, lang: string): Promise<ShopOffer[]> {
   try {
-    return await apiFetch<ShopOffer[]>(`/shops/by-slug/${slug}/offers`, lang);
+    // cache: 'no-store' — offers are dynamic pricing data, must always be fresh.
+    // The default revalidate: 3600 in apiFetch would serve stale offers for 1h,
+    // breaking tests that create offers and immediately check visibility.
+    return await apiFetch<ShopOffer[]>(`/shops/by-slug/${slug}/offers`, lang, {
+      cache: 'no-store',
+    });
   } catch {
     return [];
   }

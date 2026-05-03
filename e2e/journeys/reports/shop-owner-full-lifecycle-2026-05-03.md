@@ -1,10 +1,10 @@
 ## Journey: Shop-Owner Full Lifecycle + UI-Kombinations-Matrix — PASS
-Datum: 2026-05-03 15:45 UTC
+Datum: 2026-05-03 16:13 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Slug | Status |
 |---|---|---|---|
-| e2e-lifecycle-63d70375-owner | 5 | N/A | OK |
+| e2e-lifecycle-c7939132-owner | 15 | N/A | OK |
 
 ### Schritt-für-Schritt-Protokoll
 | # | Beschreibung | Erwartet | Tatsächlich | Status |
@@ -16,4 +16,4 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-lifecycle-63d70375-owner | best-effort | OK |
+| e2e-lifecycle-c7939132-owner | best-effort | OK |

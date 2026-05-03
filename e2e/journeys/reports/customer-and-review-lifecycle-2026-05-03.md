@@ -1,10 +1,10 @@
 ## Journey: Customer Auth + Interaction + Review Lifecycle — PASS
-Datum: 2026-05-03 15:44 UTC
+Datum: 2026-05-03 16:11 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-carl-7ad327d6-customer | N/A | FEHLER/SKIP |
+| e2e-carl-2b5b3b03-customer | N/A | FEHLER/SKIP |
 
 ### Endpoint-Unterstützung
 - Customer Auth: nein (nicht gefunden)
@@ -33,4 +33,4 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-carl-7ad327d6-customer | versucht | best-effort |
+| e2e-carl-2b5b3b03-customer | versucht | best-effort |

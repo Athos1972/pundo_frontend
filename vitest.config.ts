@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -12,9 +13,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': '/Users/bb_studio_2025/dev/github/pundo_frontend/src',
-      '@radix-ui/react-tooltip': '/Users/bb_studio_2025/dev/github/pundo_frontend/src/tests/__mocks__/radix-tooltip.tsx',
-      '@radix-ui/react-popover': '/Users/bb_studio_2025/dev/github/pundo_frontend/src/tests/__mocks__/radix-popover.tsx',
+      '@': path.resolve(__dirname, 'src'),
+      '@radix-ui/react-tooltip': path.resolve(__dirname, 'src/tests/__mocks__/radix-tooltip.tsx'),
+      '@radix-ui/react-popover': path.resolve(__dirname, 'src/tests/__mocks__/radix-popover.tsx'),
     },
   },
 })

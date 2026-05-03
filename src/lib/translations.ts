@@ -44,6 +44,7 @@ export const translations = {
     distance_km: (n: number) => `${n} km`,
     no_local_results: 'No local shops in this radius.',
     spoken_languages: 'Languages spoken',
+    change_language: 'Change language',
     days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday', ph: 'Public holiday' },
     // Auth
     auth_login: 'Sign in',
@@ -458,6 +459,7 @@ export const translations = {
     distance_km: (n: number) => `${n} km`,
     no_local_results: 'Keine lokalen Shops in diesem Umkreis.',
     spoken_languages: 'Gesprochene Sprachen',
+    change_language: 'Sprache wechseln',
     days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag', ph: 'Feiertag' },
     // Auth
     auth_login: 'Anmelden',
@@ -872,6 +874,7 @@ export const translations = {
     distance_km: (n: number) => `${n} км`,
     no_local_results: 'Нет местных магазинов в этом радиусе.',
     spoken_languages: 'Языки общения',
+    change_language: 'Сменить язык',
     days: { mon: 'Понедельник', tue: 'Вторник', wed: 'Среда', thu: 'Четверг', fri: 'Пятница', sat: 'Суббота', sun: 'Воскресенье', ph: 'Праздник' },
     // Auth
     auth_login: 'Войти',
@@ -1286,6 +1289,7 @@ export const translations = {
     distance_km: (n: number) => `${n} χλμ`,
     no_local_results: 'Δεν βρέθηκαν τοπικά καταστήματα σε αυτή την περιοχή.',
     spoken_languages: 'Γλώσσες',
+    change_language: 'Αλλαγή γλώσσας',
     days: { mon: 'Δευτέρα', tue: 'Τρίτη', wed: 'Τετάρτη', thu: 'Πέμπτη', fri: 'Παρασκευή', sat: 'Σάββατο', sun: 'Κυριακή', ph: 'Αργία' },
     // Auth
     auth_login: 'Σύνδεση',
@@ -1700,6 +1704,7 @@ export const translations = {
     distance_km: (n: number) => `${n} كم`,
     no_local_results: 'لا توجد متاجر محلية في هذا النطاق.',
     spoken_languages: 'اللغات المتحدثة',
+    change_language: 'تغيير اللغة',
     days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد', ph: 'عطلة رسمية' },
     // Auth
     auth_login: 'تسجيل الدخول',
@@ -2114,6 +2119,7 @@ export const translations = {
     distance_km: (n: number) => `${n} ק"מ`,
     no_local_results: 'לא נמצאו חנויות מקומיות ברדיוס זה.',
     spoken_languages: 'שפות מדוברות',
+    change_language: 'שינוי שפה',
     days: { mon: 'יום שני', tue: 'יום שלישי', wed: 'יום רביעי', thu: 'יום חמישי', fri: 'יום שישי', sat: 'שבת', sun: 'יום ראשון', ph: 'חג רשמי' },
     // Auth
     auth_login: 'כניסה',

@@ -635,11 +635,15 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
 
   test.afterAll(async () => {
     if (!ownerToken) return
-    // Ausgangszustand wiederherstellen
+    // Ausgangszustand wiederherstellen.
+    // NOTE: Backend PATCH ignores description:null (no-op) because there is no
+    // "elif description in model_fields_set and value is None" branch in shop_owner_shop.py.
+    // Use '' (empty string) to clear description when original was null —
+    // '' is not None, so the backend processes it and stores an empty string.
     try {
       await patchShopProfile(ownerToken, {
         name: originalProfile.name ?? null,
-        description: originalProfile.description ?? null,
+        description: originalProfile.description ?? '',
         address: originalProfile.address ?? null,
         logo_url: originalProfile.logo_url ?? null,
         spoken_languages: originalProfile.spoken_languages ?? [],
@@ -983,10 +987,12 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
   // ── B14: Revert-Verifikation ──────────────────────────────────────────────
 
   test('B14 — API: Ausgangszustand nach Revert korrekt wiederhergestellt', async () => {
-    // Revert hier explizit (afterAll macht es zusätzlich idempotent)
+    // Revert hier explizit (afterAll macht es zusätzlich idempotent).
+    // Backend-Hinweis: PATCH description:null = no-op (kein elif-Branch in shop_owner_shop.py).
+    // Revert mit '' damit der Backend-Code greift ('' is not None → descriptions["en"] = '').
     await patchShopProfile(ownerToken, {
       name: originalProfile.name ?? null,
-      description: originalProfile.description ?? null,
+      description: originalProfile.description ?? '',
       address: originalProfile.address ?? null,
       logo_url: originalProfile.logo_url ?? null,
       spoken_languages: originalProfile.spoken_languages ?? [],
@@ -998,16 +1004,20 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
     await putOpeningHours(ownerToken, originalHours)
 
     const profile = await getShopProfile(ownerToken)
-    // Accept both exact match AND null/'' equivalence — the backend may normalise
-    // null → '' for string fields, and PATCH with null may be treated as "no-op"
-    // when the field was previously null. We verify the field is not the B-edited value.
+    // Backend-Limitation: description:null is a no-op in PATCH — we revert with ''.
+    // Accept null/'' equivalence as "cleared" and verify it's not the B2-edited value.
     const descOrig = originalProfile.description ?? null
     const descActual = profile.description ?? null
-    if (descOrig !== null) {
+    if (descOrig !== null && descOrig !== '') {
       expect(descActual, 'description revertiert').toEqual(descOrig)
     } else {
-      // If original was null, just verify it's not the B2-edited value
-      expect(descActual, 'description nicht mehr der B2-Wert').not.toMatch(/Edit-Flow Beschreibung B2/)
+      // If original was null/'', we reverted with '' → backend stores ''.
+      // Accept null or '' as equivalent "cleared" state.
+      const isCleared = descActual === null || descActual === ''
+      if (!isCleared) {
+        // Must not be the B2-edited value
+        expect(descActual, 'description nicht mehr der B2-Wert').not.toMatch(/Edit-Flow Beschreibung B2/)
+      }
     }
     expect(profile.whatsapp_number ?? null, 'whatsapp_number revertiert').toEqual(originalProfile.whatsapp_number ?? null)
     expect(profile.website_url ?? null, 'website_url revertiert').toEqual(originalProfile.website_url ?? null)

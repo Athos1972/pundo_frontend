@@ -1,15 +1,15 @@
 ## Journey: Admin Data Management Sweep — PASS
-Datum: 2026-05-03 16:11 UTC
+Datum: 2026-05-03 18:38 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-adm-92aa2867-brand-without-logo | 1 | OK |
-| e2e-adm-92aa2867-brand-with-logo | 2 | OK |
-| e2e-adm-92aa2867-category-parent | 1 | OK |
-| e2e-adm-92aa2867-category-child | 2 | OK |
-| e2e-adm-92aa2867-guide-published | N/A | FEHLER/SKIP |
-| e2e-adm-92aa2867-pending-owner | 13 | OK |
+| e2e-adm-6b3762df-brand-without-logo | 1 | OK |
+| e2e-adm-6b3762df-brand-with-logo | 2 | OK |
+| e2e-adm-6b3762df-category-parent | 1 | OK |
+| e2e-adm-6b3762df-category-child | 2 | OK |
+| e2e-adm-6b3762df-guide-published | N/A | FEHLER/SKIP |
+| e2e-adm-6b3762df-pending-owner | 2 | OK |
 
 ### Endpoint-Unterstützung
 - Logo-Upload: nein (404)
@@ -37,9 +37,9 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-adm-92aa2867-brand-without-logo | best-effort | OK |
-| e2e-adm-92aa2867-brand-with-logo | best-effort | OK |
-| e2e-adm-92aa2867-category-parent | best-effort | OK |
-| e2e-adm-92aa2867-category-child | best-effort | OK |
-| e2e-adm-92aa2867-guide-published | best-effort | OK |
-| e2e-adm-92aa2867-pending-owner | best-effort | OK |
+| e2e-adm-6b3762df-brand-without-logo | best-effort | OK |
+| e2e-adm-6b3762df-brand-with-logo | best-effort | OK |
+| e2e-adm-6b3762df-category-parent | best-effort | OK |
+| e2e-adm-6b3762df-category-child | best-effort | OK |
+| e2e-adm-6b3762df-guide-published | best-effort | OK |
+| e2e-adm-6b3762df-pending-owner | best-effort | OK |

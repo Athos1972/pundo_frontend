@@ -469,7 +469,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   test('Schritt 5 — Shop-A erscheint in Suche', async ({ page }) => {
     // shopASlug is guaranteed by beforeAll (throws if missing)
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
     logStep(5, 'Shop-A Detailseite erreichbar', 'Kein 404', url, !is404 ? 'PASS' : 'FAIL')
@@ -479,7 +479,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   test('Schritt 6 — ShopCard shop-A: Icons und Badges prüfen', async ({ page }) => {
     // shopASlug guaranteed by beforeAll
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Prüfe: Shop-Name sichtbar
     const shopName = `${PREFIX}-shop-A`
@@ -501,7 +501,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   test('Schritt 7 — ShopCard shop-B: Fallback-Avatar, keine Icons', async ({ page }) => {
     // shopBSlug guaranteed by beforeAll (throws if shop-B creation failed)
     await page.goto(BASE_URL + `/shops/${ctx.shopBSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -512,7 +512,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
   test('Schritt 8 — Produktliste shop-A: alle 4 Produkte mit price_type-Labels', async ({ page }) => {
     // shopASlug guaranteed by beforeAll
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const builtProducts = ctx.fixtures.filter(f => f.type === 'product' && f.built)
     let foundCount = 0
@@ -536,7 +536,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     if (!ctx.productFixedSlug) throw new Error('PREREQUISITE BROKEN: productFixedSlug not set — product creation must have failed')
 
     await page.goto(BASE_URL + `/products/${ctx.productFixedSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -553,7 +553,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     if (!ctx.productOnRequestSlug) throw new Error('PREREQUISITE BROKEN: productOnRequestSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productOnRequestSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -570,7 +570,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     if (!ctx.productFreeSlug) throw new Error('PREREQUISITE BROKEN: productFreeSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productFreeSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -586,7 +586,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     if (!ctx.productVariableSlug) throw new Error('PREREQUISITE BROKEN: productVariableSlug not set')
 
     await page.goto(BASE_URL + `/products/${ctx.productVariableSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -608,7 +608,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     const cookieDomain = new URL(BASE_URL).hostname
     await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const htmlDir = await page.locator('html').getAttribute('dir')
     logStep(13, 'RTL: html dir-Attribut', 'dir=rtl', String(htmlDir), htmlDir === 'rtl' ? 'PASS' : 'FAIL')
@@ -622,7 +622,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     const cookieDomain = new URL(BASE_URL).hostname
     await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + `/products/${ctx.productFixedSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const htmlDir = await page.locator('html').getAttribute('dir')
     logStep(14, 'RTL: product-fixed dir-Attribut', 'dir=rtl', String(htmlDir), htmlDir === 'rtl' ? 'PASS' : 'FAIL')
@@ -649,7 +649,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     await page.waitForTimeout(500)
 
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const bodyText = await page.locator('body').innerText()

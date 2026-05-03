@@ -170,7 +170,7 @@ async function apiCreateOffer(
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function waitHydrated(page: Page) {
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
   await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 }).catch(() => {})
 }
 
@@ -194,7 +194,7 @@ async function selectItemViaModal(page: Page, searchQuery: string) {
 
   // Wait for results list
   await page.waitForTimeout(500) // debounce: 300ms
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
 
   // Click the first result button in the list
   const resultButtons = page.getByRole('dialog').locator('ul li button')
@@ -202,7 +202,7 @@ async function selectItemViaModal(page: Page, searchQuery: string) {
   await resultButtons.first().click()
 
   // After click: ShopListing is created, step advances to 2
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
 }
 
 /** Select price type in Step 2. */
@@ -700,7 +700,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     ctx.createdOfferIds.push(offerId)
 
     await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     expect(url).not.toContain('404')
@@ -736,7 +736,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
 
     await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const bodyText = await page.locator('body').innerText()
     expect(bodyText.includes('D2 Archived Should Be Hidden'), 'D2: Archived offer visible on customer page').toBe(false)
@@ -1059,7 +1059,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
 
     // Navigate to Shop A page — must NOT show Shop B's offer
     await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
     expect(
@@ -1094,7 +1094,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
 
     await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
     expect(
@@ -1200,7 +1200,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     twoShopCtx.createdOfferIds.push(offerId)
 
     await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     expect(url, 'SP4: shop page must not 404').not.toContain('not-found')
@@ -1254,7 +1254,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     twoShopCtx.createdOfferIds.push(offerId)
 
     await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
     expect(

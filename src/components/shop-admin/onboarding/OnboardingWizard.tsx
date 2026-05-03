@@ -49,17 +49,21 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   // SSR-safe: start hidden, reveal on client after localStorage read (avoids hydration mismatch)
   const [showDraftBanner, setShowDraftBanner] = useState(false)
   const [draftAge, setDraftAge] = useState(0)
+  const [emailTakenError, setEmailTakenError] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     if (resumeOAuth) return
     if (loadDraft() !== null) {
-      setShowDraftBanner(true)
-      setDraftAge(draftAgeMs() ?? 0)
+      // startTransition avoids "direct setState in effect" — intent preserved:
+      // state updates only after hydration, no hydration mismatch
+      startTransition(() => {
+        setShowDraftBanner(true)
+        setDraftAge(draftAgeMs() ?? 0)
+      })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const [emailTakenError, setEmailTakenError] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
 
   // OAuth auto-submit: triggered when callback redirects back with ?resume=oauth
   useEffect(() => {

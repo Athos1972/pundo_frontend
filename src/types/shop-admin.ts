@@ -5,7 +5,7 @@
 // ─── Shared Enums ────────────────────────────────────────────────────────────
 
 export type ItemType   = 'product' | 'service'
-export type ItemSource = 'scraper' | 'admin' | 'shop_manual' | 'shop_upload' | 'spotted'
+export type ItemSource = 'scraper' | 'admin' | 'shop_manual' | 'shop_upload' | 'spotted' | 'auto_seeded'
 export type ItemStatus = 'active' | 'inactive'
 
 export interface ShopOwner {

@@ -237,6 +237,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'Import',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'Suggested',
     // Photo Upload
     photo_upload_label: 'Photos',
     photo_upload_limit: 'Maximum 8 photos',
@@ -540,6 +541,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'Import',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'Vorgeschlagen',
     // Photo Upload
     photo_upload_label: 'Fotos',
     photo_upload_limit: 'Maximal 8 Fotos',
@@ -842,6 +844,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'Εισαγωγή',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'Προτεινόμενο',
     // Photo Upload
     photo_upload_label: 'Φωτογραφίες',
     photo_upload_limit: 'Μέγιστο 8 φωτογραφίες',
@@ -1144,6 +1147,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'Импорт',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'Предложено',
     // Photo Upload
     photo_upload_label: 'Фотографии',
     photo_upload_limit: 'Максимум 8 фотографий',
@@ -1446,6 +1450,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'استيراد',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'مقترح',
     // Photo Upload
     photo_upload_label: 'الصور',
     photo_upload_limit: 'الحد الأقصى ٨ صور',
@@ -1748,6 +1753,7 @@ const shopAdminTranslations = {
     source_shop_upload: 'ייבוא',
     source_spotted: 'Spotted',
     source_admin: 'Admin',
+    source_auto_seeded: 'מוצע',
     // Photo Upload
     photo_upload_label: 'תמונות',
     photo_upload_limit: 'מקסימום 8 תמונות',

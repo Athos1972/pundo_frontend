@@ -213,6 +213,48 @@ export interface SysAdminSocialLinkRuleCreate {
   note?: string | null
 }
 
+// ─── Item-Domain-Mappings ──────────────────────────────────────────────────────
+export interface SysAdminItemDomainMapping {
+  id: number
+  item_id: number
+  item_name: string | null        // computed by backend: names[lang] fallback
+  /** Backend returns `domain_id` (integer). Slug fields not yet in backend response (Bug 5). */
+  domain_id: number | null
+  /** Alias kept for backward-compat until backend adds slug fields. */
+  onboarding_domain_id?: number | null
+  onboarding_domain_slug?: string | null
+  specialty_id: number | null
+  specialty_slug?: string | null
+  priority: number
+  auto_assign: boolean
+  created_at: string
+}
+
+export interface SysAdminItemDomainMappingCreate {
+  item_id: number
+  /** Backend field name is `domain_id` (not `onboarding_domain_id`). */
+  domain_id?: number | null
+  specialty_id?: number | null
+  priority?: number
+  auto_assign: boolean
+}
+
+/** Normalised gap-report entry. Backend returns `{uncovered_domains, uncovered_specialties}` — see getMappingGaps(). */
+export interface MappingGapEntry {
+  /** domain or specialty slug if available */
+  slug: string | null
+  domain_id: number | null
+  specialty_id: number | null
+  /** @deprecated use domain_id / slug */
+  onboarding_domain_id?: number | null
+  onboarding_domain_slug?: string | null
+  specialty_slug?: string | null
+  /** 0 = gap (no auto-assign items cover this domain/specialty) */
+  auto_assign_item_count: number
+  /** 'domain' | 'specialty' */
+  kind: 'domain' | 'specialty'
+}
+
 // ─── API Keys ─────────────────────────────────────────────────────────────────
 export interface SysAdminApiKey {
   id: number

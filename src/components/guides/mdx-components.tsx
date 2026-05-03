@@ -109,4 +109,5 @@ export function ComparisonTable({
   )
 }
 
-export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable }
+import { GuideImage } from './GuideImage'
+export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable, GuideImage }

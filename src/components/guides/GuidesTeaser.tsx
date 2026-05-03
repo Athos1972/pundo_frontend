@@ -15,6 +15,11 @@ export async function GuidesTeaser({ lang }: Props) {
   const categoryLabels: Record<string, string> = {
     behörden: tr.category_behörden,
     mobilität: tr.category_mobilität,
+    haustiere: tr.category_haustiere,
+    gesundheit: tr.category_gesundheit,
+    wohnen: tr.category_wohnen,
+    finanzen: tr.category_finanzen,
+    plattform: tr.category_plattform,
   }
 
   return (

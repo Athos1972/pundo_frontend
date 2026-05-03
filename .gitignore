@@ -54,3 +54,11 @@ data/naidivse-signups.txt
 # Specs migrated to Obsidian vault on 2026-04-25 (Pundo-Plattform)
 specs/
 /.claude/scheduled_tasks.lock
+
+# Guide image sources (LLM originals — gitignored, only optimised assets are committed)
+content/guides/_raw/*
+!content/guides/_raw/.gitkeep
+
+# Unoptimised hero images in public/ — use `npm run guides:optimize` instead
+public/images/guides/*.png
+public/images/guides/*.jpg

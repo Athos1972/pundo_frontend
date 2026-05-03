@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import fs from 'fs'
 
 /**
  * E2E smoke tests for the shop-admin import image_url feature.
@@ -13,24 +14,18 @@ import { test, expect } from '@playwright/test'
  * Mark: "requires live backend"
  */
 
-const storageState = {
-  cookies: [
-    {
-      name: 'shop_owner_token',
-      value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNCwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzc2MjA1MjB9.FhwhkA1dkt2n5vWxZUwMEzgEj-sWxy9ddDjDSMkfWSQ',
-      domain: '127.0.0.1',
-      path: '/',
-      expires: 1777620520,
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Lax' as const,
-    },
-  ],
-  origins: [],
+// Dynamischer Storage-State aus e2e-Setup (Token bleibt valid für die aktuelle DB-Session)
+function getStorageState() {
+  const stateFile = 'e2e/.test-state.json'
+  if (fs.existsSync(stateFile)) {
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'))
+    if (state.storageState) return state.storageState
+  }
+  return { cookies: [], origins: [] }
 }
 
 test.describe('Import image_url — UI smoke tests', () => {
-  test.use({ storageState })
+  test.use({ storageState: getStorageState() })
 
   test('AC-1: FieldCatalog shows image_url row with Optional badge and example URL', async ({ page }) => {
     await page.goto('/shop-admin/import')
@@ -86,7 +81,7 @@ test.describe('Import image_url — UI smoke tests', () => {
 // ── Async-flow test (requires live backend + mock image server) ──────────────
 
 test.describe('Import image_url — Full async flow', () => {
-  test.use({ storageState })
+  test.use({ storageState: getStorageState() })
 
   test.skip('AC-3 + AC-4: Upload with image_url → pending banner → error banner after poll (requires live backend)', async ({ page }) => {
     /**

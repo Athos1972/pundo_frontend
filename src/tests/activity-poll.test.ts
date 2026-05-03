@@ -72,7 +72,7 @@ describe('useActivityPoll — initial state', () => {
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     const initial = [makeEvent('e1')]
     const { result } = renderHook(() =>
-      useActivityPoll({ brand: 'naidivse', lang: 'en', initialEvents: initial })
+      useActivityPoll({ lang: 'en', initialEvents: initial })
     )
     expect(result.current.events).toHaveLength(1)
     expect(result.current.events[0].id).toBe('e1')
@@ -101,7 +101,6 @@ describe('useActivityPoll — deduplication', () => {
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     const { result } = renderHook(() =>
       useActivityPoll({
-        brand: 'naidivse',
         lang: 'en',
         initialEvents: [e1],
         pollIntervalMs: 100,
@@ -140,7 +139,6 @@ describe('useActivityPoll — trim to maxItems', () => {
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     const { result } = renderHook(() =>
       useActivityPoll({
-        brand: 'naidivse',
         lang: 'en',
         initialEvents: initial,
         pollIntervalMs: 100,
@@ -177,7 +175,7 @@ describe('useActivityPoll — backoff on error', () => {
 
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     const { result } = renderHook(() =>
-      useActivityPoll({ brand: 'naidivse', lang: 'en', pollIntervalMs: 500 })
+      useActivityPoll({ lang: 'en', pollIntervalMs: 500 })
     )
 
     await act(async () => {
@@ -196,7 +194,7 @@ describe('useActivityPoll — backoff on error', () => {
 
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     renderHook(() =>
-      useActivityPoll({ brand: 'naidivse', lang: 'en', pollIntervalMs: 1_000 })
+      useActivityPoll({ lang: 'en', pollIntervalMs: 1_000 })
     )
 
     // Trigger first (failing) poll
@@ -250,7 +248,7 @@ describe('useActivityPoll — visibility pause', () => {
 
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     renderHook(() =>
-      useActivityPoll({ brand: 'naidivse', lang: 'en', pollIntervalMs: 1_000 })
+      useActivityPoll({ lang: 'en', pollIntervalMs: 1_000 })
     )
 
     await act(async () => { vi.advanceTimersByTime(5_000) })
@@ -264,7 +262,7 @@ describe('useActivityPoll — visibility pause', () => {
 
     const { useActivityPoll } = await import('@/lib/useActivityPoll')
     renderHook(() =>
-      useActivityPoll({ brand: 'naidivse', lang: 'en', pollIntervalMs: 30_000 })
+      useActivityPoll({ lang: 'en', pollIntervalMs: 30_000 })
     )
 
     // Verify nothing called while hidden

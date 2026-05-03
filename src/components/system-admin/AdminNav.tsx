@@ -72,6 +72,7 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
     { href: '/admin/brands', label: tr.nav_brands, icon: '✦' },
     { href: '/admin/offers', label: tr.nav_offers, icon: '💰' },
     { href: '/admin/shop-owner-offers', label: tr.nav_so_offers, icon: '🛍' },
+    { href: '/admin/item-domain-mappings', label: tr.nav_item_domain_mappings, icon: '🗺' },
     { href: '/admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },
     { href: '/admin/social-link-rules', label: tr.nav_social_link_rules, icon: '🛡' },
   ]

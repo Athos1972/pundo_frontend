@@ -278,7 +278,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
 
     // Navigate to a protected customer page without auth
     await page.goto(BASE_URL + '/account')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const url = page.url()
     const redirected = url.includes('/login') || url.includes('/auth') || url.includes('/pending') || !url.includes('/account')
     logStep(2, 'Auth-Guard: /account ohne Login', 'Redirect zu Login/Auth', url, redirected ? 'PASS' : 'SKIP')
@@ -354,7 +354,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
     } else {
       // Via browser: navigate to logout
       await page.goto(BASE_URL + '/logout')
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('load')
       const url = page.url()
       logStep(5, 'Customer Logout via Browser', 'Redirect oder public-Seite', url, 'PASS')
     }
@@ -373,7 +373,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
     page.on('pageerror', e => errors.push(e.message))
 
     await page.goto(BASE_URL + `/shops/${ctx.testShopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -390,7 +390,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
     }
 
     await page.goto(BASE_URL + `/shops/${ctx.testShopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Check for review form/button in DOM
     const reviewSelectors = [
@@ -515,7 +515,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
   test('Schritt 10 — Admin sieht pending Reviews in Moderation-Liste', async ({ page }) => {
     // Navigate to admin moderation page
     await page.goto(BASE_URL + '/admin/reviews')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     // Admin page may redirect to login
@@ -571,7 +571,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
 
     // Navigate to API keys page (requires shop-owner auth)
     await page.goto(BASE_URL + '/shop-admin/api-keys')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const isApiKeysPage = url.includes('/shop-admin/api-keys')

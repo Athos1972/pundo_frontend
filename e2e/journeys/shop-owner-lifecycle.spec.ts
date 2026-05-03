@@ -345,7 +345,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   test('Schritt 6 — Guest findet Shop in der Suche', async ({ page }) => {
     const shopName = `e2e-sol-shop-${ctx.uuid}`
     await page.goto(`${BASE_URL}/`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"]')
@@ -361,7 +361,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
     await searchInput.fill(shopName)
     await searchInput.press('Enter')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const found = await page.getByText(shopName, { exact: false }).count()
     const status = found > 0 ? 'PASS' : 'SKIP'
@@ -383,7 +383,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     await page.goto(`${BASE_URL}/shops/${ctx.shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const shopName = `e2e-sol-shop-${ctx.uuid}`
     const found = await page.getByText(shopName, { exact: false }).count()
@@ -417,7 +417,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
     // Direktaufruf
     await page.goto(`${BASE_URL}/shops/${ctx.shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found') || !(await page.getByText(`e2e-sol-shop-${ctx.uuid}`, { exact: false }).count())
 

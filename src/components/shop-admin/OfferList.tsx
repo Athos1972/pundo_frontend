@@ -19,12 +19,14 @@ function sourceBadge(source: ItemSource | undefined, tr: ReturnType<typeof tAdmi
     : source === 'shop_upload' ? tr.source_shop_upload
     : source === 'spotted' ? tr.source_spotted
     : source === 'admin' ? tr.source_admin
+    : source === 'auto_seeded' ? tr.source_auto_seeded
     : (source ?? '')
   const cls = source === 'scraper' ? 'bg-gray-100 text-gray-500'
     : source === 'shop_manual' ? 'bg-green-100 text-green-700'
     : source === 'shop_upload' ? 'bg-blue-100 text-blue-700'
     : source === 'spotted' ? 'bg-purple-100 text-purple-700'
     : source === 'admin' ? 'bg-yellow-100 text-yellow-700'
+    : source === 'auto_seeded' ? 'bg-amber-100 text-amber-700'
     : 'bg-gray-100 text-gray-500'
   return <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${cls}`}>{label}</span>
 }

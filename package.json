@@ -7,7 +7,8 @@
     "build": "next build",
     "build:prod": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "guides:optimize": "tsx scripts/optimize-guide-images.ts"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.15",
@@ -41,7 +42,9 @@
     "eslint-config-next": "^16.2.4",
     "jsdom": "^29.0.2",
     "postcss-nesting": "^14.0.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.4"
   },

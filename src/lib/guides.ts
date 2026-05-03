@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { hasImageMeta } from './guide-images'
 
 export type GuideMeta = {
   title: string
@@ -11,6 +12,7 @@ export type GuideMeta = {
   lang: string
   slug: string
   published: boolean
+  hero_alt?: string // when set + manifest has <slug>/hero, page template renders hero automatically
 }
 
 export type GuideContent = {
@@ -37,7 +39,14 @@ function readMdxFile(slug: string, lang: string): GuideContent | null {
 }
 
 export function getGuide(slug: string, lang: string): GuideContent | null {
-  return readMdxFile(slug, lang) ?? readMdxFile(slug, 'en') ?? readMdxFile(slug, 'de')
+  const result = readMdxFile(slug, lang) ?? readMdxFile(slug, 'en') ?? readMdxFile(slug, 'de')
+  if (result?.meta.hero_alt && !hasImageMeta(`${slug}/hero`)) {
+    throw new Error(
+      `[guides] Frontmatter has hero_alt but manifest is missing entry '${slug}/hero'. ` +
+        `Run \`npm run guides:optimize\`.`,
+    )
+  }
+  return result
 }
 
 export function getGuideLanguages(slug: string): string[] {

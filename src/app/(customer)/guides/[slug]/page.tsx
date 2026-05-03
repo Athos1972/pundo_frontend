@@ -6,6 +6,7 @@ import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getGuide, getGuides, getGuideSlugs, getGuideLanguages } from '@/lib/guides'
 import { mdxComponents } from '@/components/guides/mdx-components'
+import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
 import { GuideCard } from '@/components/guides/GuideCard'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -99,6 +100,8 @@ export default async function GuideDetailPage({ params }: Props) {
         <h1 className="text-2xl font-bold leading-snug">{meta.title}</h1>
         <p className="text-sm text-gray-400">{tr.guide_readtime(Number(meta.readtime))}</p>
       </header>
+
+      {meta.hero_alt && <GuideHeroImage slug={meta.slug} alt={meta.hero_alt} priority />}
 
       <article className="guide-content max-w-none">
         <MDXRemote

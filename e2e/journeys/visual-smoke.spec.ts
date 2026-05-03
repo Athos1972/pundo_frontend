@@ -19,7 +19,8 @@ test.describe('Visual Smoke-Test', () => {
     })
 
     await page.goto(`/products/${PRODUCT_WITH_IMAGES}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
+    // 'networkidle' ist ungeeignet — Plausible-Analytics hält Verbindungen offen
 
     // Mind. 1 Bild muss tatsächlich geladen sein (naturalWidth > 0)
     const loadedImages = await page.evaluate(() =>
@@ -49,7 +50,8 @@ test.describe('Visual Smoke-Test', () => {
 
   test('Suchergebnisse: Seite lädt ohne Crash, Bilder geladen wenn Ergebnisse vorhanden', async ({ page }) => {
     await page.goto('/search?q=ferplast')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
+    // 'networkidle' ist ungeeignet — Plausible-Analytics hält Verbindungen offen
 
     // Seite darf nicht crashen — kein White Screen, kein JS-Error
     const consoleErrors: string[] = []

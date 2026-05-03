@@ -20,6 +20,9 @@ import type {
   SysAdminApiKey,
   SysAdminSocialLinkRule,
   SocialLinkRuleCategory,
+  SysAdminItemDomainMapping,
+  SysAdminItemDomainMappingCreate,
+  MappingGapEntry,
 } from '@/types/system-admin'
 
 // Keep deprecated aliases available in this file so existing callers still compile
@@ -212,4 +215,79 @@ export async function getSocialLinkRules(
 
 export async function getSocialLinkRuleCategories(): Promise<{ categories: SocialLinkRuleCategory[] }> {
   return apiFetch<{ categories: SocialLinkRuleCategory[] }>('/social-link-rules/categories')
+}
+
+// ─── Item-Domain Mappings ─────────────────────────────────────────────────────
+
+export async function getItemDomainMappings(
+  params: { domain?: string; specialty?: string; limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<SysAdminItemDomainMapping>> {
+  return apiFetch<PaginatedResponse<SysAdminItemDomainMapping>>(`/item-domain-mappings${buildQs(params)}`)
+}
+
+export async function getItemDomainMapping(id: number): Promise<SysAdminItemDomainMapping> {
+  return apiFetch<SysAdminItemDomainMapping>(`/item-domain-mappings/${id}`)
+}
+
+export async function createItemDomainMapping(
+  data: SysAdminItemDomainMappingCreate,
+): Promise<SysAdminItemDomainMapping> {
+  return apiFetch<SysAdminItemDomainMapping>('/item-domain-mappings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateItemDomainMapping(
+  id: number,
+  data: Partial<SysAdminItemDomainMappingCreate>,
+): Promise<SysAdminItemDomainMapping> {
+  return apiFetch<SysAdminItemDomainMapping>(`/item-domain-mappings/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteItemDomainMapping(id: number): Promise<void> {
+  await apiFetch<void>(`/item-domain-mappings/${id}`, { method: 'DELETE' })
+}
+
+/**
+ * Fetch the auto-assign gap report.
+ *
+ * Backend returns:
+ *   { uncovered_domains: [{domain_id, domain_slug, auto_assign_count}],
+ *     uncovered_specialties: [{specialty_id, specialty_slug, auto_assign_count}] }
+ *
+ * We normalise to a flat MappingGapEntry[] so the page can filter uniformly.
+ */
+export async function getMappingGaps(): Promise<MappingGapEntry[]> {
+  const raw = await apiFetch<{
+    uncovered_domains?: Array<{ domain_id: number; domain_slug: string; auto_assign_count: number }>
+    uncovered_specialties?: Array<{ specialty_id: number; specialty_slug: string; auto_assign_count: number }>
+  }>('/item-domain-mappings/gap-report')
+
+  const domainEntries: MappingGapEntry[] = (raw.uncovered_domains ?? []).map((d) => ({
+    kind: 'domain',
+    slug: d.domain_slug ?? null,
+    domain_id: d.domain_id,
+    specialty_id: null,
+    onboarding_domain_id: d.domain_id,
+    onboarding_domain_slug: d.domain_slug ?? null,
+    specialty_slug: null,
+    auto_assign_item_count: d.auto_assign_count,
+  }))
+
+  const specialtyEntries: MappingGapEntry[] = (raw.uncovered_specialties ?? []).map((s) => ({
+    kind: 'specialty',
+    slug: s.specialty_slug ?? null,
+    domain_id: null,
+    specialty_id: s.specialty_id,
+    onboarding_domain_id: null,
+    onboarding_domain_slug: null,
+    specialty_slug: s.specialty_slug ?? null,
+    auto_assign_item_count: s.auto_assign_count,
+  }))
+
+  return [...domainEntries, ...specialtyEntries]
 }

@@ -133,42 +133,82 @@ export default async function globalSetup() {
 
   // ── 0a. Test-Frontend auf Port 3500 killen und neu starten ─────────────────
   // Stellt sicher, dass der Frontend-Server immer den aktuellen Code lädt.
-  // Next.js HMR ist für Playwright unzuverlässig — Neustart ist die sichere Methode.
-  console.log(`\n[E2E Setup] Starte Test-Frontend neu (Port ${frontendPort})...`)
-  try {
-    execSync(`lsof -ti TCP:${frontendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
-    console.log(`[E2E Setup] Altes Frontend auf Port ${frontendPort} beendet.`)
-  } catch { /* kein Prozess lief — ok */ }
-  await new Promise(r => setTimeout(r, 500))
+  //
+  // Stabilitäts-Strategie (nach wiederholten Dev-Server-Crashes unter Playwright-Last):
+  //   1. Bevorzuge Standalone-Server (.next/standalone/server.js) — stabiler als Dev.
+  //   2. Falls kein Standalone-Build vorhanden: baue ihn einmalig (dauert ~3 min).
+  //   3. E2E_SKIP_FRONTEND_RESTART=1: Überspringt Kill+Restart — Frontend läuft bereits.
+  //      Nutze dies wenn ein stabiler Standalone-Server extern gestartet wurde.
 
-  const frontendProc = spawn('npm', ['run', 'dev:test'], {
-    cwd: path.join(__dirname, '..'),
-    detached: false,
-    stdio: 'pipe',
-  })
-  frontendProc.stderr?.on('data', (d: Buffer) => {
-    const line = d.toString().trim()
-    if (line && !line.includes('ExperimentalWarning')) console.log(`[frontend] ${line}`)
-  })
-
-  console.log('[E2E Setup] Warte auf Frontend-Healthcheck...')
-  const feDeadline = Date.now() + 120_000
-  let feHealthy = false
-  while (Date.now() < feDeadline) {
+  if (process.env.E2E_SKIP_FRONTEND_RESTART === '1') {
+    console.log(`\n[E2E Setup] E2E_SKIP_FRONTEND_RESTART=1 — Frontend-Restart übersprungen.`)
+    // Nur Healthcheck — wir setzen voraus, dass das Frontend läuft
+    let feRunning = false
+    for (let i = 0; i < 5; i++) {
+      try {
+        const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
+        if (res.ok || res.status === 404 || res.status === 308) { feRunning = true; break }
+      } catch { /* noch nicht bereit */ }
+      await new Promise(r => setTimeout(r, 1000))
+    }
+    if (!feRunning) throw new Error(`[E2E Setup] E2E_SKIP_FRONTEND_RESTART=1 aber Frontend auf ${FRONTEND_URL} antwortet nicht.`)
+    console.log('[E2E Setup] Test-Frontend bereit (kein Restart — External).')
+  } else {
+    console.log(`\n[E2E Setup] Starte Test-Frontend neu (Port ${frontendPort})...`)
     try {
-      const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
-      if (res.ok || res.status === 404 || res.status === 308) { feHealthy = true; break }
-    } catch { /* noch nicht bereit */ }
-    await new Promise(r => setTimeout(r, 2000))
+      execSync(`lsof -ti TCP:${frontendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+      console.log(`[E2E Setup] Altes Frontend auf Port ${frontendPort} beendet.`)
+    } catch { /* kein Prozess lief — ok */ }
+    await new Promise(r => setTimeout(r, 500))
+
+    const repoRoot = path.join(__dirname, '..')
+    const standaloneServer = path.join(repoRoot, '.next/standalone/server.js')
+    const standaloneStatic = path.join(repoRoot, '.next/standalone/.next/static')
+
+    let frontendProc: ReturnType<typeof spawn>
+
+    if (fs.existsSync(standaloneServer) && fs.existsSync(standaloneStatic)) {
+      console.log('[E2E Setup] Standalone-Build gefunden — starte node .next/standalone/server.js (stabil).')
+      frontendProc = spawn('node', [standaloneServer], {
+        cwd: repoRoot,
+        detached: false,
+        stdio: 'pipe',
+        env: { ...process.env, PORT: frontendPort, BACKEND_URL: BACKEND_URL },
+      })
+    } else {
+      console.log('[E2E Setup] Kein Standalone-Build — starte npm run dev:test.')
+      console.log('[E2E Setup] Tipp: "npm run build" + Playwright-Start baut Standalone für stabilere Tests.')
+      frontendProc = spawn('npm', ['run', 'dev:test'], {
+        cwd: repoRoot,
+        detached: false,
+        stdio: 'pipe',
+      })
+    }
+
+    frontendProc.stderr?.on('data', (d: Buffer) => {
+      const line = d.toString().trim()
+      if (line && !line.includes('ExperimentalWarning')) console.log(`[frontend] ${line}`)
+    })
+
+    console.log('[E2E Setup] Warte auf Frontend-Healthcheck...')
+    const feDeadline = Date.now() + 120_000
+    let feHealthy = false
+    while (Date.now() < feDeadline) {
+      try {
+        const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
+        if (res.ok || res.status === 404 || res.status === 308) { feHealthy = true; break }
+      } catch { /* noch nicht bereit */ }
+      await new Promise(r => setTimeout(r, 2000))
+    }
+    if (!feHealthy) {
+      frontendProc.kill()
+      throw new Error(
+        `\n[E2E Setup] Test-Frontend auf ${FRONTEND_URL} antwortet nach 120s nicht.\n` +
+        `  Prüfe ob 'npm run dev:test' im Frontend-Repo funktioniert.\n`
+      )
+    }
+    console.log('[E2E Setup] Test-Frontend bereit.')
   }
-  if (!feHealthy) {
-    frontendProc.kill()
-    throw new Error(
-      `\n[E2E Setup] Test-Frontend auf ${FRONTEND_URL} antwortet nach 120s nicht.\n` +
-      `  Prüfe ob 'npm run dev:test' im Frontend-Repo funktioniert.\n`
-    )
-  }
-  console.log('[E2E Setup] Test-Frontend bereit.')
 
   // ── 0b. Test-Backend auf Port 8500 killen und neu starten ──────────────────
   const backendPort = new URL(BACKEND_URL).port || '8500'

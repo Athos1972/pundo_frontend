@@ -33,28 +33,42 @@ const PREFIX = `e2e-quick-ob-${UUID}`
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const DRAFT_KEY = 'pundo.onboarding.draft.v1'
+const DRAFT_KEY_V1 = 'pundo.onboarding.draft.v1'
+const DRAFT_KEY_V2 = 'pundo.onboarding.draft.v2'
 
-/** Build a valid draft object and write it to localStorage via page.addInitScript. */
+/** Build a valid v2 draft object and write it to localStorage via page.addInitScript. */
 async function injectDraft(
   page: import('@playwright/test').Page,
   providerType = 'dienstleister'
 ) {
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
   const draft = {
-    version: 1,
+    version: 2,
     expiresAt,
     providerType,
     domainSlugs: [],
     specialtySlugs: [],
     location: null,
     contact: {},
+    shopName: '',
   }
   await page.addInitScript(
     ({ key, value }: { key: string; value: string }) => {
       window.localStorage.setItem(key, value)
     },
-    { key: DRAFT_KEY, value: JSON.stringify(draft) }
+    { key: DRAFT_KEY_V2, value: JSON.stringify(draft) }
+  )
+}
+
+/** Inject a legacy v1 draft key (for AC-24 cleanup test). */
+async function injectLegacyV1Draft(page: import('@playwright/test').Page) {
+  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
+  const draft = { version: 1, expiresAt, providerType: 'haendler', domainSlugs: [], specialtySlugs: [], location: null, contact: {} }
+  await page.addInitScript(
+    ({ key, value }: { key: string; value: string }) => {
+      window.localStorage.setItem(key, value)
+    },
+    { key: DRAFT_KEY_V1, value: JSON.stringify(draft) }
   )
 }
 
@@ -287,17 +301,18 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
       // Inject partial location into localStorage draft and reload to skip map interaction
       const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
       const draft = {
-        version: 1,
+        version: 2,
         expiresAt,
         providerType: 'handwerker',
         domainSlugs: ['maler'],
         specialtySlugs: [],
         location: { lat: 34.917, lng: 33.636, address: 'Test Street, Larnaca', isB2cStorefront: false },
         contact: {},
+        shopName: '',
       }
       await page.evaluate(
         ({ key, value }: { key: string; value: string }) => window.localStorage.setItem(key, value),
-        { key: DRAFT_KEY, value: JSON.stringify(draft) }
+        { key: DRAFT_KEY_V2, value: JSON.stringify(draft) }
       )
       await page.reload()
       // Resume draft (banner shows)
@@ -324,11 +339,14 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await phoneInput.fill('+35799000011')
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
-    // Step 5: Photo — click Skip
-    const skipBtn = page.locator('button', { hasText: /skip|überspringen/i })
-    await expect(skipBtn.first(), 'T5: Skip button in Step 5 must be visible').toBeVisible({
+    // Step 5: Name (required) + Photo — enter name then click Skip (photo optional)
+    const nameInput = page.locator('input#shop-name')
+    await expect(nameInput, 'T5: shop-name input must be visible in Step 5').toBeVisible({
       timeout: 8_000,
     })
+    await nameInput.fill('Conflict Test Shop')
+    const skipBtn = page.locator('button', { hasText: /skip|überspringen/i })
+    await expect(skipBtn.first(), 'T5: Skip button in Step 5 must be visible').toBeVisible()
     await skipBtn.first().click()
 
     // Step 6: Credentials — fill conflict email + password
@@ -380,6 +398,92 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const handwerkerTile = dePage.locator('button', { hasText: /handwerker/i })
     await expect(handwerkerTile.first(), 'T6: "Handwerker" tile must be visible (DE)').toBeVisible()
     await dePage.close()
+  })
+
+  // ── T7: AC-24 — v1-Draft is silently deleted on page load ──────────────────
+
+  test('T7 — AC-24: v1-Draft wird beim Laden still gelöscht', async ({ page }) => {
+    // Inject a legacy v1 draft key
+    await injectLegacyV1Draft(page)
+
+    await page.goto(BASE_URL + '/shop-admin/onboarding')
+    await page.waitForLoadState('networkidle')
+
+    // v1 key must be gone — no banner shown (wizard starts fresh at step 1)
+    const v1KeyGone = await page.evaluate(
+      (key: string) => window.localStorage.getItem(key) === null,
+      DRAFT_KEY_V1
+    )
+    expect(v1KeyGone, 'T7: v1 draft key must be deleted on page load').toBe(true)
+
+    // No resume banner should appear (v1 draft was not migrated)
+    const banner = page.locator('button', { hasText: /continue|fortsetzen/i })
+    await expect(banner, 'T7: no resume banner should appear after v1 draft purge').toBeHidden({
+      timeout: 3_000,
+    })
+
+    // Wizard shows step 1 fresh
+    const tiles = page.locator('button[aria-pressed]')
+    await expect(tiles.first(), 'T7: wizard must render step 1 fresh').toBeVisible({
+      timeout: 10_000,
+    })
+  })
+
+  // ── T8: AC-18 — Step 5 Next/Skip disabled without name ─────────────────────
+
+  test('T8 — AC-18: Step 5 — Next und Skip deaktiviert ohne Geschäftsname', async ({ page }) => {
+    await page.goto(BASE_URL + '/shop-admin/onboarding')
+
+    // Advance to step 5 via tile click + quick navigation
+    const handwerkerTile = page.locator('button[aria-pressed]', {
+      hasText: /handwerker|tradesperson/i,
+    })
+    await expect(handwerkerTile.first()).toBeVisible({ timeout: 15_000 })
+    await handwerkerTile.first().click()
+
+    // Step 2: pick a domain without specialties (maler usually works)
+    const malerChip = page.locator('button', { hasText: /painter|maler/i })
+    await expect(malerChip.first()).toBeVisible({ timeout: 10_000 })
+    await malerChip.first().click()
+    await page.locator('button', { hasText: /next|weiter/i }).last().click()
+
+    // Skip sub-step if it appears
+    try {
+      await expect(page.locator('h2', { hasText: /located|wo bist/i }).first()).toBeVisible({ timeout: 2_000 })
+    } catch {
+      await page.locator('button', { hasText: /next|weiter/i }).last().click()
+    }
+
+    // Step 3: inject location via localStorage and reload
+    await page.waitForLoadState('networkidle')
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
+    const draft = {
+      version: 2, expiresAt,
+      providerType: 'handwerker', domainSlugs: ['maler'], specialtySlugs: [],
+      location: { lat: 34.917, lng: 33.636, address: 'Test Street', isB2cStorefront: false },
+      contact: { phone: '+35799000022' },
+      shopName: '',
+    }
+    await page.evaluate(
+      ({ key, val }: { key: string; val: string }) => window.localStorage.setItem(key, val),
+      { key: DRAFT_KEY_V2, val: JSON.stringify(draft) }
+    )
+    await page.reload()
+    const resumeBtn = page.locator('button', { hasText: /continue|fortsetzen/i })
+    await expect(resumeBtn.first()).toBeVisible({ timeout: 8_000 })
+    await resumeBtn.first().click()
+
+    // Should resume at step 5 (contact already filled)
+    const nameInput = page.locator('input#shop-name')
+    await expect(nameInput, 'T8: shop-name input must be visible on Step 5').toBeVisible({
+      timeout: 8_000,
+    })
+
+    // Next and Skip must be disabled when name is empty
+    const nextBtn = page.locator('button', { hasText: /next|weiter/i }).last()
+    const skipBtn = page.locator('button', { hasText: /skip|überspringen/i }).first()
+    await expect(nextBtn, 'T8: Next must be disabled without name').toBeDisabled()
+    await expect(skipBtn, 'T8: Skip must be disabled without name').toBeDisabled()
   })
 
 })

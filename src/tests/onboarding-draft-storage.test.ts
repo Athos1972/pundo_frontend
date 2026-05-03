@@ -2,12 +2,15 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { saveDraft, loadDraft, clearDraft, draftAgeMs } from '@/lib/onboarding/draftStorage'
 import type { OnboardingDraft } from '@/types/shop-admin'
 
+const STORAGE_KEY = 'pundo.onboarding.draft.v2'
+
 const BASE_DRAFT: Omit<OnboardingDraft, 'version' | 'expiresAt'> = {
   providerType: 'handwerker',
   domainSlugs: ['elektriker'],
   specialtySlugs: ['solar'],
   location: { lat: 34.9, lng: 33.6, address: 'Test 1, Nicosia', isB2cStorefront: true },
   contact: { whatsapp: '+357999' },
+  shopName: 'Elektro Schmidt',
 }
 
 describe('draftStorage', () => {
@@ -26,7 +29,8 @@ describe('draftStorage', () => {
     expect(loaded).not.toBeNull()
     expect(loaded!.providerType).toBe('handwerker')
     expect(loaded!.domainSlugs).toEqual(['elektriker'])
-    expect(loaded!.version).toBe(1)
+    expect(loaded!.shopName).toBe('Elektro Schmidt')
+    expect(loaded!.version).toBe(2)
   })
 
   it('returns null when no draft exists', () => {
@@ -42,25 +46,25 @@ describe('draftStorage', () => {
   it('returns null for expired draft', () => {
     saveDraft(BASE_DRAFT)
     // Manually set expiresAt to the past
-    const raw = JSON.parse(localStorage.getItem('pundo.onboarding.draft.v1')!) as OnboardingDraft
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)!) as OnboardingDraft
     raw.expiresAt = Date.now() - 1000
-    localStorage.setItem('pundo.onboarding.draft.v1', JSON.stringify(raw))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(raw))
     expect(loadDraft()).toBeNull()
     // Expired draft should be cleared
-    expect(localStorage.getItem('pundo.onboarding.draft.v1')).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
   it('returns null and clears for wrong version', () => {
     saveDraft(BASE_DRAFT)
-    const raw = JSON.parse(localStorage.getItem('pundo.onboarding.draft.v1')!) as Record<string, unknown>
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)!) as Record<string, unknown>
     raw.version = 99
-    localStorage.setItem('pundo.onboarding.draft.v1', JSON.stringify(raw))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(raw))
     expect(loadDraft()).toBeNull()
-    expect(localStorage.getItem('pundo.onboarding.draft.v1')).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
   it('handles corrupted JSON gracefully', () => {
-    localStorage.setItem('pundo.onboarding.draft.v1', '{invalid json}}}')
+    localStorage.setItem(STORAGE_KEY, '{invalid json}}}')
     expect(loadDraft()).toBeNull()
   })
 
@@ -79,9 +83,16 @@ describe('draftStorage', () => {
 
   it('overwrites existing draft on save', () => {
     saveDraft(BASE_DRAFT)
-    saveDraft({ ...BASE_DRAFT, providerType: 'gastro', domainSlugs: ['grill'] })
+    saveDraft({ ...BASE_DRAFT, providerType: 'gastro', domainSlugs: ['grill'], shopName: 'Grill House' })
     const loaded = loadDraft()
     expect(loaded!.providerType).toBe('gastro')
     expect(loaded!.domainSlugs).toEqual(['grill'])
+    expect(loaded!.shopName).toBe('Grill House')
+  })
+
+  it('purges legacy v1 key on load (AC-24)', () => {
+    localStorage.setItem('pundo.onboarding.draft.v1', JSON.stringify({ version: 1 }))
+    loadDraft()
+    expect(localStorage.getItem('pundo.onboarding.draft.v1')).toBeNull()
   })
 })

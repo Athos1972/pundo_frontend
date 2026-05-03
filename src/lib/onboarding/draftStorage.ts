@@ -1,8 +1,19 @@
 import type { OnboardingDraft } from '@/types/shop-admin'
 
-const STORAGE_KEY = 'pundo.onboarding.draft.v1'
+const STORAGE_KEY = 'pundo.onboarding.draft.v2'
+const LEGACY_KEY_V1 = 'pundo.onboarding.draft.v1'
 const TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-const CURRENT_VERSION = 1 as const
+const CURRENT_VERSION = 2 as const
+
+/** Silently remove the v1 draft key on first call. AC-24. */
+function purgeLegacyDrafts(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(LEGACY_KEY_V1)
+  } catch {
+    // Ignore — storage may be unavailable
+  }
+}
 
 export function saveDraft(draft: Omit<OnboardingDraft, 'version' | 'expiresAt'>): void {
   if (typeof window === 'undefined') return
@@ -20,6 +31,8 @@ export function saveDraft(draft: Omit<OnboardingDraft, 'version' | 'expiresAt'>)
 
 export function loadDraft(): OnboardingDraft | null {
   if (typeof window === 'undefined') return null
+  // Always purge v1 before reading v2 (AC-24)
+  purgeLegacyDrafts()
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null

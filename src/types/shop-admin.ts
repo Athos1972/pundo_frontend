@@ -324,13 +324,14 @@ export interface OnboardingLocation {
 }
 
 export interface OnboardingDraft {
-  version: 1
+  version: 2
   expiresAt: number
   providerType: OnboardingProviderType | null
   domainSlugs: string[]
   specialtySlugs: string[]
   location: OnboardingLocation | null
   contact: OnboardingContact
+  shopName: string
 }
 
 export interface OnboardingSubmitPayload {
@@ -339,6 +340,7 @@ export interface OnboardingSubmitPayload {
   specialtySlugs: string[]
   location: OnboardingLocation
   contact: OnboardingContact
+  shopName: string
   credentials: { email: string; password: string } | { type: 'google' }
 }
 

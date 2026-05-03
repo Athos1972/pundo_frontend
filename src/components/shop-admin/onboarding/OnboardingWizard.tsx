@@ -30,6 +30,7 @@ const EMPTY_DRAFT: Omit<OnboardingDraft, 'version' | 'expiresAt'> = {
   specialtySlugs: [],
   location: null,
   contact: {},
+  shopName: '',
 }
 
 interface OnboardingWizardProps {
@@ -78,6 +79,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           specialtySlugs: saved.specialtySlugs,
           location: saved.location!,
           contact: saved.contact,
+          shopName: saved.shopName ?? '',
           credentials: { type: 'google' },
         })
         clearDraft()
@@ -97,6 +99,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       specialtySlugs: saved.specialtySlugs,
       location: saved.location,
       contact: saved.contact,
+      shopName: saved.shopName ?? '',
     })
     setShowDraftBanner(false)
     // Resume at the furthest completed step
@@ -139,7 +142,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     setStep(4)
   }
 
-  function handleStep5Next(file: File | null) {
+  function handleStep5Next(file: File | null, shopName: string) {
+    persistDraft({ shopName })
     setPhotoFile(file)
     setStep(5)
   }
@@ -157,6 +161,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           specialtySlugs: draft.specialtySlugs,
           location: draft.location!,
           contact: draft.contact,
+          shopName: draft.shopName,
           credentials: { email, password },
         })
         if (photoFile) {
@@ -170,6 +175,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         const code = (err as { code?: string }).code
         if (code === 'EMAIL_TAKEN') {
           setEmailTakenError(true)
+        } else if (code === 'SHOP_NAME_INVALID') {
+          // Backend rejected shop_name — jump back to step 4 (photo+name step)
+          setStep(4)
+          setSubmitError(tr.onboarding_step5_name_required_error)
         } else {
           setSubmitError(tr.onboarding_error_generic)
         }
@@ -187,6 +196,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           specialtySlugs: draft.specialtySlugs,
           location: draft.location!,
           contact: draft.contact,
+          shopName: draft.shopName,
           credentials: { type: 'google' },
         })
         if (photoFile) {
@@ -196,7 +206,13 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         void result
         router.push('/shop-admin/register/check-email')
       } catch (err) {
-        setSubmitError(tr.onboarding_error_oauth_failed)
+        const code = (err as { code?: string }).code
+        if (code === 'SHOP_NAME_INVALID') {
+          setStep(4)
+          setSubmitError(tr.onboarding_step5_name_required_error)
+        } else {
+          setSubmitError(tr.onboarding_error_oauth_failed)
+        }
       }
     })
   }
@@ -284,6 +300,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           <StepPhoto
             tr={tr}
             initialFile={photoFile}
+            initialShopName={draft.shopName}
             onNext={handleStep5Next}
             onBack={() => setStep(3)}
           />

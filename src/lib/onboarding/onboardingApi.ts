@@ -4,10 +4,8 @@ import type { OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/
 
 export async function submitOnboarding(payload: OnboardingSubmitPayload): Promise<OnboardingSubmitResponse> {
   // Transform camelCase frontend types to snake_case backend API format.
-  // Also derive required fields (shop_name, credentials.name, credentials.type)
-  // that the backend schema mandates but the wizard doesn't explicitly collect.
+  // shopName is used directly (no email-local-part fallback — F5910 fix).
   const emailCreds = 'email' in payload.credentials ? payload.credentials : null
-  const nameDefault = emailCreds ? emailCreds.email.split('@')[0] : 'owner'
 
   const backendPayload = {
     provider_type: payload.providerType,
@@ -28,9 +26,9 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
       facebook: payload.contact.facebook ?? undefined,
       website: payload.contact.website ?? undefined,
     },
-    shop_name: nameDefault,
+    shop_name: payload.shopName,
     credentials: emailCreds
-      ? { type: 'email' as const, email: emailCreds.email, password: emailCreds.password, name: nameDefault }
+      ? { type: 'email' as const, email: emailCreds.email, password: emailCreds.password, name: payload.shopName }
       : { type: 'google' as const },
     lang: navigator.language?.slice(0, 2) ?? 'en',
   }
@@ -40,6 +38,23 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(backendPayload),
   })
+
+  if (res.status === 400) {
+    const body = await res.json().catch(() => ({})) as { detail?: unknown }
+    const detail = Array.isArray(body.detail) ? body.detail : []
+    const shopNameErr = detail.find((d: unknown) => {
+      const e = d as { field?: string }
+      return e?.field === 'shop_name'
+    }) as { field: string; code: string } | undefined
+    if (shopNameErr) {
+      throw Object.assign(new Error('SHOP_NAME_INVALID'), {
+        code: 'SHOP_NAME_INVALID',
+        subCode: shopNameErr.code,
+      })
+    }
+    throw new Error('ONBOARDING_FAILED')
+  }
+
   if (res.status === 409) {
     const body = await res.json().catch(() => ({})) as { detail?: string }
     throw Object.assign(new Error(body.detail ?? 'EMAIL_TAKEN'), { code: 'EMAIL_TAKEN' })

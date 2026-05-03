@@ -86,7 +86,14 @@ export async function getShops(
 }
 
 export async function getShop(slug: string, lang: string): Promise<ShopDetailResponse> {
-  return apiFetch<ShopDetailResponse>(`/shops/by-slug/${slug}`, lang);
+  // cache: 'no-store' — shop profile fields (website_url, description, opening hours,
+  // spoken_languages, social_links) are frequently updated by shop owners.
+  // The default revalidate: 3600 would serve stale data for up to 1 hour after an
+  // owner saves their profile, breaking both E2E tests and the real user experience.
+  // (Same reasoning as getShopOffers — see SP4 fix 2026-05-03.)
+  return apiFetch<ShopDetailResponse>(`/shops/by-slug/${slug}`, lang, {
+    cache: 'no-store',
+  });
 }
 
 export interface SitemapSlugsResponse {

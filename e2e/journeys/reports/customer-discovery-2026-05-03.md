@@ -1,5 +1,5 @@
-## Journey: Customer Discovery Flow — PASS
-Datum: 2026-05-03 18:38 UTC
+## Journey: Customer Discovery Flow — FAIL
+Datum: 2026-05-03 18:55 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID/Slug | Status |
@@ -16,11 +16,12 @@ Datum: 2026-05-03 18:38 UTC
 | 5 | Produktdetail — Inhalt vorhanden | Kein 404, Content >100 Zeichen | Content gefunden | PASS |
 | 6 | Karten-Element vorhanden | Leaflet oder Map-Element sichtbar | nicht vorhanden (optional) | SKIP |
 | 7 | Shop-Detailseite aufrufen | Kein 404, keine JS-Errors | geladen (0 Fehler) | PASS |
-| 8 | Shop-Name sichtbar | "E2E Test Shop Larnaca" auf Seite | gefunden | PASS |
-| 9 | Back-Navigation | URL wechselt weg von Shop-Detail | http://localhost:3500/ | PASS |
+| 8 | Shop-Name sichtbar | "E2E Test Shop Larnaca" auf Seite | nicht gefunden | FAIL |
 
 ### Findings (FAIL-Einträge)
-_keine_
+| Schritt | Erwartet | Tatsächlich |
+|---|---|---|
+| 8 | "E2E Test Shop Larnaca" auf Seite | nicht gefunden |
 
 ### Aufräumen
 _Keine eigenen Fixtures — keine Cleanup-Aktion nötig._

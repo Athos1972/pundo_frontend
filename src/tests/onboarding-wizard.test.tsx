@@ -93,13 +93,14 @@ describe('OnboardingWizard', () => {
   it('shows draft banner when a saved draft exists', async () => {
     const draftMod = await import('@/lib/onboarding/draftStorage')
     vi.mocked(draftMod.loadDraft).mockReturnValue({
-      version: 1,
+      version: 2,
       expiresAt: Date.now() + 1000 * 60 * 60,
       providerType: 'handwerker',
       domainSlugs: ['elektriker'],
       specialtySlugs: [],
       location: { lat: 34.9, lng: 33.6, address: 'Test', isB2cStorefront: true },
       contact: { whatsapp: '+357' },
+      shopName: '',
     })
     vi.mocked(draftMod.draftAgeMs).mockReturnValue(3600000)
 

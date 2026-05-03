@@ -1,10 +1,10 @@
 ## Journey: Customer Auth + Interaction + Review Lifecycle — PASS
-Datum: 2026-05-03 18:38 UTC
+Datum: 2026-05-03 18:55 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-carl-5ff541ba-customer | N/A | FEHLER/SKIP |
+| e2e-carl-20223c30-customer | N/A | FEHLER/SKIP |
 
 ### Endpoint-Unterstützung
 - Customer Auth: nein (nicht gefunden)
@@ -20,7 +20,7 @@ Datum: 2026-05-03 18:38 UTC
 | 4 | Customer Login | Token/Cookie erhalten | Customer-Auth nicht unterstützt | SKIP |
 | 5 | Customer Logout | Logout-Seite oder public-State | Customer-Auth nicht unterstützt | SKIP |
 | 6 | Test-Shop-Seite aufrufen | Kein 404 | http://localhost:3500/shops/e2e-test-shop-larnaca-1 | PASS |
-| 7 | Review-Formular im DOM | ReviewForm-Selektor oder Review-Text | Review-Text gefunden | PASS |
+| 7 | Review-Formular im DOM | ReviewForm-Selektor oder Review-Text | nicht gefunden | SKIP |
 | 8 | Review submitten | HTTP 200/201 | Review-Endpoint nicht unterstützt | SKIP |
 | 9 | Spotted-Feature | HTTP 200/201 | testShopId fehlt | SKIP |
 | 10 | Admin Moderation-Liste aufrufen | /admin/reviews oder Login-Redirect | http://localhost:3500/admin/login | PASS |
@@ -33,4 +33,4 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-carl-5ff541ba-customer | versucht | best-effort |
+| e2e-carl-20223c30-customer | versucht | best-effort |

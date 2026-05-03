@@ -1,15 +1,14 @@
 ## Journey: Admin Data Management Sweep — PASS
-Datum: 2026-05-03 18:38 UTC
+Datum: 2026-05-03 18:55 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID | Status |
 |---|---|---|
-| e2e-adm-6b3762df-brand-without-logo | 1 | OK |
-| e2e-adm-6b3762df-brand-with-logo | 2 | OK |
-| e2e-adm-6b3762df-category-parent | 1 | OK |
-| e2e-adm-6b3762df-category-child | 2 | OK |
-| e2e-adm-6b3762df-guide-published | N/A | FEHLER/SKIP |
-| e2e-adm-6b3762df-pending-owner | 2 | OK |
+| e2e-adm-0b0d774a-brand-without-logo | 3 | OK |
+| e2e-adm-0b0d774a-brand-with-logo | 4 | OK |
+| e2e-adm-0b0d774a-category-parent | 3 | OK |
+| e2e-adm-0b0d774a-category-child | 4 | OK |
+| e2e-adm-0b0d774a-guide-published | N/A | FEHLER/SKIP |
 
 ### Endpoint-Unterstützung
 - Logo-Upload: nein (404)
@@ -22,7 +21,7 @@ Datum: 2026-05-03 18:38 UTC
 | 1 | Brand ohne Logo — logo_url leer | logo_url: null | null | PASS |
 | 2 | Logo-Upload | Logo hochgeladen | /api/v1/admin/brands/logo nicht gefunden (404) | SKIP |
 | 3 | Category parent in Admin-Liste | categoryParentId in Liste | gefunden | PASS |
-| 4 | Category child parent_id | parent_id = 1 | 1 | PASS |
+| 4 | Category child parent_id | parent_id = 3 | 3 | PASS |
 | 5 | Admin Categories-Seite | /admin/categories oder Login-Redirect | http://localhost:3500/admin/login | PASS |
 | 6 | Pending Owner ablehnen | HTTP 2xx | HTTP 200 | PASS |
 | 6 | Owner-Status nach Ablehnung | status: rejected | rejected | PASS |
@@ -37,9 +36,8 @@ _keine_
 ### Aufräumen
 | Fixture | Gelöscht | Status |
 |---|---|---|
-| e2e-adm-6b3762df-brand-without-logo | best-effort | OK |
-| e2e-adm-6b3762df-brand-with-logo | best-effort | OK |
-| e2e-adm-6b3762df-category-parent | best-effort | OK |
-| e2e-adm-6b3762df-category-child | best-effort | OK |
-| e2e-adm-6b3762df-guide-published | best-effort | OK |
-| e2e-adm-6b3762df-pending-owner | best-effort | OK |
+| e2e-adm-0b0d774a-brand-without-logo | best-effort | OK |
+| e2e-adm-0b0d774a-brand-with-logo | best-effort | OK |
+| e2e-adm-0b0d774a-category-parent | best-effort | OK |
+| e2e-adm-0b0d774a-category-child | best-effort | OK |
+| e2e-adm-0b0d774a-guide-published | best-effort | OK |

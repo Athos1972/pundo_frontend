@@ -20,16 +20,16 @@
     }
   },
   "ownerId": 1,
-  "shopId": 2,
+  "shopId": 5,
   "shopSlug": "e2e-test-shop-larnaca-1",
   "storageState": {
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6Miwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzg0Mzg2ODR9.cIrSBLyGIMT00nAew-2GVCGzK--YawCAIR120T1bz58",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6NSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzg0NDA5ODJ9.mWOXmzH1FUVwfCL46IvF0_W-PuV1a_F7CFq4X_ViegM",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1778438684.279,
+        "expires": 1778440982.152,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"
@@ -37,5 +37,5 @@
     ],
     "origins": []
   },
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3Nzg0Mzg2ODV9.mdoBYOsDpqdA8jt3zANkcb65TmlbRdYIrnRDqCjQsPo"
+  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3Nzg0NDA5ODN9.vjHKxBuCMCwTeF1BQ2zgggw4F5BP12tCYBLJSo0SKLg"
 }

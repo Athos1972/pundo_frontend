@@ -1,3 +1,9 @@
+// Shop-Detailseite zeigt Live-Daten (Öffnungszeiten, website_url, Angebote).
+// force-dynamic verhindert Full-Route-Cache — getShop/getShopOffers haben
+// bereits cache:'no-store', aber erst ab Next.js 16 propagiert das verlässlich
+// zur Route-Ebene. Explizit ist sicherer.
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'

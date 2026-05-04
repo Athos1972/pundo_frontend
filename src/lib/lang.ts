@@ -33,6 +33,17 @@ export function setLangCookie(lang: Lang): void {
   document.cookie = `app_lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
 }
 
+// Client: Browser-Sprache auf Lang mappen (für LanguagePickerOverlay)
+export function detectBrowserLang(): Lang {
+  if (typeof navigator === 'undefined') return DEFAULT_LANG
+  const candidates = (navigator.languages?.length ? navigator.languages : [navigator.language ?? '']) as string[]
+  for (const raw of candidates) {
+    const two = raw.toLowerCase().split('-')[0]
+    if ((LANGS as readonly string[]).includes(two)) return two as Lang
+  }
+  return DEFAULT_LANG
+}
+
 // Server: aus next/headers Cookie lesen (für Server Components)
 export async function getLangServer(): Promise<Lang> {
   const { cookies } = await import('next/headers');

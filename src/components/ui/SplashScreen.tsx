@@ -1,18 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
-const OUTRO_MS = 2500
+import { SPLASH_OUTRO_MS, SPLASH_SESSION_KEY } from '@/lib/splash'
 
 export function SplashScreen({ splashSvg }: { splashSvg: string }) {
   const [visible, setVisible] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (sessionStorage.getItem('app_splash')) return
-    sessionStorage.setItem('app_splash', '1')
+    if (sessionStorage.getItem(SPLASH_SESSION_KEY)) return
+    sessionStorage.setItem(SPLASH_SESSION_KEY, '1')
 
     const show = setTimeout(() => setVisible(true), 0)
-    const hide = setTimeout(() => setVisible(false), OUTRO_MS)
+    const hide = setTimeout(() => setVisible(false), SPLASH_OUTRO_MS)
     return () => { clearTimeout(show); clearTimeout(hide) }
   }, [])
 

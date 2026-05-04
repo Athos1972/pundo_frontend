@@ -78,7 +78,7 @@ jobs:
         run: npx tsx src/runner.ts
 
       - name: Upload report artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: smoketest-report-${{ github.run_id }}

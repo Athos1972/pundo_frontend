@@ -15,6 +15,7 @@ import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
 import { SearchSimilarButton } from '@/components/search/SearchSimilarButton'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
+import { LanguagePickerOverlay } from '@/components/ui/LanguagePickerOverlay'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -112,6 +113,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </>
         )}
         <SplashScreen splashSvg={brand.assets.splashSvg} />
+        <LanguagePickerOverlay serverLang={lang} />
         <TooltipProvider>
           <SessionProvider initialSession={session}>
             <FavoritesProvider>

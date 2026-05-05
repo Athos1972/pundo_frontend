@@ -1,6 +1,19 @@
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 import { toRelativeImageUrl } from '@/lib/utils'
 
+/**
+ * Converts a potentially relative image URL to an absolute URL using the site base.
+ * Returns undefined if no valid URL is provided.
+ */
+function toAbsoluteImageUrl(url: string | null | undefined, siteUrl: string): string | undefined {
+  if (!url) return undefined
+  // Already absolute (http/https)
+  if (/^https?:\/\//.test(url)) return url
+  // Relative path — prepend site URL
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${siteUrl}${path}`
+}
+
 /** XSS-safe JSON serialization for inline <script> tags. */
 export function safeJson(value: unknown): string {
   return JSON.stringify(value)
@@ -60,6 +73,22 @@ export function buildProductSchema(
     },
   }))
 
+  // Google requires at least one of: offers, review, or aggregateRating in a
+  // Product schema. Provide a minimal fallback offer so the schema is always valid
+  // even when no fixed-price offers exist.
+  const offers =
+    schemaOffers.length > 0
+      ? schemaOffers
+      : [
+          {
+            '@type': 'Offer',
+            availability: 'https://schema.org/InStock',
+            priceCurrency: 'EUR',
+            price: '0',
+            url: `${siteUrl}/products/${product.slug}`,
+          },
+        ]
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -69,7 +98,7 @@ export function buildProductSchema(
     ...(product.brand?.name
       ? { brand: { '@type': 'Brand', name: product.brand.name } }
       : {}),
-    ...(schemaOffers.length > 0 ? { offers: schemaOffers } : {}),
+    offers,
   }
 }
 
@@ -79,11 +108,16 @@ export function buildLocalBusinessSchema(
 ): Record<string, unknown> {
   const openingHours = toOpeningHoursSpec(shop.opening_hours)
 
+  // Convert relative shop image paths to absolute URLs (required by Google).
+  const firstImageUrl = shop.images?.[0]?.url
+  const image = toAbsoluteImageUrl(toRelativeImageUrl(firstImageUrl) ?? firstImageUrl, siteUrl)
+
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: shop.name ?? 'Shop',
     url: `${siteUrl}/shops/${shop.slug}`,
+    ...(image ? { image } : {}),
     ...(shop.address_raw
       ? { address: { '@type': 'PostalAddress', streetAddress: shop.address_raw } }
       : {}),

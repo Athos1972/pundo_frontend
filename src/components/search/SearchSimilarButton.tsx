@@ -52,17 +52,14 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
           dismissLabel={tr.fab_dismiss_label}
         />
 
-        {/* Mobile: round button; Desktop (md+): pill with label */}
+        {/* Pill with icon + label on all viewports */}
         <button
           onClick={handleClick}
           aria-label={tr.search_similar_button_label}
           title={tr.search_similar_button_label}
           className={[
-            'flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform',
-            // Mobile: circle
-            'w-14 h-14 rounded-full',
-            // Desktop: pill
-            'md:w-auto md:h-14 md:rounded-full md:px-4',
+            'flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform rtl:flex-row-reverse',
+            'h-14 px-4 rounded-full',
             fabColorClasses,
             pulseClass,
           ]
@@ -70,7 +67,7 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
             .join(' ')}
         >
           <HomesickIcon className="w-6 h-6 shrink-0" />
-          <span className="hidden md:inline text-sm font-medium whitespace-nowrap">
+          <span className="text-sm font-medium whitespace-nowrap">
             {fabLabel}
           </span>
         </button>

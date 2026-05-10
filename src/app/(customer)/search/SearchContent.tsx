@@ -86,6 +86,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   }, [q, location.lat, location.lng, mapBbox, lang])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOffset(0)
     load(true, 0)
   }, [q, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps

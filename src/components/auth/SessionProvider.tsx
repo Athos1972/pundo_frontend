@@ -30,6 +30,7 @@ export function SessionProvider({
   // would hold onto the original mount-time value forever and the UI would
   // look "still signed out" until a full page reload.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSession(initialSession)
   }, [initialSession])
 

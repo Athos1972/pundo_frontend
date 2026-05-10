@@ -138,6 +138,7 @@ export function useActivityPoll({
     timerRef.current = setTimeout(() => {
       // If page hidden at tick time, skip — visibility handler will re-trigger
       if (!pausedRef.current) {
+        // eslint-disable-next-line react-hooks/immutability
         doPoll().finally(scheduleNext)
       }
       // When paused, we do NOT reschedule — the visibility handler does it

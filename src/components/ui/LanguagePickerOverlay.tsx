@@ -92,6 +92,7 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
 
   // Sync selected when preselected is resolved in useEffect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected(preselected)
   }, [preselected])
 

@@ -31,6 +31,7 @@ export function RelativeTime({ createdAt, lang }: RelativeTimeProps) {
   const tr = t(lang)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setText(toRelative(createdAt, tr))
     const id = setInterval(() => {
       setText(toRelative(createdAt, tr))

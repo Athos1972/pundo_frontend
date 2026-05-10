@@ -4,6 +4,7 @@ import type {
   CategoryListResponse,
   ShopReviewPreview,
   ShopOffer,
+  SearchResponse,
 } from '@/types/api';
 
 // Server Components (SSR/Node.js) brauchen absolute URLs — BACKEND_URL wird
@@ -42,6 +43,34 @@ export async function searchProducts(
   return apiFetch<ProductListResponse>(`/products${q ? `?${q}` : ''}`, lang);
 }
 
+/**
+ * Unified search — returns products AND service categories in a single response.
+ * Service results carry result_type='service' with category_id and provider_count.
+ * Product results carry result_type='product' with the same fields as ProductListItem.
+ *
+ * Backend: GET /api/v1/search (F5910 Service-Discovery-Bridge)
+ */
+export async function searchAll(
+  params: {
+    q: string;
+    lat?: number;
+    lng?: number;
+    bbox?: string;  // 'lat_min,lng_min,lat_max,lng_max' — map viewport for provider_count
+    limit?: number;
+    offset?: number;
+  },
+  lang: string
+): Promise<SearchResponse> {
+  const qs = new URLSearchParams();
+  qs.set('q', params.q);
+  if (params.lat != null) qs.set('lat', String(params.lat));
+  if (params.lng != null) qs.set('lng', String(params.lng));
+  if (params.bbox) qs.set('bbox', params.bbox);
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.offset != null) qs.set('offset', String(params.offset));
+  return apiFetch<SearchResponse>(`/search?${qs.toString()}`, lang, { cache: 'no-store' });
+}
+
 export async function getProduct(slug: string, lang: string): Promise<ProductDetailResponse> {
   return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang);
 }
@@ -64,6 +93,8 @@ export async function getShops(
     q?: string; lat?: number; lng?: number; limit?: number; offset?: number; status?: string;
     shop_type_id?: number; open_now?: boolean; max_dist_km?: number;
     spoken_languages?: string; has_parking?: boolean; has_own_delivery?: boolean; is_online_only?: boolean;
+    /** F5910: filter shops to those offering the given UNSPSC service category (via onboarding mapping) */
+    service_category_id?: number;
   } = {},
   lang: string
 ): Promise<ShopListResponse> {
@@ -81,6 +112,7 @@ export async function getShops(
   if (params.has_parking != null) qs.set('has_parking', String(params.has_parking));
   if (params.has_own_delivery != null) qs.set('has_own_delivery', String(params.has_own_delivery));
   if (params.is_online_only != null) qs.set('is_online_only', String(params.is_online_only));
+  if (params.service_category_id != null) qs.set('service_category_id', String(params.service_category_id));
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
 }

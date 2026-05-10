@@ -288,3 +288,35 @@ export interface SimilaritySearchQuota {
   used_month: number
   limit_monthly: number
 }
+
+// ─── Unified Search (F5910 Service-Discovery-Bridge) ─────────────────────────
+
+export interface SearchProductItem extends ProductListItem {
+  result_type: 'product'
+  score: number
+}
+
+export interface SearchServiceItem {
+  result_type: 'service'
+  category_id: number
+  category_slug: string | null
+  name: string
+  provider_count: number
+  matched_via: 'specialty' | 'domain' | 'synonym' | 'category'
+  score: number
+}
+
+export type SearchResultItem = SearchProductItem | SearchServiceItem
+
+export interface SearchResponse {
+  total: number
+  items: SearchResultItem[]
+}
+
+export function isServiceResult(i: SearchResultItem): i is SearchServiceItem {
+  return i.result_type === 'service'
+}
+
+export function isProductResult(i: SearchResultItem): i is SearchProductItem {
+  return i.result_type === 'product'
+}

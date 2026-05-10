@@ -1,9 +1,10 @@
 {
-  "sha": "9a0dee1cc1cc2373c01d652e14be7ffa97ff0e3e",
-  "timestamp": "2026-05-03T17:20:00.000000+00:00",
+  "sha": "3abef2414fad6aef8c6ef7869e13dbf672d7784f",
+  "timestamp": "2026-05-10T19:06:36.969711+00:00",
   "result": "SHIP",
-  "unit_tests": "64 files / 1220 tests PASS",
-  "playwright": "323 PASS / 37 pre-existing FAIL",
-  "coverage_snapshot": {},
-  "notes": "SP4 fix: getShopOffers cache:no-store + toContainText assertion; guide-images mock path fixed"
+  "unit_tests": "67 files / 1305 tests PASS",
+  "playwright": "all PASS (exit 0)",
+  "typescript": "PASS (1 fix: review_stats added to ProductDetailResponse)",
+  "eslint": "0 errors / 69 warnings",
+  "coverage_snapshot": {}
 }

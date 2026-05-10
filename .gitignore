@@ -54,6 +54,7 @@ data/naidivse-signups.txt
 # Specs migrated to Obsidian vault on 2026-04-25 (Pundo-Plattform)
 specs/
 /.claude/scheduled_tasks.lock
+/.claude/worktrees/
 
 # Guide image sources (LLM originals — gitignored, only optimised assets are committed)
 content/guides/_raw/*

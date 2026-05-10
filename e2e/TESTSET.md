@@ -1,10 +1,10 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-05-02
-SHA: 383c33f
-Feature: B5910-001 Nachtest — Onboarding-Karte Geolokalisierung & Zoom (Visual Smoke + Playwright Journey)
-Ergebnis: **Visual Smoke 8/8 PASS | Journey shop-owner-quick-onboarding 5/6 PASS (T5 pre-existing spec-bug — maler-lackierer hat Specialties) | B5910-001 Verdict: SHIP**
+Datum: 2026-05-10
+SHA: 3abef24
+Anlass: Routine-Qualitätsprüfung — bestehende Fehler analysieren
+Ergebnis: **TypeScript 1 Fix (review_stats in ProductDetailResponse) | Unit-Tests 1305/1305 PASS | Playwright Exit 0 (alle PASS) | Verdict: SHIP**
 
 ---
 

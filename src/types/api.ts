@@ -42,6 +42,7 @@ export interface ProductDetailResponse {
   thumbnail_url: string | null; images: ProductImages | null; attributes: Record<string, unknown> | null;
   offers: OfferDetail[];
   price_history: PriceHistoryItem[];
+  review_stats?: { average_stars: number; total_count: number } | null;
 }
 
 export interface ShopListItem {

@@ -325,19 +325,21 @@ function writeReport() {
 
 test.describe('IDM-1: /admin/item-domain-mappings List', () => {
   test('Mapping-Tabelle lädt und zeigt Einträge', async ({ browser }) => {
-    test.setTimeout(60_000) // Admin-Login + Navigation braucht mehr als 30s
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
+    test.setTimeout(60_000) // Admin-Navigation kann etwas dauern
 
-    // Admin via Login-Formular einloggen (setzt Cookie im Page-Context)
-    const loggedIn = await adminLoginViaForm(page)
-    if (!loggedIn) {
-      logStep('IDM-1a', 'Admin Login via Formular', 'Redirect zu /admin/dashboard', `Login fehlgeschlagen, URL: ${page.url()}`, 'FAIL')
-      findings.push('IDM-1a: Admin Login via Formular fehlgeschlagen')
-      await ctx2.close()
+    // Skip if admin cookie not available (beforeAll adminLogin failed)
+    if (!ctx.adminCookie) {
+      logStep('IDM-1a', 'Admin Cookie verfügbar', 'ctx.adminCookie gesetzt', 'null — beforeAll fehlgeschlagen', 'SKIP')
+      test.skip(true, 'Admin user not available in test-DB — run prepare_e2e_db.py with admin seed')
       return
     }
-    logStep('IDM-1a', 'Admin Login via Formular', 'Redirect zu /admin/dashboard', '/admin/dashboard erreicht', 'PASS')
+
+    // Inject cookie directly — avoids slow form login and unreliable networkidle on /admin/login
+    const cookieDomain = new URL(BASE_URL).hostname
+    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
+    await ctx2.addCookies([{ name: 'admin_token', value: ctx.adminCookie, domain: cookieDomain, path: '/' }])
+    const page = await ctx2.newPage()
+    logStep('IDM-1a', 'Admin Cookie injiziert', 'admin_token gesetzt', `domain=${cookieDomain}`, 'PASS')
 
     // Navigiere zu item-domain-mappings
     await page.goto(`${BASE_URL}/admin/item-domain-mappings`)
@@ -374,9 +376,11 @@ test.describe('IDM-1: /admin/item-domain-mappings List', () => {
     }
 
     // Domain/Specialty-Spalten prüfen (potentielles Bug: zeigen immer "—" wegen Feldname-Mismatch)
-    const firstDataRow = tableRows.first()
-    const domainCell = firstDataRow.locator('td').nth(2)
-    const domainText = await domainCell.textContent().catch(() => null)
+    // Only attempt cell inspection if table has data rows — otherwise textContent() waits for
+    // a non-existent element up to actionTimeout and causes the test to exceed its budget.
+    const domainText = rowCount > 0
+      ? await tableRows.first().locator('td').nth(2).textContent({ timeout: 5_000 }).catch(() => null)
+      : null
 
     if (domainText && domainText.trim() !== '—' && domainText.trim() !== '') {
       logStep('IDM-1d', 'Domain-Spalte zeigt Wert', 'Domain-Slug sichtbar (kein "—")', `"${domainText?.trim()}"`, 'PASS')

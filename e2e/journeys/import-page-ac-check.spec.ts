@@ -1,23 +1,17 @@
 import { test, expect } from '@playwright/test'
+import fs from 'fs'
+import path from 'path'
 
-const storageState = {
-  cookies: [
-    {
-      name: 'shop_owner_token',
-      value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6MjIxNCwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzc2MjA1MjB9.FhwhkA1dkt2n5vWxZUwMEzgEj-sWxy9ddDjDSMkfWSQ',
-      domain: '127.0.0.1',
-      path: '/',
-      expires: 1777620520,
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Lax' as const,
-    },
-  ],
-  origins: [],
+// Load fresh shop_owner_token from global-setup state (avoids expired hardcoded JWTs)
+function loadStorageState(): { cookies: object[]; origins: object[] } {
+  const stateFile = path.join(__dirname, '..', '.test-state.json')
+  if (!fs.existsSync(stateFile)) return { cookies: [], origins: [] }
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as { storageState?: { cookies: object[]; origins: object[] } }
+  return state.storageState ?? { cookies: [], origins: [] }
 }
 
 test.describe('Import Page — Feature AC Verification', () => {
-  test.use({ storageState })
+  test.use({ storageState: loadStorageState() })
 
   test('AC-4: file input has accept=".xlsx,.xls,.csv"', async ({ page }) => {
     await page.goto('/shop-admin/import')

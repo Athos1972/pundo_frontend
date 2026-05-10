@@ -26,10 +26,10 @@
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6NSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzg0NDA5ODJ9.mWOXmzH1FUVwfCL46IvF0_W-PuV1a_F7CFq4X_ViegM",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwic2hvcF9pZCI6NSwic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3NzkwNDQ0NzF9.SM0l3qXzaYDDvibh36kHvVj5vQCpn92c-LkRZ_Ih3V0",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1778440982.152,
+        "expires": 1779044471.495,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"
@@ -37,5 +37,5 @@
     ],
     "origins": []
   },
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3Nzg0NDA5ODN9.vjHKxBuCMCwTeF1BQ2zgggw4F5BP12tCYBLJSo0SKLg"
+  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3NzkwNDQ0NzJ9.N8-_i03NJL5mJj8qek1qt-20dLFPUJ0b64kTwOrg9uE"
 }

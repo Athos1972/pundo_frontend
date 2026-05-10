@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getShops } from '@/lib/api'
 import type { ShopListItem, ShopTypeRead } from '@/types/api'
 import { t } from '@/lib/translations'
@@ -18,6 +19,12 @@ const CHIP_OFF  = 'bg-surface border-border text-text-muted hover:border-accent'
 
 export function ShopsContent({ lang }: { lang: string }) {
   const tr = t(lang)
+  const searchParams = useSearchParams()
+
+  // F5910: ?service=<category_id> from ServiceResultCard click routing (AC8)
+  const serviceCategoryId = searchParams.get('service')
+    ? Number(searchParams.get('service'))
+    : undefined
 
   // Geolocation
   const [coords, setCoords] = useState<Coords | null>(null)
@@ -90,6 +97,8 @@ export function ShopsContent({ lang }: { lang: string }) {
       ...(hasDelivery && { has_own_delivery: true }),
       ...(isOnlineOnly && { is_online_only: true }),
       ...(langFilter.length > 0 && { spoken_languages: langFilter.join(',') }),
+      // F5910 Service-Discovery-Bridge: filter by UNSPSC service category (T14)
+      ...(serviceCategoryId != null && { service_category_id: serviceCategoryId }),
     }
 
     getShops(params, lang)
@@ -112,7 +121,7 @@ export function ShopsContent({ lang }: { lang: string }) {
         setErrorMsg(err instanceof Error ? err.message : String(err))
         setLoading(false)
       })
-  }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang])
+  }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang, serviceCategoryId])
 
   // ── Helper: type display name ─────────────────────────────────────────────────
   function typeLabel(st: ShopTypeRead): string {

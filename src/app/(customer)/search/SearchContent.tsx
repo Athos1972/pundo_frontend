@@ -1,13 +1,15 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { searchProducts } from '@/lib/api'
+import { searchAll } from '@/lib/api'
 import { t } from '@/lib/translations'
 import type { Lang } from '@/lib/lang'
 import { useGeolocation } from '@/lib/useGeolocation'
-import type { ProductListItem } from '@/types/api'
+import type { SearchResultItem, SearchServiceItem, SearchProductItem } from '@/types/api'
+import { isServiceResult, isProductResult } from '@/types/api'
 import { useInfiniteScroll } from '@/lib/useInfiniteScroll'
 import { SearchBar } from '@/components/search/SearchBar'
+import { ServiceResultCard } from '@/components/search/ServiceResultCard'
 import { ProductCard } from '@/components/product/ProductCard'
 import { FilterChips } from '@/components/search/FilterChips'
 import { DistanceSlider } from '@/components/search/DistanceSlider'
@@ -22,10 +24,8 @@ const ShopMap = dynamic(() => import('@/components/map/ShopMap').then(m => ({ de
 const PAGE_SIZE = 20
 const DEFAULT_MAX_DIST_KM = 50
 
-/** Returns true if this offer is from an online-only retailer.
- *  Uses shop_type when available (backend field); falls back to dist_km === null
- *  as structural proxy until all shop records have shop_type set. */
-function isOnlineOffer(offer: ProductListItem['best_offer']): boolean {
+/** Returns true if this offer is from an online-only retailer. */
+function isOnlineOffer(offer: SearchProductItem['best_offer']): boolean {
   if (!offer) return false
   if (offer.shop_type != null) return offer.shop_type === 'online_only'
   return offer.dist_km == null
@@ -38,33 +38,38 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   const location = useGeolocation()
 
   const q = params.get('q') ?? ''
-  const categoryId = params.get('category_id') ? Number(params.get('category_id')) : undefined
   const available = params.get('available') === 'true'
-  const shopId = params.get('shop_id') ? Number(params.get('shop_id')) : undefined
   const withPrice = params.get('with_price') === '1'
   const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
   const includeOnline = params.get('include_online') !== '0'
 
-  const [items, setItems] = useState<ProductListItem[]>([])
+  const [items, setItems] = useState<SearchResultItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [offset, setOffset] = useState(0)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
+  // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
+  // We track the map bounds in state and pass them as bbox to searchAll.
+  // When map not yet loaded → bbox=undefined → backend falls back to Cyprus-wide count.
+  const [mapBbox, setMapBbox] = useState<string | undefined>(undefined)
+
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
+    if (!q || q.length < 2) {
+      setItems([])
+      setTotal(0)
+      return
+    }
     setLoading(true)
     const newOffset = reset ? 0 : currentOffset
     try {
-      const res = await searchProducts(
+      const res = await searchAll(
         {
           q,
-          category_id: categoryId,
-          available,
-          shop_id: shopId,
           lat: location.lat,
           lng: location.lng,
-          max_dist_km: maxDistKm,
+          bbox: mapBbox,
           limit: PAGE_SIZE,
           offset: newOffset,
         },
@@ -78,12 +83,12 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     } finally {
       setLoading(false)
     }
-  }, [q, categoryId, available, shopId, location.lat, location.lng, maxDistKm, lang])
+  }, [q, location.lat, location.lng, mapBbox, lang])
 
   useEffect(() => {
     setOffset(0)
     load(true, 0)
-  }, [q, categoryId, available, shopId, withPrice, maxDistKm, location.lat, location.lng]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMore = useCallback(() => load(false, offset), [load, offset])
   const { sentinelRef, isSupported } = useInfiniteScroll({
@@ -99,12 +104,18 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     router.push(`/search?${p}`)
   }
 
-  const allFiltered = withPrice ? items.filter(item => item.best_offer?.price_type === 'fixed') : items
+  // Separate service and product results
+  const serviceItems = items.filter(isServiceResult) as SearchServiceItem[]
+  const productItems = items.filter(isProductResult) as SearchProductItem[]
 
-  // Split into local and online sections
-  const localItems = allFiltered.filter(item => !isOnlineOffer(item.best_offer))
+  // Apply product-level filters (price, distance) — services are never filtered out
+  const filteredProducts = withPrice
+    ? productItems.filter(item => item.best_offer?.price_type === 'fixed')
+    : productItems
+
+  const localItems = filteredProducts.filter(item => !isOnlineOffer(item.best_offer))
     .filter(item => item.best_offer?.dist_km == null || item.best_offer.dist_km <= maxDistKm)
-  const onlineItems = allFiltered.filter(item => isOnlineOffer(item.best_offer))
+  const onlineItems = filteredProducts.filter(item => isOnlineOffer(item.best_offer))
 
   const mapShops = Array.from(
     new Map(
@@ -167,17 +178,30 @@ export default function SearchContent({ lang }: { lang: Lang }) {
       <div className="flex h-[calc(100vh-160px)]">
         <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'block' : 'hidden'} md:block w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3`}>
 
+          {/* Service results section — always first (highest visibility per arch T13) */}
+          {serviceItems.length > 0 && (
+            <>
+              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">
+                {tr.result_service_badge}
+              </h2>
+              {serviceItems.map(item => (
+                <ServiceResultCard key={`service-${item.category_id}`} item={item} lang={lang} />
+              ))}
+            </>
+          )}
+
           {/* Local shops section */}
-          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">{tr.local_shops}</h2>
           {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
-          {!loading && localItems.length === 0 && (
+          {!loading && localItems.length === 0 && serviceItems.length === 0 && (
             <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
           )}
+          {!loading && localItems.length === 0 && serviceItems.length > 0 && null}
 
           {/* Online retailers section */}
           {includeOnline && onlineItems.length > 0 && (
             <>
-              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3">{tr.online_retailers}</h2>
+              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3 rtl:text-end">{tr.online_retailers}</h2>
               {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
             </>
           )}

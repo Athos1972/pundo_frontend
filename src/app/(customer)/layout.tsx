@@ -118,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SessionProvider initialSession={session}>
             <FavoritesProvider>
               <Header />
-              <div className="pb-24 md:pb-0">{children}</div>
+              {children}
               <Footer />
               <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
               <SearchSimilarButton lang={lang} brandSlug={brand.slug} />

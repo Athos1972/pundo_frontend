@@ -52,12 +52,27 @@ export function buildProductSchema(
   const description =
     product.descriptions?.[lang] ?? product.descriptions?.['en'] ?? undefined
 
-  const relativeImg = toRelativeImageUrl(product.thumbnail_url)
-  const image = relativeImg ? `${siteUrl}${relativeImg}` : undefined
+  const image = toAbsoluteImageUrl(
+    toRelativeImageUrl(product.thumbnail_url) ?? product.thumbnail_url,
+    siteUrl,
+  )
 
   const fixedOffers = product.offers.filter(
     (o) => o.price_type === 'fixed' && o.price != null,
   )
+
+  // Merchant listing fields required/recommended by Google.
+  // Pundo is a local-store price locator — no online shipping, return policy
+  // is determined by the individual retailer (MerchantReturnUnspecified).
+  const merchantReturnPolicy = {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: 'CY',
+    returnPolicyCategory: 'https://schema.org/MerchantReturnUnspecified',
+  }
+  const shippingDetails = {
+    '@type': 'OfferShippingDetails',
+    doesNotShip: true,
+  }
 
   const schemaOffers = fixedOffers.map((o) => ({
     '@type': 'Offer',
@@ -71,6 +86,8 @@ export function buildProductSchema(
       '@type': 'Organization',
       name: o.shop_name,
     },
+    hasMerchantReturnPolicy: merchantReturnPolicy,
+    shippingDetails,
   }))
 
   // Google requires at least one of: offers, review, or aggregateRating in a
@@ -86,8 +103,22 @@ export function buildProductSchema(
             priceCurrency: 'EUR',
             price: '0',
             url: `${siteUrl}/products/${product.slug}`,
+            hasMerchantReturnPolicy: merchantReturnPolicy,
+            shippingDetails,
           },
         ]
+
+  const stats = product.review_stats
+  const aggregateRating =
+    stats && stats.total_count > 0
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: stats.average_stars,
+          reviewCount: stats.total_count,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined
 
   return {
     '@context': 'https://schema.org',
@@ -99,6 +130,7 @@ export function buildProductSchema(
       ? { brand: { '@type': 'Brand', name: product.brand.name } }
       : {}),
     offers,
+    ...(aggregateRating ? { aggregateRating } : {}),
   }
 }
 

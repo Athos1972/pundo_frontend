@@ -118,13 +118,35 @@ describe('buildProductSchema', () => {
     expect(offers[0]['availability']).toBe('https://schema.org/InStock')
   })
 
-  it('excludes on_request offers from schema', () => {
+  it('includes hasMerchantReturnPolicy on each offer', () => {
+    const schema = buildProductSchema(baseProduct, 'en', SITE_URL)
+    const offers = schema['offers'] as Array<Record<string, unknown>>
+    const policy = offers[0]['hasMerchantReturnPolicy'] as Record<string, unknown>
+    expect(policy['@type']).toBe('MerchantReturnPolicy')
+    expect(policy['returnPolicyCategory']).toBe('https://schema.org/MerchantReturnUnspecified')
+    expect(policy['applicableCountry']).toBe('CY')
+  })
+
+  it('includes shippingDetails with doesNotShip on each offer', () => {
+    const schema = buildProductSchema(baseProduct, 'en', SITE_URL)
+    const offers = schema['offers'] as Array<Record<string, unknown>>
+    const shipping = offers[0]['shippingDetails'] as Record<string, unknown>
+    expect(shipping['@type']).toBe('OfferShippingDetails')
+    expect(shipping['doesNotShip']).toBe(true)
+  })
+
+  it('fallback offer also includes merchant return policy and shipping', () => {
     const product = {
       ...baseProduct,
       offers: [{ ...baseProduct.offers[0], price_type: 'on_request' as const, price: null }],
     }
     const schema = buildProductSchema(product, 'en', SITE_URL)
-    expect(schema['offers']).toBeUndefined()
+    const offers = schema['offers'] as Array<Record<string, unknown>>
+    expect(offers).toHaveLength(1)
+    const policy = offers[0]['hasMerchantReturnPolicy'] as Record<string, unknown>
+    expect(policy['@type']).toBe('MerchantReturnPolicy')
+    const shipping = offers[0]['shippingDetails'] as Record<string, unknown>
+    expect(shipping['doesNotShip']).toBe(true)
   })
 
   it('marks unavailable offers as OutOfStock', () => {
@@ -135,6 +157,42 @@ describe('buildProductSchema', () => {
     const schema = buildProductSchema(product, 'en', SITE_URL)
     const offers = schema['offers'] as Array<Record<string, unknown>>
     expect(offers[0]['availability']).toBe('https://schema.org/OutOfStock')
+  })
+
+  it('builds correct image URL from non-localhost absolute thumbnail_url', () => {
+    const product = { ...baseProduct, thumbnail_url: 'https://api.pundo.cy/product_images/foo.jpg' }
+    const schema = buildProductSchema(product, 'en', SITE_URL)
+    expect(schema['image']).toBe('https://api.pundo.cy/product_images/foo.jpg')
+    expect(schema['image']).not.toContain('pundo.cyhttps://')
+  })
+
+  it('emits aggregateRating when review_stats has reviews', () => {
+    const product = { ...baseProduct, review_stats: { average_stars: 4.3, total_count: 17 } }
+    const schema = buildProductSchema(product, 'en', SITE_URL)
+    expect(schema['aggregateRating']).toEqual({
+      '@type': 'AggregateRating',
+      ratingValue: 4.3,
+      reviewCount: 17,
+      bestRating: 5,
+      worstRating: 1,
+    })
+  })
+
+  it('omits aggregateRating when review_stats is null', () => {
+    const product = { ...baseProduct, review_stats: null }
+    const schema = buildProductSchema(product, 'en', SITE_URL)
+    expect(schema['aggregateRating']).toBeUndefined()
+  })
+
+  it('omits aggregateRating when review_stats is absent', () => {
+    const schema = buildProductSchema(baseProduct, 'en', SITE_URL)
+    expect(schema['aggregateRating']).toBeUndefined()
+  })
+
+  it('omits aggregateRating when total_count is 0', () => {
+    const product = { ...baseProduct, review_stats: { average_stars: 0, total_count: 0 } }
+    const schema = buildProductSchema(product, 'en', SITE_URL)
+    expect(schema['aggregateRating']).toBeUndefined()
   })
 })
 

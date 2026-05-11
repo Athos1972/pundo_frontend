@@ -34,6 +34,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { shopOwnerLogin } from './_helpers'
 
 // ─── Port-Safety ──────────────────────────────────────────────────────────────
 
@@ -80,16 +81,7 @@ function ownerAuthHeader(token: string): Record<string, string> {
 }
 
 async function getOwnerToken(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`Owner-Login fehlgeschlagen: ${res.status} ${await res.text()}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!match) throw new Error(`shop_owner_token cookie nicht gefunden: ${cookieHeader}`)
-  return match[1]
+  return shopOwnerLogin(email, password)
 }
 
 async function getShopProfile(token: string): Promise<Record<string, unknown>> {
@@ -128,6 +120,7 @@ test.describe.serial('Szenario C — Phone Field: FINDING-1', () => {
   let ownerToken = ''
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     ownerToken = await getOwnerToken(state.email, state.password)
     // Reset phone to null before tests
     await patchShopProfile(ownerToken, { phone: null })
@@ -253,9 +246,11 @@ test.describe.serial('Szenario D — Logo Upload: FINDING-3', () => {
   const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     ownerToken = await getOwnerToken(state.email, state.password)
 
     // Create a valid 200x200 JPEG using backend Pillow
+
     const { execSync } = await import('child_process')
     execSync(
       `${BACKEND_REPO}/.venv/bin/python3 -c "

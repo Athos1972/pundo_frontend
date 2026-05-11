@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test'
+import type { BrowserContextOptions } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
+type StorageState = NonNullable<BrowserContextOptions['storageState']>
+
 // Load fresh shop_owner_token from global-setup state (avoids expired hardcoded JWTs)
-function loadStorageState(): { cookies: object[]; origins: object[] } {
+function loadStorageState(): StorageState {
   const stateFile = path.join(__dirname, '..', '.test-state.json')
   if (!fs.existsSync(stateFile)) return { cookies: [], origins: [] }
-  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as { storageState?: { cookies: object[]; origins: object[] } }
+  const state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as { storageState?: StorageState }
   return state.storageState ?? { cookies: [], origins: [] }
 }
 

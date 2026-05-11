@@ -42,6 +42,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
+import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
 
 // ─── Port-Safety ──────────────────────────────────────────────────────────────
 
@@ -100,15 +101,7 @@ async function adminLogin(): Promise<string> {
       { cwd: BACKEND_REPO, stdio: 'pipe' }
     )
   } catch { /* admin may already exist */ }
-  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
-  })
-  if (!res.ok) throw new Error(`Admin-Login fehlgeschlagen: ${res.status}`)
-  const match = (res.headers.get('set-cookie') ?? '').match(/admin_token=([^;]+)/)
-  if (!match) throw new Error('admin_token cookie nicht gefunden')
-  return match[1]
+  return adminApiLogin(ADMIN_EMAIL, ADMIN_PASSWORD)
 }
 
 /** Generic admin fetch helper — uses Cookie auth (admin_token=...) */
@@ -142,16 +135,7 @@ function ownerAuthHeader(token: string): Record<string, string> {
 }
 
 async function getOwnerToken(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`Owner-Login fehlgeschlagen: ${res.status} ${await res.text()}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!match) throw new Error(`shop_owner_token cookie nicht gefunden in Set-Cookie: ${cookieHeader}`)
-  return match[1]
+  return shopOwnerLogin(email, password)
 }
 
 async function getShopProfile(token: string): Promise<Record<string, unknown>> {
@@ -220,6 +204,7 @@ async function waitHydrated(page: Page) {
 // Alle drei Szenarien (A, B, C) teilen denselben frischen Shop.
 
 test.beforeAll(async () => {
+  test.setTimeout(120_000)
   const adminToken = await adminLogin()
 
   // Registrieren
@@ -314,6 +299,7 @@ test.describe.serial('Szenario A — Tabula Rasa: Erstes Befüllen aller Felder'
   let shopSlug: string | null = null
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     ownerToken = freshOwner.token
     shopSlug = freshOwner.shopSlug
     // Initialise hours to a known controlled state:
@@ -620,6 +606,7 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
   let originalHours: Array<Record<string, unknown>> = []
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     ownerToken = freshOwner.token
     shopSlug = freshOwner.shopSlug
     originalProfile = await getShopProfile(ownerToken)
@@ -1050,6 +1037,7 @@ test.describe.serial('Szenario C — Cross-Role: Admin schreibt Öffnungszeiten,
   let hoursBeforeTest: Array<Record<string, unknown>> = []
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     ownerToken = freshOwner.token
     adminToken = await adminLogin()
     // Seed shop_hours via owner API to guarantee rows exist in the DB.

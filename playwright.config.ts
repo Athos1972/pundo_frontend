@@ -34,8 +34,9 @@ export default defineConfig({
   // not Playwright browser tests. Journey spec files (without `_`) are included via testDir.
   testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
   globalSetup: './e2e/global-setup.ts',
-  // Limit parallelism to avoid overloading the standalone Next.js server under concurrent requests
-  workers: 3,
+  // workers:2 keeps concurrent login bursts below the backend's 10/min rate limit;
+  // combined with retry logic in e2e/journeys/_helpers.ts this eliminates 429 flakiness.
+  workers: 2,
   use: {
     baseURL: frontendUrl,
   },

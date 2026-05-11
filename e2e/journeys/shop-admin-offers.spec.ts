@@ -15,6 +15,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -119,17 +120,12 @@ async function apiDelete(urlPath: string, token: string) {
   return { status: res.status }
 }
 
+let _cachedOwnerToken: string | null = null
 async function getOwnerToken(): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-  })
-  if (!res.ok) throw new Error(`Login failed: ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!match) throw new Error('shop_owner_token cookie not found in login response')
-  return match[1]
+  if (!_cachedOwnerToken) {
+    _cachedOwnerToken = await shopOwnerLogin(STATE.email, STATE.password)
+  }
+  return _cachedOwnerToken
 }
 
 /** Create a ShopListing for item_id=1 (e2e-vet-consultation-larnaca). Returns shop_listing_id. */
@@ -243,6 +239,7 @@ async function addPriceTierStep(page: Page, price: string) {
 test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     const health = await fetch(`${BACKEND_URL}/api/v1/categories`)
     if (!health.ok) throw new Error(`Backend health check failed: ${health.status}`)
 
@@ -699,6 +696,22 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     const offerId = (data as { id: number }).id
     ctx.createdOfferIds.push(offerId)
 
+    // Wait until the public backend endpoint confirms the offer is visible.
+    // In parallel test runs the Next.js SSR page is served by the same backend — if we
+    // navigate before the offer is confirmed visible the page may render a cached empty list.
+    let offerVisible = false
+    for (let i = 0; i < 10; i++) {
+      const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${ctx.shopSlug}/offers`, {
+        headers: { 'Accept-Language': 'en' },
+      })
+      if (res.ok) {
+        const items = await res.json() as Array<{ id: number }>
+        if (items.some(o => o.id === offerId)) { offerVisible = true; break }
+      }
+      await new Promise(r => setTimeout(r, 200))
+    }
+    expect(offerVisible, 'D1: offer not visible in public backend API after 2s').toBe(true)
+
     await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
     await page.waitForLoadState('load')
 
@@ -847,16 +860,7 @@ const twoShopCtx: TwoShopCtx = {
 }
 
 async function getAdminToken(): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
-  })
-  if (!res.ok) throw new Error(`[two-shop] Admin login failed: ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/admin_token=([^;]+)/)
-  if (!match) throw new Error('[two-shop] admin_token cookie not found')
-  return match[1]
+  return adminApiLogin()
 }
 
 async function adminFetch(
@@ -879,18 +883,6 @@ async function adminFetch(
   return { ok: res.ok, status: res.status, data }
 }
 
-async function shopOwnerLogin(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`[two-shop] Shop owner login failed (${email}): ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!match) throw new Error('[two-shop] shop_owner_token cookie not found')
-  return match[1]
-}
 
 async function registerAndApprove(
   email: string,
@@ -946,6 +938,7 @@ function daysFromToday(n: number): string {
 test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staffelpreise', () => {
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     // ── Admin login ────────────────────────────────────────────────────────────
     twoShopCtx.adminToken = await getAdminToken()
 

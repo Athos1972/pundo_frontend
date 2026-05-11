@@ -14,6 +14,7 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { getVerificationToken } from './_helpers/dev-token'
+import { adminLogin as adminApiLogin } from './_helpers'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -61,18 +62,8 @@ async function apiFetch(
   return { ok: res.ok, status: res.status, data }
 }
 
-async function getAdminToken(): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
-  })
-  if (!res.ok) throw new Error(`Admin login failed: ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/admin_token=([^;]+)/)
-  if (!match) throw new Error('admin_token cookie not found')
-  return match[1]
-}
+// Delegates to shared helper which retries on 429 rate limit.
+const getAdminToken = () => adminApiLogin()
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 

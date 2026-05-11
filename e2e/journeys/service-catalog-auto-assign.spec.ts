@@ -26,6 +26,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { adminLogin as adminApiLogin } from './_helpers'
 
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
 const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -108,22 +109,8 @@ async function apiDelete(url: string, headers: Record<string, string> = {}): Pro
 }
 
 // Admin login — returns cookie string (used for API calls)
-async function adminLogin(): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
-    signal: AbortSignal.timeout(30_000),
-  })
-  if (!res.ok) {
-    const txt = await res.text()
-    throw new Error(`Admin login failed: ${res.status}: ${txt}`)
-  }
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/admin_token=([^;]+)/)
-  if (!match) throw new Error('admin_token cookie not in login response')
-  return match[1]
-}
+// Delegates to shared helper which retries on 429 rate limit.
+const adminLogin = () => adminApiLogin()
 
 // Admin login via browser form — sets cookie in the Playwright page context
 // This is the correct approach for browser tests (page.request.post does NOT set page cookies)
@@ -171,6 +158,7 @@ const ctx: Ctx = {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 test.beforeAll(async () => {
+  test.setTimeout(120_000)
   ctx.uuid = randomUUID().slice(0, 8)
   ctx.ownerEmail = `e2e-sca-${ctx.uuid}@pundo-e2e.io`
   ctx.ownerPassword = 'E2eTestPassword!99'

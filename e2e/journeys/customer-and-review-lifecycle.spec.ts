@@ -18,6 +18,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { adminLogin as adminApiLogin } from './_helpers'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -111,16 +112,7 @@ async function adminLogin(): Promise<string> {
     } catch { /* admin may already exist */ }
   }
 
-  const res = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: adminEmail, password: adminPassword }),
-  })
-  if (!res.ok) throw new Error(`Admin login failed: ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/admin_token=([^;]+)/)
-  if (!match) throw new Error('admin_token cookie not found')
-  return match[1]
+  return adminApiLogin(adminEmail, adminPassword)
 }
 
 function adminHeaders() {
@@ -136,6 +128,7 @@ function logStep(step: number, desc: string, expected: string, actual: string, s
 test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
 
   test.beforeAll(async () => {
+    test.setTimeout(120_000)
     // Healthcheck
     const health = await apiFetch('GET', '/api/v1/products?limit=1')
     if (!health.ok) throw new Error(`Backend health check failed: ${health.status}`)

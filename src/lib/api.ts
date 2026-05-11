@@ -16,8 +16,12 @@ const BASE =
     : (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1');
 
 async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Promise<T> {
+  // Only apply the default revalidate when the caller hasn't explicitly set cache/revalidate.
+  // next.revalidate and cache:'no-store' are mutually exclusive in Next.js — the revalidate
+  // wins and silently ignores 'no-store', causing stale data to be served.
+  const defaults: RequestInit = init?.cache ? {} : { next: { revalidate: 3600 } };
   const res = await fetch(`${BASE}${path}`, {
-    next: { revalidate: 3600 },
+    ...defaults,
     ...init,
     headers: { 'Accept-Language': lang, ...(init?.headers ?? {}) },
   });

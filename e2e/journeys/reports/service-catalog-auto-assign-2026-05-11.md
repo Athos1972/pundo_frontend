@@ -1,9 +1,9 @@
 # Journey-Report: service-catalog-auto-assign
 
-**Datum:** 2026-05-10T20:27:56.742Z
+**Datum:** 2026-05-11T11:58:25.641Z
 **Frontend:** http://localhost:3500
 **Backend:** http://localhost:8500
-**Test-Owner:** e2e-sca-57bd4d35@pundo-e2e.io
+**Test-Owner:** e2e-sca-bc847fd8@pundo-e2e.io
 **Shop-ID:** 7  **Owner-ID:** 3
 
 ## Ergebnis: 12/21 PASS  |  7 FAIL  |  2 SKIP
@@ -29,7 +29,7 @@
 | AC-5a | Owner Login via API | HTTP 200 | HTTP 200 | **PASS** |
 | AC-5b | Auto-seeded Listings in DB | ≥1 Listing mit source=auto_seeded | 0 auto_seeded (total=0) | **FAIL** |
 | S5 | Preis-Edit | auto_seeded Listing vorhanden | kein autoListingId — vorheriger Test fehlgeschlagen | **SKIP** |
-| S6a | Shop-Seite erreichbar | HTTP 200, Shop-Seite sichtbar | http://localhost:3500/shops/e2e-sca-shop-57bd4d35 | **PASS** |
+| S6a | Shop-Seite erreichbar | HTTP 200, Shop-Seite sichtbar | http://localhost:3500/shops/e2e-sca-shop-bc847fd8 | **PASS** |
 | S6b | Listings in Customer-Sicht sichtbar | ≥1 Listing sichtbar | 0 product-links (content: vorhanden) | **FAIL** |
 | S7a | Preis in Customer-Sicht | "Auf Anfrage" oder "€50" sichtbar | kein Preis gefunden | **SKIP** |
 | S6c | Bilder in Customer-Sicht geladen | ≥0 Bilder (Shop hat evtl. keine Bilder) | 10 geladen | **PASS** |
@@ -41,5 +41,5 @@
 - IDM-3b: priority-Input nicht gefunden auf Edit-Seite
 - IDM-4a: Wegwerf-Mapping konnte nicht angelegt werden: Error: POST http://localhost:8500/api/v1/admin/item-domain-mappings → 422: {"detail":[{"type":"value_error","loc":["body"],"msg":"Value error, At least one of domain_id or specialty_id must be set","input":{"item_id":18,"onboarding_domain_id":3,"auto_assign":false,"priority":99},"ctx":{"error":{}}}]}
 - IDM-5c: Gaps-Seite zeigt Fehler. Bekannte Ursache: getMappingGaps() erwartet MappingGapEntry[] aber Backend liefert {uncovered_domains:[], uncovered_specialties:[]}. gaps.filter() schlägt auf Objekt fehl.
-- AC-5b: Keine auto_seeded Listings für Owner e2e-sca-57bd4d35@pundo-e2e.io. Mögliche Ursachen: 1) Onboarding-Endpoint existiert nicht oder hat falsche Parameter, 2) Auto-Assign-Worker wurde bei Approve nicht getriggert, 3) Domäne elektriker hat keine Mappings für diesen Shop-Type
-- S6b: Keine Listings in Customer-Sicht. Shop-URL=http://localhost:3500/shops/e2e-sca-shop-57bd4d35. Möglicherweise: 1) shop nicht öffentlich, 2) Geo-Koordinaten fehlen, 3) available=false
+- AC-5b: Keine auto_seeded Listings für Owner e2e-sca-bc847fd8@pundo-e2e.io. Mögliche Ursachen: 1) Onboarding-Endpoint existiert nicht oder hat falsche Parameter, 2) Auto-Assign-Worker wurde bei Approve nicht getriggert, 3) Domäne elektriker hat keine Mappings für diesen Shop-Type
+- S6b: Keine Listings in Customer-Sicht. Shop-URL=http://localhost:3500/shops/e2e-sca-shop-bc847fd8. Möglicherweise: 1) shop nicht öffentlich, 2) Geo-Koordinaten fehlen, 3) available=false

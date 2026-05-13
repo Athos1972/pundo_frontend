@@ -2,16 +2,18 @@
  * E2E tests — Language Picker Overlay (F6310, language-picker-first-launch-20260504)
  *
  * Covers:
- *   AC1  — Fresh visitor without cookie sees overlay
- *   AC2  — Returning visitor with cookie sees NO overlay
- *   AC3  — Browser language pre-selected (ru-RU → Русский)
- *   AC4  — Unsupported browser language → fallback en
- *   AC5  — Selection persists: cookie set after confirm
- *   AC6  — Hard reload when new lang != server lang (UI in chosen lang)
- *   AC7  — RTL layout after choosing Arabic
- *   AC9  — Native script names rendered (Русский, Ελληνικά, العربية, עברית)
- *   AC10 — No overlay rendered in SSR HTML (hydration-safe)
- *   AC11 — role=dialog, aria-modal=true, aria-labelledby present
+ *   AC1   — Fresh visitor without cookie sees overlay
+ *   AC2   — Returning visitor with cookie sees NO overlay
+ *   AC3   — Browser language pre-selected (ru-RU → Русский)
+ *   AC4   — Unsupported browser language → fallback en
+ *   AC5   — One-tap: cookie set after tapping Deutsch, overlay disappears
+ *   AC6   — One-tap: hard reload when new lang != server lang (html[lang]="de")
+ *   AC7   — One-tap: RTL layout after choosing Arabic (html[dir]="rtl")
+ *   AC9   — Native script names rendered (Русский, Ελληνικά, العربية, עברית)
+ *   AC10  — No overlay rendered in SSR HTML (hydration-safe)
+ *   AC11  — role=dialog, aria-modal=true, aria-labelledby present
+ *   AC-T2 — Same-lang one-tap: overlay disappears without hard reload
+ *   AC-T3 — No confirm/continue button present in dialog
  *
  * Notes:
  *   - Overlay appears AFTER the splash animation (SPLASH_OUTRO_MS = 2500 ms).
@@ -19,6 +21,8 @@
  *   - sessionStorage key 'app_splash' is pre-set (splash already ran) to skip the
  *     2.5 s delay in most tests; one dedicated test validates sequencing.
  *   - Tests use `playwright.config.ts` baseURL → 127.0.0.1:3500.
+ *   - One-Tap-Apply: clicking a language option directly applies the language.
+ *     There is no separate confirm/continue button.
  */
 
 import { test, expect, BrowserContext, Page } from '@playwright/test'
@@ -124,9 +128,9 @@ test('AC4 — Browser language fr-FR → English pre-selected (fallback)', async
   await ctx.close()
 })
 
-// ── AC5 — Confirm sets cookie and closes overlay ──────────────────────────────
+// ── AC5 — One-tap sets cookie and closes overlay ──────────────────────────────
 
-test('AC5 — Confirm sets app_lang cookie and overlay disappears', async ({ browser }) => {
+test('AC5 — One-tap Deutsch sets app_lang cookie and overlay disappears', async ({ browser }) => {
   const ctx = await browser.newContext({ locale: 'en-US' })
   const page = await ctx.newPage()
 
@@ -136,10 +140,8 @@ test('AC5 — Confirm sets app_lang cookie and overlay disappears', async ({ bro
 
   await waitForOverlay(page)
 
-  // Select German
+  // One tap on Deutsch — no confirm button needed
   await page.getByRole('radio', { name: /Deutsch/ }).click()
-  // Confirm (button label is now "Weiter" because selected lang is de)
-  await page.getByRole('button', { name: /Weiter/ }).click()
 
   // After hard reload, overlay should not appear (cookie is set)
   await page.waitForLoadState('domcontentloaded')
@@ -153,9 +155,9 @@ test('AC5 — Confirm sets app_lang cookie and overlay disappears', async ({ bro
   await ctx.close()
 })
 
-// ── AC6 — UI re-renders in chosen language after confirm ─────────────────────
+// ── AC6 — UI re-renders in chosen language after one-tap ─────────────────────
 
-test('AC6 — After confirming German, html[lang] is "de" post-reload', async ({ browser }) => {
+test('AC6 — After one-tap German, html[lang] is "de" post-reload', async ({ browser }) => {
   const ctx = await browser.newContext({ locale: 'en-US' })
   const page = await ctx.newPage()
 
@@ -165,11 +167,10 @@ test('AC6 — After confirming German, html[lang] is "de" post-reload', async ({
 
   await waitForOverlay(page)
 
-  await page.getByRole('radio', { name: /Deutsch/ }).click()
-  // Wait for page reload triggered by confirm (hard reload for lang change)
+  // One tap on Deutsch triggers hard reload (different lang than serverLang=en)
   const [response] = await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10_000 }),
-    page.getByRole('button', { name: /Weiter/ }).click(),
+    page.getByRole('radio', { name: /Deutsch/ }).click(),
   ])
 
   const htmlLang = await page.locator('html').getAttribute('lang')
@@ -180,7 +181,7 @@ test('AC6 — After confirming German, html[lang] is "de" post-reload', async ({
 
 // ── AC7 — RTL layout after choosing Arabic ────────────────────────────────────
 
-test('AC7 — Choosing Arabic sets html[dir]="rtl" after confirm', async ({ browser }) => {
+test('AC7 — Choosing Arabic sets html[dir]="rtl" after one-tap', async ({ browser }) => {
   const ctx = await browser.newContext({ locale: 'en-US' })
   const page = await ctx.newPage()
 
@@ -190,13 +191,10 @@ test('AC7 — Choosing Arabic sets html[dir]="rtl" after confirm', async ({ brow
 
   await waitForOverlay(page)
 
-  // Click Arabic option — it contains the native text العربية
-  await page.locator('[role="radio"]').filter({ hasText: 'العربية' }).click()
-
-  // Wait for page reload
+  // One tap on Arabic — triggers hard reload directly (no data-confirm step)
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10_000 }),
-    page.locator('[data-confirm]').click(),
+    page.locator('[role="radio"]').filter({ hasText: 'العربية' }).click(),
   ])
 
   const dir = await page.locator('html').getAttribute('dir')
@@ -252,6 +250,50 @@ test('AC11 — Dialog has role=dialog, aria-modal=true, aria-labelledby', async 
   // The element pointed to by aria-labelledby must exist and be visible
   const titleEl = page.locator(`#${labelledBy}`)
   await expect(titleEl).toBeVisible()
+})
+
+// ── AC-T2 — Same-lang one-tap: overlay disappears without hard reload ─────────
+
+test('AC-T2 — Same-lang one-tap: tapping English (serverLang=en) dismisses overlay without hard reload', async ({ browser }) => {
+  // Browser: en-US, serverLang: en → same-lang path → dismiss() + router.refresh(), no window.location.reload
+  const ctx = await browser.newContext({ locale: 'en-US' })
+  const page = await ctx.newPage()
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.evaluate(() => { sessionStorage.setItem('app_splash', '1') })
+  await page.reload({ waitUntil: 'domcontentloaded' })
+
+  await waitForOverlay(page)
+
+  // Track navigation events — there should be NONE (router.refresh does not navigate)
+  let navigationOccurred = false
+  page.on('framenavigated', () => { navigationOccurred = true })
+
+  // Tap English (pre-selected, same as serverLang=en)
+  await page.getByRole('radio', { name: /English/ }).click()
+
+  // Dialog must be gone without waiting for a navigation
+  await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 })
+
+  // Confirm no hard reload / navigation happened
+  expect(navigationOccurred, 'No navigation should occur on same-lang tap').toBe(false)
+
+  await ctx.close()
+})
+
+// ── AC-T3 — No confirm/continue button in dialog ─────────────────────────────
+
+test('AC-T3 — No confirm/continue button exists in the language picker dialog', async ({ page }) => {
+  await openAsFreshVisitor(page)
+  await waitForOverlay(page)
+
+  // Verify no button matching common confirm patterns exists
+  await expect(
+    page.getByRole('button', { name: /Continue|Weiter|Продолжить|Συνέχεια|متابعة|המשך/i })
+  ).toHaveCount(0)
+
+  // Also verify by data attribute (old selector)
+  await expect(page.locator('[data-confirm]')).toHaveCount(0)
 })
 
 // ── Extra: not skippable (ESC + backdrop) ────────────────────────────────────

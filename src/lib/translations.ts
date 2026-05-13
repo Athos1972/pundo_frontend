@@ -421,7 +421,6 @@ export const translations = {
     oauth_consent_error: 'Something went wrong. Please try again.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Choose your language',
-    language_picker_confirm: 'Continue',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -844,7 +843,6 @@ export const translations = {
     oauth_consent_error: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Sprache wählen',
-    language_picker_confirm: 'Weiter',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -1267,7 +1265,6 @@ export const translations = {
     oauth_consent_error: 'Что-то пошло не так. Пожалуйста, попробуйте снова.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Выберите язык',
-    language_picker_confirm: 'Продолжить',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1690,7 +1687,6 @@ export const translations = {
     oauth_consent_error: 'Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Επιλέξτε γλώσσα',
-    language_picker_confirm: 'Συνέχεια',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -2113,7 +2109,6 @@ export const translations = {
     oauth_consent_error: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'اختر لغتك',
-    language_picker_confirm: 'متابعة',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -2536,7 +2531,6 @@ export const translations = {
     oauth_consent_error: 'משהו השתבש. אנא נסה שוב.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'בחר שפה',
-    language_picker_confirm: 'המשך',
   },
 } as const;
 

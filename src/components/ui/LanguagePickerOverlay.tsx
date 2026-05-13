@@ -15,9 +15,10 @@ function hasCookie(): boolean {
   return /app_lang=/.test(document.cookie)
 }
 
-export function useLanguagePickerTrigger(): { shouldShow: boolean; preselected: Lang } {
+export function useLanguagePickerTrigger(): { shouldShow: boolean; preselected: Lang; dismiss: () => void } {
   const [shouldShow, setShouldShow] = useState(false)
   const [preselected, setPreselected] = useState<Lang>(DEFAULT_LANG)
+  const dismiss = useCallback(() => setShouldShow(false), [])
 
   useEffect(() => {
     // AC2: cookie present → never show
@@ -38,7 +39,7 @@ export function useLanguagePickerTrigger(): { shouldShow: boolean; preselected: 
     return () => clearTimeout(timer)
   }, [])
 
-  return { shouldShow, preselected }
+  return { shouldShow, preselected, dismiss }
 }
 
 // ---- Globe Icon ----
@@ -83,7 +84,7 @@ type Props = {
 }
 
 export function LanguagePickerOverlay({ serverLang }: Props) {
-  const { shouldShow, preselected } = useLanguagePickerTrigger()
+  const { shouldShow, preselected, dismiss } = useLanguagePickerTrigger()
   const router = useRouter()
   const [selected, setSelected] = useState<Lang>(preselected)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -111,25 +112,23 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
     optionRefs.current[idx >= 0 ? idx : 0]?.focus()
   }, [shouldShow]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleConfirm = useCallback(
+  const handleApply = useCallback(
     (chosen: Lang) => {
       setLangCookie(chosen)
+      dismiss()                        // (M6) Defense-in-Depth — always before refresh/reload
       if (chosen === serverLang) {
         router.refresh()
       } else {
         window.location.reload()
       }
     },
-    [serverLang, router],
+    [serverLang, router, dismiss],
   )
 
-  // Keyboard: arrows navigate, Enter confirms, Tab trapped
+  // Keyboard: arrows navigate, Tab trapped within 6 option buttons
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const focusable = [
-        ...optionRefs.current.filter((r): r is HTMLButtonElement => r !== null),
-        dialogRef.current?.querySelector<HTMLButtonElement>('button[data-confirm]'),
-      ].filter(Boolean) as HTMLButtonElement[]
+      const focusable = optionRefs.current.filter((r): r is HTMLButtonElement => r !== null)
 
       const currentIdx = focusable.indexOf(document.activeElement as HTMLButtonElement)
 
@@ -179,7 +178,7 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
           <span>{tr.language_picker_title}</span>
         </div>
 
-        {/* Language options */}
+        {/* Language options — one tap applies immediately */}
         <div role="radiogroup" aria-labelledby={titleId} className="flex flex-col gap-1">
           {LANGS.map((lang, idx) => {
             const isSelected = lang === selected
@@ -189,8 +188,8 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
                 ref={el => { optionRefs.current[idx] = el }}
                 role="radio"
                 aria-checked={isSelected}
-                tabIndex={isSelected ? 0 : -1}
-                onClick={() => setSelected(lang)}
+                tabIndex={0}
+                onClick={() => handleApply(lang)}
                 className={[
                   'flex items-center justify-between px-4 py-3 min-h-[44px] rounded-lg text-left',
                   'transition-colors cursor-pointer border-2',
@@ -205,15 +204,6 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
             )
           })}
         </div>
-
-        {/* Confirm button */}
-        <button
-          data-confirm
-          onClick={() => handleConfirm(selected)}
-          className="w-full py-3 rounded-lg bg-accent text-white font-semibold text-base hover:bg-accent/90 transition-colors"
-        >
-          {tr.language_picker_confirm}
-        </button>
       </div>
     </div>
   )

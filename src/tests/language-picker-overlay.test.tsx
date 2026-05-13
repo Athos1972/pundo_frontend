@@ -188,10 +188,22 @@ describe('useLanguagePickerTrigger', () => {
     await act(async () => { vi.advanceTimersByTime(200) })
     expect(result.current.preselected).toBe('en')
   })
+
+  it('exposes dismiss() that sets shouldShow to false', async () => {
+    clearCookieLang()
+    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
+
+    const { result } = renderHook(() => useLanguagePickerTrigger())
+    await act(async () => { vi.advanceTimersByTime(200) })
+    expect(result.current.shouldShow).toBe(true)
+
+    await act(async () => { result.current.dismiss() })
+    expect(result.current.shouldShow).toBe(false)
+  })
 })
 
 // ============================================================
-// LanguagePickerOverlay — component tests
+// LanguagePickerOverlay — visibility
 // ============================================================
 
 describe('LanguagePickerOverlay — visibility', () => {
@@ -224,6 +236,10 @@ describe('LanguagePickerOverlay — visibility', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
   })
 })
+
+// ============================================================
+// LanguagePickerOverlay — language options
+// ============================================================
 
 describe('LanguagePickerOverlay — language options', () => {
   async function renderOpen(serverLang: 'en' | 'de' | 'ru' | 'el' | 'ar' | 'he' = 'en') {
@@ -259,16 +275,13 @@ describe('LanguagePickerOverlay — language options', () => {
     const checked = screen.getAllByRole('radio').filter(el => el.getAttribute('aria-checked') === 'true')
     expect(checked).toHaveLength(1)
   })
-
-  it('clicking a language option updates selection', async () => {
-    await renderOpen('en')
-    const deOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('Deutsch'))!
-    fireEvent.click(deOption)
-    expect(deOption).toHaveAttribute('aria-checked', 'true')
-  })
 })
 
-describe('LanguagePickerOverlay — confirm behaviour', () => {
+// ============================================================
+// LanguagePickerOverlay — one-tap apply behaviour (new)
+// ============================================================
+
+describe('LanguagePickerOverlay — one-tap apply', () => {
   async function renderOpen(serverLang: 'en' | 'de' | 'ru' | 'el' | 'ar' | 'he' = 'en') {
     clearCookieLang()
     sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
@@ -276,28 +289,79 @@ describe('LanguagePickerOverlay — confirm behaviour', () => {
     await act(async () => { vi.advanceTimersByTime(200) })
   }
 
-  it('Confirm with same lang as serverLang calls router.refresh, not reload (AC5)', async () => {
+  // T-NEW-1 — Same-Lang-Dismiss (AC-B2, AC-T1)
+  it('tapping English when serverLang=en calls router.refresh and dismisses dialog (same-lang path)', async () => {
     mockLanguages = ['en-US']
     await renderOpen('en')
 
-    const confirmBtn = screen.getByRole('button', { name: /Continue/i })
-    fireEvent.click(confirmBtn)
+    const enOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('English'))!
+    await act(async () => { fireEvent.click(enOption) })
 
     expect(mockRefresh).toHaveBeenCalledOnce()
     expect(mockReload).not.toHaveBeenCalled()
+    // DOM-Dismiss-Assertion: dialog must be gone (not just mock-call check)
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  it('Confirm with different lang from serverLang calls window.location.reload (AC6)', async () => {
-    mockLanguages = ['de-DE']
+  // T-NEW-2 — Different-Lang-Apply (AC-B3)
+  it('tapping Deutsch when serverLang=en calls reload and dismisses dialog (different-lang path)', async () => {
+    mockLanguages = ['en-US']
     await renderOpen('en')
 
-    const confirmBtn = screen.getByRole('button', { name: /Weiter/i })
-    fireEvent.click(confirmBtn)
+    const deOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('Deutsch'))!
+    await act(async () => { fireEvent.click(deOption) })
 
+    expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('de')
     expect(mockReload).toHaveBeenCalledOnce()
     expect(mockRefresh).not.toHaveBeenCalled()
+    // DOM-Dismiss-Assertion: dismiss() runs before reload
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  // T-NEW-3 — No Confirm Button (AC-B5, AC-T3)
+  it('has no confirm/continue button in the dialog', async () => {
+    await renderOpen('en')
+
+    expect(
+      screen.queryByRole('button', { name: /Continue|Weiter|Συνέχεια|Продолжить|متابعة|המשך/i })
+    ).toBeNull()
+    // Also check by data attribute
+    expect(document.querySelector('[data-confirm]')).toBeNull()
+  })
+
+  // T-NEW-4 — setLangCookie called with correct value
+  it('tapping Arabic calls setLangCookie with "ar"', async () => {
+    await renderOpen('en')
+
+    const arOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('العربية'))!
+    await act(async () => { fireEvent.click(arOption) })
+
+    expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('ar')
+  })
+
+  // T-NEW-5 — tapping Russian calls setLangCookie with 'ru'
+  it('tapping Russian calls setLangCookie with "ru"', async () => {
+    await renderOpen('en')
+
+    const ruOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('Русский'))!
+    await act(async () => { fireEvent.click(ruOption) })
+
+    expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('ru')
+  })
+
+  // Keyboard: Enter on a button fires its onClick natively — test via fireEvent.click as proxy
+  it('all radio options have tabIndex=0 (keyboard-reachable without selection state dependency)', async () => {
+    await renderOpen('en')
+    const radios = screen.getAllByRole('radio')
+    for (const radio of radios) {
+      expect(radio).toHaveAttribute('tabIndex', '0')
+    }
   })
 })
+
+// ============================================================
+// LanguagePickerOverlay — keyboard non-dismiss
+// ============================================================
 
 describe('LanguagePickerOverlay — keyboard non-dismiss', () => {
   async function renderOpen() {
@@ -324,6 +388,10 @@ describe('LanguagePickerOverlay — keyboard non-dismiss', () => {
   })
 })
 
+// ============================================================
+// LanguagePickerOverlay — tap targets
+// ============================================================
+
 describe('LanguagePickerOverlay — tap targets', () => {
   it('all radio options have min-h-[44px]', async () => {
     clearCookieLang()
@@ -337,8 +405,12 @@ describe('LanguagePickerOverlay — tap targets', () => {
   })
 })
 
+// ============================================================
+// LanguagePickerOverlay — translations
+// ============================================================
+
 describe('LanguagePickerOverlay — translations', () => {
-  it('title updates live when user selects another language', async () => {
+  it('title is shown in English when browser lang is en-US', async () => {
     clearCookieLang()
     sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     mockLanguages = ['en-US']
@@ -346,12 +418,5 @@ describe('LanguagePickerOverlay — translations', () => {
     await act(async () => { vi.advanceTimersByTime(200) })
 
     expect(screen.getByText('Choose your language')).toBeInTheDocument()
-
-    // Select German
-    const deOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('Deutsch'))!
-    fireEvent.click(deOption)
-
-    expect(screen.getByText('Sprache wählen')).toBeInTheDocument()
-    expect(screen.getByText('Weiter')).toBeInTheDocument()
   })
 })

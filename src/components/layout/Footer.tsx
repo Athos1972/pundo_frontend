@@ -10,6 +10,9 @@ export async function Footer() {
     <footer className="border-t border-border bg-surface-alt mt-auto py-8">
       <div className="max-w-6xl mx-auto px-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="legal" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted">
+          <Link href="/blog" className="hover:text-text transition-colors">
+            {tr.footer_blog}
+          </Link>
           <Link href="/about" className="hover:text-text transition-colors">
             {tr.footer_about}
           </Link>

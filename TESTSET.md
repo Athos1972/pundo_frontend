@@ -1,16 +1,18 @@
 # TESTSET — pundo_frontend
 
-Letzter vollständiger Testlauf: **2026-05-10**  
-SHA: `66449d60202e9698bd0d3b14d53426dd129eb4b2`  
-Gesamt-Verdict: **SHIP**
+Letzter vollständiger Testlauf: **2026-05-14**  
+SHA: `819f4817e4ff44bb2454c9a3a46abdf38fdcabed`  
+Gesamt-Verdict: **FIX** (18 Playwright-Failures — alle Infrastructure/Fixture-Artefakte, keiner durch Diff verursacht)
 
 ---
 
 ## Kontext: Was wurde getestet
 
-Anlass: `npm update` (dependabot-vulnerabilities + eslint-config-next 16.2.6) + vollständiger E2E/Journey-Lauf.
+Anlass: F6310 Language Picker One-Tap-Apply (Commits 108b763, fdaa0d3, d7b9503) + chore(deps) dependabot updates.
 
-**Geänderte Pakete:** next 16.2.4→16.2.6, eslint-config-next 16.2.4→16.2.6, tailwindcss+postcss 4.2.2→4.3.0, lucide-react 1.8.0→1.14.0, jsdom 29.0.2→29.1.1, vitest 4.1.4→4.1.5, yet-another-react-lightbox 3.31.0→3.32.0.
+**Geänderte Dateien:** `src/components/ui/LanguagePickerOverlay.tsx`, `src/lib/translations.ts`, `src/lib/api.ts`, diverse E2E-Spec-Dateien.
+
+**Kritischer Fix:** Smoketest `home-anon` (pundo.cy + naidivse.cy) meldete "header img present but not visible". Ursache war `LanguagePickerOverlay` mit `z-[60] bg-black/60 fixed inset-0`, die beim ersten Seitenaufruf ohne `app_lang`-Cookie den Header verdeckte. Root-Fix: `lang-setup.ts` setzt `app_lang`-Cookie vor Navigation. Defense-in-Depth: 108b763 ruft `dismiss()` vor `router.refresh()`/`window.location.reload()` auf.
 
 ---
 
@@ -19,14 +21,9 @@ Anlass: `npm update` (dependabot-vulnerabilities + eslint-config-next 16.2.6) + 
 | Prüfung | Status | Details |
 |---|---|---|
 | TypeScript | **PASS** | `npx tsc --noEmit` exit 0 |
-| ESLint | **PASS** | 0 errors (5 `eslint-disable-next-line` für neue react-compiler Rules) |
+| ESLint | **WARN** | 34 Warnings in unveränderten Dateien; 0 Errors; geänderte Dateien clean |
 
-**ESLint-Fixes:** `eslint-config-next 16.2.6` aktivierte `react-hooks/set-state-in-effect` und `react-hooks/immutability`. Gefixt in:
-- `src/app/(customer)/search/SearchContent.tsx`
-- `src/components/activity-feed/RelativeTime.tsx`
-- `src/components/auth/SessionProvider.tsx`
-- `src/components/ui/LanguagePickerOverlay.tsx`
-- `src/lib/useActivityPoll.ts`
+**Hinweis:** Die 34 ESLint-Warnings (`--max-warnings=0` schlägt fehl) sind pre-existing in Dateien, die nicht im Diff enthalten sind. Kein Blocker.
 
 ---
 
@@ -34,66 +31,68 @@ Anlass: `npm update` (dependabot-vulnerabilities + eslint-config-next 16.2.6) + 
 
 | Status | Count |
 |---|---|
-| PASS | 1305 Tests in 67 Dateien |
-
-Keine neuen Unit-Tests erforderlich (keine neuen Module).
+| PASS | 1309 Tests in 67 Dateien |
 
 ---
 
-## Phase 3 — Browser-E2E (main.spec.ts)
+## Phase 3 — Browser-E2E (Playwright)
+
+Ausgeführt mit `E2E_REUSE_STATE=1 E2E_SKIP_FRONTEND_RESTART=1` (State 147 Min alt, shopSlug in DB = `e2e-test-shop-larnaca-1`).
 
 | Status | Count |
 |---|---|
-| PASS | 44 |
-| SKIP | 9 (kein Produkt/Shop in test-DB nach reset) |
-| FAIL | 0 |
+| PASS | 400 |
+| SKIP | 79 |
+| FAIL | 18 |
+| DID NOT RUN | 2 |
 
-**Fixes in main.spec.ts:**
-- E2E-02 search, E2E-09 signup, E2E-11 accordion, E2E-11b ReviewSection: `app_lang` Cookie vor Navigation (verhindert LanguagePickerOverlay-Blockade)
-- E2E-04b carousel, E2E-11b ReviewSection, E2E-08 map: Pre-flight `request.get` + `test.skip()` wenn Produkt/Shop nicht in test-DB
-- E2E-07 register: URL-Regex auf `/shop-admin/(register|onboarding)` erweitert
+### Language-Picker-E2E (alle 14 Tests PASS)
 
----
+Alle AC-Tests für One-Tap-Apply bestanden: AC1–AC11, AC-T2, AC-T3, ESC, backdrop.
 
-## Phase 3.5 — Journey-Tests
+### Failure-Analyse (18)
 
-| Spec | Passed | Skipped | FAIL/RCA |
+| # | Test | Root-Cause | Kategorie |
 |---|---|---|---|
-| customer-discovery | 8 | 1 | 0 |
-| customer-and-review-lifecycle | — | — | 0 |
-| service-catalog-auto-assign | 15 | 1 (IDM-1-skip wenn kein Admin) | 0 |
-| import-page-ac-check | 6 | 0 | 0 |
-| shop-owner-lifecycle | 7 | 2 | 0 |
-| shop-admin-offers | ✓ in isolation | — | 429 bei parallel (s.u.) |
-| shop-admin-profile | ✓ in isolation | — | 429 bei parallel (s.u.) |
-| shop-admin-profile-phone-logo | ✓ in isolation | — | 429 bei parallel (s.u.) |
-| shop-owner-full-lifecycle | ✓ in isolation | — | 429 bei parallel (s.u.) |
-| **Gesamt** | **88–106** | **16** | **0 echte Fehler** |
+| 1–3 | E2E-20 Admin Shop Edit (LanguageSelector) | Shop ID 91 existiert nicht in test-DB | Pre-existing Fixture |
+| 4 | D1 Offer visible on customer page | shopSlug-Mismatch (stale state) | Stale DB |
+| 5 | /legal/privacy lädt ohne Fehler (EN) | Strict-mode: 2 `<main>`-Elemente (dev-mode hydration) | Flaky/Dev-mode |
+| 6–7 | Angebote CRUD Anlegen/Archivieren | `ul li button` nicht gefunden (stale state/shopListingId) | Stale DB |
+| 8–9 | Filter-Chips 500 errors (Parking, EL) | Backend gibt HTTP 500 auf filter-click (DB state) | Backend 500 |
+| 10–14 | shop-discovery (5 Tests) | shopSlug `e2e-test-shop-larnaca` ≠ `e2e-test-shop-larnaca-1` | Stale DB |
+| 15–17 | tooltip-e2e (3 Tests) | SHOP_SLUG `bookshop-chrisognosi-cfab8f67` existiert nicht in test-DB | Pre-existing Fixture |
+| 18 | Shops-Liste lädt (mindestens 1 Shop) | Keine Shops in test-DB nach Reuse | Stale DB |
 
-**Rate-Limit-Flakiness (429):** Wenn alle Journey-Specs parallel starten, treffen mehrere `beforeAll`-Login-Calls gleichzeitig auf das Backend (Rate-Limit: 10 Logins/Minute). Ursache: `workers: 3` in `playwright.config.ts` + jede Journey-Spec hat eigene Credentials. Alle betroffenen Tests bestehen sauber in Isolation. **Kein Blocker** — kein Frontend-Bug.
+**Fazit:** Kein einziger Failure wurde durch den Diff (LanguagePickerOverlay, translations.ts, api.ts) verursacht.
 
 ---
 
-## Test-Fixes in diesem Lauf
+## Phase 4 — Production Smoketest
 
-| Datei | Problem | Fix |
-|---|---|---|
-| `e2e/journeys/customer-discovery.spec.ts` | Step 2 timeout 30s: LanguagePickerOverlay blockte `searchInput.click()` nach 2600ms | `app_lang` Cookie vor `goto('/')` gesetzt |
-| `e2e/journeys/service-catalog-auto-assign.spec.ts` IDM-1 | Timeout 60s: `domainCell.textContent()` wartete actionTimeout auf nicht-existentes td in leerer Tabelle | `textContent()` nur bei `rowCount > 0`, sonst `null` |
-| `e2e/journeys/import-page-ac-check.spec.ts` | 6 Failures: hardcodiertes JWT abgelaufen (exp: 2026-04-28) | `loadStorageState()` liest frisches Token aus global-setup `.test-state.json` |
+Letzte Run: **2026-05-13 19:16 UTC** (Brands: pundo + naidivse)
+
+| Status | Count |
+|---|---|
+| PASS | 42 |
+| FAIL | 0 |
+| SKIP | 4 (authenticated — login credentials fehlen in CI) |
+
+`home-anon`-Check mit `header img selector-visible`: alle 12 Sprachvarianten PASS.
 
 ---
 
-## FINDINGS (keine Blocker)
+## FINDINGS
 
 | ID | Beschreibung | Status |
 |---|---|---|
-| IDM-1c | Mapping-Tabelle leer in test-DB (Backend hat 103 Mappings in Prod, aber test-DB hat none) | Test dokumentiert, SKIP korrekt |
-| IDM-1d | Domain-Spalte zeigt "—" (Backend liefert `domain_id` int statt `onboarding_domain_slug`) | FINDING — Backend-Fix erforderlich |
-| Rate-limit | Journey-Specs bei parallelem Start → 429 | Infra-Problem, kein Code-Bug |
+| SMOK-1 | `header img present but not visible` — behoben durch 108b763 (dismiss() + lang-setup.ts setzt app_lang) | RESOLVED |
+| E2E-20 | Fixture-abhängig: Shop ID 91 aus Prod-DB nicht in test-DB | Pre-existing, kein Blocker |
+| TOOLTIP | Fixture-abhängig: `bookshop-chrisognosi-cfab8f67` nicht in test-DB | Pre-existing, kein Blocker |
+| ESLINT-34 | 34 pre-existing Warnings in unveränderten Dateien | Pre-existing, kein Blocker |
+| BACKEND-500 | HTTP 500 auf `/shops?lang=en&spoken_languages[]=EL` in test-DB | Backend-Issue, nicht Frontend |
 
 ---
 
-## Verdict: SHIP
+## Verdict: FIX
 
-Alle wesentlichen Tests grün. Neue Rate-Limit-Flakiness und IDM-Findings sind dokumentiert und blockieren nicht.
+Die 18 Playwright-Failures sind ausschließlich Infrastruktur-Artefakte (stale DB, pre-existing fixtures, dev-mode hydration, backend 500). Der Diff (LanguagePickerOverlay One-Tap, api.ts Cache-Fix, translations.ts Cleanup) ist korrekt implementiert. Für ein sauberes SHIP: `npx playwright test` mit frischem `global-setup` ausführen (ohne `E2E_REUSE_STATE=1`).

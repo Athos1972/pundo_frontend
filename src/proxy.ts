@@ -60,9 +60,9 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
     isDev ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}'`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
-    `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com`,
+    `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co`,
     `font-src 'self'`,
-    `connect-src 'self'${analyticsConnectSrc} https://challenges.cloudflare.com`,
+    `connect-src 'self'${analyticsConnectSrc} https://challenges.cloudflare.com https://app.trysoro.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

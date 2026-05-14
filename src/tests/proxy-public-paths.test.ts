@@ -22,6 +22,36 @@ function extractPublicPaths(src: string, varName: string): string[] {
   return match[1].match(/'([^']+)'/g)?.map(s => s.replace(/'/g, '')) ?? []
 }
 
+// Helper: extract the string content of a CSP directive line from buildCsp
+function extractCspDirective(src: string, directive: string): string {
+  const match = src.match(new RegExp(`\`${directive}[^,\`]*\``))
+  return match ? match[0] : ''
+}
+
+describe('proxy.ts — buildCsp directives (N7500 Soro embed)', () => {
+  it('img-src includes *.supabase.co for Soro article thumbnails', () => {
+    const line = extractCspDirective(proxySrc, 'img-src')
+    expect(line).toContain('https://*.supabase.co')
+  })
+
+  it('connect-src includes https://app.trysoro.com for article deep-link fetch', () => {
+    const line = extractCspDirective(proxySrc, 'connect-src')
+    expect(line).toContain('https://app.trysoro.com')
+  })
+
+  it('img-src still contains the existing pundo.cy and map tile hosts', () => {
+    const line = extractCspDirective(proxySrc, 'img-src')
+    expect(line).toContain('https://api.pundo.cy')
+    expect(line).toContain('https://*.basemaps.cartocdn.com')
+    expect(line).toContain('https://*.tile.openstreetmap.org')
+  })
+
+  it('connect-src still contains the existing Cloudflare challenges host', () => {
+    const line = extractCspDirective(proxySrc, 'connect-src')
+    expect(line).toContain('https://challenges.cloudflare.com')
+  })
+})
+
 describe('proxy.ts — PUBLIC_SHOP_ADMIN_PATHS', () => {
   const paths = extractPublicPaths(proxySrc, 'PUBLIC_SHOP_ADMIN_PATHS')
 

@@ -1,12 +1,5 @@
 {
-  "sha": "819f4817e4ff44bb2454c9a3a46abdf38fdcabed",
-  "timestamp": "2026-05-14T00:30:00.000000+00:00",
-  "result": "FIX",
-  "unit_tests": "PASS (67 files, 1309 tests)",
-  "typescript": "PASS",
-  "eslint": "34 pre-existing warnings in unchanged files (0 errors, 0 warnings in changed files)",
-  "playwright_main": "400 passed / 79 skipped / 18 failed / 2 did not run (E2E_REUSE_STATE=1 with 147min stale DB)",
-  "smoketest_production": "42 PASS / 0 FAIL / 4 SKIPPED (run 2026-05-13 19:16 UTC)",
-  "language_picker_e2e": "14/14 PASS — all one-tap-apply ACs verified (AC1-AC11, AC-T2, AC-T3, ESC, backdrop)",
-  "notes": "Smoketest 'header img present but not visible' failure was caused by LanguagePickerOverlay (z-[60] bg-black/60 fixed inset-0) covering page when no app_lang cookie. Root fix: lang-setup.ts sets app_lang cookie before navigation. Defense-in-depth: 108b763 adds dismiss() before refresh/reload. Production smoketest now 0 failures. 18 playwright failures are infrastructure artifacts: 12 from stale DB (E2E_REUSE_STATE=1 with shopSlug mismatch), 3 pre-existing fixture issues (shop ID 91, bookshop slug), 2 backend 500s on filter clicks, 1 dev-mode hydration flake (legal page double main). None caused by this diff (LanguagePickerOverlay one-tap + api.ts cache fix + translations.ts cleanup)."
+  "sha": "d76c813314923d81fd1ebc22c1f9f9cdd2e6eed8",
+  "timestamp": "2026-05-14T15:02:00.903492+00:00",
+  "coverage_snapshot": {}
 }

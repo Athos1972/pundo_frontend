@@ -65,7 +65,7 @@ describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
     // Updated 2026-05-01: +1 entry (shop-owner-quick-onboarding, F5910)
-    expect(entries).toHaveLength(18)
+    expect(entries).toHaveLength(19)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -384,7 +384,7 @@ describe('parseCatalogDirectory', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
     // Updated 2026-05-01: +1 entry (shop-owner-quick-onboarding, F5910)
-    expect(entries).toHaveLength(18)
+    expect(entries).toHaveLength(19)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -406,7 +406,7 @@ describe('parseCatalogDirectory', () => {
     // None of these should produce entries in the directory scan
     // We verify by checking that the total count is exactly 17 (the 17 journey files)
     // Updated 2026-05-01: +1 new entry (shop-owner-quick-onboarding, F5910)
-    expect(entries).toHaveLength(18)
+    expect(entries).toHaveLength(19)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

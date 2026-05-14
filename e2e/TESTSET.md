@@ -1,10 +1,53 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-05-10
-SHA: 3abef24
-Anlass: Routine-Qualitätsprüfung — bestehende Fehler analysieren
-Ergebnis: **TypeScript 1 Fix (review_stats in ProductDetailResponse) | Unit-Tests 1305/1305 PASS | Playwright Exit 0 (alle PASS) | Verdict: SHIP**
+Datum: 2026-05-14
+SHA: d76c813
+Anlass: N7500 Soro-Blog-Embed CSP-Fix (img-src + connect-src) + Blog-Seite-Tests
+Ergebnis: **TypeScript PASS | ESLint 0 Errors | Unit-Tests 1318/1318 | Smoke 10/10 | Journey customer-discovery 8/8 | Verdict: SHIP**
+
+---
+
+## Testlauf 2026-05-14 — N7500 CSP-Fix Soro-Embed
+
+### Anlass
+CSP-Erweiterung: `img-src` um `*.supabase.co`, `connect-src` um `app.trysoro.com`. Blog-Seite `/blog` hinzugefügt (N7400/N7500).
+
+### Geänderte Module
+- `src/proxy.ts` — CSP img-src + connect-src erweitert
+- `src/app/(customer)/blog/page.tsx` — neue Blog-Seite (Soro-Embed)
+- `src/components/layout/Footer.tsx` — Footer-Updates
+- `src/lib/translations.ts` — Blog-Translations
+
+### Test-Ergebnisse
+
+| Phase | Ergebnis | Details |
+|---|---|---|
+| TypeScript | **PASS** | 0 Fehler |
+| ESLint | **PASS** | 0 Errors, 69 Warnings (alle pre-existing) |
+| Unit-Tests (Vitest) | **1318/1318 PASS** | Inkl. 4 neue CSP-Tests in proxy-public-paths.test.ts |
+| Smoke-Test (Playwright) | **10/10 PASS** | visual-smoke + smoke (inkl. RTL ar/he/de) |
+| Journey customer-discovery | **8/8 PASS** | Suche, Produkt-Detail, Shop-Detail, Back-Nav |
+
+### Journey-Scan
+- mustRun: keine (geänderte Module schneiden keine existing journey touches-modules)
+- Neue Journey angelegt: `public-route-visibility-blog` (approved, P2)
+- `_parser.spec.ts` Zähltest von 18 → 19 aktualisiert
+
+### BLOCKED: PostgreSQL nicht gestartet
+- Daten-Verzeichnis: `/opt/homebrew/var/postgresql@18/` vorhanden
+- Server-Binary: nicht installiert (`postgresql@18` Formula fehlt)
+- Auflösung: `brew install postgresql@18 && brew services start postgresql@18`
+- E2E-Tests nach DB-Start nachholen
+
+### Verdict
+**SHIP (statische Ebene)** — Unit-Tests und TypeScript grün. E2E-Verifikation steht aus.
+
+### Known Issues (übernommen)
+| ID | Beschreibung | Seit |
+|---|---|---|
+| KI-001 | shop-owner-full-lifecycle Journey FAIL (pre-existing) | 2026-05-13 |
+| KI-002 | admin-data-management Journey FAIL (pre-existing) | 2026-05-13 |
 
 ---
 

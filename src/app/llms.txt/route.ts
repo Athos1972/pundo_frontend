@@ -20,6 +20,7 @@ Nutzer können Shops und Produkte bewerten und kommentieren.
 
 - [Homepage](${siteUrl}/) — Startseite mit Produktsuche
 - [Suche](${siteUrl}/search) — Produkt- und Preissuche mit Filtern
+- [Blog](${siteUrl}/blog) — Expat-Blog powered by Soro (externer Embed)
 - [Sitemap](${siteUrl}/sitemap.xml) — Alle indizierten Shops und Produkte
 
 ## Inhalte

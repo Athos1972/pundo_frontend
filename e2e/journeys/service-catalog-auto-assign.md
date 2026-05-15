@@ -12,9 +12,9 @@ touches-modules:
   - src/app/(system-admin)/admin/(portal)/item-domain-mappings/**
   - src/lib/system-admin-api.ts
   - src/types/shop-admin.ts
-last-run: 2026-05-03T10:08:00Z
+last-run: 2026-05-15T05:30:00Z
 last-result: PASS
-last-run-sha: ab7dbff3c588a78a7103d38de5556cef740bf1dd
+last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
 ---
 
 # Journey: service-catalog-auto-assign

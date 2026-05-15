@@ -19,7 +19,7 @@ touches-states:
   - ShopOwner.status:pending_email_verification
 status-changed-at: 2026-05-01T13:15:00Z
 status-changed-by-spec: schnell-onboarding-mobil-20260501
-last-run: 2026-05-01T18:25:00Z
+last-run: 2026-05-15T05:30:00Z
 last-result: PASS
 ---
 

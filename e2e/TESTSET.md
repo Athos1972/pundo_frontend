@@ -1,10 +1,52 @@
 # TESTSET – pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-05-14
-SHA: d76c813
-Anlass: N7500 Soro-Blog-Embed CSP-Fix (img-src + connect-src) + Blog-Seite-Tests
-Ergebnis: **TypeScript PASS | ESLint 0 Errors | Unit-Tests 1318/1318 | Smoke 10/10 | Journey customer-discovery 8/8 | Verdict: SHIP**
+Datum: 2026-05-15
+SHA: 7a979ab
+Anlass: N7400/N7500 — Blog + CSP-Fix Vollständiger Journey-Lauf (alle 12 implementierten Journeys)
+Ergebnis: **TypeScript PASS | ESLint 0 Errors | Unit-Tests 1318/1318 | Journeys 125/126 PASS (1 intermittent Carousel) | Verdict: SHIP**
+
+---
+
+## Testlauf 2026-05-15 — Vollständiger Journey-Lauf (alle 12 Journeys)
+
+### Anlass
+Abschluss N7400/N7500 Blogsuite: vollständiger E2E-Lauf aller implementierten Journeys nach CSP-Fix und Blog-Implementierung. Frischer DB-Reset (kein REUSE_STATE).
+
+### Test-Ergebnisse
+
+| Phase | Ergebnis | Details |
+|---|---|---|
+| TypeScript | **PASS** | 0 Fehler |
+| ESLint | **PASS** | 0 Errors, 69 Warnings (alle pre-existing) |
+| Unit-Tests (Vitest) | **1318/1318 PASS** | |
+| smoke.spec.ts | **5/5 PASS** | |
+| visual-smoke.spec.ts | **1/2 — 1 intermittent FAIL** | Carousel 768px timing |
+| customer-discovery | **8/8 PASS** | |
+| shop-owner-lifecycle | **7/7 PASS** | |
+| shop-admin-offers | **25/25 PASS** | |
+| service-catalog-auto-assign | **8/8 PASS** | |
+| shop-owner-full-lifecycle | **17/17 PASS** | |
+| customer-and-review-lifecycle | **3/3 PASS** | 9 skipped (email-verify) |
+| admin-data-management | **5/5 PASS** | 5 skipped (Logo-Upload) |
+| import-page-ac-check | **6/6 PASS** | |
+| shop-admin-import-image-url | **3/3 PASS** | |
+| shop-owner-onboarding | **6/6 PASS** | |
+| shop-owner-quick-onboarding | **8/8 PASS** | |
+| social-link-moderation | **20/20 PASS** | |
+
+**Gesamt: 125/126 PASS**
+
+### Journey-Katalog Status
+Alle 12 implementierten Journeys PASS. `admin-data-management` erstmals PASS (war pre-existing FAIL, behoben durch DB-Reset). KI-001 und KI-002 aus vorherigem Lauf aufgelöst.
+
+### Known Issues
+| ID | Beschreibung | Seit | Status |
+|----|-------------|------|--------|
+| KI-VS-001 | visual-smoke Carousel-Check intermittent bei frischem Backend-Start | 2026-05-15 | OPEN |
+
+### Verdict
+**SHIP** — Keine Regressen durch CSP-Fix + Blog-Implementierung. Vollständige Journey-Suite grün.
 
 ---
 

@@ -1,5 +1,5 @@
 ## Journey: Customer Discovery Flow — PASS
-Datum: 2026-05-14 15:07 UTC
+Datum: 2026-05-14 22:22 UTC
 
 ### Aufgebaute Test-Daten
 | Fixture | ID/Slug | Status |

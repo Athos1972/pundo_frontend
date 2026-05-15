@@ -21,9 +21,9 @@ touches-states:
   - SocialLink.blocked:true
 status-changed-at: 2026-04-24T14:00:00Z
 status-changed-by-spec: social-link-moderation-20260424
-last-run: 2026-04-26T21:15:00Z
+last-run: 2026-05-15T05:30:00Z
 last-result: PASS
-last-run-sha: fd0d7241a5c0395857bb289c5f1ae76a574d157c
+last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
 ---
 
 # Journey: social-link-moderation

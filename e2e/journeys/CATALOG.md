@@ -13,9 +13,9 @@
 |---|---|---|---|---|
 | [shop-owner-lifecycle](shop-owner-lifecycle.md) | Shop-Owner Lifecycle | implemented | P1 | PASS |
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
-| [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | FAIL |
+| [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
-| [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | FAIL |
+| [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | PASS |
 | [import-page-ac-check](import-page-ac-check.spec.ts) | Import Page Acceptance Criteria Check | implemented | P2 | PASS |
 | [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow | implemented | P2 | PASS |
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |

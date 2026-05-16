@@ -56,6 +56,26 @@ const LoginSuccessAssertSchema = z.object({
   'password-env': z.string().min(1),
 })
 
+// ─── SEO assert types (F6400) ────────────────────────────────────────────────
+
+/** Assert that the page has exactly one H1 element */
+const H1CountAssertSchema = z.object({
+  type: z.literal('h1-count'),
+  expected: z.number().int().min(0).default(1),
+})
+
+/** Assert that the page title is not equal to the brand default */
+const MetaNotDefaultTitleAssertSchema = z.object({
+  type: z.literal('meta-not-default-title'),
+  /** Brand default titles to reject, e.g. ['pundo', 'naidivse'] */
+  defaults: z.array(z.string()).optional(),
+})
+
+/** Assert that a canonical link tag is present and non-empty */
+const CanonicalPresentAssertSchema = z.object({
+  type: z.literal('canonical-present'),
+})
+
 export const AssertSchema = z.discriminatedUnion('type', [
   StatusAssertSchema,
   SelectorVisibleAssertSchema,
@@ -67,6 +87,9 @@ export const AssertSchema = z.discriminatedUnion('type', [
   SelectorCountMinAssertSchema,
   TextNotPresentAssertSchema,
   LoginSuccessAssertSchema,
+  H1CountAssertSchema,
+  MetaNotDefaultTitleAssertSchema,
+  CanonicalPresentAssertSchema,
 ])
 
 export type Assert = z.infer<typeof AssertSchema>

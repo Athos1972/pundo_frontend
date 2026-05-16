@@ -1,5 +1,5 @@
 version: 1
-last_updated: "2026-04-30"
+last_updated: "2026-05-16"
 last_updated_by: "coder"
 
 brands:
@@ -204,3 +204,78 @@ checks:
         expected: 200
       - type: text-from-translations
         key: footer_about
+
+  # ---------------------------------------------------------------------------
+  # P1 — SEO Guardrails (F6400): curated routes
+  # Checks: title != brand default, H1 count = 1, canonical present
+  # ---------------------------------------------------------------------------
+
+  - id: seo-home
+    phase: anonymous
+    path: /
+    per_language: false
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: h1-count
+        expected: 1
+      - type: meta-not-default-title
+      - type: canonical-present
+
+  - id: seo-search
+    phase: anonymous
+    path: /search
+    per_language: false
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: h1-count
+        expected: 1
+      - type: meta-not-default-title
+
+  - id: seo-guide-detail
+    phase: anonymous
+    path: /guides
+    per_language: false
+    priority: P1
+    resolve_first_item: true
+    resolve_first_item_selector: "a[href*='/guides/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: h1-count
+        expected: 1
+      - type: meta-not-default-title
+      - type: canonical-present
+
+  - id: seo-shop-detail
+    phase: anonymous
+    path: /shops
+    per_language: false
+    priority: P1
+    resolve_first_item: true
+    resolve_first_item_selector: "a[href*='/shops/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: h1-count
+        expected: 1
+      - type: meta-not-default-title
+      - type: canonical-present
+
+  - id: seo-product-detail
+    phase: anonymous
+    path: /search?q=test
+    per_language: false
+    priority: P1
+    resolve_first_item: true
+    resolve_first_item_selector: "a[href*='/products/']"
+    timeout_ms: 20000
+    retries: 1
+    asserts:
+      - type: h1-count
+        expected: 1
+      - type: meta-not-default-title
+      - type: canonical-present

@@ -267,6 +267,86 @@ async function assertTextNotPresent(
   }
 }
 
+// ─── SEO assert implementations (F6400) ─────────────────────────────────────
+
+async function assertH1Count(
+  page: Page,
+  assert: Extract<Assert, { type: 'h1-count' }>,
+): Promise<AssertResult> {
+  try {
+    const count = await page.locator('h1').count()
+    const expected = assert.expected ?? 1
+    const ok = count === expected
+    return {
+      ok,
+      expected,
+      actual: count,
+      message: ok
+        ? `H1 count is ${count} as expected`
+        : `Expected ${expected} H1 element(s), found ${count}`,
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      expected: assert.expected ?? 1,
+      actual: String(err),
+      message: `Error checking H1 count: ${err}`,
+    }
+  }
+}
+
+const BRAND_DEFAULT_TITLES = ['pundo', 'naidivse']
+
+async function assertMetaNotDefaultTitle(
+  page: Page,
+  assert: Extract<Assert, { type: 'meta-not-default-title' }>,
+): Promise<AssertResult> {
+  try {
+    const title = await page.title()
+    const defaults = assert.defaults ?? BRAND_DEFAULT_TITLES
+    const isDefault = defaults.some(
+      (d) => title.trim().toLowerCase() === d.toLowerCase() || title.trim() === d,
+    )
+    return {
+      ok: !isDefault,
+      expected: `title not in [${defaults.join(', ')}]`,
+      actual: title,
+      message: !isDefault
+        ? `Title "${title}" is page-specific (not a brand default)`
+        : `Title "${title}" is a brand default — page is missing its own <title>`,
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      expected: 'page-specific title',
+      actual: String(err),
+      message: `Error checking page title: ${err}`,
+    }
+  }
+}
+
+async function assertCanonicalPresent(page: Page): Promise<AssertResult> {
+  try {
+    const canonical = await page.locator('link[rel="canonical"]').first().getAttribute('href')
+    const ok = typeof canonical === 'string' && canonical.length > 0
+    return {
+      ok,
+      expected: 'canonical link with non-empty href',
+      actual: canonical ?? '(not found)',
+      message: ok
+        ? `Canonical found: ${canonical}`
+        : 'No <link rel="canonical"> found on page',
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      expected: 'canonical link present',
+      actual: String(err),
+      message: `Error checking canonical: ${err}`,
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // resolve_first_item helper
 // ---------------------------------------------------------------------------
@@ -357,6 +437,15 @@ export async function runAssert(opts: RunAssertOptions): Promise<AssertResult> {
         actual: 'delegated',
         message: 'login-success assert is processed by runner phase logic',
       }
+
+    case 'h1-count':
+      return assertH1Count(page, assert)
+
+    case 'meta-not-default-title':
+      return assertMetaNotDefaultTitle(page, assert)
+
+    case 'canonical-present':
+      return assertCanonicalPresent(page)
 
     default: {
       const _exhaustive: never = assert

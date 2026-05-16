@@ -12,6 +12,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl()
   const now = new Date()
 
+  // SECURITY/SEO NOTE: Auth routes (/auth/*), shop-admin routes (/shop-admin/*),
+  // and system-admin routes (/admin/*) are intentionally excluded from the sitemap.
+  // They are also covered by robots.txt/robots.ts noindex rules.
+  // The /search entry is the plain page only — parametrised URLs (?q=...) must
+  // NOT appear here (they are served with robots: noindex).
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: siteUrl,

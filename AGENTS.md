@@ -94,5 +94,7 @@ Falls eine Anforderung Backend-Änderungen erfordert: explizit benennen und ggf.
 - **Tests:** Vitest für Unit-Tests, Playwright für E2E empfohlen
 - **Shop-Admin Clean Boundary (Architektur-Prinzip):**
   `src/app/shop-admin/`, `src/components/shop-admin/` und `src/lib/shop-admin-api.ts` dürfen **keine Imports** aus customer-facing Code haben (außer generischen UI-Primitives aus `src/components/ui/`). Shop-Admin-Types gehören in `src/types/shop-admin.ts`, nicht in `src/types/api.ts`. Admin-Translations in eigenem Namespace-Objekt. Dieses Prinzip sichert, dass die spätere Auslagerung in ein separates Repo in 2–3 Tagen machbar bleibt statt 2–3 Wochen zu kosten.
+- **SEO-Guardrails (F6400):**
+  Neue Customer-Pages brauchen `generateMetadata` oder `export const metadata` (ESLint-Warn). Checkliste: `docs/seo.md`. Breadcrumb-Komponente: `src/components/ui/Breadcrumb.tsx`. Metadata-Helpers: `src/lib/seo/metadata-defaults.ts`. Audit: `pnpm seo:audit`.
 
 ---

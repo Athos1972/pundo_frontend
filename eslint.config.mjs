@@ -1,6 +1,10 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const requirePageMetadata = require("./eslint-rules/require-page-metadata.js");
 
 // ─── Shop-Admin Clean Boundary ────────────────────────────────────────────────
 // shop-admin code must not import from customer-facing modules.
@@ -45,10 +49,28 @@ const shopAdminBoundaryRule = {
   },
 };
 
+// ─── SEO Guardrail — require-page-metadata ────────────────────────────────────
+// Every (customer)/**/page.tsx must export generateMetadata or metadata.
+// Severity: warn so existing pages don't break CI immediately.
+const seoMetadataRule = {
+  files: ["src/app/(customer)/**/page.tsx"],
+  plugins: {
+    "local-seo": {
+      rules: {
+        "require-page-metadata": requirePageMetadata,
+      },
+    },
+  },
+  rules: {
+    "local-seo/require-page-metadata": "warn",
+  },
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   shopAdminBoundaryRule,
+  seoMetadataRule,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

@@ -39,6 +39,9 @@ Browser-E2E-Tests durch.
 - **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
 - **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
 - **Test-Daten-Matrix:** Gegenseitig ausschließende Zustände bekommen eigene Fixtures. Nie Zustände "zusammenpappen" um einen Test zu vereinfachen.
+- **DB-Reset-Regel (KRITISCH):** `pundo_test` enthält Echtdaten aus Prod — **niemals automatisch resetten**. Weder `global-setup.ts` noch `pytest`-Fixtures dürfen die DB ohne explizites `E2E_RESET_DB=true` löschen. Tests müssen die bestehenden Daten nutzen und bei Bedarf neue Datensätze anlegen (via API), keine DROP/TRUNCATE.
+- **Testdaten auffüllen:** Wenn `pundo_test` zu leer wirkt und Tests an fehlenden Daten scheitern, Prod→Test-Sync ausführen: `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && source .venv/bin/activate && ./scripts/sync_prod_to_test.sh`. Das Script holt echte Business-Daten (Shops, Items, Kategorien etc.) per SSH von Hetzner — kein Auth/PII, E2E-Fixtures bleiben erhalten.
+- **Expliziter Reset** nur wenn unbedingt nötig (Migrations-Test, CI): `E2E_RESET_DB=true npx playwright test` bzw. `E2E_RESET_DB=true pytest`.
 
 ---
 

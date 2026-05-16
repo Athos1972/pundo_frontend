@@ -37,8 +37,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Playwright E2E-Tests laufen immer gegen **3500 / 8500** (Safety-Check in `playwright.config.ts` verwirft Port 8000)
 - Port 8000 und 3000 sind weitgehend Echtdaten — nicht für Tests verwenden, außer explizit angefordert
 - Port 8500 und 3500 sind TEST — niemals für Produktion verwenden.
-  - Wenn Testdaten fehlen aus pundo-datenbank in die pundo_test kopieren
 - Backend-Repo startet Test-Server mit `./scripts/start_test_server.sh` (Port 8500, DB: pundo_test)
+
+**Testdaten & DB-Reset-Regel (PFLICHT):**
+- `pundo_test` enthält Echtdaten aus Prod (via `sync_prod_to_test.sh`) — diese **niemals automatisch löschen**
+- E2E-Tests und pytest-Fixtures resetten die DB **NICHT** — sie nutzen die bestehenden Daten
+- Wenn Testdaten fehlen: `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && source .venv/bin/activate && ./scripts/sync_prod_to_test.sh` ausführen
+- Expliziter Reset nur mit `E2E_RESET_DB=true` (z.B. für CI oder Migrations-Tests):
+  - Frontend: `E2E_RESET_DB=true npx playwright test`
+  - Backend: `E2E_RESET_DB=true pytest`
 
 > **Studio-Hinweis (F6995, ab 2026-05-01):** Am Studio-MacBook gilt nur die Test-Zeile. Die Prod-Zeile (3000/8000/`pundo`) ist eine Plattform-Referenz für die Hetzner-Maschine — am Studio existiert weder DB `pundo` noch ein Backend auf `:8000`. `npm run dev` wurde entfernt; nur `npm run dev:test` ist gültig.
 

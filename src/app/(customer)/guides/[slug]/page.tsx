@@ -44,7 +44,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 
   return {
-    title: pageTitle,
+    // Use absolute title to bypass the layout template (which would append " | Pundo"
+    // and push the total over 60 chars — the truncation already reserves for that).
+    title: { absolute: pageTitle },
     description,
     // hreflang languages map intentionally removed: Pundo has no URL-based i18n.
     // All language variants share the same URL — emitting hreflang would tell

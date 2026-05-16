@@ -8,7 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.ts'],
-    include: ['src/tests/**/*.test.{ts,tsx}', 'e2e/journeys/_parser.spec.ts'],
+    include: ['src/tests/**/*.test.{ts,tsx}', 'e2e/journeys/_parser.spec.ts', 'tests/unit/**/*.test.ts'],
     exclude: ['node_modules/**'],
   },
   resolve: {

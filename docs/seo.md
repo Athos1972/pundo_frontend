@@ -109,3 +109,147 @@ export async function generateMetadata({ params }) {
 // Auth/private page (opt-in, layout already covers /auth/**)
 export const metadata = noIndexMetadata('Page Title')
 ```
+
+---
+
+## Title & Description Length Guidelines (F6400, Ahrefs thresholds)
+
+| Field | Min | Max | Violation |
+|---|---|---|---|
+| `<title>` | 50 chars | 60 chars | Ahrefs: "too short" / "too long" |
+| `<meta description>` | 110 chars | 160 chars | Ahrefs: "too short" / "too long" |
+
+Use the truncation helpers from `src/lib/seo/metadata-defaults.ts`:
+
+```ts
+import { truncateTitle, truncateDescription, padShopTitle } from '@/lib/seo/metadata-defaults'
+
+// Product — remove price from title, truncate at word boundary
+const suffix = ` | Pundo`
+const truncated = truncateTitle(product.name, { max: 60, reserved: suffix.length })
+const title = `${truncated}${suffix}`
+
+// Shop — pad short names with city/category hints
+const title = padShopTitle(shop.name, { city: cityHint, category: categoryHint }, lang, 'Pundo')
+
+// Description — first 155 chars of product description
+const description = rawDesc
+  ? truncateDescription(rawDesc, { max: 155 })
+  : tr.product_desc_fallback(name, brand)
+```
+
+---
+
+## Open Graph — Complete Suite (AC-40)
+
+Every indexable page must set all of these (use `buildCompleteOpenGraph` from `src/lib/seo/og-defaults.ts`):
+
+**Required OG properties:** `og:title`, `og:description`, `og:image`, `og:image:width`, `og:image:height`, `og:image:alt`, `og:url`, `og:type`, `og:site_name`, `og:locale`
+
+**Required Twitter properties:** `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`
+
+```ts
+import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
+
+// Product page example
+const og = buildCompleteOpenGraph({
+  title: pageTitle,
+  description,
+  url: `${siteUrl}/products/${slug}`,
+  type: 'product',
+  locale: lang,
+  siteName: 'Pundo',
+  image: {
+    url: productImageUrl,
+    width: 1200,
+    height: 630,
+    alt: product.name,
+  },
+})
+
+return {
+  title: pageTitle,
+  description,
+  alternates: { canonical: canonicalUrl },
+  openGraph: og.openGraph,
+  twitter: og.twitter,
+  ...(og.other ? { other: og.other } : {}),
+}
+```
+
+### Shop OG image fallback (no logo)
+
+```ts
+// Deterministic fallback: shopId % poolSize → stable across re-renders
+const ogImage = logoUrl
+  ? { url: logoUrl, width: 1200, height: 630, alt: shop.name }
+  : pickShopFallbackOgImage(shop.id, siteUrl)
+```
+
+Pool: `public/og/shop-fallback-default.jpg` (1 image until Designer delivers 20-image pool).
+
+### Guide page (article type)
+
+```ts
+const og = buildCompleteOpenGraph({
+  ...,
+  type: 'article',
+  publishedTime: guide.meta.date,  // ISO 8601 → article:published_time in metadata.other
+})
+```
+
+---
+
+## Redirect Rules (AC-33/AC-34)
+
+**Current state (verified 2026-05-16):**
+- `next.config.ts` has **no `redirects()` block** — only `rewrites()` for API proxy
+- **No `src/middleware.ts`** exists — no middleware-level redirects
+- Trailing-slash redirects: Next.js default behaviour (308 redirect)
+- External redirects: potentially from Caddy reverse proxy (not in this repo)
+
+**Rule:** Never point internal `<Link href>` at a URL that redirects. Always use the final URL. Existing redirect rules (if added in the future) should stay for external backlink compatibility but must never be used in internal links.
+
+---
+
+## Orphan Page Rule (AC-31/AC-32)
+
+Every page in `sitemap.xml` must have at least one internal link pointing to it. If a page has no inbound links from any other customer page, it is an orphan and loses Page Rank.
+
+**Checklist for new pages:**
+1. Add the page to `Footer.tsx` or to a relevant list/index page
+2. Or add a contextual cross-link (e.g. "Related guides" in guide detail)
+3. Run `pnpm seo:audit` — the "Orphan pages" section will confirm
+
+**Accepted orphans:** `[]` (none — per BB/16.5., everything should have an inbound link)
+
+---
+
+## Sitemap Consistency (AC-30)
+
+`src/app/sitemap.ts` uses `isIndexable(url)` from `src/lib/seo/metadata-defaults.ts` to filter every URL before including it. This guarantees that no noindex route can appear in the sitemap.
+
+**isIndexable non-indexable patterns:**
+- `/auth/*`, `/account/*`, `/shop-admin/*`, `/admin/*`, `/api/*`
+- `/__playwright/*`, `/_next/*`
+- Any URL with query params: `?q=`, `?shop_id=`, `?category_id=`, `?filter=`
+
+---
+
+## Running the Audits
+
+```bash
+# Start the test server first (port 3500)
+npm run dev:test
+
+# In a second terminal — SEO audit (title/desc/OG/H1/orphans/redirects/sitemap):
+pnpm seo:audit
+
+# Performance baseline (Lighthouse, requires Chrome):
+pnpm seo:perf
+```
+
+Outputs in project root:
+- `seo-audit-<date>.json` + `seo-audit-<date>.md`
+- `perf-report-<date>.json` + `perf-report-<date>.md`
+- `seo-perf-followups.md` (appended when routes hit "Poor" thresholds)

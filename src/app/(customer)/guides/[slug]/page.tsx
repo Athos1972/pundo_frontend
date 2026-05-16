@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { getGuide, getGuides, getGuideSlugs, getGuideLanguages } from '@/lib/guides'
+import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
 import { GuideCard } from '@/components/guides/GuideCard'
 import { BackButton } from '@/components/ui/BackButton'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -22,7 +22,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { title, description } = guide.meta
   const siteUrl = 'https://pundo.cy'
-  const availableLangs = getGuideLanguages(slug)
 
   return {
     title: `${title} — pundo`,
@@ -32,9 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: 'article',
     },
+    // hreflang languages map intentionally removed: Pundo has no URL-based i18n.
+    // All language variants share the same URL — emitting hreflang would tell
+    // Google the same URL contains multiple languages simultaneously, which is
+    // incorrect. Canonical points to the English version as the canonical form.
+    // Correct hreflang requires per-language URLs (F6300 scope).
     alternates: {
       canonical: `${siteUrl}/guides/${slug}`,
-      languages: Object.fromEntries(availableLangs.map((l) => [l, `${siteUrl}/guides/${slug}`])),
     },
   }
 }
@@ -91,6 +94,11 @@ export default async function GuideDetailPage({ params }: Props) {
           }),
         }}
       />
+      <Breadcrumb items={[
+        { label: tr.home, href: '/' },
+        { label: tr.nav_guides, href: '/guides' },
+        { label: meta.title },
+      ]} />
       <BackButton fallback="/guides" />
 
       <header className="space-y-2">

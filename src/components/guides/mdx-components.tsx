@@ -110,4 +110,13 @@ export function ComparisonTable({
 }
 
 import { GuideImage } from './GuideImage'
-export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable, GuideImage }
+
+// Remap MDX h1 → h2 to prevent double-H1 on Guide pages.
+// The page template already renders a <h1> from meta.title. Any # heading in
+// MDX content would produce a second <h1>, which is an SEO violation.
+// Remapping to h2 makes double-H1 structurally impossible.
+function MdxH2({ children }: { children?: React.ReactNode }) {
+  return <h2 className="text-xl font-bold mt-6 mb-3">{children}</h2>
+}
+
+export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable, GuideImage, h1: MdxH2 }

@@ -264,96 +264,101 @@ export default async function globalSetup() {
   }
   console.log('[E2E Setup] Test-Backend bereit.')
 
-  console.log('[E2E Setup] Bereite pundo_test Datenbank vor...')
+  // ── 1. DB reset (opt-in via E2E_RESET_DB=true) ────────────────────────────
+  // By default the DB is NOT reset — prod data synced via sync_prod_to_test.sh
+  // survives test runs. Set E2E_RESET_DB=true only when a clean slate is required
+  // (e.g. CI or explicit migration testing).
+  const resetDb = process.env.E2E_RESET_DB === 'true'
 
-  // ── 1. DB reset + Kategorien kopieren ──────────────────────────────────────
-  // WICHTIG: Backend VOR dem DB-Reset stoppen, damit kein offener Connection-Pool
-  // die TRUNCATE-Locks blockiert (→ Deadlock). uvicorn spawnt 4 worker-Prozesse —
-  // lsof findet nur den Listener, die Worker sind eigenständige Kindprozesse.
-  // Deshalb: pkill -9 -f auf das komplette Uvicorn-Kommando.
-  console.log('[E2E Setup] Stoppe Backend + alle Uvicorn-Worker vor DB-Reset...')
-  try {
-    execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
-    execSync(`pkill -9 -f "uvicorn ingestor.api.main:app.*${backendPort}" 2>/dev/null || true`, { stdio: 'pipe' })
-    await new Promise(r => setTimeout(r, 2000)) // Warten bis Worker-Prozesse terminiert und PG-Verbindungen geschlossen
-    console.log('[E2E Setup] Backend + Worker gestoppt, alle DB-Verbindungen freigegeben.')
-  } catch { /* ok */ }
+  // Fixed test credentials — these stay constant across resets and non-reset runs.
+  // prepare_e2e_db.py outputs the same values; we mirror them here so we can skip
+  // the script when E2E_RESET_DB is not set.
+  let creds: TestCredentials = {
+    email: 'e2e-owner@pundo-e2e.io',
+    password: 'E2eTestPassword!99',
+    shop_name: 'E2E Test Shop',
+    shop_address: 'Test Street 1, Nicosia',
+  }
 
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
-  const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
+  if (resetDb) {
+    console.log('[E2E Setup] E2E_RESET_DB=true — Bereite pundo_test Datenbank vor (DROP + Kategorien)...')
 
-  let creds!: TestCredentials
-  // Retry up to 3x — safeguard if OS-level connections take a moment to close
-  let dbErr: unknown
-  for (let attempt = 1; attempt <= 3; attempt++) {
+    // Stop backend before reset to release all connection-pool locks (deadlock prevention).
+    console.log('[E2E Setup] Stoppe Backend + alle Uvicorn-Worker vor DB-Reset...')
     try {
-      const output = execSync(`${pyBin} ${pyScript}`, {
-        cwd: BACKEND_REPO,
-        encoding: 'utf8',
-        timeout: 300_000,
-        env: { ...process.env, PYTHONPATH: BACKEND_REPO },
-      })
-      // Last line of stdout is the JSON credentials
-      const jsonLine = output.trim().split('\n').at(-1)!
-      creds = JSON.parse(jsonLine)
-      console.log('[E2E Setup] DB reset abgeschlossen, Kategorien kopiert.')
-      dbErr = undefined
-      break
-    } catch (err) {
-      dbErr = err
-      // Surface the root error message — typical cases: alembic UniqueViolation
-      // on pg_type_typname_nsp_index, deadlock on DROP SCHEMA, lingering backend
-      // connection holding locks. test_helpers.py has its own retry+terminate
-      // logic; this outer loop is the last safety net.
-      const msg = err instanceof Error ? err.message : String(err)
-      const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString().trim() ?? ''
-      const detail = stderr.split('\n').slice(-3).join(' | ').slice(0, 240) || msg.slice(0, 240)
-      console.warn(`[E2E Setup] DB-Reset Versuch ${attempt}/3 fehlgeschlagen: ${detail}`)
-      console.warn(`[E2E Setup] Warte 3s vor erneutem Versuch…`)
-      await new Promise(r => setTimeout(r, 3000))
+      execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+      execSync(`pkill -9 -f "uvicorn ingestor.api.main:app.*${backendPort}" 2>/dev/null || true`, { stdio: 'pipe' })
+      await new Promise(r => setTimeout(r, 2000))
+      console.log('[E2E Setup] Backend + Worker gestoppt, alle DB-Verbindungen freigegeben.')
+    } catch { /* ok */ }
+
+    const pyBin = `${BACKEND_REPO}/.venv/bin/python`
+    const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
+
+    let dbErr: unknown
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const output = execSync(`${pyBin} ${pyScript}`, {
+          cwd: BACKEND_REPO,
+          encoding: 'utf8',
+          timeout: 300_000,
+          env: { ...process.env, PYTHONPATH: BACKEND_REPO },
+        })
+        const jsonLine = output.trim().split('\n').at(-1)!
+        creds = JSON.parse(jsonLine)
+        console.log('[E2E Setup] DB reset abgeschlossen, Kategorien kopiert.')
+        dbErr = undefined
+        break
+      } catch (err) {
+        dbErr = err
+        const msg = err instanceof Error ? err.message : String(err)
+        const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString().trim() ?? ''
+        const detail = stderr.split('\n').slice(-3).join(' | ').slice(0, 240) || msg.slice(0, 240)
+        console.warn(`[E2E Setup] DB-Reset Versuch ${attempt}/3 fehlgeschlagen: ${detail}`)
+        console.warn(`[E2E Setup] Warte 3s vor erneutem Versuch…`)
+        await new Promise(r => setTimeout(r, 3000))
+      }
     }
-  }
-  if (dbErr) {
-    console.error('[E2E Setup] FEHLER beim DB-Reset nach 3 Versuchen:', dbErr)
-    throw dbErr
-  }
+    if (dbErr) {
+      console.error('[E2E Setup] FEHLER beim DB-Reset nach 3 Versuchen:', dbErr)
+      throw dbErr
+    }
 
-  // ── 1b. Backend nach Schema-Reset neu starten ──────────────────────────────
-  // prepare_e2e_db runs DROP SCHEMA + alembic upgrade, which invalidates all
-  // open SQLAlchemy connections in the running uvicorn workers.  Workers then
-  // crash on the next DB request (ECONNREFUSED from the caller's perspective).
-  // Fix: kill + restart the backend with a fresh connection pool.
-  console.log('[E2E Setup] Starte Backend nach DB-Reset neu (frischer Connection-Pool)...')
-  try {
-    execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
-  } catch { /* ok */ }
-  await new Promise(r => setTimeout(r, 1000))
-
-  const backendProc2 = spawn('bash', [backendScript], {
-    cwd: BACKEND_REPO,
-    env: { ...process.env, E2E_BACKEND_PORT: backendPort },
-    detached: false,
-    stdio: 'pipe',
-  })
-  backendProc2.stderr?.on('data', (d: Buffer) => {
-    const line = d.toString().trim()
-    if (line) console.log(`[backend] ${line}`)
-  })
-
-  const deadline2 = Date.now() + 30_000
-  let healthy2 = false
-  while (Date.now() < deadline2) {
+    // Restart backend after DROP SCHEMA — running workers have stale connection pools.
+    console.log('[E2E Setup] Starte Backend nach DB-Reset neu (frischer Connection-Pool)...')
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/categories`, { signal: AbortSignal.timeout(2000) })
-      if (res.ok) { healthy2 = true; break }
-    } catch { /* noch nicht bereit */ }
+      execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
+    } catch { /* ok */ }
     await new Promise(r => setTimeout(r, 1000))
+
+    const backendProc2 = spawn('bash', [backendScript], {
+      cwd: BACKEND_REPO,
+      env: { ...process.env, E2E_BACKEND_PORT: backendPort },
+      detached: false,
+      stdio: 'pipe',
+    })
+    backendProc2.stderr?.on('data', (d: Buffer) => {
+      const line = d.toString().trim()
+      if (line) console.log(`[backend] ${line}`)
+    })
+
+    const deadline2 = Date.now() + 30_000
+    let healthy2 = false
+    while (Date.now() < deadline2) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/categories`, { signal: AbortSignal.timeout(2000) })
+        if (res.ok) { healthy2 = true; break }
+      } catch { /* noch nicht bereit */ }
+      await new Promise(r => setTimeout(r, 1000))
+    }
+    if (!healthy2) {
+      backendProc2.kill()
+      throw new Error(`\n[E2E Setup] Backend nach DB-Reset nicht erreichbar nach 30s.\n`)
+    }
+    console.log('[E2E Setup] Backend nach DB-Reset bereit.')
+  } else {
+    console.log('[E2E Setup] DB-Reset übersprungen (E2E_RESET_DB nicht gesetzt) — nutze bestehende pundo_test-Daten.')
   }
-  if (!healthy2) {
-    backendProc2.kill()
-    throw new Error(`\n[E2E Setup] Backend nach DB-Reset nicht erreichbar nach 30s.\n`)
-  }
-  console.log('[E2E Setup] Backend nach DB-Reset bereit.')
 
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
   // Also handles re-runs where the owner already exists (DB not fully reset).

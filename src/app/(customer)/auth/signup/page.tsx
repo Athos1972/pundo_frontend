@@ -3,7 +3,10 @@ import { t } from '@/lib/translations'
 import { SignupForm } from '@/components/auth/SignupForm'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Create account | Pundo' }
+export const metadata: Metadata = {
+  title: 'Create account | Pundo',
+  robots: { index: false, follow: false },
+}
 
 export default async function SignupPage() {
   const lang = await getLangServer()

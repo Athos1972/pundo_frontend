@@ -4,7 +4,10 @@ import { LoginForm } from '@/components/auth/LoginForm'
 // t() used for heading string only — tr object not passed to client component
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Sign in | Pundo' }
+export const metadata: Metadata = {
+  title: 'Sign in | Pundo',
+  robots: { index: false, follow: false },
+}
 
 export default async function LoginPage() {
   const lang = await getLangServer()

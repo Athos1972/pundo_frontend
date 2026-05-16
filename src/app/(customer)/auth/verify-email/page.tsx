@@ -4,7 +4,10 @@ import { VerifyEmailForm } from '@/components/auth/VerifyEmailForm'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-export const metadata: Metadata = { title: 'Verify email | Pundo' }
+export const metadata: Metadata = {
+  title: 'Verify email | Pundo',
+  robots: { index: false, follow: false },
+}
 
 interface Props {
   searchParams: Promise<{ email?: string; purpose?: string }>

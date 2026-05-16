@@ -15,6 +15,7 @@ import { PriceFilterToggle } from '@/components/ui/PriceFilterToggle'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { getCustomerSession } from '@/lib/customer-api'
 import { TrackProductView } from '@/components/recently-viewed/TrackProductView'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -107,6 +108,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
       />
       <div className="max-w-2xl mx-auto px-4 py-6">
         <BackButton />
+        <Breadcrumb items={[
+          { label: tr.home, href: '/' },
+          ...(product.category?.name ? [{ label: product.category.name, href: `/search?category=${product.category.id}` }] : []),
+          { label: name },
+        ]} />
         {/* Hero */}
         <div className="flex gap-4 mb-6">
           {firstImgUrl && (

@@ -1,3 +1,4 @@
+// @seo-allow-default — noindex/nofollow covered by src/app/(customer)/auth/layout.tsx
 'use client'
 
 import { useEffect } from 'react'

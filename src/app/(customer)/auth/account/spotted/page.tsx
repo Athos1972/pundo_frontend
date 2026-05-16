@@ -5,7 +5,10 @@ import { t } from '@/lib/translations'
 import { getCustomerSession, getSpottedUploads } from '@/lib/customer-api'
 import type { SpottedUpload } from '@/types/api'
 
-export const metadata: Metadata = { title: 'My Spotted Uploads | Pundo' }
+export const metadata: Metadata = {
+  title: 'My Spotted Uploads | Pundo',
+  robots: { index: false, follow: false },
+}
 
 function statusLabel(
   status: SpottedUpload['status'],

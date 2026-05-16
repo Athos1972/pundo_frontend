@@ -26,6 +26,7 @@ import { CommunityFeedbackSection } from '@/components/community/CommunityFeedba
 import { getCustomerSession } from '@/lib/customer-api'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -37,6 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const name = shop.name ?? 'Shop'
     const description = shop.address_raw ?? undefined
     const siteUrl = getSiteUrl()
+    const logoUrl = shop.images?.[0]?.url ?? undefined
     return {
       title: name,
       description,
@@ -45,11 +47,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: name,
         description,
         url: `${siteUrl}/shops/${slug}`,
+        ...(logoUrl ? { images: [{ url: logoUrl }] } : {}),
       },
       twitter: {
         card: 'summary',
         title: name,
         description,
+        ...(logoUrl ? { images: [logoUrl] } : {}),
       },
       alternates: { canonical: `${siteUrl}/shops/${slug}` },
     }
@@ -101,6 +105,11 @@ export default async function ShopPage({ params }: Props) {
       />
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <BackButton />
+        <Breadcrumb items={[
+          { label: tr.home, href: '/' },
+          { label: tr.nav_shops, href: '/shops' },
+          { label: shop.name ?? slug },
+        ]} />
         {/* Header */}
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
@@ -108,7 +117,7 @@ export default async function ShopPage({ params }: Props) {
               <div className="shrink-0">
                 <Image
                   src={shop.images[0].url}
-                  alt={shop.name ?? 'Shop logo'}
+                  alt={shop.name ?? ''}
                   width={96}
                   height={96}
                   className="rounded-xl object-cover bg-surface border border-border"

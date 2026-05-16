@@ -1,7 +1,9 @@
+import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { getCategories } from '@/lib/api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { t } from '@/lib/translations'
+import { getSiteUrl } from '@/lib/seo'
 import { Hero } from '@/components/layout/Hero'
 import { CommunityCard } from '@/components/community/CommunityCard'
 import { GuidesTeaser } from '@/components/guides/GuidesTeaser'
@@ -9,6 +11,19 @@ import { NearbyShops } from '@/components/shop/NearbyShops'
 import { HomesickTeaser } from '@/components/home/HomesickTeaser'
 import { ActivityFeed } from '@/components/activity-feed/ActivityFeed'
 import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedList'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = getSiteUrl()
+  return {
+    description: 'Find products and shops near you in Cyprus. Compare prices, check stock, and discover local businesses.',
+    alternates: { canonical: siteUrl },
+    openGraph: {
+      type: 'website',
+      url: siteUrl,
+      description: 'Find products and shops near you in Cyprus. Compare prices, check stock, and discover local businesses.',
+    },
+  }
+}
 
 export default async function HomePage() {
   const lang = await getLangServer()

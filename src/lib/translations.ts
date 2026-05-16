@@ -422,6 +422,15 @@ export const translations = {
     oauth_consent_error: 'Something went wrong. Please try again.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Choose your language',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `Discover ${name} in ${city} — browse prices, products and current offers from this ${category} shop on Pundo. Compare locally and find the best deals near you.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} by ${brand} — compare current prices and find the best offers near you on Pundo, Cyprus's local price comparison platform.`,
+    shop_title_tagline: 'Price comparison on Pundo',
+    footer_guides: 'Guides',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
   de: {
     hero_title: 'Produkte in Larnaca finden.',
@@ -845,6 +854,15 @@ export const translations = {
     oauth_consent_error: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Sprache wählen',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `Entdecke das Sortiment von ${name} in ${city} — aktuelle Preise und Angebote aus diesem ${category}-Shop auf Pundo vergleichen. Finde die besten Deals in deiner Nähe.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} von ${brand} — aktuelle Preise und Angebote auf Pundo vergleichen, dem lokalen Preisvergleich für Zypern.`,
+    shop_title_tagline: 'Preisvergleich auf Pundo',
+    footer_guides: 'Ratgeber',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
   ru: {
     hero_title: 'Найти товары в Ларнаке.',
@@ -1268,6 +1286,15 @@ export const translations = {
     oauth_consent_error: 'Что-то пошло не так. Пожалуйста, попробуйте снова.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Выберите язык',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `Откройте для себя ${name} в ${city} — сравните цены и актуальные предложения этого ${category}-магазина на Pundo. Найдите лучшие цены рядом с вами на Кипре.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} от ${brand} — сравните текущие цены и найдите лучшие предложения на Pundo, платформе для сравнения цен на Кипре.`,
+    shop_title_tagline: 'Сравнение цен на Pundo',
+    footer_guides: 'Путеводители',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
   el: {
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
@@ -1691,6 +1718,15 @@ export const translations = {
     oauth_consent_error: 'Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'Επιλέξτε γλώσσα',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `Ανακαλύψτε τo ${name} στη ${city} — συγκρίνετε τιμές και προσφορές από αυτό το κατάστημα ${category} στο Pundo. Βρείτε τις καλύτερες τιμές κοντά σας στην Κύπρο.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} από ${brand} — συγκρίνετε τρέχουσες τιμές και βρείτε τις καλύτερες προσφορές στο Pundo, την πλατφόρμα σύγκρισης τιμών για την Κύπρο.`,
+    shop_title_tagline: 'Σύγκριση τιμών στο Pundo',
+    footer_guides: 'Οδηγοί',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
   ar: {
     hero_title: 'ابحث عن منتجات في لارنكا.',
@@ -2114,6 +2150,15 @@ export const translations = {
     oauth_consent_error: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'اختر لغتك',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `اكتشف ${name} في ${city} — قارن الأسعار والعروض من متجر ${category} هذا على Pundo. ابحث عن أفضل الصفقات بالقرب منك في قبرص.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} من ${brand} — قارن الأسعار الحالية وابحث عن أفضل العروض على Pundo، منصة مقارنة الأسعار المحلية لقبرص.`,
+    shop_title_tagline: 'مقارنة الأسعار على Pundo',
+    footer_guides: 'أدلة',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
   he: {
     hero_title: 'מצא מוצרים בלרנקה.',
@@ -2537,6 +2582,15 @@ export const translations = {
     oauth_consent_error: 'משהו השתבש. אנא נסה שוב.',
     // Language Picker Overlay (F6310)
     language_picker_title: 'בחר שפה',
+    // SEO meta templates (F6400)
+    shop_meta_description: (name: string, city: string, category: string) =>
+      `גלה את ${name} ב-${city} — השווה מחירים והצעות מחנות ${category} זו ב-Pundo. מצא את העסקאות הטובות ביותר בקרבתך בקפריסין.`,
+    product_desc_fallback: (name: string, brand: string) =>
+      `${name} מאת ${brand} — השווה מחירים עדכניים ומצא את ההצעות הטובות ביותר ב-Pundo, פלטפורמת השוואת המחירים המקומית לקפריסין.`,
+    shop_title_tagline: 'השוואת מחירים ב-Pundo',
+    footer_guides: 'מדריכים',
+    footer_nostalgia: 'Nostalgia',
+    footer_homesick: 'Homesick',
   },
 } as const;
 

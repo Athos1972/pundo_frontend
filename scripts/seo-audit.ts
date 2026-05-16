@@ -3,15 +3,19 @@
  * SEO Audit Script — pundo_frontend
  *
  * Crawls a running frontend instance and checks each page for:
- *   - Title (default vs. own)
- *   - Description
+ *   - Title (default vs. own, length 50–60)
+ *   - Description (length 110–160, missing)
  *   - Canonical link
- *   - H1 count
+ *   - H1 count + empty H1
  *   - HTML lang attribute
+ *   - Open Graph completeness (all AC-40 required tags)
  *   - Images without alt (or empty alt on non-decorative images)
  *   - Internal links without visible anchor text
  *   - Internal link targets that return 4xx/5xx
  *   - External links with their HTTP status
+ *   - [Global] Sitemap-vs-noindex cross-check
+ *   - [Global] Orphan pages (in sitemap but no internal inlink)
+ *   - [Global] Internal links pointing to 3xx redirects
  *
  * Usage:
  *   pnpm tsx scripts/seo-audit.ts
@@ -28,8 +32,16 @@
 import { chromium } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { auditConfig } from './seo-audit.config.js'
+import { checkTitleLength, formatTitleLengthSection, type TitleLengthViolation } from './seo-audit/checks/title-length.js'
+import { checkDescriptionLength, formatDescriptionLengthSection, type DescriptionLengthViolation } from './seo-audit/checks/description-length.js'
+import { checkOgCompleteness, formatOgCompletenessSection, type OgGap } from './seo-audit/checks/og-completeness.js'
+import { checkH1Empty, formatH1EmptySection, type EmptyH1 } from './seo-audit/checks/h1-empty.js'
+import { checkSitemapVsNoindex, formatSitemapVsNoindexSection, type SitemapNoindexEntry } from './seo-audit/checks/sitemap-vs-noindex.js'
+import { computeOrphans, formatOrphanPagesSection, type OrphanPage } from './seo-audit/checks/orphan-pages.js'
+import { checkInternalLink, formatInternalRedirectsSection, type InternalRedirect } from './seo-audit/checks/internal-redirects.js'
 
-const BASE_URL = process.env.SEO_AUDIT_BASE_URL ?? 'http://localhost:3500'
+const BASE_URL = auditConfig.baseUrl
 const BRAND_DEFAULT_TITLES = ['pundo', 'naidivse']
 const TIMEOUT_MS = 15_000
 const EXTERNAL_TIMEOUT_MS = 10_000
@@ -46,7 +58,9 @@ interface PageAuditResult {
   description: string | null
   canonical: string | null
   og_image: string | null
+  og_tags: Record<string, string>
   h1_count: number
+  h1_text_contents: string[]
   lang_attr: string | null
   is_indexable: boolean
   images_missing_alt: string[]
@@ -54,6 +68,7 @@ interface PageAuditResult {
   internal_links_missing_anchor: string[]
   internal_links_4xx_5xx: Array<{ href: string; status: number }>
   external_links: Array<{ href: string; status: number | null }>
+  all_internal_links: string[]
 }
 
 async function fetchUrlStatus(url: string): Promise<number | null> {
@@ -115,11 +130,12 @@ async function auditPage(
   } catch {
     return {
       url, status: null, title: null, title_is_default: false,
-      description: null, canonical: null, og_image: null, h1_count: 0,
+      description: null, canonical: null, og_image: null, og_tags: {},
+      h1_count: 0, h1_text_contents: [],
       lang_attr: null, is_indexable: false,
       images_missing_alt: [], hreflang_tags: [],
       internal_links_missing_anchor: [], internal_links_4xx_5xx: [],
-      external_links: [],
+      external_links: [], all_internal_links: [],
     }
   }
 
@@ -142,6 +158,23 @@ async function auditPage(
 
     const robotsContent = robotsEl?.content?.toLowerCase() ?? ''
     const isIndexable = !robotsContent.includes('noindex')
+
+    // Collect all OG meta tags (property + name attributes) for completeness check
+    const ogTags: Record<string, string> = {}
+    doc.querySelectorAll('meta[property]').forEach((el) => {
+      const prop = el.getAttribute('property')
+      const content = (el as HTMLMetaElement).content
+      if (prop && content) ogTags[prop] = content
+    })
+    doc.querySelectorAll('meta[name^="twitter:"]').forEach((el) => {
+      const name = el.getAttribute('name')
+      const content = (el as HTMLMetaElement).content
+      if (name && content) ogTags[name] = content
+    })
+
+    // Collect H1 text contents for empty-H1 check
+    const h1TextContents: string[] = []
+    h1s.forEach((h) => h1TextContents.push(h.textContent ?? ''))
 
     // Images missing alt
     const imgsMissingAlt: string[] = []
@@ -195,7 +228,9 @@ async function auditPage(
       description: descEl?.content ?? null,
       canonical: canonicalEl?.href ?? null,
       ogImage: ogImageEl?.content ?? null,
+      ogTags,
       h1Count: h1s.length,
+      h1TextContents,
       langAttr,
       isIndexable,
       imgsMissingAlt,
@@ -230,7 +265,9 @@ async function auditPage(
     description: result.description,
     canonical: result.canonical,
     og_image: result.ogImage,
+    og_tags: result.ogTags,
     h1_count: result.h1Count,
+    h1_text_contents: result.h1TextContents,
     lang_attr: result.langAttr,
     is_indexable: result.isIndexable,
     images_missing_alt: result.imgsMissingAlt,
@@ -238,10 +275,23 @@ async function auditPage(
     internal_links_missing_anchor: result.internalMissingAnchor,
     internal_links_4xx_5xx: internalLinks4xx5xx,
     external_links: externalLinksChecked,
+    all_internal_links: result.internalLinks,
   }
 }
 
-function generateMarkdown(results: PageAuditResult[], dateStr: string): string {
+function generateMarkdown(
+  results: PageAuditResult[],
+  dateStr: string,
+  extra: {
+    titleViolations: TitleLengthViolation[]
+    descViolations: DescriptionLengthViolation[]
+    ogGaps: OgGap[]
+    emptyH1s: EmptyH1[]
+    sitemapNoindex: SitemapNoindexEntry[]
+    orphans: OrphanPage[]
+    internalRedirects: InternalRedirect[]
+  },
+): string {
   const indexable = results.filter((r) => r.is_indexable)
   const defaultTitleCount = indexable.filter((r) => r.title_is_default).length
   const h1Issues = indexable.filter((r) => r.h1_count !== 1)
@@ -266,6 +316,13 @@ function generateMarkdown(results: PageAuditResult[], dateStr: string): string {
     `| Pages missing description | ${missingDescription.length} |`,
     `| Internal links missing anchor | ${missingAnchor.length} |`,
     `| Internal broken links (4xx/5xx) | ${broken.length} |`,
+    `| Title length violations | ${extra.titleViolations.length} |`,
+    `| Description length violations | ${extra.descViolations.length} |`,
+    `| OG completeness gaps | ${extra.ogGaps.length} |`,
+    `| Empty H1 tags | ${extra.emptyH1s.length} |`,
+    `| Sitemap entries with noindex | ${extra.sitemapNoindex.length} |`,
+    `| Orphan pages | ${extra.orphans.length} |`,
+    `| Internal links to redirects | ${extra.internalRedirects.length} |`,
     '',
   ]
 
@@ -315,6 +372,23 @@ function generateMarkdown(results: PageAuditResult[], dateStr: string): string {
     lines.push('')
   }
 
+  // New check sections (F6400)
+  const titleSection = formatTitleLengthSection(extra.titleViolations)
+  if (titleSection) lines.push(titleSection)
+
+  const descSection = formatDescriptionLengthSection(extra.descViolations)
+  if (descSection) lines.push(descSection)
+
+  const ogSection = formatOgCompletenessSection(extra.ogGaps)
+  if (ogSection) lines.push(ogSection)
+
+  const h1EmptySection = formatH1EmptySection(extra.emptyH1s)
+  if (h1EmptySection) lines.push(h1EmptySection)
+
+  lines.push(formatSitemapVsNoindexSection(extra.sitemapNoindex))
+  lines.push(formatOrphanPagesSection(extra.orphans, auditConfig.acceptedOrphans))
+  lines.push(formatInternalRedirectsSection(extra.internalRedirects, auditConfig.acceptedInternalRedirects))
+
   lines.push('## All Pages')
   lines.push('')
   lines.push('| URL | Status | Title | H1 | Canonical | Description | Indexable |')
@@ -349,12 +423,76 @@ async function main() {
 
   await browser.close()
 
+  // -------------------------------------------------------------------------
+  // Per-page new checks
+  // -------------------------------------------------------------------------
+  const titleViolations: TitleLengthViolation[] = []
+  const descViolations: DescriptionLengthViolation[] = []
+  const ogGaps: OgGap[] = []
+  const emptyH1s: EmptyH1[] = []
+
+  for (const r of results.filter((r) => r.is_indexable)) {
+    const tv = checkTitleLength(r.url, r.title)
+    if (tv) titleViolations.push(tv)
+
+    const dv = checkDescriptionLength(r.url, r.description)
+    if (dv) descViolations.push(dv)
+
+    const og = checkOgCompleteness(r.url, r.og_tags)
+    if (og) ogGaps.push(og)
+
+    const h1e = checkH1Empty(r.url, r.h1_text_contents)
+    if (h1e) emptyH1s.push(h1e)
+  }
+
+  // -------------------------------------------------------------------------
+  // Global checks
+  // -------------------------------------------------------------------------
+
+  // Collect all sitemap URLs (already discovered)
+  const sitemapUrls = urls.filter((u) => !['/', '/search', '/shops', '/guides'].some((s) => u === BASE_URL + s))
+
+  console.log('[seo-audit] Running global checks (sitemap-vs-noindex, orphans, redirects)...')
+
+  // Sitemap vs noindex
+  const { checkSitemapVsNoindex: runSitemapCheck } = await import('./seo-audit/checks/sitemap-vs-noindex.js')
+  const sitemapNoindex = await runSitemapCheck(sitemapUrls, fetch)
+
+  // Orphan detection: collect all internal links seen across all pages
+  const allInternalLinks = new Set<string>()
+  for (const r of results) {
+    for (const link of r.all_internal_links) {
+      allInternalLinks.add(link)
+    }
+  }
+  const orphans = computeOrphans(sitemapUrls, allInternalLinks, auditConfig.acceptedOrphans)
+
+  // Internal redirects: check internal links from crawled pages (limit to avoid long runs)
+  const internalRedirects: InternalRedirect[] = []
+  const checkedLinks = new Set<string>()
+  for (const r of results) {
+    for (const link of r.all_internal_links.slice(0, 20)) {
+      if (checkedLinks.has(link)) continue
+      checkedLinks.add(link)
+      const redir = await checkInternalLink(r.url, link, fetch)
+      if (redir) internalRedirects.push(redir)
+    }
+  }
+
   const dateStr = new Date().toISOString().slice(0, 10)
   const jsonPath = path.join(process.cwd(), `seo-audit-${dateStr}.json`)
   const mdPath = path.join(process.cwd(), `seo-audit-${dateStr}.md`)
 
-  fs.writeFileSync(jsonPath, JSON.stringify(results, null, 2), 'utf-8')
-  fs.writeFileSync(mdPath, generateMarkdown(results, dateStr), 'utf-8')
+  fs.writeFileSync(jsonPath, JSON.stringify({ results, titleViolations, descViolations, ogGaps, emptyH1s, sitemapNoindex, orphans, internalRedirects }, null, 2), 'utf-8')
+  fs.writeFileSync(mdPath, generateMarkdown(results, dateStr, {
+    titleViolations,
+    descViolations,
+    ogGaps,
+    emptyH1s,
+    sitemapNoindex,
+    orphans,
+    internalRedirects,
+  }), 'utf-8')
 
   console.log(`[seo-audit] Report written: ${jsonPath}`)
   console.log(`[seo-audit] Report written: ${mdPath}`)
@@ -365,10 +503,12 @@ async function main() {
     ? (indexable.filter((r) => r.title_is_default).length / indexable.length) * 100
     : 0
   const h1Issues = indexable.filter((r) => r.h1_count !== 1).length
+  const newViolations = titleViolations.length + descViolations.length + ogGaps.length +
+    emptyH1s.length + sitemapNoindex.length + orphans.length + internalRedirects.length
 
-  if (defaultTitlePct > THRESHOLD_TITLE_DEFAULT_PCT || h1Issues > 0) {
+  if (defaultTitlePct > THRESHOLD_TITLE_DEFAULT_PCT || h1Issues > 0 || newViolations > 0) {
     console.error(
-      `[seo-audit] THRESHOLD VIOLATION: default title: ${defaultTitlePct.toFixed(1)}% (threshold: ${THRESHOLD_TITLE_DEFAULT_PCT}%), H1 issues: ${h1Issues}`,
+      `[seo-audit] THRESHOLD VIOLATION: default title: ${defaultTitlePct.toFixed(1)}% (threshold: ${THRESHOLD_TITLE_DEFAULT_PCT}%), H1 issues: ${h1Issues}, new violations: ${newViolations}`,
     )
     process.exit(1)
   }

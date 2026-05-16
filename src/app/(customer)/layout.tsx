@@ -10,6 +10,7 @@ import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { getBrandFromHeaders, buildThemeCss } from '@/config/brands'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
 import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
 import { SearchSimilarButton } from '@/components/search/SearchSimilarButton'
@@ -40,6 +41,25 @@ const golosText = Golos_Text({
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getBrandFromHeaders()
+
+  // T8: Build a complete OG block for brand defaults (AC-40)
+  const og = buildCompleteOpenGraph({
+    title: brand.meta.title,
+    description: brand.meta.description,
+    url: brand.meta.siteUrl,
+    type: 'website',
+    locale: 'en',
+    siteName: brand.name,
+    image: {
+      url: brand.assets.ogImage.startsWith('http')
+        ? brand.assets.ogImage
+        : `${brand.meta.siteUrl}${brand.assets.ogImage}`,
+      width: 1200,
+      height: 630,
+      alt: brand.name,
+    },
+  })
+
   return {
     metadataBase: new URL(brand.meta.siteUrl),
     title: {
@@ -48,19 +68,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: brand.meta.description,
     manifest: '/manifest.webmanifest',
-    openGraph: {
-      type: 'website',
-      siteName: brand.name,
-      title: brand.meta.title,
-      description: brand.meta.description,
-      images: [{ url: brand.assets.ogImage, width: 512, height: 512, alt: brand.name }],
-    },
-    twitter: {
-      card: 'summary',
-      title: brand.meta.title,
-      description: brand.meta.description,
-      images: [brand.assets.ogImage],
-    },
+    openGraph: og.openGraph,
+    twitter: og.twitter,
   }
 }
 

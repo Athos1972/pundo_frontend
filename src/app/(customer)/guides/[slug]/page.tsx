@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
+import { truncateTitle } from '@/lib/seo/metadata-defaults'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
@@ -22,23 +24,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { title, description } = guide.meta
   const siteUrl = 'https://pundo.cy'
+  const canonicalUrl = `${siteUrl}/guides/${slug}`
+
+  // T7/AC-37: Truncate title to fit 60-char limit with " — pundo" suffix (8 chars)
+  const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' — pundo').length })
+  const pageTitle = `${truncatedTitle} — pundo`
+
+  // Build a guaranteed-complete OG block
+  const ogImageUrl = `${siteUrl}/og/shop-fallback-default.jpg`
+  const og = buildCompleteOpenGraph({
+    title: pageTitle,
+    description: description ?? '',
+    url: canonicalUrl,
+    type: 'article',
+    locale: lang,
+    siteName: 'Pundo',
+    image: { url: ogImageUrl, width: 1200, height: 630, alt: title },
+    publishedTime: (guide.meta as { date?: string }).date,
+  })
 
   return {
-    title: `${title} — pundo`,
+    title: pageTitle,
     description,
-    openGraph: {
-      title,
-      description,
-      type: 'article',
-    },
     // hreflang languages map intentionally removed: Pundo has no URL-based i18n.
     // All language variants share the same URL — emitting hreflang would tell
     // Google the same URL contains multiple languages simultaneously, which is
     // incorrect. Canonical points to the English version as the canonical form.
     // Correct hreflang requires per-language URLs (F6300 scope).
     alternates: {
-      canonical: `${siteUrl}/guides/${slug}`,
+      canonical: canonicalUrl,
     },
+    openGraph: og.openGraph,
+    twitter: og.twitter,
+    ...(og.other ? { other: og.other } : {}),
   }
 }
 

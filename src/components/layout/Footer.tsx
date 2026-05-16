@@ -13,6 +13,9 @@ export async function Footer() {
           <Link href="/blog" className="hover:text-text transition-colors">
             {tr.footer_blog}
           </Link>
+          <Link href="/guides" className="hover:text-text transition-colors">
+            {tr.footer_guides}
+          </Link>
           <Link href="/about" className="hover:text-text transition-colors">
             {tr.footer_about}
           </Link>
@@ -24,6 +27,12 @@ export async function Footer() {
           </Link>
           <Link href="/contact" className="hover:text-text transition-colors">
             {tr.footer_contact}
+          </Link>
+          <Link href="/nostalgia" className="hover:text-text transition-colors">
+            {tr.footer_nostalgia}
+          </Link>
+          <Link href="/homesick" className="hover:text-text transition-colors">
+            {tr.footer_homesick}
           </Link>
           <Link href="/legal/imprint" className="hover:text-text transition-colors">
             {tr.footer_imprint}

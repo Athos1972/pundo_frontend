@@ -10,6 +10,8 @@ import { getLangServer } from '@/lib/lang'
 import { getShop, searchProducts, getShopOffers } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
+import { padShopTitle } from '@/lib/seo/metadata-defaults'
+import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -35,27 +37,47 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = await getLangServer()
   try {
     const shop = await getShop(slug, lang)
+    const tr = t(lang)
     const name = shop.name ?? 'Shop'
-    const description = shop.address_raw ?? undefined
     const siteUrl = getSiteUrl()
-    const logoUrl = shop.images?.[0]?.url ?? undefined
-    return {
-      title: name,
+    const canonicalUrl = `${siteUrl}/shops/${slug}`
+
+    // T6/AC-38b: Pad short shop names to reach TITLE_MIN
+    const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
+    const categoryHint = shop.shop_type?.canonical ?? null
+    const pageTitle = padShopTitle(name, { city: cityHint, category: categoryHint }, lang, 'Pundo')
+
+    // T6/AC-36: Template description with shop-specific data (≥ 110 chars)
+    const description = tr.shop_meta_description(
+      name,
+      cityHint ?? 'Cyprus',
+      categoryHint ?? 'local',
+    )
+
+    // T6/AC-40: OG image — use shop logo if available, else deterministic fallback
+    const logoUrl = shop.images?.[0]?.url ?? null
+    const ogImage = logoUrl
+      ? { url: logoUrl, width: 1200 as const, height: 630 as const, alt: name }
+      : pickShopFallbackOgImage(shop.id, siteUrl)
+
+    const og = buildCompleteOpenGraph({
+      title: pageTitle,
       description,
-      openGraph: {
-        type: 'website',
-        title: name,
-        description,
-        url: `${siteUrl}/shops/${slug}`,
-        ...(logoUrl ? { images: [{ url: logoUrl }] } : {}),
-      },
-      twitter: {
-        card: 'summary',
-        title: name,
-        description,
-        ...(logoUrl ? { images: [logoUrl] } : {}),
-      },
-      alternates: { canonical: `${siteUrl}/shops/${slug}` },
+      url: canonicalUrl,
+      type: 'website',
+      locale: lang,
+      siteName: 'Pundo',
+      image: ogImage,
+    })
+
+    return {
+      title: pageTitle,
+      description,
+      alternates: { canonical: canonicalUrl },
+      robots: { index: true, follow: true },
+      openGraph: og.openGraph,
+      twitter: og.twitter,
+      ...(og.other ? { other: og.other } : {}),
     }
   } catch {
     return { title: 'Shop' }

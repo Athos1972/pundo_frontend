@@ -5,6 +5,8 @@ import { getProduct, getRelatedProducts } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl, pickImg } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/seo'
+import { truncateTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
+import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildProductSchema, safeJson } from '@/lib/structured-data'
 import { OfferList } from '@/components/product/OfferList'
 import { ProductHeroImage } from '@/components/product/ProductHeroImage'
@@ -27,31 +29,48 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = await getLangServer()
   try {
     const product = await getProduct(slug, lang)
+    const tr = t(lang)
     const name = product.names[lang] ?? product.names.en ?? slug
-    const firstOffer = product.offers[0]
-    const priceDisplay = firstOffer?.price_type === 'fixed' && firstOffer.price
-      ? ` — ${firstOffer.price} €`
-      : ''
-    const description = product.descriptions?.[lang] ?? product.descriptions?.en ?? undefined
+    const brandName = product.brand?.name ?? 'Pundo'
+
+    // T5/AC-38: Title — truncate name to fit " | Pundo" suffix, no price in title
+    const suffixLen = Array.from(` | ${brandName}`).length
+    const truncatedName = truncateTitle(name, { max: 60, reserved: suffixLen })
+    const pageTitle = `${truncatedName} | ${brandName}`
+
+    // T5/AC-36: Description — first 155 chars of product description, fallback template
+    const rawDesc = product.descriptions?.[lang] ?? product.descriptions?.en ?? ''
+    const description = rawDesc
+      ? truncateDescription(rawDesc, { max: 155 })
+      : tr.product_desc_fallback(name, brandName)
+
     const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()
-    return {
-      title: `${name}${priceDisplay}`,
+    const canonicalUrl = `${siteUrl}/products/${slug}`
+
+    // Choose OG image: use product image or fallback
+    const ogImage = relativeImg
+      ? { url: relativeImg.startsWith('http') ? relativeImg : `${siteUrl}${relativeImg}`, width: 1200 as const, height: 630 as const, alt: name }
+      : pickShopFallbackOgImage(product.id ?? 0, siteUrl)
+
+    const og = buildCompleteOpenGraph({
+      title: pageTitle,
       description,
-      openGraph: {
-        type: 'website',
-        title: `${name}${priceDisplay}`,
-        description,
-        url: `${siteUrl}/products/${slug}`,
-        images: relativeImg ? [{ url: relativeImg }] : undefined,
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: `${name}${priceDisplay}`,
-        description,
-        images: relativeImg ? [relativeImg] : undefined,
-      },
-      alternates: { canonical: `${siteUrl}/products/${slug}` },
+      url: canonicalUrl,
+      type: 'product',
+      locale: lang,
+      siteName: brandName,
+      image: ogImage,
+    })
+
+    return {
+      title: pageTitle,
+      description,
+      alternates: { canonical: canonicalUrl },
+      robots: { index: true, follow: true },
+      openGraph: og.openGraph,
+      twitter: og.twitter,
+      ...(og.other ? { other: og.other } : {}),
     }
   } catch {
     return { title: 'Produkt' }

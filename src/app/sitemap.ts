@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getSiteUrl, getSitemap } from '@/lib/seo'
+import { isIndexable } from '@/lib/seo/metadata-defaults'
 
 // Kein automatisches Revalidate. Die Sitemap-Regeneration zieht eine einzige
 // grosse JSON-Response (alle Slugs) — das wollen wir kontrolliert per Deploy
@@ -55,5 +56,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticRoutes, ...shopRoutes, ...productRoutes]
+  const allEntries = [...staticRoutes, ...shopRoutes, ...productRoutes]
+
+  // AC-30: Filter out any URL that would be non-indexable.
+  // This prevents noindex pages from leaking into the sitemap, keeping
+  // Google's view consistent with our robots directives.
+  // Pass the full URL so isIndexable can also check query-string params.
+  return allEntries.filter((entry) => isIndexable(entry.url).indexable)
 }

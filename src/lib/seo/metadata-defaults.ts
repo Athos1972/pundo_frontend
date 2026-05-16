@@ -12,13 +12,206 @@
  */
 
 import type { Metadata } from 'next'
+import type { Lang } from '@/lib/lang'
 
 export function getSiteUrl(): string {
   return process.env.SITE_URL ?? 'https://pundo.cy'
 }
 
 // ---------------------------------------------------------------------------
-// Page-type helpers
+// Ahrefs-calibrated length constraints (single source of truth)
+// ---------------------------------------------------------------------------
+
+export const TITLE_MIN = 50
+export const TITLE_MAX = 60
+export const DESC_MIN = 110
+export const DESC_MAX = 160
+
+// ---------------------------------------------------------------------------
+// Truncation helpers — operate on Unicode code points (correct for Multibyte)
+// ---------------------------------------------------------------------------
+
+/** Strip basic HTML tags from a string before using it as meta content. */
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim()
+}
+
+/**
+ * Word-boundary-preserving title truncation.
+ *
+ * @param input  Raw title string (HTML stripped internally)
+ * @param opts.max       Maximum code-point length (default: TITLE_MAX)
+ * @param opts.reserved  Code points to reserve for a suffix (e.g. " | Pundo" = 8)
+ *
+ * If input fits within (max - reserved), it is returned as-is.
+ * Otherwise it is sliced at the last word boundary, an ellipsis "…" is appended,
+ * and the reserved space is preserved.
+ */
+export function truncateTitle(input: string, opts?: { max?: number; reserved?: number }): string {
+  const max = opts?.max ?? TITLE_MAX
+  const reserved = opts?.reserved ?? 0
+  const effectiveMax = max - reserved
+  const clean = stripHtml(input.trim())
+  const codePoints = Array.from(clean)
+  // -1 to leave room for the ellipsis character itself
+  if (codePoints.length <= effectiveMax) return clean
+  const sliceAt = effectiveMax - 1
+  const sliced = codePoints.slice(0, sliceAt)
+  const joined = sliced.join('')
+  // Try to cut at last whitespace
+  const lastSpace = joined.lastIndexOf(' ')
+  const cutTo = lastSpace > 0 ? lastSpace : sliceAt
+  return codePoints.slice(0, cutTo).join('').trimEnd() + '…'
+}
+
+/**
+ * Word-boundary-preserving description truncation.
+ *
+ * @param input  Raw description (HTML stripped internally)
+ * @param opts.max  Maximum code-point length (default: DESC_MAX)
+ */
+export function truncateDescription(input: string, opts?: { max?: number }): string {
+  const max = opts?.max ?? DESC_MAX
+  const clean = stripHtml(input.trim())
+  const codePoints = Array.from(clean)
+  if (codePoints.length <= max) return clean
+  const sliceAt = max - 1
+  const sliced = codePoints.slice(0, sliceAt)
+  const joined = sliced.join('')
+  const lastSpace = joined.lastIndexOf(' ')
+  const cutTo = lastSpace > 0 ? lastSpace : sliceAt
+  return codePoints.slice(0, cutTo).join('').trimEnd() + '…'
+}
+
+// ---------------------------------------------------------------------------
+// Shop-title padding helper
+// ---------------------------------------------------------------------------
+
+/** Translation keys used by padShopTitle — minimal subset to avoid circular deps */
+const SHOP_TAGLINES: Record<string, string> = {
+  en: 'Price comparison on Pundo',
+  de: 'Preisvergleich auf Pundo',
+  el: 'Σύγκριση τιμών στο Pundo',
+  ru: 'Сравнение цен на Pundo',
+  ar: 'مقارنة الأسعار على Pundo',
+  he: 'השוואת מחירים ב-Pundo',
+}
+
+/**
+ * Pad a short shop title to reach TITLE_MIN characters.
+ *
+ * Strategy: `${shopName}${' · ' + city}${' — ' + category}${' | ' + brandName}`
+ * Appends hints one by one until >= TITLE_MIN. If still too short after all hints,
+ * appends a localised tagline. Result is then truncated to TITLE_MAX if needed.
+ */
+export function padShopTitle(
+  shopName: string,
+  hints: { city?: string | null; category?: string | null },
+  lang: Lang,
+  brandName: string,
+): string {
+  const brandSuffix = ` | ${brandName}`
+  let base = shopName
+
+  // Step 1: append city if available and title still short
+  if (hints.city && Array.from(base + brandSuffix).length < TITLE_MIN) {
+    base = `${base} · ${hints.city}`
+  }
+
+  // Step 2: append category if still short
+  if (hints.category && Array.from(base + brandSuffix).length < TITLE_MIN) {
+    base = `${base} — ${hints.category}`
+  }
+
+  // Step 3: append tagline if still short
+  const tagline = SHOP_TAGLINES[lang] ?? SHOP_TAGLINES.en
+  if (Array.from(base + brandSuffix).length < TITLE_MIN) {
+    base = `${base} — ${tagline}`
+  }
+
+  const full = `${base}${brandSuffix}`
+  return truncateTitle(full, { max: TITLE_MAX })
+}
+
+// ---------------------------------------------------------------------------
+// Indexable-route classification
+// ---------------------------------------------------------------------------
+
+export interface RouteClassification {
+  indexable: boolean
+  reason?: string
+}
+
+const NON_INDEXABLE_PATTERNS: RegExp[] = [
+  /^\/auth(\/|$)/,
+  /^\/account(\/|$)/,
+  /^\/shop-admin(\/|$)/,
+  /^\/admin(\/|$)/,
+  /^\/api(\/|$)/,
+  /^\/__playwright(\/|$)/,
+  /^\/_next(\/|$)/,
+  /^\/favicon/,
+]
+
+/** Query params that indicate a non-indexable parametrised result page */
+const NON_INDEXABLE_QUERY_PARAMS = ['q', 'shop_id', 'category_id', 'filter']
+
+/**
+ * Returns whether a given path/URL should be indexed.
+ * NON_INDEXABLE_PATTERNS always win (blacklist-first strategy).
+ * Query-string pages with search/filter params are treated as non-indexable.
+ */
+export function isIndexable(path: string): RouteClassification {
+  // Normalise: strip origin if present
+  let pathname = path
+  let search = ''
+  try {
+    const u = new URL(path, 'http://x')
+    pathname = u.pathname
+    search = u.search
+  } catch {
+    // path was already a pathname
+  }
+
+  // Blacklist check
+  for (const pattern of NON_INDEXABLE_PATTERNS) {
+    if (pattern.test(pathname)) {
+      return { indexable: false, reason: `matches non-indexable pattern ${pattern}` }
+    }
+  }
+
+  // Query-param check
+  if (search) {
+    const params = new URLSearchParams(search)
+    for (const key of NON_INDEXABLE_QUERY_PARAMS) {
+      if (params.has(key)) {
+        return { indexable: false, reason: `has non-indexable query param "${key}"` }
+      }
+    }
+  }
+
+  return { indexable: true }
+}
+
+// ---------------------------------------------------------------------------
+// Whitelist: paths where a brand-default description is acceptable
+// (pages that intentionally inherit layout description)
+// ---------------------------------------------------------------------------
+
+export const genericDescriptionAllowed: Set<string> = new Set([
+  '/',
+  '/about',
+  '/help',
+  '/for-shops',
+  '/contact',
+  '/blog',
+  '/search',
+  '/nostalgia',
+  '/homesick',
+])
+
+// ---------------------------------------------------------------------------
+// Legacy page-type helpers (kept for backward compat)
 // ---------------------------------------------------------------------------
 
 export interface ProductMetadataArgs {

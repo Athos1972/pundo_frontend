@@ -1,0 +1,72 @@
+name: Sync Blog Translations
+
+# Fetches new posts from Soro, translates them via Claude API into all 6 languages,
+# commits the resulting MDX files, and pushes to main.
+#
+# Required GitHub Secrets:
+#   ANTHROPIC_API_KEY   — Claude API key for translation
+#
+# Runs:
+#   - Daily at 08:00 UTC (after Soro posts its daily article around 04:00–05:00 UTC)
+#   - On manual dispatch (workflow_dispatch), optionally with --backfill
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # Daily 08:00 UTC
+
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Re-process all posts (overwrite existing translations)'
+        type: boolean
+        default: false
+
+jobs:
+  sync:
+    name: Sync & Translate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the commit
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync-blog script
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          FLAGS=""
+          if [ "${{ github.event.inputs.backfill }}" = "true" ]; then
+            FLAGS="--backfill"
+          fi
+          npx tsx scripts/sync-blog.ts $FLAGS
+
+      - name: Commit and push new MDX files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage only the content/blog directory
+          git add content/blog/
+
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No new blog posts — nothing to commit."
+          else
+            CHANGED=$(git diff --cached --name-only | wc -l | tr -d ' ')
+            git commit -m "blog: sync translations (${CHANGED} file(s)) [skip ci]"
+            git push origin main
+            echo "Pushed ${CHANGED} new/updated file(s)."
+          fi

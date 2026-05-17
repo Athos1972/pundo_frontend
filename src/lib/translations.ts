@@ -195,6 +195,13 @@ export const translations = {
     category_gesundheit: 'Health',
     category_wohnen: 'Living',
     category_finanzen: 'Finance',
+    // Blog
+    page_title_blog: 'Blog',
+    blog_index_title: 'Blog',
+    blog_index_subtitle: 'News and insights about life in Cyprus',
+    blog_back: '← Back to Blog',
+    blog_read_more: 'Read more',
+    blog_published: 'Published',
     // Hero
     hero_title_pundo: 'Discover what Cyprus really has.',
     hero_title_naidivse: 'Find everything Cyprus really has.',
@@ -627,6 +634,13 @@ export const translations = {
     category_gesundheit: 'Gesundheit',
     category_wohnen: 'Wohnen',
     category_finanzen: 'Finanzen',
+    // Blog
+    page_title_blog: 'Blog',
+    blog_index_title: 'Blog',
+    blog_index_subtitle: 'Neuigkeiten und Einblicke für das Leben auf Zypern',
+    blog_back: '← Zurück zum Blog',
+    blog_read_more: 'Weiterlesen',
+    blog_published: 'Veröffentlicht',
     // Hero
     hero_title_pundo: 'Finde, was Zypern wirklich hat.',
     hero_title_naidivse: 'Finde alles, was Zypern wirklich hat.',
@@ -1059,6 +1073,13 @@ export const translations = {
     category_gesundheit: 'Здоровье',
     category_wohnen: 'Быт',
     category_finanzen: 'Финансы',
+    // Blog
+    page_title_blog: 'Блог',
+    blog_index_title: 'Блог',
+    blog_index_subtitle: 'Новости и советы о жизни на Кипре',
+    blog_back: '← Назад в блог',
+    blog_read_more: 'Читать далее',
+    blog_published: 'Опубликовано',
     // Hero
     hero_title_pundo: 'Найди, что на самом деле есть на Кипре.',
     hero_title_naidivse: 'Найди всё, что есть на Кипре на самом деле.',
@@ -1491,6 +1512,13 @@ export const translations = {
     category_gesundheit: 'Υγεία',
     category_wohnen: 'Κατοικία',
     category_finanzen: 'Χρηματοοικονομικά',
+    // Blog
+    page_title_blog: 'Blog',
+    blog_index_title: 'Blog',
+    blog_index_subtitle: 'Νέα και συμβουλές για τη ζωή στην Κύπρο',
+    blog_back: '← Πίσω στο Blog',
+    blog_read_more: 'Διαβάστε περισσότερα',
+    blog_published: 'Δημοσιεύθηκε',
     // Hero
     hero_title_pundo: 'Ανακάλυψε τι έχει πραγματικά η Κύπρος.',
     hero_title_naidivse: 'Βρες όλα όσα έχει πραγματικά η Κύπρος.',
@@ -1923,6 +1951,13 @@ export const translations = {
     category_gesundheit: 'الصحة',
     category_wohnen: 'المعيشة',
     category_finanzen: 'المالية',
+    // Blog
+    page_title_blog: 'المدونة',
+    blog_index_title: 'المدونة',
+    blog_index_subtitle: 'أخبار ونصائح عن الحياة في قبرص',
+    blog_back: '← العودة إلى المدونة',
+    blog_read_more: 'اقرأ المزيد',
+    blog_published: 'نشر في',
     // Hero
     hero_title_pundo: 'اكتشف ما تمتلكه قبرص حقاً.',
     hero_title_naidivse: 'اكتشف كل ما تمتلكه قبرص حقاً.',
@@ -2355,6 +2390,13 @@ export const translations = {
     category_gesundheit: 'בריאות',
     category_wohnen: 'מגורים',
     category_finanzen: 'פיננסים',
+    // Blog
+    page_title_blog: 'בלוג',
+    blog_index_title: 'בלוג',
+    blog_index_subtitle: 'חדשות וטיפים על החיים בקפריסין',
+    blog_back: '← חזרה לבלוג',
+    blog_read_more: 'קרא עוד',
+    blog_published: 'פורסם',
     // Hero
     hero_title_pundo: 'גלה מה יש באמת בקפריסין.',
     hero_title_naidivse: 'גלה את כל מה שיש באמת בקפריסין.',

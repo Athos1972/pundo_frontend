@@ -142,6 +142,43 @@ export async function getAdminPriceUnits(lang: string): Promise<PriceUnitOption[
   return res.json() as Promise<PriceUnitOption[]>
 }
 
+// ─── Website Status ───────────────────────────────────────────────────────────
+
+export interface WebsiteStatusResponse {
+  url: string
+  last_status: number | null
+  last_checked_at: string | null
+  final_url: string | null
+  consecutive_failures: number
+}
+
+/**
+ * GET /api/v1/shop-owner/website-status
+ * Returns null when the shop has no website, no check yet (404), or on any error.
+ * The banner should never block the page from rendering.
+ */
+export async function getWebsiteStatus(): Promise<WebsiteStatusResponse | null> {
+  const store = await cookies()
+  const token = store.get('shop_owner_token')?.value
+
+  try {
+    const res = await fetch(`${BASE}/website-status`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: 'no-store',
+    })
+
+    if (res.status === 404) return null
+    if (!res.ok) return null
+
+    return res.json() as Promise<WebsiteStatusResponse>
+  } catch {
+    return null
+  }
+}
+
 // Note: uploadShopLogo is intentionally NOT in this server-side file.
 // Client-side logo uploads go directly through fetch('/api/shop-admin/shop/logo')
 // in LogoUpload.tsx — same pattern as ImportPanel.tsx.

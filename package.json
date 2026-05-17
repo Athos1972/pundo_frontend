@@ -10,7 +10,9 @@
     "lint": "eslint",
     "guides:optimize": "tsx scripts/optimize-guide-images.ts",
     "seo:audit": "tsx scripts/seo-audit.ts",
-    "seo:perf": "tsx scripts/seo-perf.ts"
+    "seo:perf": "tsx scripts/seo-perf.ts",
+    "blog:sync": "tsx scripts/sync-blog.ts",
+    "blog:backfill": "tsx scripts/sync-blog.ts --backfill"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.15",

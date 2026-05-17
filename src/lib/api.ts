@@ -171,6 +171,34 @@ export async function getShopOffers(slug: string, lang: string): Promise<ShopOff
   }
 }
 
+export interface RelatedShopItem {
+  id: number
+  slug: string
+  name: string | null
+  shop_type: import('@/types/api').ShopTypeRead | null
+  images: Array<{ url: string }> | null
+  city: string | null
+  review_stats: { average_stars: number; total_count: number } | null
+}
+
+export interface RelatedShopsResponse {
+  items: RelatedShopItem[]
+}
+
+export async function getRelatedShops(
+  slug: string,
+  lang: string
+): Promise<RelatedShopsResponse> {
+  try {
+    return await apiFetch<RelatedShopsResponse>(
+      `/shops/by-slug/${slug}/related`,
+      lang
+    )
+  } catch {
+    return { items: [] }
+  }
+}
+
 export async function getShopReviews(
   shopId: number,
   lang: string,

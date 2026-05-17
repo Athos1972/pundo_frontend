@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
-import { getShop, searchProducts, getShopOffers } from '@/lib/api'
+import { getShop, searchProducts, getShopOffers, getRelatedShops } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
@@ -27,6 +27,7 @@ import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
 import { getCustomerSession } from '@/lib/customer-api'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
+import { RelatedShopsWidget } from '@/components/shop/RelatedShopsWidget'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
@@ -98,11 +99,12 @@ export default async function ShopPage({ params }: Props) {
 
   const session = await getCustomerSession(lang)
 
-  const [topProductsResult, offers] = await Promise.all([
+  const [topProductsResult, offers, relatedShops] = await Promise.all([
     shop.top_products.length > 0
       ? searchProducts({ shop_id: shop.id, limit: 10 }, lang).then(r => r.items)
       : Promise.resolve([]),
     getShopOffers(slug, lang),
+    getRelatedShops(slug, lang),
   ])
   const topProducts = topProductsResult
 
@@ -303,6 +305,9 @@ export default async function ShopPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* Related Shops */}
+        <RelatedShopsWidget items={relatedShops.items} lang={lang} />
 
         {/* Community Feedback */}
         <CommunityFeedbackSection

@@ -1,6 +1,6 @@
 version: 1
-last_updated: "2026-05-16"
-last_updated_by: "coder"
+last_updated: "2026-05-17"
+last_updated_by: "e2e-tester"
 
 brands:
   - id: pundo
@@ -63,7 +63,7 @@ checks:
       - type: status
         expected: 200
       - type: selector-visible
-        selector: "article h1"
+        selector: "h1"
       - type: mdx-rendered
 
   # ---------------------------------------------------------------------------

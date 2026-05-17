@@ -122,24 +122,24 @@ async function fetchArticleContent(articleId: string): Promise<string> {
 function htmlToMarkdown(html: string): string {
   return html
     // Headings
-    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `# ${stripTags(t)}\n\n`)
-    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `## ${stripTags(t)}\n\n`)
-    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `### ${stripTags(t)}\n\n`)
+    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_m: string, t: string) => `# ${stripTags(t)}\n\n`)
+    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_m: string, t: string) => `## ${stripTags(t)}\n\n`)
+    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_m: string, t: string) => `### ${stripTags(t)}\n\n`)
     // Bold / italic
-    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, (_, t) => `**${stripTags(t)}**`)
-    .replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, (_, t) => `_${stripTags(t)}_`)
+    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, (_m: string, t: string) => `**${stripTags(t)}**`)
+    .replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, (_m: string, t: string) => `_${stripTags(t)}_`)
     // Links
-    .replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, text) => `[${stripTags(text)}](${href})`)
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_m: string, href: string, text: string) => `[${stripTags(text)}](${href})`)
     // Lists
-    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, items) =>
-      items.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (__, li) => `- ${stripTags(li).trim()}\n`) + '\n'
+    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_m: string, items: string) =>
+      items.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_mi: string, li: string) => `- ${stripTags(li).trim()}\n`) + '\n'
     )
-    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_, items) => {
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m: string, items: string) => {
       let i = 0
-      return items.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (__, li) => `${++i}. ${stripTags(li).trim()}\n`) + '\n'
+      return items.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_mi: string, li: string) => `${++i}. ${stripTags(li).trim()}\n`) + '\n'
     })
     // Paragraphs
-    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_, t) => `${stripTags(t).trim()}\n\n`)
+    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_m: string, t: string) => `${stripTags(t).trim()}\n\n`)
     // Line breaks
     .replace(/<br\s*\/?>/gi, '\n')
     // Strip remaining tags

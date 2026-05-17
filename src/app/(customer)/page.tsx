@@ -14,13 +14,17 @@ import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedL
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl()
+  const title = 'Pundo — Find Local Products & Compare Prices in Cyprus'
+  const description = 'Find local products and shops in Cyprus. Compare prices, check stock, and discover the best deals at nearby businesses on Pundo.'
   return {
-    description: 'Find products and shops near you in Cyprus. Compare prices, check stock, and discover local businesses.',
+    title: { absolute: title },
+    description,
     alternates: { canonical: siteUrl },
     openGraph: {
       type: 'website',
       url: siteUrl,
-      description: 'Find products and shops near you in Cyprus. Compare prices, check stock, and discover local businesses.',
+      title,
+      description,
       siteName: 'Pundo',
       images: [{ url: `${siteUrl}/og/shop-fallback-default.jpg`, width: 1200, height: 630, alt: 'Pundo — local price comparison' }],
     },

@@ -10,7 +10,7 @@ import { getLangServer } from '@/lib/lang'
 import { getShop, searchProducts, getShopOffers } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
-import { padShopTitle } from '@/lib/seo/metadata-defaults'
+import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import Link from 'next/link'
@@ -47,11 +47,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const categoryHint = shop.shop_type?.canonical ?? null
     const pageTitle = padShopTitle(name, { city: cityHint, category: categoryHint }, lang, 'Pundo')
 
-    // T6/AC-36: Template description with shop-specific data (≥ 110 chars)
-    const description = tr.shop_meta_description(
-      name,
-      cityHint ?? 'Cyprus',
-      categoryHint ?? 'local',
+    // T6/AC-36: Template description with shop-specific data (≥ 110 chars, ≤ 160 chars)
+    const description = truncateDescription(
+      tr.shop_meta_description(name, cityHint ?? 'Cyprus', categoryHint ?? 'local'),
+      { max: 155 },
     )
 
     // T6/AC-40: OG image — use shop logo if available, else deterministic fallback
@@ -71,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     })
 
     return {
-      title: pageTitle,
+      title: { absolute: pageTitle },
       description,
       alternates: { canonical: canonicalUrl },
       robots: { index: true, follow: true },

@@ -40,9 +40,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // T5/AC-36: Description — first 155 chars of product description, fallback template
     const rawDesc = product.descriptions?.[lang] ?? product.descriptions?.en ?? ''
-    const description = rawDesc
-      ? truncateDescription(rawDesc, { max: 155 })
-      : tr.product_desc_fallback(name, brandName)
+    const description = truncateDescription(
+      rawDesc || tr.product_desc_fallback(name, brandName),
+      { max: 155 },
+    )
 
     const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     })
 
     return {
-      title: pageTitle,
+      title: { absolute: pageTitle },
       description,
       alternates: { canonical: canonicalUrl },
       robots: { index: true, follow: true },

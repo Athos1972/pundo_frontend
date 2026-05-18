@@ -1,5 +1,6 @@
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 import { toRelativeImageUrl } from '@/lib/utils'
+import { sanitizeExternalUrl } from '@/lib/url-safety'
 
 /**
  * Converts a potentially relative image URL to an absolute URL using the site base.
@@ -81,7 +82,7 @@ export function buildProductSchema(
     availability: o.is_available
       ? 'https://schema.org/InStock'
       : 'https://schema.org/OutOfStock',
-    url: o.url ?? `${siteUrl}/products/${product.slug}`,
+    url: sanitizeExternalUrl(o.url) ?? `${siteUrl}/products/${product.slug}`,
     seller: {
       '@type': 'Organization',
       name: o.shop_name,

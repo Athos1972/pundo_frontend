@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { OfferDetail } from '@/types/api'
 import { t } from '@/lib/translations'
 import { formatCrawledAt, formatPriceOrLabel } from '@/lib/utils'
+import { sanitizeExternalUrl } from '@/lib/url-safety'
 
 export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
   const tr = t(lang)
@@ -23,7 +24,8 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
     <div className="space-y-3">
       {sorted.map((offer, i) => {
         const priceLabel = formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
-        const hasCta = offer.price_type === 'on_request' && (offer.shop_phone || offer.url)
+        const safeUrl = sanitizeExternalUrl(offer.url)
+        const hasCta = offer.price_type === 'on_request' && (offer.shop_phone || safeUrl)
 
         return (
           <div key={i} className={`flex items-start justify-between gap-3 py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
@@ -47,9 +49,9 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
                       {tr.contact_shop}
                     </a>
                   )}
-                  {offer.url && (
+                  {safeUrl && (
                     <a
-                      href={offer.url}
+                      href={safeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs px-2.5 py-1 rounded-full bg-surface-alt border border-border text-text-muted hover:border-accent hover:text-accent transition-colors"

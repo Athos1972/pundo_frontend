@@ -12,6 +12,7 @@ export interface BestOffer {
   price: string | null; currency: string; price_type: PriceType; price_note: string | null;
   shop_id: number; shop_slug: string | null; shop_name: string;
   dist_km: number | null; is_available: boolean; crawled_at: string;
+  // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   url: string | null;
   shop_location: { lat: number; lng: number } | null;
   shop_type?: 'local' | 'online_only';
@@ -30,6 +31,7 @@ export interface OfferDetail {
   price: string | null; currency: string; price_type: PriceType; price_note: string | null;
   shop_phone: string | null;
   is_available: boolean;
+  // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   sku: string | null; url: string | null; crawled_at: string;
   shop_type?: 'local' | 'online_only';
   delivery_available?: boolean;

@@ -212,6 +212,12 @@ const og = buildCompleteOpenGraph({
 
 ---
 
+## Externe URLs aus API-Daten
+
+Alle externen `href`-Werte aus API-Daten (z.B. `offer.url`, `shop.website`) **müssen** durch `sanitizeExternalUrl()` aus `src/lib/url-safety.ts` laufen. Nicht-http(s)-Werte werden unterdrückt; sie verursachen sonst 404-Indexierungen in der Google Search Console.
+
+---
+
 ## Orphan Page Rule (AC-31/AC-32)
 
 Every page in `sitemap.xml` must have at least one internal link pointing to it. If a page has no inbound links from any other customer page, it is an orphan and loses Page Rank.

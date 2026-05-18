@@ -38,13 +38,6 @@ const SMOKETEST_EXTRA_HEADERS = {
 // Config from environment
 // ---------------------------------------------------------------------------
 
-function getEnv(key: string, fallback?: string): string {
-  const val = process.env[key] ?? fallback
-  if (val === undefined) {
-    throw new Error(`Required environment variable ${key} is not set`)
-  }
-  return val
-}
 
 function getBrandFilter(): string {
   return process.env['BRAND_FILTER'] ?? 'both'
@@ -88,7 +81,6 @@ async function runCheck(
   brand: Brand,
   lang: string,
   loginCookie: string | null,
-  startMs: number,
 ): Promise<RunResult> {
   const id = `${check.id}/${brand.id}/${lang}`
 
@@ -196,7 +188,7 @@ async function runCheck(
     if (targetUrl) {
       response = await withRetry(
         () => page.goto(targetUrl!, {
-          waitUntil: 'domcontentloaded',
+          waitUntil: 'load',
           timeout: check.timeout_ms,
         }),
         {
@@ -487,7 +479,7 @@ async function main(): Promise<void> {
 
         for (const lang of langs) {
           process.stdout.write(`    ${check.id} [${lang}]... `)
-          const result = await runCheck(check, brand, lang, loginCookie, runStart)
+          const result = await runCheck(check, brand, lang, loginCookie)
           results.push(result)
           console.log(result.status + (result.status !== 'PASS' ? ` — ${result.message}` : ''))
 

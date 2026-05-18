@@ -175,7 +175,7 @@ export interface RelatedShopItem {
   id: number
   slug: string
   name: string | null
-  shop_type: import('@/types/api').ShopTypeRead | null
+  shop_type: { id: number; canonical: string; name: string } | null
   images: Array<{ url: string }> | null
   city: string | null
   review_stats: { average_stars: number; total_count: number } | null

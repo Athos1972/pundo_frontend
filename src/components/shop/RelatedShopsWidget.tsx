@@ -27,10 +27,7 @@ export function RelatedShopsWidget({ items, lang }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {items.map((item) => {
           const imageUrl = item.images?.[0]?.url ?? null
-          const shopTypeName = item.shop_type
-            ? (item.shop_type.translations[lang as keyof typeof item.shop_type.translations] ??
-                item.shop_type.canonical)
-            : null
+          const shopTypeName = item.shop_type?.name ?? null
 
           return (
             <Link

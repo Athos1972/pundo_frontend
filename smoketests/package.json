@@ -2,6 +2,7 @@
   "name": "pundo-smoketester",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Production smoketest runner for pundo.cy and naidivse.cy",
   "scripts": {
     "test": "npx tsx src/runner.ts",

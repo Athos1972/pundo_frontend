@@ -10,7 +10,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "baseUrl": "."
   },
   "include": ["src/**/*", "tests/**/*", "manifest.schema.ts", "playwright.config.ts"],

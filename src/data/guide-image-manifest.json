@@ -47,6 +47,22 @@
     "hash": "sha256:8c146985a35ac643aa050794089b287f078f5ee97970f8d81fdabe210efe064c",
     "source": "_raw/bankkonto-zypern.png"
   },
+  "emergency-services/hero": {
+    "width": 2752,
+    "height": 1536,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAAXBtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAANGlsb2MAAAAAREAAAgABAAAAAAGUAAEAAAAAAAAAIQACAAAAAAG1AAEAAAAAAAAAFAAAADhpaW5mAAAAAAACAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAAAAAIAAGF2MDEAAAAAr2lwcnAAAACKaXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAEAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAcAAAAAA5waXhpAAAAAAEIAAAAOGF1eEMAAAAAdXJuOm1wZWc6bXBlZ0I6Y2ljcDpzeXN0ZW1zOmF1eGlsaWFyeTphbHBoYQAAAAAdaXBtYQAAAAAAAAACAAEDgQIDAAIEhAIFhgAAABppcmVmAAAAAAAAAA5hdXhsAAIAAQABAAAAPW1kYXQSAAoIOAh+wgIaDSAyExsAAABA7fIif8IbUZTnGOW8GaASAAoFGAh+wqAyCRsAAAEAAiEb2g==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "hash": "sha256:36b9ccf80bb980f233cb96b08eeddc792816dd1bffb442a465c193a67bfb37b7",
+    "source": "_raw/emergency-services.png"
+  },
   "fenster-tueren-zypern/hero": {
     "width": 1672,
     "height": 941,

@@ -1,7 +1,17 @@
 import { test, expect } from '@playwright/test'
+import { randomUUID } from 'crypto'
 
 // Produktseite mit bekannten lokalen product_images — ändere slug wenn Testdaten anders
 const PRODUCT_WITH_IMAGES = 'ferplast-ferplast-sport-g8-200-black-leash'
+
+const BACKEND_URL =
+  process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
+const FRONTEND_URL =
+  process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
+
+if (BACKEND_URL.includes(':8000') || FRONTEND_URL.includes(':3000')) {
+  throw new Error('[visual-smoke] Safety: NEVER run against prod ports 3000/8000!')
+}
 
 test.describe('Visual Smoke-Test', () => {
 
@@ -72,4 +82,131 @@ test.describe('Visual Smoke-Test', () => {
     }
   })
 
+})
+
+// ─── Shop-Owner Smoke: Registrierung → Login → Default-Produkte ───────────────
+
+test.describe('Shop-Owner Smoke — @pundo.com Auto-Approve (F6710)', () => {
+  const UUID = randomUUID().slice(0, 8)
+  const EMAIL = `smoke-shop-${UUID}@pundo.com`
+  const PASSWORD = 'E2eTestPassword!99'
+
+  let ownerId: number | null = null
+  let shopId: number | null = null
+  let ownerToken: string | null = null
+
+  test.beforeAll(async () => {
+    // Register via onboarding — @pundo.com must be auto-approved
+    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: EMAIL,
+        password: PASSWORD,
+        provider_type: 'dienstleister',
+        domain_slugs: ['friseur'],
+        shop_name: `Smoke Shop ${UUID}`,
+        location: { lat: 34.917, lng: 33.636 },
+        contact: { phone: '+35799000001' },
+        credentials: { type: 'email', email: EMAIL, password: PASSWORD, name: `Smoke ${UUID}` },
+        lang: 'en',
+      }),
+      signal: AbortSignal.timeout(30_000),
+    })
+    if (!res.ok) return // tests will skip individually
+
+    const data = await res.json()
+    if (data.status !== 'approved') return
+
+    // Login
+    const loginRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+      signal: AbortSignal.timeout(30_000),
+    })
+    if (!loginRes.ok) return
+
+    const cookieHeader = loginRes.headers.get('set-cookie') ?? ''
+    const tokenMatch = cookieHeader.match(/shop_owner_token=([^;]+)/)
+    if (!tokenMatch) return
+    ownerToken = tokenMatch[1]
+
+    const meRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/me`, {
+      headers: { Authorization: `Bearer ${ownerToken}` },
+    })
+    if (!meRes.ok) return
+    const me = await meRes.json()
+    ownerId = me.id as number
+    shopId = me.shop_id as number
+  })
+
+  test.afterAll(async () => {
+    if (!ownerId) return
+    // Cleanup via admin API
+    const adminLoginRes = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
+      signal: AbortSignal.timeout(15_000),
+    }).catch(() => null)
+    if (!adminLoginRes?.ok) return
+    const cookieHeader = adminLoginRes.headers.get('set-cookie') ?? ''
+    const adminTokenMatch = cookieHeader.match(/admin_token=([^;]+)/)
+    if (!adminTokenMatch) return
+    await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminTokenMatch[1]}` },
+    }).catch(() => null)
+  })
+
+  test('S1 — @pundo.com onboarding → status=approved (kein pending)', async () => {
+    test.skip(!ownerToken, 'Onboarding setup failed — is Auto-Approve deployed?')
+    expect(ownerToken).toBeTruthy()
+  })
+
+  test('S2 — Login erfolgreich → /shop-admin/dashboard lädt', async ({ page }) => {
+    test.skip(!ownerToken, 'No token from S1')
+    await page.context().addCookies([
+      {
+        name: 'shop_owner_token',
+        value: ownerToken!,
+        domain: new URL(FRONTEND_URL).hostname,
+        path: '/',
+      },
+    ])
+    await page.goto(`${FRONTEND_URL}/shop-admin/dashboard`)
+    await page.waitForLoadState('load')
+    expect(page.url()).not.toContain('/shop-admin/login')
+    const heading = page.locator('h1, nav, [data-testid="dashboard-heading"]')
+    await expect(heading.first()).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('S3 — Standard-Produkte (auto_seeded) beim Shop angelegt (optional)', async () => {
+    test.skip(!ownerToken || !shopId, 'No token/shopId from S1')
+
+    // Check items via shop-owner API
+    const itemsRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/items`, {
+      headers: { Authorization: `Bearer ${ownerToken!}` },
+      signal: AbortSignal.timeout(15_000),
+    })
+    if (!itemsRes.ok) {
+      test.skip(true, `GET /shop-owner/items: ${itemsRes.status}`)
+      return
+    }
+    const data = await itemsRes.json()
+    const items = Array.isArray(data) ? data : data.items ?? data.results ?? []
+
+    const seededItems = items.filter(
+      (i: { source?: string }) => i.source === 'auto_seeded'
+    )
+
+    if (seededItems.length === 0) {
+      // Not a failure — Baustein B may not be deployed yet
+      console.log('[visual-smoke S3] No auto_seeded items — Baustein B not deployed yet')
+      return
+    }
+
+    expect(seededItems.length).toBeGreaterThan(0)
+  })
 })

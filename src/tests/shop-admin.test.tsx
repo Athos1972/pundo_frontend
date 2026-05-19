@@ -127,7 +127,7 @@ describe('AdminNav', () => {
     render(<AdminNav tr={tr} ownerName="Test Owner" />)
     expect(screen.getAllByText(tr.nav_dashboard).length).toBeGreaterThan(0)
     // nav_products removed — products management merged into /shop-admin/offers
-    expect(screen.queryAllByText(tr.nav_products).length).toBe(0)
+    expect(screen.queryAllByText('Products').length).toBe(0)
     expect(screen.getAllByText(tr.nav_offers).length).toBeGreaterThan(0)
     expect(screen.getAllByText(tr.nav_api_keys).length).toBeGreaterThan(0)
   })

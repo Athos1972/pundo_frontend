@@ -92,6 +92,18 @@ export interface AdminItemPhoto {
   sort_order: number
 }
 
+export interface AdminOfferItemEmbed {
+  id: number
+  slug: string
+  item_type: ItemType
+  names: Record<string, string>
+  descriptions: Record<string, string> | null
+  photos: Pick<AdminItemPhoto, 'id' | 'url' | 'thumbnail_url' | 'sort_order'>[]
+  category_id: number | null
+  category_name: string | null
+  ean: string | null
+}
+
 export interface AdminItem {
   id: number
   slug: string
@@ -156,6 +168,7 @@ export interface AdminOffer {
   archived: boolean
   crawled_at: string | null
   created_at: string
+  item?: AdminOfferItemEmbed
 }
 
 // Keep backward-compat alias so any remaining usage of `offer.title` (non-null) still works

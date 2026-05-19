@@ -9,6 +9,7 @@ import type {
   AdminShop,
   OpeningHours,
   AdminOfferList,
+  AdminOffer,
   AdminShopListingList,
   AdminShopListing,
   AdminItem,
@@ -118,10 +119,14 @@ export async function getAdminOffers(
 ): Promise<AdminOfferList> {
   const qs = new URLSearchParams()
   if (params.archived != null) qs.set('archived', String(params.archived))
-  if (params.limit != null) qs.set('limit', String(params.limit))
+  qs.set('limit', String(params.limit ?? 500))
   if (params.offset != null) qs.set('offset', String(params.offset))
   const q = qs.toString()
   return apiFetchAdmin<AdminOfferList>(`/offers${q ? `?${q}` : ''}`, lang)
+}
+
+export async function getAdminOffer(id: number, lang: string): Promise<AdminOffer> {
+  return apiFetchAdmin<AdminOffer>(`/offers/${id}`, lang)
 }
 
 export async function getApiKeys(lang: string): Promise<ApiKey[]> {

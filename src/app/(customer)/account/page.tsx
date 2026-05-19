@@ -8,7 +8,10 @@ import type { Metadata } from 'next'
 import type { Review } from '@/types/api'
 import type { LinkedAccountsResponse } from '@/types/customer'
 
-export const metadata: Metadata = { title: 'Account | Pundo' }
+export const metadata: Metadata = {
+  title: 'Account | Pundo',
+  robots: { index: false, follow: false },
+}
 
 export default async function AccountPage() {
   const lang = await getLangServer()

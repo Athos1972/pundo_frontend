@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeJson, buildProductSchema, buildLocalBusinessSchema } from '@/lib/structured-data'
+import { safeJson, buildProductSchema, buildLocalBusinessSchema, buildOrganizationSchema, buildWebSiteSchema } from '@/lib/structured-data'
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 
 const SITE_URL = 'https://pundo.cy'
@@ -276,5 +276,64 @@ describe('buildLocalBusinessSchema', () => {
     const shop = { ...baseShop, name: null }
     const schema = buildLocalBusinessSchema(shop, SITE_URL)
     expect(schema['name']).toBe('Shop')
+  })
+})
+
+describe('buildOrganizationSchema', () => {
+  it('returns correct @type and @context', () => {
+    const schema = buildOrganizationSchema(SITE_URL)
+    expect(schema['@context']).toBe('https://schema.org')
+    expect(schema['@type']).toBe('Organization')
+  })
+
+  it('includes siteUrl as url', () => {
+    const schema = buildOrganizationSchema(SITE_URL)
+    expect(schema['url']).toBe(SITE_URL)
+  })
+
+  it('includes logo derived from siteUrl', () => {
+    const schema = buildOrganizationSchema(SITE_URL)
+    expect(schema['logo']).toBe(`${SITE_URL}/brands/pundo/logo.png`)
+  })
+
+  it('includes Facebook in sameAs', () => {
+    const schema = buildOrganizationSchema(SITE_URL)
+    const sameAs = schema['sameAs'] as string[]
+    expect(sameAs).toContain('https://www.facebook.com/people/Pundocy/61589320933158/')
+  })
+
+  it('produces XSS-safe JSON output via safeJson', () => {
+    const schema = buildOrganizationSchema(SITE_URL)
+    const json = safeJson(schema)
+    expect(json).not.toContain('<')
+    expect(json).not.toContain('>')
+    expect(JSON.parse(json)['@type']).toBe('Organization')
+  })
+})
+
+describe('buildWebSiteSchema', () => {
+  it('returns correct @type and @context', () => {
+    const schema = buildWebSiteSchema(SITE_URL)
+    expect(schema['@context']).toBe('https://schema.org')
+    expect(schema['@type']).toBe('WebSite')
+  })
+
+  it('includes potentialAction SearchAction', () => {
+    const schema = buildWebSiteSchema(SITE_URL)
+    const action = schema['potentialAction'] as Record<string, unknown>
+    expect(action['@type']).toBe('SearchAction')
+  })
+
+  it('urlTemplate contains search path and placeholder', () => {
+    const schema = buildWebSiteSchema(SITE_URL)
+    const action = schema['potentialAction'] as Record<string, unknown>
+    const target = action['target'] as Record<string, unknown>
+    expect(target['urlTemplate']).toBe(`${SITE_URL}/search?q={search_term_string}`)
+  })
+
+  it('query-input is set correctly', () => {
+    const schema = buildWebSiteSchema(SITE_URL)
+    const action = schema['potentialAction'] as Record<string, unknown>
+    expect(action['query-input']).toBe('required name=search_term_string')
   })
 })

@@ -8,6 +8,7 @@ import { truncateTitle } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getBlogPost, getBlogSlugs } from '@/lib/blog'
 import { mdxComponents } from '@/components/guides/mdx-components'
+import { safeJson } from '@/lib/structured-data'
 import { BackButton } from '@/components/ui/BackButton'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
@@ -75,16 +76,21 @@ export default async function BlogPostPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJson({
             '@context': 'https://schema.org',
             '@type': 'BlogPosting',
             headline: meta.title,
             description: meta.description,
             datePublished: meta.date,
-            image: meta.image,
+            ...(meta.image ? { image: meta.image } : {}),
             inLanguage: lang,
             author: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
-            publisher: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Pundo',
+              url: 'https://pundo.cy',
+              logo: { '@type': 'ImageObject', url: 'https://pundo.cy/brands/pundo/logo.png' },
+            },
             breadcrumb: {
               '@type': 'BreadcrumbList',
               itemListElement: [

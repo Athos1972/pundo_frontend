@@ -7,7 +7,10 @@ import { ContactForm } from '@/components/contact/ContactForm'
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
   const tr = t(lang)
-  return { title: `${tr.page_title_contact} — pundo` }
+  return {
+    title: `${tr.page_title_contact} — pundo`,
+    alternates: { canonical: 'https://pundo.cy/contact' },
+  }
 }
 
 export default async function ContactPage() {

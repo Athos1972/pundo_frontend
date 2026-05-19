@@ -9,7 +9,10 @@ import type { Lang } from '@/lib/lang'
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
   const tr = t(lang)
-  return { title: `${tr.page_title_help} — pundo` }
+  return {
+    title: `${tr.page_title_help} — pundo`,
+    alternates: { canonical: 'https://pundo.cy/help' },
+  }
 }
 
 export default async function HelpPage() {

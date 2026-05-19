@@ -4,6 +4,7 @@ import { getCategories } from '@/lib/api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
+import { buildOrganizationSchema, buildWebSiteSchema, safeJson } from '@/lib/structured-data'
 import { Hero } from '@/components/layout/Hero'
 import { CommunityCard } from '@/components/community/CommunityCard'
 import { GuidesTeaser } from '@/components/guides/GuidesTeaser'
@@ -14,8 +15,8 @@ import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedL
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl()
-  const title = 'Pundo — Find Local Products & Compare Prices in Cyprus'
-  const description = 'Find local products and shops in Cyprus. Compare prices, check stock, and discover the best deals at nearby businesses on Pundo.'
+  const title = 'Find Local Shops, Products & Services in Cyprus — Pundo'
+  const description = 'Find local shops, products and services in Limassol, Paphos, Larnaca and across Cyprus. Compare prices, check stock and discover nearby businesses in your own language.'
   return {
     title: { absolute: title },
     description,
@@ -39,6 +40,7 @@ export default async function HomePage() {
   const lang = await getLangServer()
   const brand = await getBrandFromHeaders()
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   const categoriesData = await getCategories(
     { taxonomy_type: 'google', only_with_products: true },
     lang
@@ -46,6 +48,8 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-bg">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildOrganizationSchema(siteUrl)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildWebSiteSchema(siteUrl)) }} />
       <Hero brand={brand} categories={categoriesData.items} lang={lang} />
 
       {/* F4700: Activity Feed — directly after Hero, before CommunityCard (AC-B5) */}

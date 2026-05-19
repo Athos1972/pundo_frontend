@@ -7,7 +7,10 @@ import { ShopsContent } from './ShopsContent'
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
   const tr = t(lang)
-  return { title: `${tr.page_title_shops} — pundo` }
+  return {
+    title: `${tr.page_title_shops} — pundo`,
+    alternates: { canonical: 'https://pundo.cy/shops' },
+  }
 }
 
 export default async function ShopsIndexPage() {

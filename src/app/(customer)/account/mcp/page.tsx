@@ -7,7 +7,10 @@ import { getOAuthConnections } from '@/lib/oauth-api'
 import { BackButton } from '@/components/ui/BackButton'
 import { McpConnectionsClient } from './McpConnectionsClient'
 
-export const metadata: Metadata = { title: 'AI Agent Connections | Pundo' }
+export const metadata: Metadata = {
+  title: 'AI Agent Connections | Pundo',
+  robots: { index: false, follow: false },
+}
 
 export default async function McpPage() {
   const lang = await getLangServer()

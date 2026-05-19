@@ -84,4 +84,10 @@ export interface BrandConfig {
     appName: string
     domain: string
   }
+
+  socialLinks?: Array<{
+    platform: string
+    url: string
+    label: string
+  }>
 }

@@ -71,4 +71,12 @@ export const pundoConfig: BrandConfig = {
     appName: 'Pundo',
     domain: 'pundo.cy',
   },
+
+  socialLinks: [
+    {
+      platform: 'facebook',
+      url: 'https://www.facebook.com/people/Pundocy/61589320933158/',
+      label: 'Pundo on Facebook',
+    },
+  ],
 }

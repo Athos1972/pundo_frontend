@@ -8,7 +8,10 @@ import { BackButton } from '@/components/ui/BackButton'
 export async function generateMetadata(): Promise<Metadata> {
   const [lang, brand] = await Promise.all([getLangServer(), getBrandFromHeaders()])
   const tr = t(lang)
-  return { title: `${tr.page_title_terms} — ${brand.name}` }
+  return {
+    title: `${tr.page_title_terms} — ${brand.name}`,
+    alternates: { canonical: `${brand.meta.siteUrl}/legal/terms` },
+  }
 }
 
 export default async function TermsPage() {

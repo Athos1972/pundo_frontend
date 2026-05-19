@@ -135,6 +135,34 @@ export function buildProductSchema(
   }
 }
 
+export function buildOrganizationSchema(siteUrl: string): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Pundo',
+    url: siteUrl,
+    logo: `${siteUrl}/brands/pundo/logo.png`,
+    sameAs: ['https://www.facebook.com/people/Pundocy/61589320933158/'],
+  }
+}
+
+export function buildWebSiteSchema(siteUrl: string): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Pundo',
+    url: siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }
+}
+
 export function buildLocalBusinessSchema(
   shop: ShopDetailResponse,
   siteUrl: string,

@@ -7,7 +7,10 @@ import { BackButton } from '@/components/ui/BackButton'
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getLangServer()
   const tr = t(lang)
-  return { title: `${tr.page_title_about} — pundo` }
+  return {
+    title: `${tr.page_title_about} — pundo`,
+    alternates: { canonical: 'https://pundo.cy/about' },
+  }
 }
 
 export default async function AboutPage() {

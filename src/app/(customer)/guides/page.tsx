@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `${tr.page_title_guides} — pundo`,
     description: tr.guides_index_subtitle,
+    alternates: { canonical: 'https://pundo.cy/guides' },
     openGraph: {
       title: tr.page_title_guides,
       description: tr.guides_index_subtitle,

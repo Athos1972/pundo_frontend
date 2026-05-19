@@ -110,6 +110,22 @@
     "hash": "sha256:5b5bd53df571e2ed55a73ebbf12caa5b00818dc69d41299c5dbccc1a5f853fb3",
     "source": "_raw/hunde-zypern.png"
   },
+  "internet-zypern/hero": {
+    "width": 2752,
+    "height": 1536,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAAXBtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAANGlsb2MAAAAAREAAAgABAAAAAAGUAAEAAAAAAAAAIAACAAAAAAG0AAEAAAAAAAAAFAAAADhpaW5mAAAAAAACAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAAAAAIAAGF2MDEAAAAAr2lwcnAAAACKaXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAEAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAcAAAAAA5waXhpAAAAAAEIAAAAOGF1eEMAAAAAdXJuOm1wZWc6bXBlZ0I6Y2ljcDpzeXN0ZW1zOmF1eGlsaWFyeTphbHBoYQAAAAAdaXBtYQAAAAAAAAACAAEDgQIDAAIEhAIFhgAAABppcmVmAAAAAAAAAA5hdXhsAAIAAQABAAAAPG1kYXQSAAoIOAh+wgIaDSAyEhsAAABQ2FYLKS179YCLqzpvcRIACgUYCH7CoDIJGwAAAQACIRva",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "hash": "sha256:a4d3936796e4e0fa6db31a9ece587398c4e13f3ed47907c339941a5884091998",
+    "source": "_raw/internet-zypern.png"
+  },
   "katzen-zypern/hero": {
     "width": 1672,
     "height": 941,

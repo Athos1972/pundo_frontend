@@ -1,0 +1,127 @@
+---
+title: 'Internet in Cyprus: Providers, Wireless and Why the Backbone Matters'
+description: >-
+  DSL, fibre, LTE home internet and Starlink — which provider works where, what
+  the backbone problem really means, and how to stay connected in rural Cyprus.
+category: wohnen
+icon: 📡
+readtime: '8'
+slug: internet-zypern
+lang: en
+published: true
+hero_alt: Satellite dish and internet cables on a rooftop in Cyprus under a clear blue sky
+---
+
+# Internet in Cyprus: Providers, Wireless and Why the Backbone Matters
+
+Internet access in Cyprus is — like much else here — a question of location. If you live in a newer building in Limassol or Nicosia, you can get stable fibre without much trouble. If you're in a village in the Troodos foothills or in an older settlement outside the city centres, you may already be familiar with a router that glows cheerfully while delivering nothing. And even with a solid connection, there are moments when the internet goes decidedly Cypriot — not because of your provider, but because of the backbone.
+
+## What Is a Backbone — and Why Should You Care?
+
+Before we get to the providers, it's worth a quick look at the infrastructure underneath. On Cyprus, this is anything but academic.
+
+The **backbone** refers to the main data highways that carry internet traffic between continents and network hubs. Think of it this way: all the roads in the country eventually lead to a motorway — that's the backbone. Your home connection is the on-ramp. No matter how wide the on-ramp, it won't help if the motorway is congested or under repair.
+
+This is particularly relevant for Cyprus because the island has **no land connection** to mainland Europe. Every single data packet you send to Europe — an email, a video call, a website from Germany — leaves the island via an **undersea fibre-optic cable**. And returns the same way.
+
+### Glossary
+
+**Latency (Ping):** The time in milliseconds it takes for a data packet to travel from your device to the target server and back. The shorter the cable route, the lower the latency. From Cyprus to Frankfurt, you're looking at a realistic 30–60 ms under normal conditions — compared to 10–15 ms from within Germany itself. Noticeable in gaming and video calls; less so for streaming.
+
+**Bandwidth:** The capacity of a connection — how much data can flow through per second. Your provider advertises, say, 100 Mbit/s; that's your home connection's bandwidth. The backbone underneath has capacity in the terabits — but when many users draw on it simultaneously, or capacity is reduced by damage, the effective bandwidth available to everyone drops.
+
+**Peering:** Agreements between network operators to exchange traffic directly, rather than routing it through expensive intermediaries. Poor peering means slow connections to certain destinations, even if your own line is technically fast.
+
+**Terrestrial:** Land-based connections (copper, fibre, wireless) — everything that is not an undersea cable.
+
+### Cyprus's Backbone Cables
+
+All commercial undersea cables serving Cyprus land at a single station in **Yermasoyia (Limassol)**. That is the most important sentence in this section: one geographic point connects the entire island to the rest of the internet. The key active systems:
+
+**SMW-3 (SEA-ME-WE 3):** One of the oldest still-active international deep-sea cables in the world (in service since 1999). It links Western Europe with the Middle East, the Indian subcontinent and Southeast Asia — and lands at Yermasoyia. Historically Cyprus's primary link to Europe. Its age makes it more susceptible to faults.
+
+**Aphrodite II:** A newer regional cable connecting Cyprus (Yermasoyia), Greece (Chania, Crete) and Israel (Haifa). Important for direct EU connectivity and as redundancy for SMW-3.
+
+**CADMOS:** Connects Cyprus to Lebanon (Beirut) and Syria. Primarily relevant for regional connectivity to the east.
+
+<InfoBox type="info">
+  The practical consequence: if a cable is damaged — by a ship's anchor, an earthquake, or age — the whole island notices. Such events are rare, but they do happen. In the meantime, traffic is rerouted over the remaining cables, increasing latency and reducing available bandwidth for everyone. It's not something you feel on an average day — but it explains why Cypriot internet can feel less predictable than on the European mainland, even with a perfectly good home connection.
+</InfoBox>
+
+## Providers at a Glance
+
+<ComparisonTable
+  headers={["Provider", "Technology", "Strength"]}
+  rows={[
+    { label: "CYTA / Cytacom", col1: "DSL, FTTH, 4G/5G, fixed wireless LTE", col2: "Widest coverage, state-owned, rural areas" },
+    { label: "Epic", col1: "FTTH, 4G/5G, home wireless", col2: "Strong mobile network, growing fixed-line presence" },
+    { label: "MTN Cyprus", col1: "4G/5G, home wireless", col2: "Mobile-first, fixed wireless home internet" },
+    { label: "Cablenet", col1: "Coaxial cable (HFC/DOCSIS), fibre", col2: "Strong presence in the Limassol area" },
+    { label: "PrimeTel", col1: "VDSL, FTTH, MVNO mobile", col2: "Fixed-line focused, own backbone peering" },
+  ]}
+/>
+
+## Fixed-Line: DSL and Fibre
+
+In city centres and larger towns — Limassol, Nicosia, Larnaca, Paphos, Paralimni — a fixed-line connection is the obvious first choice.
+
+**VDSL2 (DSL)** over CYTA's copper network is still the most widespread connection type. Speeds of up to 100 Mbit/s are theoretically possible, but in practice it depends heavily on the cable distance to the nearest distribution point. Anyone more than 500 metres from the nearest cabinet will get noticeably less.
+
+**Fibre (FTTH — Fibre to the Home)** is being actively rolled out across Cyprus. CYTA, Epic and Cablenet have partially covered the urban core areas. FTTH is symmetrical (equal upload and download speeds), considerably more stable than copper, and more future-proof. If you live in an urban area and have the option, choose FTTH.
+
+<InfoBox type="tip">
+  Before signing a contract: ask explicitly whether your exact address is served by FTTH or only VDSL. Provider websites are not always precise on availability — a quick call to support with your full address will save you frustration.
+</InfoBox>
+
+**Cablenet** uses coaxial cable infrastructure (DOCSIS), primarily in the Limassol area. Technically similar to VDSL but over a separate cable network — in some neighbourhoods, the fastest available option.
+
+## Wireless: When No Cable Reaches You
+
+Outside well-served areas — rural villages, mountain communities in the Troodos, coastal settlements without fixed-line infrastructure — wireless home internet is often the only realistic option.
+
+All three mobile operators (CYTA, Epic, MTN) offer fixed home internet plans over their 4G or 5G networks, typically using a dedicated router or an external antenna. Connection quality depends directly on mobile coverage at your specific location. As the state operator, CYTA traditionally has the broadest rural coverage, particularly in remote communities.
+
+<InfoBox type="warning">
+  Wireless home internet can slow down significantly in summer. This has nothing to do with your router — it comes down to hundreds of thousands of tourists plus seasonal expats putting heavy load on the mobile network near the coast. If you need a year-round stable connection for remote work or video calls, test it in summer, not in October.
+</InfoBox>
+
+**An external antenna changes everything:** In many cases where a standard router struggles with poor signal, a directional LTE outdoor antenna (Yagi or panel antenna) brings noticeably better stability and speed. Some providers offer this as part of their package; otherwise they are available from electronics retailers.
+
+## Starlink: The Serious Alternative
+
+Since Starlink became available in Cyprus, the situation for rural locations has changed fundamentally. What used to mean either poor wireless internet or an expensive business satellite system is now accessible to private households.
+
+**What Starlink delivers:** Consistent speeds in practice somewhere between 50 and 300 Mbit/s download, with very low satellite latency (25–60 ms — considerably better than older geostationary satellites). Particularly relevant for locations where LTE signal is weak: deep valleys, sheltered mountain sites, properties far from the nearest mast.
+
+**What Starlink cannot do:** Work reliably under dense tree canopy. The dish needs a clear view of the southern sky. Starlink is also not immune to backbone latency when traffic is routed via ground stations — but its main advantage over wireless is consistency and island-wide availability.
+
+<InfoBox type="info">
+  The hardware (dish + router) must be purchased once. In Cyprus, there are already several suppliers and electricians who offer installation as a service. The official Starlink app lets you check whether your specific GPS coordinates offer sufficient sky clearance before you commit — worth doing in advance.
+</InfoBox>
+
+## Official vs. Reality
+
+<ComparisonTable
+  headers={["What providers promise", "What to actually expect"]}
+  rows={[
+    { label: "Fibre availability", col1: "Online checker shows green", col2: "Always confirm with your exact address by phone — sometimes only the street, not the building" },
+    { label: "LTE home internet in summer", col1: "Same speeds year-round", col2: "Can drop noticeably in July/August — tourist season loads the network" },
+    { label: "Contract length", col1: "Flexible or 12 months", col2: "Best deals often require 24 months — read the fine print" },
+    { label: "Engineer appointment", col1: "Within a few days", col2: "2–3 weeks is realistic; longer around public holidays" },
+    { label: "Backbone outages", col1: "Not communicated in advance", col2: "Rare, but when they happen everyone notices — providers communicate reactively, rarely proactively" },
+  ]}
+/>
+
+## Practical Tips When Moving
+
+If you're moving to Cyprus or relocating within the island, a few steps upfront will save you a lot of trouble. Ask your landlord or the previous tenant which provider covers the address and what connection they were using. In some buildings, the cabling is pre-installed for a specific provider only — switching afterwards can be a hassle.
+
+If you're relying on LTE or Starlink, check the signal at the property before signing a lease. For LTE: walk around the flat with your phone and test all three mobile networks. For Starlink: the official app gives you a sky obstruction check based on your GPS coordinates.
+
+<InfoBox type="tip">
+  Regulations and services change fast in Cyprus. Keep [pundo.cy](https://pundo.cy) bookmarked — it's regularly updated for expats living on the island, in English, German, Russian, Arabic and Hebrew.
+</InfoBox>
+
+---
+
+*Last updated: May 2026. Providers, tariffs and availability change regularly. This guide does not replace an individual availability check.*

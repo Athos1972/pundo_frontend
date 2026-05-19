@@ -10,7 +10,10 @@ import { FormField } from '@/components/shop-admin/FormField'
 import { Suspense } from 'react'
 
 function LoginForm() {
-  const lang = getLangFromCookie()
+  // Language must be initialised to 'en' here so the server-rendered HTML matches
+  // the client's first paint. After mount, useEffect reads the real cookie and
+  // updates the state — this avoids the hydration mismatch.
+  const [lang, setLang] = useState<string>('en')
   const tr = tAdmin(lang)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -20,7 +23,11 @@ function LoginForm() {
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
 
-  useEffect(() => { document.body.dataset.hydrated = 'true' }, [])
+  useEffect(() => {
+    document.body.dataset.hydrated = 'true'
+    // Apply the real browser language after mount (deferred so SSR output matches)
+    setLang(getLangFromCookie())
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

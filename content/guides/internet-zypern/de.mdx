@@ -1,0 +1,127 @@
+---
+title: 'Internet auf Zypern: Provider, Funk und warum das Backbone alles entscheidet'
+description: >-
+  DSL, Fibre, LTE-Funk und Starlink — welcher Anbieter wo funktioniert, was das
+  Backbone-Problem wirklich bedeutet und wie du auf dem Land online bleibst.
+category: wohnen
+icon: 📡
+readtime: '8'
+slug: internet-zypern
+lang: de
+published: true
+hero_alt: Satellitenschüssel und Internetkabel auf einem Hausdach in Zypern mit blauem Himmel
+---
+
+# Internet auf Zypern: Provider, Funk und warum das Backbone alles entscheidet
+
+Internet auf Zypern ist — wie vieles hier — eine Frage des Standorts. Wer in Limassol oder Nikosia in einem neueren Gebäude wohnt, kann heute problemlos Glasfaser mit stabilen Verbindungen bekommen. Wer in einem Dorf in den Troodos-Ausläufern sitzt oder in einer älteren Siedlung außerhalb der Stadtzentren, kennt unter Umständen schon den Blick auf den Router, der zwar leuchtet, aber nichts liefert. Und selbst mit dem besten Anschluss gibt es Momente, in denen das Internet zypriotisch langsam wird — nicht wegen des Providers, sondern wegen des Backbones.
+
+## Was ist ein Backbone — und warum betrifft dich das?
+
+Bevor wir zu den Anbietern kommen, lohnt sich ein kurzer Blick auf die Infrastruktur darunter. Denn auf Zypern ist das kein akademisches Thema.
+
+**Backbone** bezeichnet die Hauptleitungen, über die der Internetverkehr zwischen Kontinenten und Netzknoten transportiert wird. Stell dir vor, alle Straßen des Landes führen irgendwann auf eine Autobahn — die ist der Backbone. Dein Anschluss zuhause ist die Einfahrt. Was nützt die breiteste Einfahrt, wenn die Autobahn zur Stoßzeit überlastet ist oder eine Baustelle hat?
+
+Für Zypern ist das besonders relevant, weil die Insel **keine Landverbindung** zum europäischen Festland hat. Jedes einzige Datenpaket, das du nach Europa schickst — eine E-Mail, ein Video-Call, eine Website aus Deutschland — verlässt die Insel über ein **Untersee-Glasfaserkabel**. Und kommt über dasselbe zurück.
+
+### Glossar
+
+**Latenz (Ping):** Die Zeit in Millisekunden, die ein Datenpaket braucht, um von deinem Gerät zum Zielserver und zurück zu reisen. Je kürzer der Kabelweg, desto niedriger die Latenz. Von Zypern nach Frankfurt sind das realistisch 30–60 ms unter normalen Bedingungen — im Vergleich zu 10–15 ms aus dem deutschen Rechenzentrum selbst. Spürbar bei Gaming und Video-Calls, weniger bei Streaming.
+
+**Bandbreite:** Die Kapazität der Verbindung — wie viel Daten pro Sekunde durchfließen können. Dein Anbieter verspricht z. B. 100 Mbit/s; das ist die Bandbreite deines Hausanschlusses. Das Backbone darunter hat theoretisch Terabits — aber wenn viele Nutzer gleichzeitig darauf zugreifen oder Kapazitäten durch Schäden reduziert sind, sinkt die effektiv verfügbare Bandbreite für alle.
+
+**Peering:** Vereinbarungen zwischen Netzbetreibern, Datenverkehr direkt auszutauschen statt über teure Zwischenwege. Schlechtes Peering = langsame Verbindungen zu bestimmten Zielen, auch wenn dein eigener Anschluss technisch schnell ist.
+
+**Terrestrisch:** Leitungen über Land (Kupfer, Glasfaser, Funk) — alles, was nicht Unterseekabel ist.
+
+### Zyperns Backbone-Kabel
+
+Alle kommerziellen Unterseekabel Zyperns landen an einer einzigen Station in **Yermasoyia (Limassol)**. Das ist der wichtigste Satz dieses Abschnitts: Ein einziger geografischer Punkt verbindet die gesamte Insel mit dem Rest des Internets. Die wichtigsten aktiven Systeme:
+
+**SMW-3 (SEA-ME-WE 3):** Eines der ältesten noch aktiven internationalen Tiefseekabel der Welt (in Betrieb seit 1999). Verbindet Westeuropa mit dem Nahen Osten, dem indischen Subkontinent und Südostasien — und landet dabei in Yermasoyia. Historisch war es für Zypern das wichtigste Verbindungskabel nach Europa. Sein Alter macht es anfälliger für Störungen.
+
+**Aphrodite II:** Ein neueres regionales Kabel, das Zypern (Yermasoyia), Griechenland (Chania auf Kreta) und Israel (Haifa) verbindet. Wichtig für die direkte EU-Verbindung und als Redundanz für SMW-3.
+
+**CADMOS:** Verbindet Zypern mit dem Libanon (Beirut) und Syrien. Primär relevant für regionale Konnektivität nach Osten.
+
+<InfoBox type="info">
+  Die Konsequenz dieser Infrastruktur: Wenn ein Kabel beschädigt wird — durch Schiffsanker, Erdbeben oder Alterung — merkt das die gesamte Insel. Solche Ereignisse sind selten, aber sie passieren. In der Zwischenzeit werden Umwege über die verbleibenden Kabel genommen, was die Latenz erhöht und die verfügbare Bandbreite reduziert. Nichts, was man täglich spürt — aber es erklärt, warum zypriotisches Internet selbst mit gutem Anschluss manchmal unberechenbarer wirkt als auf dem europäischen Festland.
+</InfoBox>
+
+## Die Provider im Überblick
+
+<ComparisonTable
+  headers={["Anbieter", "Technik", "Stärke"]}
+  rows={[
+    { label: "CYTA / Cytacom", col1: "DSL, FTTH, 4G/5G, Funk-LTE", col2: "Breiteste Abdeckung, staatlich, ländliche Gebiete" },
+    { label: "Epic", col1: "FTTH, 4G/5G, Funk-Heiminternet", col2: "Starkes Mobilnetz, wächst im Festnetzbereich" },
+    { label: "MTN Cyprus", col1: "4G/5G, Funk-Heiminternet", col2: "Mobile-first, Heiminternet via Funk" },
+    { label: "Cablenet", col1: "Koaxialkabel (HFC/DOCSIS), Fibre", col2: "Stärke im Limassol-Bereich" },
+    { label: "PrimeTel", col1: "VDSL, FTTH, MVNO mobil", col2: "Festnetz-fokussiert, eigenes Backbone-Peering" },
+  ]}
+/>
+
+## Leitungsgebunden: DSL und Fibre
+
+In den Stadtzentren und größeren Ortschaften — Limassol, Nikosia, Larnaka, Paphos, Paralimni — ist leitungsgebundenes Internet die erste Wahl.
+
+**VDSL2 (DSL)** über das Kupfernetz von CYTA ist nach wie vor der am weitesten verbreitete Anschlusstyp. Geschwindigkeiten bis 100 Mbit/s sind in der Theorie möglich, in der Praxis hängt es stark von der Kabellänge zur nächsten Verteilerstation ab. Wer mehr als 500 Meter vom nächsten Kabelverzweiger entfernt ist, bekommt deutlich weniger.
+
+**Glasfaser (FTTH — Fibre to the Home)** wird in Zypern aktiv ausgebaut. CYTA, Epic und Cablenet haben die städtischen Kerngebiete teilweise versorgt. FTTH ist symmetrisch (gleiche Upload- und Downloadgeschwindigkeit), deutlich stabiler als Kupfer und zukunftssicherer. Wer im Stadtbereich wohnt und die Wahl hat, sollte FTTH bevorzugen.
+
+<InfoBox type="tip">
+  Bevor du einen Vertrag unterschreibst: Frag explizit nach, ob deine genaue Adresse wirklich mit FTTH oder nur mit VDSL versorgt wird. Die Webseiten der Anbieter sind beim Thema Verfügbarkeit nicht immer präzise — ein Anruf beim Support mit der kompletten Adresse spart Ärger.
+</InfoBox>
+
+**Cablenet** nutzt Koaxialkabel-Infrastruktur (DOCSIS) vor allem im Raum Limassol. Technisch ähnlich zu VDSL, aber über ein separates Kabelnetz verlegt — in manchen Stadtteilen die schnellste verfügbare Option.
+
+## Funk: Wenn kein Kabel ankommt
+
+Außerhalb der gut erschlossenen Ortschaften — ländliche Gebiete, Berggemeinden im Troodos, Küstenorte ohne ausgebautes Festnetz — ist Funk-Heiminternet oft die einzige realistische Option.
+
+Alle drei Mobilanbieter (CYTA, Epic, MTN) bieten Tarife für stationäres Heiminternet über ihr 4G- oder 5G-Netz an, üblicherweise mit einem dedizierten Router oder einer Außenantenne. Die Verbindungsqualität hängt direkt von der Mobilfunkabdeckung am Standort ab. CYTA hat als staatlicher Anbieter traditionell die breiteste Flächenabdeckung, besonders in abgelegenen Gemeinden.
+
+<InfoBox type="warning">
+  Funk-Heiminternet kann im Sommer deutlich langsamer werden. Das liegt nicht am Router, sondern daran, dass Hunderttausende Touristen plus saisonale Expats das Mobilnetz in Küstennähe stark belasten. Wer ganzjährig stabil arbeiten muss (Home-Office, Video-Calls), sollte die Verbindung idealerweise im Sommer testen — nicht im Oktober.
+</InfoBox>
+
+**Außenantenne als Gamechanger:** In vielen Fällen, wo ein Standardrouter mit schlechtem Signal kämpft, bringt eine gerichtete LTE-Außenantenne (Yagi oder Panel-Antenne) spürbar mehr Stabilität und Geschwindigkeit. Die Anbieter bieten das teilweise selbst an, alternativ gibt es sie im Elektronikfachhandel.
+
+## Starlink: Die ernste Alternative
+
+Seit Starlink in Zypern verfügbar ist, hat sich die Situation für ländliche Standorte fundamental geändert. Was früher entweder schlechtes Funk-Internet oder ein teures Business-Satellitensystem bedeutete, ist heute für Privathaushalte zugänglich.
+
+**Was Starlink kann:** Gleichmäßige Verbindungen in der Praxis irgendwo zwischen 50 und 300 Mbit/s Download, mit sehr niedriger Satelliten-Latenz (25–60 ms — deutlich besser als ältere geostationäre Satelliten). Besonders relevant für Standorte, wo LTE schlecht ankommt: tiefe Täler, abgeschirmte Berglagen, Grundstücke weit vom nächsten Funkmast.
+
+**Was Starlink nicht kann:** Zuverlässig unter dichtem Baumkronendach funktionieren. Die Schüssel braucht freien Blick in den südlichen Himmel. Auch Starlink ist nicht immun gegen Backbone-Latenzen, wenn der Datenverkehr über Bodenstationen geleitet wird — der Vorteil gegenüber Funk liegt aber vor allem in der Konsistenz und der Verfügbarkeit überall auf der Insel.
+
+<InfoBox type="info">
+  Die Hardware (Schüssel + Router) muss einmalig gekauft werden. Auf Zypern gibt es bereits einige Anbieter und Elektriker, die die Montage als Service anbieten. Die offizielle Starlink-App zeigt nach Eingabe der GPS-Koordinaten, ob am gewünschten Standort ausreichend freie Himmelssicht vorhanden ist — das lässt sich also vorab prüfen.
+</InfoBox>
+
+## Regel vs. Realität
+
+<ComparisonTable
+  headers={["Was Anbieter versprechen", "Was du erwarten kannst"]}
+  rows={[
+    { label: "Fibre-Verfügbarkeit", col1: "Online-Checker zeigt grün", col2: "Immer mit Adresse beim Support bestätigen — manchmal nur der Straßenzug, nicht das Gebäude" },
+    { label: "LTE-Heiminternet im Sommer", col1: "Gleiche Geschwindigkeit ganzjährig", col2: "Kann im Juli/August deutlich einbrechen — Tourismussaison belastet das Netz" },
+    { label: "Vertragslaufzeiten", col1: "Flexibel oder 12 Monate", col2: "Oft 24 Monate für die besten Tarife — Kleingedrucktes prüfen" },
+    { label: "Techniker-Termin", col1: "Innerhalb weniger Tage", col2: "2–3 Wochen realistisch, vor langen Feiertagen länger" },
+    { label: "Backbone-Störungen", col1: "Nicht kommuniziert", col2: "Passieren selten, aber dann merkt's jeder — Provider informieren reaktiv, selten proaktiv" },
+  ]}
+/>
+
+## Praktische Tipps zum Umzug
+
+Wenn du nach Zypern ziehst oder innerhalb der Insel umziehst, lohnen sich ein paar Schritte im Voraus. Frag deinen Vermieter oder den Vormieter, welcher Anbieter an der Adresse verfügbar ist und welche Verbindung aktuell genutzt wird. Das spart viel Zeit. In einigen Gebäuden sind Kabelleitungen nur für einen bestimmten Anbieter vorinstalliert — einen Wechsel nachträglich zu ermöglichen kann Aufwand bedeuten.
+
+Wenn du auf LTE oder Starlink angewiesen bist, prüfe die Signalstärke am Standort, bevor du die Wohnung oder das Haus mietest. Für LTE: Handy an verschiedenen Stellen in der Wohnung halten und alle drei Mobilnetze prüfen. Für Starlink: Die offizielle App zeigt nach Eingabe deiner GPS-Koordinaten, ob die Schüssel am Standort freie Sicht hat.
+
+<InfoBox type="tip">
+  Infos auf Zypern ändern sich schnell — auch im Telekommunikationsbereich. [pundo.cy](https://pundo.cy) hält dich auf dem Laufenden, speziell für Expats, auf Deutsch, Englisch, Russisch, Arabisch und Hebräisch.
+</InfoBox>
+
+---
+
+*Stand: Mai 2026. Anbieter, Tarife und Verfügbarkeiten ändern sich laufend. Dieser Guide ersetzt keine individuelle Verfügbarkeitsprüfung.*

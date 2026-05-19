@@ -270,6 +270,20 @@ export default async function globalSetup() {
   // (e.g. CI or explicit migration testing).
   const resetDb = process.env.E2E_RESET_DB === 'true'
 
+  // Studio-Mac-Schutz: DATABASE_URL == DATABASE_URL_TEST → kein separates Prod-DB.
+  // In diesem Modus würde ein vollständiger Reset alle prod-synced Daten (items,
+  // categories etc.) löschen, ohne dass copy_prod_data() sie zurückbringen kann.
+  // Stattdessen: Fixtures neu seeden (--skip-reset --skip-prod-copy) ohne Schema-Drop.
+  // Für Migrations: `alembic upgrade head` direkt im Backend-Repo ausführen.
+  // Für Daten-Restore: `./scripts/sync_prod_to_test.sh` im Backend-Repo ausführen.
+  let studioMode = false
+  try {
+    const backendEnv = fs.readFileSync(path.join(BACKEND_REPO, '.env'), 'utf8')
+    const dbUrl     = backendEnv.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim()
+    const dbUrlTest = backendEnv.match(/^DATABASE_URL_TEST=(.+)$/m)?.[1]?.trim()
+    if (dbUrl && dbUrlTest && dbUrl === dbUrlTest) studioMode = true
+  } catch { /* .env nicht lesbar — kein Studio-Modus */ }
+
   // Fixed test credentials — these stay constant across resets and non-reset runs.
   // prepare_e2e_db.py outputs the same values; we mirror them here so we can skip
   // the script when E2E_RESET_DB is not set.
@@ -280,7 +294,55 @@ export default async function globalSetup() {
     shop_address: 'Test Street 1, Nicosia',
   }
 
-  if (resetDb) {
+  if (resetDb && studioMode) {
+    // ── Studio-Mac-Pfad ────────────────────────────────────────────────────────
+    // DATABASE_URL == DATABASE_URL_TEST → kein separates Prod-DB vorhanden.
+    // Ein vollständiger Schema-Drop würde alle prod-synced Daten (items, shops,
+    // categories …) löschen, ohne dass copy_prod_data() sie zurückbringen kann.
+    // Stattdessen: nur E2E-Fixtures neu seeden (kein DROP, kein Prod-Copy).
+    //
+    // Für neue Alembic-Migrationen: cd pundo_main_backend && alembic upgrade head
+    // Für Daten-Restore:            cd pundo_main_backend && ./scripts/sync_prod_to_test.sh
+    console.log(
+      '\n[E2E Setup] ⚠️  STUDIO-MODUS — E2E_RESET_DB=true ignoriert Schema-Drop!\n' +
+      '  DATABASE_URL == DATABASE_URL_TEST → kein separates Prod-DB.\n' +
+      '  Nur Fixtures werden neu geseeded (--skip-reset --skip-prod-copy).\n' +
+      '  → Migrations: cd pundo_main_backend && alembic upgrade head\n' +
+      '  → Daten:      cd pundo_main_backend && ./scripts/sync_prod_to_test.sh\n'
+    )
+
+    const pyBin = `${BACKEND_REPO}/.venv/bin/python`
+    const pyScript = `${BACKEND_REPO}/scripts/prepare_e2e_db.py`
+
+    let dbErr: unknown
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const output = execSync(`${pyBin} ${pyScript} --skip-reset --skip-prod-copy`, {
+          cwd: BACKEND_REPO,
+          encoding: 'utf8',
+          timeout: 120_000,
+          env: { ...process.env, PYTHONPATH: BACKEND_REPO },
+        })
+        const jsonLine = output.trim().split('\n').at(-1)!
+        creds = JSON.parse(jsonLine)
+        console.log('[E2E Setup] Studio-Fixtures neu geseeded (Schema unverändert).')
+        dbErr = undefined
+        break
+      } catch (err) {
+        dbErr = err
+        const msg = err instanceof Error ? err.message : String(err)
+        const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString().trim() ?? ''
+        const detail = stderr.split('\n').slice(-3).join(' | ').slice(0, 240) || msg.slice(0, 240)
+        console.warn(`[E2E Setup] Fixture-Seed Versuch ${attempt}/3 fehlgeschlagen: ${detail}`)
+        await new Promise(r => setTimeout(r, 3000))
+      }
+    }
+    if (dbErr) {
+      console.error('[E2E Setup] FEHLER beim Fixture-Seed nach 3 Versuchen:', dbErr)
+      throw dbErr
+    }
+  } else if (resetDb) {
+    // ── CI / Hetzner-Pfad: vollständiger Schema-Drop + Prod-Copy ──────────────
     console.log('[E2E Setup] E2E_RESET_DB=true — Bereite pundo_test Datenbank vor (DROP + Kategorien)...')
 
     // Stop backend before reset to release all connection-pool locks (deadlock prevention).

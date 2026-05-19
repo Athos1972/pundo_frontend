@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import type { AdminOfferItemEmbed } from '@/types/shop-admin'
+import { getSeedVisualPath } from '@/lib/seed-visuals'
 
 interface OfferItemHeaderProps {
   item: AdminOfferItemEmbed | null | undefined
@@ -18,7 +19,9 @@ export function OfferItemHeader({ item, lang, offerId }: OfferItemHeaderProps) {
   const description = item.descriptions
     ? (item.descriptions[lang] ?? item.descriptions['en'] ?? null)
     : null
-  const coverPhoto = item.photos[0] ?? null
+  // Prefer actual item photo; fall back to seed-visual for tmpl- items (transitional until backfill runs)
+  const rawPhotoUrl = item.photos[0]?.thumbnail_url ?? item.photos[0]?.url ?? null
+  const coverUrl = rawPhotoUrl ?? getSeedVisualPath(item.slug)
   const altText = primaryName ?? `Item #${item.id}`
 
   // Alle weiteren Sprachnamen als Sekundärzeile (alle außer dem primären)
@@ -28,13 +31,14 @@ export function OfferItemHeader({ item, lang, offerId }: OfferItemHeaderProps) {
     <div className="flex items-start gap-4 bg-gray-50 rounded-xl border border-gray-200 p-4 rtl:flex-row-reverse">
       {/* Foto oder Platzhalter */}
       <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-        {coverPhoto ? (
+        {coverUrl ? (
           <Image
-            src={coverPhoto.thumbnail_url ?? coverPhoto.url}
+            src={coverUrl}
             alt={altText}
             width={96}
             height={96}
             className="object-cover w-full h-full"
+            unoptimized
           />
         ) : (
           <svg aria-hidden="true" className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

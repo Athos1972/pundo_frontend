@@ -12,7 +12,8 @@
     "seo:audit": "tsx scripts/seo-audit.ts",
     "seo:perf": "tsx scripts/seo-perf.ts",
     "blog:sync": "tsx scripts/sync-blog.ts",
-    "blog:backfill": "tsx scripts/sync-blog.ts --backfill"
+    "blog:backfill": "tsx scripts/sync-blog.ts --backfill",
+    "seed-visuals:build": "node scripts/build-seed-visuals.mjs"
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.15",

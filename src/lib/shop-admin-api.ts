@@ -129,6 +129,19 @@ export async function getAdminOffer(id: number, lang: string): Promise<AdminOffe
   return apiFetchAdmin<AdminOffer>(`/offers/${id}`, lang)
 }
 
+/**
+ * Publish an auto_seeded offer by sending a PATCH with `archived: false`.
+ * The backend detects source='auto_seeded' + non-empty model_fields_set
+ * and transitions source → 'shop_manual' in-place.
+ * Server-side only. For client components use the /api/shop-admin/[...path] proxy.
+ */
+export async function publishOffer(id: number, lang: string): Promise<AdminOffer> {
+  return apiFetchAdmin<AdminOffer>(`/offers/${id}`, lang, {
+    method: 'PATCH',
+    body: JSON.stringify({ archived: false }),
+  })
+}
+
 export async function getApiKeys(lang: string): Promise<ApiKey[]> {
   return apiFetchAdmin<ApiKey[]>('/api-keys', lang)
 }

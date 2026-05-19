@@ -59,6 +59,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
   const [expired, setExpired] = useState(expiredItems)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
+  const [activatingId, setActivatingId] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
   const [searchText, setSearchText] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
@@ -158,6 +159,29 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
     })
   }
 
+  function handleActivate(id: number) {
+    setActivatingId(id)
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/shop-admin/offers/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ archived: false }),
+        })
+        if (res.ok) {
+          const updated = await res.json() as AdminOffer
+          setActive((prev) => prev.map((o) => o.id === id ? updated : o))
+          showToast(tr.offer_activate_success, 'success')
+        } else {
+          showToast(tr.error_generic, 'error')
+        }
+      } catch {
+        showToast(tr.error_generic, 'error')
+      }
+      setActivatingId(null)
+    })
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Filter bar */}
@@ -220,6 +244,11 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-gray-800">{displayName}</p>
                     {sourceBadge(offer.source, tr)}
+                    {offer.source === 'auto_seeded' && (
+                      <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                        {tr.offer_status_draft}
+                      </span>
+                    )}
                     {categoryName && (
                       <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
                         {categoryName}
@@ -237,6 +266,16 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {offer.source === 'auto_seeded' && (
+                    <button
+                      onClick={() => handleActivate(offer.id)}
+                      disabled={isPending && activatingId === offer.id}
+                      title={tr.offer_activate_tooltip}
+                      className="text-xs text-white bg-green-600 px-2 py-0.5 rounded hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {activatingId === offer.id ? '…' : tr.offer_activate}
+                    </button>
+                  )}
                   <Link
                     href={`/shop-admin/offers/${offer.id}/edit`}
                     className="text-xs text-accent hover:underline"

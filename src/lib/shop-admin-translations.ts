@@ -266,6 +266,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'Redirect blocked for security reasons.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'Please enter a valid https:// URL.',
+    // B5900-003
+    logo_unreachable: 'Logo could not be loaded',
     // Onboarding (F5910)
     onboarding_step1_title: 'What value do you bring?',
     onboarding_step2_title: 'What do you offer?',
@@ -325,6 +327,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'Search products …',
     offer_filter_all_categories: 'All categories',
     offer_no_results_filtered: 'No offers match the filter.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'Draft',
+    offer_activate: 'Activate',
+    offer_activate_tooltip: 'Make offer publicly visible',
+    offer_activate_success: 'Offer activated successfully.',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -577,6 +584,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'Weiterleitung aus Sicherheitsgründen blockiert.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'Bitte eine gültige https://-URL eingeben.',
+    // B5900-003
+    logo_unreachable: 'Logo konnte nicht geladen werden',
     // Onboarding (F5910)
     onboarding_step1_title: 'Womit bringst Du Wert?',
     onboarding_step2_title: 'Was bietest Du an?',
@@ -636,6 +645,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'Produkt suchen …',
     offer_filter_all_categories: 'Alle Kategorien',
     offer_no_results_filtered: 'Keine Angebote entsprechen dem Filter.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'Entwurf',
+    offer_activate: 'Aktivieren',
+    offer_activate_tooltip: 'Angebot öffentlich sichtbar machen',
+    offer_activate_success: 'Angebot erfolgreich aktiviert.',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -888,6 +902,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'Η ανακατεύθυνση αποκλείστηκε για λόγους ασφαλείας.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'Παρακαλώ εισάγετε έγκυρο URL που ξεκινά με https://.',
+    // B5900-003
+    logo_unreachable: 'Το λογότυπο δεν φορτώθηκε',
     // Onboarding (F5910)
     onboarding_step1_title: 'Τι αξία προσφέρεις;',
     onboarding_step2_title: 'Τι παρέχεις;',
@@ -947,6 +963,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'Αναζήτηση προϊόντων …',
     offer_filter_all_categories: 'Όλες οι κατηγορίες',
     offer_no_results_filtered: 'Δεν βρέθηκαν προσφορές για αυτό το φίλτρο.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'Πρόχειρο',
+    offer_activate: 'Ενεργοποίηση',
+    offer_activate_tooltip: 'Κάντε την προσφορά δημοσίως ορατή',
+    offer_activate_success: 'Η προσφορά ενεργοποιήθηκε επιτυχώς.',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -1199,6 +1220,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'Перенаправление заблокировано в целях безопасности.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'Пожалуйста, введите корректный URL, начинающийся с https://.',
+    // B5900-003
+    logo_unreachable: 'Логотип недоступен',
     // Onboarding (F5910)
     onboarding_step1_title: 'Чем вы приносите пользу?',
     onboarding_step2_title: 'Что вы предлагаете?',
@@ -1258,6 +1281,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'Поиск товаров …',
     offer_filter_all_categories: 'Все категории',
     offer_no_results_filtered: 'Предложения по фильтру не найдены.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'Черновик',
+    offer_activate: 'Активировать',
+    offer_activate_tooltip: 'Сделать предложение публично видимым',
+    offer_activate_success: 'Предложение успешно активировано.',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -1510,6 +1538,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'تم حظر إعادة التوجيه لأسباب أمنية.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'يرجى إدخال عنوان URL صحيح يبدأ بـ https://.',
+    // B5900-003
+    logo_unreachable: 'تعذّر تحميل الشعار',
     // Onboarding (F5910)
     onboarding_step1_title: 'ما القيمة التي تقدمها؟',
     onboarding_step2_title: 'ماذا تقدم؟',
@@ -1569,6 +1599,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'ابحث عن المنتجات …',
     offer_filter_all_categories: 'جميع الفئات',
     offer_no_results_filtered: 'لا توجد عروض تطابق الفلتر.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'مسودة',
+    offer_activate: 'تفعيل',
+    offer_activate_tooltip: 'جعل العرض مرئيًا للعموم',
+    offer_activate_success: 'تم تفعيل العرض بنجاح.',
   },
   he: {
     register_title: 'רישום החנות',
@@ -1821,6 +1856,8 @@ const shopAdminTranslations = {
     redirect_blocked: 'ההפניה נחסמה מטעמי אבטחה.',
     // Security (T20 — Phase 2)
     invalid_logo_url: 'אנא הזן כתובת URL תקינה המתחילה ב-https://.',
+    // B5900-003
+    logo_unreachable: 'הלוגו לא נטען',
     // Onboarding (F5910)
     onboarding_step1_title: 'במה אתה מביא ערך?',
     onboarding_step2_title: 'מה אתה מציע?',
@@ -1880,6 +1917,11 @@ const shopAdminTranslations = {
     offer_search_placeholder: 'חיפוש מוצרים …',
     offer_filter_all_categories: 'כל הקטגוריות',
     offer_no_results_filtered: 'לא נמצאו הצעות התואמות לסינון.',
+    // Auto-seeded offer activation
+    offer_status_draft: 'טיוטה',
+    offer_activate: 'הפעל',
+    offer_activate_tooltip: 'הפוך את ההצעה לגלויה לציבור',
+    offer_activate_success: 'ההצעה הופעלה בהצלחה.',
   },
 } as const
 

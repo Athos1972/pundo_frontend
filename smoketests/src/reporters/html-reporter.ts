@@ -29,6 +29,18 @@ function screenshotEmbed(screenshot: Buffer | undefined): string {
     </details>`
 }
 
+function networkErrorsList(r: RunResult): string {
+  if (!r.networkErrors || r.networkErrors.length === 0) return ''
+  const items = r.networkErrors
+    .map((e) => `<li style="font-family:monospace;font-size:11px;word-break:break-all;"><span style="color:#dc2626;font-weight:bold;">${e.status}</span> ${escHtml(e.url)}</li>`)
+    .join('\n')
+  return `
+    <details style="margin-top:6px;">
+      <summary style="cursor:pointer;color:#b45309;font-size:12px;">${r.networkErrors.length} network error(s)</summary>
+      <ul style="margin:4px 0 0 0;padding-left:16px;">${items}</ul>
+    </details>`
+}
+
 function resultRow(r: RunResult): string {
   const durationStr = r.duration > 0 ? `${(r.duration / 1000).toFixed(2)}s` : '—'
   return `
@@ -41,6 +53,7 @@ function resultRow(r: RunResult): string {
       <td style="padding:8px 12px;color:#6b7280;font-size:12px;">${durationStr}</td>
       <td style="padding:8px 12px;font-size:13px;color:${r.status === 'FAIL' ? '#dc2626' : '#374151'};">
         ${escHtml(r.message ?? '')}
+        ${networkErrorsList(r)}
         ${screenshotEmbed(r.screenshot)}
       </td>
     </tr>`

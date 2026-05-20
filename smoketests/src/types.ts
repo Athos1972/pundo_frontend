@@ -26,6 +26,8 @@ export interface RunResult {
   message?: string
   screenshot?: Buffer
   assertResults?: AssertResult[]
+  /** 4xx/5xx network responses captured during this check, for diagnostics */
+  networkErrors?: Array<{ status: number; url: string }>
 }
 
 export interface ReportData {

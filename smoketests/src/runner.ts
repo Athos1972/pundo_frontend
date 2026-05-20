@@ -156,12 +156,15 @@ async function runCheck(
       consoleErrors.push(text)
     }
   })
-  // Log 4xx/5xx responses to stdout for diagnostics (does not affect PASS/FAIL —
-  // only browser-generated "Failed to load resource" messages go into consoleErrors)
+  // Collect 4xx/5xx network responses per check for diagnostics.
+  // These go into RunResult.networkErrors so reporters can surface them.
+  const networkErrors: Array<{ status: number; url: string }> = []
   page.on('response', (response) => {
     const status = response.status()
     if (status >= 400) {
-      console.warn(`  [net] HTTP ${status}: ${response.url()}`)
+      const url = response.url()
+      console.warn(`  [net] HTTP ${status}: ${url}`)
+      networkErrors.push({ status, url })
     }
   })
 
@@ -190,6 +193,7 @@ async function runCheck(
           status: 'FAIL',
           duration: Date.now() - checkStart,
           message: `resolve_first_item: no item link found at ${brand.base_url}${langPath}`,
+          networkErrors: networkErrors.length > 0 ? networkErrors : undefined,
         }
       }
       targetUrl = resolvedUrl
@@ -266,6 +270,7 @@ async function runCheck(
       message,
       screenshot,
       assertResults,
+      networkErrors: networkErrors.length > 0 ? networkErrors : undefined,
     }
   } catch (err) {
     screenshot = await page.screenshot({ type: 'png', fullPage: false }).catch(() => undefined)
@@ -279,6 +284,7 @@ async function runCheck(
       duration: Date.now() - checkStart,
       message: `Unhandled error: ${err}`,
       screenshot,
+      networkErrors: networkErrors.length > 0 ? networkErrors : undefined,
     }
   } finally {
     await browser.close()

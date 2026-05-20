@@ -22,7 +22,14 @@ function formatResult(r: RunResult): string {
   const status = r.status.padEnd(7)
   const id = r.id.padEnd(50)
   const dur = r.duration > 0 ? `${(r.duration / 1000).toFixed(2)}s` : '—'
-  return `  ${status}  ${id}  ${dur}${r.message ? `\n           ${r.message}` : ''}`
+  let out = `  ${status}  ${id}  ${dur}${r.message ? `\n           ${r.message}` : ''}`
+  if (r.networkErrors && r.networkErrors.length > 0) {
+    out += `\n           Network errors (${r.networkErrors.length}):`
+    for (const e of r.networkErrors) {
+      out += `\n             ${e.status}  ${e.url}`
+    }
+  }
+  return out
 }
 
 export function generateTextReport(data: TextReportData): TextReport {

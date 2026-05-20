@@ -42,7 +42,7 @@ export function VerifyEmailForm({ lang, email, purpose }: Props) {
         // das Server-Layout `getCustomerSession()` neu ausfuehrt und der
         // SessionProvider den eingeloggten User im UI sieht — sonst bleibt
         // der Header-Button auf "Sign in" bis zum naechsten Full-Reload.
-        router.push('/')
+        router.push(`/${lang}`)
         router.refresh()
       } else {
         router.push(`/auth/password-reset/confirm?email=${encodeURIComponent(email)}`)

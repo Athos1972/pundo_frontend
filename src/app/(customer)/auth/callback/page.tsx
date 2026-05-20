@@ -3,6 +3,7 @@
 
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { getLangFromCookie } from '@/lib/lang'
 
 // Google OAuth redirects here after the backend sets the customer_token cookie.
 // We just refresh and forward to home (or show an error).
@@ -14,7 +15,7 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     if (success === '1') {
-      router.replace('/')
+      router.replace(`/${getLangFromCookie()}`)
       router.refresh()
     } else {
       // Error: redirect to login with query param so page can show a message

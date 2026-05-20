@@ -54,7 +54,9 @@ export function LoginForm({ lang, onSuccess }: Props) {
         // Bei push→refresh invalidiert refresh den RSC-Cache nach der Navigation
         // und der SessionProvider sieht den neuen initialSession per useEffect.
         // Selbe Reihenfolge wie der Google-OAuth-Callback in auth/callback/page.tsx.
-        router.push('/')
+        // push direkt auf /{lang} um den Proxy-Redirect von / → /{lang} zu
+        // vermeiden — router.refresh() arbeitet sonst gegen die Redirect-Chain.
+        router.push(`/${lang}`)
         router.refresh()
       }
     } catch {

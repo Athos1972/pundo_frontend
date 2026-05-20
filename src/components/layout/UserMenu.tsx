@@ -62,7 +62,7 @@ export function UserMenu({ lang }: Props) {
     }
     setSession({ user: null, is_authenticated: false })
     setOpen(false)
-    router.push('/')
+    router.push(`/${lang}`)
     router.refresh()
   }
 

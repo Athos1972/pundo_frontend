@@ -129,7 +129,7 @@ async function getOwnerToken(): Promise<string> {
 }
 
 /** Create a ShopListing for the given item. Returns shop_listing_id, or null on failure (e.g. 422 if item_id not in catalog). */
-async function getOrCreateShopListing(token: string, itemId = 53963): Promise<number | null> {
+async function getOrCreateShopListing(token: string, itemId = 21476): Promise<number | null> {
   const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -246,8 +246,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     const token = await getOwnerToken()
 
     // Create a ShopListing for the default item (used by most tests).
-    // Falls back to known seeded item_id 53963 (e2e-vet-consultation-larnaca) if fixtures not set.
-    const defaultItemId = STATE.fixtures?.product_ids?.['e2e-vet-consultation-larnaca'] ?? 53963
+    // Falls back to known real item_id 21476 (avicentra-avicentra-classic-menu-budgie-1kg) if fixtures not set.
+    const defaultItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
     ctx.defaultShopListingId = await getOrCreateShopListing(token, defaultItemId)
     console.log(`[offers-spec] defaultShopListingId=${ctx.defaultShopListingId} (item_id=${defaultItemId})`)
 
@@ -261,7 +261,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     // the default listing and the backend auto-archives the previous active offer for that
     // listing. If we used the same listing here, the archive target would be silently archived
     // by A1 before C1 gets to test it.
-    const archiveItemId = STATE.fixtures?.product_ids?.['fotokopieren-din-a4'] ?? 53962
+    const archiveItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-canary-1kg'] ?? 21477
     const archiveListingId = await getOrCreateShopListing(token, archiveItemId)
     if (archiveListingId) {
       const archiveSetup = await apiCreateOffer(token, archiveListingId, {
@@ -299,7 +299,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await waitHydrated(page)
 
     // Step 1: Select item via modal (search by item name)
-    await selectItemViaModal(page, 'Vet')
+    await selectItemViaModal(page, 'budgie')
 
     // Now on Step 2
     await expect(page.locator('form')).toBeVisible({ timeout: 10_000 })
@@ -371,7 +371,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await waitHydrated(page)
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'Vet')
+    await selectItemViaModal(page, 'budgie')
 
     // Step 2: Use on_request (price_tiers not required — that's what we're testing)
     await setPriceType(page, 'on_request')
@@ -445,7 +445,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await waitHydrated(page)
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'Vet')
+    await selectItemViaModal(page, 'budgie')
 
     // Step 2: Choose fixed but add no tiers — validation should reject this
     await setPriceType(page, 'fixed')
@@ -588,13 +588,12 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await page.goto(FRONTEND_URL + '/shop-admin/offers')
     await waitHydrated(page)
 
-    // OfferList shows item name, not offer title. Item 53962 = "Fotokopieren DIN-A4" (de).
-    // resolveLocalizedName falls back to 'de' when 'en' is missing.
-    await expect(page.getByText('Fotokopieren DIN-A4')).toBeVisible()
+    // OfferList shows item name, not offer title. Item 21477 = "AVICENTRA CLASSIC MENU CANARY 1KG" (en).
+    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG')).toBeVisible()
 
     // Find the specific offer row by item name AND archive button
     const offerRow = page.locator('div').filter({
-      has: page.locator('p', { hasText: 'Fotokopieren DIN-A4' }),
+      has: page.locator('p', { hasText: 'AVICENTRA CLASSIC MENU CANARY 1KG' }),
     }).filter({
       has: page.getByRole('button', { name: /archive|archivieren/i }),
     }).last()
@@ -605,7 +604,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await offerRow.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
     await offerRow.getByRole('button', { name: /archive|archivieren/i }).click()
 
-    await expect(page.getByText('Fotokopieren DIN-A4')).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG')).not.toBeVisible({ timeout: 10_000 })
 
     // Verify via API
     const token = await getOwnerToken()
@@ -628,9 +627,9 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await page.waitForTimeout(500) // let client-side tab switch render
 
     // Use double-filter to find the specific row (innermost div with item name AND delete button)
-    // OfferList shows item name "Fotokopieren DIN-A4" (item 53962), not the offer title
+    // OfferList shows item name "AVICENTRA CLASSIC MENU CANARY 1KG" (item 21477), not the offer title
     const archiveTargetRow = page.locator('div').filter({
-      has: page.locator('p', { hasText: 'Fotokopieren DIN-A4' }),
+      has: page.locator('p', { hasText: 'AVICENTRA CLASSIC MENU CANARY 1KG' }),
     }).filter({
       has: page.getByRole('button', { name: /delete|löschen/i }),
     }).last()
@@ -795,7 +794,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     })
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'Vet')
+    await selectItemViaModal(page, 'budgie')
 
     // Step 2: Fill minimal data (no promo dates — they live inside a collapsed accordion)
     await setPriceType(page, 'on_request')
@@ -965,9 +964,8 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
 
     // ── Shop A: use existing e2e owner from .test-state.json ──────────────────
     twoShopCtx.shopAToken = await getOwnerToken()
-    // ShopListing for Shop A — use seeded fixture item_id (e2e-vet-consultation-larnaca)
-    // item_id=1 does not exist in the test DB; the real ID comes from STATE.fixtures.product_ids
-    const shopAItemId = STATE.fixtures?.product_ids?.['e2e-vet-consultation-larnaca'] ?? 53963
+    // ShopListing for Shop A — use real item_id 21476 (avicentra-avicentra-classic-menu-budgie-1kg)
+    const shopAItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
     twoShopCtx.shopAListingId = await getOrCreateShopListing(twoShopCtx.shopAToken, shopAItemId)
     if (!twoShopCtx.shopAListingId) {
       throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop A (item_id=${shopAItemId})`)
@@ -1009,8 +1007,8 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     })
     twoShopCtx.shopBSlug = (patchRes.data as { slug?: string })?.slug ?? null
 
-    // ShopListing for Shop B — use the same seeded fixture item_id
-    const shopBItemId = STATE.fixtures?.product_ids?.['e2e-vet-consultation-larnaca'] ?? 53963
+    // ShopListing for Shop B — use the same real item_id
+    const shopBItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
     twoShopCtx.shopBListingId = await getOrCreateShopListing(twoShopCtx.shopBOwnerToken, shopBItemId)
     if (!twoShopCtx.shopBListingId) {
       throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop B (item_id=${shopBItemId})`)

@@ -14,5 +14,5 @@
     "shop-admin-offers": "SHIP (B8950-005 GELÖST — edit-link-Assertion)",
     "visual-smoke": "FAIL (intermittent pre-existing B8950-003)"
   },
-  "open_failures": ["B8950-001"]
+  "open_failures": []
 }

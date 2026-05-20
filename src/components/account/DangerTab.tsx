@@ -20,7 +20,7 @@ export function DangerTab({ email, lang }: Props) {
   function handleDeleted() {
     setShowModal(false)
     setSession({ user: null, is_authenticated: false })
-    router.push('/')
+    router.push(`/${lang}`)
     router.refresh()
   }
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T07:53:06.922Z",
+  "generated_at": "2026-05-20T08:04:21.109Z",
   "total": 132,
   "items": [
     {
@@ -361,10 +361,10 @@
     },
     {
       "slug": "herrenkleidung",
-      "sha256_webp": "9608a6531aacdaf1c01f145588378112174c954df7ffd974eebc0fe7edab96d4",
-      "bytes_webp": 153242,
-      "bytes_jpg": 202199,
-      "bytes_og": 116508
+      "sha256_webp": "712676b95593945f760b50e95792242755b42dda539e39466fae4502f16799c5",
+      "bytes_webp": 20752,
+      "bytes_jpg": 60594,
+      "bytes_og": 16906
     },
     {
       "slug": "hobby-basteln",

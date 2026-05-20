@@ -106,7 +106,7 @@ const PROMPT_OVERRIDES = {
   'tv-heimkino':         'Focus on flat screen TV on white background, clean product shot',
   'zement-beton':             'Concrete mixer and bags of cement on construction site, fresh concrete being poured, no people',
   'haushaltswaren-allgemein': 'Focus on assorted household items on clean white surface',
-  'herrenkleidung':      'Focus on neatly folded mens shirt and chinos on white background',
+  'herrenkleidung':      'Mens shirt and chinos neatly folded on white surface, studio light, no people, no mannequin, flat lay',
   'damenkleidung':       'Focus on elegant womens dress on white background, soft light',
   'brettspiele':         'Focus on open board game with pieces and dice on wooden table',
   // Gastronomie

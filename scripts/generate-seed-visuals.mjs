@@ -79,7 +79,7 @@ const PROMPT_OVERRIDES = {
   // Umzug & Transport
   'umzug-lokal':          'Moving boxes stacked in empty bright apartment, no people',
   'umzugshelfer-stunden': 'Focus on cardboard moving boxes neatly stacked, tape and marker nearby',
-  'moebel-montage':       'Focus on flat-pack furniture pieces laid out on floor with assembly tools',
+  'moebel-montage':       'Flat-pack furniture panels and parts laid out on wooden floor, screwdriver and Allen key beside them, instruction manual open, no people, no hands',
   'entrümpelung':         'Old furniture and junk piled up in a bright room, boxes and old chairs stacked, clearance scene, no people',
   // Büro & Recht
   'buchhaltung-monatlich':  'Focus on accounting documents, calculator and laptop on desk',

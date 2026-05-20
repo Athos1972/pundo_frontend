@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T07:51:30.799Z",
+  "generated_at": "2026-05-20T07:53:06.922Z",
   "total": 132,
   "items": [
     {
@@ -550,10 +550,10 @@
     },
     {
       "slug": "moebel-montage",
-      "sha256_webp": "fb154ea1de410bbd7b190575f1a0f9ef4476ada9256ca96c04d73377976f990b",
-      "bytes_webp": 55116,
-      "bytes_jpg": 118679,
-      "bytes_og": 47160
+      "sha256_webp": "e66f160fc2d732b80f00f437cfa6f6ba31495aec49a8689dace3b082257732d3",
+      "bytes_webp": 43100,
+      "bytes_jpg": 103546,
+      "bytes_og": 28248
     },
     {
       "slug": "moebel-transport",

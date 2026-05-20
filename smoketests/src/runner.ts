@@ -73,6 +73,21 @@ function getCheckLanguages(check: Check, allLanguages: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Build lang-prefixed URL path (F6300: all customer pages live under /{lang}/)
+// Paths for auth/account/admin are kept bare — they deliberately have no lang prefix.
+// ---------------------------------------------------------------------------
+
+const LANG_BYPASS_PATH_PREFIXES = ['/account', '/auth', '/shop-admin', '/admin']
+
+function buildLangPath(path: string, lang: string): string {
+  if (LANG_BYPASS_PATH_PREFIXES.some(p => path === p || path.startsWith(`${p}/`))) {
+    return path
+  }
+  // Prepend lang segment; bare "/" becomes "/en" (no double slash)
+  return `/${lang}${path === '/' ? '' : path}`
+}
+
+// ---------------------------------------------------------------------------
 // Single check execution
 // ---------------------------------------------------------------------------
 
@@ -158,9 +173,10 @@ async function runCheck(
     let targetUrl: string | null = null
 
     if (check.resolve_first_item && check.path) {
+      const langPath = buildLangPath(check.path, lang)
       const resolvedUrl = await resolveFirstItem(
         page,
-        check.path,
+        langPath,
         brand.base_url,
         check.resolve_first_item_selector ?? "a[href]",
       )
@@ -173,12 +189,12 @@ async function runCheck(
           phase: check.phase,
           status: 'FAIL',
           duration: Date.now() - checkStart,
-          message: `resolve_first_item: no item link found at ${brand.base_url}${check.path}`,
+          message: `resolve_first_item: no item link found at ${brand.base_url}${langPath}`,
         }
       }
       targetUrl = resolvedUrl
     } else if (check.path) {
-      targetUrl = `${brand.base_url}${check.path}`
+      targetUrl = `${brand.base_url}${buildLangPath(check.path, lang)}`
     }
 
     // Run each assert

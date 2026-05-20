@@ -18,6 +18,8 @@ touches-roles:
 touches-states:
   - Offer.status:active
   - Offer.status:archived
+  - Offer.promo:active
+  - Offer.promo:absent
 status-changed-at: 2026-05-19T14:00:00Z
 status-changed-by-spec: 2026-05-19-offer-list-item-details
 last-run: 2026-05-19T14:45:00Z
@@ -129,3 +131,71 @@ Implementierte Änderungen: Dashboard ohne Produkte-Kachel (AC-1), OfferList mit
 - Thumbnail links, Text rechts (visuelle RTL-Logik).
 **Backend-Abhängigkeit:** Keine — reine CSS-Klassen-Prüfung.
 **Test-ID:** E7
+
+---
+
+## Gruppe F — Aktionspreis (promo_price_tiers + Zeitraum) (offer-price-model-and-display-20260520)
+
+**Voraussetzung:** Backend-Deployment BE-1–BE-4 abgeschlossen.
+
+### F1: Offer mit reinem Standardpreis anlegen (kein Promo-Block)
+
+**Precondition:** Shop-Owner eingeloggt, Offer-Formular Schritt 2.
+**Steps:**
+1. Standardpreis ausfüllen (price_type=fixed, ein Tier-Step).
+2. Promo-Toggle **nicht** aktivieren.
+3. Speichern.
+**Expected:**
+- Offer gespeichert, kein `promo_price_tiers`, kein `promo_valid_from/until`.
+- In OfferList: kein Aktionspreis-Badge in der Zeile.
+**Backend-Abhängigkeit:** BE-4.
+**Test-ID:** F1
+
+### F2: Offer mit Standard + Aktionspreis anlegen
+
+**Precondition:** Wie F1.
+**Steps:**
+1. Standardpreis ausfüllen.
+2. „Aktion hinzufügen" aktivieren → Aktionspreis-PriceTierEditor + Zeitraum (heute bis +7 Tage) ausfüllen.
+3. Speichern.
+**Expected:**
+- Offer gespeichert mit `promo_price_tiers`, `promo_valid_from`, `promo_valid_until`.
+- In OfferList: Preis-Zeile zeigt Aktionspreis + „(Standard: X.XX EUR)".
+**Backend-Abhängigkeit:** BE-4.
+**Test-ID:** F2
+
+### F3: Aktionspreis ohne vollständigen Zeitraum → Validierungsfehler
+
+**Precondition:** Offer-Formular Schritt 2, Promo-Toggle aktiv.
+**Steps:**
+1. Aktionspreis ausfüllen, aber `promo_valid_until` leer lassen.
+2. Speichern versuchen.
+**Expected:**
+- Formular speichert nicht.
+- Fehlermeldung sichtbar (Zeitraum unvollständig).
+**Backend-Abhängigkeit:** Keine — reine Frontend-Validierung.
+**Test-ID:** F3
+
+### F4: Customer-Sicht während aktivem Aktionszeitraum
+
+**Precondition:** F2-Offer angelegt, Zeitraum umfasst heute.
+**Steps:**
+1. GET `/shops/<slug>` als Guest.
+2. Angebotsblock prüfen.
+**Expected:**
+- Offer erscheint im Block „Aktuelle Angebote" (nicht im Produkte-Block).
+- Aktionspreis prominent, Standardpreis durchgestrichen.
+- Aktions-Badge mit `promo_valid_until`-Datum.
+**Backend-Abhängigkeit:** BE-3.
+**Test-ID:** F4
+
+### F5: Customer-Sicht nach Ablauf des Aktionszeitraums
+
+**Precondition:** Offer aus F2, aber `promo_valid_until` liegt in der Vergangenheit (Testdatum manipulieren oder Ablauf abwarten).
+**Steps:**
+1. GET `/shops/<slug>` als Guest.
+**Expected:**
+- Offer **nicht** im Block „Aktuelle Angebote".
+- Offer erscheint im Block „Produkte" mit Standardpreis, kein Badge.
+**Backend-Abhängigkeit:** BE-3.
+**Test-ID:** F5

@@ -270,6 +270,22 @@
     "hash": "sha256:7c0c324fa6a7d47a2a7b597a502bd1076e8431800c4a65721343e2a89c3989a2",
     "source": "_raw/steuernummer-tic.png"
   },
+  "strassennavigation-zypern/hero": {
+    "width": 2752,
+    "height": 1536,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAAXBtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAANGlsb2MAAAAAREAAAgABAAAAAAGUAAEAAAAAAAAAIwACAAAAAAG3AAEAAAAAAAAAFAAAADhpaW5mAAAAAAACAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAAAAAIAAGF2MDEAAAAAr2lwcnAAAACKaXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAEAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAcAAAAAA5waXhpAAAAAAEIAAAAOGF1eEMAAAAAdXJuOm1wZWc6bXBlZ0I6Y2ljcDpzeXN0ZW1zOmF1eGlsaWFyeTphbHBoYQAAAAAdaXBtYQAAAAAAAAACAAEDgQIDAAIEhAIFhgAAABppcmVmAAAAAAAAAA5hdXhsAAIAAQABAAAAP21kYXQSAAoIOAh+wgIaDSAyFRsAAABQl+R6yB6a6JNiF+L4KQAiyBIACgUYCH7CoDIJGwAAAQACIRva",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "hash": "sha256:f254586c00dda2f527594cb785f9d11417b8fb7f803573fdb044a8c37729b905",
+    "source": "_raw/strassennavigation-zypern.png"
+  },
   "trinkwasser-zypern/hero": {
     "width": 1672,
     "height": 941,

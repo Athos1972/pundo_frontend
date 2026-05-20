@@ -8,7 +8,7 @@ owner-agent: coder
 proposed-in-spec: unified-item-offer-model-20260424
 touches-modules:
   - src/app/(shop-admin)/**
-  - src/app/(customer)/shops/[id]/**
+  - src/app/(customer)/shops/[slug]/**
   - src/components/shop/**
   - src/lib/shop-admin-api.ts
 touches-roles:

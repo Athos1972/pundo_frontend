@@ -16,6 +16,12 @@ ENV BACKEND_URL=$BACKEND_URL
 ARG NEXT_PUBLIC_PLAUSIBLE_DOMAIN=pundo.cy
 ENV NEXT_PUBLIC_PLAUSIBLE_DOMAIN=$NEXT_PUBLIC_PLAUSIBLE_DOMAIN
 
+# Cloudflare Turnstile Site Key — public (steht ohnehin im Client-Bundle).
+# Muss zur Build-Zeit verfügbar sein, damit Next.js ihn in TurnstileWidget.tsx
+# einbaked. Default ist der echte Prod-Key (gleiches Muster wie PLAUSIBLE_DOMAIN).
+ARG NEXT_PUBLIC_TURNSTILE_SITEKEY=0x4AAAAAADFKByTcndwlx0Ek
+ENV NEXT_PUBLIC_TURNSTILE_SITEKEY=$NEXT_PUBLIC_TURNSTILE_SITEKEY
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

@@ -9,8 +9,8 @@ proposed-in-spec: unified-item-offer-model-20260424
 touches-modules:
   - src/lib/shop-admin-api.ts
   - src/app/(shop-admin)/**
-  - src/app/(customer)/products/[slug]/**
-  - src/app/(customer)/search/**
+  - src/app/(customer)/[lang]/products/[slug]/**
+  - src/app/(customer)/[lang]/search/**
 touches-roles:
   - shop-owner
   - guest

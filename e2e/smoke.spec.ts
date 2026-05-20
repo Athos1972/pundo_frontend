@@ -33,8 +33,9 @@ test.describe('Visual Smoke-Test', () => {
 
     // Mobile icon links have aria-label attributes; desktop nav links do NOT.
     // This selector exclusively targets the mobile icon buttons.
-    const mobileSearchIcon = page.locator('a[href="/search"][aria-label]')
-    const mobileShopsIcon = page.locator('a[href="/shops"][aria-label]')
+    // href is now lang-prefixed (e.g. /en/search), use contains-selector
+    const mobileSearchIcon = page.locator('a[href*="/search"][aria-label]')
+    const mobileShopsIcon = page.locator('a[href*="/shops"][aria-label]')
 
     await expect(mobileSearchIcon).toBeVisible()
     await expect(mobileShopsIcon).toBeVisible()

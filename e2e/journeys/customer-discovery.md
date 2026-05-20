@@ -7,10 +7,10 @@ priority: P2
 owner-agent: designer
 proposed-in-spec: journey-catalog-system-20260423
 touches-modules:
-  - src/app/(customer)/page.tsx
-  - src/app/(customer)/search/**
-  - src/app/(customer)/products/[slug]/**
-  - src/app/(customer)/shops/[slug]/**
+  - src/app/(customer)/[lang]/page.tsx
+  - src/app/(customer)/[lang]/search/**
+  - src/app/(customer)/[lang]/products/[slug]/**
+  - src/app/(customer)/[lang]/shops/[slug]/**
   - src/app/(customer)/map/**
   - src/lib/api.ts
 touches-roles:

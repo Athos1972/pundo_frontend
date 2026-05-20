@@ -7,7 +7,7 @@ priority: P2
 owner-agent: e2e-tester
 proposed-in-spec: offer-price-model-and-display-20260520
 touches-modules:
-  - src/app/(customer)/shops/[slug]/**
+  - src/app/(customer)/[lang]/shops/[slug]/**
   - src/components/shop/**
   - src/lib/api.ts
   - src/types/api.ts

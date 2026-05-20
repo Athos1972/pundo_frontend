@@ -62,6 +62,19 @@ describe('sitemap isIndexable filter (AC-30)', () => {
     '/nostalgia',
     '/homesick',
     '/blog',
+    // lang-prefixed variants (F6300 URL i18n)
+    '/en/search',
+    '/de/shops',
+    '/en/shops/my-great-shop',
+    '/ar/products/widget-123',
+    '/he/guides/life-in-cyprus',
+    '/ru/blog',
+  ]
+
+  const LANG_PREFIXED_NON_INDEXABLE_PATHS = [
+    '/en/auth/login',
+    '/de/shop-admin/dashboard',
+    '/ru/admin/users',
   ]
 
   it('removes all non-indexable paths from the sitemap', () => {
@@ -95,5 +108,22 @@ describe('sitemap isIndexable filter (AC-30)', () => {
 
   it('is safe with an empty sitemap', () => {
     expect(filterSitemap([])).toHaveLength(0)
+  })
+
+  it('removes lang-prefixed non-indexable paths from the sitemap', () => {
+    const raw = LANG_PREFIXED_NON_INDEXABLE_PATHS.map(toSitemapEntry)
+    const filtered = filterSitemap(raw)
+    expect(filtered).toHaveLength(0)
+  })
+
+  it('keeps lang-prefixed indexable paths (/en/search, /de/shops, etc.)', () => {
+    const langPrefixedIndexable = [
+      '/en/search',
+      '/de/shops',
+      '/en/shops/my-shop',
+      '/ar/products/widget-123',
+    ].map(toSitemapEntry)
+    const filtered = filterSitemap(langPrefixedIndexable)
+    expect(filtered).toHaveLength(langPrefixedIndexable.length)
   })
 })

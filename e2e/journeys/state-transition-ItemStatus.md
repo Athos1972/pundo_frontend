@@ -10,8 +10,8 @@ touches-modules:
   - src/app/(shop-admin)/**
   - src/types/shop-admin.ts
   - src/lib/shop-admin-api.ts
-  - src/app/(customer)/search/**
-  - src/app/(customer)/products/[slug]/**
+  - src/app/(customer)/[lang]/search/**
+  - src/app/(customer)/[lang]/products/[slug]/**
 touches-roles:
   - shop-owner
   - guest

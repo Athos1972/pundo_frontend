@@ -125,9 +125,28 @@ describe('searchResultsMetadata', () => {
 })
 
 describe('searchPageMetadata', () => {
-  it('includes canonical to /search', () => {
+  it('includes canonical to /search (no-lang backward compat)', () => {
     const meta = searchPageMetadata()
     expect(meta.alternates?.canonical).toBe('https://pundo.cy/search')
+  })
+
+  it('includes canonical to /{lang}/search when lang provided', () => {
+    const meta = searchPageMetadata('de')
+    expect(meta.alternates?.canonical).toBe('https://pundo.cy/de/search')
+  })
+
+  it('includes hreflang languages when lang provided', () => {
+    const meta = searchPageMetadata('en')
+    const langs = (meta.alternates as { languages?: Record<string, string> } | undefined)?.languages
+    expect(langs).toBeDefined()
+    expect(langs?.['de']).toBe('https://pundo.cy/de/search')
+    expect(langs?.['x-default']).toBe('https://pundo.cy/en/search')
+  })
+
+  it('does not include languages when no lang provided', () => {
+    const meta = searchPageMetadata()
+    const langs = (meta.alternates as { languages?: unknown } | undefined)?.languages
+    expect(langs).toBeUndefined()
   })
 
   it('sets robots index: true', () => {

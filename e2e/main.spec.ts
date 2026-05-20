@@ -33,6 +33,7 @@ test.describe('E2E-02: Suche', () => {
     await input.click()
     await input.fill('cat food')
     await input.press('Enter')
+    // URL is now lang-prefixed: /en/search?q= (or similar lang)
     await expect(page).toHaveURL(/\/search\?q=/, { timeout: 8000 })
   })
 
@@ -178,7 +179,8 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     const firstCard = section.getByRole('listitem').first()
     const link = firstCard.getByRole('link').first()
     const href = await link.getAttribute('href')
-    expect(href).toMatch(/^\/products\//)
+    // hrefs are now lang-prefixed: /en/products/... or /de/products/...
+    expect(href).toMatch(/\/products\//)
   })
 
   test('page loads without crash when /related returns 500 (graceful fallback)', async ({ page, request }) => {
@@ -503,8 +505,9 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
   test('footer contains links to /help and /for-shops', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
-    const helpLink = page.locator('footer a[href="/help"]')
-    const forShopsLink = page.locator('footer a[href="/for-shops"]')
+    // hrefs are now lang-prefixed (e.g. /en/help) — use contains-selector
+    const helpLink = page.locator('footer a[href*="/help"]')
+    const forShopsLink = page.locator('footer a[href*="/for-shops"]')
     await expect(helpLink).toBeVisible()
     await expect(forShopsLink).toBeVisible()
   })

@@ -6,7 +6,7 @@ priority: P2
 owner-agent: e2e-tester
 proposed-in-spec: ad-hoc
 touches-modules:
-  - src/app/(customer)/blog/**
+  - src/app/(customer)/[lang]/blog/**
   - src/lib/translations.ts
   - src/proxy.ts
 touches-roles:

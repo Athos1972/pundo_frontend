@@ -8,7 +8,7 @@ owner-agent: designer
 proposed-in-spec: journey-catalog-system-20260423
 touches-modules:
   - src/app/(shop-admin)/**
-  - src/app/(customer)/shops/[slug]/**
+  - src/app/(customer)/[lang]/shops/[slug]/**
   - src/lib/shop-admin-api.ts
 touches-roles:
   - shop-owner

@@ -8,7 +8,7 @@ owner-agent: designer
 proposed-in-spec: journey-catalog-system-20260423
 touches-modules:
   - src/app/(system-admin)/**
-  - src/app/(customer)/guides/**
+  - src/app/(customer)/[lang]/guides/**
   - src/components/ui/**
 touches-roles:
   - admin

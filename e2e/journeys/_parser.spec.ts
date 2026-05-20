@@ -93,7 +93,8 @@ describe('parseCatalog — Seed-Datei', () => {
     const entries = parseCatalog(markdown)
 
     expect(entries[0].id).toBe('customer-discovery')
-    expect(entries[0].touchesModules).toContain('src/app/(customer)/search/**')
+    // F6300 URL i18n: paths updated to [lang] segment
+    expect(entries[0].touchesModules).toContain('src/app/(customer)/[lang]/search/**')
   })
 
   it('alle Einträge haben status implemented (AC-10: alle Journeys deployed)', () => {
@@ -259,12 +260,13 @@ describe('findOverlap — Jaccard-Index', () => {
   const existingEntries = loadAllJourneys()
 
   it('findet Überlappung >= 50% und liefert matching entry', () => {
-    // shop-owner-lifecycle hat: src/app/(shop-admin)/**, src/app/(customer)/shops/[id]/**, src/lib/shop-admin-api.ts
+    // shop-owner-lifecycle hat: src/app/(shop-admin)/**, src/app/(customer)/[lang]/shops/[slug]/**, src/lib/shop-admin-api.ts
+    // F6300: paths updated to include [lang] segment
     // Proposed teilt 2 von 3 Modulen → union = {3 original + 1 extra} = 4, intersect = 2 → 2/4 = 0.5
     const proposed = {
       touchesModules: [
         'src/app/(shop-admin)/**',
-        'src/app/(customer)/shops/[id]/**',
+        'src/app/(customer)/[lang]/shops/[slug]/**',
         'src/components/ui/**', // extra module not in existing
       ],
     }

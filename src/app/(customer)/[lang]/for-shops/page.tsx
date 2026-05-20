@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { forShopsContent } from '@/lib/for-shops-content'
 import type { Lang } from '@/lib/lang'
+import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -11,9 +13,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_for_shops} — pundo`,
-    alternates: { canonical: 'https://pundo.cy/for-shops' },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/for-shops`,
+      languages: buildHreflang(siteUrl, '/for-shops'),
+    },
   }
 }
 

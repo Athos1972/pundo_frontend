@@ -4,7 +4,8 @@ import Image from 'next/image'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getBlogPosts } from '@/lib/blog'
-import { localePath } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
+import { getSiteUrl } from '@/lib/seo'
 import { BackButton } from '@/components/ui/BackButton'
 
 interface Props {
@@ -14,14 +15,18 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_blog} — pundo`,
     description: tr.blog_index_subtitle,
-    alternates: { canonical: 'https://pundo.cy/blog' },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/blog`,
+      languages: buildHreflang(siteUrl, '/blog'),
+    },
     openGraph: {
       title: tr.page_title_blog,
       description: tr.blog_index_subtitle,
-      url: 'https://pundo.cy/blog',
+      url: `${siteUrl}/${lang}/blog`,
       type: 'website',
     },
   }

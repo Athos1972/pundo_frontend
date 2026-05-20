@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import SearchContent from './SearchContent'
 import type { Lang } from '@/lib/lang'
 import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 import { t } from '@/lib/translations'
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const sp = await searchParams
   const hasQuery = typeof sp['q'] === 'string' && sp['q'].length > 0
   const siteUrl = getSiteUrl()
@@ -22,10 +23,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     }
   }
 
+  const { lang } = await params as { lang: Lang }
   return {
     title: 'Search',
     description: 'Search for products and shops near you in Cyprus.',
-    alternates: { canonical: `${siteUrl}/search` },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/search`,
+      languages: buildHreflang(siteUrl, '/search'),
+    },
     robots: { index: true, follow: true },
   }
 }

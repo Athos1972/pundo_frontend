@@ -7,7 +7,7 @@ import { t } from '@/lib/translations'
 import { truncateTitle } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
-import { localePath } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
 import { GuideCard } from '@/components/guides/GuideCard'
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { title, description } = guide.meta
   const siteUrl = 'https://pundo.cy'
-  const canonicalUrl = `${siteUrl}/guides/${slug}`
+  const canonicalUrl = `${siteUrl}/${lang}/guides/${slug}`
 
   // T7/AC-37: Truncate title to fit 60-char limit with " — pundo" suffix (8 chars)
   const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' — pundo').length })
@@ -51,6 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: {
       canonical: canonicalUrl,
+      languages: buildHreflang(siteUrl, `/guides/${slug}`),
     },
     openGraph: og.openGraph,
     twitter: og.twitter,

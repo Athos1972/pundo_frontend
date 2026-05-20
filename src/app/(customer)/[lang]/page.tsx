@@ -5,6 +5,7 @@ import { getCategories } from '@/lib/api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 import { buildOrganizationSchema, buildWebSiteSchema, safeJson } from '@/lib/structured-data'
 import { Hero } from '@/components/layout/Hero'
 import { CommunityCard } from '@/components/community/CommunityCard'
@@ -22,17 +23,22 @@ export function generateStaticParams() {
   return LANGS.map(lang => ({ lang }))
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params as { lang: Lang }
   const siteUrl = getSiteUrl()
   const title = 'Find Local Shops, Products & Services in Cyprus — Pundo'
   const description = 'Find local shops, products and services in Limassol, Paphos, Larnaca and across Cyprus. Compare prices, check stock and discover nearby businesses in your own language.'
+  const canonicalUrl = `${siteUrl}/${lang}/`
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: siteUrl },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: buildHreflang(siteUrl, '/'),
+    },
     openGraph: {
       type: 'website',
-      url: siteUrl,
+      url: canonicalUrl,
       title,
       description,
       siteName: 'Pundo',

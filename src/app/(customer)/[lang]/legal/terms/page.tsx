@@ -3,6 +3,7 @@ import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getLegalContentForBrand } from '@/lib/legal-content'
 import { getBrandFromHeaders } from '@/config/brands'
+import { buildHreflang } from '@/lib/routing'
 import { BackButton } from '@/components/ui/BackButton'
 
 interface Props {
@@ -12,9 +13,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [{ lang }, brand] = await Promise.all([params as Promise<{ lang: Lang }>, getBrandFromHeaders()])
   const tr = t(lang)
+  const siteUrl = brand.meta.siteUrl
   return {
     title: `${tr.page_title_terms} — ${brand.name}`,
-    alternates: { canonical: `${brand.meta.siteUrl}/legal/terms` },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/legal/terms`,
+      languages: buildHreflang(siteUrl, '/legal/terms'),
+    },
   }
 }
 

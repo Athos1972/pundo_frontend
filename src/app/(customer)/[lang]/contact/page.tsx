@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
+import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 import { BackButton } from '@/components/ui/BackButton'
 import { ContactForm } from '@/components/contact/ContactForm'
 
@@ -11,9 +13,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_contact} — pundo`,
-    alternates: { canonical: 'https://pundo.cy/contact' },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/contact`,
+      languages: buildHreflang(siteUrl, '/contact'),
+    },
   }
 }
 

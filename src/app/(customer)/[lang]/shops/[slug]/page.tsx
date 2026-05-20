@@ -14,7 +14,7 @@ import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import { absolutizeImageUrl } from '@/lib/seo/absolutize'
-import { localePath } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
 import Link from 'next/link'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const tr = t(lang)
     const name = shop.name ?? 'Shop'
     const siteUrl = getSiteUrl()
-    const canonicalUrl = `${siteUrl}/shops/${slug}`
+    const canonicalUrl = `${siteUrl}/${lang}/shops/${slug}`
 
     // T6/AC-38b: Pad short shop names to reach TITLE_MIN
     const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
@@ -76,7 +76,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: { absolute: pageTitle },
       description,
-      alternates: { canonical: canonicalUrl },
+      alternates: {
+        canonical: canonicalUrl,
+        languages: buildHreflang(siteUrl, `/shops/${slug}`),
+      },
       robots: { index: true, follow: true },
       openGraph: og.openGraph,
       twitter: og.twitter,

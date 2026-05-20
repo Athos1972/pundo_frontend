@@ -13,6 +13,7 @@
 
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
+import { buildHreflang, stripLang } from '@/lib/routing'
 
 export function getSiteUrl(): string {
   return process.env.SITE_URL ?? 'https://pundo.cy'
@@ -173,9 +174,12 @@ export function isIndexable(path: string): RouteClassification {
     // path was already a pathname
   }
 
+  // Strip lang prefix so /en/search and /search are treated identically
+  const strippedPathname = stripLang(pathname)
+
   // Blacklist check
   for (const pattern of NON_INDEXABLE_PATTERNS) {
-    if (pattern.test(pathname)) {
+    if (pattern.test(strippedPathname)) {
       return { indexable: false, reason: `matches non-indexable pattern ${pattern}` }
     }
   }
@@ -320,13 +324,19 @@ export function searchResultsMetadata(): Metadata {
   }
 }
 
-/** Metadata for the plain /search page (no query) */
-export function searchPageMetadata(): Metadata {
+/** Metadata for the plain /search page (no query).
+ * Pass `lang` to get a lang-prefixed canonical and hreflang links.
+ * Without `lang`, falls back to the old `/search` canonical (backward compat). */
+export function searchPageMetadata(lang?: Lang): Metadata {
   const siteUrl = getSiteUrl()
+  const canonical = lang ? `${siteUrl}/${lang}/search` : `${siteUrl}/search`
   return {
     title: 'Search',
     description: 'Search for products and shops near you in Cyprus.',
-    alternates: { canonical: `${siteUrl}/search` },
+    alternates: {
+      canonical,
+      ...(lang ? { languages: buildHreflang(siteUrl, '/search') } : {}),
+    },
     robots: { index: true, follow: true },
   }
 }

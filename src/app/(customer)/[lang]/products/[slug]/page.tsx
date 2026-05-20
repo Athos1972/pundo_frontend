@@ -8,7 +8,7 @@ import { getSiteUrl } from '@/lib/seo'
 import { truncateTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildProductSchema, safeJson } from '@/lib/structured-data'
-import { localePath } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
 import { OfferList } from '@/components/product/OfferList'
 import { ProductHeroImage } from '@/components/product/ProductHeroImage'
 import { RelatedProductsCarousel } from '@/components/product/RelatedProductsCarousel'
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()
-    const canonicalUrl = `${siteUrl}/products/${slug}`
+    const canonicalUrl = `${siteUrl}/${lang}/products/${slug}`
 
     // Choose OG image: use product image or fallback
     const ogImage = relativeImg
@@ -67,7 +67,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: { absolute: pageTitle },
       description,
-      alternates: { canonical: canonicalUrl },
+      alternates: {
+        canonical: canonicalUrl,
+        languages: buildHreflang(siteUrl, `/products/${slug}`),
+      },
       robots: { index: true, follow: true },
       openGraph: og.openGraph,
       twitter: og.twitter,

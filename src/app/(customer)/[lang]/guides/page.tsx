@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getGuides } from '@/lib/guides'
+import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 import { GuidesGrid } from '@/components/guides/GuidesGrid'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -12,10 +14,14 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_guides} — pundo`,
     description: tr.guides_index_subtitle,
-    alternates: { canonical: 'https://pundo.cy/guides' },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/guides`,
+      languages: buildHreflang(siteUrl, '/guides'),
+    },
     openGraph: {
       title: tr.page_title_guides,
       description: tr.guides_index_subtitle,

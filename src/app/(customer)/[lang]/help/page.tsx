@@ -4,6 +4,8 @@ import { helpContent } from '@/lib/help-content'
 import { FaqAccordion } from '@/components/ui/FaqAccordion'
 import { BackButton } from '@/components/ui/BackButton'
 import type { Lang } from '@/lib/lang'
+import { getSiteUrl } from '@/lib/seo'
+import { buildHreflang } from '@/lib/routing'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -12,9 +14,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_help} — pundo`,
-    alternates: { canonical: 'https://pundo.cy/help' },
+    alternates: {
+      canonical: `${siteUrl}/${lang}/help`,
+      languages: buildHreflang(siteUrl, '/help'),
+    },
   }
 }
 

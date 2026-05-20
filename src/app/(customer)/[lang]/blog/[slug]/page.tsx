@@ -8,7 +8,7 @@ import { t } from '@/lib/translations'
 import { truncateTitle } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getBlogPost, getBlogSlugs } from '@/lib/blog'
-import { localePath } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { safeJson } from '@/lib/structured-data'
 import { BackButton } from '@/components/ui/BackButton'
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { title, description, date, image } = post.meta
   const siteUrl = 'https://pundo.cy'
-  const canonicalUrl = `${siteUrl}/blog/${slug}`
+  const canonicalUrl = `${siteUrl}/${lang}/blog/${slug}`
 
   const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' — pundo').length })
   const pageTitle = `${truncatedTitle} — pundo`
@@ -45,7 +45,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: { absolute: pageTitle },
     description,
-    alternates: { canonical: canonicalUrl },
+    alternates: {
+      canonical: canonicalUrl,
+      languages: buildHreflang(siteUrl, `/blog/${slug}`),
+    },
     openGraph: og.openGraph,
     twitter: og.twitter,
     ...(og.other ? { other: og.other } : {}),

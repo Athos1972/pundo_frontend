@@ -13,8 +13,8 @@ import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
+import { absolutizeImageUrl } from '@/lib/seo/absolutize'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ShopMapClient } from '@/components/map/ShopMapClient'
 import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
@@ -26,7 +26,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
 import { getCustomerSession } from '@/lib/customer-api'
-import { ShopAvatar } from '@/components/shop/ShopAvatar'
+import { ShopLogoImage } from '@/components/shop/ShopLogoImage'
 import { RelatedShopsWidget } from '@/components/shop/RelatedShopsWidget'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -55,7 +55,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     )
 
     // T6/AC-40: OG image — use shop logo if available, else deterministic fallback
-    const logoUrl = shop.images?.[0]?.url ?? null
+    // absolutizeImageUrl ensures OG-image is always an absolute URL (required by crawlers)
+    const rawLogoUrl = shop.images?.[0]?.url ?? null
+    const logoUrl = absolutizeImageUrl(rawLogoUrl, siteUrl)
     const ogImage = logoUrl
       ? { url: logoUrl, width: 1200 as const, height: 630 as const, alt: name }
       : pickShopFallbackOgImage(shop.id, siteUrl)
@@ -100,9 +102,8 @@ export default async function ShopPage({ params }: Props) {
   const session = await getCustomerSession(lang)
 
   const [topProductsResult, offers, relatedShops] = await Promise.all([
-    shop.top_products.length > 0
-      ? searchProducts({ shop_id: shop.id, limit: 10 }, lang).then(r => r.items)
-      : Promise.resolve([]),
+    // T4/B5900-003: Gate removed — always fetch products (limit 12, BE-3 fix required for full coverage)
+    searchProducts({ shop_id: shop.id, limit: 12 }, lang).then(r => r.items),
     getShopOffers(slug, lang),
     getRelatedShops(slug, lang),
   ])
@@ -136,23 +137,11 @@ export default async function ShopPage({ params }: Props) {
         {/* Header */}
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
-            {shop.images?.[0]?.url ? (
-              <div className="shrink-0">
-                <Image
-                  src={shop.images[0].url}
-                  alt={shop.name ?? ''}
-                  width={96}
-                  height={96}
-                  className="rounded-xl object-cover bg-surface border border-border"
-                />
-              </div>
-            ) : (
-              <ShopAvatar
-                name={shop.name}
-                shopId={shop.id}
-                size="lg"
-              />
-            )}
+            <ShopLogoImage
+              url={shop.images?.[0]?.url ?? null}
+              name={shop.name ?? null}
+              size="lg"
+            />
             <div className="min-w-0">
               <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>
               {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
@@ -294,6 +283,7 @@ export default async function ShopPage({ params }: Props) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-sm text-text font-heading">{tr.products}</h2>
+              {/* TODO: Folge-Bug B5900-004 — Link führt auf nicht-existierende Route /search?shop_id=... */}
               <Link href={`/search?shop_id=${shop.id}`} className="text-xs text-accent hover:underline">
                 Alle →
               </Link>

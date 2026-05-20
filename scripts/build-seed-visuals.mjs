@@ -3,9 +3,9 @@
  *
  * CLI: node scripts/build-seed-visuals.mjs [--dry-run] [--slug=<slug>]
  *
- * Reads:  public/seed-visuals/_masters/<slug>.jpg  (1600×1200 master)
- * Writes: public/seed-visuals/<slug>.webp           (1200×900, q=82)
- *         public/seed-visuals/<slug>.jpg            (1200×900, q=85)
+ * Reads:  public/seed-visuals/_masters/<slug>.jpg  (1024×1024 square from DrawThings)
+ * Writes: public/seed-visuals/<slug>.webp           (1024×1024, q=82)
+ *         public/seed-visuals/<slug>.jpg            (1024×1024, q=85)
  *         public/seed-visuals/<slug>-og.webp        (1200×630, center-crop, q=82)
  * Also writes: public/seed-visuals/_manifest.json
  *
@@ -28,8 +28,7 @@ const MASTERS_DIR = path.join(REPO_ROOT, 'public', 'seed-visuals', '_masters')
 const OUTPUT_DIR = path.join(REPO_ROOT, 'public', 'seed-visuals')
 const MANIFEST_PATH = path.join(OUTPUT_DIR, '_manifest.json')
 
-const CARD_WIDTH = 1200
-const CARD_HEIGHT = 900
+const CARD_SIZE = 1024  // square 1:1
 const OG_WIDTH = 1200
 const OG_HEIGHT = 630
 const WEBP_QUALITY = 82
@@ -77,15 +76,15 @@ async function processMaster(masterPath, dryRun) {
     return null
   }
 
-  // Card WebP (1200×900)
+  // Card WebP (1024×1024 square)
   await sharp(masterPath)
-    .resize(CARD_WIDTH, CARD_HEIGHT, { fit: 'cover', position: 'centre' })
+    .resize(CARD_SIZE, CARD_SIZE, { fit: 'cover', position: 'centre' })
     .webp({ quality: WEBP_QUALITY })
     .toFile(cardWebpPath)
 
-  // Card JPG (1200×900)
+  // Card JPG (1024×1024 square)
   await sharp(masterPath)
-    .resize(CARD_WIDTH, CARD_HEIGHT, { fit: 'cover', position: 'centre' })
+    .resize(CARD_SIZE, CARD_SIZE, { fit: 'cover', position: 'centre' })
     .jpeg({ quality: JPG_QUALITY, progressive: true })
     .toFile(cardJpgPath)
 
@@ -139,7 +138,7 @@ async function main() {
 
   if (!fs.existsSync(MASTERS_DIR)) {
     console.log('No _masters/ directory found. Nothing to process.')
-    console.log('Place 1600×1200 JPEG masters in public/seed-visuals/_masters/<slug>.jpg')
+    console.log('Place 1024×1024 JPEG masters in public/seed-visuals/_masters/<slug>.jpg')
     return
   }
 

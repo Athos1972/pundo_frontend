@@ -78,11 +78,24 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 // ─── 4 Angebotsgruppen ───────────────────────────────────────────────────────
 
+interface PriceTierStep {
+  min_quantity: number
+  max_quantity?: number
+  price: number
+  currency: string
+}
+
+interface PriceTier {
+  unit: string
+  unit_label_custom?: string
+  steps: PriceTierStep[]
+}
+
 interface Gruppe {
   nr: number
   name: string
   price_type: 'fixed' | 'on_request' | 'free' | 'variable'
-  price_tiers: Array<{ label: string; price: number }>
+  price_tiers: PriceTier[]
   item_name_de: string
   item_count: number
 }
@@ -92,7 +105,7 @@ const GRUPPEN: Gruppe[] = [
     nr: 1,
     name: 'FIXED',
     price_type: 'fixed',
-    price_tiers: [{ label: '', price: 24.99 }],
+    price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: 24.99, currency: 'EUR' }] }],
     item_name_de: 'Smoke Tiernahrung Premium',
     item_count: 2,
   },
@@ -116,7 +129,7 @@ const GRUPPEN: Gruppe[] = [
     nr: 4,
     name: 'VARIABLE',
     price_type: 'variable',
-    price_tiers: [{ label: 'pro Stunde', price: 55.00 }],
+    price_tiers: [{ unit: 'hour', unit_label_custom: 'pro Stunde', steps: [{ min_quantity: 1, price: 55.00, currency: 'EUR' }] }],
     item_name_de: 'Smoke Tierpflege Leistung',
     item_count: 2,
   },
@@ -270,11 +283,13 @@ test.beforeAll(async () => {
     }
   }
   if (itemIds.length === 0) throw new Error('[Smoke] Kein Item erstellt — Testabbruch')
-  console.log(`[Smoke] Items: ${itemIds}`)
+  // Deduplizieren — bei 409-Kollision können mehrere Items auf dieselbe ID zeigen
+  const uniqueItemIds = [...new Set(itemIds)]
+  console.log(`[Smoke] Items: ${uniqueItemIds} (${itemIds.length} erstellt, ${uniqueItemIds.length} unique)`)
 
   // 10. Shop-Listings erstellen (1 Listing pro Item)
   const listingIds: number[] = []
-  for (const itemId of itemIds) {
+  for (const itemId of uniqueItemIds) {
     const listRes = await api(
       'POST',
       '/api/v1/shop-owner/shop-listings',
@@ -321,7 +336,7 @@ test.beforeAll(async () => {
   console.log(`[Smoke] Offers: ${offerIds}`)
   console.log(`[Smoke] Setup abgeschlossen — Gruppe ${gruppe.nr}/${gruppe.name}, ${offerIds.length} Offers aktiv.`)
 
-  state = { ownerEmail, shopName, shopId, shopSlug, ownerToken, gruppe, itemIds, listingIds, offerIds }
+  state = { ownerEmail, shopName, shopId, shopSlug, ownerToken, gruppe, itemIds: uniqueItemIds, listingIds, offerIds }
 })
 
 // ─── Teardown ────────────────────────────────────────────────────────────────

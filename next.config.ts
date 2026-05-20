@@ -38,6 +38,19 @@ const SECURITY_HEADERS = [
 
 const config: NextConfig = {
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      // Local dev and Hetzner prod — relative /shop_logos/... paths resolve via
+      // next.config rewrites, but the Image Optimizer needs the final origin.
+      { protocol: 'http',  hostname: 'localhost' },
+      { protocol: 'https', hostname: 'pundo.cy' },
+      { protocol: 'https', hostname: 'naidivse.cy' },
+      // URL-Fallback for user-supplied external logo URLs (BB decision OFFEN-4).
+      // Security trade-off: allows any https domain; mitigated by FE validation
+      // in LogoUpload.tsx (https:// only, max 2048 chars, no data:/javascript:).
+      { protocol: 'https', hostname: '**' },
+    ],
+  },
   allowedDevOrigins: [...new Set([...getLanIPs(), ...manualOrigins, ...LOCAL_BRAND_DOMAINS, ...LOOPBACK_ORIGINS])],
   async headers() {
     return [

@@ -81,6 +81,11 @@ export function LogoUpload({ currentLogoUrl, lang, onLogoUploaded }: LogoUploadP
               fill
               className="object-contain"
               unoptimized={preview.startsWith('blob:')}
+              onError={() => {
+                // B5900-003: show error instead of silent broken-image icon
+                setError(tr.logo_unreachable)
+                setPreview(null)
+              }}
             />
           ) : (
             <span className="text-2xl text-gray-300 select-none">&#128247;</span>

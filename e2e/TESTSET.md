@@ -3,9 +3,9 @@
 ## Letzter Testlauf
 
 Datum: 2026-05-20  
-SHA: 10118b2f9da709bde99b613837accfa095a5d54a  
+SHA: 7d83712551375b57c608b51b0480604fb13dfa95  
 Spec: offer-price-model-and-display-20260520  
-Ergebnis: 1616 Vitest PASS · E2E: customer-shop-promo-visibility SHIP (P2/P3/P4/P5 PASS, P1 SKIP erwartet)
+Ergebnis: 1628 Vitest PASS · E2E: customer-shop-promo-visibility SHIP · Verdict: **SHIP**
 
 ---
 
@@ -22,11 +22,15 @@ Ergebnis: 1616 Vitest PASS · E2E: customer-shop-promo-visibility SHIP (P2/P3/P4
 
 | Dateien | Tests | Ergebnis |
 |---------|-------|---------|
-| 84 | 1616 | ✅ alle bestanden |
+| 84 | 1628 | ✅ alle bestanden |
 
 Neue Tests (offer-price-model-and-display-20260520):
 - `src/tests/shop-offer-card.test.tsx` — 17 Tests: ShopOfferCard Standard/Promo/on_request/Bild/Link/RTL/Badge
 - `src/tests/offer-form-promo.test.tsx` — 40 Tests: shop-admin-translations Promo-Keys, OfferForm Rendering, Promo-Validierungslogik
+- `src/tests/OfferList.test.tsx` — 4 Regressions-Tests: promo_price prominent, standard_price strikethrough, kein Strikethrough ohne Promo, Legacy-Fallback
+
+Reparierte Tests:
+- `src/tests/language-switcher.test.tsx` — `router.refresh()` → `router.push('/ru')` (TESTFEHLER nach [lang]-Routing-Refactor)
 
 ---
 
@@ -119,3 +123,4 @@ Kein `pre-existing`-Label mehr — jedes FAIL hat eine Bug-Datei mit Owner + Kat
 | B8950-002 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-20 |
 | B8950-003 | FLAKY | OFFEN | BB | frontend | 2026-05-15 |
 | B8950-004 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-01 |
+| B8950-005 | TESTFEHLER | GELÖST | BB | frontend | 2026-05-20 |

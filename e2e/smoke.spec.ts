@@ -83,48 +83,23 @@ test.describe('Visual Smoke-Test', () => {
   })
 
   test('RTL: Arabische Sprache setzt dir=rtl', async ({ page }) => {
-    // Set lang cookie and reload
-    await page.goto('/')
-    await page.evaluate(() => {
-      document.cookie = 'app_lang=ar; path=/'
-    })
-    await page.goto('/')
+    // With i18n routing, navigate directly to the lang-prefixed URL
+    await page.goto('/ar/')
     await page.waitForLoadState('networkidle')
-
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
-
-    // Reset
-    await page.evaluate(() => {
-      document.cookie = 'app_lang=de; path=/'
-    })
   })
 
   test('RTL: Hebräische Sprache setzt dir=rtl', async ({ page }) => {
-    await page.goto('/')
-    await page.evaluate(() => {
-      document.cookie = 'app_lang=he; path=/'
-    })
-    await page.goto('/')
+    await page.goto('/he/')
     await page.waitForLoadState('networkidle')
-
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
-
-    // Reset
-    await page.evaluate(() => {
-      document.cookie = 'app_lang=de; path=/'
-    })
   })
 
   test('LTR: Deutsche Sprache setzt dir=ltr', async ({ page }) => {
-    await page.goto('/')
-    await page.evaluate(() => {
-      document.cookie = 'app_lang=de; path=/'
-    })
-    await page.goto('/')
+    await page.goto('/de/')
     await page.waitForLoadState('networkidle')
-
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('ltr')
   })

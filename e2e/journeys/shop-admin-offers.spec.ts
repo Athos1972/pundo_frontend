@@ -325,8 +325,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     // After submit, the form redirects to the offers list
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
-    // The offers list shows item names (not offer titles), so we just confirm the page loaded
-    await expect(page.locator('body')).toBeVisible()
+    // OfferList shows item names (not offer titles) — confirm at least one offer edit link renders
+    await expect(page.locator('a[href*="/shop-admin/offers/"][href*="/edit"]').first()).toBeVisible({ timeout: 10_000 })
 
     // Verify via API — offer title is the authoritative check
     const token = await getOwnerToken()
@@ -379,7 +379,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
-    await expect(page.locator('body')).toBeVisible()
+    // OfferList shows item names (not offer titles) — confirm at least one offer edit link renders
+    await expect(page.locator('a[href*="/shop-admin/offers/"][href*="/edit"]').first()).toBeVisible({ timeout: 10_000 })
 
     const token = await getOwnerToken()
     const { data } = await apiGet('/api/v1/shop-owner/offers', token)
@@ -485,8 +486,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
-    // OfferList shows item names not offer titles — just confirm the redirect happened
-    await expect(page.locator('body')).toBeVisible()
+    // OfferList shows item names (not offer titles) — confirm at least one offer edit link renders
+    await expect(page.locator('a[href*="/shop-admin/offers/"][href*="/edit"]').first()).toBeVisible({ timeout: 10_000 })
 
     // Verify via API (PATCH archive+create gives a new ID — search by title)
     const { data } = await apiGet('/api/v1/shop-owner/offers', token)

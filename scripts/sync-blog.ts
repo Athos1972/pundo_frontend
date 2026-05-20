@@ -2,16 +2,14 @@
 /**
  * sync-blog.ts
  *
- * Fetches new posts from the Soro embed API, translates them via the Claude API
- * into all 6 supported languages, and writes MDX files to content/blog/.
+ * Fetches new posts from the Soro embed API and writes en.mdx files to content/blog/.
+ * Translation into all other languages is handled by the Cowork scheduled task
+ * (Claude reads en.mdx and writes de/ru/el/ar/he.mdx directly — no API key needed).
  *
  * Usage:
  *   tsx scripts/sync-blog.ts               # only process new posts
- *   tsx scripts/sync-blog.ts --backfill    # also process already-existing en.mdx (re-translate)
- *   tsx scripts/sync-blog.ts --dry-run     # fetch & translate but don't write files
- *
- * Required env vars:
- *   ANTHROPIC_API_KEY   — Claude API key for translation
+ *   tsx scripts/sync-blog.ts --backfill    # re-fetch already-existing en.mdx
+ *   tsx scripts/sync-blog.ts --dry-run     # fetch but don't write files
  *
  * Optional env vars:
  *   SORO_SITE_ID        — overrides the hard-coded Soro site ID
@@ -28,15 +26,6 @@ import https from 'https'
 const SORO_SITE_ID = process.env.SORO_SITE_ID ?? '8c458bd7-a4f3-4174-9c98-0dcf90178cc2'
 const SORO_EMBED_BASE = `https://app.trysoro.com/api/embed/${SORO_SITE_ID}`
 const BLOG_DIR = path.join(process.cwd(), 'content', 'blog')
-const LANGS = ['de', 'el', 'ru', 'ar', 'he'] as const
-
-const LANG_NAMES: Record<string, string> = {
-  de: 'German',
-  el: 'Greek',
-  ru: 'Russian',
-  ar: 'Arabic',
-  he: 'Hebrew',
-}
 
 const args = process.argv.slice(2)
 const BACKFILL = args.includes('--backfill')
@@ -57,32 +46,6 @@ function httpGet(url: string): Promise<string> {
       res.on('data', (chunk: Buffer) => { body += chunk.toString() })
       res.on('end', () => resolve(body))
     }).on('error', reject)
-  })
-}
-
-function httpsPost(url: string, body: string, headers: Record<string, string>): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url)
-    const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), ...headers },
-    }
-    const req = https.request(options, (res) => {
-      let data = ''
-      res.on('data', (chunk: Buffer) => { data += chunk.toString() })
-      res.on('end', () => {
-        if (res.statusCode && res.statusCode >= 400) {
-          reject(new Error(`HTTP ${res.statusCode}: ${data}`))
-        } else {
-          resolve(data)
-        }
-      })
-    })
-    req.on('error', reject)
-    req.write(body)
-    req.end()
   })
 }
 
@@ -161,68 +124,6 @@ function stripTags(html: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Claude translation
-// ---------------------------------------------------------------------------
-
-async function translateWithClaude(
-  content: string,
-  title: string,
-  description: string,
-  targetLang: string,
-  targetLangName: string,
-): Promise<{ title: string; description: string; content: string }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
-
-  const prompt = `Translate the following blog post from English to ${targetLangName}.
-
-Rules:
-- Use natural, idiomatic ${targetLangName} — not a word-for-word translation
-- Preserve all Markdown formatting (##, **, _, - lists, etc.) exactly
-- Keep proper nouns (Cyprus, Larnaca, Limassol, IBAN, KYC, etc.) as-is
-- Keep any URLs, slugs, or technical strings unchanged
-- For Arabic and Hebrew: use proper RTL phrasing naturally
-- Respond with ONLY a JSON object, no markdown fences:
-  {"title":"...","description":"...","content":"..."}
-
-TITLE:
-${title}
-
-DESCRIPTION:
-${description}
-
-CONTENT:
-${content}`
-
-  const requestBody = JSON.stringify({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
-    messages: [{ role: 'user', content: prompt }],
-  })
-
-  const raw = await httpsPost(
-    'https://api.anthropic.com/v1/messages',
-    requestBody,
-    {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-  )
-
-  const response = JSON.parse(raw) as {
-    content: Array<{ type: string; text: string }>
-    error?: { message: string }
-  }
-
-  if (response.error) throw new Error(`Claude API error: ${response.error.message}`)
-
-  const text = response.content[0]?.text ?? ''
-  // Strip potential markdown code fences if model adds them
-  const jsonStr = text.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim()
-  return JSON.parse(jsonStr) as { title: string; description: string; content: string }
-}
-
-// ---------------------------------------------------------------------------
 // MDX file writer
 // ---------------------------------------------------------------------------
 
@@ -292,37 +193,6 @@ async function main() {
       writeMdx(article.slug, 'en', article.title, article.excerpt, isoDate, article.image, markdownContent)
     } else {
       console.log(`  [dry-run] would write en.mdx for ${article.slug}`)
-    }
-
-    // Translate to all other languages
-    for (const lang of LANGS) {
-      const langPath = path.join(BLOG_DIR, article.slug, `${lang}.mdx`)
-      if (fs.existsSync(langPath) && !BACKFILL) {
-        console.log(`  ⏭  ${lang}.mdx exists, skipping`)
-        continue
-      }
-
-      console.log(`  🌐 Translating → ${lang} (${LANG_NAMES[lang]})…`)
-      try {
-        const translated = await translateWithClaude(
-          markdownContent,
-          article.title,
-          article.excerpt,
-          lang,
-          LANG_NAMES[lang],
-        )
-
-        if (!DRY_RUN) {
-          writeMdx(article.slug, lang, translated.title, translated.description, isoDate, article.image, translated.content)
-        } else {
-          console.log(`  [dry-run] would write ${lang}.mdx for ${article.slug}`)
-        }
-      } catch (err) {
-        console.error(`  ✗ Failed to translate ${article.slug} → ${lang}:`, err)
-      }
-
-      // Small delay to avoid rate-limiting
-      await new Promise((r) => setTimeout(r, 500))
     }
   }
 

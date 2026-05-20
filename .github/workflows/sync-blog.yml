@@ -1,10 +1,9 @@
-name: Sync Blog Translations
+name: Sync Blog (Fetch Only)
 
-# Fetches new posts from Soro, translates them via Claude API into all 6 languages,
-# commits the resulting MDX files, and pushes to main.
+# Fetches new posts from Soro and writes en.mdx files to content/blog/.
+# Translation into de/ru/el/ar/he is handled by the Cowork scheduled task.
 #
-# Required GitHub Secrets:
-#   ANTHROPIC_API_KEY   — Claude API key for translation
+# No GitHub Secrets required.
 #
 # Runs:
 #   - Daily at 08:00 UTC (after Soro posts its daily article around 04:00–05:00 UTC)
@@ -44,8 +43,6 @@ jobs:
         run: npm ci
 
       - name: Run sync-blog script
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           FLAGS=""
           if [ "${{ github.event.inputs.backfill }}" = "true" ]; then

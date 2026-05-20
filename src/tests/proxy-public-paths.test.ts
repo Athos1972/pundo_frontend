@@ -52,6 +52,41 @@ describe('proxy.ts — buildCsp directives (N7500 Soro embed)', () => {
   })
 })
 
+describe('proxy.ts — i18n routing (F6300)', () => {
+  it('I18N_BYPASS_PREFIXES includes /_next', () => {
+    expect(proxySrc).toContain("'/_next'")
+  })
+
+  it('I18N_BYPASS_PREFIXES includes /auth and /account', () => {
+    expect(proxySrc).toContain("'/auth'")
+    expect(proxySrc).toContain("'/account'")
+  })
+
+  it('I18N_BYPASS_PREFIXES includes /shop-admin', () => {
+    expect(proxySrc).toContain("'/shop-admin'")
+  })
+
+  it('detects lang from URL first segment and builds redirect', () => {
+    expect(proxySrc).toContain('LANG_SET.has(firstSegment)')
+  })
+
+  it('sets x-lang request header for Server Components', () => {
+    expect(proxySrc).toContain("requestHeaders.set('x-lang'")
+  })
+
+  it('syncs app_lang cookie on response when URL lang differs from cookie', () => {
+    expect(proxySrc).toContain('response.cookies.set(LANG_COOKIE')
+  })
+
+  it('uses 307 in dev and 308 in production', () => {
+    expect(proxySrc).toContain("NODE_ENV === 'development' ? 307 : 308")
+  })
+
+  it('strips lang prefix before applying SEO Cache-Control', () => {
+    expect(proxySrc).toContain('stripLangForCache(pathname)')
+  })
+})
+
 describe('proxy.ts — PUBLIC_SHOP_ADMIN_PATHS', () => {
   const paths = extractPublicPaths(proxySrc, 'PUBLIC_SHOP_ADMIN_PATHS')
 

@@ -4,8 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react'
 // ---- Mocks (must be declared before imports that use them) ----
 
 const mockRefresh = vi.fn()
+const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mockRefresh, push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ refresh: mockRefresh, push: mockPush, replace: vi.fn(), back: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/',
 }))
@@ -39,6 +40,7 @@ function renderMobile(current: 'en' | 'de' | 'ru' | 'el' | 'ar' | 'he' = 'en', d
 
 beforeEach(() => {
   mockRefresh.mockClear()
+  mockPush.mockClear()
   vi.mocked(LangModule.setLangCookie).mockClear()
 })
 
@@ -161,7 +163,7 @@ describe('LanguageSwitcher — Language selection', () => {
     expect(LangModule.setLangCookie).toHaveBeenCalledWith('de')
   })
 
-  it('clicking an option calls router.refresh()', () => {
+  it('clicking an option calls router.push() with lang-prefixed URL', () => {
     const { trigger } = renderMobile('en')
     fireEvent.click(trigger!)
 
@@ -169,7 +171,9 @@ describe('LanguageSwitcher — Language selection', () => {
     expect(ruOption).toBeDefined()
     fireEvent.click(ruOption!)
 
-    expect(mockRefresh).toHaveBeenCalledOnce()
+    // pathname is '/' → bare path after stripping lang is '/' → push to '/ru'
+    expect(mockPush).toHaveBeenCalledOnce()
+    expect(mockPush).toHaveBeenCalledWith('/ru')
   })
 
   it('clicking an option closes the popover', () => {

@@ -52,6 +52,23 @@ cat package.json | grep '"next"'
 # Falls unklar: node_modules/next/dist/docs/ lesen
 ```
 
+### Bug-Register prüfen (PFLICHT bei Bug-Fix-Aufträgen — F8950)
+
+Wenn der /e2e-tester dir Bug-Dateien als Input übergeben hat (Vault-Pfad steht
+im Handoff-Block des Test-Reports): lies JEDE offene Bug-Datei bevor du Code änderst.
+
+```
+Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
+            20 Features/FG8 Admin & Operations/Bugs/B<id>/B<id>.md
+```
+
+Für jeden Bug:
+- Setze `status: IN ARBEIT` in der Bug-Datei (Resolution-Log-Zeile ergänzen).
+- Verstehe Symptom + RCA + Kategorie bevor du etwas änderst.
+- `category: FIXTURE-DEFEKT` ist **nicht dein Job** — das macht der e2e-tester
+  (`sync_prod_to_test.sh`). Nur `FUNKTIONSFEHLER` und `TESTFEHLER` bearbeitest du.
+- Nach dem Fix: `status: GELÖST` setzen, Commit-SHA im Abschnitt `## Fix` eintragen.
+
 Lese mindestens:
 - Die direkt betroffenen Komponenten/Seiten
 - `src/lib/api.ts` falls API-Calls geändert werden
@@ -324,6 +341,31 @@ npx vitest run --coverage
 | Pure Logik (`src/lib/utils.ts`, Mapper, Formatter) | 80% | **90%** |
 | Komponenten (React-Rendering-Logik) | 70% | 80% |
 | API-Client (`src/lib/api.ts`) | 70% | 80% |
+
+---
+
+## 3.5 Anti-Schön-Test-Regel (PFLICHT — F8950)
+
+Du darfst eine bestehende Assertion NUR dann abschwächen, ändern oder entfernen,
+wenn **BEIDE** Bedingungen erfüllt sind:
+
+1. Es existiert eine Bug-Datei mit `category: TESTFEHLER`, die genau diesen Test betrifft.
+2. Ihr Abschnitt `## Korrektheits-Beweis` ist ausgefüllt — mit einem konkreten Beleg,
+   dass das Ist-Verhalten tatsächlich korrekt ist (Screenshot-Referenz, API-Response,
+   Commit-SHA des Function-Fixes, oder manuell verifizierter Output).
+
+Betroffene Assertion-Muster (Heuristik des e2e-tester-Diff-Checks):
+`.toBe(`, `.toEqual(`, `.toHaveLength(`, `.toBeGreaterThan(`, `.toContain(`,
+`.toHaveCount(`, `.toBeVisible(`, `.toBeGreaterThanOrEqual(`
+
+**Fehlt eine der zwei Bedingungen → lass die Assertion stehen und fixe den PRODUKTIONSCODE.**
+Eine grüne Suite durch aufgeweichte Assertions ist ein Verstoß; der e2e-tester
+meldet ihn als `SCHÖN-TEST-VERDACHT` → Verdict `ESCALATE`.
+
+Bug-Regression-Test (ergänzt die bestehende Regel aus §2):
+Beim Fix eines `FUNKTIONSFEHLER` zuerst einen Test schreiben der den Bug reproduziert
+(vor dem Fix ROT, nach dem Fix GRÜN). Diesen Test NICHT abschwächen um ihn grün zu
+bekommen — das ist der klassische Schöntestfall.
 
 ---
 

@@ -37,6 +37,8 @@ Browser-E2E-Tests durch.
 - Kein automatisches Commit — User committet manuell.
 - Nicht blockieren bei Coverage-Unterschreitung — dokumentieren und weitermachen.
 - **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
+- **Kein pre-existing-Label (F8950):** Es gibt keinen Status "pre-existing" mehr. Jedes FAIL ist `OFFEN`, `IN ARBEIT`, `GELÖST` oder `QUARANTÄNE` und hat eine Bug-Datei im Vault-Register (`FG8 Admin & Operations/Bugs/`). Ein FAIL blockiert das Verdict bis er GELÖST ist oder BB explizit entschieden hat. Quarantäne erfordert BB-Signatur (`test.fixme()` + `// QUARANTÄNE B<id> — <Grund> — <Datum>`).
+- **Gate-Invariante (F8950):** `verdict:"SHIP"` ist nur erlaubt wenn `open_failures` ein leeres Array ist. Vor dem SHIP-Verdict: `node scripts/verdict-gate.mjs` ausführen — bei exit≠0 ist SHIP verboten → Verdict `FIX` oder `ESCALATE`.
 - **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
 - **Test-Daten-Matrix:** Gegenseitig ausschließende Zustände bekommen eigene Fixtures. Nie Zustände "zusammenpappen" um einen Test zu vereinfachen.
 - **DB-Reset-Regel (KRITISCH):** `pundo_test` enthält Echtdaten aus Prod — **niemals automatisch resetten**. Weder `global-setup.ts` noch `pytest`-Fixtures dürfen die DB ohne explizites `E2E_RESET_DB=true` löschen. Tests müssen die bestehenden Daten nutzen und bei Bedarf neue Datensätze anlegen (via API), keine DROP/TRUNCATE.
@@ -53,6 +55,7 @@ Phase 1:   Statische Prüfung    (TypeScript + ESLint → fehlerfrei?)
 Phase 2:   Unit-Tests           (Vitest → Coverage-Lücken schließen)
 Phase 3:   Visual Smoke-Test    (Pflicht — immer, unabhängig vom Scope)
 Phase 4:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
+Phase 4.5: Quality-Gate         (RCA-Klassifikation, Bug-Register, Gate, Schön-Test-Check, Coder-Trigger)
 Phase 5:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
 Phase 5.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
 Phase 5.6: Issue-Update         (Bug/Feature-Datei im Obsidian-Vault — PFLICHT)
@@ -730,6 +733,113 @@ Wenn ein Journey-Schritt FAIL liefert:
 
 ---
 
+## Phase 4.5: Quality-Gate & Bug-Register (PFLICHT — F8950)
+
+**Kommt nach Phase 3.5 (Journey-Run), vor Phase 5 (Qualitäts-Gate & Dokumentation).**
+
+Kein FAIL bleibt namenlos. Kein SHIP ohne leeres `open_failures`. Kein Schöntesten ohne dokumentierten Beweis.
+
+### Schritt 1 — open_failures aus letztem Lauf laden
+
+```bash
+python3 -c "
+import json
+try:
+  d = json.load(open('.claude/skills/e2e-tester/.last_run'))
+  print('Vorherige open_failures:', d.get('open_failures', []))
+except Exception as e:
+  print('Kein .last_run — leere Liste annehmen')
+"
+```
+
+Prüfe für jeden Eintrag in `open_failures` den aktuellen Status in der
+jeweiligen Vault-Bug-Datei. Ist er `GELÖST` → aus der Liste entfernen.
+
+### Schritt 2 — Neue FAILs RCA-klassifizieren (Pflicht)
+
+Jeder FAIL aus Phase 1–4 bekommt verpflichtend eine Kategorie:
+
+| Kategorie | Bedeutung | Owner |
+|-----------|-----------|-------|
+| `FUNKTIONSFEHLER` | Produktcode ist kaputt (inkl. ESLint-Error) | coder |
+| `TESTFEHLER` | Test-Assertion/Selektor falsch, Funktion korrekt | coder — **nur mit Korrektheits-Beweis** |
+| `FIXTURE-DEFEKT` | Testdaten/Fixture fehlen (z.B. sync_prod_to_test.sh) | e2e-tester |
+| `FLAKY` | Intermittent — muss stabilisiert werden | coder → sonst ESCALATE → BB |
+
+„Unbekannt" ist keine gültige Kategorie. Solange die Kategorie offen ist → `ESCALATE`.
+
+### Schritt 3 — Bug-Dateien anlegen/aktualisieren
+
+Für jeden FAIL (neu oder weiter offen):
+
+```
+Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
+            20 Features/FG8 Admin & Operations/Bugs/B<id>/B<id>.md
+Template:   Bug-Template.md im selben Bugs/-Ordner
+```
+
+Pflichtfelder: `id`, `type`, `category`, `status`, `repo: frontend`, `owner`,
+`discovered`, `last-run-sha`, `journey`.
+
+Dann Bug-ID in `e2e/TESTSET.md` unter „Open Failures" eintragen.
+
+### Schritt 4 — Schön-Test-Diff-Check
+
+```bash
+LAST_SHA=$(python3 -c "import json; print(json.load(open('.claude/skills/e2e-tester/.last_run')).get('sha','HEAD~1'))" 2>/dev/null || echo "HEAD~1")
+
+# Entfernte oder abgeschwächte Assertion-Zeilen seit letztem Lauf
+git diff "$LAST_SHA" -- 'e2e/**/*.ts' 'src/tests/**/*.ts' \
+  | grep '^-' | grep -v '^---' \
+  | grep -E '\.(toBe|toEqual|toHaveLength|toBeGreaterThan|toContain|toHaveCount|toBeVisible|toBeGreaterThanOrEqual)\('
+```
+
+Wenn Treffer: Für jede entfernte/abgeschwächte Assertion prüfen ob eine Bug-Datei
+mit `category: TESTFEHLER` **und** ausgefülltem `## Korrektheits-Beweis` existiert.
+- Beweis vorhanden → Änderung legitim.
+- Beweis fehlt → Finding `SCHÖN-TEST-VERDACHT` im Report, Verdict `ESCALATE`.
+
+Der Check ist Heuristik (Falsch-Positiv bei legitimem Refactoring möglich) →
+deshalb `ESCALATE` (Mensch entscheidet), nicht auto-FAIL.
+
+### Schritt 5 — Gate-Check
+
+```bash
+node scripts/verdict-gate.mjs
+# exit 0 → SHIP erlaubt
+# exit 1 → SHIP verboten → FIX oder ESCALATE
+```
+
+Baue die finale `open_failures`-Liste: alle Bug-Dateien im Scope mit `status != GELÖST`.
+
+```
+open_failures == []  → Verdict SHIP
+open_failures != []  → Verdict FIX   (im Chain lösbar: coder bekommt Bugs)
+                       oder ESCALATE (nicht im Chain lösbar: FLAKY/Datenmodell-Frage/
+                                      fehlende Kategorie/Schön-Test-Verdacht/BB nötig)
+```
+
+**`SHIP` mit nicht-leerem `open_failures` ist ein Verstoß — verboten.**
+
+### Schritt 6 — Handoff-Block bei FIX
+
+Bei Verdict `FIX` am Ende des Reports einfügen:
+
+```
+## Handoff an /coder (FIX-Verdict)
+
+Offene Bugs:
+- B8950-NNN (KATEGORIE) — <Kurzbeschreibung>
+
+Vault-Pfad Bug-Dateien:
+  /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
+  20 Features/FG8 Admin & Operations/Bugs/B8950-NNN/B8950-NNN.md
+
+Nächster Schritt: /coder mit diesen Bug-Dateien als Input.
+```
+
+---
+
 ## Phase 4: Qualitäts-Gate & Dokumentation
 
 ### .last_run Marker aktualisieren
@@ -740,14 +850,17 @@ TIMESTAMP=$(python3 -c "from datetime import datetime, timezone; print(datetime.
 
 python3 -c "
 import json
+# INVARIANTE: verdict='SHIP' nur wenn open_failures leer ist (F8950 Gate)
 data = {
   'sha': '$CURRENT_SHA',
   'timestamp': '$TIMESTAMP',
+  'verdict': '$VERDICT',           # SHIP | FIX | ESCALATE — aus Phase 4.5 Gate
+  'open_failures': open_failures,  # Liste von dicts; leer = Gate grün
   'coverage_snapshot': {}
 }
 with open('.claude/skills/e2e-tester/.last_run', 'w') as f:
     json.dump(data, f, indent=2)
-print('last_run aktualisiert:', '$CURRENT_SHA')
+print('last_run aktualisiert:', '$CURRENT_SHA', '| verdict:', '$VERDICT')
 "
 ```
 
@@ -798,8 +911,11 @@ Ergebnis: X/Y bestanden, Z übersprungen
 ### Code-Fixes während des Tests
 | Datei | Änderung | Grund |
 
-### Known Issues
-| ID | Beschreibung | Seit |
+### Open Failures (Bug-Register)
+Quelle der Wahrheit: Vault `FG8 Admin & Operations/Bugs/` — kein `pre-existing` mehr.
+`verdict:"SHIP"` nur wenn `open_failures: []` in `.last_run`.
+
+| Bug-ID | Kategorie | Status | Owner | Entdeckt |
 ```
 
 ### Abschlussbericht

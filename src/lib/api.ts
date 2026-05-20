@@ -76,7 +76,8 @@ export async function searchAll(
 }
 
 export async function getProduct(slug: string, lang: string): Promise<ProductDetailResponse> {
-  return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang);
+  // no-store: promo prices are dynamic and must always be fresh (same reasoning as getShopOffers)
+  return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang, { cache: 'no-store' });
 }
 
 /**

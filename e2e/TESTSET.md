@@ -14,7 +14,7 @@ Ergebnis: 1616 Vitest PASS · E2E: customer-shop-promo-visibility SHIP (P2/P3/P4
 | Prüfung | Status |
 |---------|--------|
 | TypeScript (`tsc --noEmit`) | ✅ PASS — 0 Fehler |
-| ESLint | ⚠️ 1 pre-existing Error (OnboardingWizard.tsx:29 — setState in effect), 81 Warnings |
+| ESLint | ⚠️ 1 Error (OnboardingWizard.tsx:29 — setState in effect → B8950-004), 81 Warnings |
 
 ---
 
@@ -36,7 +36,7 @@ Neue Tests (offer-price-model-and-display-20260520):
 
 | Test | Status | Anmerkung |
 |------|--------|-----------|
-| Produktseite: Bilder laden, Carousel | ❌ FAIL | Carousel-Sichtbarkeit bei 768px — 0 sichtbar statt ≥2 (intermittenter Fehler, pre-existing seit 2026-05-15) |
+| Produktseite: Bilder laden, Carousel | ❌ FAIL | Carousel-Sichtbarkeit bei 768px — 0 sichtbar statt ≥2 (intermittent, FLAKY → B8950-003) |
 | Suchergebnisse: Seite lädt ohne Crash | ✅ PASS | Leerer Zustand korrekt gerendert |
 | Shop-Owner Smoke S1–S3 | ✅ 3x PASS | Auto-Approve + Dashboard + auto_seeded SKIP (Baustein B nicht deployed) |
 
@@ -56,13 +56,13 @@ Verdict: **SHIP**
 
 | Schritt | Status | Anmerkung |
 |---------|--------|-----------|
-| A1 | ❌ FAIL | item_id=1 nicht in pundo_test (pre-existing seit 2026-05-19) |
+| A1 | ❌ FAIL | item_id=1 nicht in pundo_test (FIXTURE-DEFEKT → B8950-001) |
 | SP4 | ❌ FAIL | Cascadiert von A1 |
 | E5b | ❌ FAIL | Suche filtert nicht — war SKIP (keine Daten), jetzt sichtbar da e2e-Angebot existiert. Untersuchung nötig. |
 | A2–A4, B1–B4, C1–C3, D1–D2, DT1–DT2, E5a/c/d, E1, E-NAV, E7, XS2 | ✅ 8 PASS | |
 | A5–A6, B1-Cascade, C-Cascade etc. | ⏭ 27 SKIP | Cascade von A1 |
 
-RCA A1/SP4: item_id=1 (e2e-vet-consultation-larnaca) fehlt in pundo_test — pre-existing seit 19.05.  
+RCA A1/SP4: item_id=1 (e2e-vet-consultation-larnaca) fehlt in pundo_test — FIXTURE-DEFEKT → B8950-001  
 RCA E5b: Neu sichtbar durch erstelltes E2E-Angebot. Selector-Issue oder Filter-Bug in OfferList — separate Untersuchung.
 
 #### SEO-Tests (`e2e/seo-lengths.spec.ts`)
@@ -107,11 +107,15 @@ RCA E5b: Neu sichtbar durch erstelltes E2E-Angebot. Selector-Issue oder Filter-B
 
 ---
 
-### Known Issues
+### Open Failures (Bug-Register)
 
-| ID | Beschreibung | Status |
-|----|-------------|--------|
-| DATA-001 | item_id=1 (e2e-vet-consultation-larnaca) fehlt in pundo_test — shop-admin-offers A1 und SP4 immer FAIL | offen seit 2026-05-19 |
-| DATA-002 | E5b (Suche OfferList) neu sichtbar da E2E-Angebot existiert — war vorher SKIP | neu 2026-05-20 |
-| SMOKE-001 | Visual Smoke Carousel intermittent FAIL bei 768px — pre-existing seit 2026-05-15 | offen |
-| LINT-001 | OnboardingWizard.tsx:29 setState in effect — pre-existing | offen |
+Quelle der Wahrheit: Vault `FG8 Admin & Operations/Bugs/`
+Kein `pre-existing`-Label mehr — jedes FAIL hat eine Bug-Datei mit Owner + Kategorie.
+`verdict:"SHIP"` ist nur möglich wenn alle Bugs `GELÖST` sind (`open_failures: []` in `.last_run`).
+
+| Bug-ID | Kategorie | Status | Owner | Repo | Entdeckt |
+|--------|-----------|--------|-------|------|---------|
+| B8950-001 | FIXTURE-DEFEKT | OFFEN | e2e-tester | frontend | 2026-05-19 |
+| B8950-002 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-20 |
+| B8950-003 | FLAKY | OFFEN | BB | frontend | 2026-05-15 |
+| B8950-004 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-01 |

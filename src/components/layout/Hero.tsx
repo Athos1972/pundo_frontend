@@ -7,6 +7,8 @@ import { CategoryChips } from '@/components/search/CategoryChips'
 import type { BrandConfig } from '@/config/brands'
 import type { CategoryItem } from '@/types/api'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 
 const EMOJI_MAP: Record<string, string> = {
   'Pet Supplies': '🐾',
@@ -29,7 +31,7 @@ function getEmoji(name: string | null): string {
 interface Props {
   brand: BrandConfig
   categories: CategoryItem[]
-  lang: string
+  lang: Lang
 }
 
 export function Hero({ brand, categories, lang }: Props) {
@@ -75,7 +77,7 @@ export function Hero({ brand, categories, lang }: Props) {
               <p className="text-sm text-text leading-relaxed">{painPointText}</p>
               {slug === 'pundo' && (
                 <Link
-                  href="/contact"
+                  href={localePath(lang, '/contact')}
                   className="text-sm text-accent underline hover:no-underline mt-1 inline-block"
                 >
                   {tr.contact_missing_something}
@@ -96,7 +98,7 @@ export function Hero({ brand, categories, lang }: Props) {
               {catGrid.map((cat) => (
                 <Link
                   key={cat.id}
-                  href={`/search?category_id=${cat.id}`}
+                  href={localePath(lang, `/search?category_id=${cat.id}`)}
                   className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-bg border border-border p-3 hover:border-accent hover:text-accent transition-colors text-center"
                 >
                   <span className="text-2xl">{getEmoji(cat.name)}</span>

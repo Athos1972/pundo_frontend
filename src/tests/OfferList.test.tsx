@@ -24,6 +24,72 @@ const baseOffer: OfferDetail = {
   crawled_at: '2026-05-01T10:00:00Z',
 }
 
+describe('OfferList — Aktionspreis-Regression (Bug: 3€ statt 39,99€)', () => {
+  it('zeigt promo_price prominent wenn gesetzt', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offer: OfferDetail = {
+      ...baseOffer,
+      price: '39.9900',
+      price_type: 'fixed',
+      currency: 'EUR',
+      standard_price: '50.0000',
+      standard_currency: 'EUR',
+      promo_price: '39.9900',
+      promo_currency: 'EUR',
+      promo_valid_until: '2026-06-19T00:00:00Z',
+    }
+    render(<OfferList offers={[offer]} lang="en" productName="Budgie Food" />)
+    expect(screen.getByText('39.99 EUR')).toBeInTheDocument()
+    expect(screen.getByText('50.00 EUR')).toBeInTheDocument()
+  })
+
+  it('zeigt standard_price durchgestrichen wenn promo aktiv', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offer: OfferDetail = {
+      ...baseOffer,
+      price: '39.9900',
+      price_type: 'fixed',
+      currency: 'EUR',
+      standard_price: '50.0000',
+      standard_currency: 'EUR',
+      promo_price: '39.9900',
+      promo_currency: 'EUR',
+      promo_valid_until: '2026-06-19T00:00:00Z',
+    }
+    const { container } = render(<OfferList offers={[offer]} lang="en" productName="Budgie Food" />)
+    const strikethrough = container.querySelector('s')
+    expect(strikethrough).not.toBeNull()
+    expect(strikethrough?.textContent).toBe('50.00 EUR')
+  })
+
+  it('zeigt keinen Durchstreichpreis wenn kein promo_price', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offer: OfferDetail = {
+      ...baseOffer,
+      price: '50.0000',
+      price_type: 'fixed',
+      currency: 'EUR',
+      standard_price: '50.0000',
+      standard_currency: 'EUR',
+    }
+    const { container } = render(<OfferList offers={[offer]} lang="en" productName="Budgie Food" />)
+    expect(container.querySelector('s')).toBeNull()
+    expect(screen.getByText('50.00 EUR')).toBeInTheDocument()
+  })
+
+  it('fällt auf offer.price zurück wenn standard_price fehlt (Legacy-Antwort)', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offer: OfferDetail = {
+      ...baseOffer,
+      price: '7.9900',
+      price_type: 'fixed',
+      currency: 'EUR',
+    }
+    render(<OfferList offers={[offer]} lang="en" productName="Budgie Food" />)
+    expect(screen.getByText('7.99 EUR')).toBeInTheDocument()
+  })
+})
+
 describe('OfferList — URL sanitization', () => {
   it('does not render a link when url is a raw base64 token', async () => {
     const { OfferList } = await import('@/components/product/OfferList')

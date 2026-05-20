@@ -126,9 +126,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <TooltipProvider>
           <SessionProvider initialSession={session}>
             <FavoritesProvider>
-              <Header />
+              <Header lang={lang} />
               {children}
-              <Footer />
+              <Footer lang={lang} />
               <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
               <SearchSimilarButton lang={lang} brandSlug={brand.slug} />
               <BottomTabBar lang={lang} recentlyViewed={brand.features.recentlyViewed} />

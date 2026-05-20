@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { LANGS, LANG_NATIVE_NAMES, type Lang, DEFAULT_LANG, detectBrowserLang, setLangCookie } from '@/lib/lang'
+import { stripLang } from '@/lib/routing'
 import { t } from '@/lib/translations'
 import { SPLASH_OUTRO_MS, SPLASH_SESSION_KEY } from '@/lib/splash'
 
@@ -83,9 +84,10 @@ type Props = {
   serverLang: Lang
 }
 
-export function LanguagePickerOverlay({ serverLang }: Props) {
+export function LanguagePickerOverlay({ serverLang: _serverLang }: Props) {
   const { shouldShow, preselected, dismiss } = useLanguagePickerTrigger()
   const router = useRouter()
+  const pathname = usePathname()
   const [selected, setSelected] = useState<Lang>(preselected)
   const dialogRef = useRef<HTMLDivElement>(null)
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -115,14 +117,11 @@ export function LanguagePickerOverlay({ serverLang }: Props) {
   const handleApply = useCallback(
     (chosen: Lang) => {
       setLangCookie(chosen)
-      dismiss()                        // (M6) Defense-in-Depth — always before refresh/reload
-      if (chosen === serverLang) {
-        router.refresh()
-      } else {
-        window.location.reload()
-      }
+      dismiss()
+      const pathWithoutLang = stripLang(pathname)
+      router.push(`/${chosen}${pathWithoutLang === '/' ? '' : pathWithoutLang}`)
     },
-    [serverLang, router, dismiss],
+    [pathname, router, dismiss],
   )
 
   // Keyboard: arrows navigate, Tab trapped within 6 option buttons

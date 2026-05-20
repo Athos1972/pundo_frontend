@@ -1,7 +1,8 @@
 'use client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useRef, useState, useEffect } from 'react'
 import { LANGS, LANG_NATIVE_NAMES, type Lang, setLangCookie } from '@/lib/lang'
+import { stripLang } from '@/lib/routing'
 import { t } from '@/lib/translations'
 
 const LANG_LABELS: Record<Lang, string> = {
@@ -17,10 +18,16 @@ const LANG_LABELS: Record<Lang, string> = {
 
 function LanguageSwitcherDesktop({ current, dark }: { current: Lang; dark?: boolean }) {
   const router = useRouter()
+  const pathname = usePathname()
+  // Derive active lang from the URL so the highlight stays correct after
+  // client-side navigation (the server-rendered `current` prop is stale once
+  // the root layout stops re-rendering on lang-segment changes).
+  const activeLang = LANGS.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? current
 
   function handleChange(lang: Lang) {
     setLangCookie(lang)
-    router.refresh()
+    const bare = stripLang(pathname)
+    router.push(`/${lang}${bare === '/' ? '' : bare}`)
   }
 
   return (
@@ -31,7 +38,7 @@ function LanguageSwitcherDesktop({ current, dark }: { current: Lang; dark?: bool
           onClick={() => handleChange(l)}
           title={l.toUpperCase()}
           className={`px-2 py-1 text-xs rounded transition-colors min-w-[28px] text-center ${
-            l === current
+            l === activeLang
               ? dark
                 ? 'bg-white/20 text-white font-medium'
                 : 'bg-accent text-white font-medium'
@@ -99,8 +106,10 @@ function LanguageSwitcherMobile({
   ariaLabel: string
 }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const activeLang = LANGS.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? current
   const [open, setOpen] = useState(false)
-  const [focusIndex, setFocusIndex] = useState<number>(() => LANGS.indexOf(current))
+  const [focusIndex, setFocusIndex] = useState<number>(() => LANGS.indexOf(activeLang))
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const itemRefs = useRef<(HTMLLIElement | null)[]>([])
@@ -137,14 +146,15 @@ function LanguageSwitcherMobile({
   }, [open, focusIndex])
 
   function handleOpen() {
-    const idx = LANGS.indexOf(current)
+    const idx = LANGS.indexOf(activeLang)
     setFocusIndex(idx >= 0 ? idx : 0)
     setOpen(true)
   }
 
   function handleSelect(lang: Lang) {
     setLangCookie(lang)
-    router.refresh()
+    const bare = stripLang(pathname)
+    router.push(`/${lang}${bare === '/' ? '' : bare}`)
     setOpen(false)
   }
 
@@ -199,7 +209,7 @@ function LanguageSwitcherMobile({
           className={popoverBase}
         >
           {LANGS.map((l, i) => {
-            const isActive = l === current
+            const isActive = l === activeLang
             const itemColor = isActive
               ? dark
                 ? 'bg-white/10 text-white font-medium'

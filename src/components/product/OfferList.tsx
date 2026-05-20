@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { OfferDetail } from '@/types/api'
 import { t } from '@/lib/translations'
-import { formatCrawledAt, formatPriceOrLabel } from '@/lib/utils'
+import { formatCrawledAt, formatPriceOrLabel, fmtPrice } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 
 export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
@@ -23,9 +23,23 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
   return (
     <div className="space-y-3">
       {sorted.map((offer, i) => {
-        const priceLabel = formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
         const safeUrl = sanitizeExternalUrl(offer.url)
         const hasCta = offer.price_type === 'on_request' && (offer.shop_phone || safeUrl)
+
+        const hasPromo = !!offer.promo_price
+        const promoPriceDisplay = hasPromo
+          ? `${fmtPrice(offer.promo_price!)} ${offer.promo_currency ?? offer.currency}`
+          : null
+        const stdLabel = formatPriceOrLabel(
+          offer.standard_price ?? offer.price,
+          offer.standard_currency ?? offer.currency,
+          offer.price_type,
+          offer.price_note,
+          tr,
+        )
+        const promoBadgeDate = offer.promo_valid_until
+          ? new Date(offer.promo_valid_until).toLocaleDateString(lang, { day: 'numeric', month: 'short' })
+          : null
 
         return (
           <div key={i} className={`flex items-start justify-between gap-3 py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
@@ -63,11 +77,25 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
               )}
             </div>
             <div className="flex-shrink-0 text-right rtl:text-left">
-              <p className={`font-bold ${priceLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
-                {priceLabel.display}
-              </p>
-              {priceLabel.note && (
-                <p className="text-xs text-text-light mt-0.5">{priceLabel.note}</p>
+              {promoPriceDisplay ? (
+                <>
+                  <p className="font-bold text-accent">{promoPriceDisplay}</p>
+                  {stdLabel.isNumeric && (
+                    <s className="text-xs text-text-muted">{stdLabel.display}</s>
+                  )}
+                  {promoBadgeDate && (
+                    <p className="text-xs text-red-600 mt-0.5">{tr.promo_badge} {promoBadgeDate}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className={`font-bold ${stdLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
+                    {stdLabel.display}
+                  </p>
+                  {stdLabel.note && (
+                    <p className="text-xs text-text-light mt-0.5">{stdLabel.note}</p>
+                  )}
+                </>
               )}
             </div>
           </div>

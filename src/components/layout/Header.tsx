@@ -1,18 +1,22 @@
 import Link from 'next/link'
-import { getLangServer } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { UserMenu } from '@/components/layout/UserMenu'
 import { getBrandFromHeaders } from '@/config/brands'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 
-export async function Header() {
-  const [lang, brand] = await Promise.all([getLangServer(), getBrandFromHeaders()])
-  const tr = t(lang)
+interface HeaderProps {
+  lang: Lang
+}
+
+export async function Header({ lang }: HeaderProps) {
+  const [brand, tr] = [await getBrandFromHeaders(), t(lang)]
 
   return (
     <header className="border-b border-border bg-surface sticky top-0 z-20">
       <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 flex items-center gap-2 md:gap-4">
-        <Link href="/" aria-label={`${brand.name} — Zur Startseite`} className="shrink-0">
+        <Link href={localePath(lang, '/')} aria-label={`${brand.name} — Zur Startseite`} className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={brand.assets.logoSvg} alt={brand.name} className="h-12 w-auto" />
         </Link>
@@ -22,7 +26,7 @@ export async function Header() {
             {brand.nav.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={localePath(lang, item.href)}
                 className="text-sm text-text-muted hover:text-accent transition-colors font-medium"
               >
                 {tr[item.key as keyof typeof tr] as string}
@@ -34,7 +38,7 @@ export async function Header() {
         {/* Mobile quick-access icons — search + shops */}
         <div className="flex md:hidden items-center gap-1 ml-auto rtl:ml-0 rtl:mr-auto rtl:flex-row-reverse">
           <Link
-            href="/search"
+            href={localePath(lang, '/search')}
             aria-label={tr.search}
             className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-surface-alt transition-colors"
           >
@@ -44,7 +48,7 @@ export async function Header() {
             <span className="sr-only">{tr.search}</span>
           </Link>
           <Link
-            href="/shops"
+            href={localePath(lang, '/shops')}
             aria-label={tr.nav_shops}
             className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-surface-alt transition-colors"
           >

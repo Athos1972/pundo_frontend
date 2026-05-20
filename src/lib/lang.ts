@@ -44,10 +44,14 @@ export function detectBrowserLang(): Lang {
   return DEFAULT_LANG
 }
 
-// Server: aus next/headers Cookie lesen (für Server Components)
+// Server: Sprache aus Request ermitteln (für Server Components)
+// Reihenfolge: x-lang Header (gesetzt von proxy.ts) → app_lang Cookie → Fallback
 export async function getLangServer(): Promise<Lang> {
-  const { cookies } = await import('next/headers');
-  const store = await cookies();
-  const val = store.get('app_lang')?.value;
+  const { headers, cookies } = await import('next/headers');
+  const headerStore = await headers();
+  const xLang = headerStore.get('x-lang');
+  if (xLang && (LANGS as readonly string[]).includes(xLang)) return xLang as Lang;
+  const cookieStore = await cookies();
+  const val = cookieStore.get('app_lang')?.value;
   return (LANGS as readonly string[]).includes(val ?? '') ? (val as Lang) : DEFAULT_LANG;
 }

@@ -18,9 +18,40 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getBrandConfig } from '@/config/brands'
+import { LANGS, DEFAULT_LANG, type Lang } from '@/lib/lang'
+
+// ---- i18n routing constants -----------------------------------------------
+const LANG_SET = new Set<string>(LANGS)
+const LANG_COOKIE = 'app_lang'
+
+// Paths that bypass i18n redirect entirely (keep language-agnostic)
+const I18N_BYPASS_PREFIXES = [
+  '/_next', '/api', '/admin', '/shop-admin', '/auth', '/account',
+  '/favicon', '/og', '/brands', '/brand_logos', '/manifest.webmanifest',
+  '/robots.txt', '/sitemap.xml', '/llms.txt', '/__playwright',
+  '/product_images', '/review_photos', '/shop_logos',
+]
+
+function shouldBypassI18n(pathname: string): boolean {
+  // Static files with extensions
+  if (/\.[a-zA-Z0-9]{1,10}$/.test(pathname)) return true
+  return I18N_BYPASS_PREFIXES.some(p => pathname === p || pathname.startsWith(`${p}/`))
+}
+
+function detectLang(request: NextRequest): Lang {
+  const cookieLang = request.cookies.get(LANG_COOKIE)?.value
+  if (cookieLang && LANG_SET.has(cookieLang)) return cookieLang as Lang
+  const acceptLanguage = request.headers.get('accept-language') ?? ''
+  for (const raw of acceptLanguage.split(',')) {
+    const code = raw.trim().split(';')[0].split('-')[0].toLowerCase()
+    if (LANG_SET.has(code)) return code as Lang
+  }
+  return DEFAULT_LANG
+}
 
 // Public SEO paths — these get a cacheable Cache-Control header so Googlebot
 // and CDNs can cache them (Next.js dynamic rendering emits private/no-store by default).
+// Paths are matched after stripping the lang prefix (e.g. /en/about → /about).
 const SEO_PUBLIC_EXACT = new Set(['/', '/about', '/contact', '/for-shops'])
 const SEO_PUBLIC_PREFIXES = [
   '/products/',
@@ -34,6 +65,16 @@ const SEO_PUBLIC_PREFIXES = [
   '/homesick',
 ]
 const SEO_CACHE = 'public, s-maxage=3600, stale-while-revalidate=86400'
+
+/** Strip the leading /{lang} prefix for SEO cache matching */
+function stripLangForCache(pathname: string): string {
+  const segments = pathname.split('/')
+  if (segments[1] && LANG_SET.has(segments[1])) {
+    const rest = segments.slice(2).join('/')
+    return rest ? `/${rest}` : '/'
+  }
+  return pathname
+}
 
 const PUBLIC_SHOP_ADMIN_PATHS = [
   '/shop-admin/login',
@@ -79,6 +120,32 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // ---- Job 0: i18n Routing (F6300) --------------------------------------
+  // Redirect bare paths to /{lang}/path. Paths under admin/auth/account/api
+  // are bypassed — they stay language-agnostic.
+  if (!shouldBypassI18n(pathname)) {
+    const segments = pathname.split('/')
+    const firstSegment = segments[1] ?? ''
+    if (!LANG_SET.has(firstSegment)) {
+      // No lang prefix → redirect to detected lang
+      const preferredLang = detectLang(request)
+      const url = request.nextUrl.clone()
+      url.pathname = `/${preferredLang}${pathname === '/' ? '' : pathname}`
+      // 307 in dev (avoids caching), 308 in production (SEO-friendly permanent)
+      const statusCode = process.env.NODE_ENV === 'development' ? 307 : 308
+      return NextResponse.redirect(url, statusCode)
+    }
+    // Valid lang prefix present — forward lang via header so getLangServer()
+    // reads the correct value even on first visit (before cookie is stored).
+    // Also sync cookie on response if it drifted.
+    const currentCookie = request.cookies.get(LANG_COOKIE)?.value
+    if (currentCookie !== firstSegment) {
+      ;(request as NextRequest & { _detectedLang?: string })._detectedLang = firstSegment
+    }
+    // Always inject x-lang header so Server Components get the right lang
+    ;(request as NextRequest & { _xLang?: string })._xLang = firstSegment
+  }
+
   // ---- Job 1: Brand-Detection -------------------------------------------
   const host = request.headers.get('host') ?? ''
   const brand = getBrandConfig(host)
@@ -119,14 +186,31 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('content-security-policy', csp)
   requestHeaders.set('x-brand-slug', brand.slug)
 
+  // Forward detected lang so getLangServer() reads it on every request
+  const xLang = (request as NextRequest & { _xLang?: string })._xLang
+  if (xLang) {
+    requestHeaders.set('x-lang', xLang)
+  }
+
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   })
   response.headers.set('content-security-policy', csp)
   setSecurityHeaders(response.headers)
 
-  // SEO cache-control for public content pages
-  if (SEO_PUBLIC_EXACT.has(pathname) || SEO_PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+  // Sync app_lang cookie when URL lang differs from stored cookie
+  const detectedLang = (request as NextRequest & { _detectedLang?: string })._detectedLang
+  if (detectedLang) {
+    response.cookies.set(LANG_COOKIE, detectedLang, {
+      maxAge: 31_536_000,
+      path: '/',
+      sameSite: 'lax',
+    })
+  }
+
+  // SEO cache-control for public content pages (match against lang-stripped path)
+  const strippedPath = stripLangForCache(pathname)
+  if (SEO_PUBLIC_EXACT.has(strippedPath) || SEO_PUBLIC_PREFIXES.some((p) => strippedPath.startsWith(p))) {
     response.headers.set('Cache-Control', SEO_CACHE)
   }
 

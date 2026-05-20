@@ -35,6 +35,11 @@ export interface OfferDetail {
   sku: string | null; url: string | null; crawled_at: string;
   shop_type?: 'local' | 'online_only';
   delivery_available?: boolean;
+  standard_price?: string | null;
+  standard_currency?: string | null;
+  promo_price?: string | null;
+  promo_currency?: string | null;
+  promo_valid_until?: string | null;
 }
 export interface ProductDetailResponse {
   id: number; slug: string;

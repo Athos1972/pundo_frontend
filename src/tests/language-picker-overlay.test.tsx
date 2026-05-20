@@ -4,10 +4,12 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 // ---- Mocks ----
 
 const mockRefresh = vi.fn()
+const mockPush = vi.fn()
 const mockReload = vi.fn()
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mockRefresh, push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ refresh: mockRefresh, push: mockPush, replace: vi.fn(), back: vi.fn() }),
+  usePathname: () => '/en/some-page',
 }))
 
 // Mock setLangCookie so it doesn't try to write document.cookie in JSDOM
@@ -74,6 +76,7 @@ import { renderHook } from '@testing-library/react'
 
 beforeEach(() => {
   mockRefresh.mockClear()
+  mockPush.mockClear()
   mockReload.mockClear()
   vi.mocked(LangModule.setLangCookie).mockClear()
   sessionStorageMock.clear()
@@ -290,21 +293,22 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
   }
 
   // T-NEW-1 — Same-Lang-Dismiss (AC-B2, AC-T1)
-  it('tapping English when serverLang=en calls router.refresh and dismisses dialog (same-lang path)', async () => {
+  it('tapping English when serverLang=en calls router.push and dismisses dialog (same-lang path)', async () => {
     mockLanguages = ['en-US']
     await renderOpen('en')
 
     const enOption = screen.getAllByRole('radio').find(el => el.textContent?.includes('English'))!
     await act(async () => { fireEvent.click(enOption) })
 
-    expect(mockRefresh).toHaveBeenCalledOnce()
+    expect(mockPush).toHaveBeenCalledOnce()
+    expect(mockPush).toHaveBeenCalledWith('/en/some-page')
     expect(mockReload).not.toHaveBeenCalled()
     // DOM-Dismiss-Assertion: dialog must be gone (not just mock-call check)
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   // T-NEW-2 — Different-Lang-Apply (AC-B3)
-  it('tapping Deutsch when serverLang=en calls reload and dismisses dialog (different-lang path)', async () => {
+  it('tapping Deutsch when serverLang=en calls router.push to /de path and dismisses dialog (different-lang path)', async () => {
     mockLanguages = ['en-US']
     await renderOpen('en')
 
@@ -312,9 +316,10 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
     await act(async () => { fireEvent.click(deOption) })
 
     expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('de')
-    expect(mockReload).toHaveBeenCalledOnce()
-    expect(mockRefresh).not.toHaveBeenCalled()
-    // DOM-Dismiss-Assertion: dismiss() runs before reload
+    expect(mockPush).toHaveBeenCalledOnce()
+    expect(mockPush).toHaveBeenCalledWith('/de/some-page')
+    expect(mockReload).not.toHaveBeenCalled()
+    // DOM-Dismiss-Assertion: dismiss() runs before push
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 

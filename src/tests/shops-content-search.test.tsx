@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act, fireEvent } from '@testing-library/react'
-import { ShopsContent } from '@/app/(customer)/shops/ShopsContent'
+import { ShopsContent } from '@/app/(customer)/[lang]/shops/ShopsContent'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 

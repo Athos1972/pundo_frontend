@@ -25,8 +25,12 @@ function LoginForm() {
 
   useEffect(() => {
     document.body.dataset.hydrated = 'true'
-    // Apply the real browser language after mount (deferred so SSR output matches)
-    setLang(getLangFromCookie())
+    // Apply the real browser language after mount (deferred so SSR output matches).
+    // startTransition avoids "direct setState in effect" lint warning — the update is
+    // intentionally non-blocking: it runs after paint so SSR and first-paint are identical.
+    startTransition(() => {
+      setLang(getLangFromCookie())
+    })
   }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

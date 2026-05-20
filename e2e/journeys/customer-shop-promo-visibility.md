@@ -1,7 +1,7 @@
 ---
 id: customer-shop-promo-visibility
 title: Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock)
-status: approved
+status: implemented
 spec-file: e2e/journeys/customer-shop-promo-visibility.spec.ts
 priority: P2
 owner-agent: e2e-tester
@@ -16,7 +16,7 @@ touches-roles:
 touches-states:
   - Offer.promo:active
   - Offer.promo:absent
-status-changed-at: 2026-05-20T00:00:00Z
+status-changed-at: 2026-05-20T15:10:00Z
 status-changed-by-spec: offer-price-model-and-display-20260520
 last-run: 1970-01-01T00:00:00Z
 last-result: N/A
@@ -27,8 +27,6 @@ last-result: N/A
 **Ziel:** Auf der Shop-Detailseite erscheinen Angebote mit aktiver Aktion im Block „Aktuelle Angebote" (im Produkt-Stil mit Badge), während Standard-Listings ausschließlich im Block „Produkte" landen. Kein Angebots-Block wenn keine aktive Aktion.
 
 **Voraussetzung:** Backend-Deployment BE-1–BE-4 (promo_price_tiers, neuer offers-Endpoint) abgeschlossen.
-
----
 
 ### P1: Kein Angebotsblock ohne aktive Aktion (AC-7)
 
@@ -41,8 +39,6 @@ last-result: N/A
 - Block „Products" ist sichtbar (Standard-Listings erscheinen dort).
 **Backend-Abhängigkeit:** Vollständig — Endpoint liefert leere Liste für Shop ohne aktive Aktionen.
 **Test-ID:** P1
-
----
 
 ### P2: Angebotsblock mit aktiver Aktion — Produkt-Stil-Karte (AC-8)
 
@@ -58,8 +54,6 @@ last-result: N/A
 **Backend-Abhängigkeit:** Vollständig.
 **Test-ID:** P2
 
----
-
 ### P3: Preis ohne 4-Nachkommastellen (AC-9)
 
 **Precondition:** Backend liefert `promo_price: "7.9900"` oder `standard_price: "12.5000"`.
@@ -69,8 +63,6 @@ last-result: N/A
 - Angezeigter Preis endet nicht auf mehr als 2 Dezimalstellen: `7.99`, nicht `7.9900`.
 **Backend-Abhängigkeit:** Keine zusätzliche — reine `fmtPrice()`-Logik im Frontend.
 **Test-ID:** P3
-
----
 
 ### P4: Aktions-Badge mit Datum (AC-10)
 
@@ -84,8 +76,6 @@ last-result: N/A
 - Durchgestrichener Standard-Preis sichtbar neben Aktionspreis (`<s>` oder `line-through`-Klasse).
 **Backend-Abhängigkeit:** Vollständig.
 **Test-ID:** P4
-
----
 
 ### P5: Alle 6 Sprachen — neue Keys vorhanden (AC-11)
 

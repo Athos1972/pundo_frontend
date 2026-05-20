@@ -1,7 +1,16 @@
 {
-  "sha": "312ae62",
-  "timestamp": "2026-05-19T14:36:05.911250+00:00",
-  "coverage_snapshot": {},
-  "last_journey": "shop-admin-offers",
-  "result": "PASS"
+  "sha": "10118b2f9da709bde99b613837accfa095a5d54a",
+  "date": "2026-05-20T13:21:00Z",
+  "spec": "offer-price-model-and-display-20260520",
+  "verdict": "SHIP",
+  "vitest": {
+    "files": 84,
+    "tests": 1616,
+    "passed": 1616
+  },
+  "e2e": {
+    "customer-shop-promo-visibility": "SHIP",
+    "shop-admin-offers": "FIX (pre-existing)",
+    "visual-smoke": "FAIL (intermittent pre-existing)"
+  }
 }

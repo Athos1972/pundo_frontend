@@ -9,7 +9,7 @@ proposed-in-spec: journey-catalog-system-20260423
 touches-modules:
   - src/app/(customer)/auth/**
   - src/app/(customer)/account/**
-  - src/app/(customer)/shops/[id]/**
+  - src/app/(customer)/shops/[slug]/**
   - src/app/(customer)/products/[slug]/**
   - src/components/shop/**
   - src/lib/api.ts

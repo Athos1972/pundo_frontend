@@ -35,8 +35,6 @@ last-run-sha: 312ae62
 
 **Finding F1 (offen):** `POST /shop-owner/products` Legacy-Endpoint versucht INSERT in `shop_owner_products` (Tabelle entfernt) → HTTP 500. Fixture-Setup schlägt fehl. Spec braucht Rewrite auf `/shop-owner/items` + `/shop-owner/shop-listings`.
 
----
-
 ## Gruppe E — Item-Details, Filter & Dashboard-Aufräumen (2026-05-19-offer-list-item-details)
 
 Implementierte Änderungen: Dashboard ohne Produkte-Kachel (AC-1), OfferList mit Item-Name (AC-2–4), Kategorie-Chip (AC-5–6), Description (AC-7–8), Thumbnail (AC-9–10), Textsuche (AC-11–15), Pagination-Fix (AC-16), Edit-Page Detail-Endpoint (AC-17), H1 mit Item-Name (AC-18), Item-Header-Block (AC-19), RTL-Layout (AC-20), neue i18n-Keys (AC-22), `nav_products` entfernt (AC-24).
@@ -131,8 +129,6 @@ Implementierte Änderungen: Dashboard ohne Produkte-Kachel (AC-1), OfferList mit
 - Thumbnail links, Text rechts (visuelle RTL-Logik).
 **Backend-Abhängigkeit:** Keine — reine CSS-Klassen-Prüfung.
 **Test-ID:** E7
-
----
 
 ## Gruppe F — Aktionspreis (promo_price_tiers + Zeitraum) (offer-price-model-and-display-20260520)
 

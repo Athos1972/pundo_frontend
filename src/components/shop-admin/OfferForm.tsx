@@ -29,6 +29,12 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
   const [selectedItem, setSelectedItem] = useState<ItemSearchResult | null>(preloadedItem ?? null)
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>(offer?.price_tiers ?? [])
   const [priceType, setPriceType] = useState<string>(offer?.price_type ?? 'fixed')
+  // Promo accordion state
+  const [showPromo, setShowPromo] = useState<boolean>(
+    !!(offer?.promo_price_tiers?.length && offer?.promo_valid_from && offer?.promo_valid_until)
+  )
+  const [promoTiers, setPromoTiers] = useState<PriceTier[]>(offer?.promo_price_tiers ?? [])
+  const [promoType, setPromoType] = useState<string>(offer?.promo_price_type ?? 'fixed')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isEdit = !!offer
@@ -57,6 +63,18 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
         if (hasInvalidStep) newErrors.price_tiers = tr.tier_step_error_price
       }
     }
+    // Promo validation: promo requires BOTH tiers AND full date range (all-or-nothing)
+    if (showPromo) {
+      const promoFrom = (data.get('promo_valid_from') as string) || null
+      const promoUntil = (data.get('promo_valid_until') as string) || null
+      const hasPromoTiers = promoTiers.length > 0 && promoTiers.some(t => t.steps.some(s => !!s.price))
+      const hasPromoDates = !!(promoFrom && promoUntil)
+      if (!hasPromoTiers) newErrors.promo_price_tiers = tr.tier_no_steps
+      if (!hasPromoDates) newErrors.promo_dates = tr.required
+      if (hasPromoTiers && hasPromoDates && promoFrom && promoUntil && promoFrom > promoUntil) {
+        newErrors.promo_dates = tr.valid_from + ' > ' + tr.valid_until
+      }
+    }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
     setErrors({})
 
@@ -74,15 +92,27 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
         // on_request and free have no price tiers
         const tiersToSend = (priceType === 'on_request' || priceType === 'free') ? [] : normalizedTiers
 
+        // Normalize promo tiers
+        const normalizedPromoTiers = promoTiers.map((tier) => ({
+          ...tier,
+          steps: tier.steps.map((s) => ({ ...s, price: s.price.replace(',', '.') })),
+        }))
+        const promoTiersToSend = showPromo && (promoType === 'fixed' || promoType === 'variable')
+          ? normalizedPromoTiers : []
+
         const body: Record<string, unknown> = {
           shop_listing_id: shopListingId,
           price_type: priceType,
           price_tiers: tiersToSend,
           currency: 'EUR',
+          // Promo fields
+          promo_price_type: showPromo ? promoType : null,
+          promo_price_tiers: promoTiersToSend,
+          promo_valid_from: showPromo ? (data.get('promo_valid_from') as string) || null : null,
+          promo_valid_until: showPromo ? (data.get('promo_valid_until') as string) || null : null,
+          // Optional promotion meta
           title: (data.get('title') as string) || null,
           description: (data.get('description') as string) || null,
-          valid_from: (data.get('valid_from') as string) || null,
-          valid_until: (data.get('valid_until') as string) || null,
           offer_url: (data.get('offer_url') as string) || null,
         }
 
@@ -238,50 +268,95 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
             </div>
           )}
 
-          {/* Price type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{tr.price}</label>
-            <select
-              value={priceType}
-              onChange={(e) => setPriceType(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
-            >
-              <option value="fixed">{tr.price}</option>
-              <option value="on_request">On request</option>
-              <option value="free">Free</option>
-              <option value="variable">Variable</option>
-            </select>
+          {/* Standardpreis */}
+          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">{tr.standard_price ?? 'Standard price'}</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{tr.price}</label>
+              <select
+                value={priceType}
+                onChange={(e) => setPriceType(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                <option value="fixed">{tr.price}</option>
+                <option value="on_request">On request</option>
+                <option value="free">Free</option>
+                <option value="variable">Variable</option>
+              </select>
+            </div>
+            {(priceType === 'fixed' || priceType === 'variable') && (
+              <>
+                <PriceTierEditor
+                  tiers={priceTiers}
+                  onChange={setPriceTiers}
+                  priceUnits={priceUnits}
+                  lang={lang}
+                />
+                {errors.price_tiers && (
+                  <p className="text-xs text-red-600">{errors.price_tiers}</p>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Price tiers for fixed/variable */}
-          {(priceType === 'fixed' || priceType === 'variable') && (
-            <>
-              <PriceTierEditor
-                tiers={priceTiers}
-                onChange={setPriceTiers}
-                priceUnits={priceUnits}
-                lang={lang}
-              />
-              {errors.price_tiers && (
-                <p className="text-xs text-red-600">{errors.price_tiers}</p>
-              )}
-            </>
-          )}
-
-          {/* Promotion period */}
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              label={tr.valid_from}
-              name="valid_from"
-              type="date"
-              defaultValue={offer?.valid_from?.slice(0, 10) ?? ''}
-            />
-            <FormField
-              label={tr.valid_until}
-              name="valid_until"
-              type="date"
-              defaultValue={offer?.valid_until?.slice(0, 10) ?? ''}
-            />
+          {/* Aktionspreis (Accordion) — disabled for scraper offers */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              disabled={isScraperOffer}
+              onClick={() => !isScraperOffer && setShowPromo(!showPromo)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>{tr.promo_section ?? 'Promotion (optional)'}</span>
+              <span className="text-gray-400 text-xs">{showPromo ? '▲' : '▼'}</span>
+            </button>
+            {showPromo && (
+              <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{tr.promo_price ?? 'Promotional price'}</label>
+                  <select
+                    value={promoType}
+                    onChange={(e) => setPromoType(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  >
+                    <option value="fixed">{tr.price}</option>
+                    <option value="on_request">On request</option>
+                    <option value="free">Free</option>
+                    <option value="variable">Variable</option>
+                  </select>
+                </div>
+                {(promoType === 'fixed' || promoType === 'variable') && (
+                  <>
+                    <PriceTierEditor
+                      tiers={promoTiers}
+                      onChange={setPromoTiers}
+                      priceUnits={priceUnits}
+                      lang={lang}
+                    />
+                    {errors.promo_price_tiers && (
+                      <p className="text-xs text-red-600">{errors.promo_price_tiers}</p>
+                    )}
+                  </>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    label={tr.valid_from}
+                    name="promo_valid_from"
+                    type="date"
+                    defaultValue={offer?.promo_valid_from?.slice(0, 10) ?? ''}
+                  />
+                  <FormField
+                    label={tr.valid_until}
+                    name="promo_valid_until"
+                    type="date"
+                    defaultValue={offer?.promo_valid_until?.slice(0, 10) ?? ''}
+                  />
+                </div>
+                {errors.promo_dates && (
+                  <p className="text-xs text-red-600">{errors.promo_dates}</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Optional promotion fields */}

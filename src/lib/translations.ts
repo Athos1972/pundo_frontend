@@ -312,6 +312,8 @@ export const translations = {
     filter_online_only: 'Online only',
     shop_offers: 'Current offers',
     shop_offer_valid_until: 'Valid until',
+    promo_badge: 'Sale until',
+    regular_price: 'Regular price',
     search: 'Search',
     shop_search_placeholder: 'Search shops...',
     // FAB Onboarding (F4010)
@@ -752,6 +754,8 @@ export const translations = {
     filter_online_only: 'Nur online',
     shop_offers: 'Aktuelle Angebote',
     shop_offer_valid_until: 'Gültig bis',
+    promo_badge: 'Aktion bis',
+    regular_price: 'Normalpreis',
     search: 'Suchen',
     shop_search_placeholder: 'Shops suchen...',
     // FAB Onboarding (F4010)
@@ -1192,6 +1196,8 @@ export const translations = {
     filter_online_only: 'Только онлайн',
     shop_offers: 'Актуальные акции',
     shop_offer_valid_until: 'Действует до',
+    promo_badge: 'Акция до',
+    regular_price: 'Обычная цена',
     search: 'Поиск',
     shop_search_placeholder: 'Поиск магазинов...',
     // FAB Onboarding (F4010)
@@ -1632,6 +1638,8 @@ export const translations = {
     filter_online_only: 'Μόνο online',
     shop_offers: 'Τρέχουσες προσφορές',
     shop_offer_valid_until: 'Ισχύει έως',
+    promo_badge: 'Προσφορά έως',
+    regular_price: 'Κανονική τιμή',
     search: 'Αναζήτηση',
     shop_search_placeholder: 'Αναζήτηση καταστημάτων...',
     // FAB Onboarding (F4010)
@@ -2072,6 +2080,8 @@ export const translations = {
     filter_online_only: 'أونلاين فقط',
     shop_offers: 'العروض الحالية',
     shop_offer_valid_until: 'صالح حتى',
+    promo_badge: 'عرض حتى',
+    regular_price: 'السعر العادي',
     search: 'بحث',
     shop_search_placeholder: 'البحث عن متاجر...',
     // FAB Onboarding (F4010)
@@ -2512,6 +2522,8 @@ export const translations = {
     filter_online_only: 'אונליין בלבד',
     shop_offers: 'מבצעים נוכחיים',
     shop_offer_valid_until: 'בתוקף עד',
+    promo_badge: 'מבצע עד',
+    regular_price: 'מחיר רגיל',
     search: 'חיפוש',
     shop_search_placeholder: 'חיפוש חנויות...',
     // FAB Onboarding (F4010)

@@ -28,6 +28,7 @@ import { CommunityFeedbackSection } from '@/components/community/CommunityFeedba
 import { getCustomerSession } from '@/lib/customer-api'
 import { ShopLogoImage } from '@/components/shop/ShopLogoImage'
 import { RelatedShopsWidget } from '@/components/shop/RelatedShopsWidget'
+import { ShopOfferCard } from '@/components/shop/ShopOfferCard'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
@@ -248,31 +249,13 @@ export default async function ShopPage({ params }: Props) {
           </div>
         )}
 
-        {/* Active shop offers */}
+        {/* Active shop offers — only offers with currently active promotion */}
         {offers.length > 0 && (
           <div>
             <h2 className="font-bold text-sm text-text font-heading mb-3">{tr.shop_offers}</h2>
             <div className="space-y-2">
               {offers.map(offer => (
-                <div key={offer.id} className="bg-surface border border-border rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-text text-sm">{offer.title}</p>
-                    {offer.price && (
-                      <span className="text-sm font-bold text-accent shrink-0">
-                        {offer.price} {offer.currency}
-                      </span>
-                    )}
-                  </div>
-                  {offer.description && (
-                    <p className="text-sm text-text-muted mt-1">{offer.description}</p>
-                  )}
-                  {offer.valid_until && (
-                    <p className="text-xs text-text-light mt-2">
-                      {tr.shop_offer_valid_until}{' '}
-                      {new Date(offer.valid_until).toLocaleDateString(lang, { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                  )}
-                </div>
+                <ShopOfferCard key={offer.id} offer={offer} lang={lang} />
               ))}
             </div>
           </div>

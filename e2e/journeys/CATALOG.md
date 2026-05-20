@@ -32,7 +32,7 @@
 | [service-catalog-auto-assign](service-catalog-auto-assign.md) | Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7 | implemented | P1 | PASS |
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
 | [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD + Foto-Upload (F6710) | implemented | P2 | — |
-| [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | approved | P2 | — |
+| [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |
 | [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
 

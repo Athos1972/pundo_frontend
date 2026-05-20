@@ -2,9 +2,10 @@
 
 ## Letzter Testlauf
 
-Datum: 2026-05-16  
-SHA: cfc253668e01407c8a79490a94ab059aefabed8b  
-Ergebnis: 43 passed · 3 skipped (datenbedingt) · 0 failed
+Datum: 2026-05-20  
+SHA: 10118b2f9da709bde99b613837accfa095a5d54a  
+Spec: offer-price-model-and-display-20260520  
+Ergebnis: 1616 Vitest PASS · E2E: customer-shop-promo-visibility SHIP (P2/P3/P4/P5 PASS, P1 SKIP erwartet)
 
 ---
 
@@ -13,7 +14,7 @@ Ergebnis: 43 passed · 3 skipped (datenbedingt) · 0 failed
 | Prüfung | Status |
 |---------|--------|
 | TypeScript (`tsc --noEmit`) | ✅ PASS — 0 Fehler |
-| ESLint | ✅ PASS — 0 Errors, 79 Warnings (pre-existing) |
+| ESLint | ⚠️ 1 pre-existing Error (OnboardingWizard.tsx:29 — setState in effect), 81 Warnings |
 
 ---
 
@@ -21,7 +22,11 @@ Ergebnis: 43 passed · 3 skipped (datenbedingt) · 0 failed
 
 | Dateien | Tests | Ergebnis |
 |---------|-------|---------|
-| 73 | 1424 | ✅ alle bestanden |
+| 84 | 1616 | ✅ alle bestanden |
+
+Neue Tests (offer-price-model-and-display-20260520):
+- `src/tests/shop-offer-card.test.tsx` — 17 Tests: ShopOfferCard Standard/Promo/on_request/Bild/Link/RTL/Badge
+- `src/tests/offer-form-promo.test.tsx` — 40 Tests: shop-admin-translations Promo-Keys, OfferForm Rendering, Promo-Validierungslogik
 
 ---
 
@@ -31,18 +36,44 @@ Ergebnis: 43 passed · 3 skipped (datenbedingt) · 0 failed
 
 | Test | Status | Anmerkung |
 |------|--------|-----------|
-| Produktseite: Bilder laden, Carousel | ✅ PASS | 404-Seite lädt korrekt, kein Carousel-DOM → Assertion übersprungen |
+| Produktseite: Bilder laden, Carousel | ❌ FAIL | Carousel-Sichtbarkeit bei 768px — 0 sichtbar statt ≥2 (intermittenter Fehler, pre-existing seit 2026-05-15) |
 | Suchergebnisse: Seite lädt ohne Crash | ✅ PASS | Leerer Zustand korrekt gerendert |
+| Shop-Owner Smoke S1–S3 | ✅ 3x PASS | Auto-Approve + Dashboard + auto_seeded SKIP (Baustein B nicht deployed) |
+
+#### Journey: customer-shop-promo-visibility (NEU — offer-price-model-and-display-20260520)
+
+| Schritt | Status | Anmerkung |
+|---------|--------|-----------|
+| P1 — Kein Angebotsblock ohne Aktion | ⏭ SKIP | e2e-test-shop hat aktives Angebot — korrekt |
+| P2 — ShopOfferCard vorhanden | ✅ PASS | Card sichtbar mit Preis |
+| P3 — Preis-Format (max 2 Dezimalstellen) | ✅ PASS | 0 Treffer mit 3+ Stellen |
+| P4 — Aktions-Badge + Strikethrough | ✅ PASS | bg-red-50 Badge + `<s>` vorhanden |
+| P5 — Translations alle 6 Sprachen | ✅ PASS | Kein "undefined" in 6 Sprachen |
+
+Verdict: **SHIP**
+
+#### Journey: shop-admin-offers (mustRun)
+
+| Schritt | Status | Anmerkung |
+|---------|--------|-----------|
+| A1 | ❌ FAIL | item_id=1 nicht in pundo_test (pre-existing seit 2026-05-19) |
+| SP4 | ❌ FAIL | Cascadiert von A1 |
+| E5b | ❌ FAIL | Suche filtert nicht — war SKIP (keine Daten), jetzt sichtbar da e2e-Angebot existiert. Untersuchung nötig. |
+| A2–A4, B1–B4, C1–C3, D1–D2, DT1–DT2, E5a/c/d, E1, E-NAV, E7, XS2 | ✅ 8 PASS | |
+| A5–A6, B1-Cascade, C-Cascade etc. | ⏭ 27 SKIP | Cascade von A1 |
+
+RCA A1/SP4: item_id=1 (e2e-vet-consultation-larnaca) fehlt in pundo_test — pre-existing seit 19.05.  
+RCA E5b: Neu sichtbar durch erstelltes E2E-Angebot. Selector-Issue oder Filter-Bug in OfferList — separate Untersuchung.
 
 #### SEO-Tests (`e2e/seo-lengths.spec.ts`)
 
 | Test | Status | Anmerkung |
 |------|--------|-----------|
-| Home page — title/OG | ✅ PASS | og:title, og:description, og:image, og:site_name, twitter:card vollständig |
-| Shop detail page | ⏭ SKIP | Kein Shop via /shops-Listing erreichbar (Prod-Sync unvollständig) |
-| Product detail page | ⏭ SKIP | Kein Produkt via /search erreichbar (Prod-Sync unvollständig) |
-| Guide detail page — title truncated, OG | ✅ PASS | `title:{absolute:…}` verhindert Template-Overlap ≤60 Zeichen |
-| Ahrefs-Schwellwerte (Konstanten) | ✅ PASS | TITLE_MIN=50, TITLE_MAX=60, DESC_MIN=110, DESC_MAX=160 |
+| Home page — title/OG | ✅ PASS | |
+| Shop detail page | ⏭ SKIP | Prod-Sync unvollständig |
+| Product detail page | ⏭ SKIP | Prod-Sync unvollständig |
+| Guide detail page | ✅ PASS | |
+| Ahrefs-Schwellwerte (Konstanten) | ✅ PASS | |
 
 #### Language Picker (`e2e/language-picker.spec.ts`)
 
@@ -56,36 +87,15 @@ Ergebnis: 43 passed · 3 skipped (datenbedingt) · 0 failed
 |------|--------|
 | Section auf Shop-Seite, Login-CTA, RTL, Redirect (6 Tests) | ✅ alle PASS |
 
-#### Customer Discovery (`e2e/journeys/customer-discovery.spec.ts`)
-Config: `playwright.config.ts` (global-setup aktiv, kein DB-Reset)
-
-| Test | Status | Anmerkung |
-|------|--------|-----------|
-| Schritt 1 — Startseite Suchleiste | ✅ PASS | |
-| Schritt 2 — Suche navigiert zu /search | ✅ PASS | |
-| Schritt 3 — Suchergebnisse mind. 1 Karte | ⏭ SKIP | Keine Prod-Items in pundo_test |
-| Schritt 4 — Klick auf ProductCard | ✅ PASS | |
-| Schritt 5 — Produktname und Preis/Angebote | ✅ PASS | |
-| Schritt 6 — Karten-Element (optional) | ✅ PASS | |
-| Schritt 7 — Shop-Detailseite als Guest | ✅ PASS | |
-| Schritt 8 — Shop-Name sichtbar | ✅ PASS | E2E-Fixture-Shop via global-setup |
-| Schritt 9 — Back-Navigation | ✅ PASS | |
-
 ---
 
-### Datenlage pundo_test
+### Datenlage pundo_test (aktualisiert 2026-05-20)
 
-| Tabelle | Count | Anmerkung |
-|---------|-------|-----------|
-| shops | 1 | E2E-Fixture (shop-a) |
-| items | 3 | E2E-Fixtures (Royal Canin Varianten) |
-| categories | 1 | |
-| shop_listings | 2 | E2E-Fixtures |
-| offers | 2 | E2E-Fixtures |
-
-Der Sync hat das Schema zurückgesetzt und die Zahlen aus der Prod-DB gemeldet, jedoch keine echten Tabellendaten übertragen (SSH-Verbindungsabbruch). Nur E2E-Fixtures aus `prepare_e2e_db.py --skip-reset --skip-prod-copy` sind vorhanden.
-
-SEO-Tests für Shop- und Produkt-Detail-Seiten brauchen echte navigierbare Shops/Produkte → warten auf vollständigen Prod-Sync.
+| Tabelle | Anmerkung |
+|---------|-----------|
+| shops | E2E-Fixture e2e-test-shop (ID 7777), ggf. weitere aus Prod-Sync |
+| items | item_id=1 (e2e-vet-consultation-larnaca) FEHLT — E2E-Fixtures benötigen Aktualisierung |
+| unified_offers | Offer 2634 (Fotokopieren DIN-A4, promo_valid_until 2026-06-19) — manuell erstellt für Promo-Tests |
 
 ---
 
@@ -101,4 +111,7 @@ SEO-Tests für Shop- und Produkt-Detail-Seiten brauchen echte navigierbare Shops
 
 | ID | Beschreibung | Status |
 |----|-------------|--------|
-| DATA-001 | Prod-Sync unvollständig — pundo_test hat nur E2E-Fixtures, keine echten Shops/Items | offen |
+| DATA-001 | item_id=1 (e2e-vet-consultation-larnaca) fehlt in pundo_test — shop-admin-offers A1 und SP4 immer FAIL | offen seit 2026-05-19 |
+| DATA-002 | E5b (Suche OfferList) neu sichtbar da E2E-Angebot existiert — war vorher SKIP | neu 2026-05-20 |
+| SMOKE-001 | Visual Smoke Carousel intermittent FAIL bei 768px — pre-existing seit 2026-05-15 | offen |
+| LINT-001 | OnboardingWizard.tsx:29 setState in effect — pre-existing | offen |

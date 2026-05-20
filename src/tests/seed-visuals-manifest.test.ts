@@ -108,10 +108,7 @@ describe('seed-visuals manifest', () => {
     if (manifest.items.length === 0) return // graceful skip
 
     for (const item of manifest.items) {
-      expect(item.bytes_webp).toBeLessThanOrEqual(
-        MAX_BYTES,
-        `${item.slug}.webp exceeds 200 KB (${item.bytes_webp} bytes)`,
-      )
+      expect(item.bytes_webp, `${item.slug}.webp exceeds 200 KB (${item.bytes_webp} bytes)`).toBeLessThanOrEqual(MAX_BYTES)
     }
   })
 
@@ -120,10 +117,7 @@ describe('seed-visuals manifest', () => {
     if (manifest.items.length === 0) return // graceful skip
 
     for (const item of manifest.items) {
-      expect(item.bytes_jpg).toBeLessThanOrEqual(
-        MAX_BYTES,
-        `${item.slug}.jpg exceeds 200 KB (${item.bytes_jpg} bytes)`,
-      )
+      expect(item.bytes_jpg, `${item.slug}.jpg exceeds 200 KB (${item.bytes_jpg} bytes)`).toBeLessThanOrEqual(MAX_BYTES)
     }
   })
 
@@ -132,10 +126,7 @@ describe('seed-visuals manifest', () => {
     if (manifest.items.length === 0) return // graceful skip
 
     for (const item of manifest.items) {
-      expect(item.bytes_og).toBeLessThanOrEqual(
-        MAX_BYTES,
-        `${item.slug}-og.webp exceeds 200 KB (${item.bytes_og} bytes)`,
-      )
+      expect(item.bytes_og, `${item.slug}-og.webp exceeds 200 KB (${item.bytes_og} bytes)`).toBeLessThanOrEqual(MAX_BYTES)
     }
   })
 

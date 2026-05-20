@@ -96,12 +96,23 @@ export interface ShopDetailResponse extends ShopListItem {
 
 export interface ShopOffer {
   id: number
-  title: string
-  description?: string | null
-  price?: string | null
-  currency: string
-  valid_from?: string | null
-  valid_until?: string | null
+  // Item-Embed (vom Backend inline aufgelöst, lokalisiert per Accept-Language)
+  item_name: string
+  item_slug: string | null        // für /products/[slug]-Link
+  item_photo_url: string | null   // Thumbnail-URL
+  item_brand: string | null
+  item_description: string | null
+
+  // Standardpreis (immer vorhanden, außer price_type on_request/free)
+  standard_price: string | null   // z.B. "12.5000" → via fmtPrice()
+  standard_price_type: PriceType
+  standard_currency: string
+
+  // Aktionspreis (nur wenn heute innerhalb Aktionszeitraum)
+  promo_price: string | null
+  promo_price_type: PriceType | null
+  promo_currency: string | null
+  promo_valid_until: string | null  // ISO-8601, für Badge-Anzeige
 }
 
 export interface CategoryItem {

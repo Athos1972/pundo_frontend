@@ -28,7 +28,8 @@ export function OfferFilterBar({
   return (
     <div className="flex flex-wrap gap-2">
       <input
-        type="search"
+        type="text"
+        data-testid="offer-search"
         value={searchText}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={tr.offer_search_placeholder}

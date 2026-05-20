@@ -5,6 +5,7 @@ import { useState, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { tAdmin } from '@/lib/shop-admin-translations'
+import { fmtPrice } from '@/lib/utils'
 import { showToast } from './Toast'
 import { OfferFilterBar } from './OfferFilterBar'
 import { resolveLocalizedName } from './OfferItemHeader'
@@ -44,8 +45,8 @@ function formatDateRange(from: string | null, until: string | null): string {
 }
 
 function isExpired(offer: AdminOffer): boolean {
-  if (!offer.valid_until) return false
-  return new Date(offer.valid_until) < new Date()
+  if (!offer.promo_valid_until) return false
+  return new Date(offer.promo_valid_until) < new Date()
 }
 
 function isDeletable(offer: AdminOffer): boolean {
@@ -106,12 +107,28 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
   }
 
   function getPriceDisplay(offer: AdminOffer): string {
-    if (offer.price_type === 'on_request') return 'on request'
-    if (offer.price_type === 'free') return 'free'
-    const tier = offer.price_tiers?.[0]
-    const step = tier?.steps?.[0]
-    if (step?.price) return `${step.price} ${step.currency}`
-    return ''
+    const now = new Date()
+    const promoActive = !!(
+      offer.promo_valid_from && offer.promo_valid_until &&
+      new Date(offer.promo_valid_from) <= now && new Date(offer.promo_valid_until) >= now &&
+      offer.promo_price_tiers?.[0]?.steps?.[0]?.price
+    )
+
+    // Standard price display
+    let std = ''
+    if (offer.price_type === 'on_request') std = 'on request'
+    else if (offer.price_type === 'free') std = 'free'
+    else {
+      const step = offer.price_tiers?.[0]?.steps?.[0]
+      if (step?.price) std = `${fmtPrice(step.price)} ${step.currency}`
+    }
+
+    if (promoActive) {
+      const promoStep = offer.promo_price_tiers[0].steps[0]
+      const promo = `${fmtPrice(promoStep.price)} ${promoStep.currency}`
+      return std ? `${promo} (${tr.standard_price ?? 'std'}: ${std})` : promo
+    }
+    return std
   }
 
   function handleArchive(id: number) {
@@ -261,7 +278,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                     </p>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {formatDateRange(offer.valid_from, offer.valid_until)}
+                    {formatDateRange(offer.promo_valid_from, offer.promo_valid_until)}
                     {getPriceDisplay(offer) && ` · ${getPriceDisplay(offer)}`}
                   </p>
                 </div>

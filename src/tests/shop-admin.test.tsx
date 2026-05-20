@@ -252,7 +252,7 @@ describe('ProductList', () => {
 // ─── OfferList tabs ───────────────────────────────────────────────────────────
 
 describe('OfferList', () => {
-  const makeOffer = (id: number, title: string, archived: boolean, valid_until: string): import('@/types/shop-admin').AdminOffer => ({
+  const makeOffer = (id: number, title: string, archived: boolean, promo_valid_until: string): import('@/types/shop-admin').AdminOffer => ({
     id,
     shop_listing_id: 100 + id,
     title,
@@ -260,8 +260,10 @@ describe('OfferList', () => {
     price_type: 'fixed',
     price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: '5.00', currency: 'EUR' }] }],
     currency: 'EUR',
-    valid_from: '2026-01-01',
-    valid_until,
+    promo_price_type: 'fixed',
+    promo_price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: '3.99', currency: 'EUR' }] }],
+    promo_valid_from: '2026-01-01',
+    promo_valid_until,
     source: 'shop_manual',
     offer_url: null,
     archived,

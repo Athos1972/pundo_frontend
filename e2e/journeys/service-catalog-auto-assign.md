@@ -4,6 +4,7 @@ title: Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7
 status: implemented
 priority: P1
 owner-agent: coder
+spec-file: e2e/journeys/service-catalog-auto-assign.spec.ts
 proposed-in-spec: service-katalog-auto-assign-20260502
 status-changed-at: 2026-05-03T10:08:00Z
 status-changed-by-spec: service-katalog-auto-assign-20260502

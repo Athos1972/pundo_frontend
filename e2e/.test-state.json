@@ -3,17 +3,17 @@
   "password": "E2eTestPassword!99",
   "shop_name": "E2E Test Shop",
   "shop_address": "Test Street 1, Nicosia",
-  "ownerId": 5,
-  "shopId": 3763,
+  "ownerId": 367,
+  "shopId": 7777,
   "shopSlug": "e2e-test-shop",
   "storageState": {
     "cookies": [
       {
         "name": "shop_owner_token",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1Iiwic2hvcF9pZCI6Mzc2Mywic3RhdHVzIjoiYXBwcm92ZWQiLCJleHAiOjE3Nzk4MTE4NDh9.znfMnswaz9tBrEHVeiO2zx_72laDT1xLabEF1SvZ9YE",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNjciLCJzaG9wX2lkIjo3Nzc3LCJzdGF0dXMiOiJhcHByb3ZlZCIsImV4cCI6MTc3OTg5MjQ3M30.ocHTCkSJA3k2p80DDiYXATmRrBULkQH_0HB5g4yshK4",
         "domain": "127.0.0.1",
         "path": "/",
-        "expires": 1779811848.109,
+        "expires": 1779892473.705,
         "httpOnly": true,
         "secure": false,
         "sameSite": "Lax"
@@ -21,5 +21,5 @@
     ],
     "origins": []
   },
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3Nzk4MTE4NDl9.fP-iJ0y1xN-Vc83AWaye7PuIRYGk7d2zFN8qjXNjypo"
+  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDgzIiwicm9sZSI6InN1cGVyYWRtaW4iLCJ0eXBlIjoiYWRtaW4iLCJleHAiOjE3Nzk4OTI0NzR9.hsTVSNsUMaITgZGt_qxssb2ZSOlzXvqgeX5S3lUq8H0"
 }

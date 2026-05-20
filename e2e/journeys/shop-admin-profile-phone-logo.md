@@ -8,7 +8,7 @@ owner-agent: coder
 proposed-in-spec: shop-admin-profile-catalogued-20260424
 touches-modules:
   - src/app/(shop-admin)/**
-  - src/app/(customer)/shops/[id]/**
+  - src/app/(customer)/shops/[slug]/**
   - src/lib/shop-admin-api.ts
 touches-roles:
   - shop-owner

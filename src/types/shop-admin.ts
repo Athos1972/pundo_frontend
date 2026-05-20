@@ -158,11 +158,16 @@ export interface AdminOffer {
   shop_listing_id: number
   title: string | null
   description: string | null
+  // Standardpreis (Pflicht, außer price_type on_request/free)
   price_type: PriceType
   price_tiers: PriceTier[]
   currency: string
-  valid_from: string | null
-  valid_until: string | null
+  // Aktionspreis (optional — alle vier Felder oder keines)
+  promo_price_type: PriceType | null
+  promo_price_tiers: PriceTier[]
+  promo_valid_from: string | null
+  promo_valid_until: string | null
+  // Metadaten
   source: ItemSource
   offer_url: string | null
   archived: boolean

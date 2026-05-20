@@ -1455,15 +1455,21 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
       return
     }
 
-    // type="text" works with Playwright fill() — React onChange fires via CDP keyboard events
-    await searchInput.fill('zzz-no-match-xyzxyzxyz')
+    // pressSequentially triggers React onChange per keystroke (more reliable than fill() for
+    // controlled inputs under React 19 with CDP-based event dispatch)
+    await searchInput.pressSequentially('zzz-no-match-xyzxyzxyz', { delay: 20 })
     await expect(searchInput).toHaveValue('zzz-no-match-xyzxyzxyz', { timeout: 3_000 })
 
-    // The no-results message reads "No offers match the filter." (en).
-    const noResultsMsg = page.locator('p').filter({
-      hasText: /match the filter|entsprechen dem Filter|No offers match|Keine Angebote entsprechen/i,
-    })
-    await expect(noResultsMsg, 'E5b: Suche hat nicht gefiltert — kein "no results"-Element nach 8s').toBeVisible({ timeout: 8_000 })
+    // Language-independent check: the offer list container must disappear and the no-results
+    // paragraph (text-gray-400) must appear. Avoids regex that only covered EN/DE (B8950-002).
+    await expect(
+      page.locator('div.bg-white.rounded-xl.border'),
+      'E5b: Offer-Tabelle noch sichtbar — Filter hat nicht angeschlagen'
+    ).toHaveCount(0, { timeout: 8_000 })
+    await expect(
+      page.locator('p.text-gray-400.text-sm.text-center'),
+      'E5b: No-results-Paragraph fehlt'
+    ).toBeVisible({ timeout: 3_000 })
   })
 
   test('E5c — Suchfeld leeren zeigt alle Items wieder (AC-13)', async ({ page }) => {

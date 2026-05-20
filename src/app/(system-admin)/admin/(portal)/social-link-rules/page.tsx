@@ -79,9 +79,9 @@ export default async function SocialLinkRulesPage({ searchParams }: PageProps) {
           ↵
         </button>
         {(q || category) && (
-          <a href="/admin/social-link-rules" className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/admin/social-link-rules" className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
             {tr.clear}
-          </a>
+          </Link>
         )}
       </form>
 

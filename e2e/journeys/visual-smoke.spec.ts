@@ -40,20 +40,23 @@ test.describe('Visual Smoke-Test', () => {
 
     // Carousel: bei Tablet-Breite mind. 2 Items im DOM.
     // DOM-Präsenz ist der verlässliche Check; Viewport-Sichtbarkeit ist zusätzlich,
-    // aber wird nur geprüft wenn das Carousel bereits gerendert/gelayoutet ist
-    // (lr.width > 0). Sonst intermittent: getBoundingClientRect gibt 0 zurück wenn
-    // das Carousel noch nicht gemalt wurde.
+    // aber wird nur geprüft wenn das Carousel bereits gerendert/gelayoutet ist.
+    // Fix B8950-003: waitForFunction stellt sicher dass Layout abgeschlossen ist bevor
+    // getBoundingClientRect aufgerufen wird (Race-Condition bei pageload).
     const carouselList = page.locator('[role="list"]').first()
     const itemCount = await carouselList.locator('[role="listitem"]').count()
     if (itemCount > 0) {
       expect(itemCount, 'Carousel: weniger als 2 Items im DOM').toBeGreaterThanOrEqual(2)
 
-      const listWidth = await page.evaluate(() => {
+      // Wait until the list is actually laid out (width > 0) before measuring visibility.
+      // This eliminates the race-condition where getBoundingClientRect returns 0 for a list
+      // that exists in the DOM but hasn't been painted yet.
+      const isLaidOut = await page.waitForFunction(() => {
         const list = document.querySelector('[role="list"]')
-        return list ? list.getBoundingClientRect().width : 0
-      })
-      if (listWidth > 0) {
-        // Only check viewport visibility when the list has been laid out
+        return list ? list.getBoundingClientRect().width > 0 : false
+      }, { timeout: 5_000 }).catch(() => false)
+
+      if (isLaidOut) {
         const visibleInViewport = await page.evaluate(() => {
           const list = document.querySelector('[role="list"]')
           if (!list) return 0

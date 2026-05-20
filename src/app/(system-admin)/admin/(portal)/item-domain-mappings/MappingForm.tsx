@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import type { SysAdminItemDomainMapping } from '@/types/system-admin'
 
@@ -165,12 +166,12 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
         >
           {isPending ? tr.saving : tr.save}
         </button>
-        <a
+        <Link
           href="/admin/item-domain-mappings"
           className="px-5 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
         >
           {tr.cancel}
-        </a>
+        </Link>
       </div>
     </form>
   )

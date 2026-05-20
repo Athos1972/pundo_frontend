@@ -72,12 +72,12 @@ export default async function ItemDomainMappingsPage({ searchParams }: PageProps
           ↵
         </button>
         {(domain || specialty) && (
-          <a
+          <Link
             href="/admin/item-domain-mappings"
             className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
           >
             {tr.clear}
-          </a>
+          </Link>
         )}
       </form>
 

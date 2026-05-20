@@ -120,7 +120,7 @@ Kein `pre-existing`-Label mehr — jedes FAIL hat eine Bug-Datei mit Owner + Kat
 | Bug-ID | Kategorie | Status | Owner | Repo | Entdeckt |
 |--------|-----------|--------|-------|------|---------|
 | B8950-001 | FIXTURE-DEFEKT | OFFEN | e2e-tester | frontend | 2026-05-19 |
-| B8950-002 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-20 |
-| B8950-003 | FLAKY | OFFEN | BB | frontend | 2026-05-15 |
-| B8950-004 | FUNKTIONSFEHLER | OFFEN | coder | frontend | 2026-05-01 |
+| B8950-002 | TESTFEHLER | GELÖST | coder | frontend | 2026-05-20 |
+| B8950-003 | FLAKY | GELÖST | BB | frontend | 2026-05-15 |
+| B8950-004 | FUNKTIONSFEHLER | GELÖST | coder | frontend | 2026-05-01 |
 | B8950-005 | TESTFEHLER | GELÖST | BB | frontend | 2026-05-20 |

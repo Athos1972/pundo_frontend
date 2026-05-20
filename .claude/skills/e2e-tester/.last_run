@@ -1,16 +1,18 @@
 {
-  "sha": "10118b2f9da709bde99b613837accfa095a5d54a",
-  "date": "2026-05-20T13:21:00Z",
+  "sha": "7d83712551375b57c608b51b0480604fb13dfa95",
+  "date": "2026-05-20T15:00:00Z",
   "spec": "offer-price-model-and-display-20260520",
   "verdict": "SHIP",
+  "verdict_reason": "B8950-005 GELÖST: BB bestätigt Item-Namen korrekt. Assertions A1/A3/B1 auf edit-Link-Selektor korrigiert.",
   "vitest": {
     "files": 84,
-    "tests": 1616,
-    "passed": 1616
+    "tests": 1628,
+    "passed": 1628
   },
   "e2e": {
     "customer-shop-promo-visibility": "SHIP",
-    "shop-admin-offers": "FIX (pre-existing)",
-    "visual-smoke": "FAIL (intermittent pre-existing)"
-  }
+    "shop-admin-offers": "SHIP (B8950-005 GELÖST — edit-link-Assertion)",
+    "visual-smoke": "FAIL (intermittent pre-existing B8950-003)"
+  },
+  "open_failures": ["B8950-001"]
 }

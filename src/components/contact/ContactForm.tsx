@@ -39,6 +39,10 @@ export function ContactForm({ lang }: Props) {
     setTurnstileToken(token)
   }, [])
 
+  const handleTurnstileError = useCallback(() => {
+    setStatus('captcha_failed')
+  }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -148,7 +152,7 @@ export function ContactForm({ lang }: Props) {
         />
       </div>
 
-      <TurnstileWidget onToken={handleToken} />
+      <TurnstileWidget onToken={handleToken} onError={handleTurnstileError} />
 
       {status === 'captcha_failed' && (
         <p className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
@@ -164,7 +168,7 @@ export function ContactForm({ lang }: Props) {
 
       <button
         type="submit"
-        disabled={status === 'sending'}
+        disabled={status === 'sending' || !turnstileToken}
         className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors"
       >
         {status === 'sending' ? tr.contact_sending : tr.contact_send}

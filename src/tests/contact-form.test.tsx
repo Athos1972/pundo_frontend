@@ -10,11 +10,21 @@ vi.mock('next/link', () => ({
     <a href={href} className={className}>{children}</a>,
 }))
 
-// TurnstileWidget: in tests call onToken immediately so forms are not blocked by CAPTCHA
+// TurnstileWidget: call onToken immediately so forms are not blocked by CAPTCHA.
+// capturedOnError is set on each render so tests can imperatively trigger failure.
+let capturedOnError: (() => void) | undefined
+
 vi.mock('@/components/security/TurnstileWidget', async () => {
   const { useEffect } = await import('react')
   return {
-    TurnstileWidget: ({ onToken }: { onToken: (token: string) => void }) => {
+    TurnstileWidget: ({
+      onToken,
+      onError,
+    }: {
+      onToken: (token: string) => void
+      onError?: () => void
+    }) => {
+      capturedOnError = onError
       useEffect(() => { onToken('test-bypass-token') }, [onToken])
       return null
     },
@@ -211,6 +221,36 @@ describe('ContactForm — Interaktionen', () => {
     const select = screen.getByRole('combobox')
     await user.selectOptions(select, 'contact_cat_suggestion')
     expect(select).toHaveValue('contact_cat_suggestion')
+  })
+})
+
+// ── ContactForm Turnstile-Resilienz ───────────────────────────────────────────
+
+describe('ContactForm — Turnstile Resilienz (B-Frontend-005)', () => {
+  it('Button ist aktiv sobald onToken feuert', async () => {
+    render(<ContactForm lang="en" />)
+    // Mock fires onToken immediately → button should be enabled
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /send message/i })).not.toBeDisabled()
+    })
+  })
+
+  it('onError-Callback wird an TurnstileWidget weitergegeben', async () => {
+    render(<ContactForm lang="en" />)
+    await waitFor(() => expect(capturedOnError).toBeDefined())
+    expect(typeof capturedOnError).toBe('function')
+  })
+
+  it('zeigt turnstile_failed wenn capturedOnError ausgelöst wird', async () => {
+    render(<ContactForm lang="en" />)
+    await waitFor(() => expect(capturedOnError).toBeDefined())
+
+    // Simulate widget error
+    capturedOnError!()
+
+    await waitFor(() => {
+      expect(screen.getByText(t('en').turnstile_failed)).toBeInTheDocument()
+    })
   })
 })
 

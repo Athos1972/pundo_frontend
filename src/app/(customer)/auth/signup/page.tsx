@@ -9,6 +9,10 @@ export const metadata: Metadata = {
 }
 
 export default async function SignupPage() {
+  if (!process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY && process.env.NODE_ENV === 'production') {
+    console.error('[SignupPage] CRITICAL: NEXT_PUBLIC_TURNSTILE_SITEKEY not configured — all signups blocked')
+  }
+
   const lang = await getLangServer()
   const { auth_signup } = t(lang)
 

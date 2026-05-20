@@ -6,7 +6,7 @@
 // absent (local development without Cloudflare).
 
 import Script from 'next/script'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { t } from '@/lib/translations'
 import { getLangFromCookie } from '@/lib/lang'
 
@@ -35,8 +35,9 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
   const tr = t(lang)
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
+  const [tokenReceived, setTokenReceived] = useState(false)
 
-  // Dev-bypass: no sitekey configured → call onToken immediately.
+  // No sitekey: dev-bypass in development, signal error in production.
   useEffect(() => {
     if (!sitekey) {
       if (process.env.NODE_ENV === 'development') {
@@ -44,9 +45,14 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
           '[TurnstileWidget] NEXT_PUBLIC_TURNSTILE_SITEKEY not set — using dev-bypass token.',
         )
         onToken('dev-bypass')
+      } else {
+        console.error(
+          '[TurnstileWidget] NEXT_PUBLIC_TURNSTILE_SITEKEY is not set in production — CAPTCHA cannot render, forms will be blocked.',
+        )
+        onError?.()
       }
     }
-  // onToken is intentionally excluded from deps — we only want this to run once on mount.
+  // onToken/onError intentionally excluded — run once on mount only.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sitekey])
 
@@ -55,6 +61,7 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
     if (!sitekey) return
 
     window.onTurnstileSuccess = (token: string) => {
+      setTokenReceived(true)
       onToken(token)
     }
 
@@ -65,7 +72,6 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
     return () => {
       delete window.onTurnstileSuccess
       delete window.onTurnstileError
-      // Remove the rendered widget if Turnstile API is available.
       if (widgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.remove(widgetIdRef.current)
@@ -75,13 +81,11 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
         widgetIdRef.current = null
       }
     }
-  // Stable callback refs: onToken / onError change identity on every render in
-  // most callers, but re-registering globals on each render is fine (cheap) and
-  // ensures the latest callbacks are always used.
+  // Stable callback refs: re-registering globals on each render is fine (cheap)
+  // and ensures the latest callbacks are always used.
   }, [sitekey, onToken, onError])
 
   if (!sitekey) {
-    // Nothing to render in dev-bypass mode.
     return null
   }
 
@@ -94,20 +98,20 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
         data-sitekey={sitekey}
         data-callback="onTurnstileSuccess"
         data-error-callback="onTurnstileError"
-        // RTL-compatible: no fixed text-align, let the parent decide layout.
       />
 
-      {/* Accessible status message while the widget loads (hidden once the
-          iframe appears, so we keep it as a visually-hidden hint only). */}
-      <p className="sr-only" aria-live="polite">
-        {tr.turnstile_loading}
-      </p>
+      {/* Visible loading hint until the widget issues a token. Hidden once ready. */}
+      {!tokenReceived && (
+        <p className="text-xs text-text-muted mt-1" aria-live="polite">
+          {tr.turnstile_loading}
+        </p>
+      )}
 
-      {/* Script loaded lazily — only downloaded when the component mounts.
-          Strategy lazyOnload defers until after the page is interactive.  */}
+      {/* afterInteractive ensures the script loads as soon as the page hydrates,
+          avoiding a race where a fast user submits before the widget is ready. */}
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
     </div>
   )

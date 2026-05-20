@@ -26,6 +26,10 @@ export function SignupForm({ lang }: Props) {
     setTurnstileToken(token)
   }, [])
 
+  const handleTurnstileError = useCallback(() => {
+    setError(tr.turnstile_failed)
+  }, [tr.turnstile_failed])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -36,7 +40,8 @@ export function SignupForm({ lang }: Props) {
     }
 
     if (!turnstileToken) {
-      setError(tr.turnstile_required)
+      // Defence-in-depth: button is disabled when token is absent, so this
+      // path should not be reachable under normal circumstances.
       return
     }
 
@@ -138,7 +143,7 @@ export function SignupForm({ lang }: Props) {
         <p className="text-xs text-text-muted mt-1">{tr.auth_password_min}</p>
       </div>
 
-      <TurnstileWidget onToken={handleToken} />
+      <TurnstileWidget onToken={handleToken} onError={handleTurnstileError} />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -148,7 +153,7 @@ export function SignupForm({ lang }: Props) {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !turnstileToken}
         className="w-full py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-60"
       >
         {loading ? '...' : tr.auth_signup}

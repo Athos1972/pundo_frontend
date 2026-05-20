@@ -98,7 +98,7 @@ describe('UserMenu — authenticated', () => {
         expect.objectContaining({ method: 'POST' })
       )
     })
-    expect(mockPush).toHaveBeenCalledWith('/')
+    expect(mockPush).toHaveBeenCalledWith('/en') // lang="en" → /${lang} redirect (6ea10d2)
   })
 
   it('shows avatar image when avatar_url is set', () => {

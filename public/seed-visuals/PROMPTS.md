@@ -1,8 +1,8 @@
 # Seed-Visual Prompt Templates
 
-**DrawThings Modell:** FLUX.1-dev (fp8) — Stand 2026-05  
-**Ziel-Ratio Card:** 4:3 (1600 × 1200 px Master → 1200 × 900 px Card)  
-**Ziel-Ratio OG:** 1.91:1 (1200 × 630 px, fokuszentrierter Crop aus der Card)
+**DrawThings Modell:** FLUX.1 [schnell] — Stand 2026-05  
+**Ziel-Ratio:** 1:1 Quadrat — direkt in DrawThings auf **1024 × 1024 px** generieren  
+**Ziel-Ratio OG:** 1.91:1 (1200 × 630 px, automatischer Center-Crop via `seed-visuals:build`)
 
 ---
 
@@ -20,8 +20,13 @@ in foreground, shallow depth of field, studio lighting
 ```
 blurry, low quality, distorted, text, watermark, people, faces, hands,
 anatomical errors, flags, country symbols, political symbols,
-nsfw, cartoon, anime, illustration
+nsfw, cartoon, anime, illustration, brand names, product labels, logos on appliances
 ```
+
+**Gelernte Prompt-Regeln:**
+- ❌ Nie gleichzeitig Innen- und Außenbereich im Prompt nennen (z.B. „indoor unit" + „outdoor compressor") → FLUX mischt beides in eine Szene
+- ✅ Für AC/Heizung: immer nur den Teil beschreiben, der den Service repräsentiert (Installation = Innengerät im Wohnzimmer)
+- ✅ `no brand names, no product labels` in Negative Prompt reduziert Fake-Logos deutlich
 
 ---
 
@@ -41,15 +46,17 @@ Kombiniere den Stil-Anker mit einer spezifischen Beschreibung:
 | `elektriker-stoerung` | `electrical circuit breaker panel with professional tools beside it` |
 | `knx-programmierung` | `smart home control panel with illuminated touch interface, modern interior` |
 | `laminat-verlegen` | `laminate flooring planks being installed, click-lock system visible` |
-| `klimaanlage-installieren` | `modern split air conditioning unit mounted on white wall, outdoor compressor unit` |
+| `ac-installation` | `modern white split AC indoor unit wall-mounted in bright living room, clean minimal interior` |
+| `ac-wartung` | `modern white split AC indoor unit wall-mounted in bright living room, clean minimal interior` |
+| `klimaanlage-installieren` | `modern white split AC indoor unit wall-mounted in bright living room, clean minimal interior` |
 
 ---
 
 ## Workflow
 
 1. Öffne DrawThings auf dem Studio-Mac (FLUX.1-dev fp8).
-2. Setze Steps: 30, CFG: 3.5, Sampler: DPM++ 2M Karras.
-3. Setze Image Size: 1600 × 1200 (4:3).
+2. Setze Steps: 4, CFG: 1.0 (FLUX schnell Default).
+3. Setze Image Size: **1024 × 1024 (1:1)**.
 4. Füge Stil-Anker + Item-Beschreibung in das Prompt-Feld ein.
 5. Negative Prompt eintragen.
 6. Generiere 3–5 Kandidaten, wähle das beste.

@@ -552,16 +552,21 @@ test.describe.serial('Admin Data Management Sweep', () => {
       return
     }
 
-    // Check admin brands page
+    // Inject admin cookie so we land on the page (not redirect to login)
+    await page.context().addCookies([{
+      name: 'admin_token',
+      value: ctx.adminToken!,
+      domain: new URL(BASE_URL).hostname,
+      path: '/',
+    }])
+
     await page.goto(BASE_URL + '/admin/brands')
-    await page.waitForLoadState('networkidle')
+    // Use 'load' not 'networkidle' — Next.js App Router / RSC keeps background requests running
+    await page.waitForLoadState('load')
 
     const url = page.url()
-    if (!url.includes('/admin/brands')) {
-      logStep(9, 'Admin Brands-Seite', '/admin/brands', url, 'SKIP')
-      test.skip(true, 'Reason: /admin/brands Route nicht verfügbar oder Redirect zu Login')
-      return
-    }
+    logStep(9, 'Admin Brands-Seite', '/admin/brands geladen', url, url.includes('/admin/brands') ? 'PASS' : 'FAIL')
+    expect(url, 'Wurde auf Login weitergeleitet — Cookie-Injection gescheitert?').toContain('/admin/brands')
 
     const brandName = `${PREFIX}-brand-without-logo`
     const found = await page.getByText(brandName, { exact: false }).count()

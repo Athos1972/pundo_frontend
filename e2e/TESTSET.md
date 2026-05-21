@@ -73,9 +73,10 @@ Verdict: **PASS** (Report: `e2e/journeys/reports/admin-shop-create-delete-2026-0
 | Category child unter parent | ✅ PASS | |
 | Admin-Categories im Browser | ✅ PASS | Cookie-Injection fix + networkidle→load |
 | Pending Shop-Owner ablehnen | ✅ PASS | |
-| Guide published / Detailseite / Brand-Übersicht | ⏭ SKIP | Backend-Endpoints nicht implementiert (genuines Feature-Gap) |
+| Brands in Admin-Übersicht | ✅ PASS | Cookie-Injection fix + networkidle→load |
+| Guide published / Detailseite (Schritte 7+8) | ⏭ SKIP | Backend-Endpoints nicht implementiert (genuines Feature-Gap) |
 
-Verdict: 7/10 PASS, 3/10 SKIP (Schritte 7–9: Guides + Brand-Übersicht — Backend fehlt)
+Verdict: 8/10 PASS, 2/10 SKIP (Schritte 7–8: Guides-Backend fehlt)
 
 #### Journey: shop-owner-full-lifecycle (mustRun)
 

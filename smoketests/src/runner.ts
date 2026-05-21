@@ -304,34 +304,57 @@ async function performLogin(
   // Use the backend API directly instead of the UI form.
   // Turnstile is a frontend-only guard on the /auth/login page; the
   // POST /api/v1/customer/auth/login endpoint has no bot check.
+  //
+  // Retry logic: first requests from a cold GitHub Actions runner to
+  // pundo.cy can fail with 5xx due to TLS/connection warmup. One retry
+  // after 1 s is sufficient to recover.
   const loginUrl = `${brand.base_url}/api/v1/customer/auth/login`
-  try {
-    const res = await fetch(loginUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...SMOKETEST_EXTRA_HEADERS,
-      },
-      body: JSON.stringify({ email: user, password }),
-      redirect: 'manual',
-    })
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      return { cookie: null, error: `Login API HTTP ${res.status}: ${body.slice(0, 200)}` }
+  async function attempt(): Promise<{ cookie: string | null; error?: string }> {
+    try {
+      const res = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...SMOKETEST_EXTRA_HEADERS,
+        },
+        body: JSON.stringify({ email: user, password }),
+        redirect: 'manual',
+      })
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '')
+        // Log full headers for diagnostics (truncated to avoid noise)
+        const headers: Record<string, string> = {}
+        res.headers.forEach((v, k) => { headers[k] = v })
+        console.warn(`  [auth] Login non-200: ${res.status} | headers: ${JSON.stringify(headers)} | body: ${body.slice(0, 500)}`)
+        return { cookie: null, error: `Login API HTTP ${res.status}: ${body.slice(0, 200)}` }
+      }
+
+      // Extract customer_token from Set-Cookie header
+      const setCookie = res.headers.get('set-cookie') ?? ''
+      const match = setCookie.match(/customer_token=([^;]+)/)
+      if (match) {
+        return { cookie: match[1] }
+      }
+
+      return { cookie: null, error: 'Login API succeeded but no customer_token in Set-Cookie header' }
+    } catch (err) {
+      return { cookie: null, error: `Login API fetch error: ${err}` }
     }
-
-    // Extract customer_token from Set-Cookie header
-    const setCookie = res.headers.get('set-cookie') ?? ''
-    const match = setCookie.match(/customer_token=([^;]+)/)
-    if (match) {
-      return { cookie: match[1] }
-    }
-
-    return { cookie: null, error: 'Login API succeeded but no customer_token in Set-Cookie header' }
-  } catch (err) {
-    return { cookie: null, error: `Login API fetch error: ${err}` }
   }
+
+  const first = await attempt()
+  if (first.cookie !== null) return first
+
+  // Retry once on 5xx or network error — transient warmup on first brand
+  if (first.error?.includes('HTTP 5') || first.error?.includes('fetch error')) {
+    console.warn(`  [auth] Login failed (${first.error}), retrying in 1 s...`)
+    await new Promise(resolve => setTimeout(resolve, 1_000))
+    return attempt()
+  }
+
+  return first
 }
 
 // ---------------------------------------------------------------------------

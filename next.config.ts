@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next'
 import os from 'os'
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' })
 
 // Auto-detect all LAN IPv4 addresses so mobile/tablet devices on the local
 // network can access the dev server without having to set ALLOWED_DEV_ORIGINS.
@@ -38,6 +41,7 @@ const SECURITY_HEADERS = [
 
 const config: NextConfig = {
   output: 'standalone',
+  reactStrictMode: true,
   images: {
     remotePatterns: [
       // Local dev and Hetzner prod — relative /shop_logos/... paths resolve via
@@ -87,4 +91,4 @@ const config: NextConfig = {
   },
 }
 
-export default config
+export default withBundleAnalyzer(config)

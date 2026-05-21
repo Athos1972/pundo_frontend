@@ -3,6 +3,10 @@
 // Checks that all 6 language blocks in every i18n namespace file have the same keys as EN.
 // Usage: tsx scripts/check-i18n-parity.ts
 
+import { shopAdminAuthTranslationsMap } from '../src/lib/i18n/shop-admin-auth'
+import { shopAdminCatalogTranslationsMap } from '../src/lib/i18n/shop-admin-catalog'
+import { shopAdminOffersTranslationsMap } from '../src/lib/i18n/shop-admin-offers'
+import { shopAdminCommonTranslationsMap } from '../src/lib/i18n/shop-admin-common'
 import { commonTranslations } from '../src/lib/i18n/common'
 import { authTranslations } from '../src/lib/i18n/auth'
 import { searchTranslations } from '../src/lib/i18n/search'
@@ -25,6 +29,10 @@ const namespaces: { name: string; obj: AnyTranslationMap }[] = [
   { name: 'community', obj: communityTranslations as unknown as AnyTranslationMap },
   { name: 'guides', obj: guidesTranslations as unknown as AnyTranslationMap },
   { name: 'contact', obj: contactTranslations as unknown as AnyTranslationMap },
+  { name: 'shop-admin-auth', obj: shopAdminAuthTranslationsMap as unknown as AnyTranslationMap },
+  { name: 'shop-admin-catalog', obj: shopAdminCatalogTranslationsMap as unknown as AnyTranslationMap },
+  { name: 'shop-admin-offers', obj: shopAdminOffersTranslationsMap as unknown as AnyTranslationMap },
+  { name: 'shop-admin-common', obj: shopAdminCommonTranslationsMap as unknown as AnyTranslationMap },
 ]
 
 const LANGS = ['de', 'ru', 'el', 'ar', 'he'] as const

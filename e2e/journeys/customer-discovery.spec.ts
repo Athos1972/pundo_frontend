@@ -117,7 +117,7 @@ test.describe.serial('Customer Discovery Flow', () => {
   // Step 1: Startseite — Suchleiste sichtbar
   test('Schritt 1 — Startseite zeigt Suchleiste', async ({ page }) => {
     await page.goto(BASE_URL + '/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"], input[placeholder*="search"]')
@@ -134,7 +134,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     const cookieDomain = new URL(BASE_URL).hostname
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + '/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"], input[placeholder*="search"]')
@@ -182,7 +182,7 @@ test.describe.serial('Customer Discovery Flow', () => {
   test('Schritt 3 — Suchergebnisse zeigen mindestens 1 Karte', async ({ page }) => {
     const query = seedShopName ?? 'shop'
     await page.goto(BASE_URL + `/search?q=${encodeURIComponent(query)}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Verschiedene mögliche Selektoren für Product/ShopCards
     const cardSelectors = [
@@ -216,7 +216,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     }
 
     await page.goto(BASE_URL + `/products/${productSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const url = page.url()
     const onDetailPage = url.includes('/products/')
     logStep(4, 'Produkt-Detailseite aufrufen', 'URL /products/<slug>', url, onDetailPage ? 'PASS' : 'FAIL')
@@ -232,7 +232,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     }
 
     await page.goto(BASE_URL + `/products/${productSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Prüfe: Irgendein bedeutsamer Text-Content auf der Seite
     const bodyText = await page.locator('body').innerText()
@@ -253,7 +253,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     }
 
     await page.goto(BASE_URL + `/products/${productSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const mapEl = page.locator(
       '[data-testid="map"], .leaflet-container, iframe[src*="maps"], canvas.mapboxgl-canvas'
@@ -279,7 +279,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const is404 = url.includes('404') || url.includes('not-found')
@@ -297,7 +297,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     }
 
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const nameCount = await page.getByText(seedShopName, { exact: false }).count()
     logStep(8, 'Shop-Name sichtbar', `"${seedShopName}" auf Seite`, nameCount > 0 ? 'gefunden' : 'nicht gefunden', nameCount > 0 ? 'PASS' : 'FAIL')
@@ -314,14 +314,14 @@ test.describe.serial('Customer Discovery Flow', () => {
 
     // Navigate: home → shops/slug → back()
     await page.goto(BASE_URL + '/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const homeUrl = page.url()
 
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     await page.goBack()
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const backUrl = page.url()
 
     // Back navigiert zur vorherigen Seite (nicht notwendigerweise exakt home — kann /shops sein)

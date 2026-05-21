@@ -132,7 +132,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Check if shop has active promo offers — backend should return empty list
     // The h2 for "Current offers" / shop_offers should NOT be present when list is empty
@@ -159,7 +159,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const offersHeading = page.locator('h2').filter({ hasText: /current offers/i })
     const hasOffers = await offersHeading.count() > 0
@@ -192,7 +192,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Get all price text on the page
     const priceTexts = await page.locator('text=/\\d+\\.\\d{3,}/').count()
@@ -212,7 +212,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const offersHeading = page.locator('h2').filter({ hasText: /current offers/i })
     const hasOffers = await offersHeading.count() > 0
@@ -257,7 +257,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
 
     for (const lang of langs) {
       await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=${lang}`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('load')
 
       // Check no "undefined" text appears in the DOM (would indicate missing translation key)
       const undefinedText = await page.locator('text=undefined').count()

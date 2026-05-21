@@ -11,8 +11,7 @@
  * | category-child     | Sub-Kategorie unter parent         | Tree-Expand/Collapse                    |
  * | guide-published    | Guide im Status published          | Public-Sichtbarkeit                     |
  *
- * HINWEIS: Logo-Upload (brand-with-logo) wird per test.skip übersprungen wenn
- * kein File-Upload-Endpoint existiert.
+ * Logo-Upload-Endpoint POST /api/v1/admin/brands/{id}/logo ist live (B8950-007 GELÖST 2026-05-21).
  */
 
 import { test, expect } from '@playwright/test'
@@ -366,12 +365,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
       return
     }
 
-    if (!ctx.logoUploadSupported) {
-      logStep(2, 'Logo-Upload', 'Logo hochgeladen', '/api/v1/admin/brands/logo nicht gefunden (404)', 'SKIP')
-      test.skip(true, 'Reason: Logo-Upload-Endpoint /api/v1/admin/brands/logo existiert nicht (404) — File-Upload-Feature nicht implementiert')
-      return
-    }
-
     // Attempt logo upload (PNG 1x1 pixel base64)
     const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
 
@@ -440,17 +433,21 @@ test.describe.serial('Admin Data Management Sweep', () => {
       return
     }
 
+    // Inject admin cookie so we land on the page (not redirect to login)
+    await page.context().addCookies([{
+      name: 'admin_token',
+      value: ctx.adminToken!,
+      domain: new URL(BASE_URL).hostname,
+      path: '/',
+    }])
+
     await page.goto(BASE_URL + '/admin/categories')
-    await page.waitForLoadState('networkidle')
+    // Use 'load' not 'networkidle' — Next.js App Router / RSC keeps background requests running
+    await page.waitForLoadState('load')
 
     const url = page.url()
-    const isAdminPage = url.includes('/admin/categories') || url.includes('/admin/login')
-    logStep(5, 'Admin Categories-Seite', '/admin/categories oder Login-Redirect', url, isAdminPage ? 'PASS' : 'SKIP')
-
-    if (!url.includes('/admin/categories')) {
-      test.skip(true, 'Reason: /admin/categories Route existiert nicht oder ist anders geroutet')
-      return
-    }
+    logStep(5, 'Admin Categories-Seite', '/admin/categories geladen', url, url.includes('/admin/categories') ? 'PASS' : 'FAIL')
+    expect(url, 'Wurde auf Login weitergeleitet — Cookie-Injection gescheitert?').toContain('/admin/categories')
 
     // Check for tree or list element
     const treeEl = page.locator(

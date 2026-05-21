@@ -732,8 +732,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     expect(offerVisible, 'D1: offer not visible in public backend API after 2s').toBe(true)
 
     await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
-    // networkidle: wait for all RSC streaming chunks to finish (Next.js App Router streams pages)
-    await page.waitForLoadState('networkidle')
+    // load: networkidle never settles on customer pages after RSC prefetch fix (2026-05-21)
+    await page.waitForLoadState('load')
 
     const url = page.url()
     expect(url).not.toContain('404')

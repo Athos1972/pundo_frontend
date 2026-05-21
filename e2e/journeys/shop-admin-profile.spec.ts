@@ -194,7 +194,7 @@ async function ensureAuth(page: Page): Promise<void> {
 // ─── Helper: waitHydrated ─────────────────────────────────────────────────────
 
 async function waitHydrated(page: Page) {
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
   await page.waitForSelector('body[data-hydrated="true"]', { timeout: 20_000 })
 }
 
@@ -533,7 +533,7 @@ test.describe.serial('Szenario A — Tabula Rasa: Erstes Befüllen aller Felder'
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     const bodyText = await page.locator('body').innerText()
@@ -924,7 +924,7 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const url = page.url()
     expect(url.includes('404') || url.includes('not-found'), 'Kein 404').toBe(false)
@@ -964,7 +964,7 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
     }
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     const bodyText = await page.locator('body').innerText()
     const hasClosedText = /closed|geschlossen|κλειστό|закрыто/i.test(bodyText)

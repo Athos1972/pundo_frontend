@@ -244,6 +244,7 @@ async function runCheck(
         lang,
         response,
         consoleErrors,
+        networkErrors,
       })
       assertResults.push(result)
     }

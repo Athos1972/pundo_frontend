@@ -3,13 +3,13 @@
 ## Letzter Testlauf
 
 Datum: 2026-05-21  
-SHA: cd80192af7412e831f6db2bf8fe1719af30f73dc  
-Spec: bugfix-delete-shop-500-20260521 + ShopForm-422-fix  
-Ergebnis: 1643 Vitest PASS · Smoke RTL/LTR 3/3 · Visual-Smoke 5/5 · admin-shop-create-delete PASS · admin-data-management PASS · shop-owner-full-lifecycle 17/17 · Verdict: **SHIP**
+SHA: 495567cafce27f0d8ee5e619d4e11998518763a6  
+Spec: smoketest-rsc-404-login-skip (lang-prefix-fix + login API-bypass + networkidle→load sweep)  
+Ergebnis: 1643 Vitest PASS · Smoke 8/8 PASS · Journeys 202/260 PASS (25 skip, 25 not-run, 7 pre-existing FAIL) · Verdict: **SHIP**
 
 ---
 
-## Testlauf 2026-05-20 (archiviert)
+## Testlauf 2026-05-21 (archiviert — bugfix-delete-shop)
 
 Datum: 2026-05-20  
 SHA: 03d24b47eb37913071d2694634d78358a2496d2b  
@@ -68,12 +68,14 @@ Verdict: **PASS** (Report: `e2e/journeys/reports/admin-shop-create-delete-2026-0
 | Schritt | Status | Anmerkung |
 |---------|--------|-----------|
 | Brand ohne Logo: Fallback-Avatar | ✅ PASS | |
-| Brand mit Logo: Upload | ⏭ SKIP | Endpoint nicht implementiert (pre-existing) |
+| Brand mit Logo: Upload | ✅ PASS | B8950-007 GELÖST — Endpoint live |
 | Category parent anlegen + abrufbar | ✅ PASS | Pagination-Fix: direkter ID-Lookup |
 | Category child unter parent | ✅ PASS | |
-| Admin-Categories im Browser | ⏭ SKIP | /admin/categories Route fehlt (pre-existing) |
+| Admin-Categories im Browser | ✅ PASS | Cookie-Injection fix + networkidle→load |
 | Pending Shop-Owner ablehnen | ✅ PASS | |
-| Guide/Brand-Schritte | ⏭ SKIP | Endpoints nicht verfügbar (pre-existing) |
+| Guide published / Detailseite / Brand-Übersicht | ⏭ SKIP | Backend-Endpoints nicht implementiert (genuines Feature-Gap) |
+
+Verdict: 7/10 PASS, 3/10 SKIP (Schritte 7–9: Guides + Brand-Übersicht — Backend fehlt)
 
 #### Journey: shop-owner-full-lifecycle (mustRun)
 

@@ -106,7 +106,7 @@ async function patchShopProfile(token: string, body: Record<string, unknown>): P
 // The app does NOT set data-hydrated="true" on <body>, so we wait for a
 // DOM element that is only rendered by ProfileForm after the page is ready.
 async function waitProfileForm(page: Page) {
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
   // The submit "Save" button is rendered by ProfileForm — once it's in the DOM
   // the form is ready for interaction.
   await page.waitForSelector('button[type="submit"]', { timeout: 20_000 })
@@ -214,7 +214,7 @@ test.describe.serial('Szenario C — Phone Field: FINDING-1', () => {
     await patchShopProfile(ownerToken, { phone: '+35799777888' })
 
     await page.goto(`${BASE_URL}/shops/${shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Should have a tel: link
     const telLink = page.locator('a[href="tel:+35799777888"]')
@@ -451,7 +451,7 @@ print('created')
 
     // Check customer-facing shop page
     await page.goto(`${BASE_URL}/shops/${shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Shop page should have an img referencing shop_logos
     const logoImg = page.locator('img[src*="shop_logos"]')

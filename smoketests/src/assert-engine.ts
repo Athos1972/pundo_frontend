@@ -167,22 +167,40 @@ async function assertRedirectTo(
 
 async function assertNoConsoleErrors(
   consoleErrors: string[],
+  networkErrors: Array<{ status: number; url: string }>,
 ): Promise<AssertResult> {
-  // Filter RSC prefetch 404s — these are background noise from Next.js prefetching
-  // linked pages. A 404 on a prefetch request doesn't mean the current page is broken.
-  // Also filter Cloudflare beacon errors (route.fulfill() interception artifact).
-  const realErrors = consoleErrors.filter(e =>
-    !(e.includes('Failed to load resource') && e.includes('404')) &&
+  // Filter known noise from console errors.
+  // "Failed to load resource: 404" is checked more precisely via networkErrors below
+  // (URL not available in the console message itself).
+  const realConsoleErrors = consoleErrors.filter(e =>
     !e.includes('cloudflareinsights.com'),
   )
-  const ok = realErrors.length === 0
+
+  // RSC-prefetch 404s: Next.js prefetches every visible <Link> href. If any return 404
+  // it means an internal link has no /{lang}/ prefix — a real bug, not background noise.
+  const rscErrors = networkErrors.filter(e => e.status === 404 && e.url.includes('_rsc='))
+
+  const ok = realConsoleErrors.length === 0 && rscErrors.length === 0
+
+  if (!ok) {
+    const parts: string[] = []
+    if (realConsoleErrors.length > 0)
+      parts.push(`${realConsoleErrors.length} console error(s): ${realConsoleErrors.slice(0, 3).join('; ')}`)
+    if (rscErrors.length > 0)
+      parts.push(`${rscErrors.length} broken internal link(s) — RSC prefetch 404: ${rscErrors.slice(0, 3).map(e => e.url).join(', ')}`)
+    return {
+      ok: false,
+      expected: 'no console errors and no broken internal links',
+      actual: [...realConsoleErrors, ...rscErrors.map(e => `RSC 404: ${e.url}`)],
+      message: parts.join('; '),
+    }
+  }
+
   return {
-    ok,
+    ok: true,
     expected: 'no console errors',
-    actual: realErrors.length === 0 ? 'no errors' : realErrors,
-    message: ok
-      ? 'No console errors detected'
-      : `${realErrors.length} console error(s): ${realErrors.slice(0, 3).join('; ')}`,
+    actual: 'no errors',
+    message: 'No console errors detected',
   }
 }
 
@@ -403,10 +421,11 @@ export interface RunAssertOptions {
   lang: string
   response: Response | null
   consoleErrors: string[]
+  networkErrors: Array<{ status: number; url: string }>
 }
 
 export async function runAssert(opts: RunAssertOptions): Promise<AssertResult> {
-  const { page, assert, lang, response, consoleErrors } = opts
+  const { page, assert, lang, response, consoleErrors, networkErrors } = opts
 
   switch (assert.type) {
     case 'status':
@@ -425,7 +444,7 @@ export async function runAssert(opts: RunAssertOptions): Promise<AssertResult> {
       return assertRedirectTo(page, response, assert)
 
     case 'no-console-errors':
-      return assertNoConsoleErrors(consoleErrors)
+      return assertNoConsoleErrors(consoleErrors, networkErrors)
 
     case 'mdx-rendered':
       return assertMdxRendered(page)

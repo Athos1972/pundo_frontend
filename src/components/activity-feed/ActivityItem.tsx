@@ -8,6 +8,8 @@
 import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { eventToColorClasses, eventToHref, eventVariant } from '@/lib/activity-events'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { RelativeTime } from './RelativeTime'
 import type { ActivityEvent } from '@/types/activity'
 
@@ -43,7 +45,8 @@ function getEventText(event: ActivityEvent, tr: ReturnType<typeof t>): string {
 export function ActivityItem({ event, variant, lang, className = '' }: ActivityItemProps) {
   const tr = t(lang)
   const colors = eventToColorClasses(event)
-  const href = eventToHref(event)
+  const rawHref = eventToHref(event)
+  const href = rawHref ? localePath(lang as Lang, rawHref) : null
   const text = getEventText(event, tr)
   const icon = EVENT_ICONS[event.event_type] ?? '●'
 

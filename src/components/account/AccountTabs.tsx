@@ -77,7 +77,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
         {/* MCP / AI Agents — eigene Seite, nur auf pundo */}
         {showMcpTab && (
           <Link
-            href={`/${lang}/account/mcp`}
+            href="/account/mcp"
             className={tabButtonClass(isMcpActive)}
           >
             {tr.account_tab_mcp}

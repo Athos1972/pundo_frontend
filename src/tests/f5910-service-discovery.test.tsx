@@ -94,7 +94,7 @@ describe('ServiceResultCard', () => {
     render(<ServiceResultCard item={mockServiceItem} lang="en" />)
     const button = screen.getByRole('button')
     fireEvent.click(button)
-    expect(mockPush).toHaveBeenCalledWith('/shops?service=42')
+    expect(mockPush).toHaveBeenCalledWith('/en/shops?service=42')
   })
 
   it('AC11: renders with RTL-compatible aria-label in Hebrew', async () => {

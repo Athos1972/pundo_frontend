@@ -3,6 +3,8 @@ import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { searchProducts, getCategories, getShops } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
+import type { Lang } from '@/lib/lang'
+import { localePath } from '@/lib/routing'
 import { t } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
 import { fmtPrice, toRelativeImageUrl } from '@/lib/utils'
@@ -64,23 +66,23 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
 
   function navigateProduct(slug: string) {
     setOpen(false)
-    router.push(`/products/${slug}`)
+    router.push(localePath(lang as Lang, `/products/${slug}`))
   }
 
   function navigateCategory(id: number) {
     setOpen(false)
-    router.push(`/search?category_id=${id}`)
+    router.push(localePath(lang as Lang, `/search`) + `?category_id=${id}`)
   }
 
   function navigateShop(slug: string) {
     setOpen(false)
-    router.push(`/shops/${slug}`)
+    router.push(localePath(lang as Lang, `/shops/${slug}`))
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setOpen(false)
-    if (value.trim()) router.push(`/search?q=${encodeURIComponent(value.trim())}`)
+    if (value.trim()) router.push(localePath(lang as Lang, `/search`) + `?q=${encodeURIComponent(value.trim())}`)
   }
 
   const catCount = suggestions.categories.length

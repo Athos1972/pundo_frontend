@@ -12,6 +12,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
+import type { Lang } from '@/lib/lang'
+import { localePath } from '@/lib/routing'
 import { useRecentlyViewed } from '@/lib/useRecentlyViewed'
 
 interface RecentlyViewedListProps {
@@ -31,7 +33,9 @@ export function RecentlyViewedList({ variant, lang }: RecentlyViewedListProps) {
 
   const items = activeTab === 'products' ? products : shops
   const itemHref = (slug: string) =>
-    activeTab === 'products' ? `/products/${slug}` : `/shops/${slug}`
+    activeTab === 'products'
+      ? localePath(lang as Lang, `/products/${slug}`)
+      : localePath(lang as Lang, `/shops/${slug}`)
 
   return (
     <div className="w-full">

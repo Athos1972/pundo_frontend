@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
+import type { Lang } from '@/lib/lang'
+import { localePath } from '@/lib/routing'
 import type { FavoriteListItem, AlertInterval, NotificationSettings } from '@/types/api'
 
 interface Props {
@@ -135,7 +137,7 @@ export function FavoritesTab({ lang }: Props) {
         <div className="space-y-3">
           {favorites.map((fav) => (
             <div key={fav.id} className="flex items-center gap-3 bg-surface border border-border rounded-xl p-3">
-              <Link href={`/products/${fav.product_slug}`} className="shrink-0">
+              <Link href={localePath(lang as Lang, `/products/${fav.product_slug}`)} className="shrink-0">
                 <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
                   {fav.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -151,7 +153,7 @@ export function FavoritesTab({ lang }: Props) {
 
               <div className="flex-1 min-w-0">
                 <Link
-                  href={`/products/${fav.product_slug}`}
+                  href={localePath(lang as Lang, `/products/${fav.product_slug}`)}
                   className="font-medium text-sm text-text line-clamp-1 hover:text-accent"
                 >
                   {fav.product_name}

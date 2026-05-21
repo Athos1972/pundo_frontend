@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import type { SearchServiceItem } from '@/types/api'
 import { t } from '@/lib/translations'
+import type { Lang } from '@/lib/lang'
+import { localePath } from '@/lib/routing'
 
 interface ServiceResultCardProps {
   item: SearchServiceItem
@@ -30,7 +32,7 @@ export function ServiceResultCard({ item, lang }: ServiceResultCardProps) {
       : tr.result_service_providers_in_view(item.provider_count)
 
   function handleClick() {
-    router.push(`/shops?service=${item.category_id}`)
+    router.push(localePath(lang as Lang, '/shops') + `?service=${item.category_id}`)
   }
 
   return (

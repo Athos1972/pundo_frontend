@@ -42,6 +42,8 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
 
   // For EN name editing — stored internally as a plain string, sent as {en: ...}
   const [name, setName] = useState(pickName(shop?.names, ''))
+  const [slug, setSlug] = useState(shop?.slug ?? '')
+  const [slugTouched, setSlugTouched] = useState(false)
   const [address, setAddress] = useState(shop?.address_line1 ?? '')
   const [city, setCity] = useState(shop?.city ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
@@ -88,9 +90,20 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
     }
   }
 
+  function toSlug(s: string) {
+    return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value
+    setName(val)
+    if (!isEdit && !slugTouched) setSlug(toSlug(val))
+  }
+
   function validate() {
     const e: Record<string, string> = {}
     if (!name.trim()) e.name = 'Name is required'
+    if (!isEdit && !slug.trim()) e.slug = 'Slug is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -99,8 +112,9 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
     e.preventDefault()
     if (!validate() || !socialLinksValid) return
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       names: { en: name.trim() },
+      ...(isEdit ? {} : { slug: slug.trim() }),
       address_line1: address.trim() || null,
       city: city.trim() || null,
       phone: phone.trim() || null,
@@ -150,10 +164,22 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         name="name"
         required
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={handleNameChange}
         error={errors.name}
         disabled={isPending}
       />
+
+      {!isEdit && (
+        <FormField
+          label="Slug"
+          name="slug"
+          required
+          value={slug}
+          onChange={(e) => { setSlugTouched(true); setSlug(e.target.value) }}
+          error={errors.slug}
+          disabled={isPending}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <FormField

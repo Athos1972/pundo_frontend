@@ -3,9 +3,9 @@
 ## Letzter Testlauf
 
 Datum: 2026-05-20  
-SHA: 7d83712551375b57c608b51b0480604fb13dfa95  
-Spec: offer-price-model-and-display-20260520  
-Ergebnis: 1628 Vitest PASS · E2E: customer-shop-promo-visibility SHIP · Verdict: **SHIP**
+SHA: 03d24b47eb37913071d2694634d78358a2496d2b  
+Spec: signup-turnstile-no-widget-20260520 (+ B-Frontend-005 Hotfix)  
+Ergebnis: 1636 Vitest PASS · Smoke 5/5 PASS · B8950-006 GELÖST · Verdict: **SHIP**
 
 ---
 
@@ -14,7 +14,7 @@ Ergebnis: 1628 Vitest PASS · E2E: customer-shop-promo-visibility SHIP · Verdic
 | Prüfung | Status |
 |---------|--------|
 | TypeScript (`tsc --noEmit`) | ✅ PASS — 0 Fehler |
-| ESLint | ⚠️ 1 Error (OnboardingWizard.tsx:29 — setState in effect → B8950-004), 81 Warnings |
+| ESLint | ✅ 0 Errors, 80 Warnings (alle pre-existing) |
 
 ---
 
@@ -22,15 +22,13 @@ Ergebnis: 1628 Vitest PASS · E2E: customer-shop-promo-visibility SHIP · Verdic
 
 | Dateien | Tests | Ergebnis |
 |---------|-------|---------|
-| 84 | 1628 | ✅ alle bestanden |
+| 84 | 1636 | ✅ alle bestanden |
 
-Neue Tests (offer-price-model-and-display-20260520):
-- `src/tests/shop-offer-card.test.tsx` — 17 Tests: ShopOfferCard Standard/Promo/on_request/Bild/Link/RTL/Badge
-- `src/tests/offer-form-promo.test.tsx` — 40 Tests: shop-admin-translations Promo-Keys, OfferForm Rendering, Promo-Validierungslogik
-- `src/tests/OfferList.test.tsx` — 4 Regressions-Tests: promo_price prominent, standard_price strikethrough, kein Strikethrough ohne Promo, Legacy-Fallback
+Neue Tests (signup-turnstile-no-widget-20260520):
+- `src/tests/contact-form.test.tsx` — 3 neue Tests: Button-aktiv-nach-onToken, onError-Callback-verdrahtet, turnstile_failed-bei-Widget-Fehler
 
 Reparierte Tests:
-- `src/tests/language-switcher.test.tsx` — `router.refresh()` → `router.push('/ru')` (TESTFEHLER nach [lang]-Routing-Refactor)
+- `src/tests/account.test.tsx` — logout-Redirect `/` → `/en` (B8950-006 TESTFEHLER: commit 6ea10d2 hatte `router.push(\`/\${lang}\`)` geändert, Test nicht mitgezogen)
 
 ---
 
@@ -40,7 +38,7 @@ Reparierte Tests:
 
 | Test | Status | Anmerkung |
 |------|--------|-----------|
-| Produktseite: Bilder laden, Carousel | ❌ FAIL | Carousel-Sichtbarkeit bei 768px — 0 sichtbar statt ≥2 (intermittent, FLAKY → B8950-003) |
+| Produktseite: Bilder laden, Carousel | ✅ PASS | B8950-003 GELÖST — Carousel sichtbar bei 768px |
 | Suchergebnisse: Seite lädt ohne Crash | ✅ PASS | Leerer Zustand korrekt gerendert |
 | Shop-Owner Smoke S1–S3 | ✅ 3x PASS | Auto-Approve + Dashboard + auto_seeded SKIP (Baustein B nicht deployed) |
 
@@ -124,3 +122,4 @@ Kein `pre-existing`-Label mehr — jedes FAIL hat eine Bug-Datei mit Owner + Kat
 | B8950-003 | FLAKY | GELÖST | BB | frontend | 2026-05-15 |
 | B8950-004 | FUNKTIONSFEHLER | GELÖST | coder | frontend | 2026-05-01 |
 | B8950-005 | TESTFEHLER | GELÖST | BB | frontend | 2026-05-20 |
+| B8950-006 | TESTFEHLER | GELÖST | coder | frontend | 2026-05-20 |

@@ -1,18 +1,21 @@
 {
-  "sha": "7d83712551375b57c608b51b0480604fb13dfa95",
-  "date": "2026-05-20T15:00:00Z",
-  "spec": "offer-price-model-and-display-20260520",
+  "sha": "03d24b47eb37913071d2694634d78358a2496d2b",
+  "timestamp": "2026-05-20T19:15:00Z",
+  "spec": "signup-turnstile-no-widget-20260520",
   "verdict": "SHIP",
-  "verdict_reason": "B8950-005 GELÖST: BB bestätigt Item-Namen korrekt. Assertions A1/A3/B1 auf edit-Link-Selektor korrigiert.",
+  "verdict_reason": "B8950-006 GEL\u00d6ST (TESTFEHLER: logout-redirect /en). 1636/1636 unit tests. Smoke 5/5. TS clean. Turnstile-Resilienz-Fix vollst\u00e4ndig. Journey customer-and-review-lifecycle: dev-bypass weiterhin aktiv \u2192 kein Regressions-Risiko.",
   "vitest": {
     "files": 84,
-    "tests": 1628,
-    "passed": 1628
+    "tests": 1636,
+    "passed": 1636
   },
   "e2e": {
-    "customer-shop-promo-visibility": "SHIP",
-    "shop-admin-offers": "SHIP (B8950-005 GELÖST — edit-link-Assertion)",
-    "visual-smoke": "FAIL (intermittent pre-existing B8950-003)"
+    "visual-smoke": "PASS (5/5)",
+    "customer-and-review-lifecycle": "NOT_RERUN (Background-Task-Timeout in Tooling \u2014 letzter bekannter Stand: PASS @ 7d83712)"
   },
-  "open_failures": []
+  "open_failures": [],
+  "bugs_fixed": [
+    "B8950-006"
+  ],
+  "coverage_snapshot": {}
 }

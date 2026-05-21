@@ -637,3 +637,4 @@ describe('LanguageSelector', () => {
     expect(screen.getByText('Gesprochene Sprachen')).toBeDefined()
   })
 })
+

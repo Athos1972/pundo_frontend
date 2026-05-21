@@ -59,6 +59,7 @@ export const pundoConfig: BrandConfig = {
     homesickTeaser: false,
     activityFeed: 'compact',
     recentlyViewed: 'drawer',
+    mcp: true,
   },
 
   nav: [

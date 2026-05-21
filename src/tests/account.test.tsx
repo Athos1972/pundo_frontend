@@ -154,6 +154,7 @@ describe('AccountTabs', () => {
         reviews={[]}
         trustProfile={null}
         lang="en"
+        showMcpTab={false}
       />
     )
     expect(screen.getByRole('tab', { name: /profile/i })).toBeInTheDocument()
@@ -170,6 +171,7 @@ describe('AccountTabs', () => {
         reviews={[]}
         trustProfile={null}
         lang="en"
+        showMcpTab={false}
       />
     )
     expect(screen.getByRole('tab', { name: /profile/i })).toHaveAttribute('aria-selected', 'true')
@@ -184,6 +186,7 @@ describe('AccountTabs', () => {
         reviews={[]}
         trustProfile={null}
         lang="en"
+        showMcpTab={false}
       />
     )
     await user.click(screen.getByRole('tab', { name: /security/i }))
@@ -200,6 +203,7 @@ describe('AccountTabs', () => {
         reviews={[]}
         trustProfile={null}
         lang="en"
+        showMcpTab={false}
       />
     )
     await user.click(screen.getByRole('tab', { name: /my reviews/i }))
@@ -215,6 +219,7 @@ describe('AccountTabs', () => {
         reviews={mockReviews}
         trustProfile={null}
         lang="en"
+        showMcpTab={false}
       />
     )
     await user.click(screen.getByRole('tab', { name: /my reviews/i }))
@@ -229,6 +234,7 @@ describe('AccountTabs', () => {
         reviews={[]}
         trustProfile={null}
         lang="de"
+        showMcpTab={false}
       />
     )
     expect(screen.getByRole('tab', { name: /profil/i })).toBeInTheDocument()

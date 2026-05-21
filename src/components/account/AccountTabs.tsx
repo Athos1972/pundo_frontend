@@ -21,9 +21,10 @@ interface Props {
   reviews: Review[]
   trustProfile: TrustProfileResponse | null
   lang: string
+  showMcpTab: boolean
 }
 
-export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang }: Props) {
+export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, showMcpTab }: Props) {
   const tr = t(lang)
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [user, setUser] = useState<AuthUser>(initialUser)
@@ -73,13 +74,15 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
             {tab.label}
           </button>
         ))}
-        {/* MCP / AI Agents — eigene Seite */}
-        <Link
-          href={`/${lang}/account/mcp`}
-          className={tabButtonClass(isMcpActive)}
-        >
-          {tr.account_tab_mcp}
-        </Link>
+        {/* MCP / AI Agents — eigene Seite, nur auf pundo */}
+        {showMcpTab && (
+          <Link
+            href={`/${lang}/account/mcp`}
+            className={tabButtonClass(isMcpActive)}
+          >
+            {tr.account_tab_mcp}
+          </Link>
+        )}
       </nav>
 
       {/* Tab panels */}

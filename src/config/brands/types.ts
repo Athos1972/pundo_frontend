@@ -70,6 +70,7 @@ export interface BrandConfig {
     homesickTeaser: boolean
     activityFeed: false | 'livefeed' | 'compact'   // F4700
     recentlyViewed: 'hidden' | 'home' | 'drawer'   // F4700
+    mcp: boolean   // AI Agent Connections (pundo only)
   }
 
   community?: {

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { getCustomerSession } from '@/lib/customer-api'
 import { getTrustProfile } from '@/lib/community-api'
+import { getBrandFromHeaders } from '@/config/brands'
 import { BackButton } from '@/components/ui/BackButton'
 import { AccountTabs } from '@/components/account/AccountTabs'
 import type { Metadata } from 'next'
@@ -23,10 +24,11 @@ export default async function AccountPage() {
 
   const user = session.user
 
-  const [reviews, linkedAccounts, trustProfile] = await Promise.all([
+  const [reviews, linkedAccounts, trustProfile, brand] = await Promise.all([
     fetchMyReviews(lang),
     fetchLinkedAccounts(lang),
     getTrustProfile(lang),
+    getBrandFromHeaders(),
   ])
 
   return (
@@ -49,6 +51,7 @@ export default async function AccountPage() {
           reviews={reviews}
           trustProfile={trustProfile}
           lang={lang}
+          showMcpTab={brand.features.mcp}
         />
       </div>
     </main>

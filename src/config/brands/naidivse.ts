@@ -62,6 +62,7 @@ export const naidivseConfig: BrandConfig = {
     homesickTeaser: true,
     activityFeed: 'livefeed',
     recentlyViewed: 'home',
+    mcp: false,
   },
 
   community: {

@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import type { ShopListItem } from '@/types/api'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { StarRatingDisplay } from '@/components/reviews/StarRatingDisplay'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -90,7 +92,7 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
 
   return (
     <Link
-      href={`/shops/${shop.slug}`}
+      href={localePath(lang as Lang,`/shops/${shop.slug}`)}
       className="block bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors"
     >
       <div className="flex gap-3 items-start">

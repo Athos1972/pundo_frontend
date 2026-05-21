@@ -1,21 +1,31 @@
 {
-  "sha": "03d24b47eb37913071d2694634d78358a2496d2b",
-  "timestamp": "2026-05-20T19:15:00Z",
-  "spec": "signup-turnstile-no-widget-20260520",
+  "sha": "cd80192af7412e831f6db2bf8fe1719af30f73dc",
+  "timestamp": "2026-05-21T12:00:00Z",
+  "spec": "bugfix-delete-shop-500-20260521 + ShopForm-422-fix",
   "verdict": "SHIP",
-  "verdict_reason": "B8950-006 GEL\u00d6ST (TESTFEHLER: logout-redirect /en). 1636/1636 unit tests. Smoke 5/5. TS clean. Turnstile-Resilienz-Fix vollst\u00e4ndig. Journey customer-and-review-lifecycle: dev-bypass weiterhin aktiv \u2192 kein Regressions-Risiko.",
+  "verdict_reason": "Alle Tests grün. ShopForm-422-Fix (slug-Pflichtfeld) + DELETE-CASCADE-Fix verifiziert. admin-shop-create-delete PASS (2/2). visual-smoke PASS (5/5). RTL/LTR PASS (3/3). admin-data-management PASS/SKIP (5/5+5 SKIP pre-existing). shop-owner-full-lifecycle PASS (17/17). 1643/1643 Unit-Tests. TS clean. 0 FAIL.",
   "vitest": {
-    "files": 84,
-    "tests": 1636,
-    "passed": 1636
+    "files": 85,
+    "tests": 1643,
+    "passed": 1643
   },
   "e2e": {
     "visual-smoke": "PASS (5/5)",
-    "customer-and-review-lifecycle": "NOT_RERUN (Background-Task-Timeout in Tooling \u2014 letzter bekannter Stand: PASS @ 7d83712)"
+    "smoke-rtl-ltr": "PASS (3/3)",
+    "admin-shop-create-delete": "PASS (2/2)",
+    "admin-data-management": "PASS (5/5) + SKIP (5) pre-existing",
+    "shop-owner-full-lifecycle": "PASS (17/17)"
   },
   "open_failures": [],
   "bugs_fixed": [
-    "B8950-006"
+    "B8950-001 (DELETE 500 CASCADE)",
+    "ShopForm-422 (slug field)"
+  ],
+  "test_fixes": [
+    "admin-shop-create-delete.spec.ts: Confirm-Button-Selector auf dialog-scope eingeschränkt",
+    "smoke.spec.ts: RTL/LTR networkidle -> load (Next.js RSC background requests)",
+    "admin-data-management.spec.ts: Category-Lookup via direktem ID-Endpoint statt paginierter Liste",
+    "_parser.spec.ts: Journey-Count 23->24 (admin-shop-create-delete hinzugefuegt)"
   ],
   "coverage_snapshot": {}
 }

@@ -402,14 +402,12 @@ test.describe.serial('Admin Data Management Sweep', () => {
       return
     }
 
-    const res = await request.get(`${BACKEND_URL}/api/v1/admin/categories?limit=100`, {
+    // Direkt per ID abrufen — vermeidet Pagination-Problem bei großen Kategorie-Listen
+    const res = await request.get(`${BACKEND_URL}/api/v1/admin/categories/${ctx.categoryParentId}`, {
       headers: adminHeaders(),
     })
-    expect(res.ok(), `Admin-Categories-GET fehlgeschlagen`).toBe(true)
-    const data = await res.json() as { items?: Array<{ id: number }> }
-    const items = data.items ?? []
-    const found = items.some(c => c.id === ctx.categoryParentId)
-    logStep(3, 'Category parent in Admin-Liste', 'categoryParentId in Liste', found ? 'gefunden' : 'nicht gefunden', found ? 'PASS' : 'FAIL')
+    const found = res.ok()
+    logStep(3, 'Category parent in Admin-Liste', 'categoryParentId abrufbar', found ? 'gefunden' : `HTTP ${res.status()}`, found ? 'PASS' : 'FAIL')
     expect(found, `Category parent ${ctx.categoryParentId} nicht in Admin-Liste`).toBe(true)
   })
 

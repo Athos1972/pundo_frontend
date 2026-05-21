@@ -1,6 +1,8 @@
 // Server Component — no 'use client' needed
 import Link from 'next/link'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { fmtPrice, formatPriceOrLabel } from '@/lib/utils'
 import { absolutizeImageUrl } from '@/lib/seo/absolutize'
 import { getSiteUrl } from '@/lib/seo'
@@ -60,7 +62,7 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
         {/* Item name — link to product page if slug exists */}
         <p className="font-bold text-text text-sm leading-snug line-clamp-2 font-heading">
           {offer.item_slug ? (
-            <Link href={`/products/${offer.item_slug}`} className="after:absolute after:inset-0">
+            <Link href={localePath(lang as Lang,`/products/${offer.item_slug}`)} className="after:absolute after:inset-0">
               {offer.item_name}
             </Link>
           ) : (

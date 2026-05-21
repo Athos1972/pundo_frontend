@@ -114,8 +114,8 @@ describe('ShopCard', () => {
   it('verlinkt auf /shops/<slug> statt /shops/<id>', () => {
     render(<ShopCard shop={makeShop()} lang="de" />)
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', '/shops/mein-testshop')
-    expect(link).not.toHaveAttribute('href', '/shops/42')
+    expect(link).toHaveAttribute('href', '/de/shops/mein-testshop')
+    expect(link).not.toHaveAttribute('href', '/de/shops/42')
   })
 
   it('zeigt Shop-Name an', () => {
@@ -140,8 +140,8 @@ describe('OfferList', () => {
   it('verlinkt auf /shops/<slug>', () => {
     render(<OfferList offers={[makeOffer()]} lang="de" productName="Test" />)
     const link = screen.getByRole('link', { name: 'Mein Testshop' })
-    expect(link).toHaveAttribute('href', '/shops/mein-testshop')
-    expect(link).not.toHaveAttribute('href', '/shops/42')
+    expect(link).toHaveAttribute('href', '/de/shops/mein-testshop')
+    expect(link).not.toHaveAttribute('href', '/de/shops/42')
   })
 
   it('sortiert verfügbare Angebote zuerst', () => {
@@ -161,8 +161,8 @@ describe('ProductCard', () => {
   it('verlinkt Shop via shop_slug', () => {
     render(<ProductCard item={makeProduct()} lang="de" />)
     const shopLink = screen.getByRole('link', { name: 'Mein Testshop' })
-    expect(shopLink).toHaveAttribute('href', '/shops/mein-testshop')
-    expect(shopLink).not.toHaveAttribute('href', '/shops/42')
+    expect(shopLink).toHaveAttribute('href', '/de/shops/mein-testshop')
+    expect(shopLink).not.toHaveAttribute('href', '/de/shops/42')
   })
 
   it('rendert Shop-Name als Text wenn shop_slug null ist', () => {
@@ -177,7 +177,7 @@ describe('ProductCard', () => {
   it('verlinkt Produkt via product slug', () => {
     render(<ProductCard item={makeProduct()} lang="de" />)
     const productLink = screen.getByRole('link', { name: 'Royal Canin Adult 2kg' })
-    expect(productLink).toHaveAttribute('href', '/products/royal-canin-adult-2kg')
+    expect(productLink).toHaveAttribute('href', '/de/products/royal-canin-adult-2kg')
   })
 })
 

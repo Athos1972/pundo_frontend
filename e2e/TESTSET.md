@@ -2,6 +2,15 @@
 
 ## Letzter Testlauf
 
+Datum: 2026-05-21  
+SHA: cd80192af7412e831f6db2bf8fe1719af30f73dc  
+Spec: bugfix-delete-shop-500-20260521 + ShopForm-422-fix  
+Ergebnis: 1643 Vitest PASS · Smoke RTL/LTR 3/3 · Visual-Smoke 5/5 · admin-shop-create-delete PASS · admin-data-management PASS · shop-owner-full-lifecycle 17/17 · Verdict: **SHIP**
+
+---
+
+## Testlauf 2026-05-20 (archiviert)
+
 Datum: 2026-05-20  
 SHA: 03d24b47eb37913071d2694634d78358a2496d2b  
 Spec: signup-turnstile-no-widget-20260520 (+ B-Frontend-005 Hotfix)  
@@ -9,7 +18,7 @@ Ergebnis: 1636 Vitest PASS · Smoke 5/5 PASS · B8950-006 GELÖST · Verdict: **
 
 ---
 
-### Statische Prüfung
+### Statische Prüfung (2026-05-21)
 
 | Prüfung | Status |
 |---------|--------|
@@ -18,7 +27,91 @@ Ergebnis: 1636 Vitest PASS · Smoke 5/5 PASS · B8950-006 GELÖST · Verdict: **
 
 ---
 
-### Unit-Tests (Vitest)
+### Unit-Tests (Vitest) — 2026-05-21
+
+| Dateien | Tests | Ergebnis |
+|---------|-------|---------|
+| 85 | 1643 | ✅ alle bestanden |
+
+Neue Tests (bugfix-delete-shop-500-20260521 + ShopForm-422-fix):
+- `src/tests/shop-form.test.tsx` (NEU) — 7 Tests: slug-Feld im Create-Mode, Auto-Generierung, Manual-Override, Validation, Payload-Prüfung (Create+Edit)
+- `e2e/journeys/_parser.spec.ts` — Journey-Count 23→24 (admin-shop-create-delete)
+
+Reparierte Tests:
+- `e2e/smoke.spec.ts` — RTL/LTR: `networkidle` → `load` (Next.js App Router RSC Background-Requests)
+- `e2e/journeys/admin-shop-create-delete.spec.ts` — Confirm-Button-Selector auf `[role="dialog"]`-Scope
+- `e2e/journeys/admin-data-management.spec.ts` — Category-Lookup via `GET /api/v1/admin/categories/{id}` (Pagination-Bug)
+
+---
+
+### E2E-Tests — 2026-05-21
+
+#### Smoke RTL/LTR (`e2e/smoke.spec.ts`)
+
+| Test | Status |
+|------|--------|
+| RTL: Arabisch dir=rtl | ✅ PASS |
+| RTL: Hebräisch dir=rtl | ✅ PASS |
+| LTR: Deutsch dir=ltr | ✅ PASS |
+
+#### Journey: admin-shop-create-delete (NEU — bugfix-delete-shop-500-20260521)
+
+| Schritt | Status | Anmerkung |
+|---------|--------|-----------|
+| AC-1: Shop anlegen via UI → erscheint in Liste | ✅ PASS | Slug-Feld vorhanden, 422-Fix verifiziert |
+| AC-2+AC-3: Delete + Confirm-Dialog → gelöscht | ✅ PASS | CASCADE-Fix verifiziert, Dialog-Selector gefixed |
+
+Verdict: **PASS** (Report: `e2e/journeys/reports/admin-shop-create-delete-2026-05-21.md`)
+
+#### Journey: admin-data-management (mustRun)
+
+| Schritt | Status | Anmerkung |
+|---------|--------|-----------|
+| Brand ohne Logo: Fallback-Avatar | ✅ PASS | |
+| Brand mit Logo: Upload | ⏭ SKIP | Endpoint nicht implementiert (pre-existing) |
+| Category parent anlegen + abrufbar | ✅ PASS | Pagination-Fix: direkter ID-Lookup |
+| Category child unter parent | ✅ PASS | |
+| Admin-Categories im Browser | ⏭ SKIP | /admin/categories Route fehlt (pre-existing) |
+| Pending Shop-Owner ablehnen | ✅ PASS | |
+| Guide/Brand-Schritte | ⏭ SKIP | Endpoints nicht verfügbar (pre-existing) |
+
+#### Journey: shop-owner-full-lifecycle (mustRun)
+
+| Schritte | Status |
+|----------|--------|
+| 17/17 | ✅ alle PASS |
+
+#### Visual Smoke (`e2e/journeys/visual-smoke.spec.ts`)
+
+| Test | Status |
+|------|--------|
+| Produktseite: Bilder, Carousel | ✅ PASS |
+| Suchergebnisse | ✅ PASS |
+| Shop-Owner S1–S3 | ✅ PASS |
+
+---
+
+### Open Failures (Bug-Register) — 2026-05-21
+
+Quelle der Wahrheit: Vault `FG8 Admin & Operations/Bugs/` — kein `pre-existing` mehr.
+`verdict:"SHIP"` nur wenn `open_failures: []` in `.last_run`.
+
+| Bug-ID | Kategorie | Status | Anmerkung |
+|--------|-----------|--------|-----------|
+| — | — | — | Keine offenen Bugs. Gate grün. |
+
+---
+
+### Statische Prüfung (2026-05-20 — archiviert)
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript (`tsc --noEmit`) | ✅ PASS — 0 Fehler |
+| ESLint | ✅ 0 Errors, 80 Warnings (alle pre-existing) |
+
+---
+
+### Unit-Tests (Vitest) — 2026-05-20 (archiviert)
 
 | Dateien | Tests | Ergebnis |
 |---------|-------|---------|

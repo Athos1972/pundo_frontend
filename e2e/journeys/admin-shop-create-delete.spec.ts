@@ -251,19 +251,16 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
     await deleteBtn.click()
     logStep(8, 'Delete-Button geklickt', 'Confirm-Dialog erscheint', 'Button geklickt', 'PASS')
 
-    // AC-3: Dialog muss sichtbar sein
-    const dialog = page.locator('[role="dialog"], [data-state="open"]').first()
-    const dialogVisible = await dialog.isVisible().catch(() => false)
-    if (!dialogVisible) {
-      // Fallback: Dialog wird durch Modal-Overlay identifiziert
-      const overlay = page.locator('.fixed.inset-0, [class*="backdrop"], [class*="overlay"]').first()
-      await expect(overlay).toBeVisible({ timeout: 5_000 })
-    }
-    logStep(9, 'Confirm-Dialog sichtbar', 'Dialog erscheint', dialogVisible ? 'Dialog sichtbar' : 'Overlay sichtbar', 'PASS')
+    // AC-3: Dialog muss sichtbar sein — warten bis role="dialog" im DOM ist
+    await page.waitForSelector('[role="dialog"]', { timeout: 10_000 })
+    const dialog = page.locator('[role="dialog"]').first()
+    await expect(dialog).toBeVisible({ timeout: 5_000 })
+    logStep(9, 'Confirm-Dialog sichtbar', 'Dialog erscheint', 'Dialog sichtbar', 'PASS')
 
-    // AC-3: Bestätigen klicken
-    const confirmBtn = page.locator('button', { hasText: /delete|löschen|bestätigen|confirm/i }).last()
-    await expect(confirmBtn).toBeVisible()
+    // AC-3: Bestätigen klicken — Confirm-Button INNERHALB des Dialogs
+    // (nicht .last() der Gesamtseite, da beide Buttons denselben Text "Delete" haben)
+    const confirmBtn = dialog.locator('button', { hasText: /delete|löschen|bestätigen|confirm/i })
+    await expect(confirmBtn).toBeVisible({ timeout: 5_000 })
     await confirmBtn.click()
 
     // Warte auf Seiten-Refresh (router.refresh() nach erfolgreichem Delete)

@@ -110,7 +110,7 @@ describe('ShopOfferCard — standard price (no promo)', () => {
   it('renders link to product page when item_slug present', () => {
     render(<ShopOfferCard offer={BASE_OFFER} lang="en" />)
     const link = screen.getByRole('link')
-    expect(link.getAttribute('href')).toBe('/products/pv-anlage-5kw')
+    expect(link.getAttribute('href')).toBe('/en/products/pv-anlage-5kw')
   })
 
   it('does NOT render a link when item_slug is null', () => {

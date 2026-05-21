@@ -19,9 +19,9 @@ touches-states:
   - Shop.has_offers:false
 status-changed-at: 2026-05-21T00:00:00Z
 status-changed-by-spec: bugfix-delete-shop-500-20260521
-last-run: null
-last-result: null
-last-run-sha: null
+last-run: 2026-05-21T12:00:00Z
+last-result: PASS
+last-run-sha: cd80192af7412e831f6db2bf8fe1719af30f73dc
 ---
 
 ### Journey: Admin Shop Create + Delete (UI Golden Path)

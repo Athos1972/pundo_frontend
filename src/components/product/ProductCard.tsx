@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import type { ProductListItem } from '@/types/api'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { formatPriceOrLabel, pickImg } from '@/lib/utils'
 import { FavoriteButton } from '@/components/product/FavoriteButton'
 
@@ -37,7 +39,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
         {/* Text content to the right of the image */}
         <div className="p-3 flex flex-col justify-center min-w-0">
           <p className="font-bold text-text text-sm leading-snug line-clamp-2 font-heading">
-            <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
+            <Link href={localePath(lang as Lang,`/products/${item.slug}`)} className="after:absolute after:inset-0">
               {productName}
             </Link>
           </p>
@@ -48,7 +50,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
                 {priceLabel.display}
               </span>
               {offer.shop_slug
-                ? <Link href={`/shops/${offer.shop_slug}`} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
+                ? <Link href={localePath(lang as Lang,`/shops/${offer.shop_slug}`)} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
                 : <span className="text-xs text-accent truncate">{offer.shop_name}</span>
               }
               {offer.delivery_available && (
@@ -83,7 +85,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
       <div className="p-3">
         <p className="font-bold text-text text-sm leading-snug line-clamp-2 font-heading">
           {/* Stretched link covers the whole card */}
-          <Link href={`/products/${item.slug}`} className="after:absolute after:inset-0">
+          <Link href={localePath(lang as Lang,`/products/${item.slug}`)} className="after:absolute after:inset-0">
             {productName}
           </Link>
         </p>
@@ -94,7 +96,7 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
               {priceLabel.display}
             </span>
             {offer.shop_slug
-              ? <Link href={`/shops/${offer.shop_slug}`} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
+              ? <Link href={localePath(lang as Lang,`/shops/${offer.shop_slug}`)} className="text-xs text-accent underline truncate hover:opacity-80">{offer.shop_name}</Link>
               : <span className="text-xs text-accent truncate">{offer.shop_name}</span>
             }
             {offer.delivery_available && (

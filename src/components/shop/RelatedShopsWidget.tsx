@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 import type { RelatedShopItem } from '@/lib/api'
 
@@ -32,7 +34,7 @@ export function RelatedShopsWidget({ items, lang }: Props) {
           return (
             <Link
               key={item.id}
-              href={`/shops/${item.slug}`}
+              href={localePath(lang as Lang,`/shops/${item.slug}`)}
               className="flex flex-col items-center gap-2 bg-surface border border-border rounded-xl p-3 hover:border-accent transition-colors text-center"
             >
               {imageUrl ? (

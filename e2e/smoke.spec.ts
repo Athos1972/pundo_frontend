@@ -10,7 +10,7 @@ test.describe('Visual Smoke-Test', () => {
 
   test('Startseite lädt und zeigt Hero', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Should render without JS errors
     const jsErrors: string[] = []
@@ -29,7 +29,7 @@ test.describe('Visual Smoke-Test', () => {
   test('Mobile Header: Search- und Shops-Icon sichtbar bei < 768px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 })
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Mobile icon links have aria-label attributes; desktop nav links do NOT.
     // This selector exclusively targets the mobile icon buttons.
@@ -44,7 +44,7 @@ test.describe('Visual Smoke-Test', () => {
   test('Desktop Header: Nav-Links sichtbar bei >= 768px', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
 
     // Desktop nav should be present — header nav only
     const nav = page.locator('header nav')
@@ -84,22 +84,24 @@ test.describe('Visual Smoke-Test', () => {
 
   test('RTL: Arabische Sprache setzt dir=rtl', async ({ page }) => {
     // With i18n routing, navigate directly to the lang-prefixed URL
+    // Use 'load' not 'networkidle' — Next.js App Router / RSC keeps background
+    // requests running indefinitely, so networkidle never fires (TESTFEHLER-Fix 2026-05-21)
     await page.goto('/ar/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
   })
 
   test('RTL: Hebräische Sprache setzt dir=rtl', async ({ page }) => {
     await page.goto('/he/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
   })
 
   test('LTR: Deutsche Sprache setzt dir=ltr', async ({ page }) => {
     await page.goto('/de/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('ltr')
   })

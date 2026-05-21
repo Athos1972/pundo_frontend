@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import type { GuideMeta } from '@/lib/guides'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { GuideCard } from './GuideCard'
 import { CategoryFilter } from './CategoryFilter'
 
@@ -13,7 +15,7 @@ type Props = {
   lang: string
 }
 
-export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeLabels }: Props) {
+export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeLabels, lang }: Props) {
   const [selected, setSelected] = useState('')
 
   const categories = [...new Set(guides.map((g) => g.category))].map((cat) => ({
@@ -35,7 +37,7 @@ export function GuidesGrid({ guides, filterAll, categoryLabels, readtimeLabels }
           <GuideCard
             key={`${guide.slug}-${guide.lang}`}
             guide={guide}
-            href={`/guides/${guide.slug}`}
+            href={localePath(lang as Lang,`/guides/${guide.slug}`)}
             variant="grid"
             categoryLabel={categoryLabels[guide.category] ?? guide.category}
             readtimeLabel={readtimeLabels[guide.readtime] ?? ''}

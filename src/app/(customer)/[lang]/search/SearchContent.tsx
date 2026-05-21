@@ -13,6 +13,7 @@ import { ServiceResultCard } from '@/components/search/ServiceResultCard'
 import { ProductCard } from '@/components/product/ProductCard'
 import { FilterChips } from '@/components/search/FilterChips'
 import { DistanceSlider } from '@/components/search/DistanceSlider'
+import { localePath } from '@/lib/routing'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
@@ -102,7 +103,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   function setParam(key: string, value: string | null) {
     const p = new URLSearchParams(params.toString())
     if (value === null) { p.delete(key) } else { p.set(key, value) }
-    router.push(`/search?${p}`)
+    router.push(`${localePath(lang, '/search')}?${p}`)
   }
 
   // Separate service and product results
@@ -135,7 +136,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     <div className="min-h-screen bg-bg">
       <div className="sticky top-0 z-[9999] bg-bg border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-2">
-          <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
+          <Link href={localePath(lang, '/')} className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="m10 12-4-4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

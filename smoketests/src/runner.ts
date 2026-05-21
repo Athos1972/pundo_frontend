@@ -292,7 +292,7 @@ async function runCheck(
 }
 
 // ---------------------------------------------------------------------------
-// Login helper
+// Login helper — direct API call, bypasses Turnstile (UI-only protection)
 // ---------------------------------------------------------------------------
 
 async function performLogin(
@@ -300,49 +300,36 @@ async function performLogin(
   user: string,
   password: string,
 ): Promise<{ cookie: string | null; error?: string }> {
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
-    extraHTTPHeaders: SMOKETEST_EXTRA_HEADERS,
-  })
-  const page = await context.newPage()
-
+  // Use the backend API directly instead of the UI form.
+  // Turnstile is a frontend-only guard on the /auth/login page; the
+  // POST /api/v1/customer/auth/login endpoint has no bot check.
+  const loginUrl = `${brand.base_url}/api/v1/customer/auth/login`
   try {
-    // Navigate to login page
-    const loginUrl = `${brand.base_url}/auth/login`
-    await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 })
+    const res = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...SMOKETEST_EXTRA_HEADERS,
+      },
+      body: JSON.stringify({ email: user, password }),
+      redirect: 'manual',
+    })
 
-    // Fill login form
-    await page.fill('input[type="email"], input[name="email"]', user)
-    await page.fill('input[type="password"], input[name="password"]', password)
-    await page.click('button[type="submit"]')
-
-    // Wait for navigation after login
-    await page.waitForURL((url) => !url.toString().includes('/auth/login'), {
-      timeout: 10_000,
-    }).catch(() => null)
-
-    // Extract session cookie
-    const cookies = await context.cookies()
-    const sessionCookie = cookies.find((c) =>
-      c.name === 'session' || c.name === 'access_token' ||
-      c.name === 'customer_token' || c.name.includes('auth'),
-    )
-
-    if (sessionCookie) {
-      return { cookie: sessionCookie.value }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { cookie: null, error: `Login API HTTP ${res.status}: ${body.slice(0, 200)}` }
     }
 
-    // Check if still on login page (login failed)
-    const currentUrl = page.url()
-    if (currentUrl.includes('/auth/login')) {
-      return { cookie: null, error: 'Still on login page after submit — credentials may be wrong' }
+    // Extract customer_token from Set-Cookie header
+    const setCookie = res.headers.get('set-cookie') ?? ''
+    const match = setCookie.match(/customer_token=([^;]+)/)
+    if (match) {
+      return { cookie: match[1] }
     }
 
-    return { cookie: null, error: 'Login appeared to succeed but no session cookie found' }
+    return { cookie: null, error: 'Login API succeeded but no customer_token in Set-Cookie header' }
   } catch (err) {
-    return { cookie: null, error: String(err) }
-  } finally {
-    await browser.close()
+    return { cookie: null, error: `Login API fetch error: ${err}` }
   }
 }
 

@@ -123,7 +123,7 @@ describe('RelatedProductsCarousel', () => {
       />
     )
     const link = screen.getByRole('link', { name: 'My Product' })
-    expect(link.getAttribute('href')).toBe('/products/my-product')
+    expect(link.getAttribute('href')).toBe('/en/products/my-product')
   })
 
   it('uses the translated title passed as prop (DE)', async () => {

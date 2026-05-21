@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { getGuides } from '@/lib/guides'
 import { t } from '@/lib/translations'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 import { GuideCard } from './GuideCard'
 
 type Props = { lang: string }
@@ -26,7 +28,7 @@ export async function GuidesTeaser({ lang }: Props) {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-text">{tr.guides_teaser_title}</h2>
-        <Link href="/guides" className="text-sm text-accent">
+        <Link href={localePath(lang as Lang,'/guides')} className="text-sm text-accent">
           {tr.guides_teaser_link(total)}
         </Link>
       </div>
@@ -35,7 +37,7 @@ export async function GuidesTeaser({ lang }: Props) {
           <GuideCard
             key={`${guide.slug}-${guide.lang}`}
             guide={guide}
-            href={`/guides/${guide.slug}`}
+            href={localePath(lang as Lang,`/guides/${guide.slug}`)}
             variant="teaser"
             categoryLabel={categoryLabels[guide.category] ?? guide.category}
           />

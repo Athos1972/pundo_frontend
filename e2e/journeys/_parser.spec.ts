@@ -64,8 +64,8 @@ last-result: N/A
 describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
-    // Updated 2026-05-20: +1 entry (customer-shop-promo-visibility)
-    expect(entries).toHaveLength(23)
+    // Updated 2026-05-21: +1 entry (admin-shop-create-delete)
+    expect(entries).toHaveLength(24)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -385,8 +385,8 @@ describe('parseCatalogDirectory', () => {
   it('findet alle Journey-Dateien und liefert 17 Einträge', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
-    // Updated 2026-05-20: +1 entry (customer-shop-promo-visibility)
-    expect(entries).toHaveLength(23)
+    // Updated 2026-05-21: +1 entry (admin-shop-create-delete)
+    expect(entries).toHaveLength(24)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -407,8 +407,8 @@ describe('parseCatalogDirectory', () => {
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan
     // We verify by checking that the total count is exactly 17 (the 17 journey files)
-    // Updated 2026-05-20: +1 entry (customer-shop-promo-visibility)
-    expect(entries).toHaveLength(23)
+    // Updated 2026-05-21: +1 entry (admin-shop-create-delete)
+    expect(entries).toHaveLength(24)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

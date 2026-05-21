@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { CategoryItem } from '@/types/api'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
 
 const EMOJI_MAP: Record<string, string> = {
   'Animals & Pet Supplies': '🐾',
@@ -50,7 +52,7 @@ function getPriority(name: string | null): number {
 
 const VISIBLE_MAX = 4
 
-export function CategoryChips({ categories, lang: _lang }: { categories: CategoryItem[]; lang: string }) {
+export function CategoryChips({ categories, lang }: { categories: CategoryItem[]; lang: string }) {
   if (categories.length === 0) return null
 
   const filtered = categories.filter(c => {
@@ -68,7 +70,7 @@ export function CategoryChips({ categories, lang: _lang }: { categories: Categor
       {visible.map(cat => (
         <Link
           key={cat.id}
-          href={`/search?category_id=${cat.id}`}
+          href={`${localePath(lang as Lang,'/search')}?category_id=${cat.id}`}
           className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-surface border border-border rounded-full text-sm text-text-muted hover:border-accent hover:text-accent transition-colors whitespace-nowrap"
         >
           <span>{getEmoji(cat.name)}</span>
@@ -77,7 +79,7 @@ export function CategoryChips({ categories, lang: _lang }: { categories: Categor
       ))}
       {remaining > 0 && (
         <Link
-          href="/search"
+          href={localePath(lang as Lang,'/search')}
           className="flex-shrink-0 flex items-center px-3 py-2 bg-surface border border-border rounded-full text-sm text-text-muted hover:border-accent hover:text-accent transition-colors whitespace-nowrap"
         >
           +{remaining}

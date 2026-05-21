@@ -25,6 +25,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/lib/lang', () => ({
+  LANGS: ['en', 'de', 'ru', 'el', 'ar', 'he'],
   getLangFromCookie: () => 'en',
   isRTL: (lang: string) => lang === 'ar' || lang === 'he',
 }))

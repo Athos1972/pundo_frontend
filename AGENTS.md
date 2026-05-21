@@ -64,6 +64,34 @@ Backend-Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/ski
 Falls eine Anforderung Backend-Änderungen erfordert: explizit benennen und ggf. in das Backend-Repo wechseln.
 <!-- END:backend-repo -->
 
+<!-- BEGIN:i18n-routing -->
+# i18n Routing — PFLICHT bei jedem Link und router.push()
+
+**Customer-Pages** liegen unter `src/app/(customer)/[lang]/` und brauchen immer einen `/{lang}/`-Präfix.
+**Bypass-Pfade** (`/account`, `/auth`, `/api`, `/shop-admin`, `/admin` u.a.) haben **keinen** lang-Präfix.
+
+**Goldene Regel:** Alle `<Link href>` und `router.push()` zu Customer-Pages müssen `localePath(lang as Lang, '/pfad')` verwenden:
+
+```typescript
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
+
+// Customer-Page — PFLICHT mit localePath:
+router.push(localePath(lang as Lang, `/products/${slug}`))
+<Link href={localePath(lang as Lang, `/shops/${slug}`)}>
+
+// Bypass-Pfad — direkt, KEIN localePath:
+<Link href="/account/mcp">
+<Link href="/auth/login">
+```
+
+**Konsequenz bei Fehler:** Next.js prefetcht alle sichtbaren Links als RSC-Payload (`?_rsc=`). Fehlender `/{lang}/`-Präfix → HTTP 404 → Konsolen-Fehler im Smoketest.
+
+**Vollständige Bypass-Liste:** `/_next /api /admin /shop-admin /auth /account /favicon /og /brands /brand_logos` + Dateien mit Extension.
+
+**Detaildoku:** `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/10 Wissen/i18n-routing-model.md`
+<!-- END:i18n-routing -->
+
 <!-- BEGIN:languages -->
 # Sprachen & i18n — PFLICHT
 

@@ -1,8 +1,8 @@
 # Journey Report: customer-extended (2026-05-21)
 
-**FAV Customer:** fav-cf52a4ec@pundo.com
-**DEL Customer:** del-cf52a4ec@pundo.com
-**MCP Customer:** mcp-cf52a4ec@pundo.com
+**FAV Customer:** fav-4b529094@pundo.com
+**DEL Customer:** del-4b529094@pundo.com
+**MCP Customer:** mcp-4b529094@pundo.com
 **Test Item ID:** 21476
 
 ## Findings
@@ -37,6 +37,6 @@ Call log:
 - T1 WARN: Keine Favoriten-Items in der Liste gefunden (account-page rendering or UI gap)
 - T1 PASS: Favorit nach Entfernen nicht mehr sichtbar
 - T2 SKIP: POST /reviews failed 404 — {"detail":"Not Found"}
-- T3 WARN: GET /admin/otp/del-cf52a4ec@pundo.com returned 404 — trying without OTP
+- T3 WARN: GET /admin/otp/del-4b529094@pundo.com returned 404 — trying without OTP
 - T3 SKIP: Could not retrieve OTP — admin endpoint not available
 - T4 PASS: /account/mcp lädt ohne 404/5xx

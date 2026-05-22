@@ -1,11 +1,11 @@
 # Journey Report: shop-admin-product-crud (2026-05-21)
 
-**Shop-Owner:** crud-4824b44b@pundo.com
-**Shop ID:** 5162
+**Shop-Owner:** crud-772de181@pundo.com
+**Shop ID:** 8698
 
 ## Findings
 - T1 PASS: Dashboard erreichbar
-- T2 PASS: Produkt angelegt (ID=55325), Offers-Seite erreichbar
+- T2 PASS: Produkt angelegt (ID=56940), Offers-Seite erreichbar
 - T3 SKIP: No file input found on product edit page
 - T4 PASS: Offers/new erreichbar (Preis-Schritt via Offer-Flow)
 - T5 WARN: Kategorie-Update returned 405

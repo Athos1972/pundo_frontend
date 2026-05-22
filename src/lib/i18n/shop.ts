@@ -26,6 +26,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Hello! I found ${productName} on ${hostname}. Please get in touch.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `Hello! I found your shop ${shopName} on ${hostname}. Please get in touch.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'Lowest',
+    price_highest: 'Highest',
+    price_average: 'Average',
+    price_current: 'Current',
+    price_trend_since: (d: string) => `since ${d}`,
+    price_best_seen: 'Best price seen so far',
+    price_no_change_yet: "No price change observed yet — we'll track this price from now on.",
+    price_history_scope_cheapest: 'Cheapest price across all shops',
   },
   de: {
     all_offers: 'Alle Angebote',
@@ -53,6 +62,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Hallo! Ich habe ${productName} auf ${hostname} gefunden. Bitte um Kontaktaufnahme.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `Hallo! Ich habe Ihren Shop ${shopName} auf ${hostname} gefunden. Bitte um Kontaktaufnahme.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'Tiefstpreis',
+    price_highest: 'Höchstpreis',
+    price_average: 'Durchschnitt',
+    price_current: 'Aktuell',
+    price_trend_since: (d: string) => `seit ${d}`,
+    price_best_seen: 'Bester bisher beobachteter Preis',
+    price_no_change_yet: 'Noch keine Preisänderung beobachtet — wir verfolgen diesen Preis ab jetzt.',
+    price_history_scope_cheapest: 'Günstigster Preis über alle Shops',
   },
   ru: {
     all_offers: 'Все предложения',
@@ -80,6 +98,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Привет! Я нашёл ${productName} на ${hostname}. Пожалуйста, свяжитесь со мной.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `Привет! Я нашёл ваш магазин ${shopName} на ${hostname}. Пожалуйста, свяжитесь со мной.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'Минимум',
+    price_highest: 'Максимум',
+    price_average: 'Среднее',
+    price_current: 'Сейчас',
+    price_trend_since: (d: string) => `с ${d}`,
+    price_best_seen: 'Лучшая наблюдаемая цена',
+    price_no_change_yet: 'Изменений цены пока не наблюдалось — мы следим за этой ценой.',
+    price_history_scope_cheapest: 'Минимальная цена среди всех магазинов',
   },
   el: {
     all_offers: 'Όλες οι προσφορές',
@@ -107,6 +134,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Γεια! Βρήκα το ${productName} στο ${hostname}. Παρακαλώ επικοινωνήστε μαζί μου.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `Γεια! Βρήκα το κατάστημά σας ${shopName} στο ${hostname}. Παρακαλώ επικοινωνήστε μαζί μου.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'Χαμηλότερη',
+    price_highest: 'Υψηλότερη',
+    price_average: 'Μέσος όρος',
+    price_current: 'Τρέχουσα',
+    price_trend_since: (d: string) => `από ${d}`,
+    price_best_seen: 'Καλύτερη τιμή μέχρι τώρα',
+    price_no_change_yet: 'Δεν παρατηρήθηκε αλλαγή τιμής ακόμα — παρακολουθούμε αυτή την τιμή.',
+    price_history_scope_cheapest: 'Φθηνότερη τιμή σε όλα τα καταστήματα',
   },
   ar: {
     all_offers: 'جميع العروض',
@@ -134,6 +170,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `مرحبا! وجدت ${productName} على ${hostname}. يرجى التواصل معي.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `مرحبا! وجدت متجركم ${shopName} على ${hostname}. يرجى التواصل معي.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'الأدنى',
+    price_highest: 'الأعلى',
+    price_average: 'المتوسط',
+    price_current: 'الحالي',
+    price_trend_since: (d: string) => `منذ ${d}`,
+    price_best_seen: 'أفضل سعر لوحظ حتى الآن',
+    price_no_change_yet: 'لم يُلاحظ أي تغيير في السعر حتى الآن — سنتابع هذا السعر من الآن.',
+    price_history_scope_cheapest: 'أرخص سعر عبر جميع المتاجر',
   },
   he: {
     all_offers: 'כל ההצעות',
@@ -161,6 +206,15 @@ const shopTranslations = {
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `שלום! מצאתי את ${productName} ב-${hostname}. נא ליצור קשר.`,
     whatsapp_message_shop: (shopName: string, hostname: string) => `שלום! מצאתי את החנות שלכם ${shopName} ב-${hostname}. נא ליצור קשר.`,
+    // T8 — F4900 Preisverlauf-Ausbau Phase 1
+    price_lowest: 'הנמוך ביותר',
+    price_highest: 'הגבוה ביותר',
+    price_average: 'ממוצע',
+    price_current: 'נוכחי',
+    price_trend_since: (d: string) => `מאז ${d}`,
+    price_best_seen: 'המחיר הטוב ביותר שנצפה עד כה',
+    price_no_change_yet: 'לא נצפה שינוי מחיר עדיין — אנו עוקבים אחר מחיר זה מעכשיו.',
+    price_history_scope_cheapest: 'המחיר הזול ביותר בכל החנויות',
   },
 } as const
 

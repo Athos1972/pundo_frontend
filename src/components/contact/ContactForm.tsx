@@ -1,9 +1,10 @@
 'use client'
 // T15 — Contact Form with Turnstile CAPTCHA (F6990 Phase 2)
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { t } from '@/lib/translations'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
+import { useSession } from '@/components/auth/SessionProvider'
 
 interface Props {
   lang: string
@@ -21,15 +22,33 @@ const CATEGORIES = [
 
 export function ContactForm({ lang }: Props) {
   const tr = t(lang)
+  const session = useSession()
+  const isPrefilled =
+    session.is_authenticated &&
+    !!session.user?.display_name &&
+    !!session.user?.email
+
   const [status, setStatus] = useState<Status>('idle')
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     subject: '',
     category: CATEGORIES[0],
     description: '',
-    name: '',
-    email: '',
-  })
+    name: isPrefilled ? (session.user?.display_name ?? '') : '',
+    email: isPrefilled ? (session.user?.email ?? '') : '',
+  }))
+
+  // Sync name/email when session changes (e.g. user logs in/out on this page).
+  // Intentional setState-in-effect: mirrors the SessionProvider pattern (see SessionProvider.tsx).
+  useEffect(() => {
+    if (isPrefilled && session.user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForm(prev => ({ ...prev, name: session.user!.display_name, email: session.user!.email }))
+    } else if (!session.is_authenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForm(prev => ({ ...prev, name: '', email: '' }))
+    }
+  }, [isPrefilled, session.user?.id, session.is_authenticated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function update(field: keyof typeof form, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -90,6 +109,21 @@ export function ContactForm({ lang }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-text-muted leading-relaxed">{tr.contact_intro}</p>
+
+      {isPrefilled && session.user && (
+        <p className="text-sm text-text-muted leading-relaxed">
+          {tr.contact_identity_notice
+            .replace('{display_name}', session.user.display_name)
+            .replace('{email}', session.user.email)
+            .split(session.user.email)
+            .flatMap((part, i, arr) =>
+              i < arr.length - 1
+                ? [part, <bdi key={i} className="font-medium text-text">{session.user!.email}</bdi>]
+                : [part]
+            )}
+        </p>
+      )}
+
       <div>
         <label className={labelClass}>{tr.contact_subject}</label>
         <input
@@ -129,28 +163,32 @@ export function ContactForm({ lang }: Props) {
         />
       </div>
 
-      <div>
-        <label className={labelClass}>{tr.contact_name}</label>
-        <input
-          type="text"
-          required
-          minLength={2}
-          value={form.name}
-          onChange={e => update('name', e.target.value)}
-          className={inputClass}
-        />
-      </div>
+      {!isPrefilled && (
+        <>
+          <div>
+            <label className={labelClass}>{tr.contact_name}</label>
+            <input
+              type="text"
+              required
+              minLength={2}
+              value={form.name}
+              onChange={e => update('name', e.target.value)}
+              className={inputClass}
+            />
+          </div>
 
-      <div>
-        <label className={labelClass}>{tr.contact_email}</label>
-        <input
-          type="email"
-          required
-          value={form.email}
-          onChange={e => update('email', e.target.value)}
-          className={inputClass}
-        />
-      </div>
+          <div>
+            <label className={labelClass}>{tr.contact_email}</label>
+            <input
+              type="email"
+              required
+              value={form.email}
+              onChange={e => update('email', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+        </>
+      )}
 
       <TurnstileWidget onToken={handleToken} onError={handleTurnstileError} />
 

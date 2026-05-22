@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { LANGS } from '@/lib/lang'
 import { getCategories } from '@/lib/api'
+import { getFeaturedCategoryIds } from '@/lib/featured-categories'
+import type { CategoryItem } from '@/types/api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
@@ -56,16 +58,30 @@ export default async function HomePage({ params }: Props) {
   const brand = await getBrandFromHeaders()
   const tr = t(lang)
   const siteUrl = getSiteUrl()
+  const featuredIds = getFeaturedCategoryIds()
   const categoriesData = await getCategories(
-    { taxonomy_type: 'google', only_with_products: true },
+    featuredIds
+      ? { taxonomy_type: 'google' }
+      : { taxonomy_type: 'google', only_with_products: true },
     lang
   ).catch(() => ({ items: [] }))
+
+  let categories: CategoryItem[]
+  if (featuredIds) {
+    categories = featuredIds
+      .map(id => categoriesData.items.find(c => c.id === id))
+      .filter((c): c is CategoryItem => c !== undefined)
+    const missing = featuredIds.filter(id => !categoriesData.items.some(c => c.id === id))
+    if (missing.length > 0) console.warn('[featured-categories] IDs nicht im Backend:', missing)
+  } else {
+    categories = categoriesData.items
+  }
 
   return (
     <div className="min-h-screen bg-bg">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildOrganizationSchema(siteUrl)) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildWebSiteSchema(siteUrl)) }} />
-      <Hero brand={brand} categories={categoriesData.items} lang={lang} />
+      <Hero brand={brand} categories={categories} lang={lang} preserveOrder={!!featuredIds} />
 
       {/* F4700: Activity Feed — directly after Hero, before CommunityCard (AC-B5) */}
       <ActivityFeed brand={brand} lang={lang} />

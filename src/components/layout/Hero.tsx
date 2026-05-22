@@ -9,6 +9,7 @@ import type { CategoryItem } from '@/types/api'
 import { t } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
+import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
 
 const EMOJI_MAP: Record<string, string> = {
   'Pet Supplies': '🐾',
@@ -32,9 +33,10 @@ interface Props {
   brand: BrandConfig
   categories: CategoryItem[]
   lang: Lang
+  preserveOrder?: boolean
 }
 
-export function Hero({ brand, categories, lang }: Props) {
+export function Hero({ brand, categories, lang, preserveOrder = false }: Props) {
   const tr = t(lang)
   const [dismissed, setDismissed] = useState(true)
 
@@ -110,10 +112,12 @@ export function Hero({ brand, categories, lang }: Props) {
             </div>
           )}
 
-          <SearchBar placeholder={tr.search_placeholder} />
+          <SearchBar placeholder={tr.search_placeholder} lang={lang} />
+
+          <ContactCtaLink variant="inline" lang={lang} />
 
           {!brand.features.catsfirst && (
-            <CategoryChips categories={categories} lang={lang} />
+            <CategoryChips categories={categories} lang={lang} preserveOrder={preserveOrder} />
           )}
         </div>
       </div>

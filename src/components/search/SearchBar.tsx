@@ -5,7 +5,7 @@ import { searchProducts, getCategories, getShops } from '@/lib/api'
 import { getLangFromCookie } from '@/lib/lang'
 import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
-import { t } from '@/lib/translations'
+import { t, tSearch } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
 import { fmtPrice, toRelativeImageUrl } from '@/lib/utils'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
@@ -13,6 +13,7 @@ import { ShopAvatar } from '@/components/shop/ShopAvatar'
 interface Props {
   placeholder: string
   defaultValue?: string
+  lang?: Lang
 }
 
 interface SuggestionGroup {
@@ -21,9 +22,11 @@ interface SuggestionGroup {
   products: ProductListItem[]
 }
 
-export function SearchBar({ placeholder, defaultValue = '' }: Props) {
+export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Props) {
   const router = useRouter()
-  const lang = getLangFromCookie()
+  const langFromCookie = getLangFromCookie()
+  const lang = langProp ?? langFromCookie
+  const tr = tSearch(lang)
   const [value, setValue] = useState(defaultValue)
   const [suggestions, setSuggestions] = useState<SuggestionGroup>({ categories: [], shops: [], products: [] })
   const [open, setOpen] = useState(false)
@@ -33,6 +36,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  /* eslint-disable react-hooks/preserve-manual-memoization */
   const fetchSuggestions = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (q.length < 2) { setSuggestions({ categories: [], shops: [], products: [] }); setOpen(false); return }
@@ -57,6 +61,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
       }
     }, 300)
   }, [lang])
+  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value
@@ -69,9 +74,10 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
     router.push(localePath(lang as Lang, `/products/${slug}`))
   }
 
-  function navigateCategory(id: number) {
+  function navigateCategory(id: number, name?: string | null) {
     setOpen(false)
-    router.push(localePath(lang as Lang, `/search`) + `?category_id=${id}`)
+    const nameParam = name ? `&category_name=${encodeURIComponent(name)}` : ''
+    router.push(localePath(lang as Lang, `/search`) + `?category_id=${id}${nameParam}`)
   }
 
   function navigateShop(slug: string) {
@@ -101,7 +107,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault()
       if (activeIdx < catCount) {
-        navigateCategory(suggestions.categories[activeIdx].id)
+        navigateCategory(suggestions.categories[activeIdx].id, suggestions.categories[activeIdx].name)
       } else if (activeIdx < catCount + shopCount) {
         navigateShop(suggestions.shops[activeIdx - catCount].slug)
       } else {
@@ -160,12 +166,12 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
           {hasCategories && (
             <>
               <li className="px-4 py-1.5 bg-surface-alt border-b border-border">
-                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">Kategorien</span>
+                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">{tr.dropdown_categories}</span>
               </li>
               {suggestions.categories.map((cat, idx) => (
                 <li key={`cat-${cat.id}`}>
                   <button
-                    onMouseDown={() => navigateCategory(cat.id)}
+                    onMouseDown={() => navigateCategory(cat.id, cat.name)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
                       idx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                     }`}
@@ -195,7 +201,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
           {hasShops && (
             <>
               <li className={`px-4 py-1.5 bg-surface-alt border-b border-border ${hasCategories ? 'border-t' : ''}`}>
-                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">Shops</span>
+                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">{tr.dropdown_shops}</span>
               </li>
               {suggestions.shops.map((shop, idx) => {
                 const globalIdx = catCount + idx
@@ -230,7 +236,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
           {hasProducts && (
             <>
               <li className={`px-4 py-1.5 bg-surface-alt border-b border-border ${(hasCategories || hasShops) ? 'border-t' : ''}`}>
-                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">Produkte</span>
+                <span className="text-[10px] uppercase tracking-widest font-medium text-text-muted">{tr.dropdown_products}</span>
               </li>
               {suggestions.products.map((item, idx) => {
                 const globalIdx = catCount + shopCount + idx
@@ -276,7 +282,7 @@ export function SearchBar({ placeholder, defaultValue = '' }: Props) {
               onMouseDown={(e) => handleSubmit(e as unknown as React.FormEvent)}
               className="w-full px-4 py-2.5 text-xs text-text-muted hover:text-accent hover:bg-surface-alt transition-colors text-left"
             >
-              Alle Ergebnisse für &bdquo;{value}&ldquo; →
+              {tr.dropdown_all_results(value)}
             </button>
           </li>
         </ul>

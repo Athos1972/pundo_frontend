@@ -66,7 +66,14 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
     }
 
     window.onTurnstileError = () => {
-      onError?.()
+      // In dev, Cloudflare may reject localhost domains — fall back to dev-bypass
+      // so local development is not blocked by a domain restriction error.
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[TurnstileWidget] Cloudflare error in development — using dev-bypass token.')
+        onToken('dev-bypass')
+      } else {
+        onError?.()
+      }
     }
 
     return () => {

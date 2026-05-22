@@ -209,3 +209,29 @@ describe('CategoryEmptyState — RTL (ar/he)', () => {
     expect(flexContainer).not.toBeNull()
   })
 })
+
+describe('CategoryEmptyState — ContactCtaLink (F2360)', () => {
+  it('renders "Product or shop missing?" CTA in empty state (EN)', async () => {
+    const { CategoryEmptyState } = await import('@/components/search/CategoryEmptyState')
+    render(<CategoryEmptyState relatedCategories={[]} lang="en" />)
+
+    expect(screen.getByText('Product or shop missing?')).toBeInTheDocument()
+    expect(screen.getByText('Report it')).toBeInTheDocument()
+  })
+
+  it('renders "Produkt oder Shop fehlt?" CTA (DE)', async () => {
+    const { CategoryEmptyState } = await import('@/components/search/CategoryEmptyState')
+    render(<CategoryEmptyState relatedCategories={[]} lang="de" />)
+
+    expect(screen.getByText('Produkt oder Shop fehlt?')).toBeInTheDocument()
+  })
+
+  it('renders CTA even when related categories are present', async () => {
+    const { CategoryEmptyState } = await import('@/components/search/CategoryEmptyState')
+    const cats = [makeCategoryItem(1, 'Dog Supplies', 5)]
+    render(<CategoryEmptyState relatedCategories={cats} lang="en" />)
+
+    // CTA always shown, regardless of related categories
+    expect(screen.getByText('Product or shop missing?')).toBeInTheDocument()
+  })
+})

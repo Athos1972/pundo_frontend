@@ -52,6 +52,16 @@ describe('proxy.ts — buildCsp directives (N7500 Soro embed)', () => {
   })
 })
 
+describe('proxy.ts — avatar proxy (broken-image bug)', () => {
+  it('I18N_BYPASS_PREFIXES includes /avatars so avatar paths skip i18n redirect', () => {
+    expect(proxySrc).toContain("'/avatars'")
+  })
+
+  it('matcher excludes avatars so middleware does not run on avatar image requests', () => {
+    expect(proxySrc).toMatch(/\(\?!_next\|api\|[^)]*avatars/)
+  })
+})
+
 describe('proxy.ts — i18n routing (F6300)', () => {
   it('I18N_BYPASS_PREFIXES includes /_next', () => {
     expect(proxySrc).toContain("'/_next'")
@@ -60,6 +70,10 @@ describe('proxy.ts — i18n routing (F6300)', () => {
   it('I18N_BYPASS_PREFIXES includes /auth and /account', () => {
     expect(proxySrc).toContain("'/auth'")
     expect(proxySrc).toContain("'/account'")
+  })
+
+  it('I18N_BYPASS_PREFIXES includes /oauth (MCP OAuth consent, F6600)', () => {
+    expect(proxySrc).toContain("'/oauth'")
   })
 
   it('I18N_BYPASS_PREFIXES includes /shop-admin', () => {

@@ -76,22 +76,72 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
     await expect(emptyIntro).toBeVisible()
   })
 
-  test('AC5: Leere Kategorie mit keinen verwandten Kategorien zeigt Fallback-Link (Backend pending)', async ({ page }) => {
-    // Backend /related-with-products not yet deployed → returns error → empty array → Fallback shown
+  test('AC3: Leere Kategorie MIT verwandten Kategorien zeigt bis zu 6 Vorschlags-Links', async ({ page }) => {
+    // Category 2922 = Pet Apparel Hangers (0 direct products, 6 related categories with products)
+    // Backend GET /categories/2922/related-with-products → 6 items
+    await page.goto('/en/search?category_id=2922&category_name=Pet+Apparel+Hangers')
+    await page.waitForLoadState('networkidle')
+
+    // AC3a: intro text visible (wait up to 8s for async useEffect)
+    const emptyIntro = page.getByText('Currently no products in this category.')
+    await expect(emptyIntro).toBeVisible({ timeout: 8000 })
+
+    // AC3b: suggestions label visible — wait for async getRelatedCategories useEffect
+    const suggestionsLabel = page.getByText('Here are some suggestions:')
+    await expect(suggestionsLabel).toBeVisible({ timeout: 8000 })
+
+    // AC3c: at least 1 suggestion link present (up to 6)
+    // Filter out the current category navigation links (category_name param links in header)
+    const suggestionLinks = page.locator('[data-testid="category-empty-state"] a[href*="category_id"]')
+    const fallbackSuggestionLinks = page.locator('a[href*="category_id"]').filter({ hasText: /Fish|Dog|Cat|Pet Bed|Pet Bell|Biometric/ })
+
+    // Use either testid selector or text-based fallback
+    const hasTestId = await suggestionLinks.count() > 0
+    const linksLocator = hasTestId ? suggestionLinks : fallbackSuggestionLinks
+    const linkCount = await linksLocator.count()
+
+    expect(linkCount, `Keine Vorschlags-Links gefunden`).toBeGreaterThan(0)
+    expect(linkCount, `Mehr als 6 Links (max AC-spec)`).toBeLessThanOrEqual(6)
+
+    // AC3d: Fallback "Browse all categories" should NOT be shown when suggestions exist
+    const browseAllLink = page.getByText('Browse all categories')
+    await expect(browseAllLink).not.toBeVisible()
+  })
+
+  test('AC3+AC4: Klick auf Vorschlags-Link navigiert zur Kategoriesuche', async ({ page }) => {
+    // Category 2922 = Pet Apparel Hangers (0 products), related: Fish Supplies (2904, 147 products)
+    await page.goto('/en/search?category_id=2922&category_name=Pet+Apparel+Hangers')
+    await page.waitForLoadState('networkidle')
+
+    // Wait for async suggestions to appear
+    const suggestionsLabel = page.getByText('Here are some suggestions:')
+    await expect(suggestionsLabel).toBeVisible({ timeout: 8000 })
+
+    // Find first suggestion link (one of the related category names)
+    const suggestionLinks = page.locator('a[href*="category_id"]').filter({ hasText: /Fish|Dog|Cat|Pet Bed|Pet Bell|Biometric/ })
+    await expect(suggestionLinks.first()).toBeVisible({ timeout: 5000 })
+
+    // Click first suggestion
+    await suggestionLinks.first().click()
+    await page.waitForLoadState('networkidle')
+
+    // AC4: Should navigate to a category search page
+    const currentUrl = page.url()
+    expect(currentUrl, `URL enthält keine category_id nach Klick`).toContain('category_id=')
+  })
+
+  test('AC5: Leere Kategorie OHNE verwandte Kategorien zeigt Fallback-Link', async ({ page }) => {
+    // Category 5 = Commercial Cleaning (0 products, related-with-products → empty)
     await page.goto('/en/search?category_id=5&category_name=Commercial+Cleaning')
     await page.waitForLoadState('networkidle')
 
-    // With backend pending, we expect the fallback browse all link
-    // OR related suggestions if backend happened to respond
-    // Either way, the page should not crash and show at least the intro text
     const emptyIntro = page.getByText('Currently no products in this category.')
     await expect(emptyIntro).toBeVisible()
 
-    // Fallback link should be present (browse all / home)
+    // When no related categories: fallback browse all link appears
     const browseAllLink = page.getByText('Browse all categories')
     const hasRelatedSuggestions = page.getByText('Here are some suggestions:')
 
-    // Either fallback OR suggestions should be visible (depending on backend)
     const fallbackVisible = await browseAllLink.isVisible().catch(() => false)
     const suggestionsVisible = await hasRelatedSuggestions.isVisible().catch(() => false)
     expect(fallbackVisible || suggestionsVisible, 'Weder Fallback-Link noch Vorschläge sichtbar').toBe(true)

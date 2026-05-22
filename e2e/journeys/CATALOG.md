@@ -35,6 +35,7 @@
 | [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |
 | [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
+| [category-discovery](category-discovery.md) | Category Discovery Flow (F2350) | approved | P2 | — |
 
 ## Smoketest Coverage
 

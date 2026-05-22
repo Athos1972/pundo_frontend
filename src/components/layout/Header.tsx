@@ -14,7 +14,7 @@ export async function Header({ lang }: HeaderProps) {
   const [brand, tr] = [await getBrandFromHeaders(), t(lang)]
 
   return (
-    <header className="border-b border-border bg-surface sticky top-0 z-20">
+    <header className="border-b border-border bg-surface sticky top-0 z-30">
       <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 flex items-center gap-2 md:gap-4">
         <Link href={localePath(lang, '/')} aria-label={`${brand.name} — Zur Startseite`} className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}

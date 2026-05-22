@@ -26,10 +26,10 @@ const LANG_COOKIE = 'app_lang'
 
 // Paths that bypass i18n redirect entirely (keep language-agnostic)
 const I18N_BYPASS_PREFIXES = [
-  '/_next', '/api', '/admin', '/shop-admin', '/auth', '/account',
+  '/_next', '/api', '/admin', '/shop-admin', '/auth', '/account', '/oauth',
   '/favicon', '/og', '/brands', '/brand_logos', '/manifest.webmanifest',
   '/robots.txt', '/sitemap.xml', '/llms.txt', '/__playwright',
-  '/product_images', '/review_photos', '/shop_logos',
+  '/product_images', '/review_photos', '/shop_logos', '/avatars',
 ]
 
 function shouldBypassI18n(pathname: string): boolean {
@@ -97,8 +97,11 @@ const buildCsp = (nonce: string, analyticsHost?: string): string => {
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}${analyticsScriptSrc} https://challenges.cloudflare.com`,
     // In dev: allow unsafe-inline without nonce (nonce + unsafe-inline doesn't work in CSP)
-    // In prod: use nonce-only (strict)
-    isDev ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}'`,
+    // In prod: use nonce-only (strict) + hash for next/font/google's deterministic CSS-variable injection.
+    // next/font injects a <style> with CSS custom properties (font variable names) that has no nonce API.
+    // The hash is stable as long as the font config in (customer)/layout.tsx stays unchanged.
+    // If fonts change → run: npx playwright test --reporter=list 2>&1 | grep "sha256-" to get the new hash.
+    isDev ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY='`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co`,
@@ -237,7 +240,7 @@ export const config = {
   matcher: [
     {
       source:
-        '/((?!_next|api|brand_logos|product_images|review_photos|favicon.ico|manifest.webmanifest).*)',
+        '/((?!_next|api|brand_logos|product_images|review_photos|avatars|favicon.ico|manifest.webmanifest).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

@@ -2,6 +2,86 @@
 
 ## Letzter Testlauf
 
+Datum: 2026-05-22  
+SHA: cb9b44f28005715632d23e1c124cf0248a84fb1a  
+Spec: **F4100 Favoriten-Fixes** (Hero-Button, Produktlink-Guard, My Favorites Dropdown + Route)  
+Ergebnis: TypeScript PASS · ESLint PASS · 6/6 Vitest PASS · 9/9 E2E PASS · Verdict: **SHIP**
+
+### E2E-Details F4100 favoriten-fixes (9/9 PASS)
+
+| # | Test | Status | Zeit |
+|---|------|--------|------|
+| 1 | Fix a — AC1: Herz-Button im Hero sichtbar (anon) | ✅ PASS | 775ms |
+| 2 | Fix a — AC2: Auth-User Herz togglet Favorit | ✅ PASS | 4.3s |
+| 3 | Fix a — AC3: Anon → Redirect /auth/login | ✅ PASS | 3.9s |
+| 4 | Fix b — AC6: GET /favorites liefert product_slug | ✅ PASS | 60ms |
+| 5 | Fix b — AC7: Kein /products/undefined-Link | ✅ PASS | 5.7s |
+| 6 | Fix c — AC8: My Favorites im Dropdown | ✅ PASS | 2.7s |
+| 7 | Fix c — AC9a: Klick → /account/favorites | ✅ PASS | 2.9s |
+| 8 | Fix c — T0b: /account/favorites zeigt Tab sofort | ✅ PASS | 743ms |
+| 9 | Fix c — AC10: Translations alle 6 Sprachen | ✅ PASS | 9ms |
+
+### Neue Unit-Tests F4100 (6 Tests)
+
+- `src/tests/favorites-tab-guard.test.tsx` — 6 Tests (product_slug Guard, localePath, undefined-Safety)
+
+---
+
+## Testlauf 2026-05-22 — F2360 (archiviert)
+
+Datum: 2026-05-22  
+SHA: 309239e58967e8aaa506a176c41ee5d7a88ad35c  
+Spec: **F2360 Kuratierte Homepage-Kategorien** (Steuerfile + CategoryChips expand/collapse)  
+Ergebnis: TypeScript PASS · ESLint 0 Errors · 1736/1736 Vitest PASS · 25/26 E2E PASS (1 opt. skip) · Verdict: **SHIP**
+
+### E2E-Details F2360
+
+| Test | Status |
+|------|--------|
+| AC4 — 4 Chips + +N Button | ✅ PASS |
+| AC5+6 — Expand/Collapse | ✅ PASS |
+| AC7 — category_name in href | ✅ PASS |
+| AC1 — Steuerfile-IDs geladen | ✅ PASS |
+| AC3 — Kein Crash bei fehlenden IDs | ✅ PASS |
+| customer-discovery (8/9, 1 opt. skip) | ✅ PASS |
+
+### Neue Unit-Tests F2360 (16 Tests)
+
+- `src/tests/featured-categories.test.ts` — 5 Tests (Steuerfile-Logik)
+- `src/tests/CategoryChips.test.tsx` — 11 Tests (Chips, RTL, preserveOrder, BLOCKED-Filter)
+
+---
+
+## Testlauf 2026-05-22 (archiviert — F2350)
+
+Datum: 2026-05-22  
+SHA: 309239e58967e8aaa506a176c41ee5d7a88ad35c  
+Spec: F2350 Kategoriesuche Leerzustand & verwandte Kategorien  
+Ergebnis: TypeScript PASS · ESLint 0 Errors · 1710/1710 Vitest PASS · 12/12 E2E PASS · Verdict: **SHIP**  
+Backend pending: `GET /api/v1/categories/{id}/related-with-products` → 404, AC3 Re-Test nach Backend-Deployment nötig.
+
+---
+
+## Testlauf 2026-05-22 (archiviert — hero-contact-cta)
+
+Datum: 2026-05-22  
+SHA: 309239e58967e8aaa506a176c41ee5d7a88ad35c  
+Spec: hero-contact-cta-20260522 (Inline-CTA Hero + 0-Treffer-CTA + ContactForm Session-Prefill)  
+Ergebnis: TypeScript PASS · ESLint 0 Errors · Unit-Tests 103/103 PASS · Smoke 8/8 PASS · customer-discovery 8/9 (1 optional skip) · AC-Tests 9/9 PASS · Verdict: **SHIP**
+
+---
+
+## Testlauf 2026-05-22 — 404-i18n (archiviert)
+
+Datum: 2026-05-22  
+SHA: 309239e58967e8aaa506a176c41ee5d7a88ad35c  
+Spec: 404-i18n (not-found.tsx übersetzt, 6 Sprachen + RTL)  
+Ergebnis: 6 neue Vitest PASS · E2E-07b PASS · Manuelle Verifikation EN/DE/AR/HE/EL/RU ✓ · Verdict: **SHIP**
+
+---
+
+## Testlauf 2026-05-21 (archiviert)
+
 Datum: 2026-05-21  
 SHA: 495567cafce27f0d8ee5e619d4e11998518763a6  
 Spec: smoketest-rsc-404-login-skip (lang-prefix-fix + login API-bypass + networkidle→load sweep)  

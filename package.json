@@ -15,6 +15,7 @@
     "seo:perf": "tsx scripts/seo-perf.ts",
     "blog:sync": "tsx scripts/sync-blog.ts",
     "blog:backfill": "tsx scripts/sync-blog.ts --backfill",
+    "backfill:categories": "tsx scripts/backfill-featured-categories.ts",
     "seed-visuals:generate": "node scripts/generate-seed-visuals.mjs",
     "seed-visuals:generate:skip-existing": "node scripts/generate-seed-visuals.mjs --skip-existing",
     "seed-visuals:build": "node scripts/build-seed-visuals.mjs"

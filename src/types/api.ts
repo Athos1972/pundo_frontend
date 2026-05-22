@@ -123,6 +123,7 @@ export interface ShopOffer {
 export interface CategoryItem {
   id: number; parent_id: number | null; taxonomy_type: string;
   external_id: string; level: string | null; name: string | null; child_count: number;
+  product_count?: number;  // NEU — von /categories/{id}/related-with-products befüllt
 }
 export interface CategoryListResponse { items: CategoryItem[]; }
 

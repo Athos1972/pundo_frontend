@@ -203,6 +203,14 @@ export async function getRelatedShops(
   }
 }
 
+export async function getRelatedCategories(
+  id: number,
+  lang: string,
+  limit = 6
+): Promise<CategoryListResponse> {
+  return apiFetch<CategoryListResponse>(`/categories/${id}/related-with-products?limit=${limit}`, lang);
+}
+
 export async function getShopReviews(
   shopId: number,
   lang: string,

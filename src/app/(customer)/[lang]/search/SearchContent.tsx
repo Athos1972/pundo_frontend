@@ -1,7 +1,7 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { searchAll, searchProducts, getCategories } from '@/lib/api'
+import { searchAll, searchProducts, getCategories, getRelatedCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
 import type { Lang } from '@/lib/lang'
 import { useGeolocation } from '@/lib/useGeolocation'
@@ -14,6 +14,8 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { FilterChips } from '@/components/search/FilterChips'
 import { DistanceSlider } from '@/components/search/DistanceSlider'
 import { localePath } from '@/lib/routing'
+import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
+import { CategoryEmptyState } from '@/components/search/CategoryEmptyState'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
@@ -37,14 +39,20 @@ function toSearchProductItem(p: ProductListItem): SearchProductItem {
   return { ...p, result_type: 'product', score: 0 }
 }
 
-export default function SearchContent({ lang }: { lang: Lang }) {
+export default function SearchContent({ lang, initialCategoryId }: { lang: Lang; initialCategoryId?: string | null }) {
   const params = useSearchParams()
   const router = useRouter()
   const tr = t(lang)
   const location = useGeolocation()
 
   const q = params.get('q') ?? ''
-  const categoryId = params.get('category_id')
+  // Use initialCategoryId (from server) as fallback for the first render before
+  // useSearchParams() resolves — prevents the hydration-race that shows the generic
+  // empty state briefly on ?category_id= URLs.
+  const rawCategoryId = params.get('category_id')
+  const categoryId = rawCategoryId !== null ? rawCategoryId : (initialCategoryId ?? null)
+  const categoryNameParam = params.get('category_name') ?? ''
+  const isCategoryMode = categoryId !== null
   const available = params.get('available') === 'true'
   const withPrice = params.get('with_price') === '1'
   const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
@@ -56,6 +64,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   const [offset, setOffset] = useState(0)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   const [categoryName, setCategoryName] = useState<string | null>(null)
+  const [relatedCategories, setRelatedCategories] = useState<import('@/types/api').CategoryItem[]>([])
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
@@ -124,10 +133,12 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     let cancelled = false
     getCategories({ ids: [+categoryId] }, lang)
       .then(res => {
-        if (!cancelled && res.items.length > 0 && res.items[0].name) {
-          setCategoryName(res.items[0].name)
+        // Find by id — robust before B1 (full list returned) and after B1 (filtered list).
+        const match = res.items.find(c => c.id === +categoryId!)
+        if (!cancelled && match?.name) {
+          setCategoryName(match.name)
         }
-        // If no items or no name (B1 not yet deployed), fallback stays null → show generic title
+        // If no match or no name, fallback stays null → show generic title
       })
       .catch(() => {
         // Backend B1 not yet deployed — silently fall back to generic title
@@ -138,8 +149,10 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOffset(0)
+    setRelatedCategories([])
     load(true, 0)
   }, [q, categoryId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const loadMore = useCallback(() => load(false, offset), [load, offset])
   const { sentinelRef, isSupported } = useInfiniteScroll({
@@ -148,6 +161,21 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     isLoading: loading,
     rootRef: scrollContainerRef,
   })
+
+  // Load related categories when in category mode and result is empty (AC3/F2350)
+  useEffect(() => {
+    if (!isCategoryMode || loading || items.length > 0) return
+    if (!categoryId) return
+    let cancelled = false
+    getRelatedCategories(+categoryId, lang, 6)
+      .then(res => {
+        if (!cancelled) setRelatedCategories(res.items)
+      })
+      .catch(() => {
+        // Backend not available — keep empty array → Fallback-Link shown (AC5)
+      })
+    return () => { cancelled = true }
+  }, [isCategoryMode, loading, items.length, categoryId, lang]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function setParam(key: string, value: string | null) {
     const p = new URLSearchParams(params.toString())
@@ -181,13 +209,14 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     ).values()
   )
 
-  // T7: Determine empty-state message
   const isEmpty = !loading && items.length === 0
-  const emptyMessage = categoryId ? tr.category_no_results : tr.no_results
+
+  // Display name: URL param takes priority (already available), API-loaded name as fallback
+  const displayCategoryName = categoryNameParam || categoryName
 
   return (
     <div className="min-h-screen bg-bg">
-      <div className="sticky top-0 z-[9999] bg-bg border-b border-border px-4 py-3">
+      <div className="sticky top-0 z-20 bg-bg border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-2">
           <Link href={localePath(lang, '/')} className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -196,7 +225,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
             {tr.home}
           </Link>
         </div>
-        <SearchBar placeholder={tr.search_placeholder} defaultValue={q} />
+        <SearchBar placeholder={tr.search_placeholder} defaultValue={q} lang={lang} />
         <FilterChips
           available={available}
           onAvailableChange={v => setParam('available', v ? 'true' : null)}
@@ -233,15 +262,15 @@ export default function SearchContent({ lang }: { lang: Lang }) {
       <div className="flex h-[calc(100vh-160px)]">
         <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'block' : 'hidden'} md:block w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3`}>
 
-          {/* T5: Category context heading */}
-          {categoryId && (
+          {/* Category context heading — always in category mode, with fallback */}
+          {isCategoryMode && (
             <h1 className="text-lg font-semibold text-text rtl:text-end">
-              {categoryName ?? tr.category_results_title}
+              {displayCategoryName || tr.category_results_title}
             </h1>
           )}
 
-          {/* Service results section — always first (highest visibility per arch T13) */}
-          {serviceItems.length > 0 && (
+          {/* Service results section — text mode only (services don't apply in category mode) */}
+          {!isCategoryMode && serviceItems.length > 0 && (
             <>
               <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">
                 {tr.result_service_badge}
@@ -255,10 +284,9 @@ export default function SearchContent({ lang }: { lang: Lang }) {
           {/* Local shops section */}
           <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">{tr.local_shops}</h2>
           {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
-          {!loading && localItems.length === 0 && serviceItems.length === 0 && (
+          {!loading && localItems.length === 0 && (!isCategoryMode && serviceItems.length === 0) && (
             <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
           )}
-          {!loading && localItems.length === 0 && serviceItems.length > 0 && null}
 
           {/* Online retailers section */}
           {includeOnline && onlineItems.length > 0 && (
@@ -280,12 +308,26 @@ export default function SearchContent({ lang }: { lang: Lang }) {
               {tr.load_more} ({total - items.length})
             </button>
           )}
-          {/* T7: Show category-specific empty state message when in category mode */}
-          {isEmpty && (
-            <p className="text-center text-text-muted py-12">{emptyMessage}</p>
+
+          {/* Category mode empty state */}
+          {isCategoryMode && isEmpty && (
+            <CategoryEmptyState
+              relatedCategories={relatedCategories}
+              lang={lang}
+            />
+          )}
+
+          {/* Text mode empty state — generic no_results + contact CTA */}
+          {!isCategoryMode && isEmpty && (
+            <div className="py-8 space-y-6">
+              <p className="text-center text-text-muted">{tr.no_results}</p>
+              {q.length >= 2 && (
+                <ContactCtaLink variant="block" lang={lang} />
+              )}
+            </div>
           )}
         </div>
-        <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[45%] p-4`}>
+        <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[45%] p-4 relative z-0`}>
           <ShopMap
             shops={mapShops}
             className="w-full h-full rounded-xl overflow-hidden"

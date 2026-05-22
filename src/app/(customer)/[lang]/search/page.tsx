@@ -36,8 +36,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 }
 
-export default async function SearchPage({ params }: Props) {
+export default async function SearchPage({ params, searchParams }: Props) {
   const { lang } = await params as { lang: Lang }
+  const sp = await searchParams
+  // Pass category_id from server to avoid hydration race in SearchContent
+  const initialCategoryId = typeof sp['category_id'] === 'string' && sp['category_id'].length > 0
+    ? sp['category_id']
+    : null
   const tr = t(lang)
   return (
     <Suspense fallback={
@@ -47,7 +52,7 @@ export default async function SearchPage({ params }: Props) {
     }>
       {/* Visually hidden H1 for SEO — SearchBar has the visible search UI */}
       <h1 className="sr-only">{tr.search}</h1>
-      <SearchContent lang={lang} />
+      <SearchContent lang={lang} initialCategoryId={initialCategoryId} />
     </Suspense>
   )
 }

@@ -56,6 +56,7 @@ export function SignupForm({ lang }: Props) {
       const data = await res.json() as {
         detail?: string | Array<{ field?: string; message?: string }>
         error?: string
+        is_verified?: boolean
       }
 
       if (!res.ok) {
@@ -85,7 +86,11 @@ export function SignupForm({ lang }: Props) {
         return
       }
 
-      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}&purpose=signup`)
+      if (data.is_verified) {
+        router.push('/account')
+      } else {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}&purpose=signup`)
+      }
     } catch {
       setError(tr.error_generic)
     } finally {

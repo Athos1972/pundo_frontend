@@ -4,6 +4,7 @@ import type { CategoryItem } from '@/types/api'
 import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
 import { tCommon } from '@/lib/i18n/common'
+import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
 
 interface CategoryEmptyStateProps {
   relatedCategories: CategoryItem[]
@@ -51,6 +52,8 @@ export function CategoryEmptyState({ relatedCategories, lang }: CategoryEmptySta
           </Link>
         </div>
       )}
+
+      <ContactCtaLink variant="block" lang={lang} />
     </div>
   )
 }

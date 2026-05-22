@@ -18,11 +18,13 @@ import type { ProductListItem } from '@/types/api'
 const mockSearchProducts = vi.fn()
 const mockSearchAll = vi.fn()
 const mockGetCategories = vi.fn()
+const mockGetRelatedCategories = vi.fn()
 
 vi.mock('@/lib/api', () => ({
   searchProducts: (...args: unknown[]) => mockSearchProducts(...args),
   searchAll: (...args: unknown[]) => mockSearchAll(...args),
   getCategories: (...args: unknown[]) => mockGetCategories(...args),
+  getRelatedCategories: (...args: unknown[]) => mockGetRelatedCategories(...args),
 }))
 
 // ─── Next.js mocks ────────────────────────────────────────────────────────────
@@ -100,8 +102,11 @@ describe('SearchContent — category mode', () => {
     mockSearchProducts.mockReset()
     mockSearchAll.mockReset()
     mockGetCategories.mockReset()
+    mockGetRelatedCategories.mockReset()
     // Default: categories endpoint returns empty (B1 not yet deployed)
     mockGetCategories.mockResolvedValue({ items: [] })
+    // Default: related categories returns empty (backend endpoint not yet deployed)
+    mockGetRelatedCategories.mockResolvedValue({ items: [] })
   })
 
   it('calls searchProducts (not searchAll) when ?category_id=678 is set', async () => {
@@ -146,19 +151,43 @@ describe('SearchContent — category mode', () => {
     expect(mockSearchAll).not.toHaveBeenCalled()
   })
 
-  it('shows category_no_results when categoryId is set and items are empty', async () => {
+  it('shows CategoryEmptyState (category_empty_intro) when categoryId is set and items are empty', async () => {
     mockSearchParamsValue = new URLSearchParams('category_id=999999')
     mockSearchProducts.mockResolvedValue({ total: 0, items: [] })
+    mockGetRelatedCategories.mockResolvedValue({ items: [] })
+
+    const SearchContent = (await import('@/app/(customer)/[lang]/search/SearchContent')).default
+    render(<SearchContent lang="en" />)
+
+    // CategoryEmptyState renders category_empty_intro: "Currently no products in this category."
+    await waitFor(() => {
+      expect(screen.getByText('Currently no products in this category.')).toBeInTheDocument()
+    })
+    // Fallback link should show because related categories are empty
+    await waitFor(() => {
+      expect(screen.getByText('Browse all categories')).toBeInTheDocument()
+    })
+  })
+
+  it('shows CategoryEmptyState fallback (browse all link) when empty and relatedCategories returns empty', async () => {
+    // SearchContent calls getRelatedCategories when category results are empty (F2350).
+    // Backend returns empty list → CategoryEmptyState shows the browse-all fallback.
+    mockSearchParamsValue = new URLSearchParams('category_id=42')
+    mockSearchProducts.mockResolvedValue({ total: 0, items: [] })
+    // beforeEach already sets mockGetRelatedCategories.mockResolvedValue({ items: [] })
 
     const SearchContent = (await import('@/app/(customer)/[lang]/search/SearchContent')).default
     render(<SearchContent lang="en" />)
 
     await waitFor(() => {
-      expect(screen.getByText('No items found in this category.')).toBeInTheDocument()
+      expect(screen.getByText('Currently no products in this category.')).toBeInTheDocument()
+      expect(screen.getByText('Browse all categories')).toBeInTheDocument()
     })
+    // getRelatedCategories IS called (it's the F2350 feature) — mock returns [] → fallback shown
+    expect(mockGetRelatedCategories).toHaveBeenCalledWith(42, 'en', 6)
   })
 
-  it('shows generic no_results (not category_no_results) when no categoryId and empty results', async () => {
+  it('shows generic no_results (not CategoryEmptyState) when no categoryId and empty results', async () => {
     mockSearchParamsValue = new URLSearchParams('q=xyzzy')
     mockSearchAll.mockResolvedValue({ total: 0, items: [] })
 
@@ -166,8 +195,10 @@ describe('SearchContent — category mode', () => {
     render(<SearchContent lang="en" />)
 
     await waitFor(() => {
-      // 'no_results' is a key in common translations — the text "No results" (or similar)
-      expect(screen.queryByText('No items found in this category.')).not.toBeInTheDocument()
+      // category_empty_intro should NOT appear in text mode
+      expect(screen.queryByText('Currently no products in this category.')).not.toBeInTheDocument()
+      // generic no_results should appear
+      expect(screen.getByText('No results found.')).toBeInTheDocument()
     })
   })
 })

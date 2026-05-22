@@ -87,6 +87,10 @@ const config: NextConfig = {
         source: '/shop_logos/:path*',
         destination: `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/shop_logos/:path*`,
       },
+      {
+        source: '/avatars/:path*',
+        destination: `${process.env.BACKEND_URL ?? 'http://localhost:8000'}/avatars/:path*`,
+      },
     ]
   },
 }

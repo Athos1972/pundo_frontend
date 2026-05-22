@@ -2,8 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ContactForm } from '@/components/contact/ContactForm'
+import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
 import { t, translations } from '@/lib/translations'
 import { LANGS } from '@/lib/lang'
+
+// Default: anonymous session (no auth)
+vi.mock('@/components/auth/SessionProvider', () => ({
+  useSession: () => ({ user: null, is_authenticated: false }),
+}))
 
 vi.mock('next/link', () => ({
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) =>
@@ -267,5 +273,147 @@ describe('ContactForm — RTL Sprachen', () => {
     const { container } = render(<ContactForm lang="he" />)
     expect(container.querySelector('form')).toBeInTheDocument()
     expect(screen.getByText(t('he').contact_send)).toBeInTheDocument()
+  })
+})
+
+// ── Neue Translation-Keys ─────────────────────────────────────────────────────
+
+describe('Contact CTA translation keys — alle 6 Sprachen', () => {
+  const newKeys = [
+    'contact_identity_notice',
+    'contact_cta_inline',
+    'contact_cta_empty_title',
+    'contact_cta_empty_results',
+    'contact_cta_empty_action',
+  ] as const
+
+  for (const lang of LANGS) {
+    it(`lang="${lang}" hat alle neuen contact_cta_* und contact_identity_notice Keys`, () => {
+      const tr = translations[lang]
+      for (const key of newKeys) {
+        expect(tr[key], `missing "${key}" for lang "${lang}"`).toBeTruthy()
+        expect((tr[key] as string).length).toBeGreaterThan(0)
+      }
+    })
+  }
+
+  it('contact_identity_notice enthält {display_name} und {email} Platzhalter', () => {
+    for (const lang of LANGS) {
+      const notice = translations[lang].contact_identity_notice
+      expect(notice, `lang "${lang}": missing {display_name}`).toContain('{display_name}')
+      expect(notice, `lang "${lang}": missing {email}`).toContain('{email}')
+    }
+  })
+})
+
+// ── ContactForm — Angemeldeter Nutzer (Prefill) ───────────────────────────────
+
+describe('ContactForm — Session-Prefill (angemeldeter Nutzer)', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  it('blendet Name- und E-Mail-Felder aus wenn angemeldet (AC-2)', async () => {
+    vi.doMock('@/components/auth/SessionProvider', () => ({
+      useSession: () => ({
+        is_authenticated: true,
+        user: { id: 1, display_name: 'Anna Beispiel', email: 'anna@test.com', is_verified: true, provider: 'email', created_at: '' },
+      }),
+    }))
+    const { ContactForm: PrefillForm } = await import('@/components/contact/ContactForm')
+    render(<PrefillForm lang="en" />)
+    expect(screen.queryByText('Name')).not.toBeInTheDocument()
+    expect(screen.queryByText('Email')).not.toBeInTheDocument()
+  })
+
+  it('zeigt Identitäts-Hinweis mit Name und E-Mail wenn angemeldet (AC-3)', async () => {
+    vi.doMock('@/components/auth/SessionProvider', () => ({
+      useSession: () => ({
+        is_authenticated: true,
+        user: { id: 1, display_name: 'Anna Beispiel', email: 'anna@test.com', is_verified: true, provider: 'email', created_at: '' },
+      }),
+    }))
+    const { ContactForm: PrefillForm } = await import('@/components/contact/ContactForm')
+    render(<PrefillForm lang="en" />)
+    expect(screen.getByText(/Anna Beispiel/)).toBeInTheDocument()
+    expect(screen.getByText(/anna@test\.com/)).toBeInTheDocument()
+  })
+
+  it('zeigt Name- und E-Mail-Felder für anonyme Nutzer (AC-4)', () => {
+    render(<ContactForm lang="en" />)
+    expect(screen.getByText('Name')).toBeInTheDocument()
+    expect(screen.getByText('Email')).toBeInTheDocument()
+  })
+
+  it('sendet name+email aus Session im POST-Body wenn angemeldet (AC-5)', async () => {
+    vi.doMock('@/components/auth/SessionProvider', () => ({
+      useSession: () => ({
+        is_authenticated: true,
+        user: { id: 1, display_name: 'Anna Beispiel', email: 'anna@test.com', is_verified: true, provider: 'email', created_at: '' },
+      }),
+    }))
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true })
+    global.fetch = mockFetch as unknown as typeof fetch
+
+    const { ContactForm: PrefillForm } = await import('@/components/contact/ContactForm')
+    render(<PrefillForm lang="en" />)
+    fireEvent.submit(screen.getByRole('button'))
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    expect(body.name).toBe('Anna Beispiel')
+    expect(body.email).toBe('anna@test.com')
+  })
+
+  it('Fallback zu normalen Feldern wenn display_name leer ist', async () => {
+    vi.doMock('@/components/auth/SessionProvider', () => ({
+      useSession: () => ({
+        is_authenticated: true,
+        user: { id: 1, display_name: '', email: 'anna@test.com', is_verified: true, provider: 'email', created_at: '' },
+      }),
+    }))
+    const { ContactForm: FallbackForm } = await import('@/components/contact/ContactForm')
+    render(<FallbackForm lang="en" />)
+    expect(screen.getByText('Name')).toBeInTheDocument()
+    expect(screen.getByText('Email')).toBeInTheDocument()
+  })
+})
+
+// ── ContactCtaLink ────────────────────────────────────────────────────────────
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}))
+
+describe('ContactCtaLink — inline variant', () => {
+  for (const lang of LANGS) {
+    it(`lang="${lang}" rendert Inline-CTA-Link mit korrektem Text`, () => {
+      render(<ContactCtaLink variant="inline" lang={lang as import('@/lib/lang').Lang} />)
+      const link = screen.getByRole('link')
+      expect(link).toBeInTheDocument()
+      expect(link.getAttribute('href')).toContain('/contact')
+      expect(link.textContent).toBe(translations[lang].contact_cta_inline)
+    })
+  }
+})
+
+describe('ContactCtaLink — block variant', () => {
+  for (const lang of LANGS) {
+    it(`lang="${lang}" rendert Block-CTA mit Titel, Text und Link`, () => {
+      render(<ContactCtaLink variant="block" lang={lang as import('@/lib/lang').Lang} />)
+      expect(screen.getByText(translations[lang].contact_cta_empty_title)).toBeInTheDocument()
+      expect(screen.getByText(translations[lang].contact_cta_empty_results)).toBeInTheDocument()
+      const link = screen.getByRole('link')
+      expect(link).toBeInTheDocument()
+      expect(link.getAttribute('href')).toContain('/contact')
+    })
+  }
+
+  it('block-CTA-Link verwendet localePath (enthält lang-Präfix)', () => {
+    render(<ContactCtaLink variant="block" lang="de" />)
+    const link = screen.getByRole('link')
+    expect(link.getAttribute('href')).toContain('/de/contact')
   })
 })

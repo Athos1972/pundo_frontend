@@ -2,13 +2,33 @@
 
 import { useState } from 'react'
 import type { OAuthConnection } from '@/types/customer'
-import type { Translations } from '@/lib/translations'
 import { disconnectOAuthClient } from '@/lib/oauth-api'
+
+export interface McpClientTr {
+  mcp_intro: string
+  mcp_url_copy: string
+  mcp_url_copied: string
+  mcp_setup_heading: string
+  mcp_snippet_hint: string
+  mcp_tab_claude: string
+  mcp_tab_cursor: string
+  mcp_tab_openclaw: string
+  mcp_connections_heading: string
+  mcp_connection_last_used: string
+  mcp_connection_never_used: string
+  mcp_connection_disconnect: string
+  mcp_connection_disconnect_confirm: string
+  mcp_connection_disconnect_yes: string
+  mcp_connection_disconnect_no: string
+  mcp_connection_disconnected: string
+  mcp_connection_scope_badge: string
+  mcp_error_load: string
+}
 
 interface Props {
   initialConnections: OAuthConnection[]
   lang: string
-  tr: Translations
+  tr: McpClientTr
 }
 
 const MCP_SERVER_URL = 'https://mcp.pundo.cy'
@@ -53,7 +73,7 @@ const OPENCLAW_SNIPPET = JSON.stringify(
 
 type ClientTab = 'claude' | 'cursor' | 'openclaw'
 
-function formatDate(iso: string | null, tr: Translations, lang: string): string {
+function formatDate(iso: string | null, tr: McpClientTr, lang: string): string {
   if (!iso) return tr.mcp_connection_never_used
   try {
     return new Date(iso).toLocaleDateString(lang, {
@@ -68,7 +88,7 @@ function formatDate(iso: string | null, tr: Translations, lang: string): string 
 
 interface DisconnectDialogProps {
   clientName: string
-  tr: Translations
+  tr: McpClientTr
   onConfirm: () => void
   onCancel: () => void
   loading: boolean

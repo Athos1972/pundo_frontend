@@ -15,9 +15,17 @@ interface TurnstileVerifyResponse {
  * - Fails closed (returns false) on network errors.
  * - In development, if TURNSTILE_SECRET_KEY is not set, returns true with a
  *   console warning so that local development is not blocked.
+ * - In development, the sentinel token 'dev-bypass' is accepted without any
+ *   Cloudflare network call (issued by TurnstileWidget when no sitekey is set).
  */
 export async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY
+
+  // Accept the local dev-bypass sentinel without hitting Cloudflare.
+  if (token === 'dev-bypass' && process.env.NODE_ENV === 'development') {
+    console.warn('[turnstile-server] dev-bypass token accepted — local development only.')
+    return true
+  }
 
   if (!secret) {
     if (process.env.NODE_ENV === 'development') {

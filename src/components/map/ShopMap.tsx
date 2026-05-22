@@ -63,14 +63,23 @@ function FitBounds({ shops, center, zoom }: FitBoundsProps) {
   const map = useMap()
   const fitRef = useRef({ shops, center, zoom })
 
-  // Keep ref in sync before ResizeObserver fires (layout phase, not render)
+  // Keep ref current so the ResizeObserver always sees fresh data
   useLayoutEffect(() => {
     fitRef.current = { shops, center, zoom }
   })
 
+  // Stable key: only changes when the actual set of shops changes.
+  // Using the array reference as a dep would re-fire on every SearchContent
+  // render (mapShops is Array.from(...) → new ref each time), causing RAF
+  // cleanup to cancel the call before it fires.
+  const shopsKey = shops.map(s => s.id).join(',')
+
   useEffect(() => {
-    applyFit(map, shops, center, zoom)
-  }, [map, shops, center, zoom])
+    // invalidateSize so fitBounds reads the correct container dimensions
+    map.invalidateSize({ animate: false })
+    applyFit(map, fitRef.current.shops, center, zoom)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, shopsKey, center?.[0], center?.[1], zoom])
 
   useEffect(() => {
     const container = map.getContainer()

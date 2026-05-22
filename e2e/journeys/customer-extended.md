@@ -47,12 +47,25 @@ Schließt Testlücken im Customer-Bereich, die `customer-and-review-lifecycle` n
 
 ## Steps
 
+### T0b: /account/favorites Direktroute (F4100-Fix-c)
+1. Eingeloggter Customer navigiert direkt zu `/account/favorites`
+2. Assert: Seite lädt ohne Redirect/404
+3. Assert: FavoritesTab ist sofort aktiv sichtbar (kein Tab-Klick nötig)
+4. Assert: Seiteninhalt enthält Favoriten-Überschrift (`favorites_tab` Translation-Key)
+
 ### T1: Favoriten
 1. Customer anlegen: `fav-<uuid>@pundo.com` → Auto-Approve → Login via Browser
 2. API: `POST /api/v1/customer/favorites/<item_id>` (erstes verfügbares Item)
 3. Browser: `/account` → Tab „Favorites" → Item-Name sichtbar
 4. API: `DELETE /api/v1/customer/favorites/<item_id>`
 5. Browser: Tab reload → Item nicht mehr in Favoriten-Liste
+
+### T1b: Favoriten-Link navigiert korrekt (F4100-Fix-b)
+1. Customer aus T1, API: `POST /api/v1/customer/favorites/<item_id>` erneut
+2. Browser: `/account` → Tab „Favorites" → Item-Name sichtbar
+3. Assert: Produktlink im Listeneintrag enthält gültigen Slug (nicht `undefined`)
+4. Browser: Klick auf Produktname → navigiert zu `/{lang}/products/{slug}`
+5. Assert: Produktseite lädt (HTTP 200, `<h1>` mit Produktname sichtbar, kein 404)
 
 ### T2: Eigene Reviews im Profil
 1. Customer aus T1 (oder neuer Account)

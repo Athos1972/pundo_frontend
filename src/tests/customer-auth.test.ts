@@ -3,6 +3,30 @@ import { isRTL, getLangFromCookie, LANGS, DEFAULT_LANG } from '@/lib/lang'
 
 // Tests for pure validation logic that doesn't need a browser
 
+// ── @pundo.com auto-verify redirect logic ─────────────────────────────────────
+
+describe('Signup post-redirect decision', () => {
+  const getRedirect = (isVerified: boolean, email: string) =>
+    isVerified
+      ? '/account'
+      : `/auth/verify-email?email=${encodeURIComponent(email)}&purpose=signup`
+
+  it('redirects @pundo.com (is_verified=true) to /account', () => {
+    expect(getRedirect(true, 'e2e@pundo.com')).toBe('/account')
+  })
+
+  it('redirects regular user (is_verified=false) to verify-email', () => {
+    expect(getRedirect(false, 'user@example.com')).toBe(
+      '/auth/verify-email?email=user%40example.com&purpose=signup'
+    )
+  })
+
+  it('encodes special chars in email for verify-email URL', () => {
+    const result = getRedirect(false, 'test+tag@example.com')
+    expect(result).toContain('test%2Btag%40example.com')
+  })
+})
+
 describe('Password validation', () => {
   it('rejects passwords shorter than 8 characters', () => {
     const isValid = (pw: string) => pw.length >= 8

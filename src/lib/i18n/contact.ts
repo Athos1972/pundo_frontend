@@ -1,6 +1,11 @@
 // src/lib/i18n/contact.ts — Contact & Spotted namespace
 const contactTranslations = {
   en: {
+    contact_identity_notice: "You're writing as {display_name} ({email}).",
+    contact_cta_inline: "Can't find it? Tell us.",
+    contact_cta_empty_title: 'Product or shop missing?',
+    contact_cta_empty_results: "We couldn't find a match. Let us know what you were looking for and we'll add it.",
+    contact_cta_empty_action: 'Report it',
     contact_intro: 'Thank you for reaching out! We look forward to your message and will get back to you as soon as possible.',
     contact_missing_something: 'Something missing? Let us know!',
     contact_subject: 'Subject',
@@ -33,6 +38,11 @@ const contactTranslations = {
     spotted_account_error_vision_failed: 'Photo could not be processed.',
   },
   de: {
+    contact_identity_notice: 'Du schreibst als {display_name} ({email}).',
+    contact_cta_inline: 'Nichts gefunden? Sag uns Bescheid.',
+    contact_cta_empty_title: 'Produkt oder Shop fehlt?',
+    contact_cta_empty_results: 'Wir haben nichts gefunden. Sag uns, wonach du gesucht hast — wir ergänzen es.',
+    contact_cta_empty_action: 'Jetzt melden',
     contact_intro: 'Vielen Dank, dass Du mit uns Kontakt aufnimmst! Wir freuen uns auf Deine Nachricht und melden uns so rasch wie möglich!',
     contact_missing_something: 'Fehlt etwas? Schreib uns!',
     contact_subject: 'Thema',
@@ -65,6 +75,11 @@ const contactTranslations = {
     spotted_account_error_vision_failed: 'Foto konnte nicht verarbeitet werden.',
   },
   ru: {
+    contact_identity_notice: 'Ты пишешь как {display_name} ({email}).',
+    contact_cta_inline: 'Не нашёл? Напиши нам.',
+    contact_cta_empty_title: 'Не хватает продукта или магазина?',
+    contact_cta_empty_results: 'Мы ничего не нашли. Сообщи нам, что ты искал — мы добавим это.',
+    contact_cta_empty_action: 'Сообщить',
     contact_intro: 'Спасибо, что написал нам! Мы рады твоему сообщению и ответим как можно скорее!',
     contact_missing_something: 'Чего-то не хватает? Напиши нам!',
     contact_subject: 'Тема',
@@ -97,6 +112,11 @@ const contactTranslations = {
     spotted_account_error_vision_failed: 'Не удалось обработать фото.',
   },
   el: {
+    contact_identity_notice: 'Γράφεις ως {display_name} ({email}).',
+    contact_cta_inline: 'Δεν το βρήκες; Πες μας.',
+    contact_cta_empty_title: 'Λείπει προϊόν ή κατάστημα;',
+    contact_cta_empty_results: 'Δεν βρήκαμε αποτέλεσμα. Πες μας τι έψαχνες — θα το προσθέσουμε.',
+    contact_cta_empty_action: 'Ανάφερέ το',
     contact_intro: 'Ευχαριστούμε που επικοινωνείτε μαζί μας! Χαιρόμαστε για το μήνυμά σας και θα απαντήσουμε το συντομότερο δυνατό!',
     contact_missing_something: 'Λείπει κάτι; Γράψτε μας!',
     contact_subject: 'Θέμα',
@@ -129,6 +149,11 @@ const contactTranslations = {
     spotted_account_error_vision_failed: 'Η φωτογραφία δεν μπόρεσε να επεξεργαστεί.',
   },
   ar: {
+    contact_identity_notice: 'أنت تكتب بوصفك {display_name} ({email}).',
+    contact_cta_inline: 'لم تجده؟ أخبرنا.',
+    contact_cta_empty_title: 'هل يوجد منتج أو متجر مفقود؟',
+    contact_cta_empty_results: 'لم نجد نتائج. أخبرنا بما كنت تبحث عنه وسنضيفه.',
+    contact_cta_empty_action: 'أبلغنا',
     contact_intro: 'شكراً لتواصلك معنا! يسعدنا استقبال رسالتك وسنرد عليك في أقرب وقت ممكن!',
     contact_missing_something: 'هل يوجد شيء ناقص؟ أخبرنا!',
     contact_subject: 'الموضوع',
@@ -161,6 +186,11 @@ const contactTranslations = {
     spotted_account_error_vision_failed: 'تعذّر معالجة الصورة.',
   },
   he: {
+    contact_identity_notice: 'אתה כותב בתור {display_name} ({email}).',
+    contact_cta_inline: 'לא מצאת? ספר לנו.',
+    contact_cta_empty_title: 'חסר מוצר או חנות?',
+    contact_cta_empty_results: 'לא מצאנו תוצאות. ספר לנו מה חיפשת — נוסיף אותו.',
+    contact_cta_empty_action: 'דווח לנו',
     contact_intro: 'תודה שפנית אלינו! אנחנו שמחים להודעתך ונחזור אליך בהקדם האפשרי!',
     contact_missing_something: 'חסר משהו? כתוב לנו!',
     contact_subject: 'נושא',

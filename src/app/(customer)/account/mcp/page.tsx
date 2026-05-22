@@ -5,7 +5,7 @@ import { t } from '@/lib/translations'
 import { getCustomerSession } from '@/lib/customer-api'
 import { getOAuthConnections } from '@/lib/oauth-api'
 import { BackButton } from '@/components/ui/BackButton'
-import { McpConnectionsClient } from './McpConnectionsClient'
+import { McpConnectionsClient, type McpClientTr } from './McpConnectionsClient'
 
 export const metadata: Metadata = {
   title: 'AI Agent Connections | Pundo',
@@ -41,7 +41,26 @@ export default async function McpPage() {
             <McpConnectionsClient
               initialConnections={connectionsData.connections}
               lang={lang}
-              tr={tr}
+              tr={{
+                mcp_intro: tr.mcp_intro,
+                mcp_url_copy: tr.mcp_url_copy,
+                mcp_url_copied: tr.mcp_url_copied,
+                mcp_setup_heading: tr.mcp_setup_heading,
+                mcp_snippet_hint: tr.mcp_snippet_hint,
+                mcp_tab_claude: tr.mcp_tab_claude,
+                mcp_tab_cursor: tr.mcp_tab_cursor,
+                mcp_tab_openclaw: tr.mcp_tab_openclaw,
+                mcp_connections_heading: tr.mcp_connections_heading,
+                mcp_connection_last_used: tr.mcp_connection_last_used,
+                mcp_connection_never_used: tr.mcp_connection_never_used,
+                mcp_connection_disconnect: tr.mcp_connection_disconnect,
+                mcp_connection_disconnect_confirm: tr.mcp_connection_disconnect_confirm,
+                mcp_connection_disconnect_yes: tr.mcp_connection_disconnect_yes,
+                mcp_connection_disconnect_no: tr.mcp_connection_disconnect_no,
+                mcp_connection_disconnected: tr.mcp_connection_disconnected,
+                mcp_connection_scope_badge: tr.mcp_connection_scope_badge,
+                mcp_error_load: tr.mcp_error_load,
+              } satisfies McpClientTr}
             />
           )}
         </div>

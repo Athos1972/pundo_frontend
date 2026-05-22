@@ -1,11 +1,11 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { searchAll } from '@/lib/api'
+import { searchAll, searchProducts, getCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
 import type { Lang } from '@/lib/lang'
 import { useGeolocation } from '@/lib/useGeolocation'
-import type { SearchResultItem, SearchServiceItem, SearchProductItem } from '@/types/api'
+import type { SearchResultItem, SearchServiceItem, SearchProductItem, ProductListItem } from '@/types/api'
 import { isServiceResult, isProductResult } from '@/types/api'
 import { useInfiniteScroll } from '@/lib/useInfiniteScroll'
 import { SearchBar } from '@/components/search/SearchBar'
@@ -32,6 +32,11 @@ function isOnlineOffer(offer: SearchProductItem['best_offer']): boolean {
   return offer.dist_km == null
 }
 
+/** Maps a ProductListItem to SearchProductItem so the existing render pipeline works. */
+function toSearchProductItem(p: ProductListItem): SearchProductItem {
+  return { ...p, result_type: 'product', score: 0 }
+}
+
 export default function SearchContent({ lang }: { lang: Lang }) {
   const params = useSearchParams()
   const router = useRouter()
@@ -39,6 +44,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   const location = useGeolocation()
 
   const q = params.get('q') ?? ''
+  const categoryId = params.get('category_id')
   const available = params.get('available') === 'true'
   const withPrice = params.get('with_price') === '1'
   const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
@@ -49,6 +55,7 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   const [loading, setLoading] = useState(false)
   const [offset, setOffset] = useState(0)
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+  const [categoryName, setCategoryName] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
@@ -57,7 +64,8 @@ export default function SearchContent({ lang }: { lang: Lang }) {
   const [mapBbox, setMapBbox] = useState<string | undefined>(undefined)
 
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
-    if (!q || q.length < 2) {
+    // T4: In category mode q is not required; otherwise require at least 2 chars
+    if (!categoryId && (!q || q.length < 2)) {
       setItems([])
       setTotal(0)
       return
@@ -65,32 +73,73 @@ export default function SearchContent({ lang }: { lang: Lang }) {
     setLoading(true)
     const newOffset = reset ? 0 : currentOffset
     try {
-      const res = await searchAll(
-        {
-          q,
-          lat: location.lat,
-          lng: location.lng,
-          bbox: mapBbox,
-          limit: PAGE_SIZE,
-          offset: newOffset,
-        },
-        lang
-      )
-      setItems(prev => reset ? res.items : [...prev, ...res.items])
-      setTotal(res.total)
-      setOffset(newOffset + res.items.length)
+      if (categoryId) {
+        // T2: Category mode — use searchProducts with category_id
+        const res = await searchProducts(
+          {
+            category_id: +categoryId,
+            q: q || undefined,
+            lat: location.lat,
+            lng: location.lng,
+            limit: PAGE_SIZE,
+            offset: newOffset,
+          },
+          lang
+        )
+        // T3: Map ProductListItem → SearchProductItem for the existing render pipeline
+        setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
+        setTotal(res.total)
+        setOffset(newOffset + res.items.length)
+      } else {
+        // Existing search mode
+        const res = await searchAll(
+          {
+            q,
+            lat: location.lat,
+            lng: location.lng,
+            bbox: mapBbox,
+            limit: PAGE_SIZE,
+            offset: newOffset,
+          },
+          lang
+        )
+        setItems(prev => reset ? res.items : [...prev, ...res.items])
+        setTotal(res.total)
+        setOffset(newOffset + res.items.length)
+      }
     } catch {
       // keep existing
     } finally {
       setLoading(false)
     }
-  }, [q, location.lat, location.lng, mapBbox, lang])
+  }, [q, categoryId, location.lat, location.lng, mapBbox, lang])
+
+  // T5: Load category name when categoryId is set (non-blocking, with fallback)
+  useEffect(() => {
+    if (!categoryId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCategoryName(null)
+      return
+    }
+    let cancelled = false
+    getCategories({ ids: [+categoryId] }, lang)
+      .then(res => {
+        if (!cancelled && res.items.length > 0 && res.items[0].name) {
+          setCategoryName(res.items[0].name)
+        }
+        // If no items or no name (B1 not yet deployed), fallback stays null → show generic title
+      })
+      .catch(() => {
+        // Backend B1 not yet deployed — silently fall back to generic title
+      })
+    return () => { cancelled = true }
+  }, [categoryId, lang])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOffset(0)
     load(true, 0)
-  }, [q, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, categoryId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMore = useCallback(() => load(false, offset), [load, offset])
   const { sentinelRef, isSupported } = useInfiniteScroll({
@@ -131,6 +180,10 @@ export default function SearchContent({ lang }: { lang: Lang }) {
         }])
     ).values()
   )
+
+  // T7: Determine empty-state message
+  const isEmpty = !loading && items.length === 0
+  const emptyMessage = categoryId ? tr.category_no_results : tr.no_results
 
   return (
     <div className="min-h-screen bg-bg">
@@ -180,6 +233,13 @@ export default function SearchContent({ lang }: { lang: Lang }) {
       <div className="flex h-[calc(100vh-160px)]">
         <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'block' : 'hidden'} md:block w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3`}>
 
+          {/* T5: Category context heading */}
+          {categoryId && (
+            <h1 className="text-lg font-semibold text-text rtl:text-end">
+              {categoryName ?? tr.category_results_title}
+            </h1>
+          )}
+
           {/* Service results section — always first (highest visibility per arch T13) */}
           {serviceItems.length > 0 && (
             <>
@@ -220,8 +280,9 @@ export default function SearchContent({ lang }: { lang: Lang }) {
               {tr.load_more} ({total - items.length})
             </button>
           )}
-          {!loading && items.length === 0 && (
-            <p className="text-center text-text-muted py-12">{tr.no_results}</p>
+          {/* T7: Show category-specific empty state message when in category mode */}
+          {isEmpty && (
+            <p className="text-center text-text-muted py-12">{emptyMessage}</p>
           )}
         </div>
         <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[45%] p-4`}>

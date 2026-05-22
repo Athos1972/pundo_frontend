@@ -14,10 +14,11 @@ interface Props {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const sp = await searchParams
   const hasQuery = typeof sp['q'] === 'string' && sp['q'].length > 0
+  const hasCategoryId = typeof sp['category_id'] === 'string' && sp['category_id'].length > 0
   const siteUrl = getSiteUrl()
 
-  if (hasQuery) {
-    // Parametrised search URLs must not be indexed (index bloat)
+  if (hasQuery || hasCategoryId) {
+    // Parametrised search / category URLs must not be indexed (index bloat)
     return {
       robots: { index: false, follow: true },
     }

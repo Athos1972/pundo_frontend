@@ -31,6 +31,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'In a shop? Snap a product — the community will love it!',
     fab_dismiss_label: 'Dismiss',
+    category_results_title: 'Category results',
+    category_no_results: 'No items found in this category.',
   },
   de: {
     search_placeholder: 'Produkt oder Shop suchen...',
@@ -63,6 +65,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'Gerade in einem Shop? Fotografiere ein Produkt — die Community freut sich!',
     fab_dismiss_label: 'Schließen',
+    category_results_title: 'Kategorie-Ergebnisse',
+    category_no_results: 'Keine Einträge in dieser Kategorie gefunden.',
   },
   ru: {
     search_placeholder: 'Найти продукт или магазин...',
@@ -95,6 +99,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'В магазине? Сфотографируй товар — сообщество оценит!',
     fab_dismiss_label: 'Закрыть',
+    category_results_title: 'Результаты категории',
+    category_no_results: 'В этой категории ничего не найдено.',
   },
   el: {
     search_placeholder: 'Αναζήτηση προϊόντος ή καταστήματος...',
@@ -127,6 +133,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'Σε κατάστημα; Φωτογράφισε ένα προϊόν — η κοινότητα θα χαρεί!',
     fab_dismiss_label: 'Κλείσιμο',
+    category_results_title: 'Αποτελέσματα κατηγορίας',
+    category_no_results: 'Δεν βρέθηκαν εγγραφές σε αυτή την κατηγορία.',
   },
   ar: {
     search_placeholder: 'ابحث عن منتج أو متجر...',
@@ -159,6 +167,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'في متجر؟ صوّر منتجًا — المجتمع سيقدّر ذلك!',
     fab_dismiss_label: 'إغلاق',
+    category_results_title: 'نتائج الفئة',
+    category_no_results: 'لم يتم العثور على عناصر في هذه الفئة.',
   },
   he: {
     search_placeholder: 'חפש מוצר או חנות...',
@@ -191,6 +201,8 @@ const searchTranslations = {
     fab_spotted_label: 'Spotted',
     fab_spotted_onboarding_text: 'בחנות? צלם מוצר — הקהילה תשמח!',
     fab_dismiss_label: 'סגור',
+    category_results_title: 'תוצאות קטגוריה',
+    category_no_results: 'לא נמצאו פריטים בקטגוריה זו.',
   },
 } as const
 

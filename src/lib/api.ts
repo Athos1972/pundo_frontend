@@ -146,7 +146,7 @@ export async function getSitemapSlugs(): Promise<SitemapSlugsResponse> {
 }
 
 export async function getCategories(
-  params: { parent_id?: number; taxonomy_type?: string; q?: string; limit?: number; only_with_products?: boolean } = {},
+  params: { parent_id?: number; taxonomy_type?: string; q?: string; limit?: number; only_with_products?: boolean; ids?: number[] } = {},
   lang: string
 ): Promise<CategoryListResponse> {
   const qs = new URLSearchParams();
@@ -155,6 +155,9 @@ export async function getCategories(
   if (params.q) qs.set('q', params.q);
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.only_with_products) qs.set('only_with_products', 'true');
+  if (params.ids && params.ids.length > 0) {
+    params.ids.forEach(id => qs.append('ids', String(id)));
+  }
   const q = qs.toString();
   return apiFetch<CategoryListResponse>(`/categories${q ? `?${q}` : ''}`, lang);
 }

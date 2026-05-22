@@ -22,11 +22,12 @@ interface Props {
   trustProfile: TrustProfileResponse | null
   lang: string
   showMcpTab: boolean
+  initialTab?: Tab
 }
 
-export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, showMcpTab }: Props) {
+export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, showMcpTab, initialTab }: Props) {
   const tr = t(lang)
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? 'profile')
   const [user, setUser] = useState<AuthUser>(initialUser)
   const pathname = usePathname()
   const isMcpActive = pathname?.includes('/account/mcp') ?? false

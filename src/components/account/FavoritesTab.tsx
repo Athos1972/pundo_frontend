@@ -135,29 +135,55 @@ export function FavoritesTab({ lang }: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          {favorites.map((fav) => (
+          {favorites.map((fav) => {
+            const productHref = fav.product_slug
+              ? localePath(lang as Lang, `/products/${fav.product_slug}`)
+              : null
+            return (
             <div key={fav.id} className="flex items-center gap-3 bg-surface border border-border rounded-xl p-3">
-              <Link href={localePath(lang as Lang, `/products/${fav.product_slug}`)} className="shrink-0">
-                <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
-                  {fav.image_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={fav.image_url}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.classList.add('hidden') }}
-                    />
-                  )}
-                </div>
-              </Link>
+              {productHref ? (
+                <Link href={productHref} className="shrink-0">
+                  <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
+                    {fav.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={fav.image_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.classList.add('hidden') }}
+                      />
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <span className="shrink-0">
+                  <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
+                    {fav.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={fav.image_url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.classList.add('hidden') }}
+                      />
+                    )}
+                  </div>
+                </span>
+              )}
 
               <div className="flex-1 min-w-0">
-                <Link
-                  href={localePath(lang as Lang, `/products/${fav.product_slug}`)}
-                  className="font-medium text-sm text-text line-clamp-1 hover:text-accent"
-                >
-                  {fav.product_name}
-                </Link>
+                {productHref ? (
+                  <Link
+                    href={productHref}
+                    className="font-medium text-sm text-text line-clamp-1 hover:text-accent"
+                  >
+                    {fav.product_name}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-sm text-text line-clamp-1">
+                    {fav.product_name}
+                  </span>
+                )}
                 {fav.brand && <p className="text-xs text-text-muted">{fav.brand}</p>}
                 {fav.best_offer_price && (
                   <p className="text-xs text-accent font-medium mt-0.5">
@@ -209,7 +235,8 @@ export function FavoritesTab({ lang }: Props) {
                 </button>
               )}
             </div>
-          ))}
+            )
+          })}
 
           {favorites.length < total && (
             <button

@@ -1,0 +1,81 @@
+{
+  "comment": "Redaktionell kuratierte Homepage-Kategorien. category_ids in Anzeige-Reihenfolge. Pflege via 'npm run backfill:categories' oder manuell.",
+  "category_ids": [
+    {
+      "id": 2863,
+      "name": "Animals & Pet Supplies"
+    },
+    {
+      "id": 2988,
+      "name": "Apparel & Accessories"
+    },
+    {
+      "id": 3228,
+      "name": "Arts & Entertainment"
+    },
+    {
+      "id": 3728,
+      "name": "Baby & Toddler"
+    },
+    {
+      "id": 3815,
+      "name": "Business & Industrial"
+    },
+    {
+      "id": 4039,
+      "name": "Cameras & Optics"
+    },
+    {
+      "id": 4143,
+      "name": "Electronics"
+    },
+    {
+      "id": 8458,
+      "name": "Electronics & Gadgets"
+    },
+    {
+      "id": 4561,
+      "name": "Food, Beverages & Tobacco"
+    },
+    {
+      "id": 4925,
+      "name": "Furniture"
+    },
+    {
+      "id": 5046,
+      "name": "Hardware"
+    },
+    {
+      "id": 5568,
+      "name": "Health & Beauty"
+    },
+    {
+      "id": 5914,
+      "name": "Home & Garden"
+    },
+    {
+      "id": 6949,
+      "name": "Luggage & Bags"
+    },
+    {
+      "id": 7039,
+      "name": "Office Supplies"
+    },
+    {
+      "id": 7205,
+      "name": "Religious & Ceremonial"
+    },
+    {
+      "id": 7253,
+      "name": "Sporting Goods"
+    },
+    {
+      "id": 8054,
+      "name": "Toys & Games"
+    },
+    {
+      "id": 8228,
+      "name": "Vehicles & Parts"
+    }
+  ]
+}

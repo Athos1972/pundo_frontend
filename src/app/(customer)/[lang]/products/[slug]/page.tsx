@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
-import { getProduct, getRelatedProducts } from '@/lib/api'
+import { getProduct, getRelatedProducts, getRelatedCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl, pickImg } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/seo'
@@ -19,6 +19,8 @@ import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { getCustomerSession } from '@/lib/customer-api'
 import { TrackProductView } from '@/components/recently-viewed/TrackProductView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { RelatedCategoriesCard } from '@/components/product/RelatedCategoriesCard'
+import { FavoriteButton } from '@/components/product/FavoriteButton'
 
 interface Props {
   params: Promise<{ lang: string; slug: string }>
@@ -87,7 +89,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const withPrice = with_price === '1'
   const tr = t(lang)
 
-  // Fetch product + related in parallel; related failure must not break the page.
+  // Stufe 1: Fetch product + related in parallel; failures must not break the page.
   const [productResult, relatedResult, session] = await Promise.allSettled([
     getProduct(slug, lang),
     getRelatedProducts(slug, lang),
@@ -101,6 +103,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
     ? relatedResult.value.items.filter(p => p.slug !== slug)
     : []
   const isAuthenticated = session.status === 'fulfilled' && session.value.is_authenticated
+
+  // Stufe 2: Verwandte Kategorien — sequenziell, da product.category.id erst jetzt bekannt.
+  const relatedCategories = product.category
+    ? await getRelatedCategories(product.category.id, lang).then(r => r.items).catch(() => [])
+    : []
 
   const siteUrl = getSiteUrl()
   const name = product.names[lang] ?? product.names.en ?? slug
@@ -141,7 +148,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
             <ProductHeroImage src={firstImgUrl} origSrc={origImgUrl} alt={name} />
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-extrabold text-text leading-tight font-heading">{name}</h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-xl font-extrabold text-text leading-tight font-heading">{name}</h1>
+              <FavoriteButton productId={product.id} lang={lang} size="md" className="shrink-0 mt-0.5" />
+            </div>
             {product.brand && <p className="text-sm text-text-muted mt-1">{product.brand.name}</p>}
             {product.category && <p className="text-xs text-text-light mt-0.5">{product.category.name}</p>}
             {sizeStr && <p className="text-xs text-text-light mt-0.5">{sizeStr}</p>}
@@ -174,6 +184,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
         {/* Reviews */}
         <ReviewSection entityType="product" entityId={product.id} lang={lang} tr={tr} isAuthenticated={isAuthenticated} />
+
+        {/* Verwandte Kategorien */}
+        <RelatedCategoriesCard
+          categories={relatedCategories}
+          lang={lang}
+          title={tr.related_categories}
+        />
       </div>
       <script
         type="application/ld+json"

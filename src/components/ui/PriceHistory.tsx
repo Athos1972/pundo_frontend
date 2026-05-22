@@ -1,51 +1,58 @@
+// src/components/ui/PriceHistory.tsx — T6
+// Orchestration wrapper. Decides which sub-component to render based on
+// the number of aggregated price points:
+//   0 points → null (caller must not render the card at all, enforced by page.tsx guard)
+//   1 point  → <PriceHistoryEmpty> (AC-8)
+//   ≥ 2 pts  → <PriceHistoryStats> + <PriceHistoryChart> (AC-4 / AC-5 / AC-6 / AC-7)
+
 import type { PriceHistoryItem } from '@/types/api'
+import type { Lang } from '@/lib/lang'
+import { aggregatePriceHistory, computePriceStats } from '@/lib/price-history'
+import { PriceHistoryEmpty } from './PriceHistoryEmpty'
+import { PriceHistoryStats } from './PriceHistoryStats'
+import { PriceHistoryChart } from './PriceHistoryChart'
 
-export function PriceHistory({ items }: { items: PriceHistoryItem[] }) {
-  if (items.length < 2) return null
+interface Props {
+  items: PriceHistoryItem[]
+  lang: Lang
+  currencySymbol?: string
+}
 
-  const prices = items.map(i => parseFloat(i.price))
-  const min = Math.min(...prices)
-  const max = Math.max(...prices)
-  const range = max - min || 1
+export function PriceHistory({ items, lang, currencySymbol = '€' }: Props) {
+  const points = aggregatePriceHistory(items)
 
-  const W = 280
-  const H = 48
-  const PAD = 4
+  // AC-9: 0 points → render nothing (page.tsx guard keeps the card hidden)
+  if (points.length === 0) return null
 
-  const points = items.map((item, i) => {
-    const x = PAD + (i / (items.length - 1)) * (W - PAD * 2)
-    const y = PAD + (1 - (parseFloat(item.price) - min) / range) * (H - PAD * 2)
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
+  // AC-8: exactly 1 point → informational empty state, no sparkline
+  if (points.length === 1) {
+    return (
+      <PriceHistoryEmpty
+        currentPrice={points[0].price}
+        currencySymbol={currencySymbol}
+        lang={lang}
+      />
+    )
+  }
 
-  const latest = prices[prices.length - 1]
-  const oldest = prices[0]
-  const diff = latest - oldest
-  const trendColor = diff <= 0 ? '#2A8C5A' : '#D4622A'
+  // ≥ 2 points → full stats + chart
+  const stats = computePriceStats(points)
+  if (!stats) return null // shouldn't happen, defensive guard
 
-  const lastItem = items[items.length - 1]
-  const lastX = W - PAD
-  const lastY = PAD + (1 - (parseFloat(lastItem.price) - min) / range) * (H - PAD * 2)
+  // Trend color: green for drop/flat, orange for rise (AC-5)
+  const trendColor = stats.trendPct <= 0 ? '#2A8C5A' : '#D4622A'
 
   return (
-    <div className="flex items-center gap-4">
-      <svg viewBox={`0 0 ${W} ${H}`} className="flex-1 h-12" preserveAspectRatio="none">
-        <polyline
-          points={points}
-          fill="none"
-          stroke={trendColor}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx={lastX} cy={lastY} r="3" fill={trendColor} />
-      </svg>
-      <div className="text-right flex-shrink-0">
-        <p className="font-bold text-sm text-text">{latest.toFixed(2)}</p>
-        <p className={`text-xs ${diff <= 0 ? 'text-success' : 'text-accent'}`}>
-          {diff > 0 ? '+' : ''}{diff.toFixed(2)}
-        </p>
-      </div>
+    <div className="space-y-3">
+      <PriceHistoryStats
+        stats={stats}
+        currencySymbol={currencySymbol}
+        lang={lang}
+      />
+      <PriceHistoryChart
+        points={points}
+        trendColor={trendColor}
+      />
     </div>
   )
 }

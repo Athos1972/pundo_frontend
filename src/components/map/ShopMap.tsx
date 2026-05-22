@@ -1,6 +1,6 @@
 'use client'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { t } from '@/lib/translations'
@@ -32,12 +32,62 @@ interface ShopMapProps {
   lang?: Lang
 }
 
-// Re-centers the map whenever center/zoom change (MapContainer ignores prop updates after mount)
-function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap()
-  useEffect(() => {
+// Applies the best-fit view: explicit center/zoom take precedence, then auto-fit all pins
+export function applyFit(
+  map: L.Map,
+  shops: ShopPin[],
+  center?: [number, number],
+  zoom?: number,
+): void {
+  if (center && zoom !== undefined) {
     map.setView(center, zoom)
-  }, [center[0], center[1], zoom]) // eslint-disable-line react-hooks/exhaustive-deps
+    return
+  }
+  if (shops.length >= 2) {
+    const bounds = L.latLngBounds(shops.map(s => [s.lat, s.lng]))
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 })
+  } else if (shops.length === 1) {
+    map.setView([shops[0].lat, shops[0].lng], 15)
+  }
+  // 0 shops → no-op; MapContainer shows Larnaca fallback
+}
+
+interface FitBoundsProps {
+  shops: ShopPin[]
+  center?: [number, number]
+  zoom?: number
+}
+
+// Fits the map to show all pins; re-fits when shops/center/zoom change or container becomes visible
+function FitBounds({ shops, center, zoom }: FitBoundsProps) {
+  const map = useMap()
+  const fitRef = useRef({ shops, center, zoom })
+
+  // Keep ref in sync before ResizeObserver fires (layout phase, not render)
+  useLayoutEffect(() => {
+    fitRef.current = { shops, center, zoom }
+  })
+
+  useEffect(() => {
+    applyFit(map, shops, center, zoom)
+  }, [map, shops, center, zoom])
+
+  useEffect(() => {
+    const container = map.getContainer()
+    let wasHidden = container.offsetWidth === 0
+    const ro = new ResizeObserver(() => {
+      if (wasHidden && container.offsetWidth > 0) {
+        wasHidden = false
+        map.invalidateSize()
+        applyFit(map, fitRef.current.shops, fitRef.current.center, fitRef.current.zoom)
+      } else if (container.offsetWidth === 0) {
+        wasHidden = true
+      }
+    })
+    ro.observe(container)
+    return () => ro.disconnect()
+  }, [map])
+
   return null
 }
 
@@ -64,7 +114,7 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAU
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={false}
       >
-        <ChangeView center={defaultCenter} zoom={zoom} />
+        <FitBounds shops={shops} center={center} zoom={zoom} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
           url={localizedUrl}

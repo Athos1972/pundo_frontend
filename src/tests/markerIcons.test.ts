@@ -54,12 +54,12 @@ describe('highlightedMarkerIcon', () => {
     expect(asMock(highlightedMarkerIcon).iconSize).toEqual([25, 41])
   })
 
-  it('html contains scale(1.35) for visual enlargement', () => {
-    expect(asMock(highlightedMarkerIcon).html).toContain('scale(1.35)')
+  it('html uses CSS class for visual enlargement (no inline style — CSP compliance)', () => {
+    expect(asMock(highlightedMarkerIcon).html).toContain('pundo-marker-highlighted')
   })
 
-  it('html contains drop-shadow for glow effect', () => {
-    expect(asMock(highlightedMarkerIcon).html).toContain('drop-shadow')
+  it('html contains no inline style attributes (CSP style-src compliance)', () => {
+    expect(asMock(highlightedMarkerIcon).html).not.toContain('style=')
   })
 
   it('html references the PNG marker image', () => {

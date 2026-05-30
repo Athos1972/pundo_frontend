@@ -78,8 +78,8 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
       ref={sheetRef}
       role="region"
       aria-label={ariaLabel}
-      className="absolute bottom-0 left-0 right-0 bg-bg rounded-t-2xl z-10 flex flex-col sheet-elevation"
-      style={{ height: 'calc(100% - 60px)' }}
+      // sheet-body: height calc(100% - 60px) — defined in globals.css (avoids CSP inline-style hash)
+      className="absolute bottom-0 left-0 right-0 bg-bg rounded-t-2xl z-10 flex flex-col sheet-elevation sheet-body"
     >
       {/* Drag handle */}
       <div
@@ -93,11 +93,10 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
         <div className="w-10 h-1 bg-border rounded-full" />
       </div>
 
-      {/* Scrollable list content — padding-bottom respects iOS home-indicator safe area */}
+      {/* sheet-scroll-area: padding-bottom = max(1.5rem, safe-area-inset-bottom) — in globals.css */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 space-y-3 pt-1"
-        style={{ paddingBottom: 'max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)))' }}
+        className="flex-1 overflow-y-auto px-4 space-y-3 pt-1 sheet-scroll-area"
       >
         {children}
       </div>

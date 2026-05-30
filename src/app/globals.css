@@ -431,3 +431,12 @@ h1, h2, h3, .font-display {
 
 /* SearchMapBottomSheet elevation shadow */
 .sheet-elevation { box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.10); }
+
+/* SearchMapBottomSheet structural classes — NOT Tailwind utilities.
+   Using CSS classes instead of inline style= attributes avoids CSP sha256-hash requirements. */
+
+/* Sheet body: fills container height minus 60px permanent map strip */
+.sheet-body { height: calc(100% - 60px); }
+
+/* Sheet scroll area: safe padding so iOS home indicator never clips content */
+.sheet-scroll-area { padding-bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px))); }

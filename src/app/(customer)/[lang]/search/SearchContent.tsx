@@ -343,7 +343,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     // flex-col + h-[100dvh]: the outer container fills the dynamic viewport exactly.
     // This replaces the old min-h-screen approach and eliminates all hardcoded pixel offsets.
     // Every child either shrinks to its natural height (shrink-0) or fills the rest (flex-1).
-    <div className="flex flex-col bg-bg" style={{ height: '100dvh' }}>
+    <div className="flex flex-col bg-bg h-[100dvh]">
 
       {/* Sticky header — shrink-0 so it takes its natural height (variable: chips, slider) */}
       <div className="shrink-0 sticky top-0 z-20 bg-bg border-b border-border px-4 py-3">

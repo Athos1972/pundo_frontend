@@ -3,6 +3,57 @@
 ## Letzter Testlauf
 
 Datum: 2026-05-30  
+SHA: de68be213f8e024c5324bf3022c4386a65ec8b75  
+Spec: **CSP-Fix** (inline `style=` Attribute → CSS-Klassen, `pundo-marker-highlighted`)  
+Ergebnis: TypeScript PASS · ESLint PASS · 1828/1828 Vitest PASS · Browser PASS · Verdict: **SHIP**
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | ✅ PASS (0 Fehler) |
+| ESLint | ✅ PASS (0 Errors, 84 pre-existing Warnings) |
+
+### Unit-Tests (1828/1828 PASS)
+
+| Datei | Tests | Status | Anmerkung |
+|-------|-------|--------|-----------|
+| markerIcons.test.ts | 11 | ✅ | 2 Tests auf CSS-Klasse statt Inline-Style umgestellt |
+| Gesamt (99 Dateien) | 1828 | ✅ | |
+
+### CSP-Fix — Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/app/globals.css` | CSS-Klassen `.pundo-marker-highlighted`, `.sheet-elevation` hinzugefügt |
+| `src/components/map/markerIcons.ts` | `divIcon` HTML: `style=` → `class="pundo-marker-highlighted"` |
+| `src/components/product/RelatedProductsCarousel.tsx` | `style={{ scrollbarWidth }}` → `className="scrollbar-none"` |
+| `src/components/map/ShopMap.tsx` | Alle `style={}` → Tailwind-Klassen (Popup + Wrapper) |
+| `src/components/map/ShopMapClient.tsx` | `style={{ minHeight }}` → `min-h-[200px]` |
+| `src/components/map/SearchMapBottomSheet.tsx` | `useLayoutEffect` + `ref` für dynamische Transform; `touch-none`; `sheet-elevation` |
+
+### Browser-Tests
+
+| Test-Suite | Ergebnis | Anmerkung |
+|-----------|---------|-----------|
+| Smoke (9 Tests) | ✅ 9/9 PASS | Startseite, Header, Shops, RTL |
+| Language-Smoke nach Rebuild (33 Tests) | ✅ 33/33 PASS | **0 CSP-Violations** — alle 6 Sprachen clean |
+| smoke-shop-visibility S2 | ✅ TESTFEHLER-Fix | Selector `href^=` → `href*=` (lang-Präfix war unberücksichtigt) |
+
+### Testfehler-Fix (TESTFEHLER — kein Funktionsfehler)
+
+`e2e/smoke-shop-visibility.spec.ts` S2 — Selector `a[href^="/products/"]` matcht nie, weil alle Produkt-URLs den lang-Präfix haben (`/{lang}/products/slug`). Fix: `href^=` → `href*=`.  
+Korrektheits-Beweis: `ProductCard.tsx:56` — `<Link href={localePath(lang as Lang, /products/${slug})}` bestätigt, dass alle generierten Hrefs `/{lang}/products/slug` sind. Der alte Selector hat die Funktion nie getestet (immer Timeout) — kein echter Funktionsfehler.
+
+### Open Failures
+
+Keine — `open_failures: []` — Gate: `SHIP erlaubt`
+
+---
+
+## Vorheriger Testlauf (2026-05-30 — F5860 guides-featured-hero-link)
+
+Datum: 2026-05-30  
 SHA: a1cdb7ef3cf6f4136d2b62cb902996a84e860066  
 Spec: **F5860 guides-featured-hero-link** (Featured-Guide-Hero auf Guides-Übersicht)  
 Ergebnis: TypeScript PASS · ESLint PASS · 1828/1828 Vitest PASS · Browser PASS · Verdict: **SHIP**

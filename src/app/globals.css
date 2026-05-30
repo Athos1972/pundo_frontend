@@ -398,15 +398,36 @@ h1, h2, h3, .font-display {
 
 /* Leaflet highlighted marker icon — CSS classes instead of inline styles.
    Cannot use Tailwind utilities here: these class names appear only in a
-   JS-constructed HTML string that the Tailwind compiler never scans. */
+   JS-constructed HTML string that the Tailwind compiler never scans.
+
+   Marker-System: beide Zustände nutzen denselben SVG-Pin (#D4622A),
+   nur die CSS-Klasse unterscheidet Normal vs. Aktiv. Kein Glow-Ring,
+   kein Farbkontrast — Konsistenz über visuelle Dramatik. */
+
+/* Normal-Zustand: Basis-Schatten für Tiefenwirkung auf der Karte */
+.pundo-pin {
+  display: inline-block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.28));
+  transition: transform 0.15s ease, filter 0.15s ease;
+  transform-origin: 50% 100%;
+}
+
+/* Aktiver Zustand (Hover-Desktop / Pin-Tap-Mobile):
+   Größer + stärkerer, markenkonformer Schatten — kein Fremdfarb-Glow */
+.pundo-pin--active {
+  transform: scale(1.32) translateY(-3px);
+  filter: drop-shadow(0 4px 10px rgba(212, 98, 42, 0.45))
+          drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+
+/* Legacy — bleibt für Übergangszeit erhalten */
 .pundo-marker-highlighted { position: relative; width: 25px; height: 41px; }
 .pundo-marker-highlighted > img {
   transform: scale(1.35);
   transform-origin: 50% 100%;
-  filter: drop-shadow(0 0 7px var(--color-accent, #D4622A))
-          drop-shadow(0 0 3px var(--color-accent, #D4622A));
+  filter: drop-shadow(0 4px 8px rgba(212, 98, 42, 0.45));
   transition: transform 0.15s, filter 0.15s;
 }
 
-/* SearchMapBottomSheet elevation shadow — static value extracted from inline style */
-.sheet-elevation { box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12); }
+/* SearchMapBottomSheet elevation shadow */
+.sheet-elevation { box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.10); }

@@ -1,9 +1,8 @@
 /**
  * Unit tests for markerIcons.ts (F4300 — Hover-Highlight)
  *
- * Verifies icon dimensions and that the highlighted icon carries
- * the glow HTML string. Uses a synchronous mock so module-level
- * L.icon / L.divIcon calls receive the mock before the module loads.
+ * Beide Icons sind divIcon mit custom SVG-Pin in Akzentfarbe #D4622A.
+ * Die Tests prüfen Dimensionen, CSS-Klassen und SVG-Inhalt.
  */
 
 import { describe, it, expect, vi } from 'vitest'
@@ -20,7 +19,6 @@ vi.mock('leaflet/dist/leaflet.css', () => ({}))
 import { defaultMarkerIcon, highlightedMarkerIcon } from '@/components/map/markerIcons'
 
 type MockIcon = { __mockType: string; iconSize?: [number, number]; iconAnchor?: [number, number]; html?: string; className?: string }
-// Double-cast needed: Leaflet types don't overlap with our mock shape
 function asMock(icon: unknown): MockIcon { return icon as MockIcon }
 
 describe('defaultMarkerIcon', () => {
@@ -28,16 +26,28 @@ describe('defaultMarkerIcon', () => {
     expect(defaultMarkerIcon).toBeDefined()
   })
 
-  it('was created as an icon (not divIcon)', () => {
-    expect(asMock(defaultMarkerIcon).__mockType).toBe('icon')
+  it('was created as a divIcon (SVG-Pin)', () => {
+    expect(asMock(defaultMarkerIcon).__mockType).toBe('divIcon')
   })
 
-  it('has iconSize [25, 41]', () => {
-    expect(asMock(defaultMarkerIcon).iconSize).toEqual([25, 41])
+  it('has iconSize [28, 40]', () => {
+    expect(asMock(defaultMarkerIcon).iconSize).toEqual([28, 40])
   })
 
-  it('has iconAnchor [12, 41]', () => {
-    expect(asMock(defaultMarkerIcon).iconAnchor).toEqual([12, 41])
+  it('has iconAnchor at base-center [14, 40]', () => {
+    expect(asMock(defaultMarkerIcon).iconAnchor).toEqual([14, 40])
+  })
+
+  it('html contains brand accent color #D4622A', () => {
+    expect(asMock(defaultMarkerIcon).html).toContain('#D4622A')
+  })
+
+  it('html contains pundo-pin CSS class (defined in globals.css)', () => {
+    expect(asMock(defaultMarkerIcon).html).toContain('pundo-pin')
+  })
+
+  it('className is empty string to prevent Leaflet default white box', () => {
+    expect(asMock(defaultMarkerIcon).className).toBe('')
   })
 })
 
@@ -46,24 +56,24 @@ describe('highlightedMarkerIcon', () => {
     expect(highlightedMarkerIcon).toBeDefined()
   })
 
-  it('was created as a divIcon (not L.icon)', () => {
+  it('was created as a divIcon', () => {
     expect(asMock(highlightedMarkerIcon).__mockType).toBe('divIcon')
   })
 
-  it('has iconSize [25, 41] — same as default', () => {
-    expect(asMock(highlightedMarkerIcon).iconSize).toEqual([25, 41])
+  it('has same iconSize as default [28, 40]', () => {
+    expect(asMock(highlightedMarkerIcon).iconSize).toEqual([28, 40])
   })
 
-  it('html uses CSS class for visual enlargement (no inline style — CSP compliance)', () => {
-    expect(asMock(highlightedMarkerIcon).html).toContain('pundo-marker-highlighted')
+  it('html contains pundo-pin--active CSS class for active state', () => {
+    expect(asMock(highlightedMarkerIcon).html).toContain('pundo-pin--active')
   })
 
-  it('html contains no inline style attributes (CSP style-src compliance)', () => {
+  it('html contains brand accent color #D4622A (same SVG, CSS-only difference)', () => {
+    expect(asMock(highlightedMarkerIcon).html).toContain('#D4622A')
+  })
+
+  it('html contains no inline style= attributes (CSP style-src compliant)', () => {
     expect(asMock(highlightedMarkerIcon).html).not.toContain('style=')
-  })
-
-  it('html references the PNG marker image', () => {
-    expect(asMock(highlightedMarkerIcon).html).toContain('marker-icon.png')
   })
 
   it('className is empty string to prevent Leaflet default white box', () => {

@@ -376,7 +376,8 @@ test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', async ({ page }
   await page.waitForLoadState('networkidle')
 
   // Warte bis mindestens ein Produkt-Link geladen ist (max 10s)
-  const productLinks = page.locator('a[href^="/products/"]')
+  // Produkt-URLs haben lang-Präfix: /{lang}/products/slug — daher href*= statt href^=
+  const productLinks = page.locator('a[href*="/products/"]')
   await expect(productLinks.first()).toBeVisible({ timeout: 10_000 })
 
   const count = await productLinks.count()

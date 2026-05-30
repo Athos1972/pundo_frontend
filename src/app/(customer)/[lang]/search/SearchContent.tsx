@@ -70,8 +70,8 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const [hoveredShopId, setHoveredShopId] = useState<number | null>(null)
   // Pin-tap → scroll-to-card (mobile)
   const [pinnedShopId, setPinnedShopId] = useState<number | null>(null)
-  // Bottom sheet snap state (mobile)
-  const [sheetSnap, setSheetSnap] = useState<SheetSnap>('peek')
+  // Bottom sheet snap state (mobile) — start at half so content is immediately visible
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>('half')
 
   // Scroll containers
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)   // desktop
@@ -172,6 +172,25 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     isLoading: loading,
     rootRef: scrollContainerRef,
   })
+
+  // Mobile infinite scroll: scroll-listener on the sheet's scroll container.
+  // IntersectionObserver (above) only fires for the desktop panel; this covers mobile.
+  useEffect(() => {
+    const container = mobileScrollRef.current
+    if (!container) return
+    const hasMore = items.length < total
+    if (!hasMore || loading) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container
+      if (scrollTop + clientHeight >= scrollHeight - 220) {
+        loadMore()
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [mobileScrollRef, items.length, total, loading, loadMore])
 
   // Load related categories when in category mode and result is empty (AC3/F2350)
   useEffect(() => {
@@ -360,7 +379,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
 
       {/* MOBILE layout: full-screen map background + draggable bottom sheet.
           The map is always mounted and visible → FitBounds works without display:none toggling. */}
-      <div className="md:hidden relative h-[calc(100vh-160px)]">
+      <div className="md:hidden relative h-[calc(100dvh-160px)]">
         <div className="absolute inset-0 z-0">
           <ShopMap
             shops={mapShops}
@@ -381,7 +400,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
       </div>
 
       {/* DESKTOP layout: side-by-side split (unchanged behaviour) */}
-      <div className="hidden md:flex h-[calc(100vh-160px)]">
+      <div className="hidden md:flex h-[calc(100dvh-160px)]">
         <div ref={scrollContainerRef} className="w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
           {listContent}
         </div>

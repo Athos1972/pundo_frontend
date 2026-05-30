@@ -1,9 +1,12 @@
 {
-  "sha": "a1cdb7ef3cf6f4136d2b62cb902996a84e860066",
-  "timestamp": "2026-05-30T14:35:00Z",
+  "sha": "de68be213f8e024c5324bf3022c4386a65ec8b75",
+  "timestamp": "2026-05-30T15:17:05.246316+00:00",
   "verdict": "SHIP",
   "open_failures": [],
   "coverage_snapshot": {
-    "note": "backend-only fix, no frontend changes"
+    "unit_tests": "1828/1828",
+    "coverage_gaps": [
+      "ShopMapClient.tsx (Leaflet/Canvas)"
+    ]
   }
 }

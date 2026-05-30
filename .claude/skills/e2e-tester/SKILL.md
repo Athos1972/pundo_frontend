@@ -650,6 +650,60 @@ test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 
 ---
 
+---
+
+### E2E-08: Reaktive Sprachnavigation (Client-Side Language Switch)
+
+**Priorität: Hoch** — Betrifft alle Layout-Komponenten, die `lang` als Server-Prop erhalten.
+
+**Trigger:** Dieser Test ist PFLICHT wenn der Diff eine der folgenden Dateien berührt:
+- `src/app/(customer)/layout.tsx`
+- `src/lib/useLang.ts`
+- `src/components/layout/Header.tsx`, `Footer.tsx`, `NavLinks.tsx`, `FooterLinks.tsx`
+- `src/components/layout/BottomTabBar.tsx`
+- `src/components/spotted/SpottedGlobalButton.tsx`
+- `src/components/search/SearchSimilarButton.tsx`
+- Jede neue Client Component, die `lang` als Prop aus dem Root-Layout erhält
+
+**Hintergrund:** Das `(customer)/layout.tsx` rendert bei Client-Navigation zwischen Sprach-Segmenten (`/de` → `/en`) nicht neu — Next.js App Router preserves shared layouts. Alle Komponenten, die `lang` als Server-Prop erhalten und UI-Text damit rendern, müssen stattdessen `useLang()` nutzen, um via `usePathname()` reaktiv zu bleiben.
+
+**Akzeptanzkriterien:**
+
+| # | Prüfung | Kriterium |
+|---|---------|-----------|
+| 1 | Header-Nav nach Sprachswitch | Nach Klick auf EN-Button: Header-Nav-Links zeigen EN-Labels (kein Reload) |
+| 2 | Footer nach Sprachswitch | Footer-Links zeigen EN-Labels (kein Reload) |
+| 3 | Rücknavigation | Nach Klick auf DE: alle Labels zurück auf DE |
+| 4 | RTL-Sprache (AR) | Nach Klick auf AR: Labels in Arabisch, `html[dir=rtl]` gesetzt |
+
+```typescript
+// e2e/reactive-lang.spec.ts
+test('E2E-08: Header/Footer Labels aktualisieren via LanguageSwitcher ohne Reload', async ({ page }) => {
+  await page.goto('http://localhost:3500/de')
+
+  // Ausgangszustand DE prüfen
+  await expect(page.locator('header nav a').first()).toHaveText('Anbieter')
+  await expect(page.locator('footer nav a').filter({ hasText: 'Für Anbieter' })).toBeVisible()
+
+  // Auf EN wechseln via LanguageSwitcher-Button (kein page.goto!)
+  await page.click('button[title="EN"]')
+  await page.waitForURL('**/en**')
+
+  // EN-Labels müssen sofort sichtbar sein (kein Reload)
+  await expect(page.locator('header nav a').first()).toHaveText('Businesses')
+  await expect(page.locator('footer nav a').filter({ hasText: 'For Businesses' })).toBeVisible()
+
+  // Rücknavigation auf DE
+  await page.click('button[title="DE"]')
+  await page.waitForURL('**/de**')
+  await expect(page.locator('header nav a').first()).toHaveText('Anbieter')
+})
+```
+
+**Anti-Pattern das dieser Test erkennt:** Wenn ein Component `lang` nur aus dem Server-Prop liest (ohne `useLang()`), schlägt AC1 fehl — der Header zeigt nach dem Klick noch DE-Labels obwohl die URL bereits `/en` zeigt.
+
+---
+
 ### Fehlerbehandlung
 
 1. Exit-Code != 0: Playwright-Output lesen

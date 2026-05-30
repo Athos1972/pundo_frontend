@@ -160,12 +160,13 @@ describe('SearchContent — category mode', () => {
     render(<SearchContent lang="en" />)
 
     // CategoryEmptyState renders category_empty_intro: "Currently no products in this category."
+    // SearchContent renders listContent in both mobile+desktop branches → text appears 2× in DOM
     await waitFor(() => {
-      expect(screen.getByText('Currently no products in this category.')).toBeInTheDocument()
+      expect(screen.getAllByText('Currently no products in this category.')[0]).toBeInTheDocument()
     })
     // Fallback link should show because related categories are empty
     await waitFor(() => {
-      expect(screen.getByText('Browse all categories')).toBeInTheDocument()
+      expect(screen.getAllByText('Browse all categories')[0]).toBeInTheDocument()
     })
   })
 
@@ -180,8 +181,8 @@ describe('SearchContent — category mode', () => {
     render(<SearchContent lang="en" />)
 
     await waitFor(() => {
-      expect(screen.getByText('Currently no products in this category.')).toBeInTheDocument()
-      expect(screen.getByText('Browse all categories')).toBeInTheDocument()
+      expect(screen.getAllByText('Currently no products in this category.')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('Browse all categories')[0]).toBeInTheDocument()
     })
     // getRelatedCategories IS called (it's the F2350 feature) — mock returns [] → fallback shown
     expect(mockGetRelatedCategories).toHaveBeenCalledWith(42, 'en', 6)
@@ -197,8 +198,8 @@ describe('SearchContent — category mode', () => {
     await waitFor(() => {
       // category_empty_intro should NOT appear in text mode
       expect(screen.queryByText('Currently no products in this category.')).not.toBeInTheDocument()
-      // generic no_results should appear
-      expect(screen.getByText('No results found.')).toBeInTheDocument()
+      // generic no_results should appear (appears in both mobile+desktop DOM branches)
+      expect(screen.getAllByText('No results found.')[0]).toBeInTheDocument()
     })
   })
 })

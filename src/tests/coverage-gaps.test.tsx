@@ -135,6 +135,78 @@ describe('ProductCard image resolution', () => {
   })
 })
 
+// ─── ProductCard hover props (F4300 map-hover-glow) ──────────────────────────
+
+describe('ProductCard hover props', () => {
+  const base = {
+    id: 2, slug: 'fish-food', names: { en: 'Fish Food' }, brand: null,
+    category_id: null, thumbnail_url: null, images: null,
+    best_offer: {
+      shop_id: 42, shop_name: 'Fish Shop', shop_slug: 'fish-shop',
+      price: '5.00', currency: 'EUR', price_type: 'fixed', price_note: null,
+      is_available: true, crawled_at: '2026-01-01T00:00:00Z',
+      shop_location: { lat: 34.9, lng: 33.6 },
+    },
+  }
+
+  it('isHighlighted=true adds ring and accent-bg classes to horizontal card', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const { container } = render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <ProductCard item={base as any} lang="en" variant="horizontal" isHighlighted shopId={42} />
+    )
+    const root = container.firstChild as HTMLElement
+    expect(root.className).toContain('ring-1')
+    expect(root.className).toContain('ring-accent')
+    expect(root.className).toContain('bg-accent/5')
+  })
+
+  it('isHighlighted=false/undefined keeps default border class', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const { container } = render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <ProductCard item={base as any} lang="en" variant="horizontal" shopId={42} />
+    )
+    const root = container.firstChild as HTMLElement
+    expect(root.className).toContain('border-border')
+    expect(root.className).not.toContain('ring-accent')
+  })
+
+  it('onMouseEnterShop called with shopId on mouseEnter', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const onEnter = vi.fn()
+    const { container } = render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <ProductCard item={base as any} lang="en" variant="horizontal" shopId={42} onMouseEnterShop={onEnter} />
+    )
+    fireEvent.mouseEnter(container.firstChild as HTMLElement)
+    expect(onEnter).toHaveBeenCalledWith(42)
+  })
+
+  it('onMouseLeaveShop called on mouseLeave', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const onLeave = vi.fn()
+    const { container } = render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <ProductCard item={base as any} lang="en" variant="horizontal" shopId={42} onMouseLeaveShop={onLeave} />
+    )
+    fireEvent.mouseLeave(container.firstChild as HTMLElement)
+    expect(onLeave).toHaveBeenCalled()
+  })
+
+  it('no error when shopId is undefined (online-retailer case)', async () => {
+    const { ProductCard } = await import('@/components/product/ProductCard')
+    const onEnter = vi.fn()
+    const { container } = render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      <ProductCard item={base as any} lang="en" variant="horizontal" onMouseEnterShop={onEnter} />
+    )
+    // No shopId → onEnter must NOT be called (edge case A2)
+    fireEvent.mouseEnter(container.firstChild as HTMLElement)
+    expect(onEnter).not.toHaveBeenCalled()
+  })
+})
+
 // ─── HoursEditor: save and second slot ───────────────────────────────────────
 
 describe('HoursEditor save and second slot', () => {

@@ -6,15 +6,18 @@ import { HomesickIcon } from './HomesickIcon'
 import { FABOnboardingPopout } from '@/components/ui/FABOnboardingPopout'
 import { useFabOnboarding } from '@/lib/useFabOnboarding'
 import { t } from '@/lib/translations'
+import { useLang } from '@/lib/useLang'
+import type { Lang } from '@/lib/lang'
 
 interface Props {
-  lang: string
+  lang: Lang
   brandSlug: string
 }
 
 export function SearchSimilarButton({ lang, brandSlug }: Props) {
   const [open, setOpen] = useState(false)
-  const tr = t(lang)
+  const currentLang = useLang(lang)
+  const tr = t(currentLang)
 
   // Brand-specific timing: naidivse = 3 s / no auto-dismiss; pundo = 5 s / 8 s auto-dismiss
   const isNaidivse = brandSlug === 'naidivse'
@@ -76,7 +79,7 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
         </button>
       </div>
 
-      <SearchSimilarModal lang={lang} isOpen={open} onClose={() => setOpen(false)} />
+      <SearchSimilarModal lang={currentLang} isOpen={open} onClose={() => setOpen(false)} />
     </div>
   )
 }

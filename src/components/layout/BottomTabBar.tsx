@@ -11,16 +11,19 @@
 
 import { useState } from 'react'
 import { t } from '@/lib/translations'
+import { useLang } from '@/lib/useLang'
+import type { Lang } from '@/lib/lang'
 import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedList'
 
 interface BottomTabBarProps {
-  lang: string
+  lang: Lang
   /** Matches BrandConfig.features.recentlyViewed */
   recentlyViewed: 'hidden' | 'home' | 'drawer'
 }
 
 export function BottomTabBar({ lang, recentlyViewed }: BottomTabBarProps) {
-  const tr = t(lang)
+  const currentLang = useLang(lang)
+  const tr = t(currentLang)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Only render when there is at least one visible tab

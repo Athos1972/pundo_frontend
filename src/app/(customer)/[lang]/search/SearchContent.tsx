@@ -16,6 +16,7 @@ import { DistanceSlider } from '@/components/search/DistanceSlider'
 import { localePath } from '@/lib/routing'
 import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
 import { CategoryEmptyState } from '@/components/search/CategoryEmptyState'
+import { SearchMapBottomSheet, type SheetSnap } from '@/components/map/SearchMapBottomSheet'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
@@ -62,14 +63,24 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [offset, setOffset] = useState(0)
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   const [categoryName, setCategoryName] = useState<string | null>(null)
   const [relatedCategories, setRelatedCategories] = useState<import('@/types/api').CategoryItem[]>([])
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+
+  // Hover/highlight state for desktop list ↔ map pin connection
+  const [hoveredShopId, setHoveredShopId] = useState<number | null>(null)
+  // Pin-tap → scroll-to-card (mobile)
+  const [pinnedShopId, setPinnedShopId] = useState<number | null>(null)
+  // Bottom sheet snap state (mobile)
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>('peek')
+
+  // Scroll containers
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)   // desktop
+  const mobileScrollRef = useRef<HTMLDivElement | null>(null)      // mobile sheet
+
+  // Refs to product card DOM nodes keyed by shop_id (for scroll-to-card on pin tap)
+  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
-  // We track the map bounds in state and pass them as bbox to searchAll.
-  // When map not yet loaded → bbox=undefined → backend falls back to Cyprus-wide count.
   const [mapBbox, setMapBbox] = useState<string | undefined>(undefined)
 
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
@@ -133,16 +144,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     let cancelled = false
     getCategories({ ids: [+categoryId] }, lang)
       .then(res => {
-        // Find by id — robust before B1 (full list returned) and after B1 (filtered list).
         const match = res.items.find(c => c.id === +categoryId!)
         if (!cancelled && match?.name) {
           setCategoryName(match.name)
         }
-        // If no match or no name, fallback stays null → show generic title
       })
-      .catch(() => {
-        // Backend B1 not yet deployed — silently fall back to generic title
-      })
+      .catch(() => {})
     return () => { cancelled = true }
   }, [categoryId, lang])
 
@@ -153,6 +160,10 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     load(true, 0)
   }, [q, categoryId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Clear item refs when result set changes so stale shopId → DOM mappings don't linger
+  useEffect(() => {
+    itemRefs.current.clear()
+  }, [q, categoryId])
 
   const loadMore = useCallback(() => load(false, offset), [load, offset])
   const { sentinelRef, isSupported } = useInfiniteScroll({
@@ -171,9 +182,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
       .then(res => {
         if (!cancelled) setRelatedCategories(res.items)
       })
-      .catch(() => {
-        // Backend not available — keep empty array → Fallback-Link shown (AC5)
-      })
+      .catch(() => {})
     return () => { cancelled = true }
   }, [isCategoryMode, loading, items.length, categoryId, lang]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -182,6 +191,23 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     if (value === null) { p.delete(key) } else { p.set(key, value) }
     router.push(`${localePath(lang, '/search')}?${p}`)
   }
+
+  // Pin-tap on mobile: expand sheet to half, scroll to matching product card, briefly highlight it
+  const handlePinClick = useCallback((shopId: number) => {
+    setHoveredShopId(shopId)
+    setPinnedShopId(shopId)
+    setSheetSnap('half')
+    // Wait for snap animation (250ms) then scroll
+    setTimeout(() => {
+      const el = itemRefs.current.get(shopId)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 280)
+    // Remove highlight after card is visible
+    setTimeout(() => {
+      setPinnedShopId(null)
+      setHoveredShopId(null)
+    }, 1200)
+  }, [])
 
   // Separate service and product results
   const serviceItems = items.filter(isServiceResult) as SearchServiceItem[]
@@ -214,8 +240,89 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   // Display name: URL param takes priority (already available), API-loaded name as fallback
   const displayCategoryName = categoryNameParam || categoryName
 
+  // Shared list content rendered inside both mobile sheet and desktop panel
+  const listContent = (
+    <>
+      {/* Service results section — text mode only */}
+      {!isCategoryMode && serviceItems.length > 0 && (
+        <>
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">
+            {tr.result_service_badge}
+          </h2>
+          {serviceItems.map(item => (
+            <ServiceResultCard key={`service-${item.category_id}`} item={item} lang={lang} />
+          ))}
+        </>
+      )}
+
+      {/* Local shops section */}
+      <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">{tr.local_shops}</h2>
+      {localItems.map(item => {
+        const shopId = item.best_offer?.shop_id
+        const hasLocation = !!item.best_offer?.shop_location
+        return (
+          <div
+            key={`local-${item.id}`}
+            ref={el => {
+              if (shopId == null) return
+              if (el) { itemRefs.current.set(shopId, el) } else { itemRefs.current.delete(shopId) }
+            }}
+          >
+            <ProductCard
+              item={item}
+              lang={lang}
+              variant="horizontal"
+              shopId={hasLocation ? shopId : undefined}
+              isHighlighted={pinnedShopId != null && shopId === pinnedShopId}
+              onMouseEnterShop={setHoveredShopId}
+              onMouseLeaveShop={() => setHoveredShopId(null)}
+            />
+          </div>
+        )
+      })}
+      {!loading && localItems.length === 0 && (!isCategoryMode && serviceItems.length === 0) && (
+        <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
+      )}
+
+      {/* Online retailers section */}
+      {includeOnline && onlineItems.length > 0 && (
+        <>
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3 rtl:text-end">{tr.online_retailers}</h2>
+          {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
+        </>
+      )}
+
+      {loading && [1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-alt rounded-xl animate-pulse" />)}
+
+      {isSupported && <div ref={sentinelRef} aria-hidden="true" />}
+
+      {!isSupported && !loading && items.length < total && (
+        <button
+          onClick={() => load(false, offset)}
+          className="w-full py-3 bg-surface border border-border rounded-xl text-text-muted hover:border-accent hover:text-accent transition-colors text-sm font-medium"
+        >
+          {tr.load_more} ({total - items.length})
+        </button>
+      )}
+
+      {/* Category mode empty state */}
+      {isCategoryMode && isEmpty && (
+        <CategoryEmptyState relatedCategories={relatedCategories} lang={lang} />
+      )}
+
+      {/* Text mode empty state */}
+      {!isCategoryMode && isEmpty && (
+        <div className="py-8 space-y-6">
+          <p className="text-center text-text-muted">{tr.no_results}</p>
+          {q.length >= 2 && <ContactCtaLink variant="block" lang={lang} />}
+        </div>
+      )}
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-bg">
+      {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-bg border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-2">
           <Link href={localePath(lang, '/')} className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
@@ -242,96 +349,49 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         />
       </div>
 
-      {/* Mobile toggle */}
-      <div className="flex md:hidden gap-2 px-4 py-3">
-        <button
-          onClick={() => setMobileView('list')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mobileView === 'list' ? 'bg-accent text-white' : 'bg-surface border border-border text-text-muted'}`}
+      {/* Category heading — outside layout branches so there is exactly one h1 */}
+      {isCategoryMode && (
+        <div className="px-4 pt-3 pb-1">
+          <h1 className="text-lg font-semibold text-text rtl:text-end">
+            {displayCategoryName || tr.category_results_title}
+          </h1>
+        </div>
+      )}
+
+      {/* MOBILE layout: full-screen map background + draggable bottom sheet.
+          The map is always mounted and visible → FitBounds works without display:none toggling. */}
+      <div className="md:hidden relative h-[calc(100vh-160px)]">
+        <div className="absolute inset-0 z-0">
+          <ShopMap
+            shops={mapShops}
+            className="w-full h-full"
+            lang={lang}
+            highlightedShopId={hoveredShopId}
+            onPinClick={handlePinClick}
+          />
+        </div>
+        <SearchMapBottomSheet
+          snap={sheetSnap}
+          onSnapChange={setSheetSnap}
+          scrollContainerRef={mobileScrollRef}
+          ariaLabel={tr.list_view}
         >
-          {tr.list_view}
-        </button>
-        <button
-          onClick={() => setMobileView('map')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mobileView === 'map' ? 'bg-accent text-white' : 'bg-surface border border-border text-text-muted'}`}
-        >
-          {tr.map_view}
-        </button>
+          {listContent}
+        </SearchMapBottomSheet>
       </div>
 
-      {/* Desktop: side by side. Mobile: toggled */}
-      <div className="flex h-[calc(100vh-160px)]">
-        <div ref={scrollContainerRef} className={`${mobileView === 'list' ? 'block' : 'hidden'} md:block w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3`}>
-
-          {/* Category context heading — always in category mode, with fallback */}
-          {isCategoryMode && (
-            <h1 className="text-lg font-semibold text-text rtl:text-end">
-              {displayCategoryName || tr.category_results_title}
-            </h1>
-          )}
-
-          {/* Service results section — text mode only (services don't apply in category mode) */}
-          {!isCategoryMode && serviceItems.length > 0 && (
-            <>
-              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">
-                {tr.result_service_badge}
-              </h2>
-              {serviceItems.map(item => (
-                <ServiceResultCard key={`service-${item.category_id}`} item={item} lang={lang} />
-              ))}
-            </>
-          )}
-
-          {/* Local shops section */}
-          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">{tr.local_shops}</h2>
-          {localItems.map(item => <ProductCard key={`local-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
-          {!loading && localItems.length === 0 && (!isCategoryMode && serviceItems.length === 0) && (
-            <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
-          )}
-
-          {/* Online retailers section */}
-          {includeOnline && onlineItems.length > 0 && (
-            <>
-              <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3 rtl:text-end">{tr.online_retailers}</h2>
-              {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
-            </>
-          )}
-
-          {loading && [1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-alt rounded-xl animate-pulse" />)}
-
-          {isSupported && <div ref={sentinelRef} aria-hidden="true" />}
-
-          {!isSupported && !loading && items.length < total && (
-            <button
-              onClick={() => load(false, offset)}
-              className="w-full py-3 bg-surface border border-border rounded-xl text-text-muted hover:border-accent hover:text-accent transition-colors text-sm font-medium"
-            >
-              {tr.load_more} ({total - items.length})
-            </button>
-          )}
-
-          {/* Category mode empty state */}
-          {isCategoryMode && isEmpty && (
-            <CategoryEmptyState
-              relatedCategories={relatedCategories}
-              lang={lang}
-            />
-          )}
-
-          {/* Text mode empty state — generic no_results + contact CTA */}
-          {!isCategoryMode && isEmpty && (
-            <div className="py-8 space-y-6">
-              <p className="text-center text-text-muted">{tr.no_results}</p>
-              {q.length >= 2 && (
-                <ContactCtaLink variant="block" lang={lang} />
-              )}
-            </div>
-          )}
+      {/* DESKTOP layout: side-by-side split (unchanged behaviour) */}
+      <div className="hidden md:flex h-[calc(100vh-160px)]">
+        <div ref={scrollContainerRef} className="w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
+          {listContent}
         </div>
-        <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-[45%] p-4 relative z-0`}>
+        <div className="md:flex flex-col w-full md:w-[45%] p-4 relative z-0">
           <ShopMap
             shops={mapShops}
             className="w-full h-full rounded-xl overflow-hidden"
             lang={lang}
+            highlightedShopId={hoveredShopId}
+            onPinClick={handlePinClick}
           />
         </div>
       </div>

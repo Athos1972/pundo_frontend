@@ -13,6 +13,7 @@ export type GuideMeta = {
   slug: string
   published: boolean
   hero_alt?: string // when set + manifest has <slug>/hero, page template renders hero automatically
+  featured?: boolean // when true + hero_alt set, rendered as full-width hero above the grid
 }
 
 export type GuideContent = {
@@ -58,4 +59,12 @@ export function getGuides(lang: string): GuideMeta[] {
   return getGuideSlugs()
     .map((slug) => getGuide(slug, lang)?.meta ?? null)
     .filter((m): m is GuideMeta => m !== null)
+}
+
+// Returns the first guide with featured: true in the exact requested language.
+// No language fallback by design — hero is hidden when no exact-language MDX exists.
+export function getFeaturedGuide(lang: string): GuideMeta | null {
+  return getGuideSlugs()
+    .map((slug) => readMdxFile(slug, lang)?.meta ?? null)
+    .filter((m): m is GuideMeta => m !== null && m.featured === true)[0] ?? null
 }

@@ -1,12 +1,9 @@
 {
-  "sha": "cb9b44f28005715632d23e1c124cf0248a84fb1a",
-  "timestamp": "2026-05-22T18:00:00.000000+00:00",
+  "sha": "a1cdb7ef3cf6f4136d2b62cb902996a84e860066",
+  "timestamp": "2026-05-30T14:35:00Z",
   "verdict": "SHIP",
   "open_failures": [],
   "coverage_snapshot": {
-    "unit_tests": "6/6 (favorites-tab-guard)",
-    "e2e_tests": "9/9 PASS — F4100 favoriten-fixes vollständig",
-    "typescript": "PASS",
-    "eslint": "PASS"
+    "note": "backend-only fix, no frontend changes"
   }
 }

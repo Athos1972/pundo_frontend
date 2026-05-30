@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { getGuides } from '@/lib/guides'
+import { getGuides, getFeaturedGuide } from '@/lib/guides'
+import { FeaturedGuideHero } from '@/components/guides/FeaturedGuideHero'
 import { getSiteUrl } from '@/lib/seo'
 import { buildHreflang } from '@/lib/routing'
 import { GuidesGrid } from '@/components/guides/GuidesGrid'
@@ -32,7 +33,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function GuidesIndexPage({ params }: Props) {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
-  const guides = getGuides(lang)
+  const featured = getFeaturedGuide(lang)
+  const allGuides = getGuides(lang)
+  const gridGuides = featured
+    ? allGuides.filter((g) => g.slug !== featured.slug)
+    : allGuides
 
   const categoryLabels: Record<string, string> = {
     behörden: tr.category_behörden,
@@ -42,6 +47,7 @@ export default async function GuidesIndexPage({ params }: Props) {
     wohnen: tr.category_wohnen,
     finanzen: tr.category_finanzen,
     plattform: tr.category_plattform,
+    start: tr.category_start,
   }
 
   return (
@@ -51,12 +57,20 @@ export default async function GuidesIndexPage({ params }: Props) {
         <h1 className="text-2xl font-bold">{tr.guides_index_title}</h1>
         <p className="mt-1 text-gray-500 text-sm">{tr.guides_index_subtitle}</p>
       </div>
+      {featured?.hero_alt && (
+        <FeaturedGuideHero
+          guide={featured}
+          lang={lang}
+          badgeLabel={tr.guides_featured_badge}
+          ctaLabel={tr.guides_featured_cta}
+        />
+      )}
       <GuidesGrid
-        guides={guides}
+        guides={gridGuides}
         filterAll={tr.guides_filter_all}
         categoryLabels={categoryLabels}
         readtimeLabels={Object.fromEntries(
-          [...new Set(guides.map((g) => g.readtime))].map((rt) => [rt, tr.guide_readtime(Number(rt))])
+          [...new Set(allGuides.map((g) => g.readtime))].map((rt) => [rt, tr.guide_readtime(Number(rt))])
         )}
         lang={lang}
       />

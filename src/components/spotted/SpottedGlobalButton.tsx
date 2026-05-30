@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useSession } from '@/components/auth/SessionProvider'
 import { extractGPS } from '@/lib/exif'
 import { t } from '@/lib/translations'
+import { useLang } from '@/lib/useLang'
+import type { Lang } from '@/lib/lang'
 import { FABOnboardingPopout } from '@/components/ui/FABOnboardingPopout'
 import { useFabOnboarding } from '@/lib/useFabOnboarding'
 import { CameraView } from './CameraView'
@@ -20,12 +22,13 @@ type UploadState =
   | 'upload_error'
 
 interface Props {
-  lang: string
+  lang: Lang
   brandSlug: string
 }
 
 export function SpottedGlobalButton({ lang, brandSlug }: Props) {
-  const tr = t(lang)
+  const currentLang = useLang(lang)
+  const tr = t(currentLang)
   const session = useSession()
   const [state, setState] = useState<UploadState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
@@ -168,7 +171,7 @@ export function SpottedGlobalButton({ lang, brandSlug }: Props) {
       {/* Auth gate */}
       {state === 'auth_gate' && (
         <AuthModal
-          lang={lang}
+          lang={currentLang}
           tr={tr}
           onSuccess={handleAuthSuccess}
           onClose={dismiss}

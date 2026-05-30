@@ -5,17 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { t } from '@/lib/translations'
 import { isRTL, Lang, DEFAULT_LANG } from '@/lib/lang'
-
-// Fix Leaflet default icon (webpack issue)
-const icon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
+import { defaultMarkerIcon, highlightedMarkerIcon } from './markerIcons'
 
 interface ShopPin {
   id: number
@@ -30,6 +20,8 @@ interface ShopMapProps {
   center?: [number, number]
   zoom?: number
   lang?: Lang
+  highlightedShopId?: number | null
+  onPinClick?: (shopId: number) => void
 }
 
 // Applies the best-fit view: explicit center/zoom take precedence, then auto-fit all pins
@@ -105,7 +97,7 @@ const TILE_LANG: Record<string, string> = {
   de: 'de', en: 'en', ru: 'ru', ar: 'ar', he: 'he',
 }
 
-export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAULT_LANG }: ShopMapProps) {
+export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAULT_LANG, highlightedShopId, onPinClick }: ShopMapProps) {
   const defaultCenter: [number, number] = center ?? (shops.length > 0 ? [shops[0].lat, shops[0].lng] : [34.9, 33.63])
   const tileUrl = `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
   const langCode = TILE_LANG[lang] ?? 'en'
@@ -129,7 +121,12 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAU
           url={localizedUrl}
         />
         {shops.map(shop => (
-          <Marker key={shop.id} position={[shop.lat, shop.lng]} icon={icon}>
+          <Marker
+            key={shop.id}
+            position={[shop.lat, shop.lng]}
+            icon={shop.id === highlightedShopId ? highlightedMarkerIcon : defaultMarkerIcon}
+            eventHandlers={{ click: () => onPinClick?.(shop.id) }}
+          >
             <Popup>
               <div dir={isRTL(lang) ? 'rtl' : 'ltr'} style={{ minWidth: '160px' }}>
                 <p style={{ fontWeight: 600, marginBottom: '4px' }}>{shop.name}</p>

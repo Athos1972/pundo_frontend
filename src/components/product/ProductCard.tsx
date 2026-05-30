@@ -8,7 +8,17 @@ import type { Lang } from '@/lib/lang'
 import { formatPriceOrLabel, pickImg } from '@/lib/utils'
 import { FavoriteButton } from '@/components/product/FavoriteButton'
 
-export function ProductCard({ item, lang, variant = 'vertical' }: { item: ProductListItem; lang: string; variant?: 'vertical' | 'horizontal' }) {
+interface ProductCardProps {
+  item: ProductListItem
+  lang: string
+  variant?: 'vertical' | 'horizontal'
+  shopId?: number
+  isHighlighted?: boolean
+  onMouseEnterShop?: (shopId: number) => void
+  onMouseLeaveShop?: () => void
+}
+
+export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighlighted, onMouseEnterShop, onMouseLeaveShop }: ProductCardProps) {
   const tr = t(lang)
   const offer = item.best_offer
   const imgSrc = pickImg(item.images, 'card', item.thumbnail_url)
@@ -19,7 +29,11 @@ export function ProductCard({ item, lang, variant = 'vertical' }: { item: Produc
 
   if (variant === 'horizontal') {
     return (
-      <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors flex">
+      <div
+        className={`relative bg-surface border rounded-xl overflow-hidden transition-colors flex ${isHighlighted ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-border hover:border-accent'}`}
+        onMouseEnter={() => shopId != null && onMouseEnterShop?.(shopId)}
+        onMouseLeave={() => onMouseLeaveShop?.()}
+      >
         {/* Image — fixed 120×120px square on the left */}
         <div className="w-[120px] h-[120px] shrink-0 bg-surface-alt flex items-center justify-center overflow-hidden relative">
           {imgSrc && (

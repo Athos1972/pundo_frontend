@@ -20,9 +20,9 @@ touches-states:
   - Product.availability:available
 status-changed-at: 2026-04-23T15:00:00Z
 status-changed-by-spec: journey-catalog-system-20260423
-last-run: 2026-05-22T14:06:15Z
+last-run: 2026-05-30T14:35:00Z
 last-result: PASS
-last-run-sha: 309239e58967e8aaa506a176c41ee5d7a88ad35c
+last-run-sha: a1cdb7ef3cf6f4136d2b62cb902996a84e860066
 ---
 
 ### Journey: Customer Discovery Flow

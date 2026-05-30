@@ -63,6 +63,22 @@
     "hash": "sha256:36b9ccf80bb980f233cb96b08eeddc792816dd1bffb442a465c193a67bfb37b7",
     "source": "_raw/emergency-services.png"
   },
+  "expat-start-zypern/hero": {
+    "width": 2752,
+    "height": 1536,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAAXBtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAANGlsb2MAAAAAREAAAgABAAAAAAGUAAEAAAAAAAAAHgACAAAAAAGyAAEAAAAAAAAAFAAAADhpaW5mAAAAAAACAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAAAAAIAAGF2MDEAAAAAr2lwcnAAAACKaXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAEAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAcAAAAAA5waXhpAAAAAAEIAAAAOGF1eEMAAAAAdXJuOm1wZWc6bXBlZ0I6Y2ljcDpzeXN0ZW1zOmF1eGlsaWFyeTphbHBoYQAAAAAdaXBtYQAAAAAAAAACAAEDgQIDAAIEhAIFhgAAABppcmVmAAAAAAAAAA5hdXhsAAIAAQABAAAAOm1kYXQSAAoIOAh+wgIaDSAyEBsAAABQlxZowtRUmB4v4cASAAoFGAh+wqAyCRsAAAEAAiEb2g==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "hash": "sha256:b317be8b756e91f5cc5c6483adab3f2173a23b2cd07f6aef22120bb5cb971616",
+    "source": "_raw/expat-start-zypern.png"
+  },
   "fenster-tueren-zypern/hero": {
     "width": 1672,
     "height": 941,

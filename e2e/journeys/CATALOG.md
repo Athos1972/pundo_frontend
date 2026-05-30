@@ -36,6 +36,7 @@
 | [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
 | [category-discovery](category-discovery.md) | Category Discovery Flow (F2350) | approved | P2 | — |
+| [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | — |
 
 ## Smoketest Coverage
 

@@ -2,7 +2,117 @@
 
 ## Letzter Testlauf
 
-Datum: 2026-05-22  
+Datum: 2026-05-30  
+SHA: a1cdb7ef3cf6f4136d2b62cb902996a84e860066  
+Spec: **F5860 guides-featured-hero-link** (Featured-Guide-Hero auf Guides-Übersicht)  
+Ergebnis: TypeScript PASS · ESLint PASS · 1828/1828 Vitest PASS · Browser PASS · Verdict: **SHIP**
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | ✅ PASS (0 Fehler) |
+| ESLint | ✅ PASS (0 Errors, 84 pre-existing Warnings) |
+
+### Unit-Tests (1828/1828 PASS)
+
+| Datei | Tests | Status | Anmerkung |
+|-------|-------|--------|-----------|
+| FeaturedGuideHero.test.tsx | 11 | ✅ | Neu — Komponente + getFeaturedGuide-Logik |
+| category-search.test.tsx | 3 gefixt | ✅ | TESTFEHLER: Dual-Layout (mobile+desktop) rendert listContent 2× → getByText → getAllByText |
+| Gesamt (99 Dateien) | 1828 | ✅ | |
+
+### Testfehler-Fix (TESTFEHLER — kein Funktionsfehler)
+
+`category-search.test.tsx` — 3 Tests verwandten `getByText(...)` für Text der durch das neue Mobile+Desktop-Dual-Layout zweimal im DOM erscheint. `SearchContent` rendert `listContent` in beiden Branches (`md:hidden` Mobile-Bottomsheet + `hidden md:flex` Desktop-Split). Fix: `getByText` → `getAllByText(...)[0]`.  
+Korrektheits-Beweis: Klassen `md:hidden`/`hidden md:flex` stellen sicher dass nur je eine Version sichtbar ist — das Verhalten ist korrekt, der Test war zu restriktiv.
+
+### Browser-Smoke (AC-Prüfung)
+
+| AC | Prüfung | Status |
+|----|---------|--------|
+| AC-1 | Hero-Karte oben auf /de/guides | ✅ |
+| AC-2 | Hero-Bild vorhanden (echtes Bild, nicht Icon) | ✅ |
+| AC-3 | Link → /de/guides/expat-start-zypern | ✅ |
+| AC-4 | Kein Duplicate im Grid | ✅ |
+| AC-5 | Guide-Detailseite lädt korrekt | ✅ |
+| AC-6 | i18n-Strings (Badge „Übersicht", CTA „Hier starten →") | ✅ |
+| AC-8 | RTL /ar/guides: dir=rtl, Badge „نظرة عامة", CTA „← ابدأ هنا", Bild links | ✅ |
+| AC-10 | Kategorie-Filter + Grid funktionieren | ✅ |
+
+### Open Failures
+
+Keine — `open_failures: []`
+
+---
+
+## Vorheriger Testlauf (2026-05-30 — F4300 map-hover-glow-mobile-ux)
+
+SHA: a1cdb7ef3cf6f4136d2b62cb902996a84e860066  
+Ergebnis: TypeScript PASS · ESLint PASS · 70/70 Vitest PASS · 8/8 E2E PASS · 3/3 Journeys PASS · Verdict: **SHIP**
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | ✅ PASS (0 Fehler) |
+| ESLint | ✅ PASS (0 Errors, 85 pre-existing Warnings) |
+
+### Unit-Tests (70/70 PASS)
+
+| Datei | Tests | Status |
+|-------|-------|--------|
+| markerIcons.test.ts | 9 | ✅ |
+| SearchMapBottomSheet.test.tsx | 13 | ✅ |
+| ShopMap.test.tsx | 8 | ✅ |
+| coverage-gaps.test.tsx (inkl. 5 neue Hover-Prop-Tests) | 40 | ✅ |
+
+### COVERAGE_GAP (nicht blockierend)
+
+| Modul | Ursache |
+|-------|---------|
+| ShopMapClient.tsx | Leaflet/Canvas — nur im Browser testbar |
+| SearchContent.tsx | Komplexe Client-Component mit Leaflet + Geo |
+
+### E2E-Tests (8/8 PASS)
+
+| # | Test | Status |
+|---|------|--------|
+| 1 | AC1/AC4: Karte lädt, echte Dimensionen | ✅ |
+| 2 | AC1: Leaflet-Marker im DOM | ✅ |
+| 3 | AC2: Filter-Wechsel, kein Leaflet-Fehler | ✅ |
+| 4 | AC4: 0 Shops, kein JS-Fehler | ✅ |
+| 5 | AC7: RTL Arabisch | ✅ |
+| 6 | AC7: RTL Hebräisch | ✅ |
+| 7 | AC5: Mobile — Karte sichtbar ohne Tab-Antippen (NEU) | ✅ |
+| 8 | AC6: Mobile — Bottom-Sheet-Handle im DOM (NEU) | ✅ |
+
+### Journey-Run (3/3 PASS)
+
+| Journey | Ergebnis | Details |
+|---------|----------|---------|
+| customer-discovery | ✅ 8/9 (1 skip: kein Map-Element auf Produktdetail) | mustRun: map/** + search/** |
+| admin-data-management | ✅ 8/10 (2 skips: bekannte optionale Checks) | mustRun: guides/** |
+| shop-owner-full-lifecycle | ✅ 17/17 | mustRun: search/** |
+
+### Code-Fixes während des Tests
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| e2e/f4300-map-auto-fit.spec.ts | `.first()` → `.filter({visible:true}).first()` | TESTFEHLER: neues 2-Layout-Muster hat 2 `.leaflet-container`-Instanzen im DOM |
+
+### Open Failures
+
+| Status | Anzahl |
+|--------|--------|
+| open_failures | **0** |
+
+Verdict: **SHIP** ✅
+
+---
+
+## Vorheriger Testlauf (2026-05-22)
+
 SHA: cb9b44f28005715632d23e1c124cf0248a84fb1a  
 Spec: **F4100 Favoriten-Fixes** (Hero-Button, Produktlink-Guard, My Favorites Dropdown + Route)  
 Ergebnis: TypeScript PASS · ESLint PASS · 6/6 Vitest PASS · 9/9 E2E PASS · Verdict: **SHIP**

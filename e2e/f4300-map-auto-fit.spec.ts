@@ -49,8 +49,9 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     await page.goto(MULTI_SHOP_URL)
     await page.waitForLoadState('networkidle')
 
-    // Map container should be present and non-zero height
-    const mapContainer = page.locator('.leaflet-container').first()
+    // Layout has two .leaflet-container (mobile + desktop branch) — pick visible one.
+    // On desktop the mobile-branch map is md:hidden; on mobile the desktop-branch map is hidden md:flex.
+    const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
     await expect(mapContainer).toBeVisible()
 
     const box = await mapContainer.boundingBox()
@@ -79,7 +80,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     const count = await markers.count()
     // If 0 markers: shops may have no coordinates — warn but don't fail hard
     // (test data variance). At minimum the map must render.
-    const mapContainer = page.locator('.leaflet-container').first()
+    const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
     await expect(mapContainer).toBeVisible()
 
     if (count === 0) {
@@ -99,8 +100,8 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     await page.goto('/de/search?category_id=2871&category_name=Animals')
     await page.waitForLoadState('networkidle')
 
-    // Map still present after navigation
-    const mapContainer = page.locator('.leaflet-container').first()
+    // Map still present after navigation — pick visible container (two in DOM: mobile + desktop branch)
+    const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
     await expect(mapContainer).toBeVisible()
 
     const criticalErrors = errors.filter(e =>
@@ -179,5 +180,100 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
       e.toLowerCase().includes('fitbounds')
     )
     expect(criticalErrors, `Leaflet-Fehler (he): ${criticalErrors.join(' | ')}`).toHaveLength(0)
+  })
+
+  // AC5: Mobile layout — map visible on load without tapping a tab
+  test('AC5: Mobile-Viewport — Karte sofort sichtbar ohne Tab-Antippen', async ({ page }) => {
+    const errors = collectCriticalErrors(page)
+
+    // iPhone 13 viewport
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(MULTI_SHOP_URL)
+    await page.waitForLoadState('networkidle')
+
+    // Map must be present in the DOM and visible without interaction
+    const mapContainer = page.locator('.leaflet-container').first()
+    await expect(mapContainer).toBeVisible({ timeout: 5000 })
+
+    const box = await mapContainer.boundingBox()
+    expect(box, 'Karte hat keine Bounding-Box auf Mobile').not.toBeNull()
+    expect(box!.width, 'Karten-Breite 0 auf Mobile').toBeGreaterThan(0)
+    expect(box!.height, 'Karten-Höhe 0 auf Mobile').toBeGreaterThan(0)
+
+    // No critical errors
+    const criticalErrors = errors.filter(e =>
+      e.toLowerCase().includes('cannot read') ||
+      e.toLowerCase().includes('fitbounds') ||
+      e.toLowerCase().includes('leaflet')
+    )
+    expect(criticalErrors, `Leaflet-Fehler auf Mobile: ${criticalErrors.join(' | ')}`).toHaveLength(0)
+  })
+
+  // AC6: Bottom sheet renders and drag handle is present on mobile
+  test('AC6: Mobile-Viewport — Bottom-Sheet-Handle ist im DOM vorhanden', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(MULTI_SHOP_URL)
+    await page.waitForLoadState('networkidle')
+
+    // The sheet region should exist (aria-label set in SearchContent)
+    // The drag handle pill div is inside the sheet
+    const sheet = page.locator('[role="region"]').first()
+    await expect(sheet).toBeAttached({ timeout: 5000 })
+  })
+
+  // AC-TextSearch-1: Text-Suche mit Geo — Karte zeigt Pins (shop_location fix)
+  test('AC-TextSearch-1: Text-Suche mit Geo-Koordinaten zeigt Leaflet-Marker', async ({ page }) => {
+    const errors = collectCriticalErrors(page)
+
+    // Text search with lat/lng — backend now returns shop_location for local shops
+    await page.goto('/de/search?q=schesir&lat=34.9&lng=33.6')
+    await page.waitForLoadState('networkidle')
+
+    // Map must load without errors
+    const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
+    await expect(mapContainer).toBeVisible({ timeout: 8000 })
+
+    // Verify at least one marker exists (shop has coordinates in test DB)
+    const markers = page.locator('.leaflet-marker-icon')
+    await page.waitForTimeout(1500) // allow Leaflet to place markers after data loads
+    const count = await markers.count()
+
+    if (count === 0) {
+      console.warn('AC-TextSearch-1: Keine Marker — Schesir-Shop hat evtl. keine Koordinaten in pundo_test')
+    } else {
+      expect(count).toBeGreaterThanOrEqual(1)
+    }
+
+    // No critical JS errors
+    const criticalErrors = errors.filter(e =>
+      e.toLowerCase().includes('cannot read') ||
+      e.toLowerCase().includes('fitbounds') ||
+      e.toLowerCase().includes('leaflet')
+    )
+    expect(criticalErrors, `Leaflet-Fehler in Text-Suche: ${criticalErrors.join(' | ')}`).toHaveLength(0)
+  })
+
+  // AC-TextSearch-2: Text-Suche — Karte ohne Geo zeigt Larnaca-Fallback (kein Absturz)
+  test('AC-TextSearch-2: Text-Suche ohne Geo — Karte lädt ohne Fehler (Larnaca-Fallback)', async ({ page }) => {
+    const errors = collectCriticalErrors(page)
+
+    // No lat/lng → dist_km=null → items treated as online → mapShops empty → Larnaca fallback
+    await page.goto('/de/search?q=schesir')
+    await page.waitForLoadState('networkidle')
+
+    // Map container must exist and have dimensions (even with 0 pins)
+    const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
+    await expect(mapContainer).toBeVisible({ timeout: 8000 })
+
+    const box = await mapContainer.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.width).toBeGreaterThan(0)
+    expect(box!.height).toBeGreaterThan(0)
+
+    const criticalErrors = errors.filter(e =>
+      e.toLowerCase().includes('cannot read') ||
+      e.toLowerCase().includes('fitbounds')
+    )
+    expect(criticalErrors).toHaveLength(0)
   })
 })

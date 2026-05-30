@@ -26,6 +26,7 @@ vi.mock('leaflet', async () => {
     ...original,
     latLngBounds: (points: [number, number][]) => ({ _points: points, __isMockBounds: true }),
     icon: () => ({}),
+    divIcon: () => ({}),
   }
 })
 

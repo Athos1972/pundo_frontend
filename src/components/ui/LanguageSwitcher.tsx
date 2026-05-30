@@ -3,6 +3,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useRef, useState, useEffect } from 'react'
 import { LANGS, LANG_NATIVE_NAMES, type Lang, setLangCookie } from '@/lib/lang'
 import { stripLang } from '@/lib/routing'
+import { useLang } from '@/lib/useLang'
 import { t } from '@/lib/translations'
 
 const LANG_LABELS: Record<Lang, string> = {
@@ -19,10 +20,7 @@ const LANG_LABELS: Record<Lang, string> = {
 function LanguageSwitcherDesktop({ current, dark }: { current: Lang; dark?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
-  // Derive active lang from the URL so the highlight stays correct after
-  // client-side navigation (the server-rendered `current` prop is stale once
-  // the root layout stops re-rendering on lang-segment changes).
-  const activeLang = LANGS.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? current
+  const activeLang = useLang(current)
 
   function handleChange(lang: Lang) {
     setLangCookie(lang)
@@ -107,7 +105,7 @@ function LanguageSwitcherMobile({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const activeLang = LANGS.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? current
+  const activeLang = useLang(current)
   const [open, setOpen] = useState(false)
   const [focusIndex, setFocusIndex] = useState<number>(() => LANGS.indexOf(activeLang))
   const containerRef = useRef<HTMLDivElement>(null)

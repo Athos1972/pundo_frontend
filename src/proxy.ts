@@ -101,8 +101,12 @@ const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = fal
     // next/font injects a <style> with CSS custom properties (font variable names) that has no nonce API.
     // The hash is stable as long as the font config in (customer)/layout.tsx stays unchanged.
     // If fonts change → run: npx playwright test --reporter=list 2>&1 | grep "sha256-" to get the new hash.
-    // allowInlineStyles=true: used for /blog where the Soro embed injects inline styles at runtime.
-    isDev || allowInlineStyles ? `style-src 'self' 'unsafe-inline'` : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY='`,
+    // allowInlineStyles=true: used for /blog where Soro embed injects inline styles at runtime.
+    // allowInlineStyles=true: /blog – Soro widget injects inline styles at runtime.
+    // 'unsafe-hashes' + sha256 covers style= attributes (e.g. Leaflet map) on all other pages.
+    isDev || allowInlineStyles
+      ? `style-src 'self' 'unsafe-inline'`
+      : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY=' 'unsafe-hashes' 'sha256-U7qpK+rHoFOZHvmwTPXyOVr1wpK+zdAg1mRTaYEGL9g='`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co`,
@@ -183,7 +187,7 @@ export function proxy(request: NextRequest) {
   const nonceBytes = new Uint8Array(16)
   crypto.getRandomValues(nonceBytes)
   const nonce = Buffer.from(nonceBytes).toString('base64')
-  // /blog embeds the Soro widget which injects inline styles at runtime — relax style-src for that route only.
+  // /blog embeds the Soro widget which injects inline styles — relax style-src for that route only.
   const isBlogPage = pathname === '/blog' || /^\/[a-z]{2}\/blog$/.test(pathname)
   const csp = buildCsp(nonce, brand.analytics.plausibleHost, isBlogPage)
 

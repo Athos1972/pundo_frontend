@@ -3,7 +3,7 @@
 //
 // Brand-Config-Typen. Eigene Datei, damit individuelle Brand-Module den Typ
 // importieren können, ohne den Barrel `./index` zu durchlaufen
-// (sonst: Zirkular-Import index.ts ↔ pundo.ts/rusky.ts/naidivse.ts).
+// (sonst: Zirkular-Import index.ts ↔ pundo.ts/naidivse.ts).
 // =============================================================================
 
 export interface BrandConfig {

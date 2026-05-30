@@ -9,6 +9,7 @@ import { SessionProvider } from '@/components/auth/SessionProvider'
 import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
+import { DirSync } from '@/components/layout/DirSync'
 import { getBrandFromHeaders, buildThemeCss } from '@/config/brands'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
@@ -121,6 +122,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             />
           </>
         )}
+        <DirSync fallbackLang={lang} />
         <SplashScreen splashSvg={brand.assets.splashSvg} />
         <LanguagePickerOverlay serverLang={lang} />
         <TooltipProvider>

@@ -15,43 +15,42 @@ import type { SheetSnap } from '@/components/map/SearchMapBottomSheet'
 
 // --- nearestSnap unit tests (pure function) ---
 
+// Snap values: full=0, half=42, peek=72 (% of sheet height = container−60px)
 describe('nearestSnap', () => {
   it('y=0 → full', () => {
     expect(nearestSnap(0)).toBe<SheetSnap>('full')
   })
 
-  it('y=75 → peek', () => {
-    expect(nearestSnap(75)).toBe<SheetSnap>('peek')
+  it('y=72 → peek', () => {
+    expect(nearestSnap(72)).toBe<SheetSnap>('peek')
   })
 
-  it('y=40 → half', () => {
-    expect(nearestSnap(40)).toBe<SheetSnap>('half')
+  it('y=42 → half', () => {
+    expect(nearestSnap(42)).toBe<SheetSnap>('half')
   })
 
-  it('y=10 → full (closer to 0 than to 40)', () => {
+  it('y=10 → full (closer to 0 than to 42)', () => {
     expect(nearestSnap(10)).toBe<SheetSnap>('full')
   })
 
-  it('y=25 → half (equidistant 0↔40 → picks half since |25-40|=15 < |25-0|=25)', () => {
-    // 25 is closer to 40 (delta=15) than to 0 (delta=25)
-    expect(nearestSnap(25)).toBe<SheetSnap>('half')
+  it('y=21 → full (equidistant 0↔42 → full wins on <=)', () => {
+    expect(nearestSnap(21)).toBe<SheetSnap>('full')
   })
 
-  it('y=60 → peek (closer to 75 than to 40)', () => {
-    expect(nearestSnap(60)).toBe<SheetSnap>('peek')
+  it('y=22 → half (closer to 42 than to 0)', () => {
+    expect(nearestSnap(22)).toBe<SheetSnap>('half')
   })
 
-  it('y=55 → half (equidistant: |55-40|=15 < |55-75|=20)', () => {
-    expect(nearestSnap(55)).toBe<SheetSnap>('half')
+  it('y=50 → half (|50-42|=8 < |50-72|=22)', () => {
+    expect(nearestSnap(50)).toBe<SheetSnap>('half')
   })
 
-  it('y=57 → peek (|57-75|=18 < |57-40|=17? no → half)', () => {
-    // |57-40|=17, |57-75|=18 → half wins
-    expect(nearestSnap(57)).toBe<SheetSnap>('half')
-  })
-
-  it('y=58 → peek (|58-75|=17 < |58-40|=18)', () => {
+  it('y=58 → peek (|58-72|=14 < |58-42|=16)', () => {
     expect(nearestSnap(58)).toBe<SheetSnap>('peek')
+  })
+
+  it('y=57 → half (|57-42|=15 <= |57-72|=15 → half wins on <=)', () => {
+    expect(nearestSnap(57)).toBe<SheetSnap>('half')
   })
 })
 

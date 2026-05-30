@@ -11,18 +11,19 @@ interface Props {
   ariaLabel?: string
 }
 
-// translateY values in dvh — how far the 90dvh-tall sheet is shifted down.
-// dvh = Dynamic Viewport Height: adjusts when browser chrome (address bar,
-// navigation bar) shows or hides. Unlike vh (layout viewport), dvh tracks
-// the actually visible area → sheet never disappears behind browser chrome.
-const SNAP_VH: Record<SheetSnap, number> = { peek: 75, half: 40, full: 0 }
+// translateY values as % of sheet height.
+// Sheet height = container height − 60px (60px of map always visible above).
+// Using % units means all calculations are container-relative, not viewport-relative.
+// → The drag handle is ALWAYS accessible: at full (0%), handle is 0px from container top
+//   = right below the sticky header. At peek (72%), ≈28% of list visible.
+const SNAP_VH: Record<SheetSnap, number> = { peek: 72, half: 42, full: 0 }
 
 // Exported for unit tests
 export function nearestSnap(y: number): SheetSnap {
   const candidates: [SheetSnap, number][] = [
     ['full', Math.abs(y)],
-    ['half', Math.abs(y - 40)],
-    ['peek', Math.abs(y - 75)],
+    ['half', Math.abs(y - 42)],
+    ['peek', Math.abs(y - 72)],
   ]
   return candidates.reduce((a, b) => (a[1] <= b[1] ? a : b))[0]
 }
@@ -34,20 +35,18 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
   const sheetRef = useRef<HTMLDivElement>(null)
 
   const baseVh = SNAP_VH[snap]
-  // visualViewport.height is the actually visible height (excludes browser chrome).
-  // Falls back to window.innerHeight on environments that don't support visualViewport.
-  const viewH = typeof window !== 'undefined'
-    ? (window.visualViewport?.height ?? window.innerHeight)
-    : 800
-  const deltaVh = isDragging ? (dragDeltaPx / viewH) * 100 : 0
-  const currentVh = Math.max(0, Math.min(75, baseVh + deltaVh))
+  // Use the sheet's own clientHeight for drag calculation so everything is container-relative.
+  // Falls back to 600 (reasonable mobile estimate) if the ref isn't attached yet.
+  const sheetH = sheetRef.current?.clientHeight ?? 600
+  const deltaVh = isDragging ? (dragDeltaPx / sheetH) * 100 : 0
+  const currentVh = Math.max(0, Math.min(72, baseVh + deltaVh))
 
-  // Apply transform using dvh units so the animation tracks the dynamic viewport.
-  // useLayoutEffect fires before paint → no visible flash on state changes.
+  // translateY(X%) is relative to the element itself → fully container-relative.
+  // useLayoutEffect fires before paint → no visible flash.
   useLayoutEffect(() => {
     const el = sheetRef.current
     if (!el) return
-    el.style.transform = `translateY(${currentVh}dvh)`
+    el.style.transform = `translateY(${currentVh}%)`
     el.style.transition = isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'
   }, [currentVh, isDragging])
 
@@ -65,9 +64,7 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
 
   const handlePointerUp = useCallback(() => {
     if (dragStartY.current === null) return
-    const h = typeof window !== 'undefined'
-      ? (window.visualViewport?.height ?? window.innerHeight)
-      : 800
+    const h = sheetRef.current?.clientHeight ?? 600
     const delta = (dragDeltaPx / h) * 100
     const finalVh = Math.max(0, Math.min(75, baseVh + delta))
     dragStartY.current = null
@@ -81,7 +78,8 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
       ref={sheetRef}
       role="region"
       aria-label={ariaLabel}
-      className="absolute bottom-0 left-0 right-0 h-[90dvh] bg-bg rounded-t-2xl z-10 flex flex-col sheet-elevation"
+      className="absolute bottom-0 left-0 right-0 bg-bg rounded-t-2xl z-10 flex flex-col sheet-elevation"
+      style={{ height: 'calc(100% - 60px)' }}
     >
       {/* Drag handle */}
       <div

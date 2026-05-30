@@ -340,9 +340,13 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   )
 
   return (
-    <div className="min-h-screen bg-bg">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-bg border-b border-border px-4 py-3">
+    // flex-col + h-[100dvh]: the outer container fills the dynamic viewport exactly.
+    // This replaces the old min-h-screen approach and eliminates all hardcoded pixel offsets.
+    // Every child either shrinks to its natural height (shrink-0) or fills the rest (flex-1).
+    <div className="flex flex-col bg-bg" style={{ height: '100dvh' }}>
+
+      {/* Sticky header — shrink-0 so it takes its natural height (variable: chips, slider) */}
+      <div className="shrink-0 sticky top-0 z-20 bg-bg border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-2">
           <Link href={localePath(lang, '/')} className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-accent transition-colors flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -368,18 +372,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         />
       </div>
 
-      {/* Category heading — outside layout branches so there is exactly one h1 */}
-      {isCategoryMode && (
-        <div className="px-4 pt-3 pb-1">
-          <h1 className="text-lg font-semibold text-text rtl:text-end">
-            {displayCategoryName || tr.category_results_title}
-          </h1>
-        </div>
-      )}
-
-      {/* MOBILE layout: full-screen map background + draggable bottom sheet.
-          The map is always mounted and visible → FitBounds works without display:none toggling. */}
-      <div className="md:hidden relative h-[calc(100dvh-160px)]">
+      {/* MOBILE layout: flex-1 fills exactly whatever height the header leaves.
+          No hardcoded px offset — works regardless of header height (chips, slider, etc.).
+          Sheet height = container height − 60px → 60px of map permanently visible above sheet.
+          This ensures the drag handle is ALWAYS accessible (never covered by header). */}
+      <div className="md:hidden flex-1 min-h-0 relative overflow-hidden">
+        {/* Map: full container background */}
         <div className="absolute inset-0 z-0">
           <ShopMap
             shops={mapShops}
@@ -395,16 +393,28 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           scrollContainerRef={mobileScrollRef}
           ariaLabel={tr.list_view}
         >
+          {/* Category heading inside sheet so it adapts to the sheet's scroll */}
+          {isCategoryMode && (
+            <h1 className="text-lg font-semibold text-text rtl:text-end pt-1 pb-0.5">
+              {displayCategoryName || tr.category_results_title}
+            </h1>
+          )}
           {listContent}
         </SearchMapBottomSheet>
       </div>
 
-      {/* DESKTOP layout: side-by-side split (unchanged behaviour) */}
-      <div className="hidden md:flex h-[calc(100dvh-160px)]">
-        <div ref={scrollContainerRef} className="w-full md:w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
+      {/* DESKTOP layout: flex-1 fills the rest, side-by-side split (unchanged behaviour) */}
+      <div className="hidden md:flex flex-1 min-h-0">
+        <div ref={scrollContainerRef} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
+          {/* Category heading in desktop left panel */}
+          {isCategoryMode && (
+            <h1 className="text-lg font-semibold text-text rtl:text-end">
+              {displayCategoryName || tr.category_results_title}
+            </h1>
+          )}
           {listContent}
         </div>
-        <div className="md:flex flex-col w-full md:w-[45%] p-4 relative z-0">
+        <div className="flex flex-col w-[45%] p-4">
           <ShopMap
             shops={mapShops}
             className="w-full h-full rounded-xl overflow-hidden"

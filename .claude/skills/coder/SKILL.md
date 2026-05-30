@@ -416,6 +416,7 @@ Empfehlung an E2E-Tester:
 - **Keine Secrets:** Kein Hardcoding von API-Keys, URLs, Passwörtern.
 - **Keine automatischen Commits:** User committet manuell.
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
+- **Dokumentation im selben PR aktualisieren:** Wenn du Ports, Befehle, Env-Vars, Komponentenstruktur oder API-Routing änderst → `docs/architecture.md` oder `docs/e2e-testing.md` im selben PR mitpflegen. Nie "docs später". Operatives Wissen (wie/wo/was) lebt in `/docs`. Design-Entscheidungen (warum) und Feature-Geschichte leben im Vault — die schreibt der Architect.
 - Dokumentation immer auf Letztstand halten README.md
 - Wenn sich wesentliche Änderungen ergeben maintaine den SKILL.md im /architect dieses Projekts
 - **Tooltip-Pflicht für UI-Elemente (PFLICHT):**

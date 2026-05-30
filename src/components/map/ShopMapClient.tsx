@@ -4,7 +4,7 @@ import type { Lang } from '@/lib/lang'
 
 const ShopMap = dynamic(() => import('./ShopMap').then(m => ({ default: m.ShopMap })), {
   ssr: false,
-  loading: () => <div className="w-full h-full bg-surface-alt animate-pulse rounded-xl" style={{ minHeight: '200px' }} />,
+  loading: () => <div className="w-full h-full min-h-[200px] bg-surface-alt animate-pulse rounded-xl" />,
 })
 
 interface ShopPin {

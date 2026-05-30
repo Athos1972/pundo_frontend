@@ -44,8 +44,7 @@ export function RelatedProductsCarousel({ items, lang, title }: Props) {
        * dir="rtl" on <html> — no extra Tailwind rtl: modifier needed here.
        */}
       <div
-        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth scrollbar-none"
         role="list"
       >
         {items.map(item => (

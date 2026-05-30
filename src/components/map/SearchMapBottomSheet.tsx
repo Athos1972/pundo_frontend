@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useLayoutEffect } from 'react'
 
 export type SheetSnap = 'peek' | 'half' | 'full'
 
@@ -28,11 +28,21 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
   const [isDragging, setIsDragging] = useState(false)
   const [dragDeltaPx, setDragDeltaPx] = useState(0)
   const dragStartY = useRef<number | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const baseVh = SNAP_VH[snap]
   const viewH = typeof window !== 'undefined' ? window.innerHeight : 800
   const deltaVh = isDragging ? (dragDeltaPx / viewH) * 100 : 0
   const currentVh = Math.max(0, Math.min(75, baseVh + deltaVh))
+
+  // Apply dynamic transform/transition directly via DOM to avoid CSP style-src violations.
+  // useLayoutEffect fires before paint so there is no visible flash on state changes.
+  useLayoutEffect(() => {
+    const el = sheetRef.current
+    if (!el) return
+    el.style.transform = `translateY(${currentVh}vh)`
+    el.style.transition = isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'
+  }, [currentVh, isDragging])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -59,19 +69,14 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
 
   return (
     <div
+      ref={sheetRef}
       role="region"
       aria-label={ariaLabel}
-      className="absolute bottom-0 left-0 right-0 h-[90vh] bg-bg rounded-t-2xl z-10 flex flex-col"
-      style={{
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.12)',
-        transform: `translateY(${currentVh}vh)`,
-        transition: isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)',
-      }}
+      className="absolute bottom-0 left-0 right-0 h-[90vh] bg-bg rounded-t-2xl z-10 flex flex-col sheet-elevation"
     >
       {/* Drag handle */}
       <div
-        className="flex-shrink-0 flex items-center justify-center h-6 cursor-grab active:cursor-grabbing select-none"
-        style={{ touchAction: 'none' }}
+        className="flex-shrink-0 flex items-center justify-center h-6 cursor-grab active:cursor-grabbing select-none touch-none"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

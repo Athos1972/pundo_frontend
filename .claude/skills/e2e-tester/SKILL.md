@@ -1015,6 +1015,24 @@ Known Issues:
 
 ## Phase 4.5: Living Docs Sync
 
+Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.md`) und die **Repo-Docs** (`docs/`) noch zum tatsächlichen Code-Stand passen.
+
+### Vault vs. /docs — Zuständigkeiten
+
+| Inhalt | Wo | Wer pflegt |
+|---|---|---|
+| Feature-Specs (01–04-*.md), Feature-Docs, Bug-Dateien, Journey-Catalog | **Vault** `/Pundo-Plattform/` | designer / architect / coder / e2e-tester |
+| Architektur-Entscheidungen, Trade-offs, Geschichte, Cross-Repo-Kontext | **Vault** | architect |
+| Ports, Test-Befehle, Env-Vars, Komponentenstruktur | **`docs/` im Repo** | coder im selben PR; e2e-tester wenn er Drift entdeckt |
+| E2E-Setup (`docs/e2e-testing.md`) | **`docs/` im Repo** | e2e-tester bei Änderungen an Ports/Setup |
+| API-Referenz, Architektur-Übersicht (`docs/architecture.md`) | **`docs/` im Repo** | architect/coder |
+
+**Wenn du im Diff siehst:** Port-Änderungen, neue Env-Vars, neues Test-Script, neue Route-Gruppen → `docs/e2e-testing.md` oder `docs/architecture.md` prüfen und bei Drift patchen (Schritt 2 unten).
+
+**Nie:** Ports oder Befehle nur im Vault dokumentieren. **Nie:** Feature-Geschichte/Trade-offs nur in `/docs`.
+
+---
+
 Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.md`) noch zum tatsächlichen Code-Stand passen.
 **Nicht-blocking** — läuft immer durch, egal ob User j oder n antwortet.
 

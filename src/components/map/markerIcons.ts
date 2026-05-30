@@ -16,11 +16,11 @@ export const defaultMarkerIcon = L.icon({
 
 // Highlighted marker: same PNG with CSS scale + drop-shadow glow via divIcon.
 // Uses --color-accent CSS variable (fallback: #D4622A from globals.css).
-// Inline styles are required inside Leaflet divIcon html strings — Tailwind purges
-// class-based styles that only appear in dynamic html strings.
+// CSS classes (.pundo-marker-highlighted) are defined in globals.css — not Tailwind
+// utilities — so they survive the Tailwind compiler purge of dynamic html strings.
 export const highlightedMarkerIcon = L.divIcon({
   className: '',
-  html: `<div style="position:relative;width:25px;height:41px"><img src="${ICON_URL}" width="25" height="41" style="transform:scale(1.35);transform-origin:50% 100%;filter:drop-shadow(0 0 7px var(--color-accent,#D4622A)) drop-shadow(0 0 3px var(--color-accent,#D4622A));transition:transform 0.15s,filter 0.15s" /></div>`,
+  html: `<div class="pundo-marker-highlighted"><img src="${ICON_URL}" width="25" height="41" /></div>`,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],

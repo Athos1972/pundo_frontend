@@ -108,11 +108,11 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAU
     : tileUrl
 
   return (
-    <div className={className} style={{ minHeight: '200px' }}>
+    <div className={`${className} min-h-[200px]`}>
       <MapContainer
         center={defaultCenter}
         zoom={zoom}
-        style={{ height: '100%', width: '100%' }}
+        className="h-full w-full"
         scrollWheelZoom={false}
       >
         <FitBounds shops={shops} center={center} zoom={zoom} />
@@ -128,30 +128,30 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAU
             eventHandlers={{ click: () => onPinClick?.(shop.id) }}
           >
             <Popup>
-              <div dir={isRTL(lang) ? 'rtl' : 'ltr'} style={{ minWidth: '160px' }}>
-                <p style={{ fontWeight: 600, marginBottom: '4px' }}>{shop.name}</p>
-                <p style={{ fontSize: '11px', color: '#6b7280', marginBottom: '6px' }}>{t(lang).show_route}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div dir={isRTL(lang) ? 'rtl' : 'ltr'} className="min-w-[160px]">
+                <p className="font-semibold mb-1">{shop.name}</p>
+                <p className="text-[11px] text-gray-500 mb-1.5">{t(lang).show_route}</p>
+                <div className="flex flex-col gap-1">
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${shop.name} – Google Maps`}
-                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                    className="text-blue-600 no-underline text-[13px]"
                   >Google Maps</a>
                   <a
                     href={`https://maps.apple.com/?daddr=${shop.lat},${shop.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${shop.name} – Apple Maps`}
-                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                    className="text-blue-600 no-underline text-[13px]"
                   >Apple Maps</a>
                   <a
                     href={`https://www.waze.com/ul?ll=${shop.lat},${shop.lng}&navigate=yes`}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${shop.name} – Waze`}
-                    style={{ color: '#2563eb', textDecoration: 'none', fontSize: '13px' }}
+                    className="text-blue-600 no-underline text-[13px]"
                   >Waze</a>
                 </div>
               </div>

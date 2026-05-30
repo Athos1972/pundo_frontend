@@ -395,3 +395,18 @@ h1, h2, h3, .font-display {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Leaflet highlighted marker icon — CSS classes instead of inline styles.
+   Cannot use Tailwind utilities here: these class names appear only in a
+   JS-constructed HTML string that the Tailwind compiler never scans. */
+.pundo-marker-highlighted { position: relative; width: 25px; height: 41px; }
+.pundo-marker-highlighted > img {
+  transform: scale(1.35);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 7px var(--color-accent, #D4622A))
+          drop-shadow(0 0 3px var(--color-accent, #D4622A));
+  transition: transform 0.15s, filter 0.15s;
+}
+
+/* SearchMapBottomSheet elevation shadow — static value extracted from inline style */
+.sheet-elevation { box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12); }

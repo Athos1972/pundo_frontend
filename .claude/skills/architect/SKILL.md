@@ -46,6 +46,26 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 
 ---
 
+## Dokumentation: Vault vs. /docs
+
+**Faustregel:** „Warum so entschieden?" → Vault. „Wie führe ich X aus?" → `/docs` im Repo.
+
+| Inhalt | Wo | Regel |
+|---|---|---|
+| Feature-Specs (01–04-*.md) | **Vault** `/Pundo-Plattform/20 Features/<FG>/<Feature>/specs/` | designer/architect/coder/e2e-tester schreiben hierhin |
+| Feature-Docs (FGn/_index.md, Feature.md) | **Vault** | Architektur-Entscheidungen, Trade-offs, Geschichte, Cross-Repo-Kontext |
+| Bug-Dateien, Journey-Catalog | **Vault** | e2e-tester führt Register |
+| Ports, Test-Befehle, Env-Vars | **`/docs` im Repo** | Muss im selben PR wie Codeänderungen aktualisiert werden |
+| API-Referenz (Endpoints, Felder) | **`/docs` im Repo** | Nah am Code, von CI/Agenten lesbar |
+| Komponenten-Struktur, Route-Übersicht | **`/docs` im Repo** | `architecture.md` — wird mit dem Code gepflegt |
+| E2E-Setup, wie Tests ausführen | **`/docs` im Repo** | `e2e-testing.md` — Ports/Befehle hier, nie im Vault |
+
+**Nie:** Ports oder Test-Befehle nur im Vault dokumentieren — sie veralten sofort und stehen dem Operator nicht zur Verfügung. **Nie:** Architektur-Entscheidungen/Feature-Geschichte nur in `/docs` — sie gehören in den Vault wo sie mit Specs und Bug-Kontext verknüpft sind.
+
+Wenn du `02-architecture.md` schreibst und dabei Ports, Befehle oder Komponentenstruktur änderst: tragt den `docs/architecture.md`-Update als Task in `03-implementation.md` ein, damit der Coder ihn im selben PR erledigt.
+
+---
+
 ## Modulstruktur
 
 ```

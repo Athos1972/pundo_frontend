@@ -13,45 +13,70 @@ Das Frontend ist die User-facing Next.js-App; das Backend (`pundo_main_backend`)
 | UI | React 19, Tailwind CSS v4 |
 | Karten | Leaflet 1.9 + react-leaflet 5 |
 | Sprache | TypeScript 5 (strict) |
-| Tests | Vitest + Testing Library |
+| Tests | Vitest + Testing Library (Unit), Playwright (E2E) |
 
 ## Designprinzipien
 
 - **Mobile-first**: App wird primär auf Mobilgeräten genutzt
 - **Server Components by default**: Nur was Interaktivität/Browser-APIs braucht, wird Client Component
-- **API-Proxy**: Kein direkter Backend-Zugriff vom Browser — alles via `/api/v1/` Next.js-Rewrite
-- **Backend als Quelle der Wahrheit**: Übersetzungen und RTL-Flag kommen vom Backend
+- **API-Proxy**: Kein direkter Backend-Zugriff vom Browser — alles via Next.js-Rewrites (`/api/v1/`, `/shop_logos/`, `/product_images/`, `/review_photos/`, `/brand_logos/`, `/avatars/`)
+- **Mehrsprachig von Anfang an**: EN, DE, EL, RU, AR, HE — RTL (AR, HE) via Tailwind `rtl:`-Modifier
+- **Backend als Quelle der Wahrheit**: Kategorien, Produkte, Shops kommen immer vom Backend; UI-Strings sind im Frontend statisch
+
+## Route-Gruppen
+
+```
+src/app/
+├── (customer)/          # Öffentliche Customer-Routen (lang-prefix via [lang]/)
+│   ├── [lang]/          # Lokalisierte Seiten: search, products, shops, guides, help, …
+│   ├── account/         # Bypass-Pfad (kein lang-Prefix): favorites, mcp
+│   ├── auth/            # Bypass-Pfad: login, signup, callback, password-reset
+│   ├── blog/            # Bypass-Pfad
+│   ├── guides/          # Bypass-Pfad (legacy redirects)
+│   └── …
+├── (shop-admin)/        # Shop-Owner-Portal — Clean Boundary!
+│   └── shop-admin/      # login, register, onboarding, (portal)/…
+├── (system-admin)/      # System-Admin-Portal
+│   └── admin/           # login, (portal)/…
+├── (oauth)/             # OAuth 2.0 Authorization Server (F6600)
+│   └── oauth/authorize/
+└── api/                 # Next.js API Routes (nominatim-Proxy, og-image, …)
+```
+
+**i18n-Routing:** Customer-Pages unter `[lang]/` brauchen immer `localePath(lang, '/pfad')`. Bypass-Pfade (`/account`, `/auth`, `/api`, `/shop-admin`, `/admin`) haben keinen lang-Prefix.
 
 ## Modulstruktur
 
 ```
 src/
-├── app/
-│   ├── (customer)/          # Öffentliche Customer-Routen
-│   │   ├── page.tsx         # Startseite
-│   │   ├── search/          # Suchergebnisse (SearchContent als Client Component)
-│   │   ├── products/[slug]/ # Produktdetailseite
-│   │   └── shops/[slug]/    # Shop-Detailseite
-│   ├── (shop-admin)/        # Shop-Admin-Bereich (isoliert — Clean Boundary!)
-│   │   └── shop-admin/      # Login, Dashboard, Produkte, Angebote, Öffnungszeiten
-│   └── api/
-│       └── shop-admin/      # API-Proxy für Shop-Admin-Requests
 ├── components/
-│   ├── map/                 # Leaflet-Karte (Client-only, dynamic import)
-│   ├── product/             # ProductCard, OfferList, ProductImage
-│   ├── search/              # SearchBar, FilterChips, CategoryChips
-│   ├── shop/                # ShopCard, NearbyShops
-│   ├── shop-admin/          # Isolierte Admin-Komponenten (nur ui/ importieren!)
-│   └── ui/                  # Generische Bausteine: BackButton, PriceFilterToggle, …
+│   ├── map/             # Leaflet-Karte + SearchMapBottomSheet (Client-only, dynamic import)
+│   ├── product/         # ProductCard, OfferList, RelatedProductsCarousel, PriceHistory*
+│   ├── search/          # SearchBar, FilterChips, CategoryChips, ServiceResultCard, SearchSimilarButton
+│   ├── shop/            # ShopCard, ShopOfferCard, NearbyShops, RelatedShopsWidget
+│   ├── shop-admin/      # Isolierte Admin-Komponenten (nur ui/ importieren — Clean Boundary!)
+│   ├── system-admin/    # System-Admin-Komponenten
+│   ├── layout/          # Header, Footer, BottomTabBar
+│   ├── activity-feed/   # ActivityFeed, LiveFeed
+│   ├── recently-viewed/ # RecentlyViewed-Drawer
+│   ├── spotted/         # SpottedGlobalButton, SpottedModal
+│   ├── guides/          # Guide-Komponenten
+│   └── ui/              # Generische Bausteine (shared, importierbar von allen)
 ├── lib/
-│   ├── api.ts               # API-Client für Server Components
-│   ├── shop-admin-api.ts    # Separater API-Client für Shop-Admin
-│   ├── lang.ts              # Spracherkennung, isRTL, Cookie-Utils
-│   ├── translations.ts      # UI-Strings (6 Sprachen, kein i18n-Framework)
-│   └── utils.ts             # Hilfsfunktionen inkl. formatPriceOrLabel
+│   ├── api.ts                   # API-Client für Server Components
+│   ├── customer-api.ts          # Customer-spezifische Endpoints
+│   ├── shop-admin-api.ts        # Shop-Admin API-Client (Clean Boundary)
+│   ├── lang.ts                  # Spracherkennung, isRTL, Cookie-Utils
+│   ├── translations.ts          # Customer-UI-Strings (6 Sprachen, kein i18n-Framework)
+│   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
+│   ├── system-admin-translations.ts
+│   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
+│   ├── seo/                     # metadata-defaults, og-defaults, sitemap-helpers
+│   ├── i18n/                    # common.ts, guides.ts (tCommon, tGuides)
+│   └── price-history.ts         # aggregatePriceHistory(), computePriceStats()
 └── types/
-    ├── api.ts               # TypeScript-Interfaces für Backend-Responses
-    └── shop-admin.ts        # Separates Type-File für Shop-Admin
+    ├── api.ts                   # TypeScript-Interfaces für Backend-Responses
+    └── shop-admin.ts            # Separates Type-File für Shop-Admin (Clean Boundary)
 ```
 
 ## Server vs. Client Components
@@ -62,7 +87,7 @@ src/
 | Suchformular mit onChange | **Client Component** |
 | Leaflet-Karte | **Client Component** (`dynamic import, ssr: false`) |
 | URL-Params lesen/schreiben | **Client Component** (`useSearchParams`) |
-| Filter-Toggle (PriceFilterToggle) | **Client Component** |
+| FABs (SearchSimilarButton, SpottedGlobalButton) | **Client Component** (fixed-Position, Touch-Events) |
 | Statische UI-Shell | **Server Component** |
 
 **Faustregel:** Immer Server Component. `'use client'` nur wenn wirklich nötig.
@@ -70,11 +95,14 @@ src/
 ## API-Routing
 
 ```
-Browser → /api/v1/*  →  Next.js Rewrite  →  BACKEND_URL/api/v1/*
+Browser → /api/v1/*  →  Next.js Rewrite (next.config.ts)  →  BACKEND_URL/api/v1/*
+Browser → /shop_logos/*  →  Rewrite  →  BACKEND_URL/shop_logos/*
+Browser → /product_images/*  →  Rewrite  →  BACKEND_URL/product_images/*
+…
 ```
 
 Server Components rufen `BACKEND_URL` direkt auf (kein Rewrite-Overhead).  
-Client Components nutzen `NEXT_PUBLIC_API_URL` (relativ, geht durch den Rewrite).
+Client Components rufen `/api/v1/…` relativ auf (geht durch den Rewrite).
 
 ## Shop-Admin Clean Boundary
 
@@ -89,14 +117,19 @@ Client Components nutzen `NEXT_PUBLIC_API_URL` (relativ, geht durch den Rewrite)
 
 **Prüfung:** `grep -r "from.*components/(map|product|search|shop)" src/components/shop-admin/` → muss leer sein.
 
+## Brand-Config-System
+
+Jede Brand (`pundo`, `naidivse`) hat eine Config in `src/config/brands/<brand>.ts` mit Theme, Assets, Features-Flags (`catsfirst`, `homesickTeaser`, `activityFeed`, `mcp`, …). Die aktive Brand wird per Host-Header aus dem Backend ermittelt; `src/config/brands/index.ts` ist der Barrel.
+
 ## Bekannte Trade-offs
 
 | Entscheidung | Begründung |
 |---|---|
-| Kein i18n-Framework | Wenige statische Strings; Backend liefert übersetzte Inhalte |
+| Kein i18n-Framework | Wenige statische Strings; Content kommt übersetzt vom Backend |
 | Eigener Fetch in `api.ts` | Kein Extra-Dependency, volle Kontrolle |
 | Leaflet statt Google Maps | Open Source, keine API-Key-Pflicht |
 | `output: 'standalone'` | Docker-freundlich |
+| Preisverlauf-Aggregation im Frontend | Backend liefert Rohdaten; Aggregat-Entscheid BB/22.5. |
 
 ## Weiterführende Docs
 
@@ -105,8 +138,10 @@ Client Components nutzen `NEXT_PUBLIC_API_URL` (relativ, geht durch den Rewrite)
 - [Datenmodell](./data-model.md)
 - [Shop-Owner Portal](./shop-owner-portal.md)
 - [Shop-Sprachen](./shop-languages.md)
+- [SEO](./seo.md)
 
 **Technische Dokumentation:**
-- [I18n & RTL](./i18n.md)
+- [i18n & RTL](./i18n.md)
 - [Price Types](./price-types.md)
 - [E2E-Testing](./e2e-testing.md)
+- [Analytics](./analytics.md)

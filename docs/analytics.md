@@ -32,7 +32,7 @@ Der Meta-Pixel wird **ausschließlich nach Marketing-Opt-in** geladen. Kein Pre-
 ```typescript
 // src/config/brands/pundo.ts
 analytics: {
-  metaPixelId: '315772795678654',
+  metaPixelId: '870274585468299',
 }
 ```
 
@@ -81,4 +81,4 @@ Footer-Link „Cookie-Einstellungen" öffnet den Banner erneut. Bei Widerruf: `f
 ## Dashboard-Zugang
 
 - **Plausible:** `https://plausible.pundo.cy` (Credentials außerhalb dieses Repos)
-- **Meta Pixel:** Facebook Ads Manager → Events Manager → Pixel `315772795678654`
+- **Meta Pixel:** Facebook Ads Manager → Events Manager → Pixel `870274585468299`

@@ -21,7 +21,7 @@ export function FABOnboardingPopout({
     // Positioned absolute relative to the FAB container
     // bottom-full = above the FAB, end-0 = aligned to button end edge (RTL-aware)
     <div
-      className="absolute bottom-full mb-3 end-0 z-[45] w-[220px]"
+      className="absolute bottom-full mb-3 end-0 z-[47] w-[220px]"
       role="tooltip"
     >
       <div className="bg-surface rounded-xl shadow-md p-3 text-sm text-text border border-border relative">

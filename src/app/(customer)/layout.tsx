@@ -14,9 +14,8 @@ import { getBrandFromHeaders, buildThemeCss } from '@/config/brands'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
 import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
-import { SearchSimilarButton } from '@/components/search/SearchSimilarButton'
 import { TooltipProvider } from '@/components/ui/Tooltip'
-import { BottomTabBar } from '@/components/layout/BottomTabBar'
+import { HomesickAndBar } from '@/components/layout/HomesickAndBar'
 import { LanguagePickerOverlay } from '@/components/ui/LanguagePickerOverlay'
 
 const spaceGrotesk = Space_Grotesk({
@@ -132,8 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {children}
               <Footer lang={lang} />
               <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
-              <SearchSimilarButton lang={lang} brandSlug={brand.slug} />
-              <BottomTabBar lang={lang} recentlyViewed={brand.features.recentlyViewed} />
+              <HomesickAndBar lang={lang} brandSlug={brand.slug} recentlyViewed={brand.features.recentlyViewed} />
             </FavoritesProvider>
           </SessionProvider>
         </TooltipProvider>

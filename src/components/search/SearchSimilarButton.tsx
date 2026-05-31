@@ -12,9 +12,11 @@ import type { Lang } from '@/lib/lang'
 interface Props {
   lang: Lang
   brandSlug: string
+  hasBottomBar?: boolean
+  onOverlayChange?: (open: boolean) => void
 }
 
-export function SearchSimilarButton({ lang, brandSlug }: Props) {
+export function SearchSimilarButton({ lang, brandSlug, hasBottomBar = false, onOverlayChange }: Props) {
   const [open, setOpen] = useState(false)
   const currentLang = useLang(lang)
   const tr = t(currentLang)
@@ -33,6 +35,12 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
   function handleClick() {
     dismissOnboarding()
     setOpen(true)
+    onOverlayChange?.(true)
+  }
+
+  function handleClose() {
+    setOpen(false)
+    onOverlayChange?.(false)
   }
 
   const fabLabel = isNaidivse ? tr.fab_homesick_label_naidivse : tr.fab_homesick_label_pundo
@@ -44,9 +52,13 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
 
   const pulseClass = isNaidivse && onboardingVisible ? 'animate-pulse' : ''
 
+  const bottomClass = hasBottomBar
+    ? 'bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
+    : 'bottom-[calc(1rem+env(safe-area-inset-bottom,0px))]'
+
   return (
     // Relative container so the popout can be positioned absolutely above the FAB
-    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] end-4 z-40">
+    <div className={`fixed ${bottomClass} end-4 z-[45]`}>
       <div className="relative">
         <FABOnboardingPopout
           text={tr.fab_homesick_onboarding_text}
@@ -79,7 +91,7 @@ export function SearchSimilarButton({ lang, brandSlug }: Props) {
         </button>
       </div>
 
-      <SearchSimilarModal lang={currentLang} isOpen={open} onClose={() => setOpen(false)} />
+      <SearchSimilarModal lang={currentLang} isOpen={open} onClose={handleClose} />
     </div>
   )
 }

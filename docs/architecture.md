@@ -121,6 +121,24 @@ Client Components rufen `/api/v1/…` relativ auf (geht durch den Rewrite).
 
 Jede Brand (`pundo`, `naidivse`) hat eine Config in `src/config/brands/<brand>.ts` mit Theme, Assets, Features-Flags (`catsfirst`, `homesickTeaser`, `activityFeed`, `mcp`, …). Die aktive Brand wird per Host-Header aus dem Backend ermittelt; `src/config/brands/index.ts` ist der Barrel.
 
+## z-index-Skala (verbindlich)
+
+Alle `fixed`- und `sticky`-Elemente folgen dieser Skala. Kein Element darf einen Wert außerhalb dieser Levels verwenden ohne expliziten Architektur-Entscheid.
+
+| Level | z-Wert | Elemente |
+|---|---|---|
+| Sticky/Static Nav | `z-20` | `Header` (sticky top), SearchContent-Sticky |
+| Relative Dropdowns | `z-30` | `LanguageSwitcher`-Dropdown, `UserMenu` |
+| Permanente Fixed-Nav | `z-40` | `BottomTabBar` nav |
+| FABs | `z-[45]` | `SearchSimilarButton`, `SpottedGlobalButton` |
+| FAB-Popout | `z-[47]` | `FABOnboardingPopout` (absolute über FAB) |
+| Modale / Overlays | `z-50` | Alle portalierten Modale, `BottomTabBar`-Drawer |
+| Kritische Overlays | `z-[60]` | `LanguagePickerOverlay`, `SplashScreen` |
+
+**Invariante:** FABs (z-45) > Fixed-Nav (z-40). Portaled Modale (z-50) > FABs. Kritische Overlays (z-60) > alles andere.
+
+**Modale-Pflicht:** Jedes `fixed inset-0`-Modal muss via `ReactDOM.createPortal(content, document.body)` gerendert werden, damit sein z-50 im Root-Stacking-Context gilt — nicht relativ zu einem Eltern-Stacking-Context.
+
 ## Bekannte Trade-offs
 
 | Entscheidung | Begründung |

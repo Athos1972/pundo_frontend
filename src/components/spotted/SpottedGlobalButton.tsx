@@ -125,7 +125,7 @@ export function SpottedGlobalButton({ lang, brandSlug }: Props) {
     <div className="md:hidden">
       {/* Floating Action Button with onboarding popout */}
       {state === 'idle' && (
-        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-40">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] end-4 z-[45]">
           <div className="relative">
             <FABOnboardingPopout
               text={tr.fab_spotted_onboarding_text}

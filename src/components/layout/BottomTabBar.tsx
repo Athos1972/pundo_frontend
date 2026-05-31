@@ -19,9 +19,11 @@ interface BottomTabBarProps {
   lang: Lang
   /** Matches BrandConfig.features.recentlyViewed */
   recentlyViewed: 'hidden' | 'home' | 'drawer'
+  /** Hide the nav bar (but keep drawer functional) while a modal overlay is open */
+  hidden?: boolean
 }
 
-export function BottomTabBar({ lang, recentlyViewed }: BottomTabBarProps) {
+export function BottomTabBar({ lang, recentlyViewed, hidden = false }: BottomTabBarProps) {
   const currentLang = useLang(lang)
   const tr = t(currentLang)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -33,7 +35,7 @@ export function BottomTabBar({ lang, recentlyViewed }: BottomTabBarProps) {
     <>
       {/* Bar — mobile only */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border flex items-stretch"
+        className={`md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border flex items-stretch${hidden ? ' hidden' : ''}`}
         aria-label="Bottom navigation"
       >
         {/* Recently Viewed tab */}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useSession } from '@/components/auth/SessionProvider'
 import { useRouter } from 'next/navigation'
 import { t } from '@/lib/translations'
@@ -70,7 +71,7 @@ export function SearchSimilarModal({ lang, isOpen, onClose }: Props) {
 
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       role="dialog"
@@ -154,6 +155,7 @@ export function SearchSimilarModal({ lang, isOpen, onClose }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

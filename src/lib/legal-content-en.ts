@@ -68,7 +68,7 @@ export const legalContentEn: LegalContentByLang = {
       },
       {
         heading: 'Cookies and Analytics',
-        body: 'Strictly necessary cookies are required for the Service to function (session management, language preferences, security) and cannot be disabled.\n\nAnalytics: We use Plausible Analytics, a privacy-focused, self-hosted tool. Plausible does not use cookies, does not collect personal data, and is fully GDPR-compliant without requiring cookie consent. Our Plausible instance runs on our own infrastructure at plausible.pundo.cy — your analytics data never leaves our servers.\n\nFunctional cookies remember your preferences (e.g. preferred language, location).',
+        body: 'Strictly necessary cookies are required for the Service to function (session management, language preferences, security) and cannot be disabled.\n\nAnalytics: We use Plausible Analytics, a privacy-focused, self-hosted tool. Plausible does not use cookies, does not collect personal data, and is fully GDPR-compliant. Our Plausible instance runs on our own infrastructure at plausible.pundo.cy — your analytics data never leaves our servers.\n\nMarketing cookies (optional, requires your consent): With your explicit consent we use the Meta (Facebook) Pixel to measure advertising conversions and optimise our campaigns. The Pixel sets cookies (_fbp, _fbc) and transmits usage data to Meta Platforms, Inc., USA. Data transfer to the USA is based on Standard Contractual Clauses. You can grant or withdraw consent at any time via "Cookie settings" in the footer.\n\nFunctional cookies remember your preferences (e.g. preferred language, location).',
       },
       {
         heading: 'Data Sharing',

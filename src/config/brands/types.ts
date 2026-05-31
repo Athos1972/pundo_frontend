@@ -61,6 +61,8 @@ export interface BrandConfig {
     plausibleHost: string
     /** Overrides the default script src — use for proxied/obfuscated Plausible scripts */
     plausibleScriptSrc?: string
+    /** Meta/Facebook Pixel ID — only set for brands that run Meta Ads. Requires consent-gate. */
+    metaPixelId?: string
   }
 
   features: {

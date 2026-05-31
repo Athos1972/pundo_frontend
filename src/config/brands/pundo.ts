@@ -50,6 +50,7 @@ export const pundoConfig: BrandConfig = {
   analytics: {
     plausibleDomain: 'pundo.cy',
     plausibleHost: 'https://plausible.pundo.cy',
+    metaPixelId: '315772795678654',
   },
 
   features: {

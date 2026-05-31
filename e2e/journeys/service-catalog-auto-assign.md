@@ -30,11 +30,17 @@ last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
    - S6: Customer-Sicht: Listings sichtbar
    - S7: Customer-Sicht: Preis sichtbar
 
+> **Timing-Hinweis (ab onboarding-items-konsolidierung-20260531):**
+> Draft-Listings (`available=False`) entstehen jetzt **beim Submit** des Onboarding-Wizards,
+> nicht erst bei der Admin-Freigabe. Bei der Freigabe werden sie auf `available=True` gesetzt
+> (UPSERT). S4 muss daher bereits nach Submit testbar sein; S6/S7 weiterhin erst nach Approval.
+
 ## Abhängigkeiten
 
 - Backend: Port 8500, Fixtures `e2e_auto_assign_items.csv` + `e2e_auto_assign_mappings.csv` eingespielt
 - Domäne `elektriker` + Specialty `solaranlagen` müssen `auto_assign=true`-Mappings haben
 - Backend-Schritte 1–3 wurden in separatem Backend-E2E-Pass (21/21 PASS) verifiziert
+- **Ab Konsolidierung:** Backend muss `create_draft_listings_after_submit()` deployt haben
 
 ## touches-modules
 

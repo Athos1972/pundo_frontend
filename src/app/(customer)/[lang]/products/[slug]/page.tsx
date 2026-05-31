@@ -21,6 +21,7 @@ import { TrackProductView } from '@/components/recently-viewed/TrackProductView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { RelatedCategoriesCard } from '@/components/product/RelatedCategoriesCard'
 import { FavoriteButton } from '@/components/product/FavoriteButton'
+import { PixelViewContent } from '@/components/consent/PixelViewContent'
 
 interface Props {
   params: Promise<{ lang: string; slug: string }>
@@ -126,6 +127,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   return (
     <main className="min-h-screen bg-bg">
+      <PixelViewContent contentName={name} contentId={slug} contentType="product" />
       <TrackProductView
         product={{
           id: product.id,

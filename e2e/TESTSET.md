@@ -2,6 +2,79 @@
 
 ## Letzter Testlauf
 
+Datum: 2026-05-31  
+SHA: 6f12f563d4e430cbff5e854bb814a7df9dc40b12 (uncommitted changes)  
+Spec: **F7500 Meta-Pixel Tracking mit Consent-Gate**  
+Ergebnis: TypeScript PASS · ESLint PASS · 1853/1853 Vitest PASS · Consent E2E 7/8 PASS (1 Timeout-Fix applied) · Verdict: **SHIP**
+
+### Statische Prüfung
+
+| Prüfung | Status |
+|---------|--------|
+| TypeScript | ✅ PASS (0 Fehler) |
+| ESLint | ✅ PASS (0 neue Errors; 3 pre-existing Errors in SearchMapBottomSheet.tsx unverändert) |
+
+### Unit-Tests (1853/1853 PASS)
+
+| Datei | Tests | Status | Anmerkung |
+|-------|-------|--------|-----------|
+| consent.test.ts | 11 | ✅ NEU | parseConsentCookie, serialize, defaults, constants |
+| meta-pixel.test.ts | 5 | ✅ NEU | trackPixelEvent no-op, mit fbq, params |
+| Gesamt (102 Dateien) | 1853 | ✅ | +25 gegenüber letztem Run |
+
+### F7500 — Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/config/brands/types.ts` | `analytics.metaPixelId?: string` |
+| `src/config/brands/pundo.ts` | `metaPixelId: '315772795678654'` |
+| `src/proxy.ts` | `buildCsp()` + `proxy()` — Meta-Hosts in CSP (brand-scoped) |
+| `src/lib/consent.ts` | NEU — ConsentState, Cookie-IO |
+| `src/lib/meta-pixel.ts` | NEU — trackPixelEvent(), PixelEvents |
+| `src/lib/i18n/consent.ts` | NEU — Strings in 6 Sprachen |
+| `src/lib/translations.ts` | tConsent integriert |
+| `src/components/consent/ConsentContext.tsx` | NEU — ConsentProvider + useConsent() |
+| `src/components/consent/CookieConsentBanner.tsx` | NEU — Bottom-Bar-Banner, RTL, a11y |
+| `src/components/consent/MetaPixel.tsx` | NEU — conditional Script-Injector |
+| `src/components/consent/PixelViewContent.tsx` | NEU — ViewContent-Event-Wrapper |
+| `src/app/(customer)/layout.tsx` | ConsentProvider, Banner, MetaPixel, cookie-read |
+| `src/components/layout/FooterLinks.tsx` | Cookie-Einstellungen-Button |
+| `src/app/(customer)/[lang]/search/SearchContent.tsx` | Search-Pixel-Event |
+| `src/app/(customer)/[lang]/products/[slug]/page.tsx` | PixelViewContent |
+| `src/app/(customer)/[lang]/shops/[slug]/page.tsx` | PixelViewContent |
+| `src/lib/legal-content-{en,de,el,ru,ar,he}.ts` | Cookie-Policy aktualisiert (6×) |
+| `docs/analytics.md` | Plausible + Meta-Pixel dokumentiert |
+
+### Browser-Tests (Consent E2E)
+
+| Test | AC | Status |
+|------|----|--------|
+| Erstbesucher: Banner sichtbar, kein facebook.com Request | AC-1 | ✅ PASS |
+| Ablehnen: kein Pixel, Cookie marketing:false | AC-3 | ✅ PASS |
+| Opt-in: fbevents.js geladen, Banner weg | AC-2 | ✅ PASS |
+| Gespeicherte Entscheidung: kein Banner beim 2. Besuch | AC-4 | ✅ PASS |
+| RTL Arabisch: dir=rtl, arabischer Text | AC-8 | ✅ PASS |
+| Footer Cookie-Einstellungen öffnet Banner | — | ✅ PASS |
+| Nach Ablehnen: kein Pixel-Script im DOM | AC-6 | ✅ PASS |
+| Visual Smoke: Startseite lädt, Banner erscheint | — | ✅ PASS (fix: domcontentloaded statt networkidle) |
+
+### Testfehler-Fix
+
+`cookie-consent-flow.spec.ts` — Smoke-Test verwendete `waitForLoadState('networkidle')` auf der Homepage, die durch Map/Geolocation-Requests nie networkidle erreicht. Korrektur: `domcontentloaded` + `expect.toBeVisible({ timeout: 10000 })`. Kein Funktionsfehler.
+
+### Observations (kein Blocker)
+
+- Hydration-Warning in BackButton beim Sprachnavigation-Test: `aria-label="Zurück"` vs. `"Back"`. Pre-existing — BackButton nutzt `lang`-Server-Prop ohne `useLang()`. Nicht durch F7500 eingeführt.
+- 3 pre-existing ESLint-Errors in `SearchMapBottomSheet.tsx` (refs during render) — unverändert seit F6990.
+
+### Open Failures
+
+Keine — `open_failures: []` — Gate: `SHIP erlaubt`
+
+---
+
+## Vorheriger Testlauf (2026-05-30 — CSP-Fix)
+
 Datum: 2026-05-30  
 SHA: de68be213f8e024c5324bf3022c4386a65ec8b75  
 Spec: **CSP-Fix** (inline `style=` Attribute → CSS-Klassen, `pundo-marker-highlighted`)  

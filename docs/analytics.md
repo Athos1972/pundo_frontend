@@ -2,75 +2,83 @@
 
 ## Überblick
 
-pundo_frontend verwendet **[Plausible Analytics](https://plausible.io)** — ein cookieloses, datenschutzkonformes Tool für Seitenaufruf-Tracking.
+pundo_frontend verwendet zwei unabhängige Analytics-Systeme:
 
-- Kein Cookie-Consent-Banner erforderlich
-- Keine Einzelnutzer-Verfolgung
-- Keine Datenweitergabe an Dritte
-- Kein npm-Paket — wird als CDN-Script geladen
+| System | Zweck | Consent nötig? |
+|---|---|---|
+| **Plausible Analytics** | Cookieloses Seitenaufruf-Tracking | Nein |
+| **Meta (Facebook) Pixel** | Ad-Conversion-Tracking | Ja — Marketing-Opt-in |
 
 ---
 
-## Implementierung
+## 1. Plausible Analytics
 
-**Datei:** `src/app/(customer)/layout.tsx` (Zeilen 57–64)
+Cookielos, selbst-gehostet auf `plausible.pundo.cy`. Kein Consent-Banner erforderlich.
 
-```tsx
-{process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
-  <Script
-    defer
-    data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
-    src="https://plausible.io/js/script.js"
-    strategy="afterInteractive"
-  />
-)}
+**Brand-Config:** `brand.analytics.plausibleDomain` + `plausibleHost`
+
+**Rendering:** `src/app/(customer)/layout.tsx` — wird als `next/script afterInteractive` geladen. Nur für Brands mit gesetztem `plausibleDomain`.
+
+**Custom Events:** `window.plausible?.('event_name', { props: { ... } })`
+
+---
+
+## 2. Meta (Facebook) Pixel — Consent-Gate
+
+Der Meta-Pixel wird **ausschließlich nach Marketing-Opt-in** geladen. Kein Pre-Load, kein cookieloses Tracking.
+
+### Brand-Config
+
+```typescript
+// src/config/brands/pundo.ts
+analytics: {
+  metaPixelId: '315772795678654',
+}
 ```
 
-Das Script wird **nur geladen**, wenn `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` gesetzt ist. Ist die Variable leer (z. B. lokal), passiert nichts.
+Nur Brands mit gesetztem `metaPixelId` laden den Pixel und zeigen die Marketing-Kategorie im Consent-Banner.
 
-**Scope:** Nur das Customer-Layout — Shop-Admin und System-Admin tracken nichts.
+### Komponenten
 
----
+| Datei | Zweck |
+|---|---|
+| `src/lib/consent.ts` | `ConsentState`-Typ, Cookie-IO, Schema-Version |
+| `src/lib/meta-pixel.ts` | `trackPixelEvent()` no-op-safe Wrapper |
+| `src/components/consent/ConsentContext.tsx` | `ConsentProvider` + `useConsent()` |
+| `src/components/consent/CookieConsentBanner.tsx` | Bottom-Bar-Banner, RTL-fähig, a11y |
+| `src/components/consent/MetaPixel.tsx` | Conditional `next/script` Injector |
+| `src/components/consent/PixelViewContent.tsx` | Client-Wrapper für ViewContent-Events |
 
-## Konfiguration
+### Consent-Cookie
 
-In `.env.local.example`:
+- Name: `app_cookie_consent`
+- Format: `{"v":1,"necessary":true,"statistics":true,"marketing":false}` (URL-encoded)
+- MaxAge: 15 552 000 s (6 Monate)
+- SameSite: Lax
 
-```env
-# Plausible Analytics (cookieless, no consent banner needed)
-# Set to your domain to enable analytics. Leave unset to disable (e.g. in development).
-# NEXT_PUBLIC_PLAUSIBLE_DOMAIN=pundo.cy
-```
+### Standard-Events
 
-| Umgebung       | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` |
-|----------------|-------------------------------|
-| Produktion     | `pundo.cy`                    |
-| Entwicklung    | nicht gesetzt (disabled)      |
-| Test / E2E     | nicht gesetzt (disabled)      |
+| Event | Ausgelöst in |
+|---|---|
+| `PageView` | `MetaPixel.tsx` beim Init |
+| `Search` | `SearchContent.tsx` — bei geänderter Query |
+| `ViewContent` | `PixelViewContent.tsx` auf Produkt-/Shop-Detailseite |
 
----
+### CSP
 
-## Custom Events
+`src/proxy.ts` erweitert `connect-src` und `img-src` um Meta-Hosts **nur wenn** `brand.analytics.metaPixelId` gesetzt ist:
+- `connect-src`: `https://www.facebook.com https://connect.facebook.net`
+- `img-src`: `https://www.facebook.com`
 
-Aktuell werden **keine Custom Events** getrackt — nur automatische Seitenaufrufe via Plausible-Script.
+`script-src` braucht keinen Meta-Host — `strict-dynamic` propagiert Trust von der nonce-signierten Inline-Init auf `fbevents.js`.
 
-Falls Custom Events benötigt werden, kann `plausible()` direkt aufgerufen werden:
+### Widerruf
 
-```ts
-// Beispiel (noch nicht implementiert)
-window.plausible?.('checkout_started', { props: { shop: slug } })
-```
-
----
-
-## Datenschutz & rechtliche Verankerung
-
-Der Einsatz von Plausible ist in der **Privacy Policy** dokumentiert (`src/lib/legal-content.ts`), in allen 6 unterstützten Sprachen (EN, DE, RU, EL, AR, HE):
-
-> "We use Plausible Analytics (plausible.io) to understand how our site is used. Plausible is cookieless and privacy-friendly — it does not use cookies, does not track individual users, and does not share data with third parties. No cookie consent is required."
+Footer-Link „Cookie-Einstellungen" öffnet den Banner erneut. Bei Widerruf: `fbq('consent','revoke')` + best-effort Löschung von `_fbp`/`_fbc`.
 
 ---
 
 ## Dashboard-Zugang
 
-Das Plausible-Dashboard für `pundo.cy` ist unter [plausible.io](https://plausible.io) erreichbar (Login-Credentials außerhalb dieses Repos).
+- **Plausible:** `https://plausible.pundo.cy` (Credentials außerhalb dieses Repos)
+- **Meta Pixel:** Facebook Ads Manager → Events Manager → Pixel `315772795678654`

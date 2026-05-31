@@ -2,6 +2,7 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { searchAll, searchProducts, getCategories, getRelatedCategories } from '@/lib/api'
+import { trackPixelEvent, PixelEvents } from '@/lib/meta-pixel'
 import { t } from '@/lib/translations'
 import type { Lang } from '@/lib/lang'
 import { useGeolocation } from '@/lib/useGeolocation'
@@ -164,6 +165,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   useEffect(() => {
     itemRefs.current.clear()
   }, [q, categoryId])
+
+  // Fire Meta Pixel Search event when query changes and results are loaded
+  useEffect(() => {
+    if (!q || loading) return
+    trackPixelEvent(PixelEvents.Search, { search_string: q })
+  }, [q, loading])
 
   const loadMore = useCallback(() => load(false, offset), [load, offset])
   const { sentinelRef, isSupported } = useInfiniteScroll({

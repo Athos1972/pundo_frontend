@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { Space_Grotesk, DM_Sans, Unbounded, Golos_Text } from 'next/font/google'
 import Script from 'next/script'
 import '../globals.css'
@@ -17,6 +17,10 @@ import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import { HomesickAndBar } from '@/components/layout/HomesickAndBar'
 import { LanguagePickerOverlay } from '@/components/ui/LanguagePickerOverlay'
+import { ConsentProvider } from '@/components/consent/ConsentContext'
+import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner'
+import { MetaPixel } from '@/components/consent/MetaPixel'
+import { parseConsentCookie, CONSENT_COOKIE } from '@/lib/consent'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -82,15 +86,17 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [lang, brand, headerStore] = await Promise.all([
+  const [lang, brand, headerStore, cookieStore] = await Promise.all([
     getLangServer(),
     getBrandFromHeaders(),
     headers(),
+    cookies(),
   ])
   const dir = isRTL(lang) ? 'rtl' : 'ltr'
   const session = await getCustomerSession(lang)
   const nonce = headerStore.get('x-nonce') ?? undefined
   const themeCss = buildThemeCss(brand)
+  const initialConsent = parseConsentCookie(cookieStore.get(CONSENT_COOKIE)?.value)
 
   return (
     <html lang={lang} dir={dir}>
@@ -121,20 +127,26 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             />
           </>
         )}
-        <DirSync fallbackLang={lang} />
-        <SplashScreen splashSvg={brand.assets.splashSvg} />
-        <LanguagePickerOverlay serverLang={lang} />
-        <TooltipProvider>
-          <SessionProvider initialSession={session}>
-            <FavoritesProvider>
-              <Header lang={lang} />
-              {children}
-              <Footer lang={lang} />
-              <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
-              <HomesickAndBar lang={lang} brandSlug={brand.slug} recentlyViewed={brand.features.recentlyViewed} />
-            </FavoritesProvider>
-          </SessionProvider>
-        </TooltipProvider>
+        <ConsentProvider initialConsent={initialConsent}>
+          <DirSync fallbackLang={lang} />
+          <SplashScreen splashSvg={brand.assets.splashSvg} />
+          <LanguagePickerOverlay serverLang={lang} />
+          <TooltipProvider>
+            <SessionProvider initialSession={session}>
+              <FavoritesProvider>
+                <Header lang={lang} />
+                {children}
+                <Footer lang={lang} />
+                <SpottedGlobalButton lang={lang} brandSlug={brand.slug} />
+                <HomesickAndBar lang={lang} brandSlug={brand.slug} recentlyViewed={brand.features.recentlyViewed} />
+              </FavoritesProvider>
+            </SessionProvider>
+          </TooltipProvider>
+          <CookieConsentBanner lang={lang} />
+          {brand.analytics.metaPixelId && (
+            <MetaPixel pixelId={brand.analytics.metaPixelId} nonce={nonce} />
+          )}
+        </ConsentProvider>
       </body>
     </html>
   )

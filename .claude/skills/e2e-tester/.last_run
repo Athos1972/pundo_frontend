@@ -1,10 +1,10 @@
 {
-  "sha": "de68be213f8e024c5324bf3022c4386a65ec8b75",
-  "timestamp": "2026-05-30T15:17:05.246316+00:00",
+  "sha": "6f12f563d4e430cbff5e854bb814a7df9dc40b12",
+  "timestamp": "2026-05-31T16:02:44.065358+00:00",
   "verdict": "SHIP",
   "open_failures": [],
   "coverage_snapshot": {
-    "unit_tests": "1828/1828",
+    "unit_tests": "1853/1853",
     "coverage_gaps": [
       "ShopMapClient.tsx (Leaflet/Canvas)"
     ]

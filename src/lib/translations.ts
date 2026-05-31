@@ -11,6 +11,7 @@ import { accountTranslations } from './i18n/account'
 import { communityTranslations } from './i18n/community'
 import { guidesTranslations } from './i18n/guides'
 import { contactTranslations } from './i18n/contact'
+import { consentTranslations } from './i18n/consent'
 
 // Re-export namespace helpers for direct use
 export { tCommon, type CommonTranslations } from './i18n/common'
@@ -22,6 +23,7 @@ export { tAccount, type AccountTranslations } from './i18n/account'
 export { tCommunity, type CommunityTranslations } from './i18n/community'
 export { tGuides, type GuidesTranslations } from './i18n/guides'
 export { tContact, type ContactTranslations } from './i18n/contact'
+export { tConsent, type ConsentTranslations } from './i18n/consent'
 
 export const translations = {
   en: {
@@ -34,6 +36,7 @@ export const translations = {
     ...communityTranslations.en,
     ...guidesTranslations.en,
     ...contactTranslations.en,
+    ...consentTranslations.en,
   },
   de: {
     ...commonTranslations.de,
@@ -45,6 +48,7 @@ export const translations = {
     ...communityTranslations.de,
     ...guidesTranslations.de,
     ...contactTranslations.de,
+    ...consentTranslations.de,
   },
   ru: {
     ...commonTranslations.ru,
@@ -56,6 +60,7 @@ export const translations = {
     ...communityTranslations.ru,
     ...guidesTranslations.ru,
     ...contactTranslations.ru,
+    ...consentTranslations.ru,
   },
   el: {
     ...commonTranslations.el,
@@ -67,6 +72,7 @@ export const translations = {
     ...communityTranslations.el,
     ...guidesTranslations.el,
     ...contactTranslations.el,
+    ...consentTranslations.el,
   },
   ar: {
     ...commonTranslations.ar,
@@ -78,6 +84,7 @@ export const translations = {
     ...communityTranslations.ar,
     ...guidesTranslations.ar,
     ...contactTranslations.ar,
+    ...consentTranslations.ar,
   },
   he: {
     ...commonTranslations.he,
@@ -89,6 +96,7 @@ export const translations = {
     ...communityTranslations.he,
     ...guidesTranslations.he,
     ...contactTranslations.he,
+    ...consentTranslations.he,
   },
 } as const
 

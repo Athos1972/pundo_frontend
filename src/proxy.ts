@@ -88,9 +88,12 @@ const PUBLIC_SHOP_ADMIN_PATHS = [
 // Public paths under /admin/ that do NOT require the admin_token cookie.
 const PUBLIC_ADMIN_PATHS = ['/admin/login']
 
-const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = false): string => {
+const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = false, metaPixelEnabled = false): string => {
   const analyticsConnectSrc = analyticsHost ? ` ${analyticsHost}` : ''
   const analyticsScriptSrc = analyticsHost ? ` ${analyticsHost}` : ''
+  // Meta Pixel needs connect-src + img-src. script-src is covered by strict-dynamic.
+  const metaConnectSrc = metaPixelEnabled ? ' https://www.facebook.com https://connect.facebook.net' : ''
+  const metaImgSrc = metaPixelEnabled ? ' https://www.facebook.com' : ''
   const isDev = process.env.NODE_ENV === 'development'
 
   const directives = [
@@ -109,9 +112,9 @@ const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = fal
       : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY=' 'unsafe-hashes' 'sha256-U7qpK+rHoFOZHvmwTPXyOVr1wpK+zdAg1mRTaYEGL9g='`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
-    `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co`,
+    `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co${metaImgSrc}`,
     `font-src 'self'`,
-    `connect-src 'self'${analyticsConnectSrc} https://challenges.cloudflare.com https://app.trysoro.com`,
+    `connect-src 'self'${analyticsConnectSrc}${metaConnectSrc} https://challenges.cloudflare.com https://app.trysoro.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
@@ -189,7 +192,7 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(nonceBytes).toString('base64')
   // /blog embeds the Soro widget which injects inline styles — relax style-src for that route only.
   const isBlogPage = pathname === '/blog' || /^\/[a-z]{2}\/blog$/.test(pathname)
-  const csp = buildCsp(nonce, brand.analytics.plausibleHost, isBlogPage)
+  const csp = buildCsp(nonce, brand.analytics.plausibleHost, isBlogPage, !!brand.analytics.metaPixelId)
 
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)

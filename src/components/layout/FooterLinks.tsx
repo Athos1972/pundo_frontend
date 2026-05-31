@@ -2,13 +2,17 @@
 import Link from 'next/link'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
+import { tConsent } from '@/lib/translations'
 import { useLang } from '@/lib/useLang'
 import { localePath } from '@/lib/routing'
+import { useConsent } from '@/components/consent/ConsentContext'
 
 /** Footer nav links — left column. */
 export function FooterLinks({ fallbackLang, hasForShops }: { fallbackLang: Lang; hasForShops: boolean }) {
   const lang = useLang(fallbackLang)
   const tr = t(lang)
+  const trc = tConsent(lang)
+  const { openSettings } = useConsent()
 
   return (
     <nav aria-label="legal" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted">
@@ -41,6 +45,12 @@ export function FooterLinks({ fallbackLang, hasForShops }: { fallbackLang: Lang;
       <Link href={localePath(lang, '/legal/terms')} className="hover:text-text transition-colors">
         {tr.footer_terms}
       </Link>
+      <button
+        onClick={openSettings}
+        className="hover:text-text transition-colors text-left"
+      >
+        {trc.footer_cookie_settings}
+      </button>
     </nav>
   )
 }

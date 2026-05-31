@@ -32,6 +32,7 @@ import { RelatedShopsWidget } from '@/components/shop/RelatedShopsWidget'
 import { ShopOfferCard } from '@/components/shop/ShopOfferCard'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { PixelViewContent } from '@/components/consent/PixelViewContent'
 
 interface Props { params: Promise<{ lang: string; slug: string }> }
 
@@ -121,6 +122,7 @@ export default async function ShopPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-bg">
+      <PixelViewContent contentName={shop.name ?? slug} contentId={slug} contentType="shop" />
       <TrackShopView
         shop={{
           id: shop.id,

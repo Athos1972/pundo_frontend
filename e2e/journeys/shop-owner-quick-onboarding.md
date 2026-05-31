@@ -1,7 +1,7 @@
 ---
 id: shop-owner-quick-onboarding
 title: Shop-Owner Schnell-Onboarding Wizard (F5910)
-status: implemented
+status: approved
 spec-file: e2e/journeys/shop-owner-quick-onboarding.spec.ts
 priority: P1
 owner-agent: coder
@@ -11,21 +11,26 @@ touches-modules:
   - src/components/shop-admin/onboarding/**
   - src/lib/onboarding/**
   - src/lib/shop-admin-translations.ts
+  - src/components/shop-admin/OfferList.tsx
 touches-roles:
   - shop-owner
+  - admin
 touches-states:
   - OnboardingDraft:partial
   - OnboardingDraft:complete
   - ShopOwner.status:pending_email_verification
-status-changed-at: 2026-05-01T13:15:00Z
-status-changed-by-spec: schnell-onboarding-mobil-20260501
+  - ShopOwner.status:approved
+  - ShopListing.available:false
+  - ShopListing.available:true
+status-changed-at: 2026-05-31T00:00:00Z
+status-changed-by-spec: onboarding-items-konsolidierung-20260531
 last-run: 2026-05-15T05:30:00Z
 last-result: PASS
 ---
 
 # Journey: shop-owner-quick-onboarding
 
-**Status:** implemented (6/6 PASS)
+**Status:** approved (7 Tests — T7 noch nicht implementiert, vgl. onboarding-items-konsolidierung-20260531)
 **Priority:** P1
 **Proposed in:** schnell-onboarding-mobil-20260501
 
@@ -88,6 +93,20 @@ F5910-specific acceptance criteria for the 6-step onboarding wizard:
 3. Assert "Tradesperson" tile visible
 4. Navigate to /shop-admin/onboarding (lang=de)
 5. Assert "Schritt 1 von 6" (or "Step 1 of 6" depending on translation key) + "Handwerker" visible
+
+### T7: Post-Approval Item-Integrität (B5910-003 Konsolidierung)
+
+> **Voraussetzung:** Backend deployt mit `create_draft_listings_after_submit()` + UPSERT-Approval.
+
+1. Führe T1 (Happy Path) vollständig durch → Shop wird angelegt, Status `pending`
+2. Sofort nach Submit (vor Approval): Einloggen als Shop-Owner → `/shop-admin/offers`
+3. Assert: Draft-Listings sichtbar (`source='auto_seeded'`, Badge "Entwurf" + "Aktivieren"-Button)
+4. Assert: `offer.item.category_id` ist nicht null (API-Response prüfen via `GET /shop-owner/listings`)
+5. Assert: kein `item.slug` beginnt mit `tmpl-` (kein System-A-Item)
+6. Als Admin: Shop auf `approved` setzen
+7. Zurück im Shop-Admin → Seite neu laden
+8. Assert: Listings sind jetzt `available=true` (kein "Entwurf"-Badge mehr auf den Items)
+9. Assert: `item.category_id` weiterhin nicht null
 
 ## Notes
 

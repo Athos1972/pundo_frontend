@@ -1,7 +1,7 @@
 ---
 id: shop-owner-quick-onboarding
 title: Shop-Owner Schnell-Onboarding Wizard (F5910)
-status: approved
+status: implemented
 spec-file: e2e/journeys/shop-owner-quick-onboarding.spec.ts
 priority: P1
 owner-agent: coder
@@ -94,9 +94,10 @@ F5910-specific acceptance criteria for the 6-step onboarding wizard:
 4. Navigate to /shop-admin/onboarding (lang=de)
 5. Assert "Schritt 1 von 6" (or "Step 1 of 6" depending on translation key) + "Handwerker" visible
 
-### T7: Post-Approval Item-Integrität (B5910-003 Konsolidierung)
+### T9: Post-Approval Item-Integrität (B5910-003 Konsolidierung)
 
-> **Voraussetzung:** Backend deployt mit `create_draft_listings_after_submit()` + UPSERT-Approval.
+> **Hinweis:** Im Spec als T9 implementiert (T7 = v1-Draft-Cleanup, T8 = Name-Validierung bereits vergeben).  
+> **Voraussetzung:** Backend deployt mit `create_draft_listings_after_submit()` + UPSERT-Approval + Visual-Backfill.
 
 1. Führe T1 (Happy Path) vollständig durch → Shop wird angelegt, Status `pending`
 2. Sofort nach Submit (vor Approval): Einloggen als Shop-Owner → `/shop-admin/offers`

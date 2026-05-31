@@ -4,6 +4,12 @@
  * Tests draft persistence, discard flow, conditional specialties, email conflict,
  * progress bar and i18n for the 6-step onboarding wizard.
  *
+ * T9 additionally verifies post-approval item integrity (B5910-003):
+ * - Draft listings have category_id + no tmpl-* slugs after submit
+ * - Listings activate after admin approval
+ * - Items have photos (requires Visual-Backfill)
+ * - Customer search finds the shop's services after approval
+ *
  * Backend must be running at 8500 with pundo_test seeded (onboarding domains).
  * Frontend must be running at 3500.
  *
@@ -12,6 +18,7 @@
 
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
+import { adminLogin, shopOwnerLogin } from './_helpers'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -427,6 +434,156 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await expect(tiles.first(), 'T7: wizard must render step 1 fresh').toBeVisible({
       timeout: 10_000,
     })
+  })
+
+  // ── T9: Post-Approval Item-Integrität (B5910-003 — benötigt Backend-Konsolidierung) ──────
+
+  test('T9 — Post-Approval Item-Integrität: category_id + Foto + Customer-Suche (B5910-003)', async ({ page }) => {
+    // Marked fixme: requires backend to deploy:
+    //   1. create_draft_listings_after_submit() (System-B drafts at submit)
+    //   2. assign_services_after_onboarding() UPSERT (activate at approval)
+    //   3. backfill_seed_visuals_system_b.py (ItemPhoto rows for System-B items)
+    // Currently System-A (tmpl-* / category_id=NULL) runs instead.
+    // Remove test.fixme() once backend is deployed and verified.
+
+    const email = `${PREFIX}-t9@pundo-e2e.io`
+    const password = 'E2eTestPassword!99'
+
+    // ── 1. Onboarding-Submit via API ─────────────────────────────────────────
+    const submitRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider_type: 'handwerker',
+        domain_slugs: ['elektriker'],
+        specialty_slugs: ['solaranlagen'],
+        location: {
+          lat: 34.917,
+          lng: 33.636,
+          address: 'T9 Street, Larnaca',
+          is_b2c_storefront: true,
+        },
+        contact: { phone: '+35799000099' },
+        shop_name: `${PREFIX}-t9-shop`,
+        credentials: { type: 'email', email, password, name: `${PREFIX} T9` },
+        lang: 'de',
+      }),
+    })
+    expect(submitRes.ok, 'T9: onboarding submit must succeed').toBeTruthy()
+    const submitData = await submitRes.json() as { shop_id?: number; shop?: { id: number }; owner_id?: number }
+    const shopId: number = submitData.shop_id ?? submitData.shop?.id ?? 0
+    expect(shopId, 'T9: submit must return shop_id').toBeGreaterThan(0)
+
+    // ── 2. Listings sofort nach Submit prüfen (vor Approval) ─────────────────
+    const shopToken = await shopOwnerLogin(email, password)
+
+    const listingsRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/listings`, {
+      headers: { Cookie: `shop_owner_token=${shopToken}` },
+    })
+    expect(listingsRes.ok, 'T9: GET /shop-owner/listings must succeed').toBeTruthy()
+
+    type ListingItem = {
+      slug: string
+      category_id: number | null
+      photos: { url: string; thumbnail_url?: string }[]
+    }
+    type Listing = {
+      item: ListingItem
+      available: boolean
+      source: string
+    }
+    const listingsData = await listingsRes.json() as { items?: Listing[] } | Listing[]
+    const listings: Listing[] = Array.isArray(listingsData) ? listingsData : (listingsData.items ?? [])
+
+    expect(listings.length, 'T9: must have auto-seeded draft listings immediately after submit').toBeGreaterThan(0)
+
+    for (const listing of listings) {
+      expect(listing.source, `T9: listing ${listing.item.slug} must be auto_seeded`).toBe('auto_seeded')
+      expect(listing.available, `T9: draft must be available=false before approval`).toBe(false)
+      expect(listing.item.category_id, `T9: item ${listing.item.slug} must have category_id (not null)`).not.toBeNull()
+      expect(listing.item.slug, `T9: no tmpl-* slugs allowed (System-A removed)`).not.toMatch(/^tmpl-/)
+      // Photo-check: requires Visual-Backfill to have run
+      expect(
+        listing.item.photos.length,
+        `T9: item ${listing.item.slug} must have ≥1 ItemPhoto after backfill`
+      ).toBeGreaterThan(0)
+    }
+
+    // ── 3. Admin-Approval ────────────────────────────────────────────────────
+    const adminToken = await adminLogin()
+
+    // Find owner_id via admin shop-owners list
+    const ownersRes = await fetch(
+      `${BACKEND_URL}/api/v1/admin/shop-owners?limit=200`,
+      { headers: { Cookie: `admin_token=${adminToken}` } }
+    )
+    const ownersData = await ownersRes.json() as { items?: { id: number; shop_id: number }[] }
+    const owner = (ownersData.items ?? []).find((o) => o.shop_id === shopId)
+    expect(owner, 'T9: must find shop-owner in admin list').toBeTruthy()
+
+    const approveRes = await fetch(
+      `${BACKEND_URL}/api/v1/admin/shop-owners/${owner!.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
+        body: JSON.stringify({ status: 'approved' }),
+      }
+    )
+    expect(approveRes.ok, 'T9: admin approval must succeed').toBeTruthy()
+
+    // ── 4. Nach Approval: available=true ────────────────────────────────────
+    const listingsAfterRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/listings`, {
+      headers: { Cookie: `shop_owner_token=${shopToken}` },
+    })
+    const listingsAfterData = await listingsAfterRes.json() as { items?: Listing[] } | Listing[]
+    const listingsAfter: Listing[] = Array.isArray(listingsAfterData)
+      ? listingsAfterData
+      : (listingsAfterData.items ?? [])
+
+    for (const listing of listingsAfter) {
+      expect(
+        listing.available,
+        `T9: listing ${listing.item.slug} must be available=true after approval`
+      ).toBe(true)
+      expect(listing.item.category_id, `T9: category_id must still be set after approval`).not.toBeNull()
+    }
+
+    // ── 5. Customer-Suche: Services nach Approval auffindbar ────────────────
+    const searchRes = await fetch(
+      `${BACKEND_URL}/api/v1/search?q=solaranlage&lat=34.917&lng=33.636&radius=10&lang=de`
+    )
+    expect(searchRes.ok, 'T9: customer search must succeed').toBeTruthy()
+    const searchData = await searchRes.json() as {
+      results?: { result_type: string; provider_count?: number }[]
+    }
+    const serviceResults = (searchData.results ?? []).filter((r) => r.result_type === 'service')
+    expect(
+      serviceResults.length,
+      'T9: customer search for "solaranlage" must return ≥1 service result after approval'
+    ).toBeGreaterThan(0)
+
+    // ── 6. UI: Shop-Admin Angebotsseite — kein Entwurf-Badge nach Approval ──
+    await page.goto(BASE_URL + '/shop-admin/login')
+    await page.fill('input[type="email"]', email)
+    await page.fill('input[type="password"]', password)
+    await page.click('button[type="submit"]')
+    await page.waitForURL(/\/shop-admin\//, { timeout: 10_000 })
+    await page.goto(BASE_URL + '/shop-admin/offers')
+    await page.waitForLoadState('networkidle')
+
+    // Nach Approval: kein oranger "Entwurf"-Badge sichtbar
+    const draftBadge = page.locator('.text-orange-700', { hasText: /entwurf|draft/i })
+    await expect(
+      draftBadge,
+      'T9: no draft badge should be visible after admin approval'
+    ).toHaveCount(0, { timeout: 10_000 })
+
+    // Items müssen Bilder haben (nach Visual-Backfill: kein SVG-Platzhalter)
+    const imgWithSrc = page.locator('img[src]:not([src=""])').first()
+    await expect(
+      imgWithSrc,
+      'T9: at least one item image must be rendered (not only SVG placeholder)'
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   // ── T8: AC-18 — Step 5 Next/Skip disabled without name ─────────────────────

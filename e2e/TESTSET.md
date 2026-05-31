@@ -27,7 +27,7 @@ Ergebnis: TypeScript PASS · ESLint PASS · 1853/1853 Vitest PASS · Consent E2E
 | Datei | Änderung |
 |-------|----------|
 | `src/config/brands/types.ts` | `analytics.metaPixelId?: string` |
-| `src/config/brands/pundo.ts` | `metaPixelId: '315772795678654'` |
+| `src/config/brands/pundo.ts` | `metaPixelId: '870274585468299'` |
 | `src/proxy.ts` | `buildCsp()` + `proxy()` — Meta-Hosts in CSP (brand-scoped) |
 | `src/lib/consent.ts` | NEU — ConsentState, Cookie-IO |
 | `src/lib/meta-pixel.ts` | NEU — trackPixelEvent(), PixelEvents |

@@ -15,6 +15,13 @@
  *   1. Exact slug match:     /seed-visuals/parkett-schleifen.webp
  *   2. Cluster fallback:     /seed-visuals/<domain>.webp   (e.g. /seed-visuals/bodenbelag.webp)
  *   3. Generic placeholder:  /seed-visuals/_generic.webp
+ *
+ * @deprecated (B5910-003) — tmpl-* System-A items are being replaced by System-B catalog items
+ * that receive proper ItemPhoto rows via `backfill_seed_visuals_system_b.py`.
+ * Once the backend migration runs, `resolveItemCoverUrl` will satisfy the `photoUrl` priority
+ * branch for all auto-seeded items, and this module's tmpl-specific functions will be unused.
+ * Removal target: after E2E verification + 1 week observation (spec: onboarding-items-konsolidierung-20260531).
+ * `resolveItemCoverUrl` and `SEED_VISUAL_GENERIC_PATH` remain valid (non-deprecated).
  */
 
 /**
@@ -24,6 +31,8 @@
  * `parkett-schleifen` (non-tmpl)      → `{ domain: null, shortSlug: 'parkett-schleifen' }`
  *
  * Returns null when the slug is falsy.
+ *
+ * @deprecated Only meaningful for tmpl-* (System-A) items. See module-level note.
  */
 export function parseSeedSlug(itemSlug: string | null | undefined): {
   domain: string | null
@@ -58,6 +67,9 @@ export type SeedVisualVariant = 'card' | 'og'
  *
  * Returns `null` when `itemSlug` is falsy.
  *
+ * @deprecated Only meaningful for tmpl-* (System-A) items. See module-level note.
+ * Transitional usage in OfferItemHeader.tsx will be removed once System-B ItemPhoto backfill runs.
+ *
  * @example
  *   getSeedVisualPath('tmpl-bodenbelag-parkett-schleifen')
  *   // → '/seed-visuals/parkett-schleifen.webp'
@@ -82,6 +94,8 @@ export function getSeedVisualPath(
  * When an item slug is `tmpl-bodenbelag-parkett-schleifen` and no exact
  * visual file exists yet, this returns `/seed-visuals/bodenbelag.webp`.
  * Returns `null` when the slug has no domain prefix.
+ *
+ * @deprecated Only meaningful for tmpl-* (System-A) items. See module-level note.
  */
 export function getSeedClusterFallbackPath(
   itemSlug: string | null | undefined,
@@ -132,6 +146,9 @@ export function resolveItemCoverUrl(
 /**
  * Returns true when the item is an auto-seeded template item.
  * Seed items have slugs starting with `tmpl-`.
+ *
+ * @deprecated Only meaningful for tmpl-* (System-A) items. See module-level note.
+ * After the System-B migration, no new items will have the tmpl-* prefix.
  */
 export function isSeedItem(itemSlug: string | null | undefined): boolean {
   return typeof itemSlug === 'string' && itemSlug.startsWith('tmpl-')

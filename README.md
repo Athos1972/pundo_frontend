@@ -124,6 +124,7 @@ BACKEND_URL=http://localhost:8500 npx playwright test
 | `BACKEND_URL` | Server | Nein¹ | Absolute URL des Backends, z.B. `http://api:8000` |
 | `NEXT_PUBLIC_API_URL` | Client + Server | Nein¹ | Relative API-Basis, default `/api/v1` |
 | `ALLOWED_DEV_ORIGINS` | Server (dev only) | Nein | Komma-getrennte zusätzliche Dev-Origins |
+| `COOKIE_DOMAIN` | Server | **Pflicht auf Prod** | Domain für auth-Cookie-Löschung bei Logout. Spiegelt Backend `AUTH_COOKIE_DOMAIN`. Prod (beide Brands): `pundo.cy`. Lokal: leer lassen. |
 
 ¹ Default: `BACKEND_URL=http://localhost:8500`, `NEXT_PUBLIC_API_URL=/api/v1`
 

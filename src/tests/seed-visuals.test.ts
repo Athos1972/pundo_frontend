@@ -205,3 +205,30 @@ describe('SEED_VISUAL_GENERIC_PATH', () => {
     expect(SEED_VISUAL_GENERIC_PATH).toMatch(/^\/seed-visuals\//)
   })
 })
+
+// ─── System-B migration behaviour (B5910-003) ────────────────────────────────
+// These tests document what happens with System-B catalog items (no tmpl- prefix).
+// After the ItemPhoto backfill runs, these items will have real photoUrls and
+// resolveItemCoverUrl will return them via the priority-1 branch.
+
+describe('resolveItemCoverUrl — System-B items (B5910-003)', () => {
+  it('System-B item WITH ItemPhoto: returns photoUrl directly, never touches seed-visual logic', () => {
+    // After backfill: System-B items have ItemPhoto rows → photoUrl is set
+    const photoUrl = 'http://localhost:8500/media/seed-photos/elektriker.webp'
+    expect(resolveItemCoverUrl(photoUrl, 'elektro-installation')).toBe(photoUrl)
+  })
+
+  it('System-B item WITHOUT ItemPhoto: returns slug-based path (file likely missing on disk — pre-backfill gap)', () => {
+    // parseSeedSlug passes non-tmpl slugs through verbatim → resolveItemCoverUrl returns
+    // /seed-visuals/elektro-installation.webp even though that file does NOT exist on disk.
+    // In the browser this renders as a broken image. This is the pre-backfill gap.
+    // B5910-003: once backfill_seed_visuals_system_b.py runs, items will have ItemPhoto rows
+    // → photoUrl is set (priority-1 branch) → this path is never reached.
+    expect(resolveItemCoverUrl(null, 'elektro-installation')).toBe('/seed-visuals/elektro-installation.webp')
+  })
+
+  it('System-B item WITH ItemPhoto via absolute CDN URL: returns as-is', () => {
+    const cdnUrl = 'https://cdn.pundo.cy/photos/abc123_card.webp'
+    expect(resolveItemCoverUrl(cdnUrl, 'pv-anlage-installation')).toBe(cdnUrl)
+  })
+})

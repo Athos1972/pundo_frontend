@@ -52,9 +52,11 @@ export function SearchSimilarButton({ lang, brandSlug, hasBottomBar = false, onO
 
   const pulseClass = isNaidivse && onboardingVisible ? 'animate-pulse' : ''
 
+  // On mobile the SpottedGlobalButton FAB is always present at bottom:5rem (h-14=3.5rem),
+  // so top edge ≈ 8.5rem. Push Homesick above it on mobile (≥9rem), keep desktop as-is.
   const bottomClass = hasBottomBar
-    ? 'bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
-    : 'bottom-[calc(1rem+env(safe-area-inset-bottom,0px))]'
+    ? 'bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] md:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
+    : 'bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] md:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))]'
 
   return (
     // Relative container so the popout can be positioned absolutely above the FAB

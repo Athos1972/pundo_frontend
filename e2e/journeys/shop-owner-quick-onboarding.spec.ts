@@ -445,6 +445,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     //   3. backfill_seed_visuals_system_b.py (ItemPhoto rows for System-B items)
     // Currently System-A (tmpl-* / category_id=NULL) runs instead.
     // Remove test.fixme() once backend is deployed and verified.
+    test.fixme()
 
     const email = `${PREFIX}-t9@pundo-e2e.io`
     const password = 'E2eTestPassword!99'

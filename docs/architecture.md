@@ -40,6 +40,7 @@ src/app/
 │   └── admin/           # login, (portal)/…
 ├── (oauth)/             # OAuth 2.0 Authorization Server (F6600)
 │   └── oauth/authorize/
+├── sitemap.xml/         # Sitemap Route Handler → GET /sitemap.xml (custom, with XSLT PI)
 └── api/                 # Next.js API Routes (nominatim-Proxy, og-image, …)
 ```
 
@@ -71,7 +72,7 @@ src/
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
 │   ├── system-admin-translations.ts
 │   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
-│   ├── seo/                     # metadata-defaults, og-defaults, sitemap-helpers
+│   ├── seo/                     # metadata-defaults, og-defaults, structured-data
 │   ├── i18n/                    # common.ts, guides.ts (tCommon, tGuides)
 │   └── price-history.ts         # aggregatePriceHistory(), computePriceStats()
 └── types/

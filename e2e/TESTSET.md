@@ -2,6 +2,15 @@
 
 ## Letzter Testlauf
 
+Datum: 2026-06-03  
+SHA: c97aff773d4e70756fe53fe6c4bf2b60e41d5b95 (uncommitted changes)  
+Spec: **SEO-Feedback-Review + Google Search Console Verification (seo-feedback-review-20260603)**  
+Ergebnis: TypeScript PASS · ESLint PASS (3 pre-existing Warnings, nicht neu) · 1872/1872 Vitest PASS · E2E 62/62 PASS · SEO-Lengths 5/5 PASS · Journeys cookie-consent-flow 8/8 + reactive-language-switch 5/5 PASS · Verdict: **SHIP**
+
+---
+
+## Testlauf 2026-05-31
+
 Datum: 2026-05-31  
 SHA: 6f12f563d4e430cbff5e854bb814a7df9dc40b12 (uncommitted changes)  
 Spec: **F7500 Meta-Pixel Tracking mit Consent-Gate**  

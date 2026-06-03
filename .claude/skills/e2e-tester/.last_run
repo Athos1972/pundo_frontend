@@ -1,12 +1,13 @@
 {
-  "sha": "6f12f563d4e430cbff5e854bb814a7df9dc40b12",
-  "timestamp": "2026-05-31T16:02:44.065358+00:00",
+  "sha": "c97aff773d4e70756fe53fe6c4bf2b60e41d5b95",
+  "timestamp": "2026-06-03T14:50:00Z",
   "verdict": "SHIP",
   "open_failures": [],
   "coverage_snapshot": {
-    "unit_tests": "1853/1853",
-    "coverage_gaps": [
-      "ShopMapClient.tsx (Leaflet/Canvas)"
-    ]
+    "unit_tests": "103/103 files, 1872/1872 tests",
+    "e2e_smoke": "9/9",
+    "e2e_main": "62/62 (5 skipped)",
+    "seo_lengths": "5/5",
+    "journeys": "cookie-consent-flow: 8/8 PASS, reactive-language-switch: 5/5 PASS"
   }
 }

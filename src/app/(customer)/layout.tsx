@@ -74,6 +74,10 @@ export async function generateMetadata(): Promise<Metadata> {
     manifest: '/manifest.webmanifest',
     openGraph: og.openGraph,
     twitter: og.twitter,
+    // Google Search Console verification — brand-specific, only set where GSC is configured
+    ...(brand.analytics.googleVerification
+      ? { verification: { google: brand.analytics.googleVerification } }
+      : {}),
   }
 }
 

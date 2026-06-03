@@ -51,6 +51,7 @@ export const pundoConfig: BrandConfig = {
     plausibleDomain: 'pundo.cy',
     plausibleHost: 'https://plausible.pundo.cy',
     metaPixelId: '870274585468299',
+    googleVerification: 'L5UrMzU0t4i3F_qtk5N_EFFHz-8ZRgl3Ty6H_WYeSqM',
   },
 
   features: {

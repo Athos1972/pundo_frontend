@@ -77,10 +77,19 @@ describe('buildHreflang', () => {
     expect(result['x-default']).toBe(`${siteUrl}/en/shops/my-shop`)
   })
 
-  it('works for root path', () => {
+  it('works for root path — no trailing slash (SEO-feedback-review-20260603 M1)', () => {
     const result = buildHreflang(siteUrl, '/')
-    expect(result['en']).toBe(`${siteUrl}/en/`)
-    expect(result['x-default']).toBe(`${siteUrl}/en/`)
+    // Next.js trailingSlash=false: '/en/' 308-redirects to '/en'.
+    // Canonical must point to the non-redirecting URL, so no trailing slash here.
+    expect(result['en']).toBe(`${siteUrl}/en`)
+    expect(result['x-default']).toBe(`${siteUrl}/en`)
+  })
+
+  it('root hreflang: all 6 langs and x-default have no trailing slash', () => {
+    const result = buildHreflang(siteUrl, '/')
+    for (const key of [...LANGS, 'x-default']) {
+      expect(result[key]).not.toMatch(/\/$/)
+    }
   })
 
   it('handles path without leading slash', () => {

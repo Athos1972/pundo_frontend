@@ -29,8 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const siteUrl = getSiteUrl()
   const title = 'Find Local Shops, Products & Services in Cyprus — Pundo'
-  const description = 'Find local shops, products and services in Limassol, Paphos, Larnaca and across Cyprus. Compare prices, check stock and discover nearby businesses in your own language.'
-  const canonicalUrl = `${siteUrl}/${lang}/`
+  // 156 chars — within DESC_MAX=160 (was 168, SEO-feedback-review-20260603 M2)
+  const description = 'Find local shops, products and services in Limassol, Paphos, Larnaca and across Cyprus. Compare prices, check stock and discover nearby businesses near you.'
+  // No trailing slash: Next.js trailingSlash=false (default) 308-redirects '/en/' → '/en'
+  // Canonical must match the non-redirecting URL (SEO-feedback-review-20260603 M1)
+  const canonicalUrl = `${siteUrl}/${lang}`
   return {
     title: { absolute: title },
     description,
@@ -49,6 +52,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       images: [`${siteUrl}/og/shop-fallback-default.jpg`],
+    },
+    // Explicit robots directive — homepage was missing this (SEO-feedback-review-20260603 M3)
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
     },
   }
 }

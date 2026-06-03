@@ -31,13 +31,19 @@ export function stripLang(pathname: string): string {
  *
  * Beispiel: buildHreflang('https://pundo.cy', '/shops/my-shop')
  * → { en: 'https://pundo.cy/en/shops/my-shop', de: '...', 'x-default': '.../en/...' }
+ *
+ * Root-Sonderfall: path='/' → kein Trailing Slash (→ 'https://pundo.cy/en', nicht '.../en/')
+ * Next.js trailingSlash=false (Default) würde '/en/' per 308 auf '/en' weiterleiten,
+ * was Canonical-URL gegen echte URL in Konflikt bringt.
  */
 export function buildHreflang(siteUrl: string, path: string): Record<string, string> {
   const clean = path.startsWith('/') ? path : `/${path}`
+  // Root path '/' würde zu '…/en/' führen → Trailing-Slash-Konflikt; leerer Suffix stattdessen
+  const suffix = clean === '/' ? '' : clean
   const result: Record<string, string> = {}
   for (const lang of LANGS) {
-    result[lang] = `${siteUrl}/${lang}${clean}`
+    result[lang] = `${siteUrl}/${lang}${suffix}`
   }
-  result['x-default'] = `${siteUrl}/en${clean}`
+  result['x-default'] = `${siteUrl}/en${suffix}`
   return result
 }

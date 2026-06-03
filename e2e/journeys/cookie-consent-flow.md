@@ -4,6 +4,7 @@ title: Cookie Consent Gate + Meta-Pixel Load/Block
 status: implemented
 spec-file: e2e/journeys/cookie-consent-flow.spec.ts
 priority: P1
+owner-agent: coder
 proposed-in-spec: meta-pixel-consent-20260531
 touches-modules:
   - src/components/consent/**
@@ -13,9 +14,9 @@ touches-modules:
   - src/components/layout/FooterLinks.tsx
 touches-roles:
   - customer
-last-run: 2026-05-31
+last-run: 2026-06-03T14:45:00Z
 last-result: PASS
-last-run-sha: 6f12f563d4e430cbff5e854bb814a7df9dc40b12
+last-run-sha: HEAD
 status-changed-at: 2026-05-31T18:55:00Z
 status-changed-by-spec: meta-pixel-consent-20260531
 ---

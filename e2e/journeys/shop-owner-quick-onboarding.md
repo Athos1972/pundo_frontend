@@ -25,7 +25,7 @@ touches-states:
 status-changed-at: 2026-05-31T00:00:00Z
 status-changed-by-spec: onboarding-items-konsolidierung-20260531
 last-run: 2026-05-31T19:05:00Z
-last-result: T1-T8 PASS, T9 FAIL (test.fixme)
+last-result: FAIL
 ---
 
 # Journey: shop-owner-quick-onboarding

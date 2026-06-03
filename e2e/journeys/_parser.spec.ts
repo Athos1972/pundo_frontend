@@ -65,7 +65,8 @@ describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    expect(entries).toHaveLength(25)
+    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
+    expect(entries).toHaveLength(26)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -75,8 +76,9 @@ describe('parseCatalog — Seed-Datei', () => {
     //             + shop-owner-onboarding, social-link-moderation (implemented, added 2026-04-25)
     //             + state-transition-ItemStatus, write-to-read-createItem (approved)
     //             + shop-owner-quick-onboarding (approved, added 2026-05-01 F5910)
+    //             + cookie-consent-flow, reactive-language-switch (P1, added 2026-05-31)
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    expect(p1Entries.length).toBe(9)
+    expect(p1Entries.length).toBe(10)
     expect(p1Entries[0].status).toBe('implemented') // shop-admin-offers is first alphabetically
   })
 
@@ -386,7 +388,8 @@ describe('parseCatalogDirectory', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    expect(entries).toHaveLength(25)
+    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
+    expect(entries).toHaveLength(26)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -407,7 +410,8 @@ describe('parseCatalogDirectory', () => {
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    expect(entries).toHaveLength(25)
+    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
+    expect(entries).toHaveLength(26)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

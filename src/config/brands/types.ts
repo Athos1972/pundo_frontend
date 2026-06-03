@@ -63,6 +63,8 @@ export interface BrandConfig {
     plausibleScriptSrc?: string
     /** Meta/Facebook Pixel ID — only set for brands that run Meta Ads. Requires consent-gate. */
     metaPixelId?: string
+    /** Google Search Console site verification token — only set for brands using GSC. */
+    googleVerification?: string
   }
 
   features: {

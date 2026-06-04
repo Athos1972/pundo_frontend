@@ -12,6 +12,7 @@ import { communityTranslations } from './i18n/community'
 import { guidesTranslations } from './i18n/guides'
 import { contactTranslations } from './i18n/contact'
 import { consentTranslations } from './i18n/consent'
+import { homeTranslations } from './i18n/home'
 
 // Re-export namespace helpers for direct use
 export { tCommon, type CommonTranslations } from './i18n/common'
@@ -24,6 +25,7 @@ export { tCommunity, type CommunityTranslations } from './i18n/community'
 export { tGuides, type GuidesTranslations } from './i18n/guides'
 export { tContact, type ContactTranslations } from './i18n/contact'
 export { tConsent, type ConsentTranslations } from './i18n/consent'
+export { tHome, type HomeTranslations } from './i18n/home'
 
 export const translations = {
   en: {
@@ -37,6 +39,7 @@ export const translations = {
     ...guidesTranslations.en,
     ...contactTranslations.en,
     ...consentTranslations.en,
+    ...homeTranslations.en,
   },
   de: {
     ...commonTranslations.de,
@@ -49,6 +52,7 @@ export const translations = {
     ...guidesTranslations.de,
     ...contactTranslations.de,
     ...consentTranslations.de,
+    ...homeTranslations.de,
   },
   ru: {
     ...commonTranslations.ru,
@@ -61,6 +65,7 @@ export const translations = {
     ...guidesTranslations.ru,
     ...contactTranslations.ru,
     ...consentTranslations.ru,
+    ...homeTranslations.ru,
   },
   el: {
     ...commonTranslations.el,
@@ -73,6 +78,7 @@ export const translations = {
     ...guidesTranslations.el,
     ...contactTranslations.el,
     ...consentTranslations.el,
+    ...homeTranslations.el,
   },
   ar: {
     ...commonTranslations.ar,
@@ -85,6 +91,7 @@ export const translations = {
     ...guidesTranslations.ar,
     ...contactTranslations.ar,
     ...consentTranslations.ar,
+    ...homeTranslations.ar,
   },
   he: {
     ...commonTranslations.he,
@@ -97,6 +104,7 @@ export const translations = {
     ...guidesTranslations.he,
     ...contactTranslations.he,
     ...consentTranslations.he,
+    ...homeTranslations.he,
   },
 } as const
 

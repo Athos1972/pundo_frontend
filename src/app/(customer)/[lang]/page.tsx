@@ -16,6 +16,9 @@ import { NearbyShops } from '@/components/shop/NearbyShops'
 import { HomesickTeaser } from '@/components/home/HomesickTeaser'
 import { ActivityFeed } from '@/components/activity-feed/ActivityFeed'
 import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedList'
+import { HomepageStatsStrip } from '@/components/home/HomepageStatsStrip'
+import { HomepageCategoryGrid } from '@/components/home/HomepageCategoryGrid'
+import { ForBusinessesBand } from '@/components/home/ForBusinessesBand'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -96,8 +99,32 @@ export default async function HomePage({ params }: Props) {
     <div className="min-h-screen bg-bg">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildOrganizationSchema(siteUrl)) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildWebSiteSchema(siteUrl)) }} />
+
+      {/* Hero — revised 2-column layout with Cyprus map visual */}
       <Hero brand={brand} categories={categories} lang={lang} preserveOrder={!!featuredIds} />
 
+      {/* Stats Strip */}
+      <HomepageStatsStrip lang={lang} />
+
+      {/* Category Grid */}
+      <HomepageCategoryGrid lang={lang} />
+
+      {/* Shops Nearby — graceful fallback (returns null on error/empty) */}
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        <NearbyShops lang={lang} heading={tr.nearby_shops} />
+      </main>
+
+      {/* For Businesses Band */}
+      <ForBusinessesBand lang={lang} />
+
+      {/* Guides Teaser */}
+      <section className="py-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <GuidesTeaser lang={lang} />
+        </div>
+      </section>
+
+      {/* Brand-gated sections — below the fold, out of scope for this spec */}
       {/* F4700: Activity Feed — directly after Hero, before CommunityCard (AC-B5) */}
       <ActivityFeed brand={brand} lang={lang} />
 
@@ -116,19 +143,6 @@ export default async function HomePage({ params }: Props) {
           </div>
         </section>
       )}
-
-      <section className="py-10">
-        <div className="max-w-6xl mx-auto px-6">
-          <GuidesTeaser lang={lang} />
-        </div>
-      </section>
-
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="font-display text-xl font-bold text-text mb-5">
-          {tr.nearby_shops}
-        </h2>
-        <NearbyShops lang={lang} />
-      </main>
     </div>
   )
 }

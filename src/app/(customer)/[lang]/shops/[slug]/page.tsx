@@ -270,9 +270,8 @@ export default async function ShopPage({ params }: Props) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-sm text-text font-heading">{tr.products}</h2>
-              {/* TODO: Folge-Bug B5900-004 — Link führt auf nicht-existierende Route /search?shop_id=... */}
               <Link href={localePath(lang, `/search?shop_id=${shop.id}`)} className="text-xs text-accent hover:underline">
-                Alle →
+                {tr.filter_all} →
               </Link>
             </div>
             <div className="space-y-2">

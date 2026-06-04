@@ -59,6 +59,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const withPrice = params.get('with_price') === '1'
   const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
   const includeOnline = params.get('include_online') !== '0'
+  const shopId = params.get('shop_id')
 
   const [items, setItems] = useState<SearchResultItem[]>([])
   const [total, setTotal] = useState(0)
@@ -85,8 +86,8 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const [mapBbox, setMapBbox] = useState<string | undefined>(undefined)
 
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
-    // T4: In category mode q is not required; otherwise require at least 2 chars
-    if (!categoryId && (!q || q.length < 2)) {
+    // T4: In category or shop mode q is not required; otherwise require at least 2 chars
+    if (!categoryId && !shopId && (!q || q.length < 2)) {
       setItems([])
       setTotal(0)
       return
@@ -108,6 +109,22 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           lang
         )
         // T3: Map ProductListItem → SearchProductItem for the existing render pipeline
+        setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
+        setTotal(res.total)
+        setOffset(newOffset + res.items.length)
+      } else if (shopId) {
+        // Shop mode — show all products of a specific shop (B5900-004)
+        const res = await searchProducts(
+          {
+            shop_id: +shopId,
+            q: q || undefined,
+            lat: location.lat,
+            lng: location.lng,
+            limit: PAGE_SIZE,
+            offset: newOffset,
+          },
+          lang
+        )
         setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
         setTotal(res.total)
         setOffset(newOffset + res.items.length)
@@ -133,7 +150,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     } finally {
       setLoading(false)
     }
-  }, [q, categoryId, location.lat, location.lng, mapBbox, lang])
+  }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang])
 
   // T5: Load category name when categoryId is set (non-blocking, with fallback)
   useEffect(() => {
@@ -159,12 +176,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     setOffset(0)
     setRelatedCategories([])
     load(true, 0)
-  }, [q, categoryId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q, categoryId, shopId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear item refs when result set changes so stale shopId → DOM mappings don't linger
   useEffect(() => {
     itemRefs.current.clear()
-  }, [q, categoryId])
+  }, [q, categoryId, shopId])
 
   // Fire Meta Pixel Search event when query changes and results are loaded
   useEffect(() => {

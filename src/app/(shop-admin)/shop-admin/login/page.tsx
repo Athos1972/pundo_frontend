@@ -7,6 +7,7 @@ import { getLangFromCookie } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { sanitizeNextPath } from '@/lib/safe-redirect'
 import { FormField } from '@/components/shop-admin/FormField'
+import { ShopOwnerOAuthButton } from '@/components/shop-admin/onboarding/ShopOwnerOAuthButton'
 import { Suspense } from 'react'
 
 function LoginForm() {
@@ -19,6 +20,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   // T2 — Open Redirect fix: sanitize `next` param to same-origin /shop-admin/ paths only
   const nextPath = sanitizeNextPath(searchParams.get('next'))
+  const oauthError = searchParams.get('error')
 
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
@@ -32,6 +34,16 @@ function LoginForm() {
       setLang(getLangFromCookie())
     })
   }, [])
+
+  // Show OAuth error from callback redirect (?error=oauth_failed etc.)
+  useEffect(() => {
+    if (oauthError) {
+      setErrors({ general: tr.login_oauth_error })
+    }
+    // Only run once on mount — tr is not stable across renders but the error
+    // text is always the same key; including tr would cause re-renders on lang change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oauthError])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -109,6 +121,14 @@ function LoginForm() {
             {isPending ? '…' : tr.login_btn}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 text-xs text-gray-400">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span>{tr.login_or_divider}</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <ShopOwnerOAuthButton provider="google" tr={tr} />
 
         <p className="text-sm text-center text-gray-500">
           {tr.no_account}{' '}

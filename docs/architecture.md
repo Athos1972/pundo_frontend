@@ -136,6 +136,22 @@ Der zweite Header wird nur gesendet wenn `COOKIE_DOMAIN` gesetzt ist. Beide Bran
 
 > Siehe Bug B4800-001 für den Fix-Kontext (domain-scoped Cookie wurde nicht gecleared).
 
+### Backend-Env-Variable `GOOGLE_SHOP_OWNER_REDIRECT_URI`
+
+Steuert die `redirect_uri`, die das Backend beim Aufbau der Google-OAuth-Authorize-URL für Shop-Owner verwendet. Gesetzt im Backend-Deployment (Hetzner), nicht im Frontend.
+
+| Umgebung | Wert | Hinweis |
+|---|---|---|
+| Lokal / Test | `http://localhost:8500/api/v1/shop-owner/auth/google/callback` | Default-Fallback im Code — muss nicht explizit gesetzt werden |
+| Produktion (`pundo.cy`) | `https://api.pundo.cy/api/v1/shop-owner/auth/google/callback` | **Pflicht** — ohne diesen Wert fällt das Backend auf `localhost:8500` zurück → `redirect_uri_mismatch` |
+
+**Außerdem in der Google Cloud Console** (OAuth-Client zu `GOOGLE_CLIENT_ID`): Unter „Authorized redirect URIs" müssen beide URIs registriert sein:
+- `https://api.pundo.cy/api/v1/shop-owner/auth/google/callback` (Prod)
+- `http://localhost:8500/api/v1/shop-owner/auth/google/callback` (Dev/Test)
+- Die bestehende Customer-URI (`https://api.pundo.cy/api/v1/customer/...`) bleibt erhalten — alle URIs gleichzeitig registrieren.
+
+> Spec: `oauth-redirect-uri-mismatch-20260604` (F5910)
+
 ## Shop-Admin Clean Boundary
 
 **PFLICHT — keine Ausnahmen:**

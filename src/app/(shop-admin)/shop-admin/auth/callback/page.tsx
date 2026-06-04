@@ -17,7 +17,7 @@ function CallbackInner() {
     } else if (success === '1') {
       router.replace('/shop-admin/')
     } else {
-      router.replace(`/shop-admin/onboarding?error=${error ?? 'oauth_failed'}`)
+      router.replace(`/shop-admin/login?error=${error ?? 'oauth_failed'}`)
     }
   }, [success, newUser, error, router])
 

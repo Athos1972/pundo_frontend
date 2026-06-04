@@ -2,15 +2,19 @@
 import { useEffect, useState } from 'react'
 import { getShops } from '@/lib/api'
 import type { ShopListItem } from '@/types/api'
-import { t } from '@/lib/translations'
 import { ShopCard } from './ShopCard'
 
 type Status = 'loading' | 'ok' | 'empty' | 'error'
 
-export function NearbyShops({ lang }: { lang: string }) {
+interface Props {
+  lang: string
+  /** Optional section heading — rendered only when shops load successfully */
+  heading?: string
+}
+
+export function NearbyShops({ lang, heading }: Props) {
   const [shops, setShops] = useState<ShopListItem[]>([])
   const [status, setStatus] = useState<Status>('loading')
-  const [errorMsg, setErrorMsg] = useState<string>('')
 
   // Larnaca city centre — used when browser geolocation is denied or
   // unavailable (e.g. HTTP on mobile). Still gives meaningful distances.
@@ -23,8 +27,7 @@ export function NearbyShops({ lang }: { lang: string }) {
           setShops(d.items)
           setStatus(d.items.length > 0 ? 'ok' : 'empty')
         })
-        .catch((err: unknown) => {
-          setErrorMsg(err instanceof Error ? err.message : String(err))
+        .catch(() => {
           setStatus('error')
         })
     }
@@ -49,27 +52,18 @@ export function NearbyShops({ lang }: { lang: string }) {
     )
   }
 
-  if (status === 'error') {
-    const tr = t(lang)
-    return (
-      <p className="text-sm text-text-muted py-4">
-        {errorMsg.startsWith('API ') ? tr.shops_load_error : tr.backend_unreachable}{' '}
-        <span className="text-text-light text-xs font-mono">{errorMsg}</span>
-      </p>
-    )
-  }
-
-  if (status === 'empty') {
-    return (
-      <p className="text-sm text-text-muted py-4">
-        {t(lang).no_shops_in_db}
-      </p>
-    )
-  }
+  // Graceful fallback — hide entire section on error or empty result
+  if (status === 'error') return null
+  if (status === 'empty') return null
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {shops.map(shop => <ShopCard key={shop.id} shop={shop} lang={lang} />)}
+    <div>
+      {heading && (
+        <h2 className="font-display text-xl font-bold text-text mb-5">{heading}</h2>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {shops.map(shop => <ShopCard key={shop.id} shop={shop} lang={lang} />)}
+      </div>
     </div>
   )
 }

@@ -141,7 +141,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <BackButton />
         <Breadcrumb items={[
           { label: tr.home, href: localePath(lang, '/') },
-          ...(product.category?.name ? [{ label: product.category.name, href: localePath(lang, `/search?category=${product.category.id}`) }] : []),
+          ...(product.category?.name ? [{ label: product.category.name, href: localePath(lang, `/search?category_id=${product.category.id}`) }] : []),
           { label: name },
         ]} />
         {/* Hero */}

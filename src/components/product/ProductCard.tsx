@@ -7,6 +7,7 @@ import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
 import { formatPriceOrLabel, pickImg } from '@/lib/utils'
 import { FavoriteButton } from '@/components/product/FavoriteButton'
+import { ProductCardImage } from '@/components/product/ProductCardImage'
 
 interface ProductCardProps {
   item: ProductListItem
@@ -35,16 +36,8 @@ export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighli
         onMouseLeave={() => onMouseLeaveShop?.()}
       >
         {/* Image — fixed 120×120px square on the left */}
-        <div className="w-[120px] h-[120px] shrink-0 bg-surface-alt flex items-center justify-center overflow-hidden relative">
-          {imgSrc && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imgSrc}
-              alt=""
-              className="w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
-          )}
+        <div className="w-[120px] h-[120px] shrink-0 overflow-hidden relative">
+          <ProductCardImage src={imgSrc} alt={productName} className="w-full h-full object-cover" />
           <div className="absolute top-1 right-1 rtl:right-auto rtl:left-1">
             <FavoriteButton productId={item.id} lang={lang} size="sm" />
           </div>
@@ -80,16 +73,8 @@ export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighli
   return (
     <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors">
       {/* Image — primary visual element, full card width */}
-      <div className="w-full h-40 bg-surface-alt flex items-center justify-center overflow-hidden relative">
-        {imgSrc && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imgSrc}
-            alt=""
-            className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.style.display = 'none' }}
-          />
-        )}
+      <div className="w-full h-40 overflow-hidden relative">
+        <ProductCardImage src={imgSrc} alt={productName} className="w-full h-full object-cover" />
         <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2">
           <FavoriteButton productId={item.id} lang={lang} size="sm" />
         </div>

@@ -1,13 +1,12 @@
 {
-  "sha": "c97aff773d4e70756fe53fe6c4bf2b60e41d5b95",
-  "timestamp": "2026-06-03T14:50:00Z",
+  "sha": "b530618bc725ac9e1dbedabb3e999d204706ed9d",
+  "timestamp": "2026-06-04T21:55:00Z",
   "verdict": "SHIP",
   "open_failures": [],
   "coverage_snapshot": {
-    "unit_tests": "103/103 files, 1872/1872 tests",
-    "e2e_smoke": "9/9",
-    "e2e_main": "62/62 (5 skipped)",
-    "seo_lengths": "5/5",
-    "journeys": "cookie-consent-flow: 8/8 PASS, reactive-language-switch: 5/5 PASS"
+    "unit_tests": "13/13 (shop-id-search: 6, category-search: 7)",
+    "journey": "customer-shop-all-products-flow: 6/6 PASS",
+    "typescript": "PASS",
+    "eslint": "3 pre-existing errors (SearchMapBottomSheet), 0 new"
   }
 }

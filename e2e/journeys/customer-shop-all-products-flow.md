@@ -1,9 +1,10 @@
 ---
 id: customer-shop-all-products-flow
 title: Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id
-status: approved
+status: implemented
+spec-file: e2e/journeys/customer-shop-all-products-flow.spec.ts
 priority: P2
-owner-agent: coder
+owner-agent: e2e-tester
 proposed-in-spec: ad-hoc
 touches-modules:
   - src/app/(customer)/[lang]/shops/[slug]/**
@@ -14,10 +15,10 @@ touches-roles:
   - guest
 touches-states:
   - Shop.products:present
-status-changed-at: 2026-06-04T19:40:00Z
+status-changed-at: 2026-06-04T21:55:00Z
 status-changed-by-spec: ad-hoc
-last-run: never
-last-result: N/A
+last-run: 2026-06-04T21:55:00Z
+last-result: PASS
 ---
 
 ### Journey: Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id

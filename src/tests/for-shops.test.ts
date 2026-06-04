@@ -22,9 +22,9 @@ describe('forShopsContent — all 6 languages have all new fields', () => {
       expect(c.cta_secondary_label.length).toBeGreaterThan(0)
       expect(c.social_proof.length).toBeGreaterThan(0)
 
-      // Meta description (150-160 chars target)
-      expect(c.meta_description.length).toBeGreaterThan(0)
-      expect(c.meta_description.length).toBeLessThanOrEqual(200) // allow some flex
+      // Meta description must be within the 150–160 char SEO window
+      expect(c.meta_description.length).toBeGreaterThanOrEqual(150)
+      expect(c.meta_description.length).toBeLessThanOrEqual(160)
     })
 
     it(`lang "${lang}" has 3 business_type_chips`, () => {
@@ -151,10 +151,10 @@ describe('forShopsContent — EN specific checks', () => {
     expect(lastItem.a.toLowerCase()).toMatch(/translat|automat/)
   })
 
-  it('EN meta_description is between 100 and 200 characters', () => {
+  it('EN meta_description is within the 150–160 char SEO window', () => {
     const desc = forShopsContent.en.meta_description
-    expect(desc.length).toBeGreaterThanOrEqual(100)
-    expect(desc.length).toBeLessThanOrEqual(200)
+    expect(desc.length).toBeGreaterThanOrEqual(150)
+    expect(desc.length).toBeLessThanOrEqual(160)
   })
 })
 

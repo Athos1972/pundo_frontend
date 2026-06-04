@@ -165,7 +165,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'Contact us first',
     final_cta_fineprint: 'Takes 5 minutes · No credit card · Free to start',
 
-    meta_description: 'List your shop, trade or service on pundo — free forever. Reach customers searching nearby in 6 languages. No website needed. Sign up in 5 minutes.',
+    meta_description: 'List your shop, trade or service on pundo — free forever. Reach customers searching nearby in 6 languages. No website needed. Sign up free in 5 minutes.',
   },
 
   de: {
@@ -266,7 +266,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'Erst Kontakt aufnehmen',
     final_cta_fineprint: 'Dauert 5 Minuten · Keine Kreditkarte · Kostenlos starten',
 
-    meta_description: 'Trage deinen Shop, dein Gewerk oder deinen Dienst auf pundo ein — für immer kostenlos. Erreiche Kunden in 6 Sprachen. Keine Website nötig. Anmeldung in 5 Minuten.',
+    meta_description: 'Trage deinen Shop, dein Gewerk oder Dienst auf pundo ein — für immer kostenlos. Erreiche Kunden in 6 Sprachen. Keine Website nötig. Anmeldung in 5 Minuten.',
   },
 
   el: {
@@ -367,7 +367,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'Επικοινώνησε μαζί μας πρώτα',
     final_cta_fineprint: 'Διαρκεί 5 λεπτά · Χωρίς κάρτα · Δωρεάν εκκίνηση',
 
-    meta_description: 'Καταχώρησε το κατάστημα, το εργαστήριο ή την υπηρεσία σου στο pundo — δωρεάν για πάντα. Φτάσε πελάτες σε 6 γλώσσες. Εγγραφή σε 5 λεπτά.',
+    meta_description: 'Καταχώρησε το κατάστημα, το εργαστήριο ή την υπηρεσία σου στο pundo — δωρεάν για πάντα. Φτάσε πελάτες σε 6 γλώσσες. Χωρίς ιστοσελίδα. Εγγραφή σε 5 λεπτά.',
   },
 
   // T1 bug fix: was [{ … }][0] array literal — now plain object
@@ -469,7 +469,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'Сначала связаться с нами',
     final_cta_fineprint: 'Занимает 5 минут · Без кредитной карты · Бесплатный старт',
 
-    meta_description: 'Разместите свой магазин, мастерскую или услугу на pundo — бесплатно навсегда. Охватывайте клиентов на 6 языках. Без сайта. Регистрация за 5 минут.',
+    meta_description: 'Разместите магазин, мастерскую или услугу на pundo — бесплатно навсегда. Охватывайте клиентов на 6 языках. Без сайта. Регистрация за 5 минут. Без карты.',
   },
 
   ar: {
@@ -570,7 +570,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'تواصل معنا أولًا',
     final_cta_fineprint: 'يستغرق 5 دقائق · بلا بطاقة ائتمان · مجاني للبدء',
 
-    meta_description: 'أدرج متجرك أو حرفتك أو خدمتك على pundo — مجانًا للأبد. تواصل مع العملاء بـ 6 لغات. لا حاجة لموقع إلكتروني. سجّل في 5 دقائق.',
+    meta_description: 'أدرج متجرك أو حرفتك أو خدمتك على منصة pundo مجانًا للأبد. يصل إليك العملاء بـ 6 لغات مختلفة بدون موقع إلكتروني أو مهارات تقنية مطلوبة. سجّل في 5 دقائق.',
   },
 
   he: {
@@ -671,6 +671,6 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     final_cta_secondary: 'צור קשר קודם',
     final_cta_fineprint: 'לוקח 5 דקות · ללא כרטיס אשראי · חינמי להתחלה',
 
-    meta_description: 'רשום את החנות, המקצוע או השירות שלך ב-pundo — חינמי לנצח. הגע ללקוחות ב-6 שפות. לא צריך אתר. הרשמה ב-5 דקות.',
+    meta_description: 'רשום את החנות, המקצוע או השירות שלך ב-pundo — חינמי לנצח לגמרי. הגע ללקוחות ב-6 שפות שונות ללא צורך באתר אינטרנט או ידע טכני. הרשמה מהירה שלוקחת 5 דקות.',
   },
 }

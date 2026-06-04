@@ -126,6 +126,10 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
   })
 
   test('C1 — Klick auf Alle-Link zeigt Produkte (Kern-Regression B5900-004)', async ({ page }) => {
+    // Desktop-Viewport: vermeidet SearchMapBottomSheet-Überlagerung auf Mobile,
+    // sodass Produktkarten im sichtbaren 55%-Panel des Desktop-Layouts erscheinen.
+    await page.setViewportSize({ width: 1280, height: 900 })
+
     // Intercepte API-Calls um zu prüfen ob searchProducts mit shop_id aufgerufen wird
     const apiCalls: string[] = []
     page.on('request', req => {

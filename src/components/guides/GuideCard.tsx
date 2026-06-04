@@ -11,10 +11,10 @@ type Props = {
 }
 
 /** Compact hero image for guide cards — uses pre-encoded 480 px WebP/AVIF. */
-function GuideCardImage({ slug, alt }: { slug: string; alt: string }) {
+function GuideCardImage({ slug, alt, className = 'h-28 rounded-xl' }: { slug: string; alt: string; className?: string }) {
   const base = `/images/guides/${slug}-hero`
   return (
-    <div className="relative h-28 w-full overflow-hidden rounded-xl bg-surface-alt">
+    <div className={`relative w-full overflow-hidden bg-surface-alt ${className}`}>
       <picture>
         <source srcSet={`${base}-480.avif`} type="image/avif" />
         <source srcSet={`${base}-480.webp`} type="image/webp" />
@@ -36,13 +36,21 @@ export function GuideCard({ guide, href, variant, categoryLabel, readtimeLabel }
     return (
       <Link
         href={href}
-        className="flex w-40 shrink-0 flex-col gap-2 rounded-xl bg-surface border border-border p-3 hover:border-accent transition-colors"
+        className="flex w-40 shrink-0 flex-col gap-2 rounded-xl bg-surface border border-border overflow-hidden hover:border-accent transition-colors"
       >
-        <span className="text-2xl">{guide.icon}</span>
-        <span className="text-[11px] font-medium text-accent">{categoryLabel ?? guide.category}</span>
-        <span className="text-sm font-semibold leading-snug text-text line-clamp-3">
-          {guide.title}
-        </span>
+        {hasImage ? (
+          <GuideCardImage slug={guide.slug} alt={guide.hero_alt!} className="h-24 rounded-none" />
+        ) : (
+          <div className="flex h-16 items-center justify-center bg-surface-alt">
+            <span className="text-2xl">{guide.icon}</span>
+          </div>
+        )}
+        <div className="flex flex-col gap-1 px-3 pb-3">
+          <span className="text-[11px] font-medium text-accent">{categoryLabel ?? guide.category}</span>
+          <span className="text-sm font-semibold leading-snug text-text line-clamp-3">
+            {guide.title}
+          </span>
+        </div>
       </Link>
     )
   }

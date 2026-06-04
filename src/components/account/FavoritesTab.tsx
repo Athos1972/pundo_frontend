@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
+import { ProductCardImage } from '@/components/product/ProductCardImage'
 import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
 import type { FavoriteListItem, AlertInterval, NotificationSettings } from '@/types/api'
@@ -143,30 +144,14 @@ export function FavoritesTab({ lang }: Props) {
             <div key={fav.id} className="flex items-center gap-3 bg-surface border border-border rounded-xl p-3">
               {productHref ? (
                 <Link href={productHref} className="shrink-0">
-                  <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
-                    {fav.image_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={fav.image_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.classList.add('hidden') }}
-                      />
-                    )}
+                  <div className="w-14 h-14 rounded-lg overflow-hidden">
+                    <ProductCardImage src={fav.image_url} alt="" className="w-full h-full object-cover" />
                   </div>
                 </Link>
               ) : (
                 <span className="shrink-0">
-                  <div className="w-14 h-14 bg-surface-alt rounded-lg overflow-hidden">
-                    {fav.image_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={fav.image_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.classList.add('hidden') }}
-                      />
-                    )}
+                  <div className="w-14 h-14 rounded-lg overflow-hidden">
+                    <ProductCardImage src={fav.image_url} alt="" className="w-full h-full object-cover" />
                   </div>
                 </span>
               )}

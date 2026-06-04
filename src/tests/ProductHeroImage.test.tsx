@@ -81,4 +81,21 @@ describe('ProductHeroImage', () => {
     fireEvent.keyDown(screen.getByRole('button', { name: 'Test Product' }), { key: 'Enter' })
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
+
+  // BUG REGRESSION: onError used to call style.display='none' (DOM mutation outside React).
+  it('shows SVG placeholder after image load error (no DOM mutation)', () => {
+    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" />)
+    const img = screen.getByRole('img', { hidden: true })
+    fireEvent.error(img)
+    expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
+    const svg = document.querySelector('svg[aria-hidden="true"]')
+    expect(svg).toBeInTheDocument()
+  })
+
+  it('does not open lightbox when image has failed', () => {
+    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" />)
+    fireEvent.error(screen.getByRole('img', { hidden: true }))
+    fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
 })

@@ -8,6 +8,7 @@ import { localePath } from '@/lib/routing'
 import { t, tSearch } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
 import { fmtPrice, toRelativeImageUrl } from '@/lib/utils'
+import { ProductCardImage } from '@/components/product/ProductCardImage'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
 interface Props {
@@ -249,16 +250,12 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
                         globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                       } ${idx > 0 ? 'border-t border-border' : ''}`}
                     >
-                      <div className="w-8 h-8 flex-shrink-0 bg-surface-alt rounded-lg flex items-center justify-center overflow-hidden">
-                        {item.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={toRelativeImageUrl(item.thumbnail_url) ?? ''}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                          />
-                        ) : null}
+                      <div className="w-8 h-8 flex-shrink-0 overflow-hidden rounded-lg">
+                        <ProductCardImage
+                          src={toRelativeImageUrl(item.thumbnail_url)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-text truncate">{item.names[lang] ?? item.names.en ?? item.slug}</p>

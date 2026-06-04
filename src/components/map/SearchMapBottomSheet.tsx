@@ -35,20 +35,19 @@ export function SearchMapBottomSheet({ snap, onSnapChange, children, scrollConta
   const sheetRef = useRef<HTMLDivElement>(null)
 
   const baseVh = SNAP_VH[snap]
-  // Use the sheet's own clientHeight for drag calculation so everything is container-relative.
-  // Falls back to 600 (reasonable mobile estimate) if the ref isn't attached yet.
-  const sheetH = sheetRef.current?.clientHeight ?? 600
-  const deltaVh = isDragging ? (dragDeltaPx / sheetH) * 100 : 0
-  const currentVh = Math.max(0, Math.min(72, baseVh + deltaVh))
 
   // translateY(X%) is relative to the element itself → fully container-relative.
   // useLayoutEffect fires before paint → no visible flash.
+  // sheetRef.current is read inside the effect (not during render) to satisfy react-hooks/refs.
   useLayoutEffect(() => {
     const el = sheetRef.current
     if (!el) return
+    const sheetH = el.clientHeight || 600
+    const deltaVh = isDragging ? (dragDeltaPx / sheetH) * 100 : 0
+    const currentVh = Math.max(0, Math.min(72, baseVh + deltaVh))
     el.style.transform = `translateY(${currentVh}%)`
     el.style.transition = isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)'
-  }, [currentVh, isDragging])
+  }, [baseVh, dragDeltaPx, isDragging])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId)

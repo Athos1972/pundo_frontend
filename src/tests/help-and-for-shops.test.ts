@@ -144,12 +144,16 @@ describe('forShopsContent', () => {
     })
   }
 
-  it('EN hero_headline mentions "map" or "free"', () => {
-    expect(forShopsContent.en.hero_headline.toLowerCase()).toMatch(/map|free/)
+  it('EN hero_headline or hero_headline_accent mentions "map" or "free"', () => {
+    const en = forShopsContent.en
+    const full = (en.hero_headline + ' ' + (en.hero_headline_accent ?? '')).toLowerCase()
+    expect(full).toMatch(/map|free/)
   })
 
-  it('DE hero_headline mentions "Karte" or "kostenlos"', () => {
-    expect(forShopsContent.de.hero_headline.toLowerCase()).toMatch(/karte|kostenlos/)
+  it('DE hero_headline or hero_headline_accent mentions "Karte" or "kostenlos"', () => {
+    const de = forShopsContent.de
+    const full = (de.hero_headline + ' ' + (de.hero_headline_accent ?? '')).toLowerCase()
+    expect(full).toMatch(/karte|kostenlos/)
   })
 
   it('step numbers are "1", "2", "3" in EN', () => {

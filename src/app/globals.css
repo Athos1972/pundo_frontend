@@ -362,6 +362,12 @@ h1, h2, h3, .font-display {
   100% { transform: scale(1.8); opacity: 0; }
 }
 
+/* Homepage Hero — Cyprus map float animation */
+@keyframes floatMap {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
 .animate-slide-in-from-leading {
   animation: slide-in-from-leading 300ms ease-out forwards;
 }
@@ -381,7 +387,8 @@ h1, h2, h3, .font-display {
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-in-from-leading,
   .animate-fade-in,
-  .animate-ping-slow {
+  .animate-ping-slow,
+  [class*="floatMap"] {
     animation: none;
     opacity: 1;
   }

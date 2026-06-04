@@ -36,14 +36,15 @@ function LoginForm() {
   }, [])
 
   // Show OAuth error from callback redirect (?error=oauth_failed etc.)
+  // startTransition: avoids "setState synchronously in effect" lint warning.
+  // lang dependency: ensures the error text is in the correct language after mount.
   useEffect(() => {
     if (oauthError) {
-      setErrors({ general: tr.login_oauth_error })
+      startTransition(() => {
+        setErrors({ general: tAdmin(lang).login_oauth_error })
+      })
     }
-    // Only run once on mount — tr is not stable across renders but the error
-    // text is always the same key; including tr would cause re-renders on lang change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oauthError])
+  }, [oauthError, lang])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

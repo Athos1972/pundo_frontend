@@ -38,6 +38,7 @@
 | [category-discovery](category-discovery.md) | Category Discovery Flow (F2350) | approved | P2 | — |
 | [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | — |
 | [cookie-consent-flow](cookie-consent-flow.md) | Cookie Consent Gate + Meta-Pixel Load/Block (F7500) | implemented | P1 | PASS |
+| [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id | approved | P2 | — |
 
 ## Smoketest Coverage
 
@@ -71,6 +72,7 @@
 | state-transition-ItemStatus | Conditional — read-side only | later (V1.1) |
 | write-to-read-createItem | No — writes data | — |
 | shop-detail-attribute-matrix | **Yes** | `shop-detail-sample` |
+| customer-shop-all-products-flow | **Yes** | `shop-all-products-link` (vorschlagen) |
 
 **Manifest entries not tied to a journey (standalone smoke coverage):**
 

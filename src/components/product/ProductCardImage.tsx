@@ -30,15 +30,16 @@ function ImagePlaceholder() {
   )
 }
 
-// Shows a placeholder for images that genuinely fail to load (HTTP 404 / missing card
-// variant). Uses React state instead of DOM mutation (style.display='none') so React
-// owns visibility. loading="lazy" is intentional — the search list is paginated to
-// 20 items per page by infinite scroll, so deferred loading is both safe and useful.
-//
-// Root cause of the missing-image bug was NOT the loading strategy: it was backend
-// image-token TTL (3600 s) coupled to the frontend response-cache window (3600 s) —
-// tokens expired exactly when cached list-responses went stale, returning HTTP 410/403.
-// Fixed in core/config.py: image_token_ttl_seconds 3600 → 259200 (72 h). (B2250-003)
+// loading="lazy" is intentionally omitted (B2250-002/B2250-003).
+// Playwright measurement confirmed: Chrome's lazy-load intersection check runs against
+// the document viewport, not the nested overflow-y-auto scroll container used by the
+// search results list. Images below the document fold but within the scroll container
+// stay permanently in complete=false state and are never fetched. Forcing loading=eager
+// on those same images makes all 83/83 load immediately with HTTP 200.
+// Infinite scroll already limits the DOM to ~20 items per page, so eager loading
+// 20 card-sized images is the right trade-off here.
+// onError shows the placeholder only for genuinely broken images (HTTP 404 / expired
+// token). The token-TTL bug is fixed separately in core/config.py (B2250-003).
 export function ProductCardImage({ src, alt, className }: Props) {
   const [failed, setFailed] = useState(false)
 
@@ -51,7 +52,6 @@ export function ProductCardImage({ src, alt, className }: Props) {
     <img
       src={src}
       alt={alt}
-      loading="lazy"
       decoding="async"
       className={className}
       onError={() => setFailed(true)}

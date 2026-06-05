@@ -10,10 +10,20 @@ describe('ProductCardImage', () => {
     expect(img).toHaveAttribute('alt', 'Test Produkt')
   })
 
-  it('renders img with loading=lazy and decoding=async', () => {
+  // B2250-002: loading="lazy" must NOT be present.
+  // Playwright measurement on pundo.cy confirmed: Chrome's lazy-load intersection check
+  // runs against the document viewport, not the nested overflow-y-auto scroll container.
+  // Images below the document fold but within the list container stay in complete=false
+  // permanently and are never fetched. Forcing loading=eager makes all 83/83 load (HTTP 200).
+  it('does NOT have loading=lazy — nested-scroller lazy-load bug (B2250-002)', () => {
     render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
     const img = screen.getByRole('img', { hidden: true })
-    expect(img).toHaveAttribute('loading', 'lazy')
+    expect(img).not.toHaveAttribute('loading', 'lazy')
+  })
+
+  it('renders img with decoding=async', () => {
+    render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
+    const img = screen.getByRole('img', { hidden: true })
     expect(img).toHaveAttribute('decoding', 'async')
   })
 
@@ -23,10 +33,7 @@ describe('ProductCardImage', () => {
     expect(img).toHaveClass('w-full', 'h-full', 'object-cover')
   })
 
-  // Regression: onError shows placeholder for genuinely broken images (HTTP 404,
-  // missing card variant). The root cause of missing search-result images (B2250-003)
-  // was backend token TTL — fixed in core/config.py, not here.
-  it('renders placeholder after onError — genuinely broken image', () => {
+  it('renders placeholder after onError — genuinely broken image (HTTP 404)', () => {
     render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
     const img = screen.getByRole('img', { hidden: true })
     fireEvent.error(img)

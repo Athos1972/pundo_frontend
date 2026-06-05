@@ -17,8 +17,9 @@ touches-states:
   - Shop.products:present
 status-changed-at: 2026-06-04T21:55:00Z
 status-changed-by-spec: ad-hoc
-last-run: 2026-06-04T21:55:00Z
+last-run: 2026-06-05T12:47:00Z
 last-result: PASS
+last-run-sha: 35f75a280df9d0d7bc9fd41cd9761f0ef8957471
 ---
 
 ### Journey: Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id

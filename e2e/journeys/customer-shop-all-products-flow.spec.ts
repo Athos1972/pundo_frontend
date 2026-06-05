@@ -155,8 +155,10 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     await page.waitForTimeout(1500) // SearchContent braucht kurz für shop_id-Mode
 
     // HAUPT-ASSERTION (war vor Fix immer leer):
-    // Mindestens 1 Produkt-Link muss sichtbar sein
-    const productLinks = page.locator('a[href^="/en/products/"]')
+    // Mindestens 1 Produkt-Link muss sichtbar sein.
+    // :visible filtert den mobilen Panel (md:hidden, display:none bei 1280px) aus —
+    // sonst trifft der Selektor die DOM-ersten Links im hidden mobile sheet.
+    const productLinks = page.locator('a[href^="/en/products/"]:visible')
     await expect(productLinks.first()).toBeVisible({ timeout: 10000 })
     const count = await productLinks.count()
     logStep('C1b Produkte sichtbar', '≥1 Produkt-Link', String(count), count >= 1 ? 'PASS' : 'FAIL', count === 0 ? 'B5900-004 REGRESSION: SearchContent ignoriert shop_id' : undefined)

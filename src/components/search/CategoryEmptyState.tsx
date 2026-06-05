@@ -29,9 +29,7 @@ export function CategoryEmptyState({ relatedCategories, lang }: CategoryEmptySta
             {visibleCategories.map(cat => (
               <Link
                 key={cat.id}
-                href={
-                  `${localePath(lang, '/search')}?category_id=${cat.id}&category_name=${encodeURIComponent(cat.name ?? '')}`
-                }
+                href={`${localePath(lang, '/search')}?category_id=${cat.id}`}
                 className="flex items-center gap-1.5 px-3 py-2 bg-surface border border-border rounded-full text-sm text-text-muted hover:border-accent hover:text-accent transition-colors whitespace-nowrap"
               >
                 <span>{cat.name ?? cat.external_id}</span>

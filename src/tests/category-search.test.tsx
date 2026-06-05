@@ -202,6 +202,62 @@ describe('SearchContent — category mode', () => {
       expect(screen.getAllByText('No results found.')[0]).toBeInTheDocument()
     })
   })
+
+  it('shows product that is >50 km away in category mode without explicit max_dist_km (bug regression)', async () => {
+    // Regression: product with dist_km=60 was fetched (total=1) but frontend distance filter
+    // (default 50 km) removed it from localItems AND onlineItems, leaving a blank UI.
+    // Fix: in category mode without explicit max_dist_km, skip the frontend distance filter.
+    mockSearchParamsValue = new URLSearchParams('category_id=3750')
+    const distantProduct = makeProductListItem(44501)
+    distantProduct.category_id = 3750
+    distantProduct.best_offer = {
+      price: '10.0000',
+      price_type: 'fixed',
+      price_note: null,
+      currency: 'EUR',
+      shop_id: 34,
+      shop_slug: 'markos-pet-shop',
+      shop_name: 'Markos Pet Shop',
+      dist_km: 60.01,
+      is_available: true,
+      crawled_at: '2026-04-17T02:35:25Z',
+      url: 'https://example.com',
+      shop_location: { lat: 34.6784574, lng: 33.0242077 },
+      shop_type: 'local',
+    }
+    mockSearchProducts.mockResolvedValue({ total: 1, items: [distantProduct] })
+
+    const SearchContent = (await import('@/app/(customer)/[lang]/search/SearchContent')).default
+    render(<SearchContent lang="en" />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('product-card-44501')[0]).toBeInTheDocument()
+    })
+  })
+
+  it('does NOT pass max_dist_km to backend in category mode without explicit slider setting', async () => {
+    mockSearchParamsValue = new URLSearchParams('category_id=3750')
+    mockSearchProducts.mockResolvedValue({ total: 0, items: [] })
+
+    const SearchContent = (await import('@/app/(customer)/[lang]/search/SearchContent')).default
+    render(<SearchContent lang="en" />)
+
+    await waitFor(() => expect(mockSearchProducts).toHaveBeenCalled())
+    const [callParams] = mockSearchProducts.mock.calls[0] as [{ max_dist_km?: number }, string]
+    expect(callParams.max_dist_km).toBeUndefined()
+  })
+
+  it('does pass max_dist_km to backend in category mode when slider is explicitly set', async () => {
+    mockSearchParamsValue = new URLSearchParams('category_id=3750&max_dist_km=30')
+    mockSearchProducts.mockResolvedValue({ total: 0, items: [] })
+
+    const SearchContent = (await import('@/app/(customer)/[lang]/search/SearchContent')).default
+    render(<SearchContent lang="en" />)
+
+    await waitFor(() => expect(mockSearchProducts).toHaveBeenCalled())
+    const [callParams] = mockSearchProducts.mock.calls[0] as [{ max_dist_km?: number }, string]
+    expect(callParams.max_dist_km).toBe(30)
+  })
 })
 
 // ─── Mapper test ──────────────────────────────────────────────────────────────

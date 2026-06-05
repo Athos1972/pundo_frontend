@@ -55,6 +55,8 @@ interface EntityTableProps {
   /** Base URL without query params, used to build pagination links */
   baseHref: string
   searchQ?: string
+  /** Additional query params to preserve in pagination links (e.g. active filters) */
+  extraParams?: Record<string, string>
 }
 
 function resolveTemplate(template: string, id: number): string {
@@ -103,6 +105,7 @@ export function EntityTable({
   limit,
   baseHref,
   searchQ,
+  extraParams,
 }: EntityTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -115,6 +118,9 @@ export function EntityTable({
     const qs = new URLSearchParams()
     qs.set('page', String(p))
     if (searchQ) qs.set('q', searchQ)
+    for (const [k, v] of Object.entries(extraParams ?? {})) {
+      if (v) qs.set(k, v)
+    }
     return `${baseHref}?${qs.toString()}`
   }
 

@@ -20,7 +20,7 @@ export function RelatedCategoriesCard({ categories, lang, title }: Props) {
           {categories.map(cat => (
             <li key={cat.id} role="listitem">
               <Link
-                href={`${localePath(lang, '/search')}?category_id=${cat.id}&category_name=${encodeURIComponent(cat.name ?? '')}`}
+                href={`${localePath(lang, '/search')}?category_id=${cat.id}`}
                 className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-bg border border-border text-sm text-text hover:bg-surface transition-colors"
               >
                 {cat.name}

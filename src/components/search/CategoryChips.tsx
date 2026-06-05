@@ -89,7 +89,7 @@ export function CategoryChips({ categories, lang, preserveOrder = false }: Props
       {visible.map(cat => (
         <Link
           key={cat.id}
-          href={`${localePath(lang as Lang, '/search')}?category_id=${cat.id}&category_name=${encodeURIComponent(cat.name ?? '')}`}
+          href={`${localePath(lang as Lang, '/search')}?category_id=${cat.id}`}
           className={chipClass}
         >
           <span>{getEmoji(cat.name)}</span>

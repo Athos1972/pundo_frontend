@@ -11,7 +11,8 @@ export default async function ShopAdminLayout({ children }: { children: React.Re
   let ownerName = ''
   try {
     const me = await getMe(lang)
-    // Approved owners get the full shell; pending/rejected stay on their info page
+    // Approved owners get the full shell; pre_signup/pending/rejected stay on their info page
+    if (me.status === 'pre_signup') redirect('/shop-admin/onboarding')
     if (me.status === 'pending') redirect('/shop-admin/pending-approval')
     if (me.status === 'rejected') redirect('/shop-admin/login')
     ownerName = me.name

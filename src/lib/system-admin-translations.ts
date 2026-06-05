@@ -49,6 +49,8 @@ const sysAdminTranslations = {
     of: 'of',
     results: 'results',
     // Shops
+    status_all: 'All',
+    status_filter_label: 'Status filter',
     shop_name: 'Shop name',
     address: 'Address',
     phone: 'Phone',
@@ -257,6 +259,8 @@ const sysAdminTranslations = {
     of: 'von',
     results: 'Ergebnisse',
     // Shops
+    status_all: 'Alle',
+    status_filter_label: 'Status-Filter',
     shop_name: 'Shop-Name',
     address: 'Adresse',
     phone: 'Telefon',

@@ -53,11 +53,14 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   // empty state briefly on ?category_id= URLs.
   const rawCategoryId = params.get('category_id')
   const categoryId = rawCategoryId !== null ? rawCategoryId : (initialCategoryId ?? null)
-  const categoryNameParam = params.get('category_name') ?? ''
   const isCategoryMode = categoryId !== null
   const available = params.get('available') === 'true'
   const withPrice = params.get('with_price') === '1'
   const maxDistKm = params.get('max_dist_km') ? Number(params.get('max_dist_km')) : DEFAULT_MAX_DIST_KM
+  // True only when the user has explicitly moved the distance slider (URL param present).
+  // In category/shop browse mode we skip the distance filter by default so all products in
+  // the category are visible regardless of the user's location.
+  const hasExplicitMaxDist = params.get('max_dist_km') !== null
   const includeOnline = params.get('include_online') !== '0'
   const shopId = params.get('shop_id')
 
@@ -96,13 +99,17 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     const newOffset = reset ? 0 : currentOffset
     try {
       if (categoryId) {
-        // T2: Category mode — use searchProducts with category_id
+        // T2: Category mode — use searchProducts with category_id.
+        // max_dist_km is only passed when the user has explicitly adjusted the slider;
+        // without it the backend returns all products in the category regardless of distance,
+        // matching the product_count shown in the category chip on the product page.
         const res = await searchProducts(
           {
             category_id: +categoryId,
             q: q || undefined,
             lat: location.lat,
             lng: location.lng,
+            ...(hasExplicitMaxDist ? { max_dist_km: maxDistKm } : {}),
             limit: PAGE_SIZE,
             offset: newOffset,
           },
@@ -120,6 +127,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
             q: q || undefined,
             lat: location.lat,
             lng: location.lng,
+            ...(hasExplicitMaxDist ? { max_dist_km: maxDistKm } : {}),
             limit: PAGE_SIZE,
             offset: newOffset,
           },
@@ -150,7 +158,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     } finally {
       setLoading(false)
     }
-  }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang])
+  }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang, hasExplicitMaxDist, maxDistKm])
 
   // T5: Load category name when categoryId is set (non-blocking, with fallback)
   useEffect(() => {
@@ -262,7 +270,13 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     : productItems
 
   const localItems = filteredProducts.filter(item => !isOnlineOffer(item.best_offer))
-    .filter(item => item.best_offer?.dist_km == null || item.best_offer.dist_km <= maxDistKm)
+    .filter(item => {
+      // Skip distance filter in category/shop browse mode unless user explicitly set it.
+      // Avoids hiding valid results when the backend returns products farther than the
+      // 50 km default (e.g. a shop in Paphos when the default location is Larnaca).
+      if ((isCategoryMode || !!shopId) && !hasExplicitMaxDist) return true
+      return item.best_offer?.dist_km == null || item.best_offer.dist_km <= maxDistKm
+    })
   const onlineItems = filteredProducts.filter(item => isOnlineOffer(item.best_offer))
 
   const mapShops = Array.from(
@@ -280,8 +294,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
 
   const isEmpty = !loading && items.length === 0
 
-  // Display name: URL param takes priority (already available), API-loaded name as fallback
-  const displayCategoryName = categoryNameParam || categoryName
+  const displayCategoryName = categoryName
 
   // Announced to screen readers and browser agents when results change.
   const statusMessage = loading

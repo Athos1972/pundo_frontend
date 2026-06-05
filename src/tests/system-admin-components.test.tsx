@@ -638,3 +638,63 @@ describe('LanguageSelector', () => {
   })
 })
 
+// ─── EntityTable — pagination + extraParams ────────────────────────────────────
+
+import { EntityTable } from '@/components/system-admin/EntityTable'
+
+const TABLE_PROPS = {
+  columns: [{ key: 'name', label: 'Name' }],
+  rows: [
+    { id: 1, name: 'Alpha' },
+    { id: 2, name: 'Beta' },
+  ],
+  deleteLabel: 'Delete',
+  editLabel: 'Edit',
+  confirmMessage: 'Sure?',
+  cancelLabel: 'Cancel',
+  deletedMessage: 'Deleted.',
+  errorMessage: 'Error.',
+  noItemsLabel: 'No items.',
+  total: 40,
+  page: 1,
+  limit: 20,
+  baseHref: '/admin/shops',
+}
+
+describe('EntityTable — buildPageHref with extraParams', () => {
+  it('pagination link contains no extra params when extraParams is undefined', () => {
+    render(<EntityTable {...TABLE_PROPS} />)
+    const nextLink = screen.getByText('→').closest('a') as HTMLAnchorElement
+    expect(nextLink.href).toContain('page=2')
+    expect(nextLink.href).not.toContain('status=')
+  })
+
+  it('pagination link preserves status filter from extraParams', () => {
+    render(<EntityTable {...TABLE_PROPS} extraParams={{ status: 'inactive' }} />)
+    const nextLink = screen.getByText('→').closest('a') as HTMLAnchorElement
+    expect(nextLink.href).toContain('page=2')
+    expect(nextLink.href).toContain('status=inactive')
+  })
+
+  it('pagination link preserves active status filter', () => {
+    render(<EntityTable {...TABLE_PROPS} page={2} extraParams={{ status: 'active' }} />)
+    const prevLink = screen.getByText('←').closest('a') as HTMLAnchorElement
+    expect(prevLink.href).toContain('page=1')
+    expect(prevLink.href).toContain('status=active')
+  })
+
+  it('pagination link skips empty string values in extraParams', () => {
+    render(<EntityTable {...TABLE_PROPS} extraParams={{ status: '' }} />)
+    const nextLink = screen.getByText('→').closest('a') as HTMLAnchorElement
+    expect(nextLink.href).not.toContain('status=')
+  })
+
+  it('pagination link preserves both searchQ and extraParams', () => {
+    render(<EntityTable {...TABLE_PROPS} searchQ="kebab" extraParams={{ status: 'active' }} />)
+    const nextLink = screen.getByText('→').closest('a') as HTMLAnchorElement
+    expect(nextLink.href).toContain('q=kebab')
+    expect(nextLink.href).toContain('status=active')
+    expect(nextLink.href).toContain('page=2')
+  })
+})
+

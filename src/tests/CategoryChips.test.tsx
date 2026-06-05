@@ -114,11 +114,11 @@ describe('CategoryChips', () => {
     expect(screen.getByText('הצג פחות')).toBeTruthy()
   })
 
-  it('includes category_name in link href', () => {
+  it('includes only category_id in link href (no category_name)', () => {
     const cat = [makeCategory(42, 'Dog Supplies')]
     const { container } = render(<CategoryChips categories={cat} lang="en" />)
     const link = container.querySelector('a')
     expect(link?.getAttribute('href')).toContain('category_id=42')
-    expect(link?.getAttribute('href')).toContain('category_name=Dog%20Supplies')
+    expect(link?.getAttribute('href')).not.toContain('category_name')
   })
 })

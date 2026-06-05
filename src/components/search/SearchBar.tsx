@@ -75,10 +75,9 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
     router.push(localePath(lang as Lang, `/products/${slug}`))
   }
 
-  function navigateCategory(id: number, name?: string | null) {
+  function navigateCategory(id: number) {
     setOpen(false)
-    const nameParam = name ? `&category_name=${encodeURIComponent(name)}` : ''
-    router.push(localePath(lang as Lang, `/search`) + `?category_id=${id}${nameParam}`)
+    router.push(localePath(lang as Lang, `/search`) + `?category_id=${id}`)
   }
 
   function navigateShop(slug: string) {
@@ -108,7 +107,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault()
       if (activeIdx < catCount) {
-        navigateCategory(suggestions.categories[activeIdx].id, suggestions.categories[activeIdx].name)
+        navigateCategory(suggestions.categories[activeIdx].id)
       } else if (activeIdx < catCount + shopCount) {
         navigateShop(suggestions.shops[activeIdx - catCount].slug)
       } else {
@@ -172,7 +171,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
               {suggestions.categories.map((cat, idx) => (
                 <li key={`cat-${cat.id}`}>
                   <button
-                    onMouseDown={() => navigateCategory(cat.id, cat.name)}
+                    onMouseDown={() => navigateCategory(cat.id)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
                       idx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                     }`}

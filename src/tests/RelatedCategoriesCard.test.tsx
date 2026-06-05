@@ -7,8 +7,7 @@
  *  - Shows product_count badge when available, hides when null
  *  - Excludes the current product's own category (caller responsibility — tested via integration)
  *  - RTL: rtl:text-right on heading, rtl:flex-row-reverse on list
- *  - Link URLs use localePath + category_id + category_name params
- *  - Category name with special chars is encoded in URL
+ *  - Link URLs use localePath + category_id only (no category_name in URL)
  */
 
 import { describe, it, expect, vi } from 'vitest'
@@ -66,7 +65,7 @@ describe('RelatedCategoriesCard', () => {
     expect(screen.getByRole('link', { name: /Cat Food/ })).toBeInTheDocument()
   })
 
-  it('builds link href with localePath, category_id and category_name', () => {
+  it('builds link href with localePath and category_id only', () => {
     render(
       <RelatedCategoriesCard
         categories={[makeCategory({ id: 42, name: 'Dog Food' })]}
@@ -75,10 +74,10 @@ describe('RelatedCategoriesCard', () => {
       />
     )
     const link = screen.getByRole('link', { name: /Dog Food/ })
-    expect(link).toHaveAttribute('href', '/en/search?category_id=42&category_name=Dog%20Food')
+    expect(link).toHaveAttribute('href', '/en/search?category_id=42')
   })
 
-  it('encodes special characters in category_name', () => {
+  it('does not include category_name in link href (special characters case)', () => {
     render(
       <RelatedCategoriesCard
         categories={[makeCategory({ id: 7, name: 'Hunde & Katzen' })]}
@@ -87,7 +86,8 @@ describe('RelatedCategoriesCard', () => {
       />
     )
     const link = screen.getByRole('link', { name: /Hunde/ })
-    expect(link.getAttribute('href')).toContain('category_name=Hunde%20%26%20Katzen')
+    expect(link.getAttribute('href')).not.toContain('category_name')
+    expect(link.getAttribute('href')).toContain('category_id=7')
   })
 
   it('shows product_count badge when product_count is a number', () => {
@@ -135,7 +135,7 @@ describe('RelatedCategoriesCard', () => {
     // Link exists even with empty name (no crash)
     const links = screen.getAllByRole('link')
     expect(links).toHaveLength(1)
-    expect(links[0].getAttribute('href')).toContain('category_name=')
+    expect(links[0].getAttribute('href')).toContain('category_id=3')
   })
 
   it('renders section with aria-label matching title', () => {

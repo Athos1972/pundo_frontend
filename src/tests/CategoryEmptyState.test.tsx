@@ -69,15 +69,14 @@ describe('CategoryEmptyState — with related categories', () => {
     expect(screen.getByText('Cat Supplies')).toBeInTheDocument()
   })
 
-  it('includes correct href with category_id and category_name', async () => {
+  it('includes only category_id in href (no category_name)', async () => {
     const { CategoryEmptyState } = await import('@/components/search/CategoryEmptyState')
     const cats = [makeCategoryItem(42, 'Dog Supplies', 10)]
     render(<CategoryEmptyState relatedCategories={cats} lang="en" />)
 
     const link = screen.getByText('Dog Supplies').closest('a')
     expect(link?.href).toContain('category_id=42')
-    // encodeURIComponent produces %20 (or browser resolves + to %20)
-    expect(decodeURIComponent(link?.href ?? '')).toContain('category_name=Dog Supplies')
+    expect(link?.href).not.toContain('category_name')
   })
 
   it('shows product_count badge when product_count > 0', async () => {

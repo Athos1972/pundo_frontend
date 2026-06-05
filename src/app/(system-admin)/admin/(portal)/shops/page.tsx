@@ -8,7 +8,7 @@ import { EntityTable } from '@/components/system-admin/EntityTable'
 const LIMIT = 20
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; q?: string; id?: string }>
+  searchParams: Promise<{ page?: string; q?: string; id?: string; status?: string }>
 }
 
 export default async function ShopsPage({ searchParams }: PageProps) {
@@ -18,10 +18,11 @@ export default async function ShopsPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(sp.page ?? 1))
   const q = sp.q ?? ''
   const idQ = sp.id ?? ''
+  const statusQ = sp.status ?? ''
 
   let data = { items: [] as Awaited<ReturnType<typeof getShops>>['items'], total: 0, limit: LIMIT, offset: 0 }
   try {
-    data = await getShops({ q: q || undefined, id: idQ ? Number(idQ) : undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
+    data = await getShops({ q: q || undefined, id: idQ ? Number(idQ) : undefined, status: statusQ || undefined, limit: LIMIT, offset: (page - 1) * LIMIT })
   } catch { /* handled below */ }
 
   // Pre-process multilingual fields into display strings
@@ -62,6 +63,18 @@ export default async function ShopsPage({ searchParams }: PageProps) {
           className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         />
+        <select
+          name="status"
+          defaultValue={statusQ}
+          aria-label={tr.status_filter_label}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-slate-600 bg-white"
+        >
+          <option value="">{tr.status_all}</option>
+          <option value="active">active</option>
+          <option value="inactive">inactive</option>
+          <option value="pending">pending</option>
+        </select>
         <button
           type="submit"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 rounded-lg"
@@ -93,6 +106,7 @@ export default async function ShopsPage({ searchParams }: PageProps) {
         limit={LIMIT}
         baseHref="/admin/shops"
         searchQ={q || undefined}
+        extraParams={statusQ ? { status: statusQ } : undefined}
       />
     </div>
   )

@@ -16,7 +16,7 @@ interface ConsentContextValue {
 const ConsentContext = createContext<ConsentContextValue | null>(null)
 
 function writeConsentCookie(state: ConsentState) {
-  document.cookie = `${CONSENT_COOKIE}=${serializeConsentCookie(state)}; max-age=${CONSENT_MAX_AGE}; path=/; samesite=lax`
+  document.cookie = `${CONSENT_COOKIE}=${serializeConsentCookie(state)}; max-age=${CONSENT_MAX_AGE}; path=/; samesite=lax; secure`
 }
 
 function deletePixelCookies() {

@@ -92,6 +92,11 @@ describe('proxy.ts — i18n routing (F6300)', () => {
     expect(proxySrc).toContain('response.cookies.set(LANG_COOKIE')
   })
 
+  it('sets secure: true on app_lang cookie (Observatory regression)', () => {
+    // The options object passed to response.cookies.set must include secure: true
+    expect(proxySrc).toMatch(/response\.cookies\.set\(LANG_COOKIE[\s\S]*?secure:\s*true/)
+  })
+
   it('uses 307 in dev and 308 in production', () => {
     expect(proxySrc).toContain("NODE_ENV === 'development' ? 307 : 308")
   })

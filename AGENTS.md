@@ -56,12 +56,29 @@ This version has breaking changes — APIs, conventions, and file structure may 
 <!-- END:port-convention -->
 
 <!-- BEGIN:backend-repo -->
-# Backend-Repository
+# Repositories — Übersicht
 
-Das Backend liegt in `/Users/bb_studio_2025/dev/github/pundo_main_backend`.
-Backend-Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+| Repo | Pfad | Port Test / Prod | Zweck |
+|---|---|---|---|
+| `pundo_main_backend` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | 8500 / 8000 | REST-API, DB, Ingestor |
+| `pundo_llm_gateway` | `/Users/bb_studio_2025/dev/github/pundo_llm_gateway` | 8600 / 8100 | LLM-Task-Dispatcher (Queue-Manager, kein SDK) |
+| `pundo_llm_workers` | `/Users/bb_studio_2025/dev/github/pundo_llm_workers` | — (pollt Gateway) | LLM-Worker-Prozesse (Anthropic/OpenAI SDK hier) |
+| `pundo_mcp_server` | `/Users/bb_studio_2025/dev/github/pundo_mcp_server` | — | MCP-Server für Claude-Integration |
 
-Falls eine Anforderung Backend-Änderungen erfordert: explizit benennen und ggf. in das Backend-Repo wechseln.
+**Backend** (`pundo_main_backend`):
+- Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+- Falls Backend-Änderungen nötig: explizit benennen und in das Repo wechseln.
+
+**LLM-Gateway** (`pundo_llm_gateway`):
+- Reiner Queue-Manager — spricht selbst **niemals** mit einem LLM-Provider.
+- `routing.yml` ist autoritativ für Job-Typ → Modell/Lease/Retries-Mapping.
+- Neuer Job-Typ = Eintrag in `routing.yml` + (falls nötig) Priorität in `gateway/queue/job_priority.py`.
+- Test-Server: `./scripts/start_test_server.sh` (Port **8600**, DB `pundo_llm_gateway_test`). **Niemals** Port 8100 für Tests verwenden.
+
+**LLM-Worker** (`pundo_llm_workers`):
+- Provider-SDKs (`anthropic`, `openai`) leben **nur** hier.
+- Neuer Job-Typ = Jinja2-Template `prompts/<job_type>.j2` + Eintrag in `security.yml::untrusted_fields`.
+- Worker-Restart (Test): `./restart_test_worker.sh`. Prod: `./restart_prod_worker.sh` — **nur manuell**.
 <!-- END:backend-repo -->
 
 <!-- BEGIN:i18n-routing -->

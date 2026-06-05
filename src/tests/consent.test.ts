@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
+import { tConsent, consentTranslations } from '@/lib/i18n/consent'
 import {
   parseConsentCookie,
   serializeConsentCookie,
@@ -71,5 +74,40 @@ describe('constants', () => {
 
   it('CONSENT_MAX_AGE is 6 months in seconds', () => {
     expect(CONSENT_MAX_AGE).toBe(15_552_000)
+  })
+})
+
+describe('consentTranslations — consent_banner_text (cookie-banner-text-i18n-20260605)', () => {
+  const langs = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
+
+  it('alle 6 Sprachen haben consent_banner_text definiert und nicht leer', () => {
+    for (const lang of langs) {
+      const text = consentTranslations[lang].consent_banner_text
+      expect(text, `${lang}: consent_banner_text fehlt oder leer`).toBeTruthy()
+    }
+  })
+
+  it('keine der 6 Varianten enthält "Facebook" (Regression gegen alten Text)', () => {
+    for (const lang of langs) {
+      const text = consentTranslations[lang].consent_banner_text
+      expect(text.toLowerCase(), `${lang}: enthält noch "facebook"`).not.toContain('facebook')
+    }
+  })
+
+  it('unbekannte Sprache fällt auf en zurück (tConsent-Fallback)', () => {
+    const result = tConsent('xx')
+    expect(result.consent_banner_text).toBe(consentTranslations.en.consent_banner_text)
+  })
+})
+
+describe('ConsentContext — writeConsentCookie Secure flag (source regression)', () => {
+  const src = readFileSync(
+    resolve(__dirname, '../../src/components/consent/ConsentContext.tsx'),
+    'utf8',
+  )
+
+  it('writeConsentCookie includes secure attribute (Observatory regression 2026-06-05)', () => {
+    // The document.cookie string in writeConsentCookie must contain "secure"
+    expect(src.toLowerCase()).toMatch(/document\.cookie\s*=[\s\S]*?secure/)
   })
 })

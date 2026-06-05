@@ -1,7 +1,7 @@
 const consentTranslations = {
   en: {
     consent_banner_title: 'We use cookies',
-    consent_banner_text: 'We use cookies to show you relevant ads on Facebook. You can accept all cookies, or choose which ones to allow.',
+    consent_banner_text: 'We use cookies to make your experience more relevant and personalized. Accept all cookies or choose which ones to allow.',
     consent_accept_all: 'Accept all',
     consent_necessary_only: 'Necessary only',
     consent_settings: 'Settings',
@@ -14,7 +14,7 @@ const consentTranslations = {
   },
   de: {
     consent_banner_title: 'Wir verwenden Cookies',
-    consent_banner_text: 'Wir verwenden Cookies, um dir auf Facebook relevante Werbung anzuzeigen. Du kannst alle Cookies akzeptieren oder selbst auswählen, welche du erlauben möchtest.',
+    consent_banner_text: 'Wir verwenden Cookies, um deine Erfahrung relevanter und persönlicher zu gestalten. Akzeptiere alle Cookies oder wähle selbst, welche du erlauben möchtest.',
     consent_accept_all: 'Alle akzeptieren',
     consent_necessary_only: 'Nur notwendige',
     consent_settings: 'Einstellungen',
@@ -27,7 +27,7 @@ const consentTranslations = {
   },
   ru: {
     consent_banner_title: 'Мы используем cookies',
-    consent_banner_text: 'Мы используем cookies для показа релевантной рекламы в Facebook. Вы можете принять все cookies или выбрать нужные.',
+    consent_banner_text: 'Мы используем cookies, чтобы сделать ваш опыт более релевантным и персонализированным. Примите все cookies или выберите, какие разрешить.',
     consent_accept_all: 'Принять все',
     consent_necessary_only: 'Только необходимые',
     consent_settings: 'Настройки',
@@ -40,7 +40,7 @@ const consentTranslations = {
   },
   el: {
     consent_banner_title: 'Χρησιμοποιούμε cookies',
-    consent_banner_text: 'Χρησιμοποιούμε cookies για να σας εμφανίζουμε σχετικές διαφημίσεις στο Facebook. Μπορείτε να αποδεχτείτε όλα τα cookies ή να επιλέξετε ποια επιτρέπετε.',
+    consent_banner_text: 'Χρησιμοποιούμε cookies για να κάνουμε την εμπειρία σας πιο σχετική και εξατομικευμένη. Αποδεχτείτε όλα τα cookies ή επιλέξτε ποια θα επιτρέψετε.',
     consent_accept_all: 'Αποδοχή όλων',
     consent_necessary_only: 'Μόνο απαραίτητα',
     consent_settings: 'Ρυθμίσεις',
@@ -53,7 +53,7 @@ const consentTranslations = {
   },
   ar: {
     consent_banner_title: 'نستخدم ملفات تعريف الارتباط',
-    consent_banner_text: 'نستخدم ملفات تعريف الارتباط لعرض إعلانات ذات صلة على Facebook. يمكنك قبول جميعها أو اختيار ما تسمح به.',
+    consent_banner_text: 'نستخدم ملفات تعريف الارتباط لجعل تجربتك أكثر صلة وتخصيصاً. اقبل جميع ملفات تعريف الارتباط أو اختر ما تسمح به.',
     consent_accept_all: 'قبول الكل',
     consent_necessary_only: 'الضرورية فقط',
     consent_settings: 'الإعدادات',
@@ -66,7 +66,7 @@ const consentTranslations = {
   },
   he: {
     consent_banner_title: 'אנו משתמשים בעוגיות',
-    consent_banner_text: 'אנו משתמשים בעוגיות כדי להציג לך מודעות רלוונטיות בפייסבוק. תוכל לאשר את כולן או לבחור אילו לאפשר.',
+    consent_banner_text: 'אנו משתמשים בעוגיות כדי להפוך את החוויה שלך לרלוונטית ומותאמת יותר. אשר את כל העוגיות או בחר אילו לאפשר.',
     consent_accept_all: 'קבל הכל',
     consent_necessary_only: 'הכרחיות בלבד',
     consent_settings: 'הגדרות',

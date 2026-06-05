@@ -30,7 +30,7 @@ export function getLangFromCookie(): Lang {
 
 // Client: Cookie schreiben
 export function setLangCookie(lang: Lang): void {
-  document.cookie = `app_lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
+  document.cookie = `app_lang=${lang};path=/;max-age=31536000;SameSite=Lax;Secure`;
 }
 
 // Client: Browser-Sprache auf Lang mappen (für LanguagePickerOverlay)

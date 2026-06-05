@@ -20,6 +20,7 @@ import { CategoryEmptyState } from '@/components/search/CategoryEmptyState'
 import { SearchMapBottomSheet, type SheetSnap } from '@/components/map/SearchMapBottomSheet'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { ScrollRootContext } from '@/lib/ScrollRootContext'
 
 const ShopMap = dynamic(() => import('@/components/map/ShopMap').then(m => ({ default: m.ShopMap })), {
   ssr: false,
@@ -422,6 +423,9 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         />
       </div>
 
+      {/* ScrollRootContext: provides the scroll container element to ProductCardImage
+          so its IntersectionObserver uses the right root (fixes lazy-load in nested
+          overflow containers — B2250-002). Updated once the ref attaches. */}
       {/* MOBILE layout: flex-1 fills exactly whatever height the header leaves.
           No hardcoded px offset — works regardless of header height (chips, slider, etc.).
           Sheet height = container height − 60px → 60px of map permanently visible above sheet.
@@ -437,6 +441,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
             onPinClick={handlePinClick}
           />
         </div>
+        <ScrollRootContext.Provider value={mobileScrollRef}>
         <SearchMapBottomSheet
           snap={sheetSnap}
           onSnapChange={setSheetSnap}
@@ -451,10 +456,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           )}
           {listContent}
         </SearchMapBottomSheet>
+        </ScrollRootContext.Provider>
       </div>
 
       {/* DESKTOP layout: flex-1 fills the rest, side-by-side split (unchanged behaviour) */}
       <div className="hidden md:flex flex-1 min-h-0">
+        <ScrollRootContext.Provider value={scrollContainerRef}>
         <div ref={scrollContainerRef} aria-busy={loading} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
           {/* Category heading in desktop left panel */}
           {isCategoryMode && (
@@ -464,6 +471,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           )}
           {listContent}
         </div>
+        </ScrollRootContext.Provider>
         <div className="flex flex-col w-[45%] p-4">
           <ShopMap
             shops={mapShops}

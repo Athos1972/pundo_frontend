@@ -1,12 +1,7 @@
 {
-  "sha": "b530618bc725ac9e1dbedabb3e999d204706ed9d",
-  "timestamp": "2026-06-04T21:55:00Z",
+  "sha": "345a6d4e2c7c1774e70c25f8292507240abaa2f6",
+  "timestamp": "2026-06-05T06:18:36.656221+00:00",
   "verdict": "SHIP",
   "open_failures": [],
-  "coverage_snapshot": {
-    "unit_tests": "13/13 (shop-id-search: 6, category-search: 7)",
-    "journey": "customer-shop-all-products-flow: 6/6 PASS",
-    "typescript": "PASS",
-    "eslint": "3 pre-existing errors (SearchMapBottomSheet), 0 new"
-  }
+  "coverage_snapshot": {}
 }

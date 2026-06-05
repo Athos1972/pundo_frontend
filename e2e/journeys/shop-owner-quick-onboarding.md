@@ -8,6 +8,7 @@ owner-agent: coder
 proposed-in-spec: schnell-onboarding-mobil-20260501
 touches-modules:
   - src/app/(shop-admin)/shop-admin/onboarding/**
+  - src/app/(shop-admin)/shop-admin/auth/callback/**
   - src/components/shop-admin/onboarding/**
   - src/lib/onboarding/**
   - src/lib/shop-admin-translations.ts
@@ -24,8 +25,8 @@ touches-states:
   - ShopListing.available:true
 status-changed-at: 2026-05-31T00:00:00Z
 status-changed-by-spec: onboarding-items-konsolidierung-20260531
-last-run: 2026-05-31T19:05:00Z
-last-result: FAIL
+last-run: 2026-06-05T06:18:00Z
+last-result: PASS
 ---
 
 # Journey: shop-owner-quick-onboarding

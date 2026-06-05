@@ -37,7 +37,7 @@ Produktliste korrekt funktioniert — und dass er bei jeder künftigen Änderung
 und hat mindestens 1 Produkt mit Angebot. Wird via `sync_prod_to_test.sh` sichergestellt;
 bei fehlendem Produkt: Fixture-Defekt melden, Test nicht laufen lassen.
 
----
+----
 
 ### Runbook (Assertions in dieser Reihenfolge)
 
@@ -67,7 +67,7 @@ bei fehlendem Produkt: Fixture-Defekt melden, Test nicht laufen lassen.
 12. Navigiere zu `/en/search?category_id=1` (existierende Kategorie)
 13. Produkte erscheinen — Guard-Fix hat category-Modus nicht gebrochen
 
----
+----
 
 ### Fixture-Anforderungen
 
@@ -79,7 +79,7 @@ bei fehlendem Produkt: Fixture-Defekt melden, Test nicht laufen lassen.
 Keine eigenen E2E-Fixtures nötig — nutzt bestehende `pundo_test`-Daten.
 Bei fehlendem Shop oder 0 Produkten: `test.skip('Fixture-Defekt: ...')` + Bug-Eintrag.
 
----
+----
 
 ### Smoketest-Würdigkeit
 

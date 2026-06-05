@@ -66,7 +66,8 @@ describe('parseCatalog — Seed-Datei', () => {
     const entries = loadAllJourneys()
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    expect(entries).toHaveLength(26)
+    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
+    expect(entries).toHaveLength(27)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -384,12 +385,13 @@ describe('Edge Cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseCatalogDirectory', () => {
-  it('findet alle Journey-Dateien und liefert 17 Einträge', () => {
+  it('findet alle Journey-Dateien und liefert 27 Einträge', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    expect(entries).toHaveLength(26)
+    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
+    expect(entries).toHaveLength(27)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -411,7 +413,8 @@ describe('parseCatalogDirectory', () => {
     // None of these should produce entries in the directory scan
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    expect(entries).toHaveLength(26)
+    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
+    expect(entries).toHaveLength(27)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

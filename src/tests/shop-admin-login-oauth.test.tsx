@@ -173,7 +173,7 @@ describe('Callback page — redirect routing (T4)', () => {
     expect(mockReplace.mock.calls[0][0]).toBe('/shop-admin/onboarding?resume=oauth')
   })
 
-  it('redirects existing user to /shop-admin/ on success without new_user', async () => {
+  it('redirects existing user to /shop-admin/dashboard on success without new_user', async () => {
     mockSearchParamsString = 'success=1'
     const { default: CallbackPage } = await import(
       '@/app/(shop-admin)/shop-admin/auth/callback/page'
@@ -184,6 +184,6 @@ describe('Callback page — redirect routing (T4)', () => {
       expect(mockReplace).toHaveBeenCalled()
     })
 
-    expect(mockReplace.mock.calls[0][0]).toBe('/shop-admin/')
+    expect(mockReplace.mock.calls[0][0]).toBe('/shop-admin/dashboard')
   })
 })

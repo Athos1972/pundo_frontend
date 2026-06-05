@@ -37,10 +37,10 @@
 | [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
 | [category-discovery](category-discovery.md) | Category Discovery Flow (F2350) | approved | P2 | — |
-| [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | — |
+| [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | PASS |
 | [cookie-consent-flow](cookie-consent-flow.md) | Cookie Consent Gate + Meta-Pixel Load/Block (F7500) | implemented | P1 | PASS |
 | [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id | implemented | P2 | PASS |
-| [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | — |
+| [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | PASS |
 
 ## Smoketest Coverage
 

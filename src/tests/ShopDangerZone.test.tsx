@@ -30,7 +30,7 @@ const mockTr = {
   deactivate_confirm_button: 'Yes, close shop',
   deactivate_cancel: 'Cancel',
   deactivate_error: 'An error occurred.',
-} as Parameters<typeof ShopDangerZone>[0]['tr']
+} as unknown as Parameters<typeof ShopDangerZone>[0]['tr']
 
 describe('ShopDangerZone', () => {
   beforeEach(() => {

@@ -1,5 +1,6 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
+// nav_settings added 2026-06-05 (shop-delete-deactivate-20260605)
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -71,7 +72,7 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
     { href: '/shop-admin/import', label: tr.nav_import, icon: '⬆' },
     { href: '/shop-admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },
     { href: '/shop-admin/reviews', label: tr.nav_reviews, icon: '★' },
-    { href: '/shop-admin/settings', label: tr.nav_settings, icon: '⚙️' },
+    { href: '/shop-admin/settings', label: tr.nav_settings ?? 'Settings', icon: '⚙️' },
     { href: '/shop-admin/help', label: tr.nav_help, icon: '?' },
   ]
 

@@ -20,8 +20,8 @@ touches-states:
   - ShopOwner.status:inactive
 status-changed-at: 2026-06-05T00:00:00Z
 status-changed-by-spec: shop-delete-deactivate-20260605
-last-run: ~
-last-result: ~
+last-run: 2026-06-05T11:18:27Z
+last-result: PASS
 ---
 
 ### Journey: Shop-Owner Self-Deactivate (Danger Zone)

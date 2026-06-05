@@ -30,31 +30,32 @@ function ImagePlaceholder() {
   )
 }
 
-// Fast-scroll fix: the browser aborts inflight requests (net::ERR_ABORTED) when the
-// connection queue fills up, firing the error event even for intact images. A permanent
-// `failed` flag (previous approach) left cards blank for the rest of the session.
-// Instead we retry up to MAX_RETRIES times. key={retryCount} forces a fresh img element
-// (new DOM node, new fetch) on each retry. After MAX_RETRIES real failures the
-// placeholder is shown permanently — preventing retry storms on actual 404s.
-const MAX_RETRIES = 2
-
+// Root cause of the missing-image bug (B2250-002):
+// The search results list lives in an overflow-y-auto scroll container, not the document
+// viewport. Native loading="lazy" fires its intersection check against the wrong root in
+// this layout and triggers many images simultaneously when the user scrolls — flooding the
+// browser's 6-connection-per-host queue. Aborted requests fire the error event even on
+// intact images, leaving cards permanently empty.
+//
+// Fix: drop loading="lazy". Infinite scroll already limits the DOM to 20 items per page,
+// so eager loading 20 card-sized images is fine. Requests start in DOM order at mount
+// time rather than in a burst on scroll, which eliminates ERR_ABORTED cascades.
+// onError is kept to show the placeholder for genuinely broken/missing images (HTTP 404).
 export function ProductCardImage({ src, alt, className }: Props) {
-  const [retryCount, setRetryCount] = useState(0)
+  const [failed, setFailed] = useState(false)
 
-  if (!src || retryCount >= MAX_RETRIES) {
+  if (!src || failed) {
     return <ImagePlaceholder />
   }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      key={retryCount}
       src={src}
       alt={alt}
-      loading="lazy"
       decoding="async"
       className={className}
-      onError={() => setRetryCount(c => c + 1)}
+      onError={() => setFailed(true)}
     />
   )
 }

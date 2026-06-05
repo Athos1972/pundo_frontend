@@ -29,6 +29,7 @@ export function GuideHeroImage({ slug, alt, priority = false }: GuideHeroImagePr
         height={m.height}
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : 'auto'}
+        // @csp-allow-inline-style — dynamic blurDataURL as background-image, no Tailwind equivalent
         style={{
           width: '100%',
           height: 'auto',

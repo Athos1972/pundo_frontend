@@ -13,6 +13,7 @@ export function OnboardingProgress({ step, total, isRtl }: OnboardingProgressPro
       <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <div
           className="h-full bg-accent rounded-full transition-all duration-300"
+          // @csp-allow-inline-style — dynamic progress width (%) and RTL margin, not expressible as static Tailwind
           style={isRtl ? { marginInlineStart: 'auto', width: `${pct}%` } : { width: `${pct}%` }}
         />
       </div>

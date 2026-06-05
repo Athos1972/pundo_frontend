@@ -56,6 +56,7 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
               <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg">
                 <div className="w-2 h-2 bg-surface rounded-full" />
               </div>
+              {/* @csp-allow-inline-style — clip-path polygon not expressible as Tailwind class */}
               <div className="w-2 h-2 bg-accent mx-auto -mt-0.5 clip-triangle" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }} />
             </div>
           </div>

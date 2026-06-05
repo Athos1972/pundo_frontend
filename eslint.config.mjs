@@ -5,6 +5,7 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const requirePageMetadata = require("./eslint-rules/require-page-metadata.js");
+const noInlineStyle = require("./eslint-rules/no-inline-style.js");
 
 // ─── Shop-Admin Clean Boundary ────────────────────────────────────────────────
 // shop-admin code must not import from customer-facing modules.
@@ -66,6 +67,24 @@ const seoMetadataRule = {
   },
 };
 
+// ─── CSP Guardrail — no-inline-style ─────────────────────────────────────────
+// Warn on style={{…}} in TSX files. Use Tailwind classes instead.
+// Exceptions: add // @csp-allow-inline-style on the line above the style prop
+// (e.g. Leaflet MapContainer, dynamic calculated widths, blur placeholders).
+const cspInlineStyleRule = {
+  files: ["src/**/*.tsx"],
+  plugins: {
+    "local-csp": {
+      rules: {
+        "no-inline-style": noInlineStyle,
+      },
+    },
+  },
+  rules: {
+    "local-csp/no-inline-style": "warn",
+  },
+};
+
 // ─── Unused vars: ignore _-prefixed identifiers (standard TS convention) ──────
 // Preserve rule defaults: vars/args/ignoreRestSiblings are kept at defaults;
 // only add _-ignore patterns so prefixed identifiers stop being flagged.
@@ -98,6 +117,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   shopAdminBoundaryRule,
   seoMetadataRule,
+  cspInlineStyleRule,
   unusedVarsRule,
   testFilesRule,
   // Override default ignores of eslint-config-next.

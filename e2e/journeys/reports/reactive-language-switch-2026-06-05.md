@@ -1,5 +1,5 @@
 ## Journey: Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) — PASS
-Datum: 2026-06-05 09:16 UTC
+Datum: 2026-06-05 09:47 UTC
 Dauer: 13s
 
 ### Aufgebaute Test-Daten

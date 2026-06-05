@@ -95,6 +95,7 @@ export function CameraView({ tr, onCapture, onClose }: Props) {
           playsInline
           muted
           className="w-full h-full object-cover"
+          // @csp-allow-inline-style — dynamic transform based on camera facingMode
           style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
         />
       </div>

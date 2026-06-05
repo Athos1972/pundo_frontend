@@ -75,6 +75,7 @@ function TreeNodeRow({ node, depth, editLabel, expanded, onToggle }: TreeNodePro
     <li>
       <div
         className="flex items-start gap-1 py-1.5 hover:bg-gray-50 rounded px-2 group"
+        // @csp-allow-inline-style — dynamic depth-based indent, not expressible as static Tailwind class
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
         {/* Toggle button */}

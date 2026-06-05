@@ -61,6 +61,7 @@ export function LocationEditorMap({ lat, lng, onMove }: LocationEditorMapProps) 
     <MapContainer
       center={[lat, lng]}
       zoom={14}
+      // @csp-allow-inline-style — Leaflet MapContainer requires style prop for dimensions
       style={{ height: '300px', width: '100%', borderRadius: '8px' }}
       scrollWheelZoom={false}
     >

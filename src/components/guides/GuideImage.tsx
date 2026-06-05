@@ -27,6 +27,7 @@ export function GuideImage({ slug, asset, alt }: GuideImageProps) {
         width={m.width}
         height={m.height}
         loading="lazy"
+        // @csp-allow-inline-style — dynamic blurDataURL as background-image, no Tailwind equivalent
         style={{
           width: '100%',
           height: 'auto',

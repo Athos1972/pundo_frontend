@@ -87,6 +87,7 @@ export function OnboardingMapInner({
     <MapContainer
       center={mapCenter}
       zoom={initialZoom}
+      // @csp-allow-inline-style — Leaflet MapContainer requires style prop for dimensions
       style={{ height: '220px', width: '100%', borderRadius: '12px', cursor: 'crosshair' }}
       scrollWheelZoom={false}
     >

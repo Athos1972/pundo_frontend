@@ -320,8 +320,7 @@ export default async function ForShopsPage({ params }: Props) {
             <div className="relative flex flex-col sm:flex-row gap-8 sm:gap-0">
               {/* Connector line — desktop only */}
               <div
-                className="hidden sm:block absolute top-5 left-[calc(16.67%)] right-[calc(16.67%)] h-px"
-                style={{ background: 'rgba(212,98,42,0.3)' }}
+                className="hidden sm:block absolute top-5 left-[calc(16.67%)] right-[calc(16.67%)] h-px bg-[rgba(212,98,42,0.3)]"
                 aria-hidden="true"
               />
 
@@ -400,11 +399,13 @@ export default async function ForShopsPage({ params }: Props) {
             {/* Radial gradient overlays — decorative */}
             <div
               className="absolute top-0 right-0 w-64 h-64 opacity-10 pointer-events-none"
+              // @csp-allow-inline-style — radial-gradient with CSS var, not expressible as Tailwind
               style={{ background: 'radial-gradient(circle at top right, var(--color-accent), transparent 70%)' }}
               aria-hidden="true"
             />
             <div
               className="absolute bottom-0 left-0 w-64 h-64 opacity-10 pointer-events-none"
+              // @csp-allow-inline-style — radial-gradient with CSS var, not expressible as Tailwind
               style={{ background: 'radial-gradient(circle at bottom left, var(--color-accent), transparent 70%)' }}
               aria-hidden="true"
             />

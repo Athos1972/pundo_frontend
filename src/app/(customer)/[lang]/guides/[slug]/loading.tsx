@@ -9,6 +9,7 @@ export default function GuideDetailLoading() {
       </div>
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map((i) => (
+          // @csp-allow-inline-style — dynamic width, not expressible as static Tailwind class
           <div key={i} className="h-4 bg-surface-alt rounded animate-pulse" style={{ width: `${80 + (i % 3) * 10}%` }} />
         ))}
       </div>

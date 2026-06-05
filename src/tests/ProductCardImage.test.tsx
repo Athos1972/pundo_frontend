@@ -10,10 +10,18 @@ describe('ProductCardImage', () => {
     expect(img).toHaveAttribute('alt', 'Test Produkt')
   })
 
-  it('renders img with loading=lazy and decoding=async', () => {
+  // B2250-002: loading="lazy" was removed because it caused ERR_ABORTED cascades
+  // in the nested overflow-y-auto scroll container (burst-fires on scroll).
+  // The img must NOT have loading="lazy" — eager loading (the default) is correct here.
+  it('does NOT have loading=lazy (B2250-002: nested scroller burst-load fix)', () => {
     render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
     const img = screen.getByRole('img', { hidden: true })
-    expect(img).toHaveAttribute('loading', 'lazy')
+    expect(img).not.toHaveAttribute('loading', 'lazy')
+  })
+
+  it('renders img with decoding=async', () => {
+    render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
+    const img = screen.getByRole('img', { hidden: true })
     expect(img).toHaveAttribute('decoding', 'async')
   })
 
@@ -23,28 +31,14 @@ describe('ProductCardImage', () => {
     expect(img).toHaveClass('w-full', 'h-full', 'object-cover')
   })
 
-  // BUG REGRESSION B2250-002: fast-scroll causes net::ERR_ABORTED which fires the error
-  // event on intact images. The old fix set permanent failed=true — leaving cards blank.
-  // New fix: retry up to MAX_RETRIES=2 times; only then show permanent placeholder.
-  it('retries after first error — img still present, no placeholder yet', () => {
+  // BUG REGRESSION B2250-002: onError must show placeholder for genuinely broken images
+  // (HTTP 404, missing card variant). It must NOT fire for ERR_ABORTED — but since we
+  // removed loading="lazy", ERR_ABORTED cascades no longer occur in practice.
+  it('renders placeholder after onError — genuinely broken image (bug regression)', () => {
     render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
     const img = screen.getByRole('img', { hidden: true })
-    // Simulate first abort (e.g. net::ERR_ABORTED during fast scroll)
     fireEvent.error(img)
-    // After one error: img element should still be in the DOM (retry state)
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument()
-    // No placeholder SVG yet
-    expect(document.querySelector('svg[aria-hidden="true"]')).not.toBeInTheDocument()
-  })
-
-  it('shows placeholder permanently after MAX_RETRIES (2) errors', () => {
-    render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
-    const img1 = screen.getByRole('img', { hidden: true })
-    fireEvent.error(img1)
-    // After 1st error: retry — img still present
-    const img2 = screen.getByRole('img', { hidden: true })
-    fireEvent.error(img2)
-    // After 2nd error: MAX_RETRIES reached — placeholder must appear
+    // img must be gone, placeholder SVG must appear
     expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
     const svg = document.querySelector('svg[aria-hidden="true"]')
     expect(svg).toBeInTheDocument()
@@ -70,11 +64,9 @@ describe('ProductCardImage', () => {
   })
 
   it('placeholder does not trigger lightbox or navigation on click', () => {
-    // ProductCardImage is a leaf — no click side-effects
     render(<ProductCardImage src={null} alt="kein Bild" />)
     const placeholder = document.querySelector('div')
     expect(placeholder).toBeInTheDocument()
-    // Should not throw on click
     fireEvent.click(placeholder!)
   })
 })

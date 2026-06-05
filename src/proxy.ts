@@ -109,7 +109,7 @@ const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = fal
     // 'unsafe-hashes' + sha256 covers style= attributes (e.g. Leaflet map) on all other pages.
     isDev || allowInlineStyles
       ? `style-src 'self' 'unsafe-inline'`
-      : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY=' 'unsafe-hashes' 'sha256-U7qpK+rHoFOZHvmwTPXyOVr1wpK+zdAg1mRTaYEGL9g='`,
+      : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY=' 'unsafe-hashes' 'sha256-U7qpK+rHoFOZHvmwTPXyOVr1wpK+zdAg1mRTaYEGL9g=' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co${metaImgSrc}`,

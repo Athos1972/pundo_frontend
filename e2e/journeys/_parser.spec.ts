@@ -67,7 +67,8 @@ describe('parseCatalog — Seed-Datei', () => {
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    expect(entries).toHaveLength(27)
+    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
+    expect(entries).toHaveLength(28)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -78,8 +79,9 @@ describe('parseCatalog — Seed-Datei', () => {
     //             + state-transition-ItemStatus, write-to-read-createItem (approved)
     //             + shop-owner-quick-onboarding (approved, added 2026-05-01 F5910)
     //             + cookie-consent-flow, reactive-language-switch (P1, added 2026-05-31)
+    //             + shop-owner-admin-approval-flow (approved, added 2026-06-05)
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    expect(p1Entries.length).toBe(10)
+    expect(p1Entries.length).toBe(11)
     expect(p1Entries[0].status).toBe('implemented') // shop-admin-offers is first alphabetically
   })
 
@@ -391,7 +393,8 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    expect(entries).toHaveLength(27)
+    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
+    expect(entries).toHaveLength(28)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -412,7 +415,8 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-05-22: +1 entry (category-discovery, F2350)
     // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    expect(entries).toHaveLength(27)
+    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
+    expect(entries).toHaveLength(28)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

@@ -11,6 +11,7 @@
 
 | ID | Title | Status | Priority | Last Result |
 |---|---|---|---|---|
+| [shop-owner-admin-approval-flow](shop-owner-admin-approval-flow.md) | Shop-Owner Admin-Approval via Browser-UI | implemented | P1 | PASS |
 | [shop-owner-lifecycle](shop-owner-lifecycle.md) | Shop-Owner Lifecycle | implemented | P1 | PASS |
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |

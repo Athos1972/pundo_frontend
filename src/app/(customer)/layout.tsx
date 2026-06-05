@@ -4,7 +4,6 @@ import { Space_Grotesk, DM_Sans, Unbounded, Golos_Text } from 'next/font/google'
 import Script from 'next/script'
 import '../globals.css'
 import { getLangServer, isRTL } from '@/lib/lang'
-import { SplashScreen } from '@/components/ui/SplashScreen'
 import { SessionProvider } from '@/components/auth/SessionProvider'
 import { getCustomerSession } from '@/lib/customer-api'
 import { Footer } from '@/components/layout/Footer'
@@ -133,7 +132,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         <ConsentProvider initialConsent={initialConsent}>
           <DirSync fallbackLang={lang} />
-          <SplashScreen splashSvg={brand.assets.splashSvg} />
           <LanguagePickerOverlay serverLang={lang} />
           <TooltipProvider>
             <SessionProvider initialSession={session}>

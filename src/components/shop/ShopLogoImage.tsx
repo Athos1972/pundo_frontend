@@ -14,6 +14,11 @@ const SIZE_CLASSES: Record<'lg' | 'md', string> = {
   md: 'w-16 h-16',
 }
 
+const SIZE_TO_API: Record<'lg' | 'md', 'large' | 'medium'> = {
+  lg: 'large',
+  md: 'medium',
+}
+
 const COLOUR_PAIRS = [
   'bg-sky-100 text-sky-700',
   'bg-violet-100 text-violet-700',
@@ -45,22 +50,23 @@ interface ShopLogoImageProps {
   name: string | null
   /** Visual size */
   size: 'lg' | 'md'
+  /** Shop ID — when provided, used as intermediate fallback via favicon API before showing letter */
+  shopId?: number
 }
 
 /**
  * Renders the shop logo via next/image.
- * On load error (broken URL, 404, BE not yet mounted) falls back to a
- * coloured circle with the first initial of the shop name — identical
- * fallback to ShopAvatar, but driven by the actual logo URL instead of
- * the favicon API.
+ * Fallback chain: logo URL → favicon API (when shopId provided) → coloured initial.
+ * Keeps rounded-xl shape throughout (distinct from ShopAvatar's rounded-full).
  */
-export function ShopLogoImage({ url, name, size }: ShopLogoImageProps) {
-  const [error, setError] = useState(false)
+export function ShopLogoImage({ url, name, size, shopId }: ShopLogoImageProps) {
+  const [urlError, setUrlError] = useState(false)
+  const [faviconError, setFaviconError] = useState(false)
 
   const px = SIZE_PX[size]
   const sizeClass = SIZE_CLASSES[size]
 
-  if (url && !error) {
+  if (url && !urlError) {
     return (
       <div className={`shrink-0 ${sizeClass}`}>
         <Image
@@ -69,13 +75,29 @@ export function ShopLogoImage({ url, name, size }: ShopLogoImageProps) {
           width={px}
           height={px}
           className="rounded-xl object-cover bg-surface border border-border w-full h-full"
-          onError={() => setError(true)}
+          onError={() => setUrlError(true)}
         />
       </div>
     )
   }
 
-  // Fallback — coloured circle with initial
+  // Favicon API fallback — only when shopId is available and favicon not yet failed
+  if (shopId !== undefined && !faviconError) {
+    const faviconUrl = `/api/v1/shops/${shopId}/favicon?size=${SIZE_TO_API[size]}`
+    return (
+      <div className={`shrink-0 ${sizeClass} rounded-xl overflow-hidden`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={faviconUrl}
+          alt={name ?? ''}
+          className="w-full h-full object-cover"
+          onError={() => setFaviconError(true)}
+        />
+      </div>
+    )
+  }
+
+  // Letter fallback
   const textSize = size === 'lg' ? 'text-2xl font-bold' : 'text-lg font-semibold'
   return (
     <div

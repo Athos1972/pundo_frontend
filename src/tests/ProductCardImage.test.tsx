@@ -23,16 +23,29 @@ describe('ProductCardImage', () => {
     expect(img).toHaveClass('w-full', 'h-full', 'object-cover')
   })
 
-  // BUG REGRESSION: onError used to call style.display='none' (DOM mutation).
-  // After fix: React state drives visibility, placeholder renders instead.
-  it('renders placeholder after onError (bug regression: no DOM mutation)', () => {
+  // BUG REGRESSION B2250-002: fast-scroll causes net::ERR_ABORTED which fires the error
+  // event on intact images. The old fix set permanent failed=true — leaving cards blank.
+  // New fix: retry up to MAX_RETRIES=2 times; only then show permanent placeholder.
+  it('retries after first error — img still present, no placeholder yet', () => {
     render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
     const img = screen.getByRole('img', { hidden: true })
-    // Simulate network abort / load error
+    // Simulate first abort (e.g. net::ERR_ABORTED during fast scroll)
     fireEvent.error(img)
-    // img must be gone, placeholder SVG must appear
+    // After one error: img element should still be in the DOM (retry state)
+    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument()
+    // No placeholder SVG yet
+    expect(document.querySelector('svg[aria-hidden="true"]')).not.toBeInTheDocument()
+  })
+
+  it('shows placeholder permanently after MAX_RETRIES (2) errors', () => {
+    render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
+    const img1 = screen.getByRole('img', { hidden: true })
+    fireEvent.error(img1)
+    // After 1st error: retry — img still present
+    const img2 = screen.getByRole('img', { hidden: true })
+    fireEvent.error(img2)
+    // After 2nd error: MAX_RETRIES reached — placeholder must appear
     expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
-    // The SVG placeholder has aria-hidden="true" — query directly
     const svg = document.querySelector('svg[aria-hidden="true"]')
     expect(svg).toBeInTheDocument()
   })

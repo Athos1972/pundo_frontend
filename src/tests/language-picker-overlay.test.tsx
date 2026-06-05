@@ -26,18 +26,6 @@ Object.defineProperty(navigator, 'languages', {
   configurable: true,
 })
 
-// sessionStorage mock
-const sessionStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value },
-    removeItem: (key: string) => { delete store[key] },
-    clear: () => { store = {} },
-  }
-})()
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock, writable: true })
-
 // window.location.reload mock
 Object.defineProperty(window, 'location', {
   value: { ...window.location, reload: mockReload },
@@ -69,7 +57,6 @@ function clearCookieLang() {
 import { LanguagePickerOverlay, useLanguagePickerTrigger } from '@/components/ui/LanguagePickerOverlay'
 import { detectBrowserLang } from '@/lib/lang'
 import * as LangModule from '@/lib/lang'
-import { SPLASH_SESSION_KEY } from '@/lib/splash'
 import { renderHook } from '@testing-library/react'
 
 // ---- Setup / teardown ----
@@ -79,7 +66,6 @@ beforeEach(() => {
   mockPush.mockClear()
   mockReload.mockClear()
   vi.mocked(LangModule.setLangCookie).mockClear()
-  sessionStorageMock.clear()
   clearCookieLang()
   mockLanguages = ['en-US']
   vi.useFakeTimers()
@@ -142,16 +128,14 @@ describe('detectBrowserLang', () => {
 describe('useLanguagePickerTrigger', () => {
   it('shouldShow=false when app_lang cookie is present', async () => {
     setCookieLang('de')
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1') // splash already ran
 
     const { result } = renderHook(() => useLanguagePickerTrigger())
     await act(async () => { vi.advanceTimersByTime(200) })
     expect(result.current.shouldShow).toBe(false)
   })
 
-  it('shouldShow=true after splash delay when no cookie and splash already ran', async () => {
+  it('shouldShow=true after settle delay when no cookie', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     const { result } = renderHook(() => useLanguagePickerTrigger())
     expect(result.current.shouldShow).toBe(false) // before timer
@@ -160,22 +144,9 @@ describe('useLanguagePickerTrigger', () => {
     expect(result.current.shouldShow).toBe(true)
   })
 
-  it('shouldShow=true only after SPLASH_OUTRO_MS + buffer when splash has not yet run', async () => {
-    clearCookieLang()
-    // No sessionStorage entry — splash not yet run
-
-    const { result } = renderHook(() => useLanguagePickerTrigger())
-    await act(async () => { vi.advanceTimersByTime(2500) }) // just at boundary
-    expect(result.current.shouldShow).toBe(false)
-
-    await act(async () => { vi.advanceTimersByTime(200) }) // over the buffer
-    expect(result.current.shouldShow).toBe(true)
-  })
-
   it("preselected follows navigator.languages 'ru-RU'", async () => {
     mockLanguages = ['ru-RU']
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     const { result } = renderHook(() => useLanguagePickerTrigger())
     await act(async () => { vi.advanceTimersByTime(200) })
@@ -185,7 +156,6 @@ describe('useLanguagePickerTrigger', () => {
   it("preselected falls back to 'en' for unsupported browser lang 'fr-FR'", async () => {
     mockLanguages = ['fr-FR']
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     const { result } = renderHook(() => useLanguagePickerTrigger())
     await act(async () => { vi.advanceTimersByTime(200) })
@@ -194,7 +164,6 @@ describe('useLanguagePickerTrigger', () => {
 
   it('exposes dismiss() that sets shouldShow to false', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     const { result } = renderHook(() => useLanguagePickerTrigger())
     await act(async () => { vi.advanceTimersByTime(200) })
@@ -212,16 +181,14 @@ describe('useLanguagePickerTrigger', () => {
 describe('LanguagePickerOverlay — visibility', () => {
   it('renders null when app_lang cookie is set', async () => {
     setCookieLang('de')
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     const { container } = render(<LanguagePickerOverlay serverLang="de" />)
     await act(async () => { vi.advanceTimersByTime(200) })
     expect(container.querySelector('[role="dialog"]')).toBeNull()
   })
 
-  it('renders dialog when no cookie and splash already ran', async () => {
+  it('renders dialog when no cookie', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     render(<LanguagePickerOverlay serverLang="en" />)
     await act(async () => { vi.advanceTimersByTime(200) })
@@ -231,7 +198,6 @@ describe('LanguagePickerOverlay — visibility', () => {
 
   it('has aria-modal=true on the dialog', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
 
     render(<LanguagePickerOverlay serverLang="en" />)
     await act(async () => { vi.advanceTimersByTime(200) })
@@ -247,7 +213,6 @@ describe('LanguagePickerOverlay — visibility', () => {
 describe('LanguagePickerOverlay — language options', () => {
   async function renderOpen(serverLang: 'en' | 'de' | 'ru' | 'el' | 'ar' | 'he' = 'en') {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     render(<LanguagePickerOverlay serverLang={serverLang} />)
     await act(async () => { vi.advanceTimersByTime(200) })
   }
@@ -287,12 +252,10 @@ describe('LanguagePickerOverlay — language options', () => {
 describe('LanguagePickerOverlay — one-tap apply', () => {
   async function renderOpen(serverLang: 'en' | 'de' | 'ru' | 'el' | 'ar' | 'he' = 'en') {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     render(<LanguagePickerOverlay serverLang={serverLang} />)
     await act(async () => { vi.advanceTimersByTime(200) })
   }
 
-  // T-NEW-1 — Same-Lang-Dismiss (AC-B2, AC-T1)
   it('tapping English when serverLang=en calls router.push and dismisses dialog (same-lang path)', async () => {
     mockLanguages = ['en-US']
     await renderOpen('en')
@@ -303,11 +266,9 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
     expect(mockPush).toHaveBeenCalledOnce()
     expect(mockPush).toHaveBeenCalledWith('/en/some-page')
     expect(mockReload).not.toHaveBeenCalled()
-    // DOM-Dismiss-Assertion: dialog must be gone (not just mock-call check)
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  // T-NEW-2 — Different-Lang-Apply (AC-B3)
   it('tapping Deutsch when serverLang=en calls router.push to /de path and dismisses dialog (different-lang path)', async () => {
     mockLanguages = ['en-US']
     await renderOpen('en')
@@ -319,22 +280,18 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
     expect(mockPush).toHaveBeenCalledOnce()
     expect(mockPush).toHaveBeenCalledWith('/de/some-page')
     expect(mockReload).not.toHaveBeenCalled()
-    // DOM-Dismiss-Assertion: dismiss() runs before push
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
-  // T-NEW-3 — No Confirm Button (AC-B5, AC-T3)
   it('has no confirm/continue button in the dialog', async () => {
     await renderOpen('en')
 
     expect(
       screen.queryByRole('button', { name: /Continue|Weiter|Συνέχεια|Продолжить|متابعة|המשך/i })
     ).toBeNull()
-    // Also check by data attribute
     expect(document.querySelector('[data-confirm]')).toBeNull()
   })
 
-  // T-NEW-4 — setLangCookie called with correct value
   it('tapping Arabic calls setLangCookie with "ar"', async () => {
     await renderOpen('en')
 
@@ -344,7 +301,6 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
     expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('ar')
   })
 
-  // T-NEW-5 — tapping Russian calls setLangCookie with 'ru'
   it('tapping Russian calls setLangCookie with "ru"', async () => {
     await renderOpen('en')
 
@@ -354,7 +310,6 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
     expect(vi.mocked(LangModule.setLangCookie)).toHaveBeenCalledWith('ru')
   })
 
-  // Keyboard: Enter on a button fires its onClick natively — test via fireEvent.click as proxy
   it('all radio options have tabIndex=0 (keyboard-reachable without selection state dependency)', async () => {
     await renderOpen('en')
     const radios = screen.getAllByRole('radio')
@@ -371,7 +326,6 @@ describe('LanguagePickerOverlay — one-tap apply', () => {
 describe('LanguagePickerOverlay — keyboard non-dismiss', () => {
   async function renderOpen() {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     render(<LanguagePickerOverlay serverLang="en" />)
     await act(async () => { vi.advanceTimersByTime(200) })
   }
@@ -386,7 +340,6 @@ describe('LanguagePickerOverlay — keyboard non-dismiss', () => {
 
   it('backdrop click does NOT close the overlay (not skippable)', async () => {
     await renderOpen()
-    // click the outer backdrop (parent of dialog)
     const backdrop = screen.getByRole('dialog').parentElement!
     fireEvent.click(backdrop)
     expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -400,7 +353,6 @@ describe('LanguagePickerOverlay — keyboard non-dismiss', () => {
 describe('LanguagePickerOverlay — tap targets', () => {
   it('all radio options have min-h-[44px]', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     render(<LanguagePickerOverlay serverLang="en" />)
     await act(async () => { vi.advanceTimersByTime(200) })
 
@@ -417,7 +369,6 @@ describe('LanguagePickerOverlay — tap targets', () => {
 describe('LanguagePickerOverlay — translations', () => {
   it('title is shown in English when browser lang is en-US', async () => {
     clearCookieLang()
-    sessionStorageMock.setItem(SPLASH_SESSION_KEY, '1')
     mockLanguages = ['en-US']
     render(<LanguagePickerOverlay serverLang="en" />)
     await act(async () => { vi.advanceTimersByTime(200) })

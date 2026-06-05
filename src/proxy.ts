@@ -88,7 +88,7 @@ const PUBLIC_SHOP_ADMIN_PATHS = [
 // Public paths under /admin/ that do NOT require the admin_token cookie.
 const PUBLIC_ADMIN_PATHS = ['/admin/login']
 
-const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = false, metaPixelEnabled = false): string => {
+const buildCsp = (nonce: string, analyticsHost?: string, metaPixelEnabled = false): string => {
   const analyticsConnectSrc = analyticsHost ? ` ${analyticsHost}` : ''
   const analyticsScriptSrc = analyticsHost ? ` ${analyticsHost}` : ''
   // Meta Pixel needs connect-src + img-src. script-src is covered by strict-dynamic.
@@ -99,17 +99,9 @@ const buildCsp = (nonce: string, analyticsHost?: string, allowInlineStyles = fal
   const directives = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}${analyticsScriptSrc} https://challenges.cloudflare.com`,
-    // In dev: allow unsafe-inline without nonce (nonce + unsafe-inline doesn't work in CSP)
-    // In prod: use nonce-only (strict) + hash for next/font/google's deterministic CSS-variable injection.
-    // next/font injects a <style> with CSS custom properties (font variable names) that has no nonce API.
-    // The hash is stable as long as the font config in (customer)/layout.tsx stays unchanged.
-    // If fonts change → run: npx playwright test --reporter=list 2>&1 | grep "sha256-" to get the new hash.
-    // allowInlineStyles=true: used for /blog where Soro embed injects inline styles at runtime.
-    // allowInlineStyles=true: /blog – Soro widget injects inline styles at runtime.
-    // 'unsafe-hashes' + sha256 covers style= attributes (e.g. Leaflet map) on all other pages.
-    isDev || allowInlineStyles
-      ? `style-src 'self' 'unsafe-inline'`
-      : `style-src 'self' 'nonce-${nonce}' 'sha256-qGnR29pPEL8MPTqiU3sSC/pl2+9TzQhGK/uTWO7vBVY=' 'unsafe-hashes' 'sha256-U7qpK+rHoFOZHvmwTPXyOVr1wpK+zdAg1mRTaYEGL9g=' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='`,
+    // style-src intentionally 'unsafe-inline': CSS injection risk is low; nonces/hashes can't cover
+    // dynamic style= attributes in React (e.g. Leaflet maps, calculated widths). script-src remains strict.
+    `style-src 'self' 'unsafe-inline'`,
     // img: Kartenkacheln (CartoDB/OSM) und Leaflet-Marker-Icons (unpkg).
     // api.pundo.cy: Produktbilder werden als absolute URLs gerendert.
     `img-src 'self' data: blob: https://api.pundo.cy https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://unpkg.com https://*.supabase.co${metaImgSrc}`,
@@ -190,9 +182,7 @@ export function proxy(request: NextRequest) {
   const nonceBytes = new Uint8Array(16)
   crypto.getRandomValues(nonceBytes)
   const nonce = Buffer.from(nonceBytes).toString('base64')
-  // /blog embeds the Soro widget which injects inline styles — relax style-src for that route only.
-  const isBlogPage = pathname === '/blog' || /^\/[a-z]{2}\/blog$/.test(pathname)
-  const csp = buildCsp(nonce, brand.analytics.plausibleHost, isBlogPage, !!brand.analytics.metaPixelId)
+  const csp = buildCsp(nonce, brand.analytics.plausibleHost, !!brand.analytics.metaPixelId)
 
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)

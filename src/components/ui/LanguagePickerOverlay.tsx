@@ -5,11 +5,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { LANGS, LANG_NATIVE_NAMES, type Lang, DEFAULT_LANG, detectBrowserLang, setLangCookie } from '@/lib/lang'
 import { stripLang } from '@/lib/routing'
 import { t } from '@/lib/translations'
-import { SPLASH_OUTRO_MS, SPLASH_SESSION_KEY } from '@/lib/splash'
-
 // ---- Hook ----
 
-const SPLASH_BUFFER_MS = 100
+const PICKER_SETTLE_MS = 150
 
 function hasCookie(): boolean {
   if (typeof document === 'undefined') return false
@@ -22,20 +20,14 @@ export function useLanguagePickerTrigger(): { shouldShow: boolean; preselected: 
   const dismiss = useCallback(() => setShouldShow(false), [])
 
   useEffect(() => {
-    // AC2: cookie present → never show
     if (hasCookie()) return
 
-    // AC10 + Arch §3: sequenziell nach Splash
-    const splashAlreadyRan = Boolean(sessionStorage.getItem(SPLASH_SESSION_KEY))
-    const delay = splashAlreadyRan ? 0 : SPLASH_OUTRO_MS + SPLASH_BUFFER_MS
-
     const timer = setTimeout(() => {
-      // Re-check cookie in case switcher was used in the meantime
       if (!hasCookie()) {
         setPreselected(detectBrowserLang())
         setShouldShow(true)
       }
-    }, delay)
+    }, PICKER_SETTLE_MS)
 
     return () => clearTimeout(timer)
   }, [])

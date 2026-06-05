@@ -30,26 +30,31 @@ function ImagePlaceholder() {
   )
 }
 
-// Replaces the broken onError/style.display='none' pattern (DOM mutation outside React).
-// When the browser aborts an inflight request (fast scroll → connection queue full →
-// net::ERR_ABORTED), the error event fires even for existing images. Using React state
-// ensures the error is managed by React and resets on re-render with a new src.
-export function ProductCardImage({ src, alt, className }: Props) {
-  const [failed, setFailed] = useState(false)
+// Fast-scroll fix: the browser aborts inflight requests (net::ERR_ABORTED) when the
+// connection queue fills up, firing the error event even for intact images. A permanent
+// `failed` flag (previous approach) left cards blank for the rest of the session.
+// Instead we retry up to MAX_RETRIES times. key={retryCount} forces a fresh img element
+// (new DOM node, new fetch) on each retry. After MAX_RETRIES real failures the
+// placeholder is shown permanently — preventing retry storms on actual 404s.
+const MAX_RETRIES = 2
 
-  if (!src || failed) {
+export function ProductCardImage({ src, alt, className }: Props) {
+  const [retryCount, setRetryCount] = useState(0)
+
+  if (!src || retryCount >= MAX_RETRIES) {
     return <ImagePlaceholder />
   }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      key={retryCount}
       src={src}
       alt={alt}
       loading="lazy"
       decoding="async"
       className={className}
-      onError={() => setFailed(true)}
+      onError={() => setRetryCount(c => c + 1)}
     />
   )
 }

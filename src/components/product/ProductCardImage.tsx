@@ -3,8 +3,10 @@
 import { useState } from 'react'
 
 interface Props {
-  src: string | null | undefined
-  alt: string
+  src:      string | null | undefined
+  src2x?:   string | null  // F4500: 640px Retina variant — sets srcSet="[src] 1x, [src2x] 2x"
+  alt:      string
+  sizes?:   string         // Hint for browser: how wide is the rendered image
   className?: string
 }
 
@@ -40,7 +42,7 @@ function ImagePlaceholder() {
 // 20 card-sized images is the right trade-off here.
 // onError shows the placeholder only for genuinely broken images (HTTP 404 / expired
 // token). The token-TTL bug is fixed separately in core/config.py (B2250-003).
-export function ProductCardImage({ src, alt, className }: Props) {
+export function ProductCardImage({ src, src2x, alt, sizes, className }: Props) {
   const [failed, setFailed] = useState(false)
 
   if (!src || failed) {
@@ -51,6 +53,8 @@ export function ProductCardImage({ src, alt, className }: Props) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
+      srcSet={src2x ? `${src} 1x, ${src2x} 2x` : undefined}
+      sizes={src2x ? (sizes ?? '120px') : undefined}
       alt={alt}
       decoding="async"
       className={className}

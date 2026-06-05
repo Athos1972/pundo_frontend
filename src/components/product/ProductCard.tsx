@@ -22,7 +22,8 @@ interface ProductCardProps {
 export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighlighted, onMouseEnterShop, onMouseLeaveShop }: ProductCardProps) {
   const tr = t(lang)
   const offer = item.best_offer
-  const imgSrc = pickImg(item.images, 'card', item.thumbnail_url)
+  const imgSrc   = pickImg(item.images, 'card', item.thumbnail_url)
+  const imgSrc2x = item.images?.card_2x ?? null
   const productName = item.names[lang] ?? item.names.en ?? '—'
   const priceLabel = offer
     ? formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
@@ -37,7 +38,7 @@ export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighli
       >
         {/* Image — fixed 120×120px square on the left */}
         <div className="w-[120px] h-[120px] shrink-0 overflow-hidden relative">
-          <ProductCardImage src={imgSrc} alt={productName} className="w-full h-full object-cover" />
+          <ProductCardImage src={imgSrc} src2x={imgSrc2x} sizes="120px" alt={productName} className="w-full h-full object-cover" />
           <div className="absolute top-1 right-1 rtl:right-auto rtl:left-1">
             <FavoriteButton productId={item.id} lang={lang} size="sm" />
           </div>
@@ -74,7 +75,7 @@ export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighli
     <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors">
       {/* Image — primary visual element, full card width */}
       <div className="w-full h-40 overflow-hidden relative">
-        <ProductCardImage src={imgSrc} alt={productName} className="w-full h-full object-cover" />
+        <ProductCardImage src={imgSrc} src2x={imgSrc2x} sizes="(max-width: 639px) calc(100vw - 2rem), 320px" alt={productName} className="w-full h-full object-cover" />
         <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2">
           <FavoriteButton productId={item.id} lang={lang} size="sm" />
         </div>

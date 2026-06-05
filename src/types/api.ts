@@ -3,6 +3,7 @@ export type PriceType = 'fixed' | 'on_request' | 'free' | 'variable'
 export interface ProductImages {
   thumb:    string | null
   card:     string | null
+  card_2x?: string | null  // F4500: 640px WebP für Retina; optional bis Backend-Backfill (null wenn nicht vorhanden)
   carousel: string | null
   detail:   string | null
   orig:     string | null

@@ -1,9 +1,9 @@
 # TESTSET — pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-06-05 (CSP Inline-Style Fix)
-Ergebnis: 2026/2026 bestanden (+7 neue Tests durch neue Dateien)
-Journey-Ergebnis: 28/28 PASS (Smoke 9/9 + CSP 5/5 + reactive-lang 5/5 + cookie-consent 13/13 + shop-all-products 4/4 — 2 fixme-skips im lifecycle)
+Datum: 2026-06-05 (Cookie-Banner-Text I18N + Secure-Cookie-Flags)
+Ergebnis: 2054/2054 bestanden (+35 neue Tests gegenüber Vorrun)
+Journey-Ergebnis: 8/8 PASS (cookie-consent-flow)
 
 ### Statische Prüfung (CSP-Run)
 | Prüfung | Status |

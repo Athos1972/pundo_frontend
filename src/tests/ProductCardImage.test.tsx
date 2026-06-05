@@ -67,4 +67,44 @@ describe('ProductCardImage', () => {
     expect(placeholder).toBeInTheDocument()
     fireEvent.click(placeholder!)
   })
+
+  // F4500: srcset für Retina-Variante
+  it('renders srcSet and sizes when src2x is provided', () => {
+    render(
+      <ProductCardImage
+        src="/product_images/abc_card.webp"
+        src2x="/product_images/abc_card_2x.webp"
+        sizes="120px"
+        alt="Retina Test"
+      />
+    )
+    const img = screen.getByRole('img', { hidden: true })
+    expect(img).toHaveAttribute('srcSet', '/product_images/abc_card.webp 1x, /product_images/abc_card_2x.webp 2x')
+    expect(img).toHaveAttribute('sizes', '120px')
+  })
+
+  it('does NOT render srcSet or sizes when src2x is null', () => {
+    render(<ProductCardImage src="/product_images/abc_card.webp" src2x={null} alt="kein Retina" />)
+    const img = screen.getByRole('img', { hidden: true })
+    expect(img).not.toHaveAttribute('srcSet')
+    expect(img).not.toHaveAttribute('sizes')
+  })
+
+  it('does NOT render srcSet when src2x is omitted (undefined)', () => {
+    render(<ProductCardImage src="/product_images/abc_card.webp" alt="kein Retina" />)
+    const img = screen.getByRole('img', { hidden: true })
+    expect(img).not.toHaveAttribute('srcSet')
+  })
+
+  it('falls back to default sizes=120px when src2x set but sizes omitted', () => {
+    render(
+      <ProductCardImage
+        src="/product_images/abc_card.webp"
+        src2x="/product_images/abc_card_2x.webp"
+        alt="default sizes"
+      />
+    )
+    const img = screen.getByRole('img', { hidden: true })
+    expect(img).toHaveAttribute('sizes', '120px')
+  })
 })

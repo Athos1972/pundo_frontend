@@ -14,7 +14,7 @@ touches-modules:
   - src/components/layout/FooterLinks.tsx
 touches-roles:
   - customer
-last-run: 2026-06-03T14:45:00Z
+last-run: 2026-06-05T16:43:00Z
 last-result: PASS
 last-run-sha: HEAD
 status-changed-at: 2026-05-31T18:55:00Z

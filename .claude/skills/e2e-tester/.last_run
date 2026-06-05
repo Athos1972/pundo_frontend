@@ -1,12 +1,7 @@
 {
-  "sha": "cae1b208ad1ce4d447ef13bb4016a6dab27935c6",
-  "timestamp": "2026-06-05T11:18:27Z",
+  "sha": "345ead5ddda7b5a4a85a8dbc44819fb6f541dbf0",
+  "timestamp": "2026-06-05T16:44:00Z",
   "verdict": "SHIP",
   "open_failures": [],
-  "coverage_snapshot": {
-    "unit_tests": "2046/2046",
-    "ts": "PASS",
-    "eslint": "0 new errors (1 pre-existing SearchContent)",
-    "e2e_journeys": "shop-owner-self-deactivate PASS, shop-owner-lifecycle PASS, admin-data-management PASS"
-  }
+  "coverage_snapshot": {}
 }

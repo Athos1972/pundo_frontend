@@ -84,6 +84,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'Step {step} of {total}',
     onboarding_location_geolocate_denied: 'Location access is off — search by address or tap the map',
     onboarding_location_use_my_location: '📍 Use my location',
+    onboarding_domain_other: 'Other',
+    onboarding_domain_other_hint: 'No offers will be pre-filled — you add them yourself later.',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -167,6 +169,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'Schritt {step} von {total}',
     onboarding_location_geolocate_denied: 'Standortzugriff aus — Adresse suchen oder auf die Karte tippen',
     onboarding_location_use_my_location: '📍 Meine Position verwenden',
+    onboarding_domain_other: 'Sonstiges',
+    onboarding_domain_other_hint: 'Es werden keine Angebote vorbefüllt — du legst sie später selbst an.',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -250,6 +254,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'Βήμα {step} από {total}',
     onboarding_location_geolocate_denied: 'Η πρόσβαση τοποθεσίας είναι απενεργοποιημένη — αναζήτησε διεύθυνση ή πάτα στον χάρτη',
     onboarding_location_use_my_location: '📍 Χρήση της θέσης μου',
+    onboarding_domain_other: 'Άλλο',
+    onboarding_domain_other_hint: 'Δεν θα συμπληρωθούν προσφορές αυτόματα — τις προσθέτεις αργότερα μόνος σου.',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -333,6 +339,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'Шаг {step} из {total}',
     onboarding_location_geolocate_denied: 'Доступ к местоположению отключён — найдите адрес или нажмите на карту',
     onboarding_location_use_my_location: '📍 Использовать моё местоположение',
+    onboarding_domain_other: 'Другое',
+    onboarding_domain_other_hint: 'Предложения не будут заполнены автоматически — ты добавишь их сам позже.',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -416,6 +424,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'الخطوة {step} من {total}',
     onboarding_location_geolocate_denied: 'الوصول إلى الموقع متوقف — ابحث عن عنوان أو اضغط على الخريطة',
     onboarding_location_use_my_location: '📍 استخدام موقعي',
+    onboarding_domain_other: 'أخرى',
+    onboarding_domain_other_hint: 'لن يتم ملء العروض مسبقاً — ستضيفها بنفسك لاحقاً.',
   },
   he: {
     register_title: 'רישום החנות',
@@ -499,6 +509,8 @@ const shopAdminAuthTranslations = {
     onboarding_progress: 'שלב {step} מתוך {total}',
     onboarding_location_geolocate_denied: 'גישה למיקום כבויה — חפש כתובת או לחץ על המפה',
     onboarding_location_use_my_location: '📍 השתמש במיקום שלי',
+    onboarding_domain_other: 'אחר',
+    onboarding_domain_other_hint: 'לא יתמלאו הצעות מראש — תוסיף אותן בעצמך מאוחר יותר.',
   },
 } as const
 

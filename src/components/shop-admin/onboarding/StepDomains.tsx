@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { OnboardingDomain, OnboardingProviderType } from '@/types/shop-admin'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
-import { getDomains } from '@/lib/onboarding/domains'
+import { getDomains, OTHER_DOMAIN_SLUG } from '@/lib/onboarding/domains'
 import { DomainChip } from './DomainChip'
 
 interface StepDomainsProps {
@@ -29,14 +29,22 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
     return () => { setDomains([]) }
   }, [lang, providerType])
 
-  // Domains that have specialties and are currently selected
-  const specialtyDomains = domains.filter(d => domainSlugs.includes(d.slug) && d.specialties.length > 0)
+  const isOtherSelected = domainSlugs.includes(OTHER_DOMAIN_SLUG)
+
+  // Domains that have specialties and are currently selected — never for "Other"
+  const specialtyDomains = isOtherSelected
+    ? []
+    : domains.filter(d => domainSlugs.includes(d.slug) && d.specialties.length > 0)
   const hasSpecialties = specialtyDomains.length > 0
 
   function toggleDomain(slug: string) {
-    setDomainSlugs(prev =>
-      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
-    )
+    setDomainSlugs(prev => {
+      // Clear "Other" if a real domain is selected
+      const withoutOther = prev.filter(s => s !== OTHER_DOMAIN_SLUG)
+      return withoutOther.includes(slug)
+        ? withoutOther.filter(s => s !== slug)
+        : [...withoutOther, slug]
+    })
     // Remove orphaned specialties when domain is deselected
     setSpecialtySlugs(prev => {
       const domain = domains.find(d => d.slug === slug)
@@ -44,6 +52,15 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
       const domainSpecSlugs = domain.specialties.map(s => s.slug)
       return prev.filter(s => !domainSpecSlugs.includes(s))
     })
+  }
+
+  function toggleOther() {
+    if (isOtherSelected) {
+      setDomainSlugs([])
+    } else {
+      setDomainSlugs([OTHER_DOMAIN_SLUG])
+      setSpecialtySlugs([])
+    }
   }
 
   function toggleSpecialty(slug: string) {
@@ -75,16 +92,30 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
               ))}
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {domains.map(domain => (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {domains.map(domain => (
+                  <DomainChip
+                    key={domain.slug}
+                    label={domain.label}
+                    selected={domainSlugs.includes(domain.slug)}
+                    onToggle={() => toggleDomain(domain.slug)}
+                  />
+                ))}
+              </div>
+              <hr className="border-gray-100" />
+              <div className="flex flex-wrap gap-2">
                 <DomainChip
-                  key={domain.slug}
-                  label={domain.label}
-                  selected={domainSlugs.includes(domain.slug)}
-                  onToggle={() => toggleDomain(domain.slug)}
+                  label={tr.onboarding_domain_other}
+                  selected={isOtherSelected}
+                  onToggle={toggleOther}
+                  variant="other"
                 />
-              ))}
-            </div>
+              </div>
+              {isOtherSelected && (
+                <p className="text-xs text-gray-500">{tr.onboarding_domain_other_hint}</p>
+              )}
+            </>
           )}
           {domainSlugs.length === 0 && !loading && (
             <p className="text-xs text-red-600">{tr.onboarding_domains_min_one}</p>

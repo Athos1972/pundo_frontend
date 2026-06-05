@@ -1,16 +1,21 @@
 'use client'
 
 import type { OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/shop-admin'
+import { OTHER_DOMAIN_SLUG } from '@/lib/onboarding/domains'
 
 export async function submitOnboarding(payload: OnboardingSubmitPayload): Promise<OnboardingSubmitResponse> {
   // Transform camelCase frontend types to snake_case backend API format.
   // shopName is used directly (no email-local-part fallback — F5910 fix).
   const emailCreds = 'email' in payload.credentials ? payload.credentials : null
 
+  // Strip the frontend-only "Other" sentinel — backend receives [] for "no domain"
+  const domainSlugsForBackend = payload.domainSlugs.filter(s => s !== OTHER_DOMAIN_SLUG)
+  const specialtySlugsForBackend = domainSlugsForBackend.length > 0 ? payload.specialtySlugs : []
+
   const backendPayload = {
     provider_type: payload.providerType,
-    domain_slugs: payload.domainSlugs,
-    specialty_slugs: payload.specialtySlugs,
+    domain_slugs: domainSlugsForBackend,
+    specialty_slugs: specialtySlugsForBackend,
     location: {
       lat: payload.location.lat,
       lng: payload.location.lng,

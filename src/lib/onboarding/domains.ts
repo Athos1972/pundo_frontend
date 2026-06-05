@@ -1,5 +1,7 @@
 import type { OnboardingDomain, OnboardingProviderType } from '@/types/shop-admin'
 
+export const OTHER_DOMAIN_SLUG = 'other' as const
+
 // ─── Static fallback catalog (used when backend endpoint is unavailable) ─────
 // Labels are in German (de) as the most common fallback language.
 // The backend delivers fully localised labels in all 6 languages (en/de/el/ru/ar/he).

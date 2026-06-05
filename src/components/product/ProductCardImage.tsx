@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useScrollRoot } from '@/lib/ScrollRootContext'
+import { useState, useCallback } from 'react'
 
 const MAX_RETRIES = 2
 const RETRY_DELAY_MS = 1500
 
 interface Props {
-  src:           string | null | undefined
-  src2x?:        string | null  // F4500: 640px Retina variant — sets srcSet="[src] 1x, [src2x] 2x"
-  alt:           string
-  sizes?:        string         // Hint for browser: how wide is the rendered image
-  className?:    string
+  src:            string | null | undefined
+  src2x?:         string | null  // F4500: 640px Retina variant — sets srcSet="[src] 1x, [src2x] 2x"
+  alt:            string
+  sizes?:         string         // Hint for browser: how wide is the rendered image
+  className?:     string
   fetchpriority?: 'high' | 'low' | 'auto'
 }
 
@@ -37,45 +36,26 @@ function ImagePlaceholder() {
   )
 }
 
-// B2250-002/B2250-003: `loading="lazy"` checks the *document* viewport, not the
-// nested overflow scroll container → images below the fold inside the list never load.
-// Fix: IntersectionObserver with `root` set to the nearest scroll container
-// (provided via ScrollRootContext). Retries transient network failures up to
-// MAX_RETRIES times before falling back to the placeholder.
+// loading="lazy" is intentionally omitted (B2250-002/B2250-003).
+// Chrome's lazy-load intersection check runs against the document viewport,
+// not the nested overflow-y-auto scroll container — images inside the list
+// would never be fetched. Eager loading with ~20 items per page is the right
+// trade-off (infinite scroll limits DOM size).
+//
+// Retry logic (B2250-004): transient 4G timeouts cause onError to fire.
+// We retry up to MAX_RETRIES times with a cache-buster query param before
+// showing the permanent placeholder.
 export function ProductCardImage({ src, src2x, alt, sizes, className, fetchpriority = 'auto' }: Props) {
-  const scrollRoot = useScrollRoot()
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const [visible, setVisible]     = useState(false)
-  const [failed,  setFailed]      = useState(false)
-  const [retries, setRetries]     = useState(0)
-  const [retrySrc, setRetrySrc]   = useState<string | undefined>(undefined)
+  const [failed,   setFailed]   = useState(false)
+  const [retries,  setRetries]  = useState(0)
+  const [retrySrc, setRetrySrc] = useState<string | undefined>(undefined)
 
-  // Step 1 — IntersectionObserver: only start loading when in/near the scroll viewport
-  useEffect(() => {
-    if (!src || visible) return
-    const el = wrapperRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
-      {
-        root: scrollRoot ?? null,   // scroll container root, or document viewport as fallback
-        rootMargin: '300px',        // preload 300 px before entering view
-        threshold: 0,
-      }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [src, visible, scrollRoot])
-
-  // Step 2 — Retry: on transient 4G timeout, flip retrySrc to bust the browser's
-  // internal "this request failed" cache and trigger a fresh fetch.
   const handleError = useCallback(() => {
     if (retries < MAX_RETRIES) {
       const attempt = retries + 1
       setRetries(attempt)
       setTimeout(() => {
-        // Append a cache-buster only for retries so normal hits stay cacheable
+        // Cache-buster only on retries — normal requests stay cacheable
         setRetrySrc(`${src}${src?.includes('?') ? '&' : '?'}_r=${attempt}`)
       }, RETRY_DELAY_MS * attempt)
     } else {
@@ -88,23 +68,17 @@ export function ProductCardImage({ src, src2x, alt, sizes, className, fetchprior
   const effectiveSrc = retrySrc ?? src
 
   return (
-    <div ref={wrapperRef} className={`contents`}>
-      {visible ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={effectiveSrc}
-          srcSet={src2x ? `${effectiveSrc} 1x, ${src2x} 2x` : undefined}
-          sizes={src2x ? (sizes ?? '120px') : undefined}
-          alt={alt}
-          decoding="async"
-          // @ts-expect-error — fetchpriority is a valid HTML attribute, not yet in React types
-          fetchpriority={fetchpriority}
-          className={className}
-          onError={handleError}
-        />
-      ) : (
-        <ImagePlaceholder />
-      )}
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={effectiveSrc}
+      srcSet={src2x ? `${effectiveSrc} 1x, ${src2x} 2x` : undefined}
+      sizes={src2x ? (sizes ?? '120px') : undefined}
+      alt={alt}
+      decoding="async"
+      // @ts-expect-error — fetchpriority is a valid HTML attribute, not yet in React types
+      fetchpriority={fetchpriority}
+      className={className}
+      onError={handleError}
+    />
   )
 }

@@ -235,7 +235,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
       })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [isCategoryMode, loading, items.length, categoryId, lang]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isCategoryMode, loading, items.length, categoryId, lang])
 
   function setParam(key: string, value: string | null) {
     const p = new URLSearchParams(params.toString())

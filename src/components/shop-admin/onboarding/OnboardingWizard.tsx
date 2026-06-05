@@ -186,7 +186,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     })
   }
 
-  async function handleOAuthSubmit() {
+  async function _handleOAuthSubmit() {
     if (!draft.providerType || !draft.location) return
     startTransition(async () => {
       try {

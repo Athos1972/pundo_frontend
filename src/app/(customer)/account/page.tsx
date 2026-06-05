@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// @seo-allow-default — noindex page, no description needed
 export default async function AccountPage() {
   const lang = await getLangServer()
   const session = await getCustomerSession(lang)

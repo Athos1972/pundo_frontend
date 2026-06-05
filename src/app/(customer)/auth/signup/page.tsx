@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// @seo-allow-default — noindex page, no description needed
 export default async function SignupPage() {
   if (!process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY && process.env.NODE_ENV === 'production') {
     console.error('[SignupPage] CRITICAL: NEXT_PUBLIC_TURNSTILE_SITEKEY not configured — all signups blocked')

@@ -38,6 +38,7 @@ export function ShopOwnerEditForm({ owner, tr }: Props) {
   }
 
   const statusColors: Record<string, string> = {
+    pre_signup: 'bg-gray-100 text-gray-600',
     approved: 'bg-green-100 text-green-700',
     pending: 'bg-yellow-100 text-yellow-700',
     rejected: 'bg-red-100 text-red-700',

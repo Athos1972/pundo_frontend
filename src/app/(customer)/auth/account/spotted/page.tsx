@@ -31,6 +31,7 @@ function errorLabel(reason: string | null | undefined, tr: ReturnType<typeof t>)
   return reason ?? ''
 }
 
+// @seo-allow-default — noindex page, no description needed
 export default async function SpottedAccountPage() {
   const lang = await getLangServer()
   const tr = t(lang)

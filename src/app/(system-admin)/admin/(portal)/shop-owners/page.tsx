@@ -36,6 +36,7 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
       key: 'status',
       label: tr.status,
       badgeColors: {
+        pre_signup: 'bg-gray-100 text-gray-600',
         approved: 'bg-green-100 text-green-700',
         pending: 'bg-yellow-100 text-yellow-700',
         rejected: 'bg-red-100 text-red-700',
@@ -65,6 +66,7 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         >
           <option value="">All statuses</option>
+          <option value="pre_signup">pre_signup</option>
           <option value="pending">{tr.pending}</option>
           <option value="approved">{tr.approved}</option>
           <option value="rejected">{tr.rejected}</option>

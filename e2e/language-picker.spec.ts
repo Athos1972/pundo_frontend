@@ -30,7 +30,7 @@ import { test, expect, type Page } from '@playwright/test'
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /** Clear the app_lang cookie and set sessionStorage so the overlay shows immediately. */
-async function _freshVisitorContext(browser: Parameters<typeof test>[1] extends { browser: infer B } ? B : never): Promise<never> {
+async function _freshVisitorContext(_browser: Parameters<typeof test>[1] extends { browser: infer B } ? B : never): Promise<never> {
   throw new Error('use freshVisitorPage instead')
 }
 

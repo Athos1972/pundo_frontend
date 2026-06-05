@@ -8,7 +8,7 @@ import { tSysAdmin } from '@/lib/system-admin-translations'
 
 export default async function OnboardingDomainsPage() {
   const lang = await getLangServer()
-  const tr = tSysAdmin(lang)
+  const _tr = tSysAdmin(lang)
 
   return (
     <div className="flex flex-col gap-5">

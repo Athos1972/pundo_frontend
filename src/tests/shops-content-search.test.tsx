@@ -78,7 +78,7 @@ describe('ShopsContent — search field', () => {
   it('debounces API call — does not fire before 300ms', async () => {
     const { getShops } = await import('@/lib/api')
     const mockGetShops = vi.mocked(getShops)
-    const callCountBefore = mockGetShops.mock.calls.length
+    const _callCountBefore = mockGetShops.mock.calls.length
 
     await act(async () => {
       render(<ShopsContent lang="de" />)

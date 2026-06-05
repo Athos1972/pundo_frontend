@@ -1,6 +1,7 @@
 // src/components/home/HomepageCategoryGrid.tsx — Server Component
 // Hover effects are pure CSS (group-hover) — no state, no 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Lang } from '@/lib/lang'
 import { tHome } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
@@ -132,11 +133,12 @@ export function HomepageCategoryGrid({ lang }: Props) {
                 className="group relative block aspect-[3/4] rounded-2xl overflow-hidden bg-surface-alt"
               >
                 {/* Photo */}
-                <img
+                <Image
                   src={cat.image}
                   alt={label}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
 
                 {/* Gradient overlay for text legibility */}

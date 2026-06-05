@@ -66,6 +66,7 @@ function resolveTemplate(template: string, id: number): string {
 function renderCell(col: Column, value: unknown): React.ReactNode {
   if (col.isImage) {
     return value
+      // eslint-disable-next-line @next/next/no-img-element
       ? <img src={String(value)} alt="" className="w-8 h-8 object-contain rounded bg-gray-50 border border-gray-200 p-0.5" />
       : <span className="text-gray-400">—</span>
   }

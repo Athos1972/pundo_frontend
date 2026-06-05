@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { getLangFromCookie } from '@/lib/lang'
 import { t } from '@/lib/translations'
 
-export function BackButton({ fallback = '/' }: { fallback?: string }) {
+export function BackButton({ fallback: _fallback = '/' }: { fallback?: string }) {
   const router = useRouter()
   const lang = getLangFromCookie()
   const tr = t(lang)

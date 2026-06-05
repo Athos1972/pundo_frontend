@@ -24,7 +24,7 @@ interface ReviewsPopoverProps {
   trigger: React.ReactNode
 }
 
-export function ReviewsPopover({ shopId, shopSlug, lang, trigger }: ReviewsPopoverProps) {
+export function ReviewsPopover({ shopId, shopSlug: _shopSlug, lang, trigger }: ReviewsPopoverProps) {
   const tr = t(lang)
   const [reviews, setReviews] = useState<ShopReviewPreview[] | null>(null)
   const [loading, setLoading] = useState(false)

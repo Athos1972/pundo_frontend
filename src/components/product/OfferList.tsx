@@ -6,7 +6,7 @@ import type { Lang } from '@/lib/lang'
 import { formatCrawledAt, formatPriceOrLabel, fmtPrice } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 
-export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
+export function OfferList({ offers, lang, productName: _productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
   const tr = t(lang)
 
   const sorted = [...offers].sort((a, b) => {

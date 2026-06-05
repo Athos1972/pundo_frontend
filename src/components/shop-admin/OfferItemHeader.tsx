@@ -12,7 +12,7 @@ export function resolveLocalizedName(names: Record<string, string>, lang: string
   return names[lang] ?? names['en'] ?? names['de'] ?? Object.values(names)[0] ?? null
 }
 
-export function OfferItemHeader({ item, lang, offerId }: OfferItemHeaderProps) {
+export function OfferItemHeader({ item, lang, offerId: _offerId }: OfferItemHeaderProps) {
   if (!item) return null
 
   const primaryName = resolveLocalizedName(item.names, lang)

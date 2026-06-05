@@ -22,6 +22,7 @@ export function SplashScreen({ splashSvg }: { splashSvg: string }) {
       className="fixed inset-0 z-50 bg-white flex items-center justify-center"
       aria-hidden="true"
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={splashSvg} alt="" className="w-full h-full object-contain" />
     </div>
   )

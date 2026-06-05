@@ -84,12 +84,22 @@ const unusedVarsRule = {
   },
 }
 
+// ─── Test files: relax image rules (next/image mocks use <img> intentionally) ─
+const testFilesRule = {
+  files: ['src/tests/**', 'src/**/*.test.{ts,tsx}', 'e2e/**'],
+  rules: {
+    '@next/next/no-img-element': 'off',
+    'jsx-a11y/alt-text': 'off',
+  },
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   shopAdminBoundaryRule,
   seoMetadataRule,
   unusedVarsRule,
+  testFilesRule,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

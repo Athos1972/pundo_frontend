@@ -18,7 +18,7 @@ function formatDate(iso: string): string {
   }
 }
 
-export function ReviewCard({ review, tr, lang }: Props) {
+export function ReviewCard({ review, tr: _tr, lang }: Props) {
   return (
     <article className="bg-surface border border-border rounded-xl p-4">
       <div className="flex items-start justify-between gap-2 mb-2">

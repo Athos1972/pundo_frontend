@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { OnboardingWizard } from '@/components/shop-admin/onboarding/OnboardingWizard'
 
 // Mock next/navigation

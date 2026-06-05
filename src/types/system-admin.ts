@@ -85,8 +85,8 @@ export interface SysAdminShopOwner {
   id: number
   email: string
   name: string
-  status: 'pending' | 'approved' | 'rejected'
-  shop_id: number
+  status: 'pre_signup' | 'pending' | 'approved' | 'rejected'
+  shop_id: number | null
 }
 
 // ─── Items (was: Products) ─────────────────────────────────────────────────────

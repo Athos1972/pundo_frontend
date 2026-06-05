@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// @seo-allow-default — noindex page, no description needed
 export default async function LoginPage() {
   const lang = await getLangServer()
   const { auth_login } = t(lang)

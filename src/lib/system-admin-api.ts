@@ -30,7 +30,7 @@ type SysAdminProduct = SysAdminItem
 type SysAdminProductAttribute = SysAdminItemAttribute
 type SysAdminShopOwnerOffer = SysAdminOffer
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
+const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
 const BASE = `${BACKEND}/api/v1/admin`
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {

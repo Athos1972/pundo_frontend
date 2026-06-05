@@ -31,7 +31,6 @@ vi.mock('@/lib/seo', () => ({
 }))
 
 vi.mock('@/lib/seo/absolutize', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   absolutizeImageUrl: (url: string | null, _base: string) => url,
 }))
 

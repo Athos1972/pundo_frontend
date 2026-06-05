@@ -45,7 +45,6 @@ export function ContactForm({ lang }: Props) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(prev => ({ ...prev, name: session.user!.display_name, email: session.user!.email }))
     } else if (!session.is_authenticated) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(prev => ({ ...prev, name: '', email: '' }))
     }
   }, [isPrefilled, session.user?.id, session.is_authenticated]) // eslint-disable-line react-hooks/exhaustive-deps

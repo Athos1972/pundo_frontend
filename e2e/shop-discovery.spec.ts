@@ -14,7 +14,7 @@
  *   → Shop-Detailseite → Karte geladen → Geo-Koordinaten vorhanden
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
@@ -329,7 +329,7 @@ test.describe('Öffnungszeiten via Admin setzen', () => {
   })
 
   test('Öffnungszeiten speichern und via API verifizieren', async ({ page }) => {
-    const _state = loadStorageState()
+    const state = loadStorageState()
 
     await page.goto('/shop-admin/hours')
     // Days default to Closed — uncheck the first "Closed" checkbox to reveal time inputs

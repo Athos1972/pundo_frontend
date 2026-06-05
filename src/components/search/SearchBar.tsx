@@ -37,7 +37,6 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  /* eslint-disable react-hooks/preserve-manual-memoization */
   const fetchSuggestions = useCallback((q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (q.length < 2) { setSuggestions({ categories: [], shops: [], products: [] }); setOpen(false); return }
@@ -62,7 +61,6 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
       }
     }, 300)
   }, [lang])
-  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value

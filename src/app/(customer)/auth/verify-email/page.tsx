@@ -13,6 +13,7 @@ interface Props {
   searchParams: Promise<{ email?: string; purpose?: string }>
 }
 
+// @seo-allow-default — noindex page, no description needed
 export default async function VerifyEmailPage({ searchParams }: Props) {
   const { email, purpose } = await searchParams
   if (!email || !purpose) redirect('/auth/signup')

@@ -1,6 +1,7 @@
 // src/components/home/HomepageHeroVisual.tsx — Server Component
 // Purely decorative: aria-hidden="true", no state, no 'use client'
 
+// delay is set via CSS class (float-card-delay-N) in globals.css — NOT via style={} (CSP violation)
 interface FloatCard {
   initial: string
   name: string
@@ -9,7 +10,7 @@ interface FloatCard {
   badge: string
   badgeColor: string
   position: string
-  delay: string
+  delayClass: string
 }
 
 const FLOAT_CARDS: FloatCard[] = [
@@ -21,7 +22,7 @@ const FLOAT_CARDS: FloatCard[] = [
     badge: 'Open now',
     badgeColor: 'bg-success/20 text-success',
     position: 'top-4 left-0',
-    delay: '0.15s',
+    delayClass: 'float-card-delay-1',
   },
   {
     initial: 'P',
@@ -31,7 +32,7 @@ const FLOAT_CARDS: FloatCard[] = [
     badge: 'New',
     badgeColor: 'bg-accent/20 text-accent',
     position: 'bottom-16 right-0',
-    delay: '0.3s',
+    delayClass: 'float-card-delay-2',
   },
   {
     initial: 'S',
@@ -41,7 +42,7 @@ const FLOAT_CARDS: FloatCard[] = [
     badge: 'Open now',
     badgeColor: 'bg-success/20 text-success',
     position: 'top-1/2 -translate-y-1/2 right-4',
-    delay: '0.45s',
+    delayClass: 'float-card-delay-3',
   },
 ]
 
@@ -55,20 +56,11 @@ export function HomepageHeroVisual({ className }: Props) {
       aria-hidden="true"
       className={`relative flex items-center justify-center ${className ?? ''}`}
     >
-      {/* Glow background */}
-      <div
-        className="absolute inset-0 rounded-3xl pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 60% at 50% 50%, color-mix(in srgb, var(--color-accent) 8%, transparent) 0%, transparent 70%)',
-        }}
-      />
+      {/* Glow background — class defined in globals.css (CSP-safe, no inline style) */}
+      <div className="absolute inset-0 rounded-3xl pointer-events-none hero-glow-bg" />
 
-      {/* Cyprus SVG — simplified but recognisable outline */}
-      <div
-        className="relative w-full max-w-sm animate-[floatMap_6s_ease-in-out_infinite]"
-        style={{ animationDelay: '0s' }}
-      >
+      {/* Cyprus SVG — simplified but recognisable outline; delay 0s = CSS default, no inline style needed */}
+      <div className="relative w-full max-w-sm animate-[floatMap_6s_ease-in-out_infinite]">
         <svg
           viewBox="0 0 480 260"
           xmlns="http://www.w3.org/2000/svg"
@@ -152,8 +144,7 @@ export function HomepageHeroVisual({ className }: Props) {
         {FLOAT_CARDS.map((card) => (
           <div
             key={card.name}
-            className={`absolute ${card.position} bg-surface border border-border rounded-xl shadow-lg px-3 py-2 flex items-center gap-2 min-w-[160px] animate-[floatMap_6s_ease-in-out_infinite]`}
-            style={{ animationDelay: card.delay }}
+            className={`absolute ${card.position} ${card.delayClass} bg-surface border border-border rounded-xl shadow-lg px-3 py-2 flex items-center gap-2 min-w-[160px] animate-[floatMap_6s_ease-in-out_infinite]`}
           >
             {/* Logo initial */}
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">

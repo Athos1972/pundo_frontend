@@ -15,21 +15,9 @@ export function ForBusinessesBand({ lang }: Props) {
       <div
         className="relative bg-text rounded-[24px] px-8 sm:px-10 py-12 sm:py-14 overflow-hidden"
       >
-        {/* Radial gradient overlays — decorative */}
-        <div
-          className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%, transparent 60%)',
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-48 h-48 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--color-accent) 10%, transparent) 0%, transparent 60%)',
-          }}
-        />
+        {/* Radial gradient overlays — classes defined in globals.css (CSP-safe, no inline style) */}
+        <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none biz-band-glow-top" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 pointer-events-none biz-band-glow-bottom" />
 
         {/* Content — 2-column on desktop, stacked on mobile */}
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-8 rtl:flex-row-reverse">
@@ -38,8 +26,7 @@ export function ForBusinessesBand({ lang }: Props) {
             {/* Eyebrow chip */}
             <div className="inline-flex">
               <span
-                className="text-xs font-semibold text-accent uppercase tracking-widest px-3 py-1 rounded-full"
-                style={{ background: 'rgba(212,98,42,0.15)' }}
+                className="biz-eyebrow-chip text-xs font-semibold text-accent uppercase tracking-widest px-3 py-1 rounded-full"
               >
                 {tr.for_biz_eyebrow}
               </span>

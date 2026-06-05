@@ -146,6 +146,7 @@ export default async function ShopPage({ params }: Props) {
               url={shop.images?.[0]?.url ?? null}
               name={shop.name ?? null}
               size="lg"
+              shopId={shop.id}
             />
             <div className="min-w-0">
               <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>

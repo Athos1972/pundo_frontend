@@ -283,9 +283,22 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   // Display name: URL param takes priority (already available), API-loaded name as fallback
   const displayCategoryName = categoryNameParam || categoryName
 
+  // Announced to screen readers and browser agents when results change.
+  const statusMessage = loading
+    ? tr.search_loading ?? 'Loading…'
+    : isEmpty
+      ? tr.no_results
+      : tr.search_result_count
+        ? tr.search_result_count(total)
+        : `${total} results`
+
   // Shared list content rendered inside both mobile sheet and desktop panel
   const listContent = (
     <>
+      {/* Live region — announces result count / loading state to screen readers and browser agents */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {statusMessage}
+      </div>
       {/* Service results section — text mode only */}
       {!isCategoryMode && serviceItems.length > 0 && (
         <>
@@ -429,7 +442,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
 
       {/* DESKTOP layout: flex-1 fills the rest, side-by-side split (unchanged behaviour) */}
       <div className="hidden md:flex flex-1 min-h-0">
-        <div ref={scrollContainerRef} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
+        <div ref={scrollContainerRef} aria-busy={loading} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
           {/* Category heading in desktop left panel */}
           {isCategoryMode && (
             <h1 className="text-lg font-semibold text-text rtl:text-end">

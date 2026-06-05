@@ -12,7 +12,7 @@ export interface ShopOwner {
   id: number
   email: string
   name: string
-  status: 'pre_signup' | 'pending' | 'approved' | 'rejected'
+  status: 'pre_signup' | 'pending' | 'approved' | 'rejected' | 'inactive'
   shop_id: number | null
 }
 
@@ -29,6 +29,7 @@ export interface AdminShop {
   website_url: string | null
   webshop_url: string | null
   social_links: SocialLinksMap | null
+  status: 'active' | 'inactive' | 'pending'
 }
 
 export interface OpeningHours {

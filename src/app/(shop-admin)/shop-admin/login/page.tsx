@@ -21,6 +21,7 @@ function LoginForm() {
   // T2 — Open Redirect fix: sanitize `next` param to same-origin /shop-admin/ paths only
   const nextPath = sanitizeNextPath(searchParams.get('next'))
   const oauthError = searchParams.get('error')
+  const isDeactivated = searchParams.get('deactivated') === '1'
 
   const [isPending, startTransition] = useTransition()
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
@@ -89,6 +90,12 @@ function LoginForm() {
           <h1 className="text-2xl font-bold text-gray-900">{tr.login_title}</h1>
           <p className="text-sm text-gray-500 mt-1">{tr.login_subtitle}</p>
         </div>
+
+        {isDeactivated && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800" role="status">
+            {tr.login_deactivated_notice}
+          </div>
+        )}
 
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700" role="alert">

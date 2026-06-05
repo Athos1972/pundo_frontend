@@ -212,6 +212,16 @@ const sysAdminTranslations = {
     slr_duplicate_error: 'This host is already in the list.',
     slr_invalid_host: 'Please enter a valid host name.',
     slr_readonly_external: 'External entries are managed by the daily import.',
+    // Shop Hard-Delete (Danger Zone in ShopForm)
+    shop_delete_title: 'Delete shop permanently',
+    shop_delete_description: 'This will permanently delete the shop, all its offers, exclusive products and reviews. The shop owner account will also be deleted. This action cannot be undone.',
+    shop_delete_button: 'Delete shop…',
+    shop_delete_confirm_name: 'Type the shop name to confirm',
+    shop_delete_preview_offers: '{n} offers',
+    shop_delete_preview_items: '{n} exclusive products',
+    shop_delete_preview_reviews: '{n} reviews',
+    shop_delete_preview_error: 'Preview could not be loaded.',
+    shop_deleted: 'Shop deleted.',
   },
   de: {
     // Auth
@@ -422,6 +432,16 @@ const sysAdminTranslations = {
     slr_duplicate_error: 'Dieser Host ist bereits in der Liste.',
     slr_invalid_host: 'Bitte gib einen gültigen Host-Namen ein.',
     slr_readonly_external: 'Externe Einträge werden durch den täglichen Import verwaltet.',
+    // Shop Hard-Delete (Danger Zone in ShopForm)
+    shop_delete_title: 'Shop dauerhaft löschen',
+    shop_delete_description: 'Damit werden der Shop, alle seine Angebote, exklusiven Produkte und Bewertungen dauerhaft gelöscht. Der Shop-Owner-Account wird ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+    shop_delete_button: 'Shop löschen…',
+    shop_delete_confirm_name: 'Gib den Shop-Namen zur Bestätigung ein',
+    shop_delete_preview_offers: '{n} Angebote',
+    shop_delete_preview_items: '{n} exklusive Produkte',
+    shop_delete_preview_reviews: '{n} Bewertungen',
+    shop_delete_preview_error: 'Vorschau konnte nicht geladen werden.',
+    shop_deleted: 'Shop gelöscht.',
   },
 }
 

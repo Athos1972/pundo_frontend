@@ -40,6 +40,7 @@
 | [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | — |
 | [cookie-consent-flow](cookie-consent-flow.md) | Cookie Consent Gate + Meta-Pixel Load/Block (F7500) | implemented | P1 | PASS |
 | [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id | implemented | P2 | PASS |
+| [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | — |
 
 ## Smoketest Coverage
 
@@ -74,6 +75,7 @@
 | write-to-read-createItem | No — writes data | — |
 | shop-detail-attribute-matrix | **Yes** | `shop-detail-sample` |
 | customer-shop-all-products-flow | **Yes** | `shop-all-products-link` (vorschlagen) |
+| shop-owner-self-deactivate | No — writes + account-deactivation | — |
 
 **Manifest entries not tied to a journey (standalone smoke coverage):**
 

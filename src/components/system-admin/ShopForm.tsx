@@ -25,6 +25,7 @@ import { FormField } from './FormField'
 import { OpeningHoursEditor } from './OpeningHoursEditor'
 import { LocationEditor } from './LocationEditor'
 import { showToast } from './Toast'
+import { ShopHardDeleteSection } from './ShopHardDeleteSection'
 import { SocialLinksEditor } from '@/components/ui/SocialLinksEditor'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 
@@ -158,6 +159,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
       <FormField
         label={tr.shop_name}
@@ -383,5 +385,14 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
         )}
       </div>
     </form>
+
+    {isEdit && shop && (
+      <ShopHardDeleteSection
+        shopId={shop.id}
+        shopName={pickName(shop.names)}
+        tr={tr}
+      />
+    )}
+    </>
   )
 }

@@ -93,9 +93,8 @@ export default async function ShopsPage({ searchParams }: PageProps) {
         ]}
         rows={rows as unknown as Array<Record<string, unknown> & { id: number }>}
         editHref="/admin/shops/{id}/edit"
-        deleteUrl="/api/admin/shops/{id}"
-        deleteLabel={tr.delete}
         editLabel={tr.edit}
+        deleteLabel={tr.delete}
         confirmMessage={tr.confirm_delete}
         cancelLabel={tr.cancel}
         deletedMessage={tr.deleted}

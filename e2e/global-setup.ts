@@ -32,7 +32,7 @@ const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
 const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
 const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
-const ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
+const _ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
 export const STATE_FILE = path.join(__dirname, '.test-state.json')
 
 interface TestCredentials {
@@ -250,7 +250,7 @@ export default async function globalSetup() {
       const res = await fetch(`${BACKEND_URL}/api/v1/categories`, { signal: AbortSignal.timeout(5000) })
       if (res.ok) { healthy = true; break }
       console.log(`[E2E Setup] Healthcheck: ${res.status} — warte...`)
-    } catch (e) {
+    } catch {
       // not ready yet — continue polling
     }
     await new Promise(r => setTimeout(r, 1000))

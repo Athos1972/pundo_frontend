@@ -137,7 +137,7 @@ test.describe.serial('Admin Data Management Sweep', () => {
     ctx.adminToken = await adminLogin()
 
     // Check endpoint availability
-    const brandCheckRes = await apiFetch('GET', '/api/v1/admin/brands?limit=1', undefined, adminHeaders())
+    const _brandCheckRes = await apiFetch('GET', '/api/v1/admin/brands?limit=1', undefined, adminHeaders())
     // Probe using dummy ID=0 so we hit the actual {id}/logo route pattern (not /brands/logo which is a different route)
     const logoUploadCheckRes = await apiFetch('POST', '/api/v1/admin/brands/0/logo', undefined, adminHeaders())
     ctx.logoUploadSupported = logoUploadCheckRes.status !== 404
@@ -358,7 +358,7 @@ test.describe.serial('Admin Data Management Sweep', () => {
     expect(logoUrl, 'Brand ohne Logo hat logo_url gesetzt').toBeNull()
   })
 
-  test('Schritt 2 — Brand mit Logo angelegt (Logo-Upload)', async ({ request }) => {
+  test('Schritt 2 — Brand mit Logo angelegt (Logo-Upload)', async ({ request: _request }) => {
     if (!ctx.brandWithLogoId) {
       logStep(2, 'Brand mit Logo anlegen', 'brandId gesetzt', 'Brand-Create fehlgeschlagen', 'FAIL')
       expect(ctx.brandWithLogoId, 'Brand mit Logo konnte nicht angelegt werden').not.toBeNull()

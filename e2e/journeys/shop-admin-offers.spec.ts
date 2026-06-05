@@ -343,7 +343,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     }
   })
 
-  test('A2 — No description, on_request price + dates, no title → 201 + visible', async ({ page }) => {
+  test('A2 — No description, on_request price + dates, no title → 201 + visible', async ({ page: _page }) => {
     if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
 
     // Create via API using the default listing (title-optional case)
@@ -660,7 +660,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     ctx.archiveOfferId = null
   })
 
-  test('C3 — Delete active (non-archived) offer → 409 from backend', async ({ page }) => {
+  test('C3 — Delete active (non-archived) offer → 409 from backend', async ({ page: _page }) => {
     if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
 
     const token = await getOwnerToken()
@@ -843,7 +843,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 // Two-Shop setup: uses buildAdminShopPayload for Shop-B creation.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
+import { buildAdminShopPayload as _buildAdminShopPayload } from './_helpers/admin-shop-payload'
 import { randomUUID } from 'crypto'
 
 const LEGACY_UUID = randomUUID().slice(0, 8)

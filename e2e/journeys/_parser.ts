@@ -67,7 +67,7 @@ function splitIntoBlocks(markdown: string): { header: string; rawBlocks: string[
   let header = ''
   let inFrontmatter = false
   let currentBlock: string[] = []
-  let lineOffset = 0 // tracks line numbers for error reporting
+  let _lineOffset = 0 // tracks line numbers for error reporting
 
   // The first `---` starts the first frontmatter block.
   // Everything before the first `---` is the file header.
@@ -80,7 +80,7 @@ function splitIntoBlocks(markdown: string): { header: string; rawBlocks: string[
       header = headerLines.join('\n')
       inFrontmatter = true
       currentBlock = ['---']
-      lineOffset = i
+      _lineOffset = i
       i++
       continue
     }
@@ -268,7 +268,7 @@ export function parseCatalog(markdown: string): JourneyEntry[] {
     for (const field of REQUIRED_FIELDS) {
       if (yaml[field] === undefined || yaml[field] === null || yaml[field] === '') {
         // Estimate line number by counting lines before this block
-        const blocksBeforeThis = markdown
+        const _blocksBeforeThis = markdown
           .split('\n')
           .findIndex((l, i) =>
             l.trim() === '---' &&

@@ -18,7 +18,7 @@
  *                                 OfferList-Reihenfolge, RTL-Labels, Mobile
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
@@ -53,7 +53,7 @@ async function productExists(slug: string): Promise<boolean> {
 // ─── VP-1: Produktkarten-Labels in der Suchergebnisliste ─────────────────────
 
 test.describe('variable-price: ProductCard labels in search results', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     if (!hasFixtures()) test.skip()
   })
 

@@ -406,8 +406,6 @@ describe('parseCatalogDirectory', () => {
   it('ignoriert CATALOG.md, CATALOG_SCHEMA.md, README.md und _-Dateien', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
-    const ids = entries.map((e) => e.id)
-
     // CATALOG.md is an index — no frontmatter blocks → would return 0 entries
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan

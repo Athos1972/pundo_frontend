@@ -121,7 +121,7 @@ async function adminFetch(
   return { ok: res.ok, status: res.status, data }
 }
 
-async function adminPatchShop(adminToken: string, shopId: number, body: Record<string, unknown>): Promise<void> {
+async function _adminPatchShop(adminToken: string, shopId: number, body: Record<string, unknown>): Promise<void> {
   const res = await fetch(`${BACKEND_URL}/api/v1/admin/shops/${shopId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
@@ -1033,13 +1033,11 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
 
 test.describe.serial('Szenario C — Cross-Role: Admin schreibt Öffnungszeiten, Shop-Owner liest', () => {
   let ownerToken = ''
-  let adminToken = ''
   let hoursBeforeTest: Array<Record<string, unknown>> = []
 
   test.beforeAll(async () => {
     test.setTimeout(120_000)
     ownerToken = freshOwner.token
-    adminToken = await adminLogin()
     // Seed shop_hours via owner API to guarantee rows exist in the DB.
     // The admin PATCH endpoint (PATCH /admin/shops/{id}) only UPDATES existing
     // shop_hours rows — it does NOT insert.  Without this seed the fresh shop

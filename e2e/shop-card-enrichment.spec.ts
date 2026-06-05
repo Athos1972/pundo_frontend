@@ -47,7 +47,7 @@ test.describe('E2E-S1: Shops-Seite laden', () => {
 
   test('Back-Button vorhanden', async ({ page }) => {
     await page.goto('/shops')
-    const backBtn = page.getByRole('link').filter({ hasText: /zurück|back/i }).first()
+    const _backBtn = page.getByRole('link').filter({ hasText: /zurück|back/i }).first()
     // Back-Button kann unterschiedlich beschriftet sein — prüfe nur dass Seite nicht crashed
     const body = await page.locator('body').innerHTML()
     expect(body.length).toBeGreaterThan(100)

@@ -37,7 +37,7 @@ import { checkTitleLength, formatTitleLengthSection, type TitleLengthViolation }
 import { checkDescriptionLength, formatDescriptionLengthSection, type DescriptionLengthViolation } from './seo-audit/checks/description-length.js'
 import { checkOgCompleteness, formatOgCompletenessSection, type OgGap } from './seo-audit/checks/og-completeness.js'
 import { checkH1Empty, formatH1EmptySection, type EmptyH1 } from './seo-audit/checks/h1-empty.js'
-import { checkSitemapVsNoindex, formatSitemapVsNoindexSection, type SitemapNoindexEntry } from './seo-audit/checks/sitemap-vs-noindex.js'
+import { formatSitemapVsNoindexSection, type SitemapNoindexEntry } from './seo-audit/checks/sitemap-vs-noindex.js'
 import { computeOrphans, formatOrphanPagesSection, type OrphanPage } from './seo-audit/checks/orphan-pages.js'
 import { checkInternalLink, formatInternalRedirectsSection, type InternalRedirect } from './seo-audit/checks/internal-redirects.js'
 

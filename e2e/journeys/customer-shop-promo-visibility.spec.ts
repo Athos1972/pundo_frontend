@@ -59,7 +59,7 @@ function logStep(step: number, desc: string, expected: string, actual: string, s
 
 // ─── Backend Readiness Check ──────────────────────────────────────────────────
 
-async function backendHasPromoSupport(): Promise<boolean> {
+async function _backendHasPromoSupport(): Promise<boolean> {
   try {
     const res = await fetch(`${BACKEND_URL}/health`)
     if (!res.ok) return false

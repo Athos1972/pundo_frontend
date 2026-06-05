@@ -151,7 +151,7 @@ function runLighthouse(url: string): RouteMetrics['lcp'] extends null ? RouteMet
     report = JSON.parse(fs.readFileSync(tmpOut, 'utf-8'))
     fs.unlinkSync(tmpOut)
   } catch {
-    fs.existsSync(tmpOut) && fs.unlinkSync(tmpOut)
+    if (fs.existsSync(tmpOut)) fs.unlinkSync(tmpOut)
     return {
       route, url,
       lcp: null, cls: null, tbt: null, fcp: null, speedIndex: null,

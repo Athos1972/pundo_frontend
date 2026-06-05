@@ -25,17 +25,17 @@
  *     There is no separate confirm/continue button.
  */
 
-import { test, expect, BrowserContext, Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /** Clear the app_lang cookie and set sessionStorage so the overlay shows immediately. */
-async function freshVisitorContext(browser: Parameters<typeof test>[1] extends { browser: infer B } ? B : never): Promise<never> {
+async function _freshVisitorContext(browser: Parameters<typeof test>[1] extends { browser: infer B } ? B : never): Promise<never> {
   throw new Error('use freshVisitorPage instead')
 }
 
 /** Navigate to / as a fresh visitor (no app_lang cookie, splash already ran). */
-async function openAsFreshVisitor(page: Page, locale?: string) {
+async function openAsFreshVisitor(page: Page, _locale?: string) {
   // Pre-set sessionStorage AFTER first navigation so the JS context exists.
   // Strategy: navigate, inject storage, then reload so the hook picks it up.
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -168,7 +168,7 @@ test('AC6 — After one-tap German, html[lang] is "de" post-reload', async ({ br
   await waitForOverlay(page)
 
   // One tap on Deutsch triggers hard reload (different lang than serverLang=en)
-  const [response] = await Promise.all([
+  const [_response] = await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10_000 }),
     page.getByRole('radio', { name: /Deutsch/ }).click(),
   ])

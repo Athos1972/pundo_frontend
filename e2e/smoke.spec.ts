@@ -4,7 +4,7 @@
  * Tests public pages that render without requiring backend data.
  * For backend-dependent pages (search, shops) a degraded-gracefully check is performed.
  */
-import { test, expect, type BrowserContext } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 test.describe('Visual Smoke-Test', () => {
 

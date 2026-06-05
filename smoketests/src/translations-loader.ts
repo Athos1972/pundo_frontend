@@ -26,7 +26,7 @@ async function ensureLoaded(): Promise<Record<string, LangMap>> {
     // Dynamic import resolved by tsx at runtime
     const mod = await import('../../src/lib/translations.js')
     _translations = mod.translations as Record<string, LangMap>
-  } catch (err) {
+  } catch {
     // If tsx can't resolve the .js extension, try without extension
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -795,7 +795,7 @@ test.describe('S5: Shop-Admin Preis-Edit', () => {
     }
 
     const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
+    const _page = await ctx2.newPage()
 
     // Login via Backend-API direkt (S5 braucht nur API-Zugriff, kein Browser-UI)
     const loginRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {

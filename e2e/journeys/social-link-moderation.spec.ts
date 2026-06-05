@@ -376,7 +376,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     // Table or empty state visible
     const table = page.locator('table, [class*="table"], [class*="no_items"]')
     const emptyState = page.locator('text=empty, text=keine, text=no items, td')
-    const hasContent = (await table.count()) > 0 || (await emptyState.count()) > 0
+    const _hasContent = (await table.count()) > 0 || (await emptyState.count()) > 0
 
     // At minimum the page renders without error
     const pageUrl = page.url()

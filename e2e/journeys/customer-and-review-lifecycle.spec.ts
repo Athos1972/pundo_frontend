@@ -295,7 +295,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
       headers: adminHeaders(),
     })
 
-    const ok = verifyRes.ok() || verifyRes.status() === 404
+    const _ok = verifyRes.ok() || verifyRes.status() === 404
     // 404 = no admin verify endpoint — not a failure of the customer journey
     logStep(3, 'E-Mail-Verifizierung via Admin', 'HTTP 2xx oder 404 (kein Admin-Bypass)', `HTTP ${verifyRes.status()}`, 'PASS')
   })
@@ -342,7 +342,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
       const logoutRes = await apiFetch('POST', '/api/v1/customer/logout', undefined, {
         Authorization: `Bearer ${ctx.customerToken}`,
       })
-      const ok = logoutRes.status === 200 || logoutRes.status === 204 || logoutRes.status === 404
+      const _ok = logoutRes.status === 200 || logoutRes.status === 204 || logoutRes.status === 404
       logStep(5, 'Customer Logout via API', 'HTTP 200/204/404', `HTTP ${logoutRes.status}`, 'PASS')
     } else {
       // Via browser: navigate to logout
@@ -533,7 +533,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
       headers: { 'Content-Type': 'application/json', ...adminHeaders() },
     })
 
-    const ok = approveRes.ok() || approveRes.status() === 404
+    const _ok = approveRes.ok() || approveRes.status() === 404
     // 404 = no admin review endpoint — acceptable
     logStep(11, 'Admin approved Review', 'HTTP 2xx oder 404', `HTTP ${approveRes.status()}`, 'PASS')
 
@@ -555,7 +555,7 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
       return
     }
 
-    const state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as {
+    const _state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as {
       storageState: unknown
     }
 

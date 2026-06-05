@@ -215,7 +215,7 @@ test.describe('Shop-Detailseite', () => {
 
   test('Shop-Detailseite zeigt Adresse', async ({ page }) => {
     if (!shopSlug) return
-    const state = loadStorageState()
+    const _state = loadStorageState()
     await page.goto(`/shops/${shopSlug}`)
     // Adresse oder Teil davon soll sichtbar sein (z.B. "Larnaca") — use .first() to avoid strict-mode violation
     await expect(page.getByText(/larnaca/i).first()).toBeVisible({ timeout: 10_000 })
@@ -329,7 +329,7 @@ test.describe('Öffnungszeiten via Admin setzen', () => {
   })
 
   test('Öffnungszeiten speichern und via API verifizieren', async ({ page }) => {
-    const state = loadStorageState()
+    const _state = loadStorageState()
 
     await page.goto('/shop-admin/hours')
     // Days default to Closed — uncheck the first "Closed" checkbox to reveal time inputs

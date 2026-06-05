@@ -86,7 +86,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
-  const [mapBbox, setMapBbox] = useState<string | undefined>(undefined)
+  const [mapBbox, _setMapBbox] = useState<string | undefined>(undefined)
 
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
     // T4: In category or shop mode q is not required; otherwise require at least 2 chars

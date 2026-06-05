@@ -66,11 +66,30 @@ const seoMetadataRule = {
   },
 };
 
+// ─── Unused vars: ignore _-prefixed identifiers (standard TS convention) ──────
+// Preserve rule defaults: vars/args/ignoreRestSiblings are kept at defaults;
+// only add _-ignore patterns so prefixed identifiers stop being flagged.
+const unusedVarsRule = {
+  rules: {
+    '@typescript-eslint/no-unused-vars': ['warn', {
+      vars: 'all',
+      varsIgnorePattern: '^_',
+      args: 'after-used',
+      argsIgnorePattern: '^_',
+      ignoreRestSiblings: true,
+      caughtErrors: 'all',
+      caughtErrorsIgnorePattern: '^_',
+      destructuredArrayIgnorePattern: '^_',
+    }],
+  },
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   shopAdminBoundaryRule,
   seoMetadataRule,
+  unusedVarsRule,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

@@ -124,7 +124,7 @@ test.describe('E2E-12: Admin Auth Guard', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Load admin storage state if running against test stack
-function getAdminStorageState(): Parameters<typeof test.use>[0]['storageState'] | undefined {
+function _getAdminStorageState(): Parameters<typeof test.use>[0]['storageState'] | undefined {
   // When running against test server (3002), admin is seeded by global-setup
   // We use a pre-created admin state file if available
   const adminStateFile = path.join(__dirname, '.admin-state.json')

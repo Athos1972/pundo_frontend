@@ -56,7 +56,7 @@ test.describe.serial('Customer Discovery Flow', () => {
   let seedShopName: string | null = null
   let seedShopSlug: string | null = null
   let productSlug: string | null = null
-  const startedAt = new Date().toISOString()
+  const _startedAt = new Date().toISOString()
 
   test.beforeAll(async () => {
     // Healthcheck
@@ -315,7 +315,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     // Navigate: home → shops/slug → back()
     await page.goto(BASE_URL + '/')
     await page.waitForLoadState('load')
-    const homeUrl = page.url()
+    const _homeUrl = page.url()
 
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
     await page.waitForLoadState('load')

@@ -35,6 +35,7 @@ const shopTranslations = {
     price_best_seen: 'Best price seen so far',
     price_no_change_yet: "No price change observed yet — we'll track this price from now on.",
     price_history_scope_cheapest: 'Cheapest price across all shops',
+    shop_about_heading: 'About this shop',
   },
   de: {
     all_offers: 'Alle Angebote',
@@ -71,6 +72,7 @@ const shopTranslations = {
     price_best_seen: 'Bester bisher beobachteter Preis',
     price_no_change_yet: 'Noch keine Preisänderung beobachtet — wir verfolgen diesen Preis ab jetzt.',
     price_history_scope_cheapest: 'Günstigster Preis über alle Shops',
+    shop_about_heading: 'Über diesen Shop',
   },
   ru: {
     all_offers: 'Все предложения',
@@ -107,6 +109,7 @@ const shopTranslations = {
     price_best_seen: 'Лучшая наблюдаемая цена',
     price_no_change_yet: 'Изменений цены пока не наблюдалось — мы следим за этой ценой.',
     price_history_scope_cheapest: 'Минимальная цена среди всех магазинов',
+    shop_about_heading: 'Об этом магазине',
   },
   el: {
     all_offers: 'Όλες οι προσφορές',
@@ -143,6 +146,7 @@ const shopTranslations = {
     price_best_seen: 'Καλύτερη τιμή μέχρι τώρα',
     price_no_change_yet: 'Δεν παρατηρήθηκε αλλαγή τιμής ακόμα — παρακολουθούμε αυτή την τιμή.',
     price_history_scope_cheapest: 'Φθηνότερη τιμή σε όλα τα καταστήματα',
+    shop_about_heading: 'Σχετικά με αυτό το κατάστημα',
   },
   ar: {
     all_offers: 'جميع العروض',
@@ -179,6 +183,7 @@ const shopTranslations = {
     price_best_seen: 'أفضل سعر لوحظ حتى الآن',
     price_no_change_yet: 'لم يُلاحظ أي تغيير في السعر حتى الآن — سنتابع هذا السعر من الآن.',
     price_history_scope_cheapest: 'أرخص سعر عبر جميع المتاجر',
+    shop_about_heading: 'حول هذا المتجر',
   },
   he: {
     all_offers: 'כל ההצעות',
@@ -215,6 +220,7 @@ const shopTranslations = {
     price_best_seen: 'המחיר הטוב ביותר שנצפה עד כה',
     price_no_change_yet: 'לא נצפה שינוי מחיר עדיין — אנו עוקבים אחר מחיר זה מעכשיו.',
     price_history_scope_cheapest: 'המחיר הזול ביותר בכל החנויות',
+    shop_about_heading: 'אודות חנות זו',
   },
 } as const
 

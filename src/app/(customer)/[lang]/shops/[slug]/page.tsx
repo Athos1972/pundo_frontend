@@ -150,7 +150,6 @@ export default async function ShopPage({ params }: Props) {
             />
             <div className="min-w-0">
               <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>
-              {shop.description && <p className="text-sm text-text-muted mt-1">{shop.description}</p>}
             </div>
           </div>
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
@@ -193,6 +192,18 @@ export default async function ShopPage({ params }: Props) {
             </div>
           )}
         </div>
+
+        {/* Shop description */}
+        {shop.description && (
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <h2 className="font-bold text-sm text-text mb-2 font-heading">
+              {tr.shop_about_heading}
+            </h2>
+            <p className="text-sm text-text-muted whitespace-pre-line">
+              {shop.description}
+            </p>
+          </div>
+        )}
 
         {/* Map — isolate creates a new stacking context so Leaflet's z-indices don't bleed above FABs */}
         {pins.length > 0 && (

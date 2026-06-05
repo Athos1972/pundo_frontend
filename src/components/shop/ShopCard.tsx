@@ -114,6 +114,13 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             <p className="text-sm text-text-muted truncate mt-0.5">{shop.address_raw}</p>
           )}
 
+          {/* Row 2.5: Description excerpt */}
+          {shop.description && (
+            <p className="text-sm text-text-muted mt-1 line-clamp-2">
+              {shop.description}
+            </p>
+          )}
+
           {/* Row 3: Shop type + open/closed badge */}
           {(shopTypeName || shop.is_open_now != null) && (
             <div className="flex items-center flex-wrap gap-1.5 mt-1.5 rtl:flex-row-reverse">

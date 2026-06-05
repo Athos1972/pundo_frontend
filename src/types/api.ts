@@ -67,6 +67,7 @@ export interface ShopListItem {
   has_parking?: boolean | null;
   has_own_delivery?: boolean | null;
   is_online_only?: boolean;
+  description?: string | null;
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }

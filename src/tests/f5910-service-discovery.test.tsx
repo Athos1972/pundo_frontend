@@ -39,13 +39,13 @@ describe('isServiceResult / isProductResult type guards', () => {
 
   it('isServiceResult returns false for product items', async () => {
     const { isServiceResult } = await import('@/types/api')
-    const item = { result_type: 'product' as const, id: 1, slug: 'cat-food', names: {}, brand: null, category_id: null, thumbnail_url: null, images: null, best_offer: null, score: 0.6 }
+    const item = { result_type: 'product' as const, id: 1, slug: 'cat-food', name: 'Cat Food', brand: null, category_id: null, thumbnail_url: null, images: null, best_offer: null, score: 0.6 }
     expect(isServiceResult(item)).toBe(false)
   })
 
   it('isProductResult returns true for product items', async () => {
     const { isProductResult } = await import('@/types/api')
-    const item = { result_type: 'product' as const, id: 1, slug: 'cat-food', names: {}, brand: null, category_id: null, thumbnail_url: null, images: null, best_offer: null, score: 0.6 }
+    const item = { result_type: 'product' as const, id: 1, slug: 'cat-food', name: 'Cat Food', brand: null, category_id: null, thumbnail_url: null, images: null, best_offer: null, score: 0.6 }
     expect(isProductResult(item)).toBe(true)
   })
 })

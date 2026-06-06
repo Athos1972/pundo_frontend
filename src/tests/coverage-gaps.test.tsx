@@ -41,7 +41,7 @@ vi.mock('@/lib/utils', async (importOriginal) => {
 
 describe('ProductCard image resolution', () => {
   const base = {
-    id: 1, slug: 'cat-food', names: { en: 'Cat Food' }, brand: null,
+    id: 1, slug: 'cat-food', name: 'Cat Food', brand: null,
     category_id: null, thumbnail_url: null, images: null, best_offer: null,
   }
 
@@ -117,7 +117,7 @@ describe('ProductCard image resolution', () => {
     const { ProductCard } = await import('@/components/product/ProductCard')
     const item = {
       ...base,
-      names: { en: 'Horizontal Item' },
+      name: 'Horizontal Item',
       images: { thumb: null, card: '/img/horiz.webp', carousel: null, detail: null, orig: null },
       best_offer: {
         price: '9.99', currency: 'EUR', price_type: 'fixed', price_note: null,
@@ -139,7 +139,7 @@ describe('ProductCard image resolution', () => {
 
 describe('ProductCard hover props', () => {
   const base = {
-    id: 2, slug: 'fish-food', names: { en: 'Fish Food' }, brand: null,
+    id: 2, slug: 'fish-food', name: 'Fish Food', brand: null,
     category_id: null, thumbnail_url: null, images: null,
     best_offer: {
       shop_id: 42, shop_name: 'Fish Shop', shop_slug: 'fish-shop',

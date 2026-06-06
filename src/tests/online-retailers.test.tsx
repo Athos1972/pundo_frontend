@@ -135,7 +135,7 @@ describe('ProductCard — delivery_available badge', () => {
   const baseItem = {
     id: 1,
     slug: 'cat-food',
-    names: { en: 'Cat Food' },
+    name: 'Cat Food',
     brand: 'Whiskas',
     category_id: 1,
     thumbnail_url: null,

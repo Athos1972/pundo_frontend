@@ -24,7 +24,7 @@ export function ProductCard({ item, lang, variant = 'vertical', shopId, isHighli
   const offer = item.best_offer
   const imgSrc   = pickImg(item.images, 'card', item.thumbnail_url)
   const imgSrc2x = item.images?.card_2x ?? null
-  const productName = item.names[lang] ?? item.names.en ?? '—'
+  const productName = item.name || '—'
   const priceLabel = offer
     ? formatPriceOrLabel(offer.price, offer.currency, offer.price_type, offer.price_note, tr)
     : null

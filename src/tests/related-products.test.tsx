@@ -70,7 +70,7 @@ describe('getRelatedProducts', () => {
 const makeItem = (slug: string, name: string) => ({
   id: Math.random(),
   slug,
-  names: { en: name },
+  name,
   brand: 'TestBrand',
   category_id: 1,
   thumbnail_url: null,

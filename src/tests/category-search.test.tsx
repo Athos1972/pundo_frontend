@@ -86,7 +86,7 @@ function makeProductListItem(id: number): ProductListItem {
   return {
     id,
     slug: `product-${id}`,
-    names: { en: `Product ${id}` },
+    name: `Product ${id}`,
     brand: null,
     category_id: 678,
     thumbnail_url: null,

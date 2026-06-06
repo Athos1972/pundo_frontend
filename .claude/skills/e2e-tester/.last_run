@@ -1,7 +1,13 @@
 {
-  "sha": "345ead5ddda7b5a4a85a8dbc44819fb6f541dbf0",
-  "timestamp": "2026-06-05T16:44:00Z",
+  "sha": "fa5c7dd5f828eccdd17188c29095eb3ca198b5bb",
+  "timestamp": "2026-06-05T15:30:00.846832+00:00",
   "verdict": "SHIP",
   "open_failures": [],
-  "coverage_snapshot": {}
+  "coverage_snapshot": {
+    "onboarding-other-option.test.tsx": "19/19",
+    "onboarding-domains.test.ts": "pass",
+    "onboarding-wizard.test.tsx": "pass",
+    "onboarding-oauth.test.ts": "pass",
+    "ProductCardImage.test.tsx": "pass"
+  }
 }

@@ -25,10 +25,12 @@ vi.mock('@/lib/onboarding/draftStorage', () => ({
 
 // Mock domains fetch
 vi.mock('@/lib/onboarding/domains', () => ({
+  OTHER_DOMAIN_SLUG: 'other',
   getDomains: vi.fn().mockResolvedValue([
     { slug: 'elektriker', label: 'Elektriker', specialties: [{ slug: 'solar', label: 'Solar' }] },
     { slug: 'maler', label: 'Maler', specialties: [] },
   ]),
+  clearDomainsCache: vi.fn(),
 }))
 
 // Mock dynamic import of map

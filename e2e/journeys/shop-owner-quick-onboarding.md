@@ -25,7 +25,7 @@ touches-states:
   - ShopListing.available:true
 status-changed-at: 2026-05-31T00:00:00Z
 status-changed-by-spec: onboarding-items-konsolidierung-20260531
-last-run: 2026-06-05T06:18:00Z
+last-run: 2026-06-05T18:28:00Z
 last-result: PASS
 ---
 

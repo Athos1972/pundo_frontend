@@ -16,6 +16,11 @@ export interface ShopOwner {
   shop_id: number | null
 }
 
+// ─── Self-Service Attribute Types (F5300 / F3800 Phase 1a) ───────────────────
+
+export type CharityStatus = 'none' | 'pending' | 'approved'
+export type PaymentMethodValue = 'cash' | 'card' | 'revolut' | 'klarna'
+
 export interface AdminShop {
   id: number
   name: string
@@ -30,6 +35,14 @@ export interface AdminShop {
   webshop_url: string | null
   social_links: SocialLinksMap | null
   status: 'active' | 'inactive' | 'pending'
+  // Self-service attributes — all optional (backend may not yet return them)
+  service_radius_km?: number | null
+  delivers_island_wide?: boolean
+  supports_charity?: boolean
+  charity_note?: string | null
+  charity_status?: CharityStatus
+  appointment_required?: boolean
+  payment_methods?: PaymentMethodValue[]
 }
 
 export interface OpeningHours {

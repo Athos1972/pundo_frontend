@@ -40,6 +40,25 @@ function GlobeIcon() {
   )
 }
 
+function HeartIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  )
+}
+
 const LANG_NAME_KEYS: Record<string, keyof ReturnType<typeof t>> = {
   en: 'community_vote_language_en',
   de: 'community_vote_language_de',
@@ -89,6 +108,8 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
 
   const hasRating = shop.review_stats != null && shop.review_stats.total_count > 0
   const showAttrs = shop.has_parking === true || shop.has_own_delivery === true || shop.is_online_only === true
+    || shop.appointment_required === true
+  const showRadius = shop.delivers_island_wide === true || (shop.service_radius_km != null && shop.service_radius_km > 0)
 
   return (
     <Link
@@ -121,8 +142,8 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             </p>
           )}
 
-          {/* Row 3: Shop type + open/closed badge */}
-          {(shopTypeName || shop.is_open_now != null) && (
+          {/* Row 3: Shop type + open/closed badge + charity badge */}
+          {(shopTypeName || shop.is_open_now != null || shop.is_charity_supporter === true) && (
             <div className="flex items-center flex-wrap gap-1.5 mt-1.5 rtl:flex-row-reverse">
               {shopTypeName && (
                 <span className="text-xs bg-surface-alt border border-border text-text-muted px-2 py-0.5 rounded-full">
@@ -138,6 +159,14 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
                 <span className="text-xs bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
                   {tr.closed}
                 </span>
+              )}
+              {shop.is_charity_supporter === true && (
+                <Tooltip content={tr.charity_badge_label}>
+                  <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full cursor-default">
+                    <HeartIcon />
+                    <span className="sr-only">{tr.charity_badge_label}</span>
+                  </span>
+                </Tooltip>
               )}
             </div>
           )}
@@ -171,9 +200,9 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
             </span>
           </div>
 
-          {/* Row 5: Parking / Delivery / Online-only icons with tooltips */}
-          {showAttrs && (
-            <div className="flex items-center gap-2 mt-1.5 text-text-muted rtl:flex-row-reverse">
+          {/* Row 5: Parking / Delivery / Online-only / Appointment icons + radius hint */}
+          {(showAttrs || showRadius) && (
+            <div className="flex items-center gap-2 mt-1.5 text-text-muted rtl:flex-row-reverse flex-wrap">
               {shop.has_parking === true && (
                 <Tooltip content={tr.filter_has_parking}>
                   <span className="cursor-default"><ParkingIcon /></span>
@@ -188,6 +217,18 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
                 <Tooltip content={tr.filter_online_only}>
                   <span className="cursor-default"><GlobeIcon /></span>
                 </Tooltip>
+              )}
+              {shop.appointment_required === true && (
+                <Tooltip content={tr.shop_appointment_required}>
+                  <span className="cursor-default"><CalendarIcon /></span>
+                </Tooltip>
+              )}
+              {showRadius && (
+                <span className="text-xs text-text-muted">
+                  {shop.delivers_island_wide
+                    ? tr.shop_delivers_island_wide
+                    : tr.shop_delivers_radius(shop.service_radius_km!)}
+                </span>
               )}
             </div>
           )}

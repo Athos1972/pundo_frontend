@@ -7,7 +7,9 @@ import { LogoUpload } from '@/components/shop-admin/LogoUpload'
 import { LanguageSelector } from '@/components/ui/LanguageSelector'
 import { SocialLinksEditor } from '@/components/shop-admin/SocialLinksEditor'
 import { showToast } from '@/components/shop-admin/Toast'
-import type { AdminShop, SocialLinksMap, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory } from '@/types/shop-admin'
+import { AttributeToggle } from '@/components/shop-admin/AttributeToggle'
+import { PaymentMethodsField } from '@/components/shop-admin/PaymentMethodsField'
+import type { AdminShop, SocialLinksMap, SocialLinkFieldError, SocialLinkBlockedError, SocialLinkBlockCategory, PaymentMethodValue } from '@/types/shop-admin'
 
 const FIXED_PLATFORM_KEYS = new Set(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x'])
 
@@ -28,6 +30,26 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
   const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(shop?.logo_url ?? null)
   const [serverErrors, setServerErrors] = useState<Record<string, SocialLinkFieldError>>({})
+
+  // F5300 / F3800 Phase 1a — Self-service attribute state
+  const [radiusInput, setRadiusInput] = useState<string>(
+    shop?.service_radius_km != null ? String(shop.service_radius_km) : ''
+  )
+  const [deliversIslandWide, setDeliversIslandWide] = useState<boolean>(
+    shop?.delivers_island_wide ?? false
+  )
+  const [supportsCharity, setSupportsCharity] = useState<boolean>(
+    shop?.supports_charity ?? false
+  )
+  const [charityNote, setCharityNote] = useState<string>(
+    shop?.charity_note ?? ''
+  )
+  const [appointmentRequired, setAppointmentRequired] = useState<boolean>(
+    shop?.appointment_required ?? false
+  )
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodValue[]>(
+    (shop?.payment_methods ?? []) as PaymentMethodValue[]
+  )
 
   const errorLabels: Partial<Record<SocialLinkBlockCategory, string>> = {
     adult: tr.social_blocked_adult,
@@ -74,6 +96,14 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
             website_url: website,
             webshop_url: webshop,
             social_links: socialLinks,
+            // F5300 / F3800 Phase 1a — self-service attributes
+            service_radius_km: deliversIslandWide ? null : (radiusInput ? Number(radiusInput) : null),
+            delivers_island_wide: deliversIslandWide,
+            supports_charity: supportsCharity,
+            charity_note: supportsCharity ? (charityNote.trim() || null) : null,
+            // charity_status NOT sent — set server-side on supports_charity change
+            appointment_required: appointmentRequired,
+            payment_methods: paymentMethods,
           }),
         })
         if (res.ok) {
@@ -90,7 +120,10 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
             }
             setServerErrors((prev) => {
               const updates: Record<string, SocialLinkFieldError> = { [blocked.key]: errorEntry }
-              if (!FIXED_PLATFORM_KEYS.has(blocked.key)) updates['other'] = errorEntry
+              // charity_note uses the same block structure — key === 'charity_note'
+              if (!FIXED_PLATFORM_KEYS.has(blocked.key) && blocked.key !== 'charity_note') {
+                updates['other'] = errorEntry
+              }
               return { ...prev, ...updates }
             })
             showToast(tr.social_blocked_toast, 'error')
@@ -171,6 +204,84 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
           defaultValue={shop?.webshop_url ?? ''}
         />
       </div>
+      {/* ── F5300 Umkreis-Block ── */}
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
+        <FormField
+          label={tr.service_radius_label}
+          name="service_radius_km"
+          type="number"
+          min={0}
+          step={1}
+          disabled={deliversIslandWide}
+          value={radiusInput}
+          onChange={e => setRadiusInput(e.target.value)}
+          placeholder="e.g. 30"
+        />
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={deliversIslandWide}
+            onChange={e => {
+              setDeliversIslandWide(e.target.checked)
+              if (e.target.checked) setRadiusInput('')
+            }}
+            className="rounded border-gray-300 text-accent focus:ring-accent"
+          />
+          {tr.delivers_island_wide_label}
+        </label>
+      </div>
+
+      {/* ── F3800 Phase 1a Charity-Block ── */}
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4">
+        <AttributeToggle
+          id="supports_charity"
+          label={tr.charity_toggle_label}
+          checked={supportsCharity}
+          onChange={setSupportsCharity}
+        />
+        {supportsCharity && (
+          <>
+            <FormField
+              label={tr.charity_note_label}
+              name="charity_note"
+              as="textarea"
+              rows={2}
+              maxLength={140}
+              value={charityNote}
+              onChange={e => setCharityNote((e.target as unknown as HTMLTextAreaElement).value)}
+            />
+            {/* charity_note block error (same mechanism as social_link_blocked) */}
+            {serverErrors['charity_note'] && (
+              <p className="text-xs text-red-600" role="alert">
+                {errorLabels[serverErrors['charity_note'].category] ?? tr.social_blocked_generic}
+              </p>
+            )}
+            {shop?.charity_status === 'pending' && (
+              <p className="text-xs text-amber-600 font-medium">{tr.charity_status_pending}</p>
+            )}
+            {shop?.charity_status === 'approved' && (
+              <p className="text-xs text-green-600 font-medium">{tr.charity_status_approved}</p>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Termin-Toggle ── */}
+      <AttributeToggle
+        id="appointment_required"
+        label={tr.appointment_required_label}
+        checked={appointmentRequired}
+        onChange={setAppointmentRequired}
+      />
+
+      {/* ── Zahlungsarten-Multiselect ── */}
+      <PaymentMethodsField
+        label={tr.payment_methods_label}
+        value={paymentMethods}
+        onChange={setPaymentMethods}
+        getLabel={(key) => tr[key as keyof typeof tr] as string ?? key}
+      />
+
       <SocialLinksEditor
         value={socialLinks}
         onChange={setSocialLinks}

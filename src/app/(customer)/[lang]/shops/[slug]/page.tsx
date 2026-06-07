@@ -33,6 +33,7 @@ import { ShopOfferCard } from '@/components/shop/ShopOfferCard'
 import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { PixelViewContent } from '@/components/consent/PixelViewContent'
+import { PAYMENT_METHODS } from '@/lib/payment-methods'
 
 interface Props { params: Promise<{ lang: string; slug: string }> }
 
@@ -189,6 +190,58 @@ export default async function ShopPage({ params }: Props) {
           {shop.spoken_languages && shop.spoken_languages.length > 0 && (
             <div className="mt-3">
               <LanguageChips languages={shop.spoken_languages} label={tr.spoken_languages} lang={lang} />
+            </div>
+          )}
+
+          {/* F5300 — Service radius / island-wide (AC-02, AC-05) */}
+          {(shop.delivers_island_wide === true || (shop.service_radius_km != null && shop.service_radius_km > 0)) && (
+            <p className="text-sm text-text-muted mt-2 rtl:text-right">
+              📍 {shop.delivers_island_wide ? tr.shop_delivers_island_wide : tr.shop_delivers_radius(shop.service_radius_km!)}
+            </p>
+          )}
+
+          {/* F3800 Phase 1a — Appointment required (AC-11, AC-12) */}
+          {shop.appointment_required === true && (
+            <p className="text-sm text-amber-700 dark:text-amber-400 mt-2 font-medium rtl:text-right">
+              📅 {tr.shop_appointment_required}
+            </p>
+          )}
+
+          {/* F3800 Phase 1a — Charity badge + note (AC-08) */}
+          {shop.is_charity_supporter === true && (
+            <div className="mt-2 flex flex-col gap-1 rtl:items-end">
+              <span className="inline-flex items-center gap-1.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2.5 py-1 rounded-full font-medium self-start">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                {tr.charity_badge_label}
+              </span>
+              {/* charity_note only present on detail endpoint (approved only) */}
+              {(shop as { charity_note?: string | null }).charity_note && (
+                <p className="text-sm text-text-muted">
+                  {(shop as { charity_note?: string | null }).charity_note}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* F5300 — Payment methods (AC-14, AC-15) */}
+          {shop.payment_methods && shop.payment_methods.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-text-muted mb-1.5 font-medium">{tr.payment_methods_heading}</p>
+              <div className="flex flex-wrap gap-2 rtl:flex-row-reverse">
+                {PAYMENT_METHODS
+                  .filter(def => shop.payment_methods!.includes(def.value))
+                  .map(def => (
+                    <span
+                      key={def.value}
+                      className="inline-flex items-center gap-1.5 text-xs bg-surface-alt border border-border text-text-muted px-2.5 py-1 rounded-full"
+                    >
+                      <def.Icon className="w-3.5 h-3.5" />
+                      {tr[def.labelKey as keyof typeof tr] as string ?? def.labelKey}
+                    </span>
+                  ))}
+              </div>
             </div>
           )}
         </div>

@@ -72,6 +72,13 @@ export interface ShopListItem {
   has_own_delivery?: boolean | null;
   is_online_only?: boolean;
   description?: string | null;
+  // Self-service attributes (F5300 / F3800 Phase 1a) — optional, present once backend deploys
+  service_radius_km?: number | null;
+  delivers_island_wide?: boolean;
+  /** Derived approved-flag only — never charity_status (AC-07: pending must not leak to consumer) */
+  is_charity_supporter?: boolean;
+  appointment_required?: boolean;
+  payment_methods?: string[];
 }
 export interface ShopListResponse { items: ShopListItem[]; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }

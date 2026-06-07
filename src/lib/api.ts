@@ -100,6 +100,8 @@ export async function getShops(
     spoken_languages?: string; has_parking?: boolean; has_own_delivery?: boolean; is_online_only?: boolean;
     /** F5910: filter shops to those offering the given UNSPSC service category (via onboarding mapping) */
     service_category_id?: number;
+    /** F5300: filter by appointment_required (soft: backend may ignore if not yet implemented) */
+    appointment_required?: boolean;
   } = {},
   lang: string
 ): Promise<ShopListResponse> {
@@ -118,6 +120,7 @@ export async function getShops(
   if (params.has_own_delivery != null) qs.set('has_own_delivery', String(params.has_own_delivery));
   if (params.is_online_only != null) qs.set('is_online_only', String(params.is_online_only));
   if (params.service_category_id != null) qs.set('service_category_id', String(params.service_category_id));
+  if (params.appointment_required) qs.set('appointment_required', 'true');
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
 }

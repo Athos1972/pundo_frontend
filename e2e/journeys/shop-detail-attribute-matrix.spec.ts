@@ -178,7 +178,7 @@ test('AC-06 — Owner activates charity → sees "Under review"', async ({ page 
   if (!freshOwner.token) test.skip()
   await ensureAuth(page)
 
-  await page.goto(`${BASE_URL}/en/shop-admin/profile`)
+  await page.goto(`${BASE_URL}/shop-admin/profile`)
 
   // Activate the charity toggle (role=switch)
   const toggle = page.getByRole('switch', { name: /charity|non-profit/i })

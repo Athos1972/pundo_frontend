@@ -43,6 +43,9 @@ export function ShopsContent({ lang }: { lang: string }) {
   const [hasDelivery, setHasDelivery] = useState(false)
   const [isOnlineOnly, setIsOnlineOnly] = useState(false)
   const [langFilter, setLangFilter] = useState<string[]>([])
+  // F5300 — clientside filters
+  const [deliversToMe, setDeliversToMe] = useState(false)
+  const [appointmentRequiredFilter, setAppointmentRequiredFilter] = useState(false)
 
   // Data
   const [shops, setShops] = useState<ShopListItem[]>([])
@@ -99,6 +102,8 @@ export function ShopsContent({ lang }: { lang: string }) {
       ...(langFilter.length > 0 && { spoken_languages: langFilter.join(',') }),
       // F5910 Service-Discovery-Bridge: filter by UNSPSC service category (T14)
       ...(serviceCategoryId != null && { service_category_id: serviceCategoryId }),
+      // F5300 — appointment_required (soft dependency: backend may ignore param for now)
+      ...(appointmentRequiredFilter && { appointment_required: true }),
     }
 
     getShops(params, lang)
@@ -121,7 +126,7 @@ export function ShopsContent({ lang }: { lang: string }) {
         setErrorMsg(err instanceof Error ? err.message : String(err))
         setLoading(false)
       })
-  }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang, serviceCategoryId])
+  }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang, serviceCategoryId, appointmentRequiredFilter])
 
   // ── Helper: type display name ─────────────────────────────────────────────────
   function typeLabel(st: ShopTypeRead): string {
@@ -133,6 +138,15 @@ export function ShopsContent({ lang }: { lang: string }) {
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     )
   }
+
+  // ── F5300 clientside radius filter ──────────────────────────────────────────
+  const visibleShops = deliversToMe
+    ? shops.filter(shop =>
+        shop.delivers_island_wide === true ||
+        (coords != null && shop.dist_km != null && shop.service_radius_km != null
+          && shop.dist_km <= shop.service_radius_km)
+      )
+    : shops
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
@@ -207,6 +221,21 @@ export function ShopsContent({ lang }: { lang: string }) {
           >
             {tr.filter_online_only}
           </button>
+          {/* F5300 — "Delivers to me" (clientside filter; disabled without geolocation) */}
+          <button
+            onClick={() => setDeliversToMe(v => !v)}
+            disabled={!coords}
+            className={`${CHIP_BASE} ${deliversToMe ? CHIP_ON : CHIP_OFF} disabled:opacity-40`}
+          >
+            {tr.filter_delivers_to_me}
+          </button>
+          {/* F5300 — "By appointment" (sends param to backend; soft dependency) */}
+          <button
+            onClick={() => setAppointmentRequiredFilter(v => !v)}
+            className={`${CHIP_BASE} ${appointmentRequiredFilter ? CHIP_ON : CHIP_OFF}`}
+          >
+            {tr.filter_appointment_required}
+          </button>
         </div>
 
         {/* Spoken-language multi-select chips */}
@@ -258,13 +287,13 @@ export function ShopsContent({ lang }: { lang: string }) {
         </p>
       )}
 
-      {!loading && !errorMsg && shops.length === 0 && (
+      {!loading && !errorMsg && visibleShops.length === 0 && (
         <p className="text-sm text-text-muted py-4">{tr.shops_empty}</p>
       )}
 
-      {!loading && !errorMsg && shops.length > 0 && (
+      {!loading && !errorMsg && visibleShops.length > 0 && (
         <div className="flex flex-col gap-3">
-          {shops.map(shop => (
+          {visibleShops.map(shop => (
             <ShopCard key={shop.id} shop={shop} lang={lang} />
           ))}
         </div>

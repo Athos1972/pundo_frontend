@@ -25,3 +25,5 @@ last-result: N/A
 **Ersetzt durch:** [`shop-detail-attribute-matrix`](shop-detail-attribute-matrix.md)
 
 Ursprünglicher Scope: Öffnungszeiten, Social Links, Kontaktfelder befüllen und in Customer-Sicht verifizieren (Szenario A: Tabula Rasa, Szenario B: Edit-Flow).
+
+> **F5300 / F3800 Phase 1a (shop-self-service-attribute-batch-20260606):** Neue ACs (AC-01 bis AC-17) wurden bewusst in `shop-detail-attribute-matrix` eingebaut, nicht hier. Diese Journey bleibt deprecated.

@@ -240,6 +240,7 @@ export type AttributeType =
   | 'language_ru' | 'language_ar' | 'language_he'
   | 'parking' | 'price_level' | 'delivery'
   | 'click_collect' | 'reservation_required' | 'terrace'
+  | 'charity'
 
 export interface VoteAggregateItem {
   attribute_type: AttributeType

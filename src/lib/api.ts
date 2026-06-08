@@ -102,6 +102,8 @@ export async function getShops(
     service_category_id?: number;
     /** F5300: filter by appointment_required (soft: backend may ignore if not yet implemented) */
     appointment_required?: boolean;
+    /** F3800 Phase 2: filter to approved charity-supporter shops */
+    is_charity_supporter?: boolean;
   } = {},
   lang: string
 ): Promise<ShopListResponse> {
@@ -121,6 +123,7 @@ export async function getShops(
   if (params.is_online_only != null) qs.set('is_online_only', String(params.is_online_only));
   if (params.service_category_id != null) qs.set('service_category_id', String(params.service_category_id));
   if (params.appointment_required) qs.set('appointment_required', 'true');
+  if (params.is_charity_supporter != null) qs.set('is_charity_supporter', String(params.is_charity_supporter));
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
 }

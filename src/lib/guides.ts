@@ -14,6 +14,7 @@ export type GuideMeta = {
   published: boolean
   hero_alt?: string // when set + manifest has <slug>/hero, page template renders hero automatically
   featured?: boolean // when true + hero_alt set, rendered as full-width hero above the grid
+  tags?: string[] // optional taxonomy tags, e.g. ['charity']
 }
 
 export type GuideContent = {
@@ -59,6 +60,12 @@ export function getGuides(lang: string): GuideMeta[] {
   return getGuideSlugs()
     .map((slug) => getGuide(slug, lang)?.meta ?? null)
     .filter((m): m is GuideMeta => m !== null)
+}
+
+/** Returns all guides tagged 'charity', sorted by title, with optional limit. */
+export function getCharityGuides(lang: string, limit?: number): GuideMeta[] {
+  const results = getGuides(lang).filter((m) => m.tags?.includes('charity'))
+  return limit != null ? results.slice(0, limit) : results
 }
 
 // Returns the first guide with featured: true in the exact requested language.

@@ -11,7 +11,7 @@ interface Props {
   alt:            string
   sizes?:         string         // Hint for browser: how wide is the rendered image
   className?:     string
-  fetchpriority?: 'high' | 'low' | 'auto'
+  fetchPriority?: 'high' | 'low' | 'auto'
 }
 
 function ImagePlaceholder() {
@@ -45,7 +45,7 @@ function ImagePlaceholder() {
 // Retry logic (B2250-004): transient 4G timeouts cause onError to fire.
 // We retry up to MAX_RETRIES times with a cache-buster query param before
 // showing the permanent placeholder.
-export function ProductCardImage({ src, src2x, alt, sizes, className, fetchpriority = 'auto' }: Props) {
+export function ProductCardImage({ src, src2x, alt, sizes, className, fetchPriority = 'auto' }: Props) {
   const [failed,   setFailed]   = useState(false)
   const [retries,  setRetries]  = useState(0)
   const [retrySrc, setRetrySrc] = useState<string | undefined>(undefined)
@@ -75,8 +75,7 @@ export function ProductCardImage({ src, src2x, alt, sizes, className, fetchprior
       sizes={src2x ? (sizes ?? '120px') : undefined}
       alt={alt}
       decoding="async"
-      // @ts-expect-error — fetchpriority is a valid HTML attribute, not yet in React types
-      fetchpriority={fetchpriority}
+      fetchPriority={fetchPriority}
       className={className}
       onError={handleError}
     />

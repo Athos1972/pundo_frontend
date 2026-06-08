@@ -5,8 +5,10 @@
 // This spec covers AC-4 through AC-11 (frontend rendering, i18n, RTL).
 //
 // Products used:
-//   SKULL_SLUG: 2 price_history entries (both same price 14.00) → stats block, trendPct=0
+//   SKULL_SLUG: ≥2 price_history entries → stats block + sparkline render
 //   ZERO_SLUG:  0 price_history entries → no block rendered at all (AC-9)
+// NOTE: pundo_test is prod-synced and prices drift, so assertions about which price
+// is current/lowest are derived from live backend data (see AC-6 / AC-11), not hard-coded.
 //
 // Note on AC-8 (exactly 1 entry): tested via unit tests in PriceHistory.test.tsx (T9).
 // Route-interception does not work for Server Component API calls (SSR happens server-side),
@@ -17,9 +19,18 @@
 // (including /de/) unrelated to this feature. RTL tests exclude this error category.
 
 import { test, expect } from '@playwright/test'
+// Production aggregation logic — single source of truth for the expected stats.
+// Only a type import (@/types/api) lives inside; it is erased at compile time,
+// so this resolves cleanly under Playwright without the @/ alias.
+import { aggregatePriceHistory, computePriceStats } from '../src/lib/price-history'
+
+// pundo_test is prod-synced (sync_prod_to_test.sh) and drifts over time, so any
+// assertion about *which* price is current/lowest must be derived from live data,
+// never hard-coded. This backend is the same instance the SSR page reads from.
+const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 // Test products
-const SKULL_SLUG = 'aqua-aqua-della-skull-l-15cm-2'                       // 2 price_history entries, identical price
+const SKULL_SLUG = 'aqua-aqua-della-skull-l-15cm-2'                       // ≥2 price_history entries
 const ZERO_SLUG  = 'rs-electrical-aquarium-hang-on-filter-rs-7000-2'      // 0 price_history entries
 
 // ────────────────────────────────────────────────────────────
@@ -68,12 +79,24 @@ test('AC-5: Stats block renders price values with currency symbol', async ({ pag
 // (Both history entries have the same price → current IS lowest → isCurrentLowest=true)
 // ────────────────────────────────────────────────────────────
 
-test('AC-6: Best-price notice appears when current price equals lowest', async ({ page }) => {
+test('AC-6: Best-price notice visibility matches whether current price is the lowest seen', async ({ page, request }) => {
+  // Derive the expectation from live data instead of assuming a fixed price set:
+  // the notice must be shown iff the most recent aggregated price is the lowest ever seen.
+  const res = await request.get(`${BACKEND_URL}/api/v1/products/by-slug/${SKULL_SLUG}`)
+  expect(res.ok()).toBeTruthy()
+  const product = await res.json()
+  const stats = computePriceStats(aggregatePriceHistory(product.price_history))
+  expect(stats, 'product must have aggregatable price history').not.toBeNull()
+
   await page.goto(`/en/products/${SKULL_SLUG}`)
   await page.waitForLoadState('networkidle')
 
-  // Both history entries have the same price → current = lowest → "Best price seen so far"
-  await expect(page.getByText('Best price seen so far')).toBeVisible()
+  const notice = page.getByText('Best price seen so far')
+  if (stats!.isCurrentLowest) {
+    await expect(notice).toBeVisible()
+  } else {
+    await expect(notice).not.toBeVisible()
+  }
 })
 
 // ────────────────────────────────────────────────────────────
@@ -176,7 +199,11 @@ test('AC-10: Hebrew locale shows localized price history strings', async ({ page
 // Pre-existing CSP inline-style violation (same on /de/) is excluded from error check.
 // ────────────────────────────────────────────────────────────
 
-test('AC-11: RTL layout - Arabic price history block renders correctly', async ({ page }) => {
+test('AC-11: RTL layout - Arabic price history block renders correctly', async ({ page, request }) => {
+  const res = await request.get(`${BACKEND_URL}/api/v1/products/by-slug/${SKULL_SLUG}`)
+  const product = await res.json()
+  const stats = computePriceStats(aggregatePriceHistory(product.price_history))
+
   const errors: string[] = []
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()) })
 
@@ -195,8 +222,13 @@ test('AC-11: RTL layout - Arabic price history block renders correctly', async (
   await expect(page.getByText('الأدنى')).toBeVisible()
   await expect(page.getByText('الأعلى')).toBeVisible()
 
-  // Best-price notice in Arabic
-  await expect(page.getByText('أفضل سعر لوحظ حتى الآن')).toBeVisible()
+  // Best-price notice in Arabic — shown iff current price is the lowest seen (data-driven)
+  const notice = page.getByText('أفضل سعر لوحظ حتى الآن')
+  if (stats!.isCurrentLowest) {
+    await expect(notice).toBeVisible()
+  } else {
+    await expect(notice).not.toBeVisible()
+  }
 
   // Scope label in Arabic
   await expect(page.getByText('أرخص سعر عبر جميع المتاجر')).toBeVisible()

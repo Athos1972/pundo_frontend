@@ -44,8 +44,8 @@ export async function CharityHomepageSection({ lang }: Props) {
   const trHome = tHome(lang)
   const trGuides = tGuides(lang)
 
-  // Load approved charity shops (limit 50 for sorting)
-  const shopsResult = await getShops({ is_charity_supporter: true, limit: 50, status: 'active' }, lang).catch(() => ({ items: [] }))
+  // Load approved charity shops (limit 10 for sorting, show top 4)
+  const shopsResult = await getShops({ is_charity_supporter: true, limit: 10, status: 'active' }, lang).catch(() => ({ items: [] }))
   const approvedShops = shopsResult.items
 
   // Load charity guides
@@ -71,8 +71,8 @@ export async function CharityHomepageSection({ lang }: Props) {
     return b.shop.id - a.shop.id
   })
 
-  // Top 10 for carousel (AC-07)
-  const top10Shops = shopsWithVotes.slice(0, 10).map((s) => s.shop)
+  // Top 4 for carousel (analog GuidesTeaser)
+  const top10Shops = shopsWithVotes.slice(0, 4).map((s) => s.shop)
 
   const categoryLabels: Record<string, string> = {
     behörden: trGuides.category_behörden,

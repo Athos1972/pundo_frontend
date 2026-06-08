@@ -47,6 +47,36 @@
     "hash": "sha256:8c146985a35ac643aa050794089b287f078f5ee97970f8d81fdabe210efe064c",
     "source": "_raw/bankkonto-zypern.png"
   },
+  "charity-events-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAJAAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAsbWRhdBIACgg4CLxhAQ0GkDIWGwAAAFADYIs5KEz3LJSlgroO31NlyQ==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:b1e23963a8c51e384b0527ef000a42f6afbd03338461d7bf946a3a7f29f242ae",
+    "source": "_raw/charity-events-zypern.png"
+  },
+  "ehrenamt-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAIwAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAArbWRhdBIACgg4CLxhAQ0GkDIVGwAAAECXILUd38KyqB7COeGC3/1A",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:e5bc9a3156d567092b9829d3da4a6ed0c9ffa5a7b1930e6a01ea05240927e727",
+    "source": "_raw/ehrenamt-zypern.png"
+  },
   "emergency-services/hero": {
     "width": 2752,
     "height": 1536,
@@ -94,6 +124,36 @@
     ],
     "hash": "sha256:3ade15bdaf19bf28b274b56aee5b25b53824a82e6b00ab809d09d76cff5ff81b",
     "source": "_raw/fenster-tueren-zypern.png"
+  },
+  "fluechtlingshilfe-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAIQAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAApbWRhdBIACgg4CLxhAQ0GkDITGwAAAFDQUVHXfIdayrQV65iwHA==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:546a6afeb98249edb1ebf1b02917b9ed0f464eb2cb0f5505fad796ab50f13ce3",
+    "source": "_raw/fluechtlingshilfe-zypern.png"
+  },
+  "foodbank-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAHwAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAnbWRhdBIACgg4CLxhAQ0GkDIRGwAAAECVqFcOlYJOnw66Htg=",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:1791991d307ef4d48e508fe6600d86412b797d9536dcbeca627f38e253d00479",
+    "source": "_raw/foodbank-zypern.png"
   },
   "gesy-gesundheitssystem/hero": {
     "width": 1672,
@@ -222,6 +282,21 @@
     "hash": "sha256:e275e477f11db2f6d51fb579f512744db85bb0082277bce405b565475cf3103e",
     "source": "_raw/mukhtar.png"
   },
+  "ngo-gruenden-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAJwAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAvbWRhdBIACgg4CLxhAQ0GkDIZGwAAAFC+5eeJbfk4YJytbM8jPLVPQPq+/g==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:9d56c3315f27b8eb6d29f533340557ab15b142699f7800d38eeff703f6e96aa7",
+    "source": "_raw/ngo-gruenden-zypern.png"
+  },
   "paketboxen-zypern/hero": {
     "width": 2752,
     "height": 1536,
@@ -270,6 +345,36 @@
     "hash": "sha256:f929ef77c34e9c3b82209608675fb4b007d538ea688150661e13894e29490e4a",
     "source": "_raw/pundo-mcp-server.png"
   },
+  "recycling-zypern/hero": {
+    "width": 1024,
+    "height": 1024,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAIQAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAIAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAApbWRhdBIACgg4CL9hAQ0GkDITGwAAAFBOnBOn6tYh8V28CmhfQA==",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:cc20a6a25156e3a6524ec62b3a5da592c3710d03dad2bed230f56dce4ac834e3",
+    "source": "_raw/recycling-zypern.png"
+  },
+  "spenden-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAIwAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAArbWRhdBIACgg4CLxhAQ0GkDIVGwAAAECX3WpgOcN0jZeD0K3HYst9",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:761e146cf40e800d5d57aaa862050ec4545a490a832f4d5bdb06135eb1777e94",
+    "source": "_raw/spenden-zypern.png"
+  },
   "steuernummer-tic/hero": {
     "width": 2752,
     "height": 1536,
@@ -302,6 +407,21 @@
     "hash": "sha256:f254586c00dda2f527594cb785f9d11417b8fb7f803573fdb044a8c37729b905",
     "source": "_raw/strassennavigation-zypern.png"
   },
+  "tierschutz-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAHwAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAnbWRhdBIACgg4CLxhAQ0GkDIRGwAAAEA2eBgXFnnBdJMwUEA=",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:4fc959673e63cc63d8dfbe29c2daf242bf36f72c09e8d82f8001b48416f189a7",
+    "source": "_raw/tierschutz-zypern.png"
+  },
   "trinkwasser-zypern/hero": {
     "width": 1672,
     "height": 941,
@@ -317,6 +437,21 @@
     ],
     "hash": "sha256:1bfba116fae52f21904ab197fb92655ded29cecaf93402b14f08f02561385878",
     "source": "_raw/trinkwasser-zypern.png"
+  },
+  "volunteering-zypern/hero": {
+    "width": 1024,
+    "height": 576,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAJQAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAFAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAtbWRhdBIACgg4CLxhAQ0GkDIXGwAAAFCXyvXysp9C3nT7G9U/5ZM80Aw=",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:85b36a0e2521af120feb171b4ef1c8345dee76141872dd1e0b3e67a202ea9feb",
+    "source": "_raw/volunteering-zypern.png"
   },
   "wasser-sparen-zypern/hero": {
     "width": 1672,

@@ -83,6 +83,7 @@ export default async function GuideDetailPage({ params }: Props) {
     finanzen: tr.category_finanzen,
     plattform: tr.category_plattform,
     start: tr.category_start,
+    gemeinschaft: tr.category_gemeinschaft,
   }
 
   const allGuides = getGuides(lang)

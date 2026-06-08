@@ -22,6 +22,7 @@ export async function GuidesTeaser({ lang }: Props) {
     wohnen: tr.category_wohnen,
     finanzen: tr.category_finanzen,
     plattform: tr.category_plattform,
+    gemeinschaft: tr.category_gemeinschaft,
   }
 
   return (

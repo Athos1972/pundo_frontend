@@ -25,6 +25,9 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   const contentType = request.headers.get('content-type')
   if (contentType) headers['Content-Type'] = contentType
   if (token) headers['Authorization'] = `Bearer ${token}`
+  // Forward client host so backend can set cookie-domain per brand (B6200-001)
+  const clientHost = request.headers.get('host')
+  if (clientHost) headers['X-Forwarded-Host'] = clientHost
 
   const hasBody = !['GET', 'HEAD'].includes(request.method)
   const body = hasBody ? await request.blob() : undefined

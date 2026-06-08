@@ -19,6 +19,7 @@ import { RecentlyViewedList } from '@/components/recently-viewed/RecentlyViewedL
 import { HomepageStatsStrip } from '@/components/home/HomepageStatsStrip'
 import { HomepageCategoryGrid } from '@/components/home/HomepageCategoryGrid'
 import { ForBusinessesBand } from '@/components/home/ForBusinessesBand'
+import { CharityHomepageSection } from '@/components/home/CharityHomepageSection'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -123,6 +124,9 @@ export default async function HomePage({ params }: Props) {
           <GuidesTeaser lang={lang} />
         </div>
       </section>
+
+      {/* Charity Section — F3800 Phase 2 (both brands, no gate) */}
+      <CharityHomepageSection lang={lang} />
 
       {/* Brand-gated sections — below the fold, out of scope for this spec */}
       {/* F4700: Activity Feed — directly after Hero, before CommunityCard (AC-B5) */}

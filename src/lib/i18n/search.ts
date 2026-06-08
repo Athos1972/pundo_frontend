@@ -40,6 +40,10 @@ const searchTranslations = {
     dropdown_shops: 'Shops',
     dropdown_products: 'Products',
     dropdown_all_results: (q: string) => `All results for "${q}" →`,
+    result_service_badge: 'Service',
+    result_service_cta: 'View providers',
+    result_service_providers_in_view: (n: number) => `${n} provider${n === 1 ? '' : 's'} nearby`,
+    result_service_providers_in_view_zero: 'No providers nearby',
   },
   de: {
     search_placeholder: 'Produkt oder Shop suchen...',
@@ -81,6 +85,10 @@ const searchTranslations = {
     dropdown_shops: 'Shops',
     dropdown_products: 'Produkte',
     dropdown_all_results: (q: string) => `Alle Ergebnisse für „${q}" →`,
+    result_service_badge: 'Dienstleistung',
+    result_service_cta: 'Anbieter ansehen',
+    result_service_providers_in_view: (n: number) => `${n} Anbieter in der Nähe`,
+    result_service_providers_in_view_zero: 'Keine Anbieter in der Nähe',
   },
   ru: {
     search_placeholder: 'Найти продукт или магазин...',
@@ -122,6 +130,10 @@ const searchTranslations = {
     dropdown_shops: 'Магазины',
     dropdown_products: 'Товары',
     dropdown_all_results: (q: string) => `Все результаты для «${q}» →`,
+    result_service_badge: 'Услуга',
+    result_service_cta: 'Посмотреть исполнителей',
+    result_service_providers_in_view: (n: number) => `${n} исполнител${n === 1 ? 'ь' : 'ей'} рядом`,
+    result_service_providers_in_view_zero: 'Нет исполнителей рядом',
   },
   el: {
     search_placeholder: 'Αναζήτηση προϊόντος ή καταστήματος...',
@@ -163,6 +175,10 @@ const searchTranslations = {
     dropdown_shops: 'Καταστήματα',
     dropdown_products: 'Προϊόντα',
     dropdown_all_results: (q: string) => `Όλα τα αποτελέσματα για "${q}" →`,
+    result_service_badge: 'Υπηρεσία',
+    result_service_cta: 'Δες παρόχους',
+    result_service_providers_in_view: (n: number) => `${n} πάροχ${n === 1 ? 'ος' : 'οι'} κοντά`,
+    result_service_providers_in_view_zero: 'Κανένας πάροχος κοντά',
   },
   ar: {
     search_placeholder: 'ابحث عن منتج أو متجر...',
@@ -204,6 +220,10 @@ const searchTranslations = {
     dropdown_shops: 'المتاجر',
     dropdown_products: 'المنتجات',
     dropdown_all_results: (q: string) => `جميع النتائج لـ "${q}" →`,
+    result_service_badge: 'خدمة',
+    result_service_cta: 'عرض مقدمي الخدمة',
+    result_service_providers_in_view: (n: number) => `${n} مزود${n === 1 ? '' : 'ون'} قريبًا`,
+    result_service_providers_in_view_zero: 'لا يوجد مزودون قريبًا',
   },
   he: {
     search_placeholder: 'חפש מוצר או חנות...',
@@ -245,6 +265,10 @@ const searchTranslations = {
     dropdown_shops: 'חנויות',
     dropdown_products: 'מוצרים',
     dropdown_all_results: (q: string) => `כל התוצאות עבור "${q}" →`,
+    result_service_badge: 'שירות',
+    result_service_cta: 'הצג ספקים',
+    result_service_providers_in_view: (n: number) => `${n} ספק${n === 1 ? '' : 'ים'} בקרבת מקום`,
+    result_service_providers_in_view_zero: 'אין ספקים בקרבת מקום',
   },
 } as const
 

@@ -38,6 +38,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 Retailers',
     for_biz_chip_trades: '🔧 Tradespeople',
     for_biz_chip_services: '🛎️ Service providers',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'How you can help in Cyprus',
+    charity_section_intro: 'Discover verified charity shops and organisations in Cyprus — and guides on how you can get involved.',
+    charity_section_guides_heading: 'Guides: Giving back in Cyprus',
+    charity_section_cta: 'How you can help →',
   },
   de: {
     homepage_eyebrow: 'Lokale Entdeckung · Zypern',
@@ -70,6 +75,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 Einzelhändler',
     for_biz_chip_trades: '🔧 Handwerker',
     for_biz_chip_services: '🛎️ Dienstleister',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'So hilfst du auf Zypern',
+    charity_section_intro: 'Entdecke geprüfte Charity-Shops und Organisationen auf Zypern — und Guides, wie du dich engagieren kannst.',
+    charity_section_guides_heading: 'Guides: Helfen auf Zypern',
+    charity_section_cta: 'So kannst du helfen →',
   },
   el: {
     homepage_eyebrow: 'Τοπική ανακάλυψη · Κύπρος',
@@ -102,6 +112,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 Λιανοπωλητές',
     for_biz_chip_trades: '🔧 Τεχνίτες',
     for_biz_chip_services: '🛎️ Πάροχοι υπηρεσιών',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'Πώς μπορείς να βοηθήσεις στην Κύπρο',
+    charity_section_intro: 'Ανακαλύψτε επαληθευμένα καταστήματα και οργανώσεις φιλανθρωπίας στην Κύπρο — και οδηγούς για να συμμετάσχετε.',
+    charity_section_guides_heading: 'Οδηγοί: Προσφορά στην Κύπρο',
+    charity_section_cta: 'Πώς μπορείς να βοηθήσεις →',
   },
   ru: {
     homepage_eyebrow: 'Местные открытия · Кипр',
@@ -134,6 +149,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 Розничные магазины',
     for_biz_chip_trades: '🔧 Мастера',
     for_biz_chip_services: '🛎️ Поставщики услуг',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'Как помочь на Кипре',
+    charity_section_intro: 'Откройте для себя проверенные благотворительные магазины и организации на Кипре — и гайды о том, как можно участвовать.',
+    charity_section_guides_heading: 'Гайды: Помощь на Кипре',
+    charity_section_cta: 'Как ты можешь помочь →',
   },
   ar: {
     homepage_eyebrow: 'اكتشف محليًا · قبرص',
@@ -166,6 +186,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 تجار التجزئة',
     for_biz_chip_trades: '🔧 الحرفيون',
     for_biz_chip_services: '🛎️ مزودو الخدمات',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'كيف يمكنك المساعدة في قبرص',
+    charity_section_intro: 'اكتشف متاجر ومنظمات الخير المعتمدة في قبرص — وأدلة حول كيفية المشاركة.',
+    charity_section_guides_heading: 'أدلة: العطاء في قبرص',
+    charity_section_cta: '← كيف يمكنك المساعدة',
   },
   he: {
     homepage_eyebrow: 'גילוי מקומי · קפריסין',
@@ -198,6 +223,11 @@ const homeTranslations = {
     for_biz_chip_retailers: '🏪 קמעונאים',
     for_biz_chip_trades: '🔧 בעלי מקצוע',
     for_biz_chip_services: '🛎️ ספקי שירות',
+    // Charity Section (F3800 Phase 2)
+    charity_section_heading: 'איך אתה יכול לעזור בקפריסין',
+    charity_section_intro: 'גלה חנויות וארגוני צדקה מאומתים בקפריסין — ומדריכים כיצד להשתתף.',
+    charity_section_guides_heading: 'מדריכים: נתינה בקפריסין',
+    charity_section_cta: '← איך אתה יכול לעזור',
   },
 } as const
 

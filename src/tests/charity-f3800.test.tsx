@@ -78,7 +78,7 @@ describe('getCharityGuides()', () => {
     // Test the filter logic directly using the helper function shape
     const mockGuides = [
       { slug: 'mot-zypern', title: 'MOT', category: 'mobilität', icon: '🚗', readtime: '3', lang: 'en', published: true, description: 'Desc' },
-      { slug: 'bank-zypern', title: 'Bank', category: 'finanzen', icon: '🏦', readtime: '6', lang: 'en', published: true, description: 'Desc', tags: [] },
+      { slug: 'bank-zypern', title: 'Bank', category: 'finanzen', icon: '🏦', readtime: '6', lang: 'en', published: true, description: 'Desc', tags: [] as string[] },
     ]
     const filtered = mockGuides.filter(g => g.tags?.includes('charity'))
     expect(filtered).toHaveLength(0)

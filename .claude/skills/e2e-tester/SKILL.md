@@ -463,6 +463,8 @@ curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit
 > **⚠️ Umgebungsregel:** E2E-Tests laufen IMMER auf Port 3500 (Frontend) + 8500 (Backend).
 > Port 3000/8000 ist Produktiv — dort wird erst deployed/getestet nach grünem Test-Lauf.
 
+> **Deploy-Hook (Hetzner):** Nach SHIP-Verdict reicht `git push origin main` — Webhook löst auf Hetzner automatisch `node build` + Restart (Frontend) bzw. Alembic + Restart (Backend) aus. Eine zusätzliche to-prod-Nachricht (Vault `Wissen/Agent-Kommunikation/to-prod/`) ist nicht zwingend nötig, schadet aber nicht — sie dient als Fallback-Dokumentation falls der Hook mal bricht.
+
 ---
 
 ## Grundprinzip: DOM-Präsenz ≠ Korrekte Darstellung

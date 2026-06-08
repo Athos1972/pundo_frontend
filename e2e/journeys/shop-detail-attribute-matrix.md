@@ -46,8 +46,6 @@ last-result: N/A
 
 **Wichtig:** KEIN separater E2E-Test nur für Telefonnummer. Die Telefonnummern-Logik wird in Variante A im Gesamtkontext "Shop anlegen → alle Attribute pflegen → in Kundenansicht verifizieren" getestet.
 
----
-
 ### F5300 / F3800 Phase 1a — Neue Szenarien (shop-self-service-attribute-batch-20260606)
 
 **Variante C — Umkreis + Charity (approved) + Termin + Zahlungsarten:**

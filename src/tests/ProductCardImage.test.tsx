@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
 
 describe('ProductCardImage', () => {
@@ -34,12 +34,44 @@ describe('ProductCardImage', () => {
   })
 
   it('renders placeholder after onError — genuinely broken image (HTTP 404)', () => {
-    render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
-    const img = screen.getByRole('img', { hidden: true })
-    fireEvent.error(img)
-    expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
-    const svg = document.querySelector('svg[aria-hidden="true"]')
-    expect(svg).toBeInTheDocument()
+    // ProductCardImage retries up to MAX_RETRIES=2 times (cache-buster + RETRY_DELAY_MS
+    // backoff) before showing the permanent placeholder. A single error event only
+    // schedules a retry; the placeholder appears after initial + 2 retries = 3 error
+    // events, with the retry timers advanced between them. See ProductCardImage.tsx
+    // handleError (B2250-004).
+    vi.useFakeTimers()
+    try {
+      render(<ProductCardImage src="/product_images/test.jpg" alt="Test Produkt" />)
+
+      // Error #1 (retries 0→1): schedules retry, still renders the img.
+      act(() => {
+        fireEvent.error(screen.getByRole('img', { hidden: true }))
+      })
+      expect(screen.queryByRole('img', { hidden: true })).toBeInTheDocument()
+      act(() => {
+        vi.advanceTimersByTime(1500) // RETRY_DELAY_MS * 1 — applies cache-busted retrySrc
+      })
+
+      // Error #2 (retries 1→2): schedules retry, still renders the img.
+      act(() => {
+        fireEvent.error(screen.getByRole('img', { hidden: true }))
+      })
+      expect(screen.queryByRole('img', { hidden: true })).toBeInTheDocument()
+      act(() => {
+        vi.advanceTimersByTime(3000) // RETRY_DELAY_MS * 2 — applies cache-busted retrySrc
+      })
+
+      // Error #3 (retries === MAX_RETRIES): setFailed(true) → permanent placeholder.
+      act(() => {
+        fireEvent.error(screen.getByRole('img', { hidden: true }))
+      })
+
+      expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
+      const svg = document.querySelector('svg[aria-hidden="true"]')
+      expect(svg).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('renders placeholder when src is null', () => {

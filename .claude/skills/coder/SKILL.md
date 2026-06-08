@@ -37,6 +37,7 @@ den E2E-Tester, wenn deine Unit-Tests grün sind und TypeScript fehlerfrei kompi
 - `AGENTS.md` lesen: Next.js 16.2.2 hat Breaking Changes — Docs in `node_modules/next/dist/docs/` prüfen.
 - **Test-Umgebung zuerst:** Manuelle Tests und Verifikation immer auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Produktiv (3000/8000) erst nach erfolgreichem Test-Lauf.
 - **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
+- **Deploy-Hook (Hetzner):** Ein `git push origin main` auf `pundo_frontend` löst **automatisch** via Webhook das Deployment auf Hetzner aus — `node build`, Restart und alle nötigen Schritte laufen im Deploy-Script. Gleiches gilt für `pundo_main_backend`: Push → Hook → Alembic + Restart automatisch. Eine zusätzliche to-prod-Nachricht (Vault `Wissen/Agent-Kommunikation/to-prod/`) ist nicht zwingend nötig, schadet aber nicht — sie dient als Fallback-Dokumentation falls der Hook mal bricht.
 
 ---
 

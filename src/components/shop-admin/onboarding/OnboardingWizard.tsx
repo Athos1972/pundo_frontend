@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { isRTL } from '@/lib/lang'
 import type { Lang } from '@/lib/lang'
@@ -17,7 +18,8 @@ import { OnboardingProgress } from './OnboardingProgress'
 import { OnboardingDraftBanner } from './OnboardingDraftBanner'
 import { StepProviderType } from './StepProviderType'
 import { StepDomains } from './StepDomains'
-import { StepLocation } from './StepLocation'
+// B5910-001: StepLocation pulls Leaflet (module-level window.requestAnimationFrame) → must not be SSR'd
+const StepLocation = dynamic(() => import('./StepLocation').then(m => ({ default: m.StepLocation })), { ssr: false })
 import { StepContact } from './StepContact'
 import { StepPhoto } from './StepPhoto'
 import { StepCredentials } from './StepCredentials'

@@ -160,22 +160,22 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </div>
         </div>
 
-        {/* Price history — T7: threshold lowered from ≥2 to ≥1 (AC-8/AC-9) */}
-        {product.price_history.length >= 1 && (
-          <div className="bg-surface border border-border rounded-xl p-4 mb-4">
-            <h2 className="font-bold text-sm text-text mb-3 font-heading">{tr.price_history}</h2>
-            <PriceHistory items={product.price_history} lang={lang} currencySymbol="€" />
-          </div>
-        )}
-
         {/* Offers */}
-        <div className="bg-surface border border-border rounded-xl p-4">
+        <div className="bg-surface border border-border rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-sm text-text font-heading">{tr.all_offers}</h2>
             <PriceFilterToggle />
           </div>
           <OfferList offers={visibleOffers} lang={lang} productName={name} />
         </div>
+
+        {/* Price history — T7: threshold lowered from ≥2 to ≥1 (AC-8/AC-9). Below offers per UX request. */}
+        {product.price_history.length >= 1 && (
+          <div className="bg-surface border border-border rounded-xl p-4 mb-4">
+            <h2 className="font-bold text-sm text-text mb-3 font-heading">{tr.price_history}</h2>
+            <PriceHistory items={product.price_history} lang={lang} currencySymbol="€" />
+          </div>
+        )}
 
         {/* Related products carousel — hidden when empty */}
         <RelatedProductsCarousel

@@ -34,6 +34,7 @@ import { TrackShopView } from '@/components/recently-viewed/TrackShopView'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { PixelViewContent } from '@/components/consent/PixelViewContent'
 import { PAYMENT_METHODS } from '@/lib/payment-methods'
+import { CharityVoteControl } from '@/components/community/CharityVoteControl'
 
 interface Props { params: Promise<{ lang: string; slug: string }> }
 
@@ -106,13 +107,26 @@ export default async function ShopPage({ params }: Props) {
 
   const session = await getCustomerSession(lang)
 
-  const [topProductsResult, offers, relatedShops] = await Promise.all([
+  const [topProductsResult, offers, relatedShops, charityVotesResult] = await Promise.all([
     // T4/B5900-003: Gate removed — always fetch products (limit 12, BE-3 fix required for full coverage)
     searchProducts({ shop_id: shop.id, limit: 12 }, lang).then(r => r.items),
     getShopOffers(slug, lang),
     getRelatedShops(slug, lang),
+    // F3800 Phase 2 — fetch charity vote aggregate for CharityVoteControl
+    shop.is_charity_supporter === true
+      ? fetch(
+          `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1/shops/${shop.id}/votes`,
+          { headers: { 'Accept-Language': lang }, cache: 'no-store' }
+        )
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      : Promise.resolve(null),
   ])
   const topProducts = topProductsResult
+
+  // Extract charity vote aggregate from the votes response
+  const charityAggregate = (charityVotesResult as { aggregates?: { attribute_type: string; vote_count: number; my_value: number | null }[] } | null)
+    ?.aggregates?.find((a) => a.attribute_type === 'charity') ?? null
 
   const pins = shop.location
     ? [{ id: shop.id, name: shop.name ?? 'Shop', lat: shop.location.lat, lng: shop.location.lng }]
@@ -222,6 +236,14 @@ export default async function ShopPage({ params }: Props) {
                   {(shop as { charity_note?: string | null }).charity_note}
                 </p>
               )}
+              {/* F3800 Phase 2 — Community voting control (AC-01..AC-04) */}
+              <CharityVoteControl
+                shopId={shop.id}
+                lang={lang}
+                initialVoteCount={charityAggregate?.vote_count ?? 0}
+                initialMyValue={charityAggregate?.my_value ?? null}
+                isAuthenticated={session?.is_authenticated ?? false}
+              />
             </div>
           )}
 

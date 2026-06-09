@@ -22,7 +22,7 @@ export function NearbyShops({ lang, heading }: Props) {
 
   useEffect(() => {
     function load(lat: number, lng: number) {
-      getShops({ lat, lng, status: 'active' }, lang)
+      getShops({ lat, lng, status: 'active', limit: 10 }, lang)
         .then(d => {
           setShops(d.items)
           setStatus(d.items.length > 0 ? 'ok' : 'empty')

@@ -49,7 +49,7 @@ export async function CharityHomepageSection({ lang }: Props) {
   const approvedShops = shopsResult.items
 
   // Load charity guides
-  const charityGuides = getCharityGuides(lang)
+  const charityGuides = getCharityGuides(lang, 4)
 
   // Return null when both are empty (AC-06, E1)
   if (approvedShops.length === 0 && charityGuides.length === 0) return null

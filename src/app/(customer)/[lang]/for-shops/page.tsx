@@ -8,6 +8,7 @@ import { buildHreflang } from '@/lib/routing'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { ForShopsHeroVisual } from './ForShopsHeroVisual'
 import { ForShopsFaqGrid } from './ForShopsFaqGrid'
+import { buildFAQSchema, safeJson } from '@/lib/structured-data'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -447,6 +448,11 @@ export default async function ForShopsPage({ params }: Props) {
           {tr.footer_contact}
         </Link>
       </p>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJson(buildFAQSchema(content.faq)) }}
+      />
     </main>
   )
 }

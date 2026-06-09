@@ -77,7 +77,7 @@ describe('ServiceResultCard', () => {
     const { ServiceResultCard } = await import('@/components/search/ServiceResultCard')
     render(<ServiceResultCard item={mockServiceItem} lang="de" />)
     expect(screen.getByText('Klempner und Sanitär')).toBeTruthy()
-    expect(screen.getByText(/5 Anbieter im Kartenausschnitt/i)).toBeTruthy()
+    expect(screen.getByText(/5 Anbieter in der Nähe/i)).toBeTruthy()
     expect(screen.getByText(/Anbieter ansehen/i)).toBeTruthy()
     expect(screen.getByText('Dienstleistung')).toBeTruthy()
   })
@@ -86,7 +86,7 @@ describe('ServiceResultCard', () => {
     const { ServiceResultCard } = await import('@/components/search/ServiceResultCard')
     const zeroItem = { ...mockServiceItem, provider_count: 0 }
     render(<ServiceResultCard item={zeroItem} lang="de" />)
-    expect(screen.getByText('Keine Anbieter im Kartenausschnitt')).toBeTruthy()
+    expect(screen.getByText('Keine Anbieter in der Nähe')).toBeTruthy()
   })
 
   it('AC8: click routes to /shops?service=<category_id>', async () => {

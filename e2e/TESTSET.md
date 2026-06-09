@@ -1,24 +1,23 @@
 # TESTSET — pundo_frontend
 
 ## Letzter Testlauf
-Datum: 2026-06-05 (Cookie-Banner-Text I18N + Secure-Cookie-Flags)
-Ergebnis: 2054/2054 bestanden (+35 neue Tests gegenüber Vorrun)
-Journey-Ergebnis: 8/8 PASS (cookie-consent-flow)
+Datum: 2026-06-09 (for-shops FAQ 6→13 Items + FAQPage JSON-LD)
+Ergebnis: 2112/2112 bestanden (+20 gegenüber Vorrun, davon 2 Fixes B8950-010)
+Journey-Ergebnis: kein mustRun (FAQ ist statischer Content, kein Journey-Scope)
 
-### Statische Prüfung (CSP-Run)
+### Statische Prüfung (FAQ-Run)
 | Prüfung | Status |
 |---------|--------|
 | TypeScript | PASS (0 Fehler) |
-| ESLint | PASS (0 neue Errors/Warnings; 1 pre-existing Error SearchContent.tsx react-hooks/preserve-manual-memoization) |
+| ESLint | FAIL — 1 Error in SearchContent.tsx:248 (react-hooks/preserve-manual-memoization) → B8950-011 |
 
 ### Unit-Tests
 | Test-File | Tests | Status |
 |---|---|---|
-| shop-admin-login-oauth.test.tsx | 11 | PASS |
-| _parser.spec.ts | 20 | PASS |
-| seed-visuals-manifest.test.ts | 12 | PASS (nach Manifest-Bereinigung) |
-| ... (105 weitere) | 1976 | PASS |
-| **Gesamt** | **2019** | **PASS** |
+| for-shops.test.ts | 100 | PASS (13-Item-Count, EN spot-checks, alle 6 Sprachen) |
+| f5910-service-discovery.test.tsx | 18 | PASS (nach B8950-010 Fix: "Kartenausschnitt" → "in der Nähe") |
+| ... (112 weitere) | 1994 | PASS |
+| **Gesamt** | **2112** | **PASS** |
 
 ### COVERAGE_GAP (nicht blockierend)
 | Modul | Aktuell | Ursache |
@@ -52,12 +51,23 @@ Journey-Ergebnis: 8/8 PASS (cookie-consent-flow)
 | `AGENTS.md` | Coding-Guideline Inline-Styles | KI-Agents und Menschen |
 | 10 TSX-Dateien | `@csp-allow-inline-style` Opt-out-Kommentare oder Tailwind-Ersatz | Bestandscode whitelist |
 
+### E2E-Verifikation (FAQ-Run — curl-basiert, kein Playwright-Build)
+| Prüfung | Status |
+|---|---|
+| 6×/lang/for-shops: 13 Questions im JSON-LD | PASS |
+| FAQPage @type in JSON-LD (alle 6 Sprachen) | PASS |
+| AR: html[dir=rtl] | PASS |
+| HE: html[dir=rtl] | PASS |
+| EN/DE/EL/RU: html[dir=ltr] | PASS |
+| Erstes FAQ-Item: "commission" sichtbar | PASS |
+| Letztes FAQ-Item: "automatically translates" | PASS |
+
 ### Open Failures
 `verdict:"SHIP"` erlaubt — `open_failures: []`
 
-| Bug-ID | Kategorie | Status | Beschreibung |
-|---|---|---|---|
-| — | — | — | Keine offenen Failures |
+| Bug-ID | Kategorie | Status | Entdeckt | Beschreibung |
+|---|---|---|---|---|
+| B8950-011 | FUNKTIONSFEHLER | GELÖST | 2026-06-09 | ESLint react-hooks/preserve-manual-memoization in SearchContent.tsx:248 — useCallback entfernt |
 
 ### Docs-Sync (CSP-Run)
 | Dokument | Status |

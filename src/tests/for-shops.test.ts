@@ -106,9 +106,9 @@ describe('forShopsContent — all 6 languages have all new fields', () => {
       }
     })
 
-    it(`lang "${lang}" faq has exactly 6 items`, () => {
+    it(`lang "${lang}" faq has exactly 13 items`, () => {
       const c = forShopsContent[lang] ?? forShopsContent.en
-      expect(c.faq).toHaveLength(6)
+      expect(c.faq).toHaveLength(13)
       for (const item of c.faq) {
         expect(item.q.length).toBeGreaterThan(0)
         expect(item.a.length).toBeGreaterThan(0)
@@ -145,10 +145,15 @@ describe('forShopsContent — EN specific checks', () => {
     expect(text).toMatch(/map|business|customer/)
   })
 
-  it('EN faq 6th item mentions automatic translation (main USP)', () => {
+  it('EN faq last item mentions automatic translation (main USP)', () => {
     const faq = forShopsContent.en.faq
-    const lastItem = faq[5]
+    const lastItem = faq[faq.length - 1]
     expect(lastItem.a.toLowerCase()).toMatch(/translat|automat/)
+  })
+
+  it('EN faq first item is about sales facilitation / no commission', () => {
+    const faq = forShopsContent.en.faq
+    expect(faq[0].a.toLowerCase()).toMatch(/commission|process.*order|never.*payment/)
   })
 
   it('EN meta_description is within the 150–160 char SEO window', () => {

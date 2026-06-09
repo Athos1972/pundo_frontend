@@ -245,7 +245,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   }
 
   // Pin-tap on mobile: expand sheet to half, scroll to matching product card, briefly highlight it
-  const handlePinClick = useCallback((shopId: number) => {
+  const handlePinClick = (shopId: number) => {
     setHoveredShopId(shopId)
     setPinnedShopId(shopId)
     setSheetSnap('half')
@@ -259,7 +259,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
       setPinnedShopId(null)
       setHoveredShopId(null)
     }, 1200)
-  }, [])
+  }
 
   // Separate service and product results
   const serviceItems = items.filter(isServiceResult) as SearchServiceItem[]

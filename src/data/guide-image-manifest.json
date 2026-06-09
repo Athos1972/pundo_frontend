@@ -485,6 +485,21 @@
     "hash": "sha256:2ea33e5d6b4b2c3d9fb5ece2f43dc6b720c15ab4c1f470ec9dbcfb9b5d5ee080",
     "source": "_raw/wasser-zuhause-zypern.png"
   },
+  "wohnung-mieten-zypern/hero": {
+    "width": 1024,
+    "height": 1024,
+    "blurDataURL": "data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAG1pZjFhdmlmbWlhZgAAANZtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAAA5waXRtAAAAAAABAAAAImlsb2MAAAAAREAAAQABAAAAAAD6AAEAAAAAAAAAKAAAACNpaW5mAAAAAAABAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAVmlwcnAAAAA4aXBjbwAAAAxhdjFDgSACAAAAABRpc3BlAAAAAAAAAAgAAAAIAAAAEHBpeGkAAAAAAwgICAAAABZpcG1hAAAAAAAAAAEAAQOBAgMAAAAwbWRhdBIACgg4CL9hAQ0GkDIaGwAAAEDQHNiQBykT5+8oKu1wgaJUTGoBeWA=",
+    "formats": [
+      "avif",
+      "webp"
+    ],
+    "widths": [
+      480,
+      960
+    ],
+    "hash": "sha256:21fc9ab35d3aba013efc286dd032bed62b56ad7c4cacc58585428fbd3dfb21be",
+    "source": "_raw/wohnung-mieten-zypern.png"
+  },
   "yellow-slip/hero": {
     "width": 1672,
     "height": 941,

@@ -103,21 +103,13 @@ export function HomepageCategoryGrid({ lang }: Props) {
     <section className="py-10">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section header */}
-        <div className="flex items-end justify-between mb-6 rtl:flex-row-reverse">
-          <div>
-            <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-1">
-              {tr.category_grid_eyebrow}
-            </p>
-            <h2 className="font-display text-2xl font-bold text-text">
-              {tr.category_grid_title}
-            </h2>
-          </div>
-          <Link
-            href={localePath(lang, '/search')}
-            className="text-sm text-accent hover:underline whitespace-nowrap"
-          >
-            {tr.category_grid_all}
-          </Link>
+        <div className="mb-6">
+          <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-1">
+            {tr.category_grid_eyebrow}
+          </p>
+          <h2 className="font-display text-2xl font-bold text-text">
+            {tr.category_grid_title}
+          </h2>
         </div>
 
         {/* 6-card grid */}

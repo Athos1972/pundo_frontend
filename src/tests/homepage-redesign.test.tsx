@@ -70,12 +70,6 @@ describe('HomepageCategoryGrid', () => {
     expect(hrefs.some(h => h.includes('Groceries'))).toBe(true)
   })
 
-  it('"All categories" link points to /search', () => {
-    const { container } = render(<HomepageCategoryGrid lang="en" />)
-    const allLink = container.querySelector('a[href$="/search"]')
-    expect(allLink).not.toBeNull()
-  })
-
   it('card links have /en/ lang prefix', () => {
     const { container } = render(<HomepageCategoryGrid lang="en" />)
     const searchLinks = Array.from(container.querySelectorAll('a[href*="/en/search"]'))
@@ -163,7 +157,6 @@ describe('homeTranslations — all 6 languages complete', () => {
     'stats_languages_label',
     'category_grid_eyebrow',
     'category_grid_title',
-    'category_grid_all',
     'cat_fashion',
     'cat_tradespeople',
     'cat_health',

@@ -1,16 +1,11 @@
 // src/lib/i18n/home.ts — Homepage namespace
-// TODO BB: Confirm real numbers before launch (stats_businesses, stats_searches, stats_cities,
-//          homepage_trust_businesses, homepage_trust_cities)
+// TODO BB: Confirm real numbers before launch (stats_businesses, stats_searches, stats_cities)
 
 const homeTranslations = {
   en: {
     homepage_eyebrow: 'Local discovery · Cyprus',
     homepage_headline_accent: 'really has.',
     homepage_sub: 'Shops, tradespeople & service providers — found in your language, right where you are.',
-    // Trust row (Hero) — TODO BB: confirm real numbers before launch
-    homepage_trust_businesses: '340+ Businesses',
-    homepage_trust_cities: '30+ Cities',
-    homepage_trust_languages: '6 Languages',
     // Stats strip — TODO BB: confirm real numbers before launch
     stats_businesses: '340+',
     stats_searches: '12k',
@@ -47,9 +42,6 @@ const homeTranslations = {
     homepage_eyebrow: 'Lokale Entdeckung · Zypern',
     homepage_headline_accent: 'wirklich hat.',
     homepage_sub: 'Shops, Handwerker & Dienstleister — gefunden in deiner Sprache, genau wo du bist.',
-    homepage_trust_businesses: '340+ Unternehmen',
-    homepage_trust_cities: '30+ Städte',
-    homepage_trust_languages: '6 Sprachen',
     stats_businesses: '340+',
     stats_searches: '12k',
     stats_cities: '30+',
@@ -83,9 +75,6 @@ const homeTranslations = {
     homepage_eyebrow: 'Τοπική ανακάλυψη · Κύπρος',
     homepage_headline_accent: 'πραγματικά έχει.',
     homepage_sub: 'Καταστήματα, επαγγελματίες & πάροχοι υπηρεσιών — βρεθείτε στη γλώσσα σας, εκεί που βρίσκεστε.',
-    homepage_trust_businesses: '340+ Επιχειρήσεις',
-    homepage_trust_cities: '30+ Πόλεις',
-    homepage_trust_languages: '6 Γλώσσες',
     stats_businesses: '340+',
     stats_searches: '12k',
     stats_cities: '30+',
@@ -119,9 +108,6 @@ const homeTranslations = {
     homepage_eyebrow: 'Местные открытия · Кипр',
     homepage_headline_accent: 'на самом деле есть.',
     homepage_sub: 'Магазины, мастера и поставщики услуг — найди в своём языке, рядом с тобой.',
-    homepage_trust_businesses: '340+ компаний',
-    homepage_trust_cities: '30+ городов',
-    homepage_trust_languages: '6 языков',
     stats_businesses: '340+',
     stats_searches: '12k',
     stats_cities: '30+',
@@ -155,9 +141,6 @@ const homeTranslations = {
     homepage_eyebrow: 'اكتشف محليًا · قبرص',
     homepage_headline_accent: 'تمتلكه فعلًا.',
     homepage_sub: 'محلات وحرفيون ومزودو خدمات — اعثر عليهم بلغتك، في مكانك تمامًا.',
-    homepage_trust_businesses: '340+ شركة',
-    homepage_trust_cities: '+30 مدينة',
-    homepage_trust_languages: '6 لغات',
     stats_businesses: '340+',
     stats_searches: '12k',
     stats_cities: '30+',
@@ -191,9 +174,6 @@ const homeTranslations = {
     homepage_eyebrow: 'גילוי מקומי · קפריסין',
     homepage_headline_accent: 'באמת יש.',
     homepage_sub: 'חנויות, בעלי מקצוע וספקי שירות — מצא אותם בשפתך, בדיוק איפה שאתה.',
-    homepage_trust_businesses: '340+ עסקים',
-    homepage_trust_cities: '+30 ערים',
-    homepage_trust_languages: '6 שפות',
     stats_businesses: '340+',
     stats_searches: '12k',
     stats_cities: '30+',

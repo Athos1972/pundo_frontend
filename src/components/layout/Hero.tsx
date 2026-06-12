@@ -108,16 +108,7 @@ export function Hero({ brand, categories, lang, preserveOrder = false }: Props) 
               <CategoryChips categories={categories} lang={lang} preserveOrder={preserveOrder} />
             )}
 
-            {/* Trust row — pundo brand only */}
-            {slug === 'pundo' && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
-                <span className="text-xs text-text-muted font-medium">{tr.homepage_trust_businesses}</span>
-                <span className="text-text-muted/40 text-xs">·</span>
-                <span className="text-xs text-text-muted font-medium">{tr.homepage_trust_cities}</span>
-                <span className="text-text-muted/40 text-xs">·</span>
-                <span className="text-xs text-text-muted font-medium">{tr.homepage_trust_languages}</span>
-              </div>
-            )}
+
           </div>
 
           {/* Right column — Cyprus map visual (pundo only, desktop only) */}

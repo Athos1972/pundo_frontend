@@ -27,7 +27,7 @@ const LANG_COOKIE = 'app_lang'
 // Paths that bypass i18n redirect entirely (keep language-agnostic)
 const I18N_BYPASS_PREFIXES = [
   '/_next', '/api', '/admin', '/shop-admin', '/auth', '/account', '/oauth',
-  '/favicon', '/og', '/brands', '/brand_logos', '/manifest.webmanifest',
+  '/crm', '/favicon', '/og', '/brands', '/brand_logos', '/manifest.webmanifest',
   '/robots.txt', '/sitemap.xml', '/llms.txt', '/__playwright',
   '/product_images', '/review_photos', '/shop_logos', '/avatars',
 ]

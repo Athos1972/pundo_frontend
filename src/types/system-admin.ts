@@ -264,3 +264,75 @@ export interface SysAdminApiKey {
   created_at: string
   last_used_at: string | null
 }
+
+// ─── CRM (F7600) ───────────────────────────────────────────────────────────────
+
+export type CrmLifecycleState =
+  | 'SOURCED' | 'ENRICHED' | 'NEEDS_REVIEW' | 'QUEUED' | 'CONTACTED'
+  | 'ENGAGED' | 'INTERESTED' | 'REGISTERED' | 'UNREACHABLE'
+  | 'HARD_OPTOUT' | 'REJECTED_PRIVATE' | 'DEAD'
+
+export type CrmChannelKindIn = 'email' | 'phone'          // Request-side (Ingest)
+export type CrmOutreachLang = 'el' | 'en' | 'ru'
+export type CrmLegalBasis = 'legitimate_interest' | 'consent' | 'contract' | 'none'
+export type CrmSuppressReason = 'hard_optout' | 'rejected_private'
+
+// — Requests —
+export interface CrmIngestRequest {
+  org: { name: string; city?: string | null; category?: string | null }
+  contact: { display_name?: string | null; role_title?: string | null }
+  channels: Array<{ kind: CrmChannelKindIn; value: string }>
+  source: { source: 'business_card'; source_ref?: string | null; raw?: Record<string, unknown> | null }
+}
+export interface CrmConfirmBusinessRequest { version: number; legal_basis?: CrmLegalBasis | null; note?: string | null }
+export interface CrmLifecycleRequest { to_state: CrmLifecycleState; version: number; reason?: string | null; shop_id?: number | null }
+export interface CrmSuppressRequest { reason: CrmSuppressReason; version: number }
+export interface CrmOutreachPreviewRequest { language: CrmOutreachLang; template_id?: 'first_contact_email' }
+export interface CrmOutreachSendRequest { language: CrmOutreachLang; subject: string; body: string; idempotency_key: string } // NO version
+
+// — Responses —
+export interface CrmOutreachPreviewResponse { subject: string; body_rendered: string; placeholders: Record<string, string> }
+export interface CrmOutreachSendResponse { message_id: number; delivery_status: string }
+
+export interface CrmOrgOut {
+  id: number; name: string; legal_name?: string | null; city?: string | null
+  region?: string | null; category?: string | null; business_status: string; shop_id: number | null
+}
+export interface CrmChannelOut {
+  id: number; kind: string; value_normalized: string; reachable: string
+  consent_state: string; is_preferred: boolean; created_at: string
+}
+export interface CrmSourceOut {
+  id: number; source: string; source_ref?: string | null
+  legal_tier: string; legal_basis: string; observed_at: string
+}
+export interface CrmInteractionOut {
+  id: number; actor_type: string; actor_id?: string | null; kind: string; channel: string
+  direction: string; state_from?: string | null; state_to?: string | null
+  outcome?: string | null; payload?: Record<string, unknown> | null; created_at: string
+}
+export interface CrmMessageOut {
+  id: number; channel: string; direction: string; provider?: string | null
+  provider_message_id?: string | null; template_id?: string | null; language?: string | null
+  subject_rendered?: string | null; body_rendered?: string | null
+  delivery_status: string; error_code?: string | null; retry_count: number
+  created_at: string; updated_at: string
+}
+export interface CrmContactListItem {
+  id: number; display_name?: string | null; org_name: string
+  primary_email?: string | null; lifecycle_state: string; version: number; updated_at: string
+}
+export interface CrmContactDetail {
+  id: number; org: CrmOrgOut; display_name?: string | null; role_title?: string | null
+  lifecycle_state: string; effective_legal_tier: string; effective_legal_basis: string
+  owner_id: number | null; shop_id: number | null; needs_human: boolean; agent_paused: boolean
+  version: number
+  channels: CrmChannelOut[]; sources: CrmSourceOut[]
+  interactions: CrmInteractionOut[]; messages: CrmMessageOut[]
+  created_at: string; updated_at: string
+}
+
+// Backend error detail (for Toast evaluation)
+export type CrmErrorDetail =
+  | string                                              // e.g. "illegal_transition", "shop_id_required"
+  | { detail: string; channel_kind?: string; current_version?: number; message_id?: number }

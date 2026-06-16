@@ -23,6 +23,8 @@ import type {
   SysAdminItemDomainMapping,
   SysAdminItemDomainMappingCreate,
   MappingGapEntry,
+  CrmContactListItem,
+  CrmContactDetail,
 } from '@/types/system-admin'
 
 // Keep deprecated aliases available in this file so existing callers still compile
@@ -261,6 +263,18 @@ export async function deleteItemDomainMapping(id: number): Promise<void> {
  *
  * We normalise to a flat MappingGapEntry[] so the page can filter uniformly.
  */
+// ─── CRM (F7600) ──────────────────────────────────────────────────────────────
+
+export async function getCrmContacts(
+  params: { q?: string; lifecycle_state?: string; limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<CrmContactListItem>> {
+  return apiFetch<PaginatedResponse<CrmContactListItem>>(`/crm/contacts${buildQs(params)}`)
+}
+
+export async function getCrmContact(id: number): Promise<CrmContactDetail> {
+  return apiFetch<CrmContactDetail>(`/crm/contacts/${id}`)
+}
+
 export async function getMappingGaps(): Promise<MappingGapEntry[]> {
   const raw = await apiFetch<{
     uncovered_domains?: Array<{ domain_id: number; domain_slug: string; auto_assign_count: number }>

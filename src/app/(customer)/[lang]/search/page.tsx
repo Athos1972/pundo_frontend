@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import SearchContent from './SearchContent'
+
+export const dynamic = 'force-dynamic'
 import type { Lang } from '@/lib/lang'
 import { getSiteUrl } from '@/lib/seo'
 import { buildHreflang } from '@/lib/routing'

@@ -41,3 +41,15 @@ item.name || '—'
 **Hintergrund:** `ProductListItem.names` existiert nicht mehr — das Backend (`extract_name` in `query_utils.py`)
 liefert bereits den aufgelösten String mit vollständiger Fallback-Kette (`lang → en → first available`).
 Neue Endpoints, die `ProductListItem` zurückgeben, müssen dasselbe Muster verwenden.
+
+<!-- knowing:generated:start -->
+## Graph: 42070 symbols, 1158 packages (knowing)
+
+This project has a content-addressed knowledge graph. Before complex edits, call:
+
+- `context_for_task` with a task description (graph-ranked context)
+- `context_for_pr` with changed files (blast radius for review)
+- `blast_radius` with a symbol hash (all callers)
+
+Use `format: "gcf"` on all context calls for compact responses.
+<!-- knowing:generated:end -->

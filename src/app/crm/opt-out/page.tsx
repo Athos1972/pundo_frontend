@@ -6,7 +6,7 @@
 // Multilingual: EL / EN / RU / DE (recipient may speak any of these).
 // @seo-allow-default
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 const TEXTS: Record<string, { title: string; body: string; button: string; done: string }> = {
@@ -43,7 +43,7 @@ function detectLang(): string {
   return TEXTS[code] ? code : 'en'
 }
 
-export default function CrmOptOutPage() {
+function OptOutContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const langParam = searchParams.get('lang') ?? ''
@@ -94,5 +94,13 @@ export default function CrmOptOutPage() {
         <p className="text-xs text-gray-400">pundo</p>
       </div>
     </div>
+  )
+}
+
+export default function CrmOptOutPage() {
+  return (
+    <Suspense>
+      <OptOutContent />
+    </Suspense>
   )
 }

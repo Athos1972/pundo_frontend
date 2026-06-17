@@ -5,6 +5,7 @@ import { getGuides, getFeaturedGuide } from '@/lib/guides'
 import { FeaturedGuideHero } from '@/components/guides/FeaturedGuideHero'
 import { getSiteUrl } from '@/lib/seo'
 import { buildHreflang } from '@/lib/routing'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { GuidesGrid } from '@/components/guides/GuidesGrid'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -16,17 +17,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
   const siteUrl = getSiteUrl()
+  const pageTitle = `${tr.page_title_guides} — pundo`
+  const pageUrl = `${siteUrl}/${lang}/guides`
+
+  const { openGraph, twitter } = buildCompleteOpenGraph({
+    title: pageTitle,
+    description: tr.guides_index_subtitle,
+    url: pageUrl,
+    type: 'website',
+    locale: lang,
+    siteName: 'Pundo',
+    image: {
+      url: `${siteUrl}/og/shop-fallback-default.jpg`,
+      width: 1200,
+      height: 630,
+      alt: 'Pundo Guides',
+    },
+  })
+
   return {
-    title: `${tr.page_title_guides} — pundo`,
+    title: pageTitle,
     description: tr.guides_index_subtitle,
     alternates: {
-      canonical: `${siteUrl}/${lang}/guides`,
+      canonical: pageUrl,
       languages: buildHreflang(siteUrl, '/guides'),
     },
-    openGraph: {
-      title: tr.page_title_guides,
-      description: tr.guides_index_subtitle,
-    },
+    openGraph,
+    twitter,
   }
 }
 

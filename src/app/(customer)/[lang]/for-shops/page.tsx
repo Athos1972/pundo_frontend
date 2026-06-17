@@ -4,7 +4,7 @@ import { t } from '@/lib/translations'
 import { forShopsContent } from '@/lib/for-shops-content'
 import type { Lang } from '@/lib/lang'
 import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang } from '@/lib/routing'
+import { localePath, buildHreflang } from '@/lib/routing'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { ForShopsHeroVisual } from './ForShopsHeroVisual'
 import { ForShopsFaqGrid } from './ForShopsFaqGrid'
@@ -426,7 +426,7 @@ export default async function ForShopsPage({ params }: Props) {
                   {content.final_cta_primary}
                 </Link>
                 <Link
-                  href="/contact"
+                  href={localePath(lang, '/contact')}
                   className="inline-block border border-surface/30 text-surface font-semibold px-8 py-3 rounded-xl hover:bg-surface/10 transition-colors"
                 >
                   {content.final_cta_secondary}
@@ -440,11 +440,11 @@ export default async function ForShopsPage({ params }: Props) {
 
       {/* Help link */}
       <p className="text-center text-sm text-text-muted mb-10">
-        <Link href="/help" className="underline hover:text-text transition-colors">
+        <Link href={localePath(lang, '/help')} className="underline hover:text-text transition-colors">
           {tr.footer_help}
         </Link>
         {' · '}
-        <Link href="/contact" className="underline hover:text-text transition-colors">
+        <Link href={localePath(lang, '/contact')} className="underline hover:text-text transition-colors">
           {tr.footer_contact}
         </Link>
       </p>

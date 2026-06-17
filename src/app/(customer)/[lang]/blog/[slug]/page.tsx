@@ -96,13 +96,9 @@ export default async function BlogPostPage({ params }: Props) {
               url: 'https://pundo.cy',
               logo: { '@type': 'ImageObject', url: 'https://pundo.cy/brands/pundo/logo.png' },
             },
-            breadcrumb: {
-              '@type': 'BreadcrumbList',
-              itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Blog', item: 'https://pundo.cy/blog' },
-                { '@type': 'ListItem', position: 2, name: meta.title },
-              ],
-            },
+            // breadcrumb intentionally omitted — standalone <Breadcrumb> component
+            // emits a correct BreadcrumbList with absolute URLs (T-01 fix). Having
+            // two BreadcrumbList schemas on the same page is redundant and confusing.
           }),
         }}
       />

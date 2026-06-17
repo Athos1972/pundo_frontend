@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { getSiteUrl } from '@/lib/seo'
+import { isIndexable } from '@/lib/seo/metadata-defaults'
 
 export interface BreadcrumbItem {
   label: string
@@ -13,6 +15,10 @@ interface BreadcrumbProps {
  * Universal Breadcrumb component.
  * Renders HTML nav with Schema.org BreadcrumbList JSON-LD.
  *
+ * JSON-LD uses absolute URLs and filters out non-indexable items
+ * (e.g. ?category_id= search pages) so Google does not flag broken links.
+ * Visual breadcrumb nav is unaffected and keeps relative hrefs.
+ *
  * Usage:
  *   <Breadcrumb items={[
  *     { label: 'Home', href: '/' },
@@ -23,14 +29,27 @@ interface BreadcrumbProps {
 export function Breadcrumb({ items }: BreadcrumbProps) {
   if (items.length === 0) return null
 
+  const siteUrl = getSiteUrl()
+
+  // For JSON-LD: filter out items pointing at noindex URLs (e.g. ?category_id=)
+  const indexableItems = items.filter(
+    (item) => !item.href || isIndexable(item.href).indexable,
+  )
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
+    itemListElement: indexableItems.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      ...(item.href ? { item: item.href } : {}),
+      ...(item.href
+        ? {
+            item: item.href.startsWith('http')
+              ? item.href
+              : `${siteUrl}${item.href.startsWith('/') ? '' : '/'}${item.href}`,
+          }
+        : {}),
     })),
   }
 

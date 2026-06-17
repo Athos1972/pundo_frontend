@@ -1,6 +1,8 @@
 // src/lib/i18n/search.ts — Search / Hero namespace
 const searchTranslations = {
   en: {
+    search_page_title: 'Find Products & Shops Near You in Cyprus | Pundo',
+    search_page_description: 'Search thousands of local products and shops across Cyprus. Compare prices, check availability and find the best deals near you.',
     search_placeholder: 'Find a product or shop...',
     hero_title: 'Find products in Larnaca.',
     hero_subtitle: "Find products in local shops – even when they're not online.",
@@ -46,6 +48,8 @@ const searchTranslations = {
     result_service_providers_in_view_zero: 'No providers nearby',
   },
   de: {
+    search_page_title: 'Produkte & Shops in Zypern finden | Pundo',
+    search_page_description: 'Tausende lokale Produkte und Shops in Zypern durchsuchen. Preise vergleichen, Verfügbarkeit prüfen und die besten Angebote in deiner Nähe finden.',
     search_placeholder: 'Produkt oder Shop suchen...',
     hero_title: 'Produkte in Larnaca finden.',
     hero_subtitle: 'Finde Produkte in lokalen Shops – auch wenn sie nicht online sind.',
@@ -91,6 +95,8 @@ const searchTranslations = {
     result_service_providers_in_view_zero: 'Keine Anbieter in der Nähe',
   },
   ru: {
+    search_page_title: 'Найти товары и магазины на Кипре | Pundo',
+    search_page_description: 'Тысячи местных товаров и магазинов на Кипре. Сравнивай цены, проверяй наличие и находи лучшие предложения рядом с тобой.',
     search_placeholder: 'Найти продукт или магазин...',
     hero_title: 'Найти товары в Ларнаке.',
     hero_subtitle: 'Находи товары в местных магазинах — даже если их нет в интернете.',
@@ -136,6 +142,8 @@ const searchTranslations = {
     result_service_providers_in_view_zero: 'Нет исполнителей рядом',
   },
   el: {
+    search_page_title: 'Βρες Προϊόντα & Καταστήματα στην Κύπρο | Pundo',
+    search_page_description: 'Χιλιάδες τοπικά προϊόντα και καταστήματα στην Κύπρο. Σύγκριση τιμών, έλεγχος διαθεσιμότητας και εύρεση των καλύτερων προσφορών κοντά σου.',
     search_placeholder: 'Αναζήτηση προϊόντος ή καταστήματος...',
     hero_title: 'Βρες προϊόντα στη Λάρνακα.',
     hero_subtitle: 'Βρες προϊόντα σε τοπικά καταστήματα – ακόμα και αν δεν είναι online.',
@@ -181,6 +189,8 @@ const searchTranslations = {
     result_service_providers_in_view_zero: 'Κανένας πάροχος κοντά',
   },
   ar: {
+    search_page_title: 'ابحث عن المنتجات والمحلات في قبرص | Pundo',
+    search_page_description: 'آلاف المنتجات والمحلات المحلية في قبرص. قارن الأسعار، تحقق من التوفر وابحث عن أفضل العروض بالقرب منك.',
     search_placeholder: 'ابحث عن منتج أو متجر...',
     hero_title: 'ابحث عن منتجات في لارنكا.',
     hero_subtitle: 'ابحث عن المنتجات في المحلات المحلية – حتى لو لم تكن على الإنترنت.',
@@ -226,6 +236,8 @@ const searchTranslations = {
     result_service_providers_in_view_zero: 'لا يوجد مزودون قريبًا',
   },
   he: {
+    search_page_title: 'מצא מוצרים וחנויות בקפריסין | Pundo',
+    search_page_description: 'אלפי מוצרים וחנויות מקומיות בקפריסין. השווה מחירים, בדוק זמינות ומצא את העסקאות הטובות ביותר בקרבת מקום.',
     search_placeholder: 'חפש מוצר או חנות...',
     hero_title: 'מצא מוצרים בלרנקה.',
     hero_subtitle: 'מצא מוצרים בחנויות מקומיות – גם אם הן לא מקוונות.',

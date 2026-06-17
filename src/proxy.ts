@@ -33,8 +33,14 @@ const I18N_BYPASS_PREFIXES = [
 ]
 
 function shouldBypassI18n(pathname: string): boolean {
-  // Static files with extensions
-  if (/\.[a-zA-Z0-9]{1,10}$/.test(pathname)) return true
+  // Static files with extensions — but NOT when a valid lang prefix is present.
+  // Shop slugs like /de/shops/petsforcall.com.cy end in ".cy" which would
+  // incorrectly match the extension regex and skip lang-header injection.
+  if (/\.[a-zA-Z0-9]{1,10}$/.test(pathname)) {
+    const firstSegment = pathname.split('/')[1] ?? ''
+    if (LANG_SET.has(firstSegment)) return false
+    return true
+  }
   return I18N_BYPASS_PREFIXES.some(p => pathname === p || pathname.startsWith(`${p}/`))
 }
 

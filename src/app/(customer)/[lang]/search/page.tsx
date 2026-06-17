@@ -25,12 +25,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 
   const { lang } = await params as { lang: Lang }
+  const tr = t(lang)
   return {
-    title: 'Search',
-    description: 'Search for products and shops near you in Cyprus.',
+    title: { absolute: tr.search_page_title },
+    description: tr.search_page_description,
     alternates: {
       canonical: `${siteUrl}/${lang}/search`,
       languages: buildHreflang(siteUrl, '/search'),
+    },
+    openGraph: {
+      title: tr.search_page_title,
+      description: tr.search_page_description,
+      url: `${siteUrl}/${lang}/search`,
+      type: 'website',
     },
     robots: { index: true, follow: true },
   }

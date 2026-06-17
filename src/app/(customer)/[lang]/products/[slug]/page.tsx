@@ -5,7 +5,7 @@ import { getProduct, getRelatedProducts, getRelatedCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl, pickImg } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/seo'
-import { truncateTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
+import { truncateTitle, truncateDescription, DESC_MIN } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import { buildProductSchema, safeJson } from '@/lib/structured-data'
 import { localePath, buildHreflang } from '@/lib/routing'
@@ -41,12 +41,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const truncatedName = truncateTitle(name, { max: 60, reserved: suffixLen })
     const pageTitle = `${truncatedName} | ${brandName}`
 
-    // T5/AC-36: Description — first 155 chars of product description, fallback template
+    // T5/AC-36 + T-12: Description — pad short descriptions so they reach DESC_MIN
+    // characters. Descriptions under 110 chars (Ahrefs threshold) are padded with
+    // the fallback template appended as a sentence. Empty descriptions use the
+    // fallback template directly.
     const rawDesc = product.descriptions?.[lang] ?? product.descriptions?.en ?? ''
-    const description = truncateDescription(
-      rawDesc || tr.product_desc_fallback(name, brandName),
-      { max: 155 },
-    )
+    const baseDesc = rawDesc.length >= DESC_MIN
+      ? rawDesc
+      : rawDesc
+        ? `${rawDesc} ${tr.product_desc_fallback(name, brandName)}`
+        : tr.product_desc_fallback(name, brandName)
+    const description = truncateDescription(baseDesc, { max: 155 })
 
     const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
     const siteUrl = getSiteUrl()

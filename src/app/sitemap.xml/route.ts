@@ -1,166 +1,58 @@
 /**
- * Custom sitemap Route Handler — replaces src/app/sitemap.ts (MetadataRoute.Sitemap).
+ * Sitemap Index — replaces the monolithic sitemap.
  *
- * Reason for custom handler: Next.js MetadataRoute.Sitemap provides no hook to inject
- * an <?xml-stylesheet?> processing instruction. A Route Handler gives full XML control
- * while keeping the same caching / revalidation semantics (revalidate = false,
- * triggered by POST /api/revalidate-sitemap).
+ * Returns a <sitemapindex> pointing at sub-sitemaps. The monolith exceeded
+ * Google's 50,000-URL limit which caused Google to ignore it entirely
+ * (ahrefs-seo-audit-remediation-20260616 §3.1).
  *
- * SEO-feedback-review-20260603 M7
+ * Sub-sitemaps:
+ *   /sitemap-static.xml     ~78 URLs  (static routes × 6 langs)
+ *   /sitemap-blog.xml       ~200 URLs (blog slugs × 6 langs)
+ *   /sitemap-guides.xml     ~300 URLs (guide slugs × 6 langs)
+ *   /sitemap-shops.xml      ~5000 URLs (shop slugs × 6 langs)
+ *   /sitemap-products.xml?page=N  ≤38,256 URLs each (6,376 slugs × 6 langs)
+ *
+ * The product page count is computed dynamically so new slugs automatically
+ * get covered without a code change.
  */
 import { getSiteUrl, getSitemap } from '@/lib/seo'
-import { isIndexable } from '@/lib/seo/metadata-defaults'
-import { LANGS } from '@/lib/lang'
-import { getBlogSlugs } from '@/lib/blog'
-import { getGuideSlugs } from '@/lib/guides'
 
 // No automatic revalidation — regeneration is triggered deliberately by deploy.sh
-// via POST /api/revalidate-sitemap (same behaviour as the previous sitemap.ts).
+// via POST /api/revalidate-sitemap.
 export const revalidate = false
 
-// ---------------------------------------------------------------------------
-// Static customer routes (all × 6 langs)
-// ---------------------------------------------------------------------------
-
-const STATIC_PATHS = [
-  '/',
-  '/search',
-  '/shops',
-  '/guides',
-  '/blog',
-  '/about',
-  '/help',
-  '/for-shops',
-  '/contact',
-  '/legal/imprint',
-  '/legal/privacy',
-  '/legal/terms',
-]
-
-// ---------------------------------------------------------------------------
-// XML generation
-// ---------------------------------------------------------------------------
-
-interface SitemapEntry {
-  url: string
-  lastModified?: Date | string
-  changeFrequency?: string
-  priority?: number
-}
-
-function entriesToXml(entries: SitemapEntry[]): string {
-  const items = entries
-    .map((e) => {
-      const lastmod = e.lastModified
-        ? `\n    <lastmod>${new Date(e.lastModified).toISOString().split('T')[0]}</lastmod>`
-        : ''
-      const changefreq = e.changeFrequency
-        ? `\n    <changefreq>${e.changeFrequency}</changefreq>`
-        : ''
-      const priority =
-        e.priority != null
-          ? `\n    <priority>${e.priority.toFixed(1)}</priority>`
-          : ''
-      return `  <url>\n    <loc>${e.url}</loc>${lastmod}${changefreq}${priority}\n  </url>`
-    })
-    .join('\n')
-
-  return (
-    `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    items +
-    `\n</urlset>`
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Route Handler
-// ---------------------------------------------------------------------------
+const PAGE_SIZE = 6376 // slugs per product sub-sitemap page; × 6 langs = 38,256 URLs ≤ 50K
 
 export async function GET(): Promise<Response> {
   const siteUrl = getSiteUrl()
-  const now = new Date()
 
-  // SECURITY/SEO NOTE: Auth routes (/auth/*), shop-admin routes (/shop-admin/*),
-  // and system-admin routes (/admin/*) are intentionally excluded.
-  // The /search entry is the plain page only — parametrised URLs (?q=...) are noindex.
-
-  // Static routes × 6 languages
-  const staticRoutes: SitemapEntry[] = LANGS.flatMap((lang) =>
-    STATIC_PATHS.map((path) => {
-      // Root path has no trailing slash (Next trailingSlash=false default)
-      const suffix = path === '/' ? '' : path
-      return {
-        url: `${siteUrl}/${lang}${suffix}`,
-        lastModified: now,
-        changeFrequency: path === '/search' ? 'daily' : path === '/' ? 'weekly' : 'monthly',
-        priority: path === '/' ? 1.0 : path === '/search' ? 0.9 : 0.5,
-      }
-    })
-  )
-
-  // Blog slugs × 6 languages
-  const blogSlugs = getBlogSlugs()
-  const blogRoutes: SitemapEntry[] = LANGS.flatMap((lang) =>
-    blogSlugs.map((slug) => ({
-      url: `${siteUrl}/${lang}/blog/${slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    }))
-  )
-
-  // Guide slugs × 6 languages
-  const guideSlugs = getGuideSlugs()
-  const guideRoutes: SitemapEntry[] = LANGS.flatMap((lang) =>
-    guideSlugs.map((slug) => ({
-      url: `${siteUrl}/${lang}/guides/${slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    }))
-  )
-
-  let dynamicRoutes: SitemapEntry[] = []
+  // Determine how many product sub-sitemaps are needed
+  let totalProductPages = 1
   try {
     const data = await getSitemap()
-
-    // Products × 6 languages
-    const productRoutes: SitemapEntry[] = LANGS.flatMap((lang) =>
-      data.products.map(({ slug }) => ({
-        url: `${siteUrl}/${lang}/products/${slug}`,
-        lastModified: now,
-        changeFrequency: 'daily',
-        priority: 0.7,
-      }))
-    )
-
-    // Shops × 6 languages
-    const shopRoutes: SitemapEntry[] = LANGS.flatMap((lang) =>
-      data.shops.map(({ slug, lastModified }) => ({
-        url: `${siteUrl}/${lang}/shops/${slug}`,
-        lastModified: lastModified ? new Date(lastModified) : now,
-        changeFrequency: 'weekly',
-        priority: 0.8,
-      }))
-    )
-
-    dynamicRoutes = [...productRoutes, ...shopRoutes]
+    totalProductPages = Math.max(1, Math.ceil(data.products.length / PAGE_SIZE))
   } catch {
-    // Backend unreachable → serve static routes only (better than no sitemap)
+    // Backend unreachable → emit at least page=1 so the index is still valid
   }
 
-  const allEntries = [...staticRoutes, ...blogRoutes, ...guideRoutes, ...dynamicRoutes].filter(
-    (entry) => isIndexable(entry.url).indexable
-  )
+  const productEntries = Array.from({ length: totalProductPages }, (_, i) => {
+    const page = i + 1
+    return `  <sitemap><loc>${siteUrl}/sitemap-products.xml?page=${page}</loc></sitemap>`
+  })
 
-  const xml = entriesToXml(allEntries)
+  const xml =
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `  <sitemap><loc>${siteUrl}/sitemap-static.xml</loc></sitemap>\n` +
+    `  <sitemap><loc>${siteUrl}/sitemap-blog.xml</loc></sitemap>\n` +
+    `  <sitemap><loc>${siteUrl}/sitemap-guides.xml</loc></sitemap>\n` +
+    `  <sitemap><loc>${siteUrl}/sitemap-shops.xml</loc></sitemap>\n` +
+    productEntries.join('\n') + '\n' +
+    `</sitemapindex>`
 
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      // Cache-Control mirrors the revalidate=false semantics for CDN/proxies
       'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
     },
   })

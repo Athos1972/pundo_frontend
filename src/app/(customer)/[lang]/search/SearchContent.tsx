@@ -450,9 +450,9 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         >
           {/* Category heading inside sheet so it adapts to the sheet's scroll */}
           {isCategoryMode && (
-            <h1 className="text-lg font-semibold text-text rtl:text-end pt-1 pb-0.5">
+            <h2 className="text-lg font-semibold text-text rtl:text-end pt-1 pb-0.5">
               {displayCategoryName || tr.category_results_title}
-            </h1>
+            </h2>
           )}
           {listContent}
         </SearchMapBottomSheet>
@@ -465,9 +465,9 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         <div ref={scrollContainerRef} aria-busy={loading} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
           {/* Category heading in desktop left panel */}
           {isCategoryMode && (
-            <h1 className="text-lg font-semibold text-text rtl:text-end">
+            <h2 className="text-lg font-semibold text-text rtl:text-end">
               {displayCategoryName || tr.category_results_title}
-            </h1>
+            </h2>
           )}
           {listContent}
         </div>

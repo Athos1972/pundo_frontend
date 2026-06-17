@@ -6,6 +6,7 @@ import { t } from '@/lib/translations'
 import { getBlogPosts } from '@/lib/blog'
 import { localePath, buildHreflang } from '@/lib/routing'
 import { getSiteUrl } from '@/lib/seo'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { BackButton } from '@/components/ui/BackButton'
 
 interface Props {
@@ -16,19 +17,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
   const siteUrl = getSiteUrl()
+  const pageTitle = `${tr.page_title_blog} — pundo`
+  const pageUrl = `${siteUrl}/${lang}/blog`
+
+  const { openGraph, twitter } = buildCompleteOpenGraph({
+    title: pageTitle,
+    description: tr.blog_index_subtitle,
+    url: pageUrl,
+    type: 'website',
+    locale: lang,
+    siteName: 'Pundo',
+    image: {
+      url: `${siteUrl}/og/shop-fallback-default.jpg`,
+      width: 1200,
+      height: 630,
+      alt: 'Pundo Blog',
+    },
+  })
+
   return {
-    title: `${tr.page_title_blog} — pundo`,
+    title: pageTitle,
     description: tr.blog_index_subtitle,
     alternates: {
-      canonical: `${siteUrl}/${lang}/blog`,
+      canonical: pageUrl,
       languages: buildHreflang(siteUrl, '/blog'),
     },
-    openGraph: {
-      title: tr.page_title_blog,
-      description: tr.blog_index_subtitle,
-      url: `${siteUrl}/${lang}/blog`,
-      type: 'website',
-    },
+    openGraph,
+    twitter,
   }
 }
 

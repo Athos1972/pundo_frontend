@@ -41,6 +41,8 @@
 | [cookie-consent-flow](cookie-consent-flow.md) | Cookie Consent Gate + Meta-Pixel Load/Block (F7500) | implemented | P1 | PASS |
 | [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id | implemented | P2 | PASS |
 | [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | PASS |
+| [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
+| [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 
 ## Smoketest Coverage
 
@@ -76,6 +78,8 @@
 | shop-detail-attribute-matrix | **Yes** | `shop-detail-sample` |
 | customer-shop-all-products-flow | **Yes** | `shop-all-products-link` (vorschlagen) |
 | shop-owner-self-deactivate | No — writes + account-deactivation | — |
+| admin-crm-contact-lifecycle | No — admin area, writes CRM contacts | — |
+| admin-crm-needs-review | No — admin area, writes CRM contacts | — |
 
 **Manifest entries not tied to a journey (standalone smoke coverage):**
 

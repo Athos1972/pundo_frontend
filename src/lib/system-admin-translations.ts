@@ -311,6 +311,12 @@ const sysAdminTranslations = {
     crm_optout_confirm: 'Unsubscribe',
     crm_optout_button: 'Confirm unsubscribe',
     crm_optout_done: 'You have been unsubscribed. You will not hear from us again.',
+    // Stufe 2: Card Vision actions + viewer
+    crm_action_confirm_card: 'Confirm card',
+    crm_action_reject_private: 'Reject (private)',
+    crm_card_images_title: 'Business Card Photos',
+    crm_card_front: 'Front side',
+    crm_card_back: 'Back side',
   },
   de: {
     // Auth
@@ -620,6 +626,12 @@ const sysAdminTranslations = {
     crm_optout_confirm: 'Abmelden',
     crm_optout_button: 'Abmeldung bestätigen',
     crm_optout_done: 'Sie wurden abgemeldet. Sie werden nicht mehr von uns hören.',
+    // Stufe 2: Card Vision actions + viewer
+    crm_action_confirm_card: 'Karte bestätigen',
+    crm_action_reject_private: 'Ablehnen (privat)',
+    crm_card_images_title: 'Visitenkarten-Fotos',
+    crm_card_front: 'Vorderseite',
+    crm_card_back: 'Rückseite',
   },
 }
 

@@ -346,6 +346,8 @@ export interface CrmContactDetail {
   lifecycle_state: string; effective_legal_tier: string; effective_legal_basis: string
   owner_id: number | null; shop_id: number | null; needs_human: boolean; agent_paused: boolean
   version: number
+  // Stufe 2: card image storage keys (used to build /admin/crm/contacts/{id}/card-image/{side})
+  card_image_front_url: string | null; card_image_back_url: string | null
   channels: CrmChannelOut[]; sources: CrmSourceOut[]
   interactions: CrmInteractionOut[]; messages: CrmMessageOut[]
   created_at: string; updated_at: string

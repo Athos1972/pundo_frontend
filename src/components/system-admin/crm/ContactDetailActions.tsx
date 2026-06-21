@@ -130,6 +130,32 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
     )
   }
 
+  // Stufe 2: "Karte bestätigen" (NEEDS_REVIEW → SOURCED) action
+  const showConfirmCard =
+    currentState === 'NEEDS_REVIEW' &&
+    can(me, 'crm:lifecycle:write') &&
+    !!(contact.card_image_front_url)
+
+  function handleConfirmCard() {
+    doAction(() =>
+      crmPost<CrmContactDetail>(
+        `crm/contacts/${contact.id}/lifecycle`,
+        { to_state: 'SOURCED', version: contact.version } satisfies CrmLifecycleRequest,
+        tr,
+      ),
+    )
+  }
+
+  function handleRejectPrivate() {
+    doAction(() =>
+      crmPost<CrmContactDetail>(
+        `crm/contacts/${contact.id}/suppress`,
+        { reason: 'rejected_private', version: contact.version } satisfies CrmSuppressRequest,
+        tr,
+      ),
+    )
+  }
+
   // Terminal states — no actions available
   const isTerminal = ['HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'].includes(currentState)
 
@@ -278,6 +304,32 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
       {/* Action bar */}
       {!isTerminal && (
         <div className="flex flex-wrap gap-2">
+          {/* Stufe 2: Karte bestätigen (NEEDS_REVIEW → SOURCED) — AK4, AK12 */}
+          {showConfirmCard && (
+            <button
+              type="button"
+              onClick={handleConfirmCard}
+              disabled={isPending}
+              className="px-4 py-2 text-sm font-medium bg-green-700 text-white rounded-lg hover:bg-green-800
+                transition-colors disabled:opacity-50"
+            >
+              {tr.crm_action_confirm_card}
+            </button>
+          )}
+
+          {/* Stufe 2: Ablehnen (privat) for NEEDS_REVIEW — AK5, AK12 */}
+          {currentState === 'NEEDS_REVIEW' && can(me, 'crm:suppress_override') && (
+            <button
+              type="button"
+              onClick={handleRejectPrivate}
+              disabled={isPending}
+              className="px-4 py-2 text-sm font-medium text-rose-700 border border-rose-200 rounded-lg
+                hover:bg-rose-50 transition-colors disabled:opacity-50"
+            >
+              {tr.crm_action_reject_private}
+            </button>
+          )}
+
           {canLifecycle && contact.org.business_status !== 'confirmed' && (
             <button
               type="button"

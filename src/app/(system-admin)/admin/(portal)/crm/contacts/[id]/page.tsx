@@ -10,6 +10,7 @@ import { ContactEditForm } from '@/components/system-admin/crm/ContactEditForm'
 import { InteractionTimeline } from '@/components/system-admin/crm/InteractionTimeline'
 import { ContactDetailActions } from '@/components/system-admin/crm/ContactDetailActions'
 import { OutreachComposer } from '@/components/system-admin/crm/OutreachComposer'
+import { CardImageViewer } from '@/components/system-admin/crm/CardImageViewer'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface PageProps {
@@ -84,6 +85,16 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
         <ContactDetailActions contact={contact} tr={tr} me={me} />
         {canWrite && <ContactEditForm contact={contact} tr={tr} />}
       </div>
+
+      {/* Stufe 2: Business card images (only rendered when card_image_front_url is set) */}
+      {contact.card_image_front_url && (
+        <CardImageViewer
+          contactId={contact.id}
+          frontKey={contact.card_image_front_url}
+          backKey={contact.card_image_back_url ?? null}
+          tr={tr}
+        />
+      )}
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

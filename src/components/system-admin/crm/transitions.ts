@@ -2,14 +2,14 @@
 // This is a CLIENT-SIDE MIRROR of ingestor/lib/crm/lifecycle.py :: ALLOWED_TRANSITIONS.
 // IMPORTANT: Keep in sync with backend. If backend changes, update here too.
 // Backend is source of truth — 422 "illegal_transition" is always the final guard.
-// Last verified against: ingestor/lib/crm/lifecycle.py (2026-06-20)
+// Last verified against: ingestor/lib/crm/lifecycle.py (2026-06-21, Stufe 2)
 
 import type { CrmLifecycleState } from '@/types/system-admin'
 
 export const CRM_ALLOWED_TRANSITIONS: Record<CrmLifecycleState, CrmLifecycleState[]> = {
   SOURCED:          ['ENRICHED', 'NEEDS_REVIEW', 'QUEUED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],
   ENRICHED:         ['NEEDS_REVIEW', 'QUEUED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],
-  NEEDS_REVIEW:     ['QUEUED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],
+  NEEDS_REVIEW:     ['SOURCED', 'QUEUED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],  // SOURCED: "Karte bestätigen" (Stufe 2)
   QUEUED:           ['CONTACTED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],
   CONTACTED:        ['ENGAGED', 'INTERESTED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],
   ENGAGED:          ['INTERESTED', 'REGISTERED', 'UNREACHABLE', 'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD'],

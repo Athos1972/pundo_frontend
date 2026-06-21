@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getCrmContact } from '@/lib/system-admin-api'
+import { getCrmContact, getAdminMe } from '@/lib/system-admin-api'
 import { LifecycleBadge } from '@/components/system-admin/crm/LifecycleBadge'
-import { ChannelList } from '@/components/system-admin/crm/ChannelList'
+import { ChannelEditor } from '@/components/system-admin/crm/ChannelEditor'
+import { ContactEditForm } from '@/components/system-admin/crm/ContactEditForm'
 import { InteractionTimeline } from '@/components/system-admin/crm/InteractionTimeline'
 import { ContactDetailActions } from '@/components/system-admin/crm/ContactDetailActions'
 import { OutreachComposer } from '@/components/system-admin/crm/OutreachComposer'
@@ -37,6 +38,11 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
     if (msg.includes('404') || msg.includes('API_ERROR:404')) notFound()
     throw err
   }
+
+  // Load current admin profile for permission-gating (Stufe 1)
+  const me = await getAdminMe()
+
+  const canWrite = me.role === 'superadmin' || me.permissions == null || me.permissions.includes('crm:contacts:write')
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,9 +79,10 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Action bar */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <ContactDetailActions contact={contact} tr={tr} />
+      {/* Action bar + Edit */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
+        <ContactDetailActions contact={contact} tr={tr} me={me} />
+        {canWrite && <ContactEditForm contact={contact} tr={tr} />}
       </div>
 
       {/* Main grid */}
@@ -146,7 +153,7 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
           {/* Channels */}
           <section className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_channels_title}</h2>
-            <ChannelList channels={contact.channels} tr={tr} />
+            <ChannelEditor contact={contact} tr={tr} canWrite={canWrite} />
           </section>
 
           {/* Sources */}

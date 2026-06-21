@@ -1,30 +1,41 @@
 'use client'
-// ─── CRM Contact Detail Actions (F7600) ───────────────────────────────────────
+// ─── CRM Contact Detail Actions (F7600 Stufe 1) ───────────────────────────────
 // Actions: confirm-business, lifecycle transition, mark-as-registered (shop_id), suppress.
-// All actions carry `version` for optimistic locking.
-// T0 note: Permission gating not implemented (AdminProfile has no permissions field).
-// All buttons render; 403 → Permission Toast (AK6 backend-enforced).
+// Stufe 1 additions:
+//   - Permission-gating via me.permissions (AK5/AK6)
+//   - Superadmin SOURCED→REGISTERED direct button (AK3/AK4)
+// All lifecycle actions carry `version` for optimistic locking.
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/system-admin/ConfirmDialog'
 import { crmPost } from './crmFetch'
-import { CRM_ALLOWED_TRANSITIONS } from './transitions'
+import { CRM_ALLOWED_TRANSITIONS, SUPERADMIN_EXTRA_TRANSITIONS } from './transitions'
 import type {
   CrmLifecycleState,
   CrmContactDetail,
   CrmConfirmBusinessRequest,
   CrmLifecycleRequest,
   CrmSuppressRequest,
+  SysAdminUser,
 } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface ContactDetailActionsProps {
   contact: CrmContactDetail
   tr: SysAdminTranslations
+  me: SysAdminUser
 }
 
-export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps) {
+/**
+ * Permission helper. Returns true if the user can perform the given action.
+ * null permissions = grandfathering (all perms). superadmin always has all perms.
+ */
+function can(me: SysAdminUser, perm: string): boolean {
+  return me.role === 'superadmin' || me.permissions == null || me.permissions.includes(perm)
+}
+
+export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -35,7 +46,7 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
   const [showLifecycle, setShowLifecycle] = useState(false)
   const [selectedState, setSelectedState] = useState<CrmLifecycleState | ''>('')
 
-  // Register dialog (needs shop_id)
+  // Register dialog (needs shop_id) — used for both normal and superadmin-direct register
   const [showRegister, setShowRegister] = useState(false)
   const [shopIdInput, setShopIdInput] = useState('')
 
@@ -45,6 +56,17 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
 
   const currentState = contact.lifecycle_state as CrmLifecycleState
   const allowedTransitions = CRM_ALLOWED_TRANSITIONS[currentState] ?? []
+
+  // Superadmin extra: SOURCED→REGISTERED direct (AK3)
+  const superadminExtras = me.role === 'superadmin'
+    ? (SUPERADMIN_EXTRA_TRANSITIONS[currentState] ?? [])
+    : []
+  const showSuperadminRegister =
+    me.role === 'superadmin' &&
+    superadminExtras.includes('REGISTERED') &&
+    !allowedTransitions.includes('REGISTERED')
+
+  const canLifecycle = can(me, 'crm:lifecycle:write')
 
   function stateLabel(state: string): string {
     const key = `crm_state_${state}` as keyof SysAdminTranslations
@@ -200,7 +222,7 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
                 type="button"
                 onClick={handleRegisterSubmit}
                 disabled={!shopIdInput || isPending}
-                className="px-4 py-2 text-sm bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-teal-700 text-white rounded-lg hover:bg-teal-800 disabled:opacity-50"
               >
                 {tr.crm_action_register}
               </button>
@@ -244,7 +266,7 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
                 type="button"
                 onClick={handleSuppressSubmit}
                 disabled={isPending}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-50 disabled:opacity-50"
               >
                 {tr.crm_action_suppress}
               </button>
@@ -256,19 +278,19 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
       {/* Action bar */}
       {!isTerminal && (
         <div className="flex flex-wrap gap-2">
-          {contact.org.business_status !== 'confirmed' && (
+          {canLifecycle && contact.org.business_status !== 'confirmed' && (
             <button
               type="button"
               onClick={() => setShowConfirmBusiness(true)}
               disabled={isPending}
-              className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700
+              className="px-4 py-2 text-sm font-medium bg-slate-700 text-white rounded-lg hover:bg-slate-800
                 transition-colors disabled:opacity-50"
             >
               {tr.crm_action_confirm_business}
             </button>
           )}
 
-          {allowedTransitions.filter((s) => s !== 'REGISTERED').length > 0 && (
+          {canLifecycle && allowedTransitions.filter((s) => s !== 'REGISTERED').length > 0 && (
             <button
               type="button"
               onClick={() => { setSelectedState(''); setShowLifecycle(true) }}
@@ -280,15 +302,28 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
             </button>
           )}
 
-          {allowedTransitions.includes('REGISTERED') && currentState !== 'REGISTERED' && (
+          {canLifecycle && allowedTransitions.includes('REGISTERED') && currentState !== 'REGISTERED' && (
             <button
               type="button"
               onClick={() => setShowRegister(true)}
               disabled={isPending}
-              className="px-4 py-2 text-sm font-medium bg-green-700 text-white rounded-lg hover:bg-green-800
+              className="px-4 py-2 text-sm font-medium bg-teal-700 text-white rounded-lg hover:bg-teal-800
                 transition-colors disabled:opacity-50"
             >
               {tr.crm_action_register}
+            </button>
+          )}
+
+          {/* Superadmin-only: SOURCED→REGISTERED direct (AK3) */}
+          {showSuperadminRegister && (
+            <button
+              type="button"
+              onClick={() => setShowRegister(true)}
+              disabled={isPending}
+              className="px-4 py-2 text-sm font-medium bg-teal-800 text-white rounded-lg hover:bg-teal-900
+                transition-colors disabled:opacity-50"
+            >
+              {tr.crm_action_register_direct}
             </button>
           )}
 
@@ -296,8 +331,8 @@ export function ContactDetailActions({ contact, tr }: ContactDetailActionsProps)
             type="button"
             onClick={() => setShowSuppress(true)}
             disabled={isPending}
-            className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700
-              transition-colors disabled:opacity-50 ms-auto"
+            className="px-4 py-2 text-sm font-medium text-rose-700 border border-rose-200 rounded-lg
+              hover:bg-rose-50 transition-colors disabled:opacity-50 ms-auto"
           >
             {tr.crm_action_suppress}
           </button>

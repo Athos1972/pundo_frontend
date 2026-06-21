@@ -1,18 +1,25 @@
 'use client'
 // ─── CRM Contact Form (F7600) ─────────────────────────────────────────────────
 // Creates a new CRM contact via POST /api/admin/crm/contacts/ingest.
-// Source is fixed to "business_card" in Stufe 0.
+// Stufe 1: Source dropdown added (default: business_card).
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { FormField } from '@/components/system-admin/FormField'
 import { crmPost } from './crmFetch'
-import type { CrmIngestRequest, CrmContactDetail } from '@/types/system-admin'
+import type { CrmIngestRequest, CrmContactDetail, CrmSource } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface ContactFormProps {
   tr: SysAdminTranslations
 }
+
+const CRM_SOURCES: Array<{ value: CrmSource; labelKey: keyof SysAdminTranslations }> = [
+  { value: 'business_card', labelKey: 'crm_source_business_card' },
+  { value: 'manual',        labelKey: 'crm_source_manual' },
+  { value: 'referral',      labelKey: 'crm_source_referral' },
+  { value: 'event',         labelKey: 'crm_source_event' },
+]
 
 export function ContactForm({ tr }: ContactFormProps) {
   const router = useRouter()
@@ -25,12 +32,13 @@ export function ContactForm({ tr }: ContactFormProps) {
   const [city, setCity] = useState('')
   const [category, setCategory] = useState('')
   const [roleTitle, setRoleTitle] = useState('')
+  const [source, setSource] = useState<CrmSource>('business_card')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function validate(): boolean {
     const errs: Record<string, string> = {}
     if (!orgName.trim()) errs.org_name = tr.error_required
-    if (!email.trim()) errs.email = tr.error_required
+    if (!email.trim() && !phone.trim()) errs.contact = tr.crm_form_contact_required
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -40,12 +48,9 @@ export function ContactForm({ tr }: ContactFormProps) {
     if (!validate()) return
 
     startTransition(async () => {
-      const channels: CrmIngestRequest['channels'] = [
-        { kind: 'email', value: email.trim() },
-      ]
-      if (phone.trim()) {
-        channels.push({ kind: 'phone', value: phone.trim() })
-      }
+      const channels: CrmIngestRequest['channels'] = []
+      if (email.trim()) channels.push({ kind: 'email', value: email.trim() })
+      if (phone.trim()) channels.push({ kind: 'phone', value: phone.trim() })
 
       const body: CrmIngestRequest = {
         org: {
@@ -58,7 +63,7 @@ export function ContactForm({ tr }: ContactFormProps) {
           role_title: roleTitle.trim() || null,
         },
         channels,
-        source: { source: 'business_card' },
+        source: { source },
       }
 
       const result = await crmPost<CrmContactDetail>('crm/contacts/ingest', body, tr)
@@ -90,10 +95,8 @@ export function ContactForm({ tr }: ContactFormProps) {
         label={tr.crm_form_email}
         name="email"
         type="email"
-        required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        error={errors.email}
         disabled={isPending}
       />
       <FormField
@@ -102,6 +105,7 @@ export function ContactForm({ tr }: ContactFormProps) {
         type="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
+        error={errors.contact}
         disabled={isPending}
       />
       <FormField
@@ -125,6 +129,27 @@ export function ContactForm({ tr }: ContactFormProps) {
         onChange={(e) => setRoleTitle(e.target.value)}
         disabled={isPending}
       />
+
+      {/* Source dropdown */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="source_select" className="text-sm font-medium text-gray-700">
+          {tr.crm_form_source}
+        </label>
+        <select
+          id="source_select"
+          value={source}
+          onChange={(e) => setSource(e.target.value as CrmSource)}
+          disabled={isPending}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none
+            focus:ring-2 focus:ring-slate-600 disabled:opacity-50 bg-white"
+        >
+          {CRM_SOURCES.map(({ value, labelKey }) => (
+            <option key={value} value={value}>
+              {String(tr[labelKey])}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button

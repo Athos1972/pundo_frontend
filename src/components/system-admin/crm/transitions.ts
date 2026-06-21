@@ -2,7 +2,7 @@
 // This is a CLIENT-SIDE MIRROR of ingestor/lib/crm/lifecycle.py :: ALLOWED_TRANSITIONS.
 // IMPORTANT: Keep in sync with backend. If backend changes, update here too.
 // Backend is source of truth — 422 "illegal_transition" is always the final guard.
-// Last verified against: ingestor/lib/crm/lifecycle.py (2026-06-13)
+// Last verified against: ingestor/lib/crm/lifecycle.py (2026-06-20)
 
 import type { CrmLifecycleState } from '@/types/system-admin'
 
@@ -42,3 +42,11 @@ export const ALL_LIFECYCLE_STATES: CrmLifecycleState[] = [
   'ENGAGED', 'INTERESTED', 'REGISTERED', 'UNREACHABLE',
   'HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD',
 ]
+
+/**
+ * Extra transitions available ONLY to superadmin (Stufe 1).
+ * The backend enforces this via role-check — this map is UI-only for button visibility.
+ */
+export const SUPERADMIN_EXTRA_TRANSITIONS: Partial<Record<CrmLifecycleState, CrmLifecycleState[]>> = {
+  SOURCED: ['REGISTERED'],
+}

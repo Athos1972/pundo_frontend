@@ -237,6 +237,7 @@ const sysAdminTranslations = {
     crm_form_org_name: 'Organisation name',
     crm_form_email: 'Email address',
     crm_form_phone: 'Phone number',
+    crm_form_contact_required: 'Please enter at least one email address or phone number',
     crm_form_city: 'City',
     crm_form_category: 'Category / Industry',
     crm_form_role: 'Role / Title',
@@ -285,6 +286,27 @@ const sysAdminTranslations = {
     crm_err_no_email: 'No email channel available for this contact.',
     crm_err_send_failed: 'Email delivery failed. Please try again.',
     crm_err_generic: 'Something went wrong. Please try again.',
+    crm_err_not_found: 'Contact or resource not found.',
+    crm_err_last_channel: 'Cannot remove the last channel — at least one must remain.',
+    crm_err_duplicate_channel: 'This channel already exists for this contact.',
+    // Source labels (Stufe 1)
+    crm_source_business_card: 'Business card',
+    crm_source_manual: 'Direct contact',
+    crm_source_referral: 'Referral',
+    crm_source_event: 'Event',
+    crm_form_source: 'Source',
+    // Edit form (Stufe 1)
+    crm_edit_title: 'Edit contact',
+    crm_edit_saving: 'Saving…',
+    crm_edit_saved: 'Contact updated.',
+    // Channel editor (Stufe 1)
+    crm_channel_add: 'Add channel',
+    crm_channel_adding: 'Adding…',
+    crm_channel_remove: 'Remove',
+    crm_channel_kind: 'Type',
+    crm_channel_value: 'Value',
+    // Superadmin register-direct action (Stufe 1)
+    crm_action_register_direct: 'Mark as registered (direct)',
     // Opt-out page (for reference — actual page uses inline multilingual object)
     crm_optout_confirm: 'Unsubscribe',
     crm_optout_button: 'Confirm unsubscribe',
@@ -524,6 +546,7 @@ const sysAdminTranslations = {
     crm_form_org_name: 'Organisationsname',
     crm_form_email: 'E-Mail-Adresse',
     crm_form_phone: 'Telefonnummer',
+    crm_form_contact_required: 'Bitte mindestens eine E-Mail-Adresse oder Telefonnummer angeben',
     crm_form_city: 'Stadt',
     crm_form_category: 'Kategorie / Branche',
     crm_form_role: 'Rolle / Titel',
@@ -572,6 +595,27 @@ const sysAdminTranslations = {
     crm_err_no_email: 'Kein E-Mail-Kanal für diesen Kontakt verfügbar.',
     crm_err_send_failed: 'E-Mail-Versand fehlgeschlagen. Bitte erneut versuchen.',
     crm_err_generic: 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+    crm_err_not_found: 'Kontakt oder Ressource nicht gefunden.',
+    crm_err_last_channel: 'Letzten Kanal kann nicht entfernt werden — mindestens einer muss verbleiben.',
+    crm_err_duplicate_channel: 'Dieser Kanal existiert bereits für diesen Kontakt.',
+    // Source labels (Stufe 1)
+    crm_source_business_card: 'Visitenkarte',
+    crm_source_manual: 'Direktkontakt',
+    crm_source_referral: 'Empfehlung',
+    crm_source_event: 'Veranstaltung',
+    crm_form_source: 'Quelle',
+    // Edit form (Stufe 1)
+    crm_edit_title: 'Kontakt bearbeiten',
+    crm_edit_saving: 'Wird gespeichert…',
+    crm_edit_saved: 'Kontakt aktualisiert.',
+    // Channel editor (Stufe 1)
+    crm_channel_add: 'Kanal hinzufügen',
+    crm_channel_adding: 'Wird hinzugefügt…',
+    crm_channel_remove: 'Entfernen',
+    crm_channel_kind: 'Typ',
+    crm_channel_value: 'Wert',
+    // Superadmin register-direct action (Stufe 1)
+    crm_action_register_direct: 'Als registriert markieren (direkt)',
     // Opt-out page (for reference — actual page uses inline multilingual object)
     crm_optout_confirm: 'Abmelden',
     crm_optout_button: 'Abmeldung bestätigen',

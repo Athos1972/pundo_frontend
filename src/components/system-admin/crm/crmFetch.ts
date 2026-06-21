@@ -1,6 +1,6 @@
 'use client'
 // ─── CRM Client-Side Fetch Util (F7600) ───────────────────────────────────────
-// Encapsulates POST to /api/admin/crm/... and maps HTTP status codes to Toast messages.
+// Encapsulates POST/PATCH/DELETE to /api/admin/crm/... and maps HTTP status codes to Toast messages.
 // Clean Boundary: no imports from customer-facing code.
 
 import { showToast } from '@/components/system-admin/Toast'
@@ -23,6 +23,8 @@ function parse422Message(detail: CrmErrorDetail, tr: SysAdminTranslations): stri
     if (detail === 'illegal_transition') return tr.crm_err_illegal_transition
     if (detail === 'shop_id_required') return tr.crm_err_shop_id_required
     if (detail === 'no_email_channel') return tr.crm_err_no_email
+    if (detail === 'last_channel') return tr.crm_err_last_channel
+    if (detail === 'duplicate_channel') return tr.crm_err_duplicate_channel
     return tr.crm_err_generic
   }
   // Object detail
@@ -31,27 +33,35 @@ function parse422Message(detail: CrmErrorDetail, tr: SysAdminTranslations): stri
   if (d === 'illegal_transition') return tr.crm_err_illegal_transition
   if (d === 'shop_id_required') return tr.crm_err_shop_id_required
   if (d === 'no_email_channel') return tr.crm_err_no_email
+  if (d === 'last_channel') return tr.crm_err_last_channel
+  if (d === 'duplicate_channel') return tr.crm_err_duplicate_channel
   return tr.crm_err_generic
 }
 
 /**
- * POST to /api/admin/crm/<path> and handle all standard CRM error codes.
- * On 401: redirects to /admin/login (via window.location).
- * On 403/409/422/502: shows appropriate Toast.
- * Returns {ok, data, status}.
+ * Generic CRM request to /api/admin/crm/<path>.
+ * Handles all standard CRM error codes:
+ *   401 → redirect to /admin/login
+ *   403/409/422/502 → Toast
+ *   404 → crm_err_not_found Toast
+ *   200/201 → ok with data
  */
-export async function crmPost<T>(
+export async function crmRequest<T>(
+  method: 'POST' | 'PATCH' | 'DELETE',
   path: string,
   body: unknown,
   tr: SysAdminTranslations,
 ): Promise<CrmFetchResult<T>> {
   let res: Response
   try {
-    res = await fetch(`/api/admin/${path}`, {
-      method: 'POST',
+    const init: RequestInit = {
+      method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
+    }
+    if (body !== undefined && method !== 'DELETE') {
+      init.body = JSON.stringify(body)
+    }
+    res = await fetch(`/api/admin/${path}`, init)
   } catch {
     showToast(tr.crm_err_generic, 'error')
     return { ok: false }
@@ -67,6 +77,11 @@ export async function crmPost<T>(
   if (res.status === 403) {
     showToast(tr.crm_err_forbidden, 'error')
     return { ok: false, status: 403 }
+  }
+
+  if (res.status === 404) {
+    showToast(tr.crm_err_not_found, 'error')
+    return { ok: false, status: 404 }
   }
 
   if (res.status === 409) {
@@ -100,4 +115,37 @@ export async function crmPost<T>(
   } catch { /* 204 or non-JSON */ }
 
   return { ok: true, data, status: res.status }
+}
+
+/**
+ * POST to /api/admin/crm/<path>.
+ * Kept for backwards-compatibility — delegates to crmRequest('POST', ...).
+ */
+export async function crmPost<T>(
+  path: string,
+  body: unknown,
+  tr: SysAdminTranslations,
+): Promise<CrmFetchResult<T>> {
+  return crmRequest<T>('POST', path, body, tr)
+}
+
+/**
+ * PATCH to /api/admin/crm/<path>.
+ */
+export async function crmPatch<T>(
+  path: string,
+  body: unknown,
+  tr: SysAdminTranslations,
+): Promise<CrmFetchResult<T>> {
+  return crmRequest<T>('PATCH', path, body, tr)
+}
+
+/**
+ * DELETE to /api/admin/crm/<path>.
+ */
+export async function crmDelete<T>(
+  path: string,
+  tr: SysAdminTranslations,
+): Promise<CrmFetchResult<T>> {
+  return crmRequest<T>('DELETE', path, undefined, tr)
 }

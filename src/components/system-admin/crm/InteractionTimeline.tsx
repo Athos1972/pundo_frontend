@@ -54,6 +54,17 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
             {ia.outcome && (
               <p className="text-xs text-gray-600">{ia.outcome}</p>
             )}
+            {ia.kind === 'contact_updated' && Array.isArray(ia.payload?.fields) && (
+              <p className="text-xs text-gray-600">
+                Geändert: {(ia.payload.fields as string[]).join(', ')}
+              </p>
+            )}
+            {(ia.kind === 'channel_added' || ia.kind === 'channel_removed') && !!ia.payload?.channel_kind && (
+              <p className="text-xs text-gray-600">
+                {ia.kind === 'channel_added' ? '+' : '−'}{' '}
+                {String(ia.payload.channel_kind)}
+              </p>
+            )}
             <p className="text-xs text-gray-400">
               {ia.actor_type}{ia.actor_id ? ` #${ia.actor_id}` : ''} · {ia.direction} · {ia.channel}
             </p>

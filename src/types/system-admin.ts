@@ -6,6 +6,7 @@ export interface SysAdminUser {
   id: number
   email: string
   role: 'superadmin' | 'editor'
+  permissions: string[] | null  // null = grandfathering (all perms); [] = no extra perms
 }
 
 export interface PaginatedResponse<T> {
@@ -276,13 +277,31 @@ export type CrmChannelKindIn = 'email' | 'phone'          // Request-side (Inges
 export type CrmOutreachLang = 'el' | 'en' | 'ru'
 export type CrmLegalBasis = 'legitimate_interest' | 'consent' | 'contract' | 'none'
 export type CrmSuppressReason = 'hard_optout' | 'rejected_private'
+export type CrmSource = 'business_card' | 'manual' | 'referral' | 'event'
 
 // — Requests —
 export interface CrmIngestRequest {
   org: { name: string; city?: string | null; category?: string | null }
   contact: { display_name?: string | null; role_title?: string | null }
   channels: Array<{ kind: CrmChannelKindIn; value: string }>
-  source: { source: 'business_card'; source_ref?: string | null; raw?: Record<string, unknown> | null }
+  source: { source: CrmSource; source_ref?: string | null; raw?: Record<string, unknown> | null }
+}
+
+export interface CrmOrgUpdateRequest {
+  name?: string | null
+  city?: string | null
+  category?: string | null
+}
+
+export interface CrmContactUpdateRequest {
+  org?: CrmOrgUpdateRequest | null
+  display_name?: string | null
+  role_title?: string | null
+}
+
+export interface CrmChannelAddRequest {
+  kind: CrmChannelKindIn
+  value: string
 }
 export interface CrmConfirmBusinessRequest { version: number; legal_basis?: CrmLegalBasis | null; note?: string | null }
 export interface CrmLifecycleRequest { to_state: CrmLifecycleState; version: number; reason?: string | null; shop_id?: number | null }

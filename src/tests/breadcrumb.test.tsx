@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
@@ -58,6 +58,7 @@ describe('Breadcrumb', () => {
   })
 
   it('emits a JSON-LD script tag with BreadcrumbList schema', () => {
+    vi.stubEnv('SITE_URL', 'https://test.example')
     const { container } = render(
       <Breadcrumb
         items={[
@@ -74,10 +75,11 @@ describe('Breadcrumb', () => {
     expect(json.itemListElement).toHaveLength(3)
     expect(json.itemListElement[0].position).toBe(1)
     expect(json.itemListElement[0].name).toBe('Home')
-    expect(json.itemListElement[0].item).toBe('/')
+    expect(json.itemListElement[0].item).toBe('https://test.example/')
     expect(json.itemListElement[2].name).toBe('Acme')
     // Last item has no href → no item field
     expect(json.itemListElement[2].item).toBeUndefined()
+    vi.unstubAllEnvs()
   })
 
   it('renders separator characters between items', () => {

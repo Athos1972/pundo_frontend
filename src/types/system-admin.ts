@@ -317,8 +317,9 @@ export interface CrmOrgOut {
   id: number; name: string; legal_name?: string | null; city?: string | null
   region?: string | null; category?: string | null; business_status: string; shop_id: number | null
 }
+export type CrmChannelKindOut = 'email' | 'phone_call' | 'sms' | 'whatsapp' | 'push'
 export interface CrmChannelOut {
-  id: number; kind: string; value_normalized: string; reachable: string
+  id: number; kind: CrmChannelKindOut; value_normalized: string; reachable: string
   consent_state: string; is_preferred: boolean; created_at: string
 }
 export interface CrmSourceOut {

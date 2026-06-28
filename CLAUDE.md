@@ -53,3 +53,13 @@ This project has a content-addressed knowledge graph. Before complex edits, call
 
 Use `format: "gcf"` on all context calls for compact responses.
 <!-- knowing:generated:end -->
+
+## Graphify
+
+This project has a graphify knowledge graph at `graphify-out/graph.json` (updated weekly by cron). Before architecture questions or cross-file relationship queries, try:
+
+- `graphify query "<question>"` — BFS traversal for broad context
+- `graphify path "<node>" "<node>"` — shortest path between concepts
+- `graphify explain "<node>"` — plain-language explanation
+
+Use `graphify query` before reading multiple files — it can save tokens by answering from the graph directly.

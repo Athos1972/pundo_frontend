@@ -7,7 +7,7 @@ description: >
   TypeScript-Fehler und ESLint, übergibt strukturiert an /e2e-tester.
   Aktivieren bei: Feature implementieren, Bug fixen, Refactoring,
   Komponente erweitern, Code schreiben.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 tools:
   - Read
   - Bash

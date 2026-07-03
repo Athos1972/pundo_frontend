@@ -7,7 +7,7 @@ description: >
   Performance-Engpass analysieren, Server vs. Client Component entscheiden,
   Schnittstellendesign zum Backend, Technologie-Entscheidung, Architektur reviewen,
   wo soll ich X implementieren.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 tools:
   - Read
   - Bash

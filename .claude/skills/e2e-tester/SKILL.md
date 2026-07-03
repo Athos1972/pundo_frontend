@@ -8,7 +8,7 @@ description: >
   Responsive, API-Integration) und dokumentiert Qualitätsstatus.
   Aktivieren bei: e2e testen, nach /coder-Übergabe, Coverage-Lücken
   schließen, Qualitäts-Check.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 tools:
   - Read
   - Bash

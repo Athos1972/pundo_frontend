@@ -1,6 +1,6 @@
 import type {
   ProductListResponse, ProductDetailResponse,
-  ShopListResponse, ShopDetailResponse,
+  ShopListResponse, ShopDetailResponse, ShopListItem,
   CategoryListResponse,
   ShopReviewPreview,
   ShopOffer,
@@ -104,6 +104,10 @@ export async function getShops(
     appointment_required?: boolean;
     /** F3800 Phase 2: filter to approved charity-supporter shops */
     is_charity_supporter?: boolean;
+    /** B5900-007: exact, case-insensitive city match — drives /shops/city/[city] index pages */
+    city?: string;
+    /** B5900-007: only return shops meeting the B5900-006 completeness/indexability predicate */
+    indexable?: boolean;
   } = {},
   lang: string
 ): Promise<ShopListResponse> {
@@ -124,8 +128,57 @@ export async function getShops(
   if (params.service_category_id != null) qs.set('service_category_id', String(params.service_category_id));
   if (params.appointment_required) qs.set('appointment_required', 'true');
   if (params.is_charity_supporter != null) qs.set('is_charity_supporter', String(params.is_charity_supporter));
+  if (params.city) qs.set('city', params.city);
+  if (params.indexable != null) qs.set('indexable', String(params.indexable));
   const q = qs.toString();
   return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
+}
+
+// ── B5900-007: Städte-Index (Orphan-Shop-Pages Fix) ─────────────────────────
+
+export interface ShopCityItem {
+  city: string
+  slug: string
+  shop_count: number
+}
+
+export interface ShopCitiesResponse {
+  cities: ShopCityItem[]
+}
+
+/**
+ * Distinct cities with indexable active shop counts (GET /api/v1/shops/cities).
+ * Backend already applies the min-shop-count threshold (default 5), a garbage-value
+ * blocklist ("Street"/"Avenue"/"Cyprus") and Greek/Latin spelling-alias merging —
+ * see 02-backend-architecture.md §4.3. Do NOT override `min_count` from callers
+ * that feed the sitemap or the /shops/cities overview (thin-content risk, R5/R8).
+ */
+export async function getShopCities(lang: string): Promise<ShopCitiesResponse> {
+  return apiFetch<ShopCitiesResponse>('/shops/cities', lang)
+}
+
+/**
+ * Fetches ALL indexable, active shops for a given city name via an offset-loop,
+ * because GET /shops caps `limit` at 100 (backend-enforced) while cities like
+ * Nicosia can have 1000+ shops. Used exclusively by the SSR city index page —
+ * never call this from a client component (unbounded number of requests).
+ */
+export async function getAllShopsInCity(
+  city: string,
+  lang: string,
+  opts?: { pageSize?: number; maxPages?: number }
+): Promise<ShopListItem[]> {
+  const pageSize = opts?.pageSize ?? 100
+  const maxPages = opts?.maxPages ?? 50 // safety cap: 50 * 100 = 5000 shops
+  const all: ShopListItem[] = []
+  let offset = 0
+  for (let page = 0; page < maxPages; page++) {
+    const res = await getShops({ city, indexable: true, status: 'active', limit: pageSize, offset }, lang)
+    all.push(...res.items)
+    if (res.items.length < pageSize) break
+    offset += pageSize
+  }
+  return all
 }
 
 export async function getShop(slug: string, lang: string): Promise<ShopDetailResponse> {

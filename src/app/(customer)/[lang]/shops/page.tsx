@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang } from '@/lib/routing'
+import { buildHreflang, localePath } from '@/lib/routing'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { BackButton } from '@/components/ui/BackButton'
 import { ShopsContent } from './ShopsContent'
@@ -54,6 +55,13 @@ export default async function ShopsIndexPage({ params }: Props) {
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <BackButton />
       <h1 className="text-2xl font-bold">{tr.page_title_shops}</h1>
+      {/* B5900-007/T7 — entry link into the crawlable city-index hub */}
+      <Link
+        href={localePath(lang, '/shops/cities')}
+        className="inline-block text-sm text-accent hover:underline"
+      >
+        {tr.shops_browse_by_city_link} →
+      </Link>
       <ShopsContent lang={lang} />
     </main>
   )

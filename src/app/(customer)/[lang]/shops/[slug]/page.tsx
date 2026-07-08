@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
-import { getShop, searchProducts, getShopOffers, getRelatedShops } from '@/lib/api'
+import { getShop, searchProducts, getShopOffers, getRelatedShops, getShopCities } from '@/lib/api'
+import { findCityByName } from '@/lib/shop-city-index'
 import { buildShopPin, getWeekdayDescriptions, getSpecialDays } from '@/lib/shop-opening-hours'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
@@ -183,8 +184,26 @@ export default async function ShopPage({ params }: Props) {
   const weekdayLines = getWeekdayDescriptions(shop.opening_hours_raw)
   const specialDays = getSpecialDays(shop.opening_hours_raw)
 
-  // Derive city from address (best-effort)
-  const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
+  // B5900-007/T8: prefer the discrete `shop.city` field (backend column) over
+  // the previous address-string heuristic. Falls back to the heuristic only
+  // when `city` is not set (older data / online-only shops).
+  const cityHint = shop.city?.trim() || shop.address_raw?.split(',').at(-1)?.trim() || null
+
+  // B5900-007/T8 — resolve the city-index slug for the breadcrumb rücklink.
+  // Looked up against GET /shops/cities (same source as the city hub pages)
+  // rather than re-implementing the backend's slugify()/alias logic here —
+  // guarantees the breadcrumb link never points at a 404. Cities below the
+  // indexing threshold (or unmatched casing) simply render without a link.
+  let cityBreadcrumbHref: string | null = null
+  if (cityHint) {
+    try {
+      const { cities } = await getShopCities(lang)
+      const match = findCityByName(cities, cityHint)
+      if (match) cityBreadcrumbHref = localePath(lang, `/shops/city/${match.slug}`)
+    } catch {
+      cityBreadcrumbHref = null
+    }
+  }
 
   // B5900-006/AC-3 (neu): never render an empty <h1> / placeholder title —
   // falls back to a slug-derived display name when `name` is missing/blank.
@@ -208,6 +227,9 @@ export default async function ShopPage({ params }: Props) {
         <Breadcrumb items={[
           { label: tr.home, href: localePath(lang, '/') },
           { label: tr.nav_shops, href: localePath(lang, '/shops') },
+          ...(cityHint
+            ? [{ label: tr.shops_city_breadcrumb(cityHint), ...(cityBreadcrumbHref ? { href: cityBreadcrumbHref } : {}) }]
+            : []),
           { label: displayName },
         ]} />
         {/* Header */}

@@ -22,6 +22,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} by ${brand} — compare current prices and find the best offers near you on Pundo, Cyprus's local price comparison platform.`,
     shop_title_tagline: 'Price comparison on Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `Shops & local businesses in ${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `Discover ${count} shops and local businesses in ${city}, Cyprus. Browse opening hours, contact details and offers on Pundo.`,
+    shops_city_h1: (city: string) => `Shops in ${city}`,
+    shops_city_empty: 'No shops found for this city yet.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'Browse shops by city — Pundo',
+    shops_cities_meta_description: 'Browse all Cyprus cities and towns with local shops and businesses listed on Pundo. Find shops near you by location.',
+    shops_cities_h1: 'Browse shops by city',
+    shops_cities_empty: 'No cities available yet.',
+    shops_browse_by_city_link: 'Browse by city',
+    shops_city_shop_count: (n: number) => `${n} shop${n === 1 ? '' : 's'}`,
     contact_shop: 'Contact shop',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Hello! I found ${productName} on ${hostname}. Please get in touch.`,
@@ -72,6 +85,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} von ${brand} — aktuelle Preise und Angebote auf Pundo vergleichen, dem lokalen Preisvergleich für Zypern.`,
     shop_title_tagline: 'Preisvergleich auf Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `Shops & lokale Anbieter in ${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `Entdecke ${count} Shops und lokale Anbieter in ${city}, Zypern. Öffnungszeiten, Kontaktdaten und Angebote auf Pundo durchstöbern.`,
+    shops_city_h1: (city: string) => `Shops in ${city}`,
+    shops_city_empty: 'Für diese Stadt wurden noch keine Shops gefunden.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'Shops nach Stadt durchsuchen — Pundo',
+    shops_cities_meta_description: 'Durchstöbere alle Städte und Orte Zyperns mit lokalen Shops und Anbietern auf Pundo. Finde Shops in deiner Nähe.',
+    shops_cities_h1: 'Shops nach Stadt durchsuchen',
+    shops_cities_empty: 'Noch keine Städte verfügbar.',
+    shops_browse_by_city_link: 'Nach Stadt durchsuchen',
+    shops_city_shop_count: (n: number) => `${n} Shop${n === 1 ? '' : 's'}`,
     contact_shop: 'Shop kontaktieren',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Hallo! Ich habe ${productName} auf ${hostname} gefunden. Bitte um Kontaktaufnahme.`,
@@ -122,6 +148,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} от ${brand} — сравните текущие цены и найдите лучшие предложения на Pundo, платформе для сравнения цен на Кипре.`,
     shop_title_tagline: 'Сравнение цен на Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `Магазины и локальный бизнес в ${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `Найдите ${count} магазинов и локальных предприятий в ${city}, Кипр. Часы работы, контакты и акции на Pundo.`,
+    shops_city_h1: (city: string) => `Магазины в ${city}`,
+    shops_city_empty: 'Для этого города пока не найдено магазинов.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'Магазины по городам — Pundo',
+    shops_cities_meta_description: 'Просмотрите все города Кипра с локальными магазинами и предприятиями на Pundo. Найдите магазины рядом с вами.',
+    shops_cities_h1: 'Магазины по городам',
+    shops_cities_empty: 'Пока нет доступных городов.',
+    shops_browse_by_city_link: 'Поиск по городам',
+    shops_city_shop_count: (n: number) => `${n} магазин${(n % 10 === 1 && n % 100 !== 11) ? '' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 'а' : 'ов'}`,
     contact_shop: 'Связаться с магазином',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Привет! Я нашёл ${productName} на ${hostname}. Пожалуйста, свяжитесь со мной.`,
@@ -172,6 +211,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} από ${brand} — συγκρίνετε τρέχουσες τιμές και βρείτε τις καλύτερες προσφορές στο Pundo, την πλατφόρμα σύγκρισης τιμών για την Κύπρο.`,
     shop_title_tagline: 'Σύγκριση τιμών στο Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `Καταστήματα & τοπικές επιχειρήσεις στη ${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `Ανακαλύψτε ${count} καταστήματα και τοπικές επιχειρήσεις στη ${city}, Κύπρος. Ώρες λειτουργίας, στοιχεία επικοινωνίας και προσφορές στο Pundo.`,
+    shops_city_h1: (city: string) => `Καταστήματα στη ${city}`,
+    shops_city_empty: 'Δεν βρέθηκαν ακόμα καταστήματα για αυτή την πόλη.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'Αναζήτηση καταστημάτων ανά πόλη — Pundo',
+    shops_cities_meta_description: 'Περιηγηθείτε σε όλες τις πόλεις της Κύπρου με τοπικά καταστήματα και επιχειρήσεις στο Pundo. Βρείτε καταστήματα κοντά σας.',
+    shops_cities_h1: 'Καταστήματα ανά πόλη',
+    shops_cities_empty: 'Δεν υπάρχουν ακόμα διαθέσιμες πόλεις.',
+    shops_browse_by_city_link: 'Αναζήτηση ανά πόλη',
+    shops_city_shop_count: (n: number) => `${n} κατάστημα${n === 1 ? '' : 'τα'}`,
     contact_shop: 'Επικοινωνία',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `Γεια! Βρήκα το ${productName} στο ${hostname}. Παρακαλώ επικοινωνήστε μαζί μου.`,
@@ -222,6 +274,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} من ${brand} — قارن الأسعار الحالية وابحث عن أفضل العروض على Pundo، منصة مقارنة الأسعار المحلية لقبرص.`,
     shop_title_tagline: 'مقارنة الأسعار على Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `متاجر وأعمال محلية في ${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `اكتشف ${count} متجرًا وعملًا محليًا في ${city}، قبرص. تصفّح ساعات العمل وتفاصيل الاتصال والعروض على Pundo.`,
+    shops_city_h1: (city: string) => `المتاجر في ${city}`,
+    shops_city_empty: 'لم يتم العثور على متاجر لهذه المدينة بعد.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'تصفح المتاجر حسب المدينة — Pundo',
+    shops_cities_meta_description: 'تصفّح جميع مدن وبلدات قبرص التي تضم متاجر وأعمالًا محلية على Pundo. اعثر على المتاجر القريبة منك حسب الموقع.',
+    shops_cities_h1: 'تصفح المتاجر حسب المدينة',
+    shops_cities_empty: 'لا توجد مدن متاحة بعد.',
+    shops_browse_by_city_link: 'تصفح حسب المدينة',
+    shops_city_shop_count: (n: number) => `${n} متجر`,
     contact_shop: 'تواصل مع المتجر',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `مرحبا! وجدت ${productName} على ${hostname}. يرجى التواصل معي.`,
@@ -272,6 +337,19 @@ const shopTranslations = {
     product_desc_fallback: (name: string, brand: string) =>
       `${name} מאת ${brand} — השווה מחירים עדכניים ומצא את ההצעות הטובות ביותר ב-Pundo, פלטפורמת השוואת המחירים המקומית לקפריסין.`,
     shop_title_tagline: 'השוואת מחירים ב-Pundo',
+    // B5900-007 — Städte-Index (orphan-shop-pages)
+    shops_city_title: (city: string, count: number) => `חנויות ועסקים מקומיים ב${city} (${count}) — Pundo`,
+    shops_city_meta_description: (city: string, count: number) =>
+      `גלה ${count} חנויות ועסקים מקומיים ב${city}, קפריסין. עיין בשעות פתיחה, פרטי קשר ומבצעים ב-Pundo.`,
+    shops_city_h1: (city: string) => `חנויות ב${city}`,
+    shops_city_empty: 'טרם נמצאו חנויות עבור עיר זו.',
+    shops_city_breadcrumb: (city: string) => city,
+    shops_cities_title: 'עיון בחנויות לפי עיר — Pundo',
+    shops_cities_meta_description: 'עיינו בכל הערים והישובים בקפריסין עם חנויות ועסקים מקומיים ב-Pundo. מצאו חנויות בקרבתכם לפי מיקום.',
+    shops_cities_h1: 'עיון בחנויות לפי עיר',
+    shops_cities_empty: 'אין עדיין ערים זמינות.',
+    shops_browse_by_city_link: 'עיון לפי עיר',
+    shops_city_shop_count: (n: number) => `${n} חנויות`,
     contact_shop: 'צור קשר עם החנות',
     whatsapp_contact: 'WhatsApp',
     whatsapp_message_product: (productName: string, hostname: string) => `שלום! מצאתי את ${productName} ב-${hostname}. נא ליצור קשר.`,

@@ -10,6 +10,7 @@
  *   /sitemap-blog.xml       ~200 URLs (blog slugs × 6 langs)
  *   /sitemap-guides.xml     ~300 URLs (guide slugs × 6 langs)
  *   /sitemap-shops.xml      ~5000 URLs (shop slugs × 6 langs)
+ *   /sitemap-shop-cities.xml  ~180 URLs (city slugs × 6 langs, B5900-007)
  *   /sitemap-products.xml?page=N  ≤38,256 URLs each (6,376 slugs × 6 langs)
  *
  * The product page count is computed dynamically so new slugs automatically
@@ -47,6 +48,7 @@ export async function GET(): Promise<Response> {
     `  <sitemap><loc>${siteUrl}/sitemap-blog.xml</loc></sitemap>\n` +
     `  <sitemap><loc>${siteUrl}/sitemap-guides.xml</loc></sitemap>\n` +
     `  <sitemap><loc>${siteUrl}/sitemap-shops.xml</loc></sitemap>\n` +
+    `  <sitemap><loc>${siteUrl}/sitemap-shop-cities.xml</loc></sitemap>\n` +
     productEntries.join('\n') + '\n' +
     `</sitemapindex>`
 

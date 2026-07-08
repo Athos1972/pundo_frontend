@@ -11,6 +11,7 @@ const STATIC_PATHS = [
   '/',
   '/search',
   '/shops',
+  '/shops/cities',
   '/guides',
   '/blog',
   '/about',

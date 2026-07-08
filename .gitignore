@@ -66,3 +66,12 @@ content/guides/_raw/*
 # Unoptimised hero images in public/ — use `npm run guides:optimize` instead
 public/images/guides/*.png
 public/images/guides/*.jpg
+
+# SEO audit / perf reports (scripts/seo-audit.ts, scripts/seo-perf.ts) —
+# generated locally or in CI, uploaded as workflow artifacts, not committed.
+# See .github/workflows/seo-audit.yml (B6400-008).
+seo-audit-*.json
+seo-audit-*.md
+perf-report-*.json
+perf-report-*.md
+seo-perf-followups.md

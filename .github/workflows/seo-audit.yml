@@ -1,0 +1,179 @@
+name: SEO Audit
+
+# Runs the existing seo-audit / seo-perf scripts (scripts/seo-audit.ts,
+# scripts/seo-perf.ts) against production on a weekly schedule. Both scripts
+# already exist and already have an exit-code-1 threshold mechanism — this
+# workflow only "arms" them (see B6400-008).
+#
+# Target: https://pundo.cy (read-only HTTP crawl of the public production
+# site — no writes, no DB access, no auth). Weekly cadence + low route count
+# make the load on prod negligible.
+#
+# No GitHub Secrets required. Uses the automatically provided GITHUB_TOKEN
+# for issue creation (issues: write permission below).
+#
+# Hard-fail vs. issue-only (B6400-008 §6, open BB decision):
+#   `audit_hard_fail` / `perf_hard_fail` control whether a threshold
+#   violation turns the job red (in addition to opening/commenting on a
+#   GitHub issue) or only opens/comments on the issue while the job stays
+#   green. Default: issue-only (conservative) — until BB has reviewed the
+#   first few baseline runs and calibrated thresholds, a single noisy run
+#   should not make CI red. Flip the defaults below to `true` once thresholds
+#   are calibrated.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Weekly, Monday 06:00 UTC
+
+  workflow_dispatch:
+    inputs:
+      audit_hard_fail:
+        description: 'seo:audit — fail the job (red) on threshold violation, not just open an issue'
+        type: boolean
+        default: false
+      perf_hard_fail:
+        description: 'seo:perf — fail the job (red) on "Poor" Core Web Vitals, not just open an issue'
+        type: boolean
+        default: false
+
+env:
+  SEO_TARGET_URL: https://pundo.cy
+  # Defaults for the scheduled run (workflow_dispatch inputs override these).
+  DEFAULT_AUDIT_HARD_FAIL: 'false'
+  DEFAULT_PERF_HARD_FAIL: 'false'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  seo-audit:
+    name: SEO Audit & Perf
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Resolve hard-fail switches
+        id: switches
+        run: |
+          AUDIT_HARD_FAIL="${{ github.event.inputs.audit_hard_fail }}"
+          PERF_HARD_FAIL="${{ github.event.inputs.perf_hard_fail }}"
+          echo "audit_hard_fail=${AUDIT_HARD_FAIL:-$DEFAULT_AUDIT_HARD_FAIL}" >> "$GITHUB_OUTPUT"
+          echo "perf_hard_fail=${PERF_HARD_FAIL:-$DEFAULT_PERF_HARD_FAIL}" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------------------------------------------------
+      # seo:audit — Playwright crawl, checks title/description/OG/H1/canonical/
+      # sitemap-vs-noindex/orphans/internal-redirects. Reads target URL from
+      # SEO_AUDIT_BASE_URL env var (scripts/seo-audit.config.ts).
+      # ---------------------------------------------------------------------
+      - name: Run seo:audit
+        id: audit
+        env:
+          SEO_AUDIT_BASE_URL: ${{ env.SEO_TARGET_URL }}
+        continue-on-error: true
+        run: npm run seo:audit
+
+      # ---------------------------------------------------------------------
+      # seo:perf — Lighthouse wrapper. Reads target URL from --base-url= CLI
+      # flag, NOT an env var — must be invoked directly via tsx, not through
+      # `npm run seo:perf` (which passes no args and would fall back to
+      # localhost:3500, which does not exist in CI).
+      # ---------------------------------------------------------------------
+      - name: Run seo:perf
+        id: perf
+        continue-on-error: true
+        run: npx tsx scripts/seo-perf.ts --base-url=${{ env.SEO_TARGET_URL }}
+
+      - name: Upload report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-reports-${{ github.run_id }}
+          path: |
+            seo-audit-*.md
+            seo-audit-*.json
+            perf-report-*.md
+            perf-report-*.json
+            seo-perf-followups.md
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Ensure "seo" label exists
+        if: steps.audit.outcome == 'failure' || steps.perf.outcome == 'failure'
+        run: |
+          gh label create seo --color "1D76DB" --description "SEO audit / performance findings" --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Open or update GitHub issue on threshold violation
+        if: steps.audit.outcome == 'failure' || steps.perf.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          DATE_STR=$(date -u +%F)
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          TITLE="SEO-Audit Threshold-Verletzung (${DATE_STR})"
+
+          BODY_FILE=$(mktemp)
+          {
+            echo "Automated SEO audit found threshold violations."
+            echo ""
+            echo "- **seo:audit**: ${{ steps.audit.outcome }}"
+            echo "- **seo:perf**: ${{ steps.perf.outcome }}"
+            echo ""
+            echo "Run: ${RUN_URL}"
+            echo ""
+            echo "Reports are attached to the run as artifact \`seo-reports-${{ github.run_id }}\` (seo-audit-*.md, perf-report-*.md, seo-perf-followups.md)."
+          } > "$BODY_FILE"
+
+          EXISTING=$(gh issue list --label seo --state open --search "in:title \"SEO-Audit Threshold-Verletzung\"" --json number --jq '.[0].number' || true)
+
+          if [ -n "${EXISTING:-}" ]; then
+            echo "Existing open SEO issue #${EXISTING} found — appending comment instead of creating a new issue."
+            gh issue comment "$EXISTING" --body-file "$BODY_FILE"
+          else
+            gh issue create --title "$TITLE" --label seo --body-file "$BODY_FILE"
+          fi
+
+      - name: Enforce hard-fail switches
+        if: always()
+        run: |
+          FAILED=false
+
+          if [ "${{ steps.audit.outcome }}" = "failure" ]; then
+            echo "::warning::seo:audit reported a threshold violation."
+            if [ "${{ steps.switches.outputs.audit_hard_fail }}" = "true" ]; then
+              FAILED=true
+            fi
+          fi
+
+          if [ "${{ steps.perf.outcome }}" = "failure" ]; then
+            echo "::warning::seo:perf reported a threshold violation."
+            if [ "${{ steps.switches.outputs.perf_hard_fail }}" = "true" ]; then
+              FAILED=true
+            fi
+          fi
+
+          if [ "$FAILED" = "true" ]; then
+            echo "Hard-fail switch is enabled for at least one violated check — failing the job."
+            exit 1
+          fi
+
+          echo "No hard-fail switch triggered (or no violations) — job stays green. See GitHub issue / artifact for details."

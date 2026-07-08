@@ -6,6 +6,7 @@ import { BackButton } from '@/components/ui/BackButton'
 import type { Lang } from '@/lib/lang'
 import { getSiteUrl } from '@/lib/seo'
 import { buildHreflang } from '@/lib/routing'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -15,13 +16,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
   const siteUrl = getSiteUrl()
+  const pageUrl = `${siteUrl}/${lang}/help`
+  const title = `${tr.page_title_help} — pundo`
+  const description = tr.meta_desc_help
+
+  const { openGraph, twitter } = buildCompleteOpenGraph({
+    title,
+    description,
+    url: pageUrl,
+    type: 'website',
+    locale: lang,
+    siteName: 'pundo',
+    image: {
+      url: `${siteUrl}/og/shop-fallback-default.jpg`,
+      width: 1200,
+      height: 630,
+      alt: 'pundo',
+    },
+  })
+
   return {
-    title: `${tr.page_title_help} — pundo`,
-    description: tr.meta_desc_help,
+    title,
+    description,
     alternates: {
-      canonical: `${siteUrl}/${lang}/help`,
+      canonical: pageUrl,
       languages: buildHreflang(siteUrl, '/help'),
     },
+    openGraph,
+    twitter,
   }
 }
 

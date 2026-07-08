@@ -35,7 +35,7 @@ import * as path from 'path'
 import { auditConfig } from './seo-audit.config.js'
 import { checkTitleLength, formatTitleLengthSection, type TitleLengthViolation } from './seo-audit/checks/title-length.js'
 import { checkDescriptionLength, formatDescriptionLengthSection, type DescriptionLengthViolation } from './seo-audit/checks/description-length.js'
-import { checkOgCompleteness, formatOgCompletenessSection, type OgGap } from './seo-audit/checks/og-completeness.js'
+import { checkOgCompleteness, formatOgCompletenessSection, type OgGap, checkOgUrlMatchesCanonical, formatOgUrlMismatchSection, type OgUrlMismatch } from './seo-audit/checks/og-completeness.js'
 import { checkH1Empty, formatH1EmptySection, type EmptyH1 } from './seo-audit/checks/h1-empty.js'
 import { formatSitemapVsNoindexSection, type SitemapNoindexEntry } from './seo-audit/checks/sitemap-vs-noindex.js'
 import { computeOrphans, formatOrphanPagesSection, type OrphanPage } from './seo-audit/checks/orphan-pages.js'
@@ -87,31 +87,88 @@ async function fetchUrlStatus(url: string): Promise<number | null> {
   }
 }
 
+// Cap on how many URLs the sitemap expansion contributes to the crawl set.
+// pundo.cy's sitemap-products.xml alone has 30k+ entries across multiple
+// paginated sub-sitemaps (`?page=1..4`); a full per-page Playwright crawl of
+// every catalog entry would never finish inside the CI timeout and would
+// hammer prod with tens of thousands of requests. We take a bounded sample
+// per sub-sitemap instead — enough to catch systemic issues (missing
+// canonical, OG gaps, etc.) without an unbounded crawl. See B6400-008 T1/T2.
+//
+// Sizing: a local baseline run against prod (2026-07-08) averaged ~30s/page
+// (page load + up to 30 internal-link + 20 external-link HEAD checks per
+// page). With 8 sub-sitemaps and the CI job budget of 20 minutes total
+// (setup + Playwright install + audit + perf + artifact upload), the sample
+// size per sub-sitemap must stay small. 3 keeps the audit crawl itself to
+// roughly ~28 pages (4 static + 8×3) ≈ well under 15 minutes, leaving
+// headroom for the other steps.
+const MAX_URLS_PER_SUBSITEMAP = 3
+
+async function fetchXml(url: string, timeoutMs: number): Promise<string | null> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    return await res.text()
+  } catch {
+    return null
+  }
+}
+
+function extractLocs(xml: string): string[] {
+  const out: string[] = []
+  for (const m of xml.matchAll(/<loc>(.*?)<\/loc>/g)) {
+    const u = m[1].trim()
+    if (u) out.push(u)
+  }
+  return out
+}
+
 async function discoverUrls(baseUrl: string): Promise<string[]> {
   const urls: string[] = []
 
-  // Static routes always included
-  urls.push(baseUrl + '/')
-  urls.push(baseUrl + '/search')
-  urls.push(baseUrl + '/shops')
-  urls.push(baseUrl + '/guides')
+  // Static routes always included. The site redirects "/" etc. to the
+  // default locale ("/en") — seed the crawl with the resolved path directly
+  // so the audit measures the actual indexable page, not a 308 hop.
+  urls.push(baseUrl + '/en')
+  urls.push(baseUrl + '/en/search')
+  urls.push(baseUrl + '/en/shops')
+  urls.push(baseUrl + '/en/guides')
 
-  // Try sitemap.xml
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-    const res = await fetch(`${baseUrl}/sitemap.xml`, { signal: controller.signal })
-    clearTimeout(timer)
-    if (res.ok) {
-      const xml = await res.text()
-      const matches = xml.matchAll(/<loc>(.*?)<\/loc>/g)
-      for (const m of matches) {
-        const u = m[1].trim()
-        if (u && !urls.includes(u)) urls.push(u)
-      }
-    }
-  } catch {
+  // sitemap.xml on pundo.cy is a <sitemapindex> (nested sub-sitemaps), not a
+  // flat <urlset>. Fetch the index, then fetch each sub-sitemap in turn and
+  // take a bounded sample of <loc> entries from each — never treat a
+  // sub-sitemap URL itself as a crawlable page (it returns XML, not HTML,
+  // and page.evaluate() against it throws).
+  const indexXml = await fetchXml(`${baseUrl}/sitemap.xml`, TIMEOUT_MS)
+  if (!indexXml) {
     console.warn('[seo-audit] Could not fetch sitemap.xml')
+    return urls
+  }
+
+  const isSitemapIndex = /<sitemapindex/i.test(indexXml)
+
+  if (!isSitemapIndex) {
+    // Flat urlset — original behaviour.
+    for (const u of extractLocs(indexXml)) {
+      if (!urls.includes(u)) urls.push(u)
+    }
+    return urls
+  }
+
+  const subSitemaps = extractLocs(indexXml)
+  for (const subUrl of subSitemaps) {
+    const subXml = await fetchXml(subUrl, TIMEOUT_MS)
+    if (!subXml) {
+      console.warn(`[seo-audit] Could not fetch sub-sitemap: ${subUrl}`)
+      continue
+    }
+    const locs = extractLocs(subXml).slice(0, MAX_URLS_PER_SUBSITEMAP)
+    for (const u of locs) {
+      if (u && !urls.includes(u)) urls.push(u)
+    }
   }
 
   return urls
@@ -286,6 +343,7 @@ function generateMarkdown(
     titleViolations: TitleLengthViolation[]
     descViolations: DescriptionLengthViolation[]
     ogGaps: OgGap[]
+    ogUrlMismatches: OgUrlMismatch[]
     emptyH1s: EmptyH1[]
     sitemapNoindex: SitemapNoindexEntry[]
     orphans: OrphanPage[]
@@ -319,6 +377,7 @@ function generateMarkdown(
     `| Title length violations | ${extra.titleViolations.length} |`,
     `| Description length violations | ${extra.descViolations.length} |`,
     `| OG completeness gaps | ${extra.ogGaps.length} |`,
+    `| og:url / canonical mismatches | ${extra.ogUrlMismatches.length} |`,
     `| Empty H1 tags | ${extra.emptyH1s.length} |`,
     `| Sitemap entries with noindex | ${extra.sitemapNoindex.length} |`,
     `| Orphan pages | ${extra.orphans.length} |`,
@@ -382,6 +441,9 @@ function generateMarkdown(
   const ogSection = formatOgCompletenessSection(extra.ogGaps)
   if (ogSection) lines.push(ogSection)
 
+  const ogUrlMismatchSection = formatOgUrlMismatchSection(extra.ogUrlMismatches)
+  if (ogUrlMismatchSection) lines.push(ogUrlMismatchSection)
+
   const h1EmptySection = formatH1EmptySection(extra.emptyH1s)
   if (h1EmptySection) lines.push(h1EmptySection)
 
@@ -429,6 +491,7 @@ async function main() {
   const titleViolations: TitleLengthViolation[] = []
   const descViolations: DescriptionLengthViolation[] = []
   const ogGaps: OgGap[] = []
+  const ogUrlMismatches: OgUrlMismatch[] = []
   const emptyH1s: EmptyH1[] = []
 
   for (const r of results.filter((r) => r.is_indexable)) {
@@ -441,6 +504,9 @@ async function main() {
     const og = checkOgCompleteness(r.url, r.og_tags)
     if (og) ogGaps.push(og)
 
+    const m = checkOgUrlMatchesCanonical(r.url, r.og_tags, r.canonical)
+    if (m) ogUrlMismatches.push(m)
+
     const h1e = checkH1Empty(r.url, r.h1_text_contents)
     if (h1e) emptyH1s.push(h1e)
   }
@@ -450,7 +516,7 @@ async function main() {
   // -------------------------------------------------------------------------
 
   // Collect all sitemap URLs (already discovered)
-  const sitemapUrls = urls.filter((u) => !['/', '/search', '/shops', '/guides'].some((s) => u === BASE_URL + s))
+  const sitemapUrls = urls.filter((u) => !['/en', '/en/search', '/en/shops', '/en/guides'].some((s) => u === BASE_URL + s))
 
   console.log('[seo-audit] Running global checks (sitemap-vs-noindex, orphans, redirects)...')
 
@@ -483,11 +549,12 @@ async function main() {
   const jsonPath = path.join(process.cwd(), `seo-audit-${dateStr}.json`)
   const mdPath = path.join(process.cwd(), `seo-audit-${dateStr}.md`)
 
-  fs.writeFileSync(jsonPath, JSON.stringify({ results, titleViolations, descViolations, ogGaps, emptyH1s, sitemapNoindex, orphans, internalRedirects }, null, 2), 'utf-8')
+  fs.writeFileSync(jsonPath, JSON.stringify({ results, titleViolations, descViolations, ogGaps, ogUrlMismatches, emptyH1s, sitemapNoindex, orphans, internalRedirects }, null, 2), 'utf-8')
   fs.writeFileSync(mdPath, generateMarkdown(results, dateStr, {
     titleViolations,
     descViolations,
     ogGaps,
+    ogUrlMismatches,
     emptyH1s,
     sitemapNoindex,
     orphans,
@@ -504,7 +571,7 @@ async function main() {
     : 0
   const h1Issues = indexable.filter((r) => r.h1_count !== 1).length
   const newViolations = titleViolations.length + descViolations.length + ogGaps.length +
-    emptyH1s.length + sitemapNoindex.length + orphans.length + internalRedirects.length
+    ogUrlMismatches.length + emptyH1s.length + sitemapNoindex.length + orphans.length + internalRedirects.length
 
   if (defaultTitlePct > THRESHOLD_TITLE_DEFAULT_PCT || h1Issues > 0 || newViolations > 0) {
     console.error(

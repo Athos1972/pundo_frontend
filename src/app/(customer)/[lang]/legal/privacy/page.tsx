@@ -4,6 +4,7 @@ import { t } from '@/lib/translations'
 import { getLegalContentForBrand } from '@/lib/legal-content'
 import { getBrandFromHeaders } from '@/config/brands'
 import { buildHreflang } from '@/lib/routing'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { BackButton } from '@/components/ui/BackButton'
 
 interface Props {
@@ -14,13 +15,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [{ lang }, brand] = await Promise.all([params as Promise<{ lang: Lang }>, getBrandFromHeaders()])
   const tr = t(lang)
   const siteUrl = brand.meta.siteUrl
+  const pageUrl = `${siteUrl}/${lang}/legal/privacy`
+  const title = `${tr.page_title_privacy} — ${brand.name}`
+  const description = tr.meta_desc_privacy
+
+  const { openGraph, twitter } = buildCompleteOpenGraph({
+    title,
+    description,
+    url: pageUrl,
+    type: 'website',
+    locale: lang,
+    siteName: brand.name,
+    image: {
+      url: `${siteUrl}/og/shop-fallback-default.jpg`,
+      width: 1200,
+      height: 630,
+      alt: brand.name,
+    },
+  })
+
   return {
-    title: `${tr.page_title_privacy} — ${brand.name}`,
-    description: tr.meta_desc_privacy,
+    title,
+    description,
     alternates: {
-      canonical: `${siteUrl}/${lang}/legal/privacy`,
+      canonical: pageUrl,
       languages: buildHreflang(siteUrl, '/legal/privacy'),
     },
+    openGraph,
+    twitter,
   }
 }
 

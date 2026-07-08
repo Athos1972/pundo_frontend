@@ -12,7 +12,9 @@ import { buildShopPin, getWeekdayDescriptions, getSpecialDays } from '@/lib/shop
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
+import { isShopComplete, slugToDisplayName } from '@/lib/seo/shop-completeness'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
+import type { ShopDetailResponse } from '@/types/api'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
 import { absolutizeImageUrl } from '@/lib/seo/absolutize'
 import { localePath, buildHreflang } from '@/lib/routing'
@@ -39,59 +41,107 @@ import { CharityVoteControl } from '@/components/community/CharityVoteControl'
 
 interface Props { params: Promise<{ lang: string; slug: string }> }
 
+/**
+ * B5900-006 — Metadata for a shop that does NOT meet the isShopComplete()
+ * bar (or whose fetch failed outright). Explicit `noindex, follow` instead
+ * of the previous implicit Catch-fallback that emitted no `robots` field at
+ * all. `follow: true` keeps internal link-equity flowing (design AC-2 neu).
+ * canonical + hreflang are still emitted so the Hreflang-Mismatch nebenbefund
+ * from B5900-005 doesn't resurface for incomplete shops.
+ */
+function incompleteShopMetadata(
+  slug: string,
+  lang: Lang,
+  opts?: { displayName?: string; cityHint?: string | null; categoryHint?: string | null },
+): Metadata {
+  const tr = t(lang)
+  const siteUrl = getSiteUrl()
+  const canonicalUrl = `${siteUrl}/${lang}/shops/${slug}`
+  const displayName = opts?.displayName?.trim() || slugToDisplayName(slug)
+  const cityHint = opts?.cityHint ?? null
+  const categoryHint = opts?.categoryHint ?? null
+
+  const pageTitle = padShopTitle(displayName, { city: cityHint, category: categoryHint }, lang, 'Pundo')
+  const description = truncateDescription(
+    tr.shop_meta_description(displayName, cityHint ?? 'Cyprus', categoryHint ?? 'local'),
+    { max: 155 },
+  )
+
+  return {
+    title: { absolute: pageTitle },
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: buildHreflang(siteUrl, `/shops/${slug}`),
+    },
+    robots: { index: false, follow: true },
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params as { lang: Lang; slug: string }
+
+  let shop: ShopDetailResponse
   try {
-    const shop = await getShop(slug, lang)
-    const tr = t(lang)
-    const name = shop.name ?? 'Shop'
-    const siteUrl = getSiteUrl()
-    const canonicalUrl = `${siteUrl}/${lang}/shops/${slug}`
-
-    // T6/AC-38b: Pad short shop names to reach TITLE_MIN
-    const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
-    const categoryHint = shop.shop_type?.canonical ?? null
-    const pageTitle = padShopTitle(name, { city: cityHint, category: categoryHint }, lang, 'Pundo')
-
-    // T6/AC-36: Template description with shop-specific data (≥ 110 chars, ≤ 160 chars)
-    const description = truncateDescription(
-      tr.shop_meta_description(name, cityHint ?? 'Cyprus', categoryHint ?? 'local'),
-      { max: 155 },
-    )
-
-    // T6/AC-40: OG image — use shop logo if available, else deterministic fallback
-    // absolutizeImageUrl ensures OG-image is always an absolute URL (required by crawlers)
-    const rawLogoUrl = shop.images?.[0]?.url ?? null
-    const logoUrl = absolutizeImageUrl(rawLogoUrl, siteUrl)
-    const ogImage = logoUrl
-      ? { url: logoUrl, width: 1200 as const, height: 630 as const, alt: name }
-      : pickShopFallbackOgImage(shop.id, siteUrl)
-
-    const og = buildCompleteOpenGraph({
-      title: pageTitle,
-      description,
-      url: canonicalUrl,
-      type: 'website',
-      locale: lang,
-      siteName: 'Pundo',
-      image: ogImage,
-    })
-
-    return {
-      title: { absolute: pageTitle },
-      description,
-      alternates: {
-        canonical: canonicalUrl,
-        languages: buildHreflang(siteUrl, `/shops/${slug}`),
-      },
-      robots: { index: true, follow: true },
-      openGraph: og.openGraph,
-      twitter: og.twitter,
-      ...(og.other ? { other: og.other } : {}),
-    }
+    shop = await getShop(slug, lang)
   } catch {
-    // TODO(B5900-006): expliziter „vollständig-genug"-Titel/robots statt generischem Fallback
-    return { title: 'Shop' }
+    // Real fetch failure (e.g. network error) — no shop data at all.
+    // Explicit noindex + slug-derived title, never a crash or a generic "Shop" title.
+    return incompleteShopMetadata(slug, lang)
+  }
+
+  const tr = t(lang)
+  const siteUrl = getSiteUrl()
+  const canonicalUrl = `${siteUrl}/${lang}/shops/${slug}`
+  const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
+  const categoryHint = shop.shop_type?.canonical ?? null
+  const displayName = shop.name?.trim() || slugToDisplayName(slug)
+
+  if (!isShopComplete(shop)) {
+    // AC-2/AC-3 (neu): explicit, testable "incomplete" branch instead of an
+    // accidental Catch-fallback. Shop still gets a sensible title + H1 for
+    // human visitors coming via internal links (e.g. the search map).
+    return incompleteShopMetadata(slug, lang, { displayName, cityHint, categoryHint })
+  }
+
+  // T6/AC-38b: Pad short shop names to reach TITLE_MIN
+  const pageTitle = padShopTitle(displayName, { city: cityHint, category: categoryHint }, lang, 'Pundo')
+
+  // T6/AC-36: Template description with shop-specific data (≥ 110 chars, ≤ 160 chars)
+  const description = truncateDescription(
+    tr.shop_meta_description(displayName, cityHint ?? 'Cyprus', categoryHint ?? 'local'),
+    { max: 155 },
+  )
+
+  // T6/AC-40: OG image — use shop logo if available, else deterministic fallback
+  // absolutizeImageUrl ensures OG-image is always an absolute URL (required by crawlers)
+  const rawLogoUrl = shop.images?.[0]?.url ?? null
+  const logoUrl = absolutizeImageUrl(rawLogoUrl, siteUrl)
+  const ogImage = logoUrl
+    ? { url: logoUrl, width: 1200 as const, height: 630 as const, alt: displayName }
+    : pickShopFallbackOgImage(shop.id, siteUrl)
+
+  const og = buildCompleteOpenGraph({
+    title: pageTitle,
+    description,
+    url: canonicalUrl,
+    type: 'website',
+    locale: lang,
+    siteName: 'Pundo',
+    image: ogImage,
+  })
+
+  return {
+    title: { absolute: pageTitle },
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: buildHreflang(siteUrl, `/shops/${slug}`),
+    },
+    robots: { index: true, follow: true },
+    openGraph: og.openGraph,
+    twitter: og.twitter,
+    ...(og.other ? { other: og.other } : {}),
   }
 }
 
@@ -130,21 +180,25 @@ export default async function ShopPage({ params }: Props) {
   const charityAggregate = (charityVotesResult as { aggregates?: { attribute_type: string; vote_count: number; my_value: number | null }[] } | null)
     ?.aggregates?.find((a) => a.attribute_type === 'charity') ?? null
 
-  const pins = buildShopPin(shop)
   const weekdayLines = getWeekdayDescriptions(shop.opening_hours_raw)
   const specialDays = getSpecialDays(shop.opening_hours_raw)
 
   // Derive city from address (best-effort)
   const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
 
+  // B5900-006/AC-3 (neu): never render an empty <h1> / placeholder title —
+  // falls back to a slug-derived display name when `name` is missing/blank.
+  const displayName = shop.name?.trim() || slugToDisplayName(slug)
+  const pins = buildShopPin({ ...shop, name: displayName })
+
   return (
     <main className="min-h-screen bg-bg">
-      <PixelViewContent contentName={shop.name ?? slug} contentId={slug} contentType="shop" />
+      <PixelViewContent contentName={displayName} contentId={slug} contentType="shop" />
       <TrackShopView
         shop={{
           id: shop.id,
           slug: slug,
-          name: shop.name ?? slug,
+          name: displayName,
           image_url: shop.images?.[0]?.url ?? null,
           city: cityHint,
         }}
@@ -154,19 +208,19 @@ export default async function ShopPage({ params }: Props) {
         <Breadcrumb items={[
           { label: tr.home, href: localePath(lang, '/') },
           { label: tr.nav_shops, href: localePath(lang, '/shops') },
-          { label: shop.name ?? slug },
+          { label: displayName },
         ]} />
         {/* Header */}
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
             <ShopLogoImage
               url={shop.images?.[0]?.url ?? null}
-              name={shop.name ?? null}
+              name={displayName}
               size="lg"
               shopId={shop.id}
             />
             <div className="min-w-0">
-              <h1 className="text-2xl font-extrabold text-text font-heading">{shop.name}</h1>
+              <h1 className="text-2xl font-extrabold text-text font-heading">{displayName}</h1>
             </div>
           </div>
           {shop.address_raw && <p className="text-text-muted mt-1">{shop.address_raw}</p>}
@@ -175,7 +229,7 @@ export default async function ShopPage({ params }: Props) {
               <a
                 href={buildWhatsAppUrl(
                   shop.whatsapp_number,
-                  tr.whatsapp_message_shop(shop.name ?? '', new URL(siteUrl).hostname)
+                  tr.whatsapp_message_shop(displayName, new URL(siteUrl).hostname)
                 )}
                 target="_blank"
                 rel="noopener noreferrer"

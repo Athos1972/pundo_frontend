@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "lint:i18n": "tsx scripts/check-i18n-parity.ts",
+    "lint:mdx-links": "tsx scripts/check-mdx-links.ts",
+    "fix:mdx-links": "tsx scripts/fix-mdx-links.ts",
     "build:analyze": "ANALYZE=true next build",
     "guides:optimize": "tsx scripts/optimize-guide-images.ts",
     "seo:audit": "tsx scripts/seo-audit.ts",

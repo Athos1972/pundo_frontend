@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { getShop, searchProducts, getShopOffers, getRelatedShops } from '@/lib/api'
+import { buildShopPin, getWeekdayDescriptions, getSpecialDays } from '@/lib/shop-opening-hours'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
@@ -89,6 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ...(og.other ? { other: og.other } : {}),
     }
   } catch {
+    // TODO(B5900-006): expliziter „vollständig-genug"-Titel/robots statt generischem Fallback
     return { title: 'Shop' }
   }
 }
@@ -128,9 +130,9 @@ export default async function ShopPage({ params }: Props) {
   const charityAggregate = (charityVotesResult as { aggregates?: { attribute_type: string; vote_count: number; my_value: number | null }[] } | null)
     ?.aggregates?.find((a) => a.attribute_type === 'charity') ?? null
 
-  const pins = shop.location
-    ? [{ id: shop.id, name: shop.name ?? 'Shop', lat: shop.location.lat, lng: shop.location.lng }]
-    : []
+  const pins = buildShopPin(shop)
+  const weekdayLines = getWeekdayDescriptions(shop.opening_hours_raw)
+  const specialDays = getSpecialDays(shop.opening_hours_raw)
 
   // Derive city from address (best-effort)
   const cityHint = shop.address_raw?.split(',').at(-1)?.trim() ?? null
@@ -291,9 +293,9 @@ export default async function ShopPage({ params }: Props) {
         {(shop.opening_hours_raw || shop.opening_hours) && (
           <div className="bg-surface border border-border rounded-xl p-4">
             <h2 className="font-bold text-sm text-text mb-3 font-heading">{tr.opening_hours}</h2>
-            {shop.opening_hours_raw?.weekdayDescriptions ? (
+            {weekdayLines.length > 0 ? (
               <ul className="space-y-1">
-                {shop.opening_hours_raw.weekdayDescriptions.map((line, i) => (
+                {weekdayLines.map((line, i) => (
                   <li key={i} className="text-sm text-text">{line}</li>
                 ))}
               </ul>
@@ -324,11 +326,11 @@ export default async function ShopPage({ params }: Props) {
                 )}
               </div>
             ) : null}
-            {(shop.opening_hours_raw?.specialDays?.length ?? 0) > 0 && (
+            {specialDays.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border">
                 <p className="text-xs font-semibold text-text-muted mb-1">Sonderöffnungszeiten</p>
                 <ul className="space-y-1">
-                  {shop.opening_hours_raw!.specialDays!.map((day, i) => (
+                  {specialDays.map((day, i) => (
                     <li key={i} className="text-xs text-text-muted flex justify-between">
                       <span>{day.date}</span>
                       <span>{day.isOpen && day.openingHours ? `${day.openingHours.open} – ${day.openingHours.close}` : tr.closed}</span>

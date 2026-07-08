@@ -69,7 +69,13 @@ describe('parseCatalog — Seed-Datei', () => {
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
     // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
     // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    expect(entries).toHaveLength(29)
+    // Updated 2026-07-08 (e2e-tester, RCA): count had drifted stale — CRM Stufe 2 added
+    // admin-crm-contact-lifecycle + admin-crm-needs-review (2 entries) without updating this
+    // assertion (pre-existing, unrelated to the Ahrefs SEO-remediation batch verified same day —
+    // confirmed via `git log` timestamps: CATALOG.md/this file last touched by cd64a8f/ed091c7,
+    // both before any of the 12 SEO bug-fix commits). +1 more entry added by e2e-tester itself
+    // (shop-city-hub-and-completeness, B5900-006/B5900-007 journey). New total: 29 + 2 + 1 = 32.
+    expect(entries).toHaveLength(32)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -82,9 +88,13 @@ describe('parseCatalog — Seed-Datei', () => {
     //             + cookie-consent-flow, reactive-language-switch (P1, added 2026-05-31)
     //             + shop-owner-admin-approval-flow (approved, added 2026-06-05)
     //             + shop-owner-self-deactivate (implemented, added 2026-06-05)
+    //             + admin-crm-contact-lifecycle, admin-crm-needs-review (implemented, CRM Stufe 2)
+    // Updated 2026-07-08 (e2e-tester, RCA): 12 -> 14 (2 CRM Stufe 2 P1 journeys added without
+    // updating this assertion; not caused by the Ahrefs SEO-remediation batch, see above).
+    // First alphabetically among P1 is now admin-crm-contact-lifecycle (status: implemented).
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    expect(p1Entries.length).toBe(12)
-    expect(p1Entries[0].status).toBe('implemented') // shop-admin-offers is first alphabetically
+    expect(p1Entries.length).toBe(14)
+    expect(p1Entries[0].status).toBe('implemented') // admin-crm-contact-lifecycle is first alphabetically
   })
 
   it('shop-owner-lifecycle hat korrekte id und touches-modules', () => {
@@ -397,7 +407,9 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
     // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
     // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    expect(entries).toHaveLength(29)
+    // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the test above — 29 + 2
+    // (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
+    expect(entries).toHaveLength(32)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -420,7 +432,9 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
     // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
     // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    expect(entries).toHaveLength(29)
+    // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the first test in this
+    // describe block — 29 + 2 (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
+    expect(entries).toHaveLength(32)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

@@ -7,12 +7,14 @@ import { t } from '@/lib/translations'
 import { truncateTitle } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
+import { getImageMeta, hasImageMeta } from '@/lib/guide-images'
 import { localePath, buildHreflang } from '@/lib/routing'
 import { mdxComponents } from '@/components/guides/mdx-components'
 import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
 import { GuideCard } from '@/components/guides/GuideCard'
 import { BackButton } from '@/components/ui/BackButton'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { buildArticleSchema, safeJson } from '@/lib/structured-data'
 
 interface Props {
   params: Promise<{ lang: string; slug: string }>
@@ -41,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale: lang,
     siteName: 'Pundo',
     image: { url: ogImageUrl, width: 1200, height: 630, alt: title },
-    publishedTime: (guide.meta as { date?: string }).date,
+    publishedTime: guide.meta.date,
   })
 
   return {
@@ -91,29 +93,38 @@ export default async function GuideDetailPage({ params }: Props) {
     .filter((g) => g.category === meta.category && g.slug !== slug)
     .slice(0, 2)
 
+  const siteUrl = 'https://pundo.cy'
+  const canonicalUrl = `${siteUrl}/${lang}/guides/${slug}`
+
+  // image: Hero-Bild wenn vorhanden (dieselbe Quelle wie <GuideHeroImage>),
+  // sonst Brand-Fallback (identisch zum OG-Fallback in generateMetadata).
+  const heroWidths = meta.hero_alt && hasImageMeta(`${slug}/hero`)
+    ? getImageMeta(`${slug}/hero`).widths
+    : null
+  const articleImage = heroWidths
+    ? `${siteUrl}/images/guides/${slug}-hero-${heroWidths[heroWidths.length - 1]}.webp`
+    : `${siteUrl}/og/shop-fallback-default.jpg`
+
+  const articleSchema = buildArticleSchema({
+    title: meta.title,
+    description: meta.description,
+    lang,
+    canonicalUrl,
+    image: articleImage,
+    datePublished: meta.date,
+    dateModified: meta.updated ?? meta.date,
+    siteUrl,
+  })
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: meta.title,
-            description: meta.description,
-            inLanguage: lang,
-            author: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
-            publisher: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
-            breadcrumb: {
-              '@type': 'BreadcrumbList',
-              itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Guides', item: 'https://pundo.cy/guides' },
-                { '@type': 'ListItem', position: 2, name: meta.title },
-              ],
-            },
-          }),
-        }}
+        dangerouslySetInnerHTML={{ __html: safeJson(articleSchema) }}
       />
+      {/* breadcrumb intentionally omitted from Article schema — standalone
+          <Breadcrumb> component below emits a correct, separate BreadcrumbList
+          schema with absolute URLs (AC-2 fix, analog Blog page). */}
       <Breadcrumb items={[
         { label: tr.home, href: localePath(lang, '/') },
         { label: tr.nav_guides, href: localePath(lang, '/guides') },

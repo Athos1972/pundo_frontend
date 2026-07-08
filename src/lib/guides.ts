@@ -15,6 +15,8 @@ export type GuideMeta = {
   hero_alt?: string // when set + manifest has <slug>/hero, page template renders hero automatically
   featured?: boolean // when true + hero_alt set, rendered as full-width hero above the grid
   tags?: string[] // optional taxonomy tags, e.g. ['charity']
+  date?: string // optional, ISO 8601 (YYYY-MM-DD) — first publication, maps to Article.datePublished
+  updated?: string // optional, ISO 8601 — last content change, maps to Article.dateModified (falls back to date)
 }
 
 export type GuideContent = {
@@ -26,9 +28,14 @@ const GUIDES_DIR = path.join(process.cwd(), 'content', 'guides')
 
 export function getGuideSlugs(): string[] {
   if (!fs.existsSync(GUIDES_DIR)) return []
-  return fs.readdirSync(GUIDES_DIR).filter((entry) =>
-    fs.statSync(path.join(GUIDES_DIR, entry)).isDirectory()
-  )
+  return fs.readdirSync(GUIDES_DIR).filter((entry) => {
+    // Underscore-prefixed entries are system/asset dirs (e.g. `_raw/` holds
+    // unoptimized source images, `_image-manifest.json` is metadata) — never
+    // real guide content. Checked before statSync to skip an extra syscall
+    // and to stay robust if such an entry is ever a symlink/special file.
+    if (entry.startsWith('_')) return false
+    return fs.statSync(path.join(GUIDES_DIR, entry)).isDirectory()
+  })
 }
 
 function readMdxFile(slug: string, lang: string): GuideContent | null {

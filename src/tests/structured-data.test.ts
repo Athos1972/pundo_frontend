@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeJson, buildProductSchema, buildLocalBusinessSchema, buildOrganizationSchema, buildWebSiteSchema } from '@/lib/structured-data'
+import { safeJson, buildProductSchema, buildLocalBusinessSchema, buildOrganizationSchema, buildWebSiteSchema, buildArticleSchema } from '@/lib/structured-data'
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 
 const SITE_URL = 'https://pundo.cy'
@@ -308,6 +308,97 @@ describe('buildOrganizationSchema', () => {
     expect(json).not.toContain('<')
     expect(json).not.toContain('>')
     expect(JSON.parse(json)['@type']).toBe('Organization')
+  })
+})
+
+describe('buildArticleSchema', () => {
+  const baseInput = {
+    title: 'Registering a Car in Cyprus',
+    description: 'Step-by-step guide to vehicle registration.',
+    lang: 'en',
+    canonicalUrl: 'https://pundo.cy/en/guides/car-registration',
+    image: 'https://pundo.cy/images/guides/car-registration-hero-1600.webp',
+    siteUrl: SITE_URL,
+  }
+
+  it('sets @context and @type correctly', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['@context']).toBe('https://schema.org')
+    expect(schema['@type']).toBe('Article')
+  })
+
+  it('maps title/description/lang to headline/description/inLanguage', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['headline']).toBe(baseInput.title)
+    expect(schema['description']).toBe(baseInput.description)
+    expect(schema['inLanguage']).toBe('en')
+  })
+
+  it('includes image', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['image']).toBe(baseInput.image)
+  })
+
+  it('includes mainEntityOfPage pointing to the canonical URL', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['mainEntityOfPage']).toEqual({
+      '@type': 'WebPage',
+      '@id': baseInput.canonicalUrl,
+    })
+  })
+
+  it('includes author as Organization', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['author']).toEqual({ '@type': 'Organization', name: 'Pundo', url: SITE_URL })
+  })
+
+  it('includes publisher as Organization with logo', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['publisher']).toEqual({
+      '@type': 'Organization',
+      name: 'Pundo',
+      url: SITE_URL,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/brands/pundo/logo.png` },
+    })
+  })
+
+  it('includes datePublished and dateModified when set', () => {
+    const schema = buildArticleSchema({
+      ...baseInput,
+      datePublished: '2026-05-17',
+      dateModified: '2026-06-01',
+    })
+    expect(schema['datePublished']).toBe('2026-05-17')
+    expect(schema['dateModified']).toBe('2026-06-01')
+  })
+
+  it('omits datePublished and dateModified when not set', () => {
+    const schema = buildArticleSchema(baseInput)
+    expect(schema['datePublished']).toBeUndefined()
+    expect(schema['dateModified']).toBeUndefined()
+  })
+
+  it('never includes a nested breadcrumb (AC-2 guard)', () => {
+    const schema = buildArticleSchema({
+      ...baseInput,
+      datePublished: '2026-05-17',
+      dateModified: '2026-05-17',
+    })
+    expect(schema['breadcrumb']).toBeUndefined()
+  })
+
+  it('produces XSS-safe, re-parsable JSON via safeJson with identical shape', () => {
+    const schema = buildArticleSchema({
+      ...baseInput,
+      datePublished: '2026-05-17',
+      dateModified: '2026-06-01',
+    })
+    const json = safeJson(schema)
+    expect(json).not.toContain('<')
+    expect(json).not.toContain('>')
+    const parsed = JSON.parse(json)
+    expect(parsed).toEqual(schema)
+    expect(parsed['breadcrumb']).toBeUndefined()
   })
 })
 

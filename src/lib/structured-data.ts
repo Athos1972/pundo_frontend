@@ -180,6 +180,43 @@ export function buildFAQSchema(
   }
 }
 
+export function buildArticleSchema(input: {
+  title: string
+  description: string
+  lang: string
+  canonicalUrl: string
+  image: string
+  datePublished?: string
+  dateModified?: string
+  siteUrl: string
+}): Record<string, unknown> {
+  const { title, description, lang, canonicalUrl, image, datePublished, dateModified, siteUrl } = input
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description,
+    inLanguage: lang,
+    image,
+    ...(datePublished ? { datePublished } : {}),
+    ...(dateModified ? { dateModified } : {}),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': canonicalUrl,
+    },
+    author: { '@type': 'Organization', name: 'Pundo', url: siteUrl },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Pundo',
+      url: siteUrl,
+      logo: { '@type': 'ImageObject', url: `${siteUrl}/brands/pundo/logo.png` },
+    },
+    // KEIN breadcrumb — separates <Breadcrumb>-Component liefert bereits ein
+    // eigenständiges, korrektes BreadcrumbList-Schema (AC-2, analog Blog).
+  }
+}
+
 export function buildLocalBusinessSchema(
   shop: ShopDetailResponse,
   siteUrl: string,

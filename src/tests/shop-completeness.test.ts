@@ -90,6 +90,19 @@ describe('isShopComplete', () => {
     })
     expect(isShopComplete(shop)).toBe(false)
   })
+
+  it('B5900-007: no image, no description, but product_count > 0 (with a real address) → complete', () => {
+    // Real-world case surfaced by the E2E audit against prod data: shops from
+    // automated import typically have neither a photo nor a description, but
+    // do have a non-zero product_count. Only ~0.12% of real shops satisfied
+    // the old (image OR description)-only C3 — this is the dominant shape.
+    const shop = makeShop({
+      images: null,
+      description: null,
+      product_count: 3,
+    })
+    expect(isShopComplete(shop)).toBe(true)
+  })
 })
 
 describe('slugToDisplayName', () => {

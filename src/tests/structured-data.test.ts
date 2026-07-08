@@ -214,6 +214,9 @@ describe('buildLocalBusinessSchema', () => {
     last_scraped: '2026-04-01T10:00:00Z',
     top_products: [],
     spoken_languages: ['en', 'el'],
+    city: 'Larnaca',
+    postal_code: '6023',
+    country_code: 'CY',
   }
 
   it('sets @context and @type correctly', () => {
@@ -228,12 +231,82 @@ describe('buildLocalBusinessSchema', () => {
     expect(schema['url']).toBe('https://pundo.cy/shops/petshop-larnaca')
   })
 
-  it('includes address', () => {
+  it('includes address with full PostalAddress (streetAddress, addressLocality, postalCode, addressCountry)', () => {
     const schema = buildLocalBusinessSchema(baseShop, SITE_URL)
     expect(schema['address']).toEqual({
       '@type': 'PostalAddress',
       streetAddress: 'Main Street 1, Larnaca',
+      addressLocality: 'Larnaca',
+      postalCode: '6023',
+      addressCountry: 'CY',
     })
+  })
+
+  it('falls back addressCountry to "CY" when country_code is undefined', () => {
+    const shop = { ...baseShop, country_code: undefined }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    const address = schema['address'] as Record<string, unknown>
+    expect(address['addressCountry']).toBe('CY')
+  })
+
+  it('falls back addressCountry to "CY" when country_code is empty string', () => {
+    const shop = { ...baseShop, country_code: '' }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    const address = schema['address'] as Record<string, unknown>
+    expect(address['addressCountry']).toBe('CY')
+  })
+
+  it('omits address entirely when address_raw is null (AC-2 edge case)', () => {
+    const shop = { ...baseShop, address_raw: null }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    expect(schema['address']).toBeUndefined()
+  })
+
+  it('omits address entirely when address_raw is empty string', () => {
+    const shop = { ...baseShop, address_raw: '' }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    expect(schema['address']).toBeUndefined()
+  })
+
+  it('omits addressLocality and postalCode when city/postal_code are null, but keeps streetAddress and addressCountry', () => {
+    const shop = { ...baseShop, city: null, postal_code: null }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    expect(schema['address']).toEqual({
+      '@type': 'PostalAddress',
+      streetAddress: 'Main Street 1, Larnaca',
+      addressCountry: 'CY',
+    })
+  })
+
+  it('omits addressLocality when city is an empty string (truthy check)', () => {
+    const shop = { ...baseShop, city: '' }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    const address = schema['address'] as Record<string, unknown>
+    expect(address['addressLocality']).toBeUndefined()
+    expect(address['streetAddress']).toBe('Main Street 1, Larnaca')
+  })
+
+  it('omits postalCode when postal_code is an empty string (truthy check)', () => {
+    const shop = { ...baseShop, postal_code: '' }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    const address = schema['address'] as Record<string, unknown>
+    expect(address['postalCode']).toBeUndefined()
+  })
+
+  it('remains a valid schema when shop has no address_raw, location, or images (AC-2 combined edge case)', () => {
+    const shop = {
+      ...baseShop,
+      address_raw: null,
+      location: null,
+      images: null,
+    }
+    const schema = buildLocalBusinessSchema(shop, SITE_URL)
+    expect(schema['address']).toBeUndefined()
+    expect(schema['geo']).toBeUndefined()
+    expect(schema['image']).toBeUndefined()
+    expect(schema['name']).toBe('PetShop Larnaca')
+    expect(schema['url']).toBe('https://pundo.cy/shops/petshop-larnaca')
+    expect(schema['@type']).toBe('LocalBusiness')
   })
 
   it('includes geo coordinates', () => {

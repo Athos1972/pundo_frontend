@@ -234,7 +234,15 @@ export function buildLocalBusinessSchema(
     url: `${siteUrl}/shops/${shop.slug}`,
     ...(image ? { image } : {}),
     ...(shop.address_raw
-      ? { address: { '@type': 'PostalAddress', streetAddress: shop.address_raw } }
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: shop.address_raw,
+            ...(shop.city ? { addressLocality: shop.city } : {}),
+            ...(shop.postal_code ? { postalCode: shop.postal_code } : {}),
+            addressCountry: shop.country_code || 'CY',
+          },
+        }
       : {}),
     ...(shop.phone ? { telephone: shop.phone } : {}),
     ...(shop.location

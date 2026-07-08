@@ -62,6 +62,11 @@ export interface ShopListItem {
   phone: string | null; whatsapp_number: string | null; whatsapp_url: string | null; website: string | null;
   opening_hours: Record<string, unknown> | null;
   status: string; product_count: number; last_scraped: string | null;
+  // B6400-007: strukturierte Adressfelder für vollständiges PostalAddress-Schema (LocalBusiness).
+  // Optional für Backward-Compat mit älteren API-Ständen / Test-Mocks.
+  city?: string | null;
+  postal_code?: string | null;
+  country_code?: string | null;
   // Enriched fields (backend v2) — optional for backward compat with test mocks
   review_stats?: { average_stars: number; total_count: number } | null;
   shop_type?: ShopTypeRead | null;

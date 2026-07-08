@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = getSiteUrl()
   return {
     title: `${tr.page_title_help} — pundo`,
+    description: tr.meta_desc_help,
     alternates: {
       canonical: `${siteUrl}/${lang}/help`,
       languages: buildHreflang(siteUrl, '/help'),

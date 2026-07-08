@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = brand.meta.siteUrl
   return {
     title: `${tr.page_title_terms} — ${brand.name}`,
+    description: tr.meta_desc_terms,
     alternates: {
       canonical: `${siteUrl}/${lang}/legal/terms`,
       languages: buildHreflang(siteUrl, '/legal/terms'),

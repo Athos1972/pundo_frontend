@@ -7,6 +7,8 @@ import type { Lang } from '@/lib/lang'
 import { getSiteUrl } from '@/lib/seo'
 import { buildHreflang } from '@/lib/routing'
 import { t } from '@/lib/translations'
+import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -28,6 +30,26 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   const { lang } = await params as { lang: Lang }
   const tr = t(lang)
+  const brand = await getBrandFromHeaders()
+  const ogImageUrl = brand.assets.ogImage.startsWith('http')
+    ? brand.assets.ogImage
+    : `${brand.meta.siteUrl}${brand.assets.ogImage}`
+
+  const og = buildCompleteOpenGraph({
+    title: tr.search_page_title,
+    description: tr.search_page_description,
+    url: `${siteUrl}/${lang}/search`,
+    type: 'website',
+    locale: lang,
+    siteName: brand.name,
+    image: {
+      url: ogImageUrl,
+      width: 1200,
+      height: 630,
+      alt: brand.name,
+    },
+  })
+
   return {
     title: { absolute: tr.search_page_title },
     description: tr.search_page_description,
@@ -35,12 +57,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       canonical: `${siteUrl}/${lang}/search`,
       languages: buildHreflang(siteUrl, '/search'),
     },
-    openGraph: {
-      title: tr.search_page_title,
-      description: tr.search_page_description,
-      url: `${siteUrl}/${lang}/search`,
-      type: 'website',
-    },
+    openGraph: og.openGraph,
+    twitter: og.twitter,
     robots: { index: true, follow: true },
   }
 }

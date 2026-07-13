@@ -35,7 +35,7 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-leaflet": "^5.0.0",
-    "yet-another-react-lightbox": "^3.32.0"
+    "yet-another-react-lightbox": "^3.32.1"
   },
   "devDependencies": {
     "@csstools/postcss-cascade-layers": "^6.0.0",

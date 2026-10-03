@@ -44,6 +44,7 @@
 | [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
+| [admin-catalog-review](admin-catalog-review.spec.ts) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (6/6, re-verified 2026-07-16 nach Test-Infra-Fix + Selector-Fix, siehe 04-test-report.md Re-Verifikation) |
 
 ## Smoketest Coverage
 

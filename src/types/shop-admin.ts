@@ -381,3 +381,63 @@ export interface OnboardingSubmitResponse {
   shop_id: number
   status: string
 }
+
+// ─── Catalog Review (F5980 Autonomous Shop Commerce Brain) ───────────────────
+// Mirrors pundo_main_backend/ingestor/schemas/catalog_case.py 1:1.
+// Status enum is lowercase snake_case (backend §2.1 design deviation).
+
+export type CatalogCaseStatus =
+  | 'consent_given' | 'intake_submitted' | 'enrichment_in_progress'
+  | 'enrichment_done' | 'awaiting_owner_review' | 'published'
+  | 'rejected' | 'rework_in_progress' | 'failed'
+
+export interface CatalogCaseListItem {
+  id: number
+  shop_id: number
+  status: CatalogCaseStatus
+  item_count: number
+  completed_item_count: number
+  completeness_pct: number           // 0..1 (Backend: completed/item_count)
+  sla_deadline_at: string            // ISO datetime
+  consent_given_at: string
+  rework_cycle_count: number
+  created_at: string
+}
+
+export interface CatalogCaseListResponse {
+  cases: CatalogCaseListItem[]
+}
+
+export interface CatalogCaseSampleItem {
+  catalog_case_item_id: number
+  item_id: number | null
+  raw_name: string | null
+  raw_description: string | null
+  raw_category_path: string | null
+  names: Record<string, string> | null           // Dict — alle Sprachen (Vorher/Nachher)
+  descriptions: Record<string, string> | null
+  category_id: number | null
+  category_path: string | null
+  attributes: Record<string, unknown> | null
+  status: string
+  last_error: string | null
+}
+
+export interface CatalogCaseSampleResponse {
+  catalog_case_id: number
+  sample: CatalogCaseSampleItem[]
+  sample_size_requested: number
+  sample_size_returned: number
+}
+
+export interface CatalogCaseApproveResponse {
+  id: number
+  status: CatalogCaseStatus
+  published_at: string
+}
+
+export interface CatalogCaseRejectResponse {
+  id: number
+  status: CatalogCaseStatus
+  rework_cycle_count: number
+}

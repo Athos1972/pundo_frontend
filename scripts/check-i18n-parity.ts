@@ -7,6 +7,7 @@ import { shopAdminAuthTranslationsMap } from '../src/lib/i18n/shop-admin-auth'
 import { shopAdminCatalogTranslationsMap } from '../src/lib/i18n/shop-admin-catalog'
 import { shopAdminOffersTranslationsMap } from '../src/lib/i18n/shop-admin-offers'
 import { shopAdminCommonTranslationsMap } from '../src/lib/i18n/shop-admin-common'
+import { shopAdminCatalogReviewTranslationsMap } from '../src/lib/i18n/shop-admin-catalog-review'
 import { commonTranslations } from '../src/lib/i18n/common'
 import { authTranslations } from '../src/lib/i18n/auth'
 import { searchTranslations } from '../src/lib/i18n/search'
@@ -33,6 +34,7 @@ const namespaces: { name: string; obj: AnyTranslationMap }[] = [
   { name: 'shop-admin-catalog', obj: shopAdminCatalogTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-offers', obj: shopAdminOffersTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-common', obj: shopAdminCommonTranslationsMap as unknown as AnyTranslationMap },
+  { name: 'shop-admin-catalog-review', obj: shopAdminCatalogReviewTranslationsMap as unknown as AnyTranslationMap },
 ]
 
 const LANGS = ['de', 'ru', 'el', 'ar', 'he'] as const

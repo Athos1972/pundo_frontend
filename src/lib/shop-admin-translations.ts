@@ -8,11 +8,13 @@ import { shopAdminAuthTranslationsMap } from './i18n/shop-admin-auth'
 import { shopAdminCatalogTranslationsMap } from './i18n/shop-admin-catalog'
 import { shopAdminOffersTranslationsMap } from './i18n/shop-admin-offers'
 import { shopAdminCommonTranslationsMap } from './i18n/shop-admin-common'
+import { shopAdminCatalogReviewTranslationsMap } from './i18n/shop-admin-catalog-review'
 
 export { tShopAdminAuth, type ShopAdminAuthTranslations } from './i18n/shop-admin-auth'
 export { tShopAdminCatalog, type ShopAdminCatalogTranslations } from './i18n/shop-admin-catalog'
 export { tShopAdminOffers, type ShopAdminOffersTranslations } from './i18n/shop-admin-offers'
 export { tShopAdminCommon, type ShopAdminCommonTranslations } from './i18n/shop-admin-common'
+export { tShopAdminCatalogReview, type ShopAdminCatalogReviewTranslations } from './i18n/shop-admin-catalog-review'
 
 type Lang = 'en' | 'de' | 'el' | 'ru' | 'ar' | 'he'
 
@@ -20,7 +22,8 @@ type MergedLang =
   typeof shopAdminAuthTranslationsMap.en &
   typeof shopAdminCatalogTranslationsMap.en &
   typeof shopAdminOffersTranslationsMap.en &
-  typeof shopAdminCommonTranslationsMap.en
+  typeof shopAdminCommonTranslationsMap.en &
+  typeof shopAdminCatalogReviewTranslationsMap.en
 
 function mergeLang(lang: Lang): MergedLang {
   return {
@@ -28,6 +31,7 @@ function mergeLang(lang: Lang): MergedLang {
     ...shopAdminCatalogTranslationsMap[lang],
     ...shopAdminOffersTranslationsMap[lang],
     ...shopAdminCommonTranslationsMap[lang],
+    ...shopAdminCatalogReviewTranslationsMap[lang],
   } as MergedLang
 }
 

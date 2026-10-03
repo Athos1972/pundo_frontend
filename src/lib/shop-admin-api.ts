@@ -18,6 +18,8 @@ import type {
   ApiKey,
   ImportStatus,
   PriceUnitOption,
+  CatalogCaseListResponse,
+  CatalogCaseSampleResponse,
 } from '@/types/shop-admin'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
@@ -201,6 +203,22 @@ export async function getWebsiteStatus(): Promise<WebsiteStatusResponse | null> 
 // Client-side logo uploads go directly through fetch('/api/shop-admin/shop/logo')
 // in LogoUpload.tsx — same pattern as ImportPanel.tsx.
 // The catch-all proxy at /api/shop-admin/[...path]/route.ts handles auth attachment.
+
+// ─── Catalog Review (F5980) ────────────────────────────────────────────────────
+
+/** GET /api/v1/shop-owner/catalog-cases — list catalog cases for the authenticated shop. */
+export async function getCatalogCases(lang: string): Promise<CatalogCaseListResponse> {
+  return apiFetchAdmin<CatalogCaseListResponse>('/catalog-cases', lang)
+}
+
+/** GET /api/v1/shop-owner/catalog-cases/{id}/sample?n=10 — random Vorher/Nachher sample. */
+export async function getCatalogCaseSample(
+  lang: string, caseId: number, n = 10,
+): Promise<CatalogCaseSampleResponse> {
+  return apiFetchAdmin<CatalogCaseSampleResponse>(
+    `/catalog-cases/${caseId}/sample?n=${n}`, lang,
+  )
+}
 
 // Categories are shared data needed for admin product forms.
 // Fetched via the public /categories endpoint (no auth required).

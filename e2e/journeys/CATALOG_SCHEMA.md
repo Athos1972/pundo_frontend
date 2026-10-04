@@ -190,7 +190,7 @@ Der e2e-tester zeigt pro Testlauf **maximal 3** neue Vorschläge. Priorisierung:
 | +1 | Heuristik H4 (Write-to-Read) |
 
 Gleichstand: alphabetisch nach vorgeschlagener `id`.
-Überschuss: wird in `.claude/skills/e2e-tester/.journey_backlog` (eine ID pro Zeile) geparkt.
+Überschuss: wird in `.claude/playbooks/state/e2e-tester.journey_backlog` (eine ID pro Zeile) geparkt.
 
 ---
 

@@ -1,30 +1,8 @@
----
-name: architect
-description: >
-  Architektur-Entscheidungen, Komponenten-Design, Routing-Strategien und
-  Erweiterungen für pundo_frontend. Wird aktiviert bei: neue Seite/Route hinzufügen,
-  Komponenten-Hierarchie designen, Datenfluss planen, API-Integration entwerfen,
-  Performance-Engpass analysieren, Server vs. Client Component entscheiden,
-  Schnittstellendesign zum Backend, Technologie-Entscheidung, Architektur reviewen,
-  wo soll ich X implementieren.
-model: opus
-tools:
-  - Read
-  - Bash
-  - Glob
-  - Grep
-  - Write
-  - Edit
----
+# Playbook architect — pundo_frontend
 
-# Architect – pundo_frontend
+Gelesen vom Agent `architect` (~/.claude/agents/architect.md). Kettenprotokoll und Workflow-Regeln stehen dort und in Conventions § Spec-Workflow; hier steht nur Repo-Wissen.
 
-Du bist der leitende Architekt dieses Frontend-Systems. Du kennst jede Schicht,
-jeden Datenfluss und jeden Trade-off. Dein Job: fundierte Entscheidungen treffen,
-Konsequenzen durchdenken, konkrete Umsetzungspfade vorschlagen.
-
-Kein Bullshit, keine generischen Empfehlungen. Alles bezieht sich auf dieses
-spezifische Repo.
+Alles hier bezieht sich auf dieses Repo — keine generischen Empfehlungen.
 
 ---
 
@@ -52,7 +30,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 
 | Inhalt | Wo | Regel |
 |---|---|---|
-| Feature-Specs (01–04-*.md) | **Vault** `/Pundo-Plattform/20 Features/<FG>/<Feature>/specs/` | designer/architect/coder/e2e-tester schreiben hierhin |
+| Feature-Specs (01–04-*.md) | **Vault** (Pfade: siehe Agent / Conventions) | designer/architect/coder/e2e-tester schreiben hierhin |
 | Feature-Docs (FGn/_index.md, Feature.md) | **Vault** | Architektur-Entscheidungen, Trade-offs, Geschichte, Cross-Repo-Kontext |
 | Bug-Dateien, Journey-Catalog | **Vault** | e2e-tester führt Register |
 | Ports, Test-Befehle, Env-Vars | **`/docs` im Repo** | Muss im selben PR wie Codeänderungen aktualisiert werden |
@@ -62,13 +40,13 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 
 Ports und Test-Befehle gehören in `/docs` statt nur in den Vault — im Vault veralten sie sofort und stehen dem Operator nicht zur Verfügung. Architektur-Entscheidungen und Feature-Geschichte gehören in den Vault statt nur in `/docs`, weil sie dort mit Specs und Bug-Kontext verknüpft sind.
 
-Wenn du `02-architecture.md` schreibst und dabei Ports, Befehle oder Komponentenstruktur änderst: tragt den `docs/architecture.md`-Update als Task in `03-implementation.md` ein, damit der Coder ihn im selben PR erledigt.
+Wenn du `02-architecture.md` schreibst und dabei Ports, Befehle oder Komponentenstruktur änderst: trag den `docs/architecture.md`-Update als Task in die Task-Liste von `02-architecture.md` ein, damit der Coder ihn im selben PR erledigt.
 
 ---
 
 ## Modulstruktur
 
-Kein Baum im Skill (veraltet zu schnell) — lies den echten Code und `docs/architecture.md` (Abschnitte „Route-Gruppen“, „Modulstruktur“).
+Kein Baum im Playbook (veraltet zu schnell) — lies den echten Code und `docs/architecture.md` (Abschnitte „Route-Gruppen“, „Modulstruktur“).
 
 Orientierung:
 - Route-Groups unter `src/app/`: `(customer)/[lang]/…` (öffentliche Seiten mit `/{lang}/`-Präfix, z. B. `products/[slug]`, `shops/[slug]`, `search`, `guides`, `blog`), `(customer)/account`, `(customer)/auth`, `(shop-admin)/shop-admin`, `(system-admin)/admin`, `(oauth)`, `crm`, `api`
@@ -92,12 +70,12 @@ Browser → /brand_logos/:path*  →  http://localhost:8500/brand_logos/:path*
 ### Backend-Repo
 Falls eine Anforderung Backend-Änderungen erfordert:
 - **Pfad:** `/Users/bb_studio_2025/dev/github/pundo_main_backend`
-- **Backend-Skills:** `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+- **Backend-Playbooks:** `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/playbooks/`
 - Immer explizit kommunizieren: „Für dieses Feature braucht es Backend-Änderungen: [was genau]"
 
 ### Backend-Bedarf: Marker statt Selbststart
 
-Wenn `02-architecture.md` Backend-, Gateway- oder Worker-Anforderungen enthält: einen Abschnitt „Backend-Anforderungen“ als Marker in `02-architecture.md` schreiben und ihn im Handoff nennen. Den Backend-Architect startet der `/coordinator` oder Bernhard — nicht dieser Skill. Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“ (Cross-Repo).
+Marker-Format und Ablauf: siehe Agent (Abschnitt „Cross-repo needs“) und Conventions § Spec-Workflow.
 
 **Erkennungsmerkmale für Backend-Änderungen** (mindestens eines trifft zu):
 - Neue API-Endpoints nötig
@@ -159,7 +137,7 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 ## Routing-Architektur (Next.js App Router)
 
 ### Existierende Routen
-Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppen“). Keine Routentabelle im Skill pflegen.
+Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppen“). Keine Routentabelle im Playbook pflegen.
 
 ### Neue Routen hinzufügen
 1. Ordner in der passenden Route-Group anlegen — Customer-Pages unter `src/app/(customer)/[lang]/` (Links via `localePath()`)
@@ -220,7 +198,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 
 ### Neue Sprache
 1. Sprachcode in `src/lib/lang.ts` (inkl. `RTL_LANGS`, falls RTL) und `src/lib/translations.ts` ergänzen
-3. Backend-Team informieren (neue Übersetzungs-Batch nötig)
+2. Backend-Team informieren (neue Übersetzungs-Batch nötig)
 
 ### Backend-Endpunkt nutzen (neuer)
 1. Interface in `src/types/api.ts`
@@ -252,7 +230,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
    - (a) Validierte Designer-Vorschläge (korrekt / mit Korrekturbedarf)
    - (b) Drift-Fixes (falls vorhanden)
 
-6. **Keine Rückfrage im Lauf:** CATALOG.md nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und im Handoff unter „Entscheidungen für Bernhard“ bündeln (siehe Conventions.md, „Rückfragen“).
+6. CATALOG.md nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und unter „Entscheidungen für Bernhard“ bündeln.
 
 ### Was der Architect nicht darf
 

@@ -1,38 +1,17 @@
----
-name: coder
-description: >
-  Feature-Implementierung mit vollständiger Unit-Test-Verantwortung für
-  pundo_frontend. Implementiert Code-Änderungen in TypeScript/React/Next.js,
-  schreibt Unit-Tests (Vitest) für alle geänderten/neuen Code-Pfade, prüft
-  TypeScript-Fehler und ESLint, übergibt strukturiert an /e2e-tester.
-  Aktivieren bei: Feature implementieren, Bug fixen, Refactoring,
-  Komponente erweitern, Code schreiben.
-model: sonnet
-tools:
-  - Read
-  - Bash
-  - Glob
-  - Grep
-  - Write
-  - Edit
-  - Agent
----
+# Playbook coder — pundo_frontend
 
-# Coder – pundo_frontend
+Gelesen vom Agent `coder` (~/.claude/agents/coder.md). Kettenprotokoll und Workflow-Regeln stehen dort und in Conventions § Spec-Workflow; hier steht nur Repo-Wissen.
 
-Du bist der implementierende Entwickler dieses Frontend-Systems. Du schreibst
-korrekten, getesteten TypeScript/React/Next.js-Code und übergibst erst dann an
-den E2E-Tester, wenn deine Unit-Tests grün sind und TypeScript fehlerfrei kompiliert.
+Ziel: korrekter, getesteter TypeScript/React/Next.js-Code. Handoff an den e2e-tester erst, wenn die Unit-Tests grün sind und TypeScript fehlerfrei kompiliert.
 
 **Verantwortungsgrenze:**
 - Du bist zuständig für den Code den du schreibst und dessen Unit-Tests.
-- Der /e2e-tester ist zuständig für die Gesamtqualität des Repos.
+- Der e2e-tester ist zuständig für die Gesamtqualität des Repos.
 - Überschneidung ist kein Problem — lieber doppelt geprüft als gar nicht.
 
 **Grundregeln:**
 - Secrets (API-Keys, Passwörter) liest du aus `.env.local`, statt sie im Code zu hardcoden, weil der Code im Repo landet.
 - Keine spekulativen Abstraktionen. Kein Overengineering.
-- Kein Commit, kein Push — Commit-Message im Handoff vorschlagen, Bernhard gibt frei (Push auf `main` = Prod-Deploy). Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
 - RTL über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
 - `AGENTS.md` lesen: die installierte Next.js-Version (siehe `package.json`) hat Breaking Changes — Docs in `node_modules/next/dist/docs/` prüfen.
 - **Test-Umgebung zuerst:** Manuelle Tests und Verifikation immer auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Produktiv (3000/8000) erst nach erfolgreichem Test-Lauf.
@@ -54,7 +33,7 @@ cat package.json | grep '"next"'
 
 ### Bug-Register prüfen (bei jedem Bug-Fix-Auftrag — F8950)
 
-Wenn der /e2e-tester dir Bug-Dateien als Input übergeben hat (Vault-Pfad steht
+Wenn der e2e-tester dir Bug-Dateien als Input übergeben hat (Vault-Pfad steht
 im Handoff-Block des Test-Reports): lies JEDE offene Bug-Datei bevor du Code änderst.
 
 ```
@@ -88,10 +67,10 @@ Lese mindestens:
 3. **Implementieren:** Ändere/ergänze die Source-Files
 4. **Journey-Implementierung:** Katalog prüfen, `approved`-Journeys für diesen Spec implementieren (siehe Abschnitt 1.5)
 5. **Tests schreiben:** Schreibe Unit-Tests (siehe Abschnitt 2)
-5. **Tests laufen lassen:** Alle neuen Tests müssen grün sein
-6. **TypeScript prüfen:** `npx tsc --noEmit` — keine Fehler erlaubt
-7. **Lint prüfen:** `npm run lint` — keine Fehler erlaubt
-8. **Übergeben:** Strukturiertes Protokoll für /e2e-tester
+6. **Tests laufen lassen:** Alle neuen Tests müssen grün sein
+7. **TypeScript prüfen:** `npx tsc --noEmit` — keine Fehler erlaubt
+8. **Lint prüfen:** `npm run lint` — keine Fehler erlaubt
+9. **Handoff** an den e2e-tester (siehe Agent; Frontend-Zusatzangaben siehe Abschnitt 4)
 
 ### Was gehört nicht hierher
 
@@ -370,43 +349,15 @@ bis er grün wird — Abschwächen wäre der klassische Schöntestfall.
 
 ---
 
-## 4. Übergabe-Protokoll an /e2e-tester
+## 4. Frontend-Zusatzangaben in 03-implementation.md
 
-```
-╔══════════════════════════════════════════════════════╗
-║  /coder → /e2e-tester  Übergabe-Protokoll            ║
-╚══════════════════════════════════════════════════════╝
+Format und Pflichtteile von `03-implementation.md` und Handoff-Zeile: siehe Agent. Zusätzlich für dieses Repo:
 
-Feature: <Kurzbeschreibung, 1 Satz>
-
-Geänderte Dateien:
-  - src/components/...     (neu / geändert / gelöscht)
-  - src/lib/...
-  - src/types/...
-  - ...
-
-Neue/geänderte Tests:
-  - src/tests/<name>.test.tsx (<Anzahl> neue Tests)
-  - ...
-
-Unit-Test-Ergebnis: X/X bestanden
-TypeScript: fehlerfrei / X Fehler (mit Begründung)
-ESLint: fehlerfrei / X Warnings
-
-Backend-Änderungen nötig: Ja / Nein
-  Falls Ja: <was genau, welcher Endpunkt>
-  → pundo_main_backend: /architect dann /coder
-
-Journeys implementiert: [IDs oder "keine approved-Journeys für diesen Spec"]
-
-Vorgeschlagene Commit-Message: <type(scope): ...> (nicht committen)
-
-Empfehlung an E2E-Tester:
-  - Welche Seiten/Flows sind besonders relevant?
-  - RTL-Layout (ar, he) gesondert prüfen?
-  - Mobile-Breakpoints testen?
-  - Backend muss laufen für E2E?
-```
+- Neue/geänderte Tests mit Anzahl (`src/tests/<name>.test.tsx (<n> neue Tests)`)
+- Ergebnisse: Unit-Tests X/X, TypeScript (fehlerfrei / Fehler mit Begründung), ESLint (fehlerfrei / Warnings)
+- Backend-Änderungen nötig: Ja / Nein — falls Ja: welcher Endpunkt, was genau (pundo_main_backend braucht eigenen architect/coder-Lauf)
+- Journeys implementiert: IDs oder „keine approved-Journeys für diesen Spec"
+- Empfehlung an den e2e-tester: besonders relevante Seiten/Flows, RTL-Layout (ar, he) gesondert prüfen?, Mobile-Breakpoints?, muss das Backend (8500) laufen?
 
 ---
 
@@ -417,7 +368,6 @@ Empfehlung an E2E-Tester:
 - **Server Component by default:** Erst `'use client'` wenn wirklich nötig.
 - **RTL:** `dir` über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
 - **Keine Secrets:** Kein Hardcoding von API-Keys, URLs, Passwörtern.
-- **Kein Commit/Push:** Bernhard gibt frei (siehe Grundregeln).
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
 - **Dokumentation im selben PR aktualisieren:** Wenn du Ports, Befehle, Env-Vars, Komponentenstruktur oder API-Routing änderst → `docs/architecture.md` oder `docs/e2e-testing.md` im selben PR mitpflegen. Nie "docs später". Operatives Wissen (wie/wo/was) lebt in `/docs`. Design-Entscheidungen (warum) und Feature-Geschichte leben im Vault — die schreibt der Architect.
 - Dokumentation immer auf Letztstand halten README.md

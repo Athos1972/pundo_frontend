@@ -12,7 +12,7 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
-const path = resolve('.claude/skills/e2e-tester/.last_run')
+const path = resolve('.claude/playbooks/state/e2e-tester.last_run')
 let data
 try {
   data = JSON.parse(readFileSync(path, 'utf-8'))

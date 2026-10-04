@@ -142,7 +142,7 @@ Es gibt zwei Zeitmarker:
 
 | Marker | Pfad | Scope | Schreiber |
 |--------|------|-------|-----------|
-| Gesamt-`.last_run` | `.claude/skills/e2e-tester/.last_run` | Gesamt-Repo (git-SHA + Timestamp) | e2e-tester Phase 4 |
+| Gesamt-`.last_run` | `.claude/playbooks/state/e2e-tester.last_run` | Gesamt-Repo (git-SHA + Timestamp) | e2e-tester Phase 4 |
 | Journey-`last-run` | `CATALOG.md` pro Eintrag | Journey-spezifisch (ISO-8601) | e2e-tester Phase 4 (ohne Rückfrage) |
 
 Das ist kein Fehler — beide Marker haben unterschiedliche Scopes und existieren bewusst nebeneinander.
@@ -172,7 +172,7 @@ npx playwright test e2e/journeys/_parser.spec.ts
 Wenn der e2e-tester in einem Lauf mehr als 3 neue Journey-Vorschläge hat, parkt er überschüssige in:
 
 ```
-.claude/skills/e2e-tester/.journey_backlog
+.claude/playbooks/state/e2e-tester.journey_backlog
 ```
 
 Diese werden beim nächsten Lauf erneut geprüft (und ggf. wieder gefiltert).

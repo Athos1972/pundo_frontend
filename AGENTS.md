@@ -22,6 +22,8 @@ Kanonische Regeln (Cross-Repo-Marker, Rückfragen, Verdicts, Datenbanken): Vault
 
 Die Subagent-Definitionen liegen user-level in `~/.claude/agents/`. Repo-Overrides nur wenn nötig in `.claude/agents/`.
 
+Repo-Wissen für die Rollen: `.claude/playbooks/<rolle>.md` (wird von den Agents gelesen).
+
 ---
 
 <!-- BEGIN:nextjs-agent-rules -->
@@ -73,7 +75,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | `pundo_mcp_server` | `/Users/bb_studio_2025/dev/github/pundo_mcp_server` | — | MCP-Server für Claude-Integration |
 
 **Backend** (`pundo_main_backend`):
-- Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+- Backend-Playbooks: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/playbooks/`
 - Falls Backend-Änderungen nötig: explizit benennen und in das Repo wechseln.
 
 **LLM-Gateway** (`pundo_llm_gateway`):
@@ -143,7 +145,7 @@ router.push(localePath(lang as Lang, `/products/${slug}`))
 
 - **Zweck:** Price- und Produktlocator-App — findet Produkte und Dienstleistungen in der Nähe
 - **Stack:** Next.js 16.2.2, React 19, TypeScript, Tailwind CSS 4
-- Backend-Skills: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
+- Backend-Playbooks: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/playbooks/`
 - **Config:** `.env.local` für BACKEND_URL, ALLOWED_DEV_ORIGINS
 - **Repository-Struktur:**
   - `src/app/` — Next.js App Router: Seiten, Layouts, Loading, Error

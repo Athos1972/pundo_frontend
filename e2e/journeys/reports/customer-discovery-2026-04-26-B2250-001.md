@@ -56,7 +56,7 @@
 - `pundo_main_backend/scripts/prepare_e2e_db.py`: `pg_terminate_backend()` vor TRUNCATE — verhindert Deadlock durch offene Verbindungen
 - `e2e/global-setup.ts`: Backend + alle Uvicorn-Worker (`pkill`) vor DB-Reset stoppen; 2s Wartezeit
 - `e2e/journeys/customer-discovery.md`: Drift-Fix `shops/[id]/**` → `shops/[slug]/**`
-- `.claude/skills/e2e-tester/SKILL.md`: Pflichtregeln für Backend+Frontend vor E2E dokumentiert
+- `.claude/playbooks/e2e-tester.md`: Pflichtregeln für Backend+Frontend vor E2E dokumentiert
 
 ---
 

@@ -7,7 +7,7 @@ description: >
   Performance-Engpass analysieren, Server vs. Client Component entscheiden,
   Schnittstellendesign zum Backend, Technologie-Entscheidung, Architektur reviewen,
   wo soll ich X implementieren.
-model: claude-sonnet-5
+model: opus
 tools:
   - Read
   - Bash
@@ -41,7 +41,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 - **Server Components by default:** Nur was Interaktivität/Browser-APIs braucht, wird Client Component
 - **API-Proxy:** Kein direkter Backend-Zugriff vom Browser — alles via `/api/v1/` Next.js-Rewrite
 - **Lean Typen:** TypeScript-Interfaces in `src/types/api.ts` spiegeln Backend-Schema; kein Over-Engineering
-- **Backend als Quelle der Wahrheit:** RTL-Flag, Kategorien, Übersetzungen kommen immer vom Backend
+- **Backend als Quelle der Wahrheit:** Kategorien und übersetzte Inhalte kommen vom Backend. RTL dagegen über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten
 - **Restart-Regel:** Test-Instanzen (Frontend 3500 / Backend 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
 
 ---
@@ -68,55 +68,12 @@ Wenn du `02-architecture.md` schreibst und dabei Ports, Befehle oder Komponenten
 
 ## Modulstruktur
 
-```
-pundo_frontend/
-└── src/
-    ├── app/                    # Next.js App Router
-    │   ├── layout.tsx          # Root Layout (Sprache, RTL, globale Styles)
-    │   ├── page.tsx            # Startseite / Suche
-    │   ├── error.tsx           # Globaler Error-Boundary
-    │   ├── loading.tsx         # Globale Loading-UI
-    │   ├── not-found.tsx       # 404-Seite
-    │   ├── products/
-    │   │   └── [slug]/         # Produkt-Detailseite
-    │   │       ├── page.tsx
-    │   │       └── loading.tsx
-    │   ├── search/
-    │   │   ├── page.tsx        # Suchergebnisse (Server Component)
-    │   │   ├── SearchContent.tsx  # Client Component für interaktive Suche
-    │   │   └── loading.tsx
-    │   └── shops/
-    │       └── [id]/           # Shop-Detailseite
-    │           ├── page.tsx
-    │           └── loading.tsx
-    ├── components/             # Wiederverwendbare Komponenten
-    │   ├── map/                # Leaflet-Karte (immer Client Component, SSR disabled)
-    │   │   ├── ShopMap.tsx
-    │   │   └── ShopMapClient.tsx
-    │   ├── product/            # Produkt-Karten, Bilder, Angebote
-    │   │   ├── ProductCard.tsx
-    │   │   ├── ProductImage.tsx
-    │   │   └── OfferList.tsx
-    │   ├── search/             # Suchleiste, Filter, Kategorie-Chips
-    │   │   ├── SearchBar.tsx
-    │   │   ├── CategoryChips.tsx
-    │   │   └── FilterChips.tsx
-    │   ├── shop/               # Shop-Karten, Nearby-Shops
-    │   │   ├── ShopCard.tsx
-    │   │   └── NearbyShops.tsx
-    │   └── ui/                 # Generische UI-Bausteine
-    │       ├── BackButton.tsx
-    │       ├── LanguageSwitcher.tsx
-    │       ├── PriceHistory.tsx
-    │       └── SplashScreen.tsx
-    ├── lib/                    # Utilities & API-Client
-    │   ├── api.ts              # Fetch-Wrapper für /api/v1/
-    │   ├── lang.ts             # Spracherkennung, RTL-Util
-    │   ├── translations.ts     # UI-Strings (kein i18n-Framework)
-    │   └── utils.ts            # Allgemeine Utilities
-    └── types/
-        └── api.ts              # TypeScript-Interfaces für Backend-Responses
-```
+Kein Baum im Skill (veraltet zu schnell) — lies den echten Code und `docs/architecture.md` (Abschnitte „Route-Gruppen“, „Modulstruktur“).
+
+Orientierung:
+- Route-Groups unter `src/app/`: `(customer)/[lang]/…` (öffentliche Seiten mit `/{lang}/`-Präfix, z. B. `products/[slug]`, `shops/[slug]`, `search`, `guides`, `blog`), `(customer)/account`, `(customer)/auth`, `(shop-admin)/shop-admin`, `(system-admin)/admin`, `(oauth)`, `crm`, `api`
+- Komponenten: `src/components/<domäne>/` — Bestand per `ls src/components` prüfen
+- Weitere Repo-Docs: `docs/i18n.md`, `docs/seo.md`, `docs/search.md`, `docs/data-model.md`, `docs/e2e-testing.md`, `docs/shop-owner-portal.md`
 
 ---
 
@@ -138,18 +95,9 @@ Falls eine Anforderung Backend-Änderungen erfordert:
 - **Backend-Skills:** `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/`
 - Immer explizit kommunizieren: „Für dieses Feature braucht es Backend-Änderungen: [was genau]"
 
-### ⚠️ PFLICHT: Backend-Architect bei Backend-Änderungen
+### Backend-Bedarf: Marker statt Selbststart
 
-Wenn `02-architecture.md` Backend-Anforderungen enthält (neue Endpoints, DB-Schema-Änderungen, Migration, Worker-Umbau): **automatisch den Backend-Architect anstoßen**.
-
-Vorgehen:
-1. Frontend-`02-architecture.md` fertigschreiben
-2. Sofort danach: Backend-Architect-Agent starten mit:
-   - Design-Dokument (`01-design.md`) als Basis
-   - Frontend-Architektur-Dokument (`02-architecture.md`, Abschnitt "Backend-Anforderungen") als Kontext
-   - Ziel: `specs/<feature-slug>/02-backend-architecture.md` im **Vault** (gemeinsamer Spec-Hub: `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/20 Features/<FGx>/<Feature>/specs/<feature-slug>/`)
-   - Backend-Architect-Skill: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/skills/architect/SKILL.md`
-3. Dem User mitteilen, dass Backend-Architect parallel läuft
+Wenn `02-architecture.md` Backend-, Gateway- oder Worker-Anforderungen enthält: einen Abschnitt „Backend-Anforderungen“ als Marker in `02-architecture.md` schreiben und ihn im Handoff nennen. Den Backend-Architect startet der `/coordinator` oder Bernhard — nicht dieser Skill. Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“ (Cross-Repo).
 
 **Erkennungsmerkmale für Backend-Änderungen** (mindestens eines trifft zu):
 - Neue API-Endpoints nötig
@@ -165,7 +113,7 @@ Vorgehen:
 ### Typischer Seitenaufruf (Server Component)
 ```
 Browser
-  ↓ HTTP GET /search?q=Katzenfutter
+  ↓ HTTP GET /de/search?q=Katzenfutter
   Next.js Server
   ↓ fetch('/api/v1/products?q=Katzenfutter')  [server-side]
   Backend (pundo_main_backend, :8500 Studio / :8000 Hetzner)
@@ -183,10 +131,10 @@ SearchBar, FilterChips, CategoryChips, ShopMap, LanguageSwitcher
 
 ### Mehrsprachigkeit & RTL
 ```
-LanguageSwitcher → setzt lang-Cookie oder URL-Param
-Root Layout → liest Sprache → setzt <html lang="xx" dir="rtl|ltr">
-RTL-Flag → kommt vom Backend (category_translations.rtl)
-            NIEMALS im Frontend raten — immer aus API-Response lesen
+LanguageSwitcher → setzt Cookie app_lang + /{lang}/-Pfad
+src/app/(customer)/layout.tsx → setzt <html lang={lang} dir={dir}>
+RTL → isRTL(lang) aus src/lib/lang.ts (RTL_LANGS = ar, he)
+       Keine eigenen Sprachlisten im Code
 Tailwind RTL: rtl: prefix für spiegelbare Layouts
 ```
 
@@ -211,16 +159,11 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 ## Routing-Architektur (Next.js App Router)
 
 ### Existierende Routen
-| Route | Datei | Typ |
-|---|---|---|
-| `/` | `src/app/page.tsx` | Server |
-| `/search?q=...` | `src/app/search/page.tsx` | Server (SearchContent Client) |
-| `/products/[slug]` | `src/app/products/[slug]/page.tsx` | Server |
-| `/shops/[id]` | `src/app/shops/[id]/page.tsx` | Server |
+Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppen“). Keine Routentabelle im Skill pflegen.
 
 ### Neue Routen hinzufügen
-1. Ordner in `src/app/` anlegen (= Route)
-2. `page.tsx` (Server Component by default)
+1. Ordner in der passenden Route-Group anlegen — Customer-Pages unter `src/app/(customer)/[lang]/` (Links via `localePath()`)
+2. `page.tsx` (Server Component by default, SEO-Checkliste `docs/seo.md`)
 3. `loading.tsx` für Streaming-Skeleton
 4. `error.tsx` falls spezifischer Error-State nötig
 5. Typen in `src/types/api.ts` ergänzen falls neue API-Daten
@@ -233,8 +176,8 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 `en`, `de`, `el` (Griechisch), `ru` (Russisch), `ar` (Arabisch), `he` (Hebräisch)
 
 ### RTL-Behandlung
-- Kein implizites Raten — `rtl`-Flag immer explizit aus Backend-Response lesen
-- Root Layout: `<html lang={lang} dir={rtl ? 'rtl' : 'ltr'}>`
+- RTL über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten, nicht aus API-Feldern ableiten
+- Layout `src/app/(customer)/layout.tsx`: `<html lang={lang} dir={dir}>`
 - Tailwind: `rtl:` Modifier für gespiegelte Layouts (`rtl:text-right`, `rtl:flex-row-reverse`)
 - Test: AR und HE Sprachen müssen `dir="rtl"` auslösen; EN/DE/EL/RU nicht
 
@@ -265,7 +208,7 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 ## Erweiterungspunkte
 
 ### Neue Seite/Route
-1. Ordner in `src/app/` + `page.tsx` + `loading.tsx`
+1. Ordner in `src/app/(customer)/[lang]/` (bzw. passende Route-Group) + `page.tsx` + `loading.tsx`
 2. API-Call in `src/lib/api.ts` ergänzen
 3. TypeScript-Interface in `src/types/api.ts`
 4. Komponenten in passendem `src/components/`-Unterordner
@@ -276,8 +219,7 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 3. Props-Interface direkt in der Datei oder in `src/types/api.ts`
 
 ### Neue Sprache
-1. Sprachcode zu `src/lib/translations.ts` ergänzen
-2. RTL-Liste in `src/lib/lang.ts` pflegen (aktuell: ar, he = RTL)
+1. Sprachcode in `src/lib/lang.ts` (inkl. `RTL_LANGS`, falls RTL) und `src/lib/translations.ts` ergänzen
 3. Backend-Team informieren (neue Übersetzungs-Batch nötig)
 
 ### Backend-Endpunkt nutzen (neuer)
@@ -304,28 +246,20 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
    - Bei fehlendem Pfad: `"Stale touches-modules in <journey-id>: <glob> existiert nicht mehr"` + Fix-Vorschlag.
    - Stale Einträge zählen konservativ als "muss laufen" bis der Fix bestätigt ist.
 
-4. **Eigene Vorschläge** (Phase 1 — eingeschränkt):
-   - Phase 1: Nur Drift-Korrekturen und Validierung. Keine neuen Architekt-Heuristiken (verschoben auf Iteration 2).
-   - Expliziter Hinweis im Abschnitt: "Keine zusätzlichen Vorschläge dieser Iteration."
+4. **Eigene Vorschläge:** Nur Drift-Korrekturen und Validierung, keine neuen Architekt-Heuristiken.
 
 5. **Schreibe Abschnitt "Journey-Deltas"** in `02-architecture.md` mit:
    - (a) Validierte Designer-Vorschläge (korrekt / mit Korrekturbedarf)
    - (b) Drift-Fixes (falls vorhanden)
-   - (c) Explizitem Hinweis zu eigenen Vorschlägen (Phase 1: keine)
 
-6. **User-Bestätigung** nach bekanntem Muster:
-   ```
-   Folgende Journey-Katalog-Anpassungen schlage ich vor:
-   - [Delta-Beschreibung] — Bestätigen? (j/n)
-   ```
-   Warte auf Antwort bevor du CATALOG.md schreibst.
+6. **Keine Rückfrage im Lauf:** CATALOG.md nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und im Handoff unter „Entscheidungen für Bernhard“ bündeln (siehe Conventions.md, „Rückfragen“).
 
 ### Was der Architect NICHT darf
 
 - **Niemals** `status: implemented` setzen — das ist ausschließlich Coder-Recht.
 - **Niemals** `last-run` / `last-result` ändern — das ist ausschließlich e2e-tester-Recht.
-- **Niemals** Katalog-Einträge ohne User-Bestätigung mutieren (außer als Vorschlag im Spec).
-- **Darf** primär `touches-modules` korrigieren (Drift-Fix nach User-Bestätigung).
+- **Niemals** Katalog-Einträge ohne Bernhards Freigabe mutieren (außer als Vorschlag im Spec).
+- **Darf** primär `touches-modules`-Korrekturen vorschlagen (Drift-Fix, umgesetzt nach Freigabe).
 
 ---
 
@@ -348,7 +282,7 @@ Tailwind RTL: rtl: prefix für spiegelbare Layouts
 2. **RTL vollständig?** Wird `dir="rtl"` für AR und HE korrekt gesetzt?
 3. **API-Proxy korrekt?** Läuft alles über `/api/v1/` und nicht direkt zum Backend?
 4. **Typen aktuell?** Spiegelt `src/types/api.ts` das Backend-Schema?
-5. **Backend-Änderung nötig?** Wenn ja: explizit benennen und Backend-Skills aufrufen
+5. **Backend-Änderung nötig?** Wenn ja: explizit benennen und als Marker „Backend-Anforderungen“ in `02-architecture.md` setzen
 6. **MVP-Scope:** Braucht der MVP (Pet-Kategorie) das wirklich, oder ist es für später?
 7. **Shop-Admin Clean Boundary:** Alles unter `shop-admin/` muss isoliert bleiben — keine Imports aus customer-facing Code (außer `src/components/ui/`). Shop-Admin-spezifische Typen → `src/types/shop-admin.ts`. API-Client → `src/lib/shop-admin-api.ts`. Translations → eigener Namespace. Bei jedem Komponentendesign prüfen: Könnte man diese Datei in ein separates Repo verschieben, ohne etwas aus dem Customer-Frontend mitziehen zu müssen? Wenn Nein → Architektur anpassen.
 

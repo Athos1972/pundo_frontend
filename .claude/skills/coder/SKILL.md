@@ -7,7 +7,7 @@ description: >
   TypeScript-Fehler und ESLint, übergibt strukturiert an /e2e-tester.
   Aktivieren bei: Feature implementieren, Bug fixen, Refactoring,
   Komponente erweitern, Code schreiben.
-model: claude-sonnet-5
+model: sonnet
 tools:
   - Read
   - Bash
@@ -32,12 +32,11 @@ den E2E-Tester, wenn deine Unit-Tests grün sind und TypeScript fehlerfrei kompi
 **Grundregeln:**
 - NIEMALS Secrets (API-Keys, Passwörter) im Code hardcoden. Nur aus `.env.local` lesen!
 - Keine spekulativen Abstraktionen. Kein Overengineering.
-- Kein automatisches Commit — User committet manuell.
-- RTL-Flag (ar, he) immer explizit aus API-Response lesen, niemals raten.
-- `AGENTS.md` lesen: Next.js 16.2.2 hat Breaking Changes — Docs in `node_modules/next/dist/docs/` prüfen.
+- Kein Commit, kein Push — Commit-Message im Handoff vorschlagen, Bernhard gibt frei (Push auf `main` = Prod-Deploy). Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
+- RTL über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
+- `AGENTS.md` lesen: die installierte Next.js-Version (siehe `package.json`) hat Breaking Changes — Docs in `node_modules/next/dist/docs/` prüfen.
 - **Test-Umgebung zuerst:** Manuelle Tests und Verifikation immer auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Produktiv (3000/8000) erst nach erfolgreichem Test-Lauf.
 - **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
-- **Deploy-Hook (Hetzner):** Ein `git push origin main` auf `pundo_frontend` löst **automatisch** via Webhook das Deployment auf Hetzner aus — `node build`, Restart und alle nötigen Schritte laufen im Deploy-Script. Gleiches gilt für `pundo_main_backend`: Push → Hook → Alembic + Restart automatisch. Eine zusätzliche to-prod-Nachricht (Vault `Wissen/Agent-Kommunikation/to-prod/`) ist nicht zwingend nötig, schadet aber nicht — sie dient als Fallback-Dokumentation falls der Hook mal bricht.
 
 ---
 
@@ -60,15 +59,16 @@ im Handoff-Block des Test-Reports): lies JEDE offene Bug-Datei bevor du Code än
 
 ```
 Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
-            20 Features/FG8 Admin & Operations/Bugs/B<id>/B<id>.md
+            00 Überblick/__ Bugs & Hotfixes/B<id> <Titel>.md
 ```
+(Ältere Bug-Dateien unter `20 Features/FG*/Bugs/` sind Altbestand — dort keine neuen anlegen.)
 
 Für jeden Bug:
 - Setze `status: IN ARBEIT` in der Bug-Datei (Resolution-Log-Zeile ergänzen).
 - Verstehe Symptom + RCA + Kategorie bevor du etwas änderst.
 - `category: FIXTURE-DEFEKT` ist **nicht dein Job** — das macht der e2e-tester
   (`sync_prod_to_test.sh`). Nur `FUNKTIONSFEHLER` und `TESTFEHLER` bearbeitest du.
-- Nach dem Fix: `status: GELÖST` setzen, Commit-SHA im Abschnitt `## Fix` eintragen.
+- Nach dem Fix: `status: GELÖST` setzen, geänderte Dateien im Abschnitt `## Fix` eintragen (Commit-SHA ergänzt der Hauptthread nach Bernhards Freigabe).
 
 Lese mindestens:
 - Die direkt betroffenen Komponenten/Seiten
@@ -399,6 +399,8 @@ Backend-Änderungen nötig: Ja / Nein
 
 Journeys implementiert: [IDs oder "keine approved-Journeys für diesen Spec"]
 
+Vorgeschlagene Commit-Message: <type(scope): ...> (nicht committen)
+
 Empfehlung an E2E-Tester:
   - Welche Seiten/Flows sind besonders relevant?
   - RTL-Layout (ar, he) gesondert prüfen?
@@ -410,16 +412,15 @@ Empfehlung an E2E-Tester:
 
 ## 5. Wichtige Hinweise
 
-- **AGENTS.md lesen:** Next.js 16.2.2 hat Breaking Changes — immer Docs prüfen!
+- **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — immer Docs prüfen!
 - **Kein Overengineering:** Tests für den Code der da ist, nicht für hypothetische Features.
 - **Server Component by default:** Erst `'use client'` wenn wirklich nötig.
-- **RTL immer explizit:** `dir="rtl"` nur wenn Backend `rtl: true` liefert — niemals raten.
+- **RTL:** `dir` über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
 - **Keine Secrets:** Kein Hardcoding von API-Keys, URLs, Passwörtern.
-- **Keine automatischen Commits:** User committet manuell.
+- **Kein Commit/Push:** Bernhard gibt frei (siehe Grundregeln).
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
 - **Dokumentation im selben PR aktualisieren:** Wenn du Ports, Befehle, Env-Vars, Komponentenstruktur oder API-Routing änderst → `docs/architecture.md` oder `docs/e2e-testing.md` im selben PR mitpflegen. Nie "docs später". Operatives Wissen (wie/wo/was) lebt in `/docs`. Design-Entscheidungen (warum) und Feature-Geschichte leben im Vault — die schreibt der Architect.
 - Dokumentation immer auf Letztstand halten README.md
-- Wenn sich wesentliche Änderungen ergeben maintaine den SKILL.md im /architect dieses Projekts
 - **Tooltip-Pflicht für UI-Elemente (PFLICHT):**
   - Jede neue Komponente mit Icons (ohne sichtbares Label) → `<Tooltip content={tr.key}>` wrappen
   - Jede neue Komponente mit Sprach-Code-Badges (EL, EN, etc.) → Tooltip mit `community_vote_language_XX` key
@@ -431,6 +432,6 @@ Empfehlung an E2E-Tester:
   - `src/components/shop-admin/` → darf NUR aus `src/components/ui/` importieren, nicht aus `map/`, `product/`, `search/`, `shop/`
   - `src/lib/shop-admin-api.ts` → separates File, nicht in `api.ts` mischen
   - `src/types/shop-admin.ts` → separates File, nicht in `types/api.ts` mischen
-  - Admin-Translations → eigener Namespace (`shopAdmin: { ... }`) in `translations.ts`, nicht direkt mit Customer-Keys mischen
-  - Vor jedem Commit prüfen: Würde `grep -r "from.*components/(map|product|search|shop)" src/components/shop-admin/` einen Treffer liefern? Wenn ja → sofort refactoren.
+  - Admin-Translations → eigene Dateien `src/lib/shop-admin-translations.ts` bzw. `src/lib/system-admin-translations.ts`, nicht in `translations.ts` mit Customer-Keys mischen
+  - Vor der Übergabe prüfen: Würde `grep -r "from.*components/(map|product|search|shop)" src/components/shop-admin/` einen Treffer liefern? Wenn ja → sofort refactoren.
   - Grund: Ermöglicht Auslagerung in separates Repo in 2–3 Tagen statt 2–3 Wochen.

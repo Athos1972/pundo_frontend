@@ -8,7 +8,7 @@ description: >
   Responsive, API-Integration) und dokumentiert Qualitätsstatus.
   Aktivieren bei: e2e testen, nach /coder-Übergabe, Coverage-Lücken
   schließen, Qualitäts-Check.
-model: claude-sonnet-5
+model: sonnet
 tools:
   - Read
   - Bash
@@ -30,14 +30,14 @@ Browser-E2E-Tests durch.
 **Grundregeln:**
 - NIEMALS Secrets hardcoden.
 - Produktivdaten nur lesen, niemals verändern.
-- **Test-Umgebung zuerst:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Erst nach erfolgreichem Test-Lauf darf die Produktiv-Datenbank (Port 8000) berührt werden.
+- **Test-Umgebung:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB `pundo_test`). Am Studio gibt es keine Prod-DB (siehe AGENTS.md, Studio-Hinweis F6995).
 - **Pflicht-Voraussetzung für E2E/Smoke-Tests: BEIDE Dienste müssen laufen — Frontend (3500) UND Backend (8500).** Es gibt keine "nur-Frontend"-Tests. Ist das Backend down, sofort starten (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) oder beim User nachfragen — NICHT versuchen, Tests ohne Backend durchzuführen.
 - **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
 - Akzeptanzkriterien müssen MESSBAR sein (Selektor, URL, Text, CSS-Eigenschaft).
-- Kein automatisches Commit — User committet manuell.
+- Kein Commit, kein Push — Bernhard gibt frei (Push auf `main` = Prod-Deploy). Keine Rückfragen im Lauf: Vorschläge im Report unter „Entscheidungen für Bernhard“ sammeln. Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
 - Nicht blockieren bei Coverage-Unterschreitung — dokumentieren und weitermachen.
 - **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
-- **Kein pre-existing-Label (F8950):** Es gibt keinen Status "pre-existing" mehr. Jedes FAIL ist `OFFEN`, `IN ARBEIT`, `GELÖST` oder `QUARANTÄNE` und hat eine Bug-Datei im Vault-Register (`FG8 Admin & Operations/Bugs/`). Ein FAIL blockiert das Verdict bis er GELÖST ist oder BB explizit entschieden hat. Quarantäne erfordert BB-Signatur (`test.fixme()` + `// QUARANTÄNE B<id> — <Grund> — <Datum>`).
+- **Kein pre-existing-Label (F8950):** Es gibt keinen Status "pre-existing" mehr. Jedes FAIL ist `OFFEN`, `IN ARBEIT`, `GELÖST` oder `QUARANTÄNE` und hat eine Bug-Datei im zentralen Vault-Register (`00 Überblick/__ Bugs & Hotfixes/`). Ein FAIL blockiert das Verdict bis er GELÖST ist oder BB explizit entschieden hat. Quarantäne erfordert BB-Signatur (`test.fixme()` + `// QUARANTÄNE B<id> — <Grund> — <Datum>`).
 - **Gate-Invariante (F8950):** `verdict:"SHIP"` ist nur erlaubt wenn `open_failures` ein leeres Array ist. Vor dem SHIP-Verdict: `node scripts/verdict-gate.mjs` ausführen — bei exit≠0 ist SHIP verboten → Verdict `FIX` oder `ESCALATE`.
 - **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
 - **Test-Daten-Matrix:** Gegenseitig ausschließende Zustände bekommen eigene Fixtures. Nie Zustände "zusammenpappen" um einen Test zu vereinfachen.
@@ -51,10 +51,12 @@ Browser-E2E-Tests durch.
 
 ```
 Phase 0:   Scope-Ermittlung     (git diff → was wurde geändert?)
+Phase 0.5: Journey-Scan         (Katalog → mustRun, Drift, Vorschläge)
 Phase 1:   Statische Prüfung    (TypeScript + ESLint → fehlerfrei?)
 Phase 2:   Unit-Tests           (Vitest → Coverage-Lücken schließen)
 Phase 3:   Visual Smoke-Test    (Pflicht — immer, unabhängig vom Scope)
-Phase 4:   E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
+Phase 3.1: E2E/Browser-Tests    (Playwright → Routing, UI, RTL, Responsive)
+Phase 3.5: Journey-Run          (mustRun-Journeys ausführen)
 Phase 4.5: Quality-Gate         (RCA-Klassifikation, Bug-Register, Gate, Schön-Test-Check, Coder-Trigger)
 Phase 5:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
 Phase 5.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
@@ -69,78 +71,13 @@ Phase 5.6: Issue-Update         (Bug/Feature-Datei im Obsidian-Vault — PFLICHT
 
 **Was er prüft:** Seiten die echte Daten rendern — nicht nur ob Routen erreichbar sind, sondern ob die gerendereten Daten korrekt sichtbar sind.
 
-```typescript
-// e2e/journeys/smoke.spec.ts — dieser Test läuft bei JEDEM e2e-tester-Aufruf
-import { test, expect } from '@playwright/test'
+Echte Specs (nicht im Skill duplizieren): `e2e/smoke.spec.ts`, `e2e/smoke-shop-visibility.spec.ts` (ggf. `e2e/journeys/visual-smoke.spec.ts`).
 
-const SMOKE_PRODUCTS = [
-  'ferplast-ferplast-sport-g8-200-black-leash',  // hat lokale product_images
-]
-
-test.describe('Visual Smoke-Test', () => {
-
-  test('Produktseite: Bilder laden, Carousel hat Items', async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 1024 })
-
-    // Redirect-Trap: CDN-Hotlink-Block oder kaputte URLs auffangen
-    const suspiciousRedirects: string[] = []
-    page.on('response', r => {
-      if (r.status() >= 300 && r.status() < 400) {
-        const loc = r.headers()['location'] ?? ''
-        if (loc.includes('docs.') || loc.includes('guidelines') || loc.includes('error')) {
-          suspiciousRedirects.push(`${r.url()} → ${loc}`)
-        }
-      }
-    })
-
-    await page.goto(`/products/${SMOKE_PRODUCTS[0]}`)
-    await page.waitForLoadState('networkidle')
-
-    // Bilder: mind. 1 muss tatsächlich geladen sein (naturalWidth > 0)
-    const loadedImages = await page.evaluate(() =>
-      [...document.images].filter(i => i.complete && i.naturalWidth > 0).length
-    )
-    expect(loadedImages, 'Keine Bilder geladen (alle broken)').toBeGreaterThan(0)
-
-    // Carousel: DOM-Anzahl bei Tablet-Breite
-    const carouselItems = page.locator('[aria-label*="product"] [role="listitem"], [role="list"] [role="listitem"]')
-    const count = await carouselItems.count()
-    if (count > 0) {
-      // mind. 2 Items im DOM wenn Carousel vorhanden
-      expect(count, 'Carousel hat weniger als 2 Items').toBeGreaterThanOrEqual(2)
-      // und mind. 2 sichtbar im Tablet-Viewport
-      const visible = await page.evaluate(() => {
-        const list = document.querySelector('[role="list"]')
-        if (!list) return 0
-        const lr = list.getBoundingClientRect()
-        return [...list.querySelectorAll('[role="listitem"]')]
-          .filter(el => el.getBoundingClientRect().left < lr.right - 50).length
-      })
-      expect(visible, 'Bei Tablet-Breite sind weniger als 2 Cards sichtbar').toBeGreaterThanOrEqual(2)
-    }
-
-    // Keine CDN-Hotlink-Redirects
-    expect(suspiciousRedirects, `Suspicious redirects: ${suspiciousRedirects.join(', ')}`).toHaveLength(0)
-  })
-
-  test('Suchergebnisse: ProductCards mit Inhalt', async ({ page }) => {
-    await page.goto('/search?q=leash')
-    await page.waitForLoadState('networkidle')
-
-    const cards = page.locator('[data-testid="product-card"], .product-card, [role="article"]')
-    // Weniger strikt: einfach prüfen dass mind. 1 Ergebnis-Item existiert
-    const productLinks = page.locator('a[href^="/products/"]')
-    await expect(productLinks.first()).toBeVisible()
-
-    // Bilder in den Suchergebnissen
-    const loadedImages = await page.evaluate(() =>
-      [...document.images].filter(i => i.complete && i.naturalWidth > 0).length
-    )
-    expect(loadedImages, 'Suchergebnisse: keine Bilder geladen').toBeGreaterThan(0)
-  })
-
-})
+```bash
+npx playwright test --config e2e/smoke-only.config.ts
 ```
+
+Prinzipien, die neue Smoke-Checks erfüllen müssen: Customer-Routen immer mit `/{lang}/`-Präfix (z. B. `/de/products/<slug>`), Bilder über `naturalWidth > 0` prüfen, keine verdächtigen 3xx-Redirects (CDN-Hotlink-Block), Carousel bei Tablet-Breite ≥ 2 sichtbare Items.
 
 **Wenn der Smoke-Test FAIL ist:** Stoppe sofort, analysiere Root Cause. Kein Feature-Test-Weiter ohne grünen Smoke.
 
@@ -241,10 +178,10 @@ Scanne den Phase-0-Diff mit diesen Heuristiken:
 
 | # | Muster / Trigger | Vorschlags-Typ | Default `touches-modules` |
 |---|---|---|---|
-| H1 | Neue `src/app/<segment>/page.tsx` (außerhalb `api/`, `shop-admin/`, `admin/`) | `public-route-visibility-<segment>` | `src/app/<segment>/**`, `src/lib/api.ts` |
-| H2 | Neue Datei in `src/app/shop-admin/**` oder `src/app/admin/**` mit `page.tsx` | `role-boundary-<segment>` | `src/app/<segment>/**`, `src/lib/shop-admin-api.ts` |
+| H1 | Neue `src/app/(customer)/[lang]/<segment>/page.tsx` | `public-route-visibility-<segment>` | `src/app/(customer)/[lang]/<segment>/**`, `src/lib/api.ts` |
+| H2 | Neue `page.tsx` in `src/app/(shop-admin)/shop-admin/**` oder `src/app/(system-admin)/admin/**` | `role-boundary-<segment>` | `src/app/(shop-admin)/shop-admin/<segment>/**` bzw. `src/app/(system-admin)/admin/<segment>/**`, `src/lib/shop-admin-api.ts` |
 | H3 | Neues Status-Enum in `src/types/**/*.ts` (Regex: `status:\s*'[^']+'(\s*\|\s*'[^']+'){1,}`) | `state-transition-<Type>-<field>` | Alle `src/app/**/*` + `src/lib/**/*` die den Typ importieren |
-| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` | `src/lib/shop-admin-api.ts`, `src/app/shop-admin/**`, `src/app/shops/[id]/**` |
+| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` | `src/lib/shop-admin-api.ts`, `src/app/(shop-admin)/shop-admin/**`, `src/app/(customer)/[lang]/shops/[slug]/**` |
 | H5 | Neue API-Typ-Änderung via `src/types/api.ts` sichtbar (neues Feld/Enum) | `cross-role-<feature>` | `src/types/api.ts` |
 
 **Nicht-Trigger:** Tests, `.md`-Dateien, reine Tailwind-Klassen-Änderungen, `node_modules`.
@@ -254,7 +191,7 @@ Scanne den Phase-0-Diff mit diesen Heuristiken:
 Vor jedem Neu-Vorschlag: Jaccard-Overlap gegen alle Katalog-Einträge prüfen (nutze `findOverlap` aus `e2e/journeys/_parser.ts`):
 
 - `overlap >= 0.50` + Eintrag `proposed/approved/implemented` → **Merge-Vorschlag** statt Neu
-- `overlap >= 0.50` + Eintrag `skipped/deprecated` → **Unterdrücken**, nur mit Hinweis: `"früher abgelehnt am <datum>, Grund: <skip-reason>. Neu vorschlagen? j/n"`
+- `overlap >= 0.50` + Eintrag `skipped/deprecated` → **Unterdrücken**, nur als Hinweis unter „Entscheidungen für Bernhard“: `"früher abgelehnt am <datum>, Grund: <skip-reason> — neu vorschlagen?"`
 - `overlap < 0.50` → **Neuer Vorschlag**
 
 ### Schritt 5: Max-3-Regel & Priorisierung
@@ -272,31 +209,33 @@ Gleichstand → alphabetisch nach vorgeschlagener `id`.
 Überschuss → in `.claude/skills/e2e-tester/.journey_backlog` (eine ID pro Zeile) parken.
 
 **Skipped-Einträge älter als 90 Tage** separat listen:
-> "Folgende N skipped-Journeys sind >90 Tage alt. Archivieren? (j/n)"
-> Archivieren = Verschieben nach `e2e/journeys/_archive.md` (nicht löschen).
+> Unter „Entscheidungen für Bernhard“: "Folgende N skipped-Journeys sind >90 Tage alt — Archivierung vorgeschlagen."
+> Archivieren = Verschieben nach `e2e/journeys/_archive.md` (nicht löschen), erst nach Freigabe.
 
-### Schritt 6: User-Frage-Template
+### Schritt 6: Vorschläge in den Report (keine Rückfrage im Lauf)
+
+Im Report unter „Entscheidungen für Bernhard“ ausgeben:
 
 ```
 Journey-Scan-Ergebnis:
   mustRun: [<id>, ...] (N Journeys — laufen in Phase 3.5)
   Drift-Warnings: [<id>: <glob>] (kein Blocker)
 
-Mögliche fehlende Journeys:
+Entscheidungen für Bernhard — mögliche fehlende Journeys:
 
   1. id: <vorgeschlagene-id>
-     Grund: H1 — neue page.tsx in src/app/<segment>/
-     touches-modules: [src/app/<segment>/**, src/lib/api.ts]
-     Katalogeintrag anlegen als `approved`? (j/n)
+     Grund: H1 — neue page.tsx in src/app/(customer)/[lang]/<segment>/
+     touches-modules: [src/app/(customer)/[lang]/<segment>/**, src/lib/api.ts]
+     Vorschlag: Katalogeintrag als `approved` anlegen
 
   2. ...
 
   (Weitere N Vorschläge im .journey_backlog geparkt)
 ```
 
-- User antwortet `j` → Eintrag als `approved` in CATALOG.md und als `<id>.md` schreiben. Für H4-Journeys (write-to-read): Body muss die drei Pflicht-ACs aus `CATALOG_SCHEMA.md §5a` enthalten (AC-1 Happy Path, AC-2 Existing-Dependency, AC-3 Feld-Edgecase) — andernfalls ist der Body unvollständig und der Coder darf nicht auf `implemented` setzen. Coder implementiert `.spec.ts` im nächsten Spec-Lauf.
-- User antwortet `n` → Eintrag als `skipped` schreiben mit `skip-reason: "Beim Testlauf <datum> abgelehnt"`.
-- Phase 0.5 schreibt **nur** nach User-Bestätigung — außer `last-run`/`last-result` (das macht Phase 4).
+- Nach Freigabe durch Bernhard → Eintrag als `approved` in CATALOG.md und als `<id>.md` schreiben. Für H4-Journeys (write-to-read): Body muss die drei Pflicht-ACs aus `CATALOG_SCHEMA.md §5a` enthalten (AC-1 Happy Path, AC-2 Existing-Dependency, AC-3 Feld-Edgecase) — andernfalls ist der Body unvollständig und der Coder darf nicht auf `implemented` setzen. Coder implementiert `.spec.ts` im nächsten Spec-Lauf.
+- Bei Ablehnung → Eintrag als `skipped` mit `skip-reason: "Beim Testlauf <datum> abgelehnt"`.
+- Phase 0.5 schreibt Katalog-Einträge **nur** nach Freigabe — außer `last-run`/`last-result` (das macht Phase 3.5).
 
 ---
 
@@ -413,31 +352,9 @@ Status: dokumentiert, kein Blocker
 
 ---
 
-## Phase 3: Browser-E2E-Tests (Playwright)
+## Phase 3.1: Browser-E2E-Tests (Playwright)
 
-### Playwright einrichten (falls noch nicht vorhanden)
-
-```bash
-npm install -D @playwright/test
-npx playwright install chromium
-```
-
-`playwright.config.ts`:
-```typescript
-import { defineConfig } from '@playwright/test'
-
-export default defineConfig({
-  testDir: './e2e',
-  use: {
-    baseURL: 'http://localhost:3000',
-  },
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
-  },
-})
-```
+Konfiguration: bestehende `playwright.config.ts` (Port 3500/8500, verwirft Port 8000) — nicht neu anlegen. Spezial-Configs in `e2e/*.config.ts` (z. B. `smoke-only.config.ts`). Setup-Details: `docs/e2e-testing.md`.
 
 ### Vorbedingungs-Check (BLOCKIEREND — vor jedem E2E/Smoke-Lauf)
 
@@ -461,9 +378,6 @@ curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit
 > **NIEMALS mit down-Dienst testen — Tests enden mit ERR_ABORTED und maskieren echte Fehler.**
 
 > **⚠️ Umgebungsregel:** E2E-Tests laufen IMMER auf Port 3500 (Frontend) + 8500 (Backend).
-> Port 3000/8000 ist Produktiv — dort wird erst deployed/getestet nach grünem Test-Lauf.
-
-> **Deploy-Hook (Hetzner):** Nach SHIP-Verdict reicht `git push origin main` — Webhook löst auf Hetzner automatisch `node build` + Restart (Frontend) bzw. Alembic + Restart (Backend) aus. Eine zusätzliche to-prod-Nachricht (Vault `Wissen/Agent-Kommunikation/to-prod/`) ist nicht zwingend nötig, schadet aber nicht — sie dient als Fallback-Dokumentation falls der Hook mal bricht.
 
 ---
 
@@ -535,7 +449,7 @@ npx playwright test --grep "Suche"
 
 | # | Prüfung | Kriterium |
 |---|---------|-----------|
-| 1 | Suche mit Eingabe | URL wechselt zu `/search?q=...` |
+| 1 | Suche mit Eingabe | URL wechselt zu `/{lang}/search?q=...` |
 | 2 | Ergebnisse angezeigt | Mindestens 1 ProductCard sichtbar (wenn Backend läuft) |
 | 3 | Leere Suche | Keine JS-Fehler, sinnvolles Fallback-UI |
 | 4 | Ladezustand | Loading-Skeleton oder Spinner erscheint kurz |
@@ -555,20 +469,7 @@ npx playwright test --grep "Suche"
 | 3 | `dir` LTR für EN/DE/EL/RU | `<html dir="ltr">` für alle anderen |
 | 4 | Layout gespiegelt | Flex-Richtung, Text-Ausrichtung visuell korrekt |
 
-```typescript
-// e2e/rtl.spec.ts
-test('Arabische Sprache setzt dir=rtl', async ({ page }) => {
-  await page.goto('/?lang=ar')
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('rtl')
-})
-
-test('Deutsche Sprache setzt dir=ltr', async ({ page }) => {
-  await page.goto('/?lang=de')
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('ltr')
-})
-```
+Bestehende Specs: `e2e/language-smoke.spec.ts`, `e2e/language-picker.spec.ts` (Routen immer `/{lang}/…`, z. B. `/ar`, nie `/?lang=ar`). Erwartung: `dir` kommt aus `isRTL()` in `src/lib/lang.ts`.
 
 ---
 
@@ -578,33 +479,14 @@ test('Deutsche Sprache setzt dir=ltr', async ({ page }) => {
 
 | # | Prüfung | Kriterium |
 |---|---------|-----------|
-| 1 | Route erreichbar | `/products/[slug]` gibt 200 oder sinnvolles 404 |
+| 1 | Route erreichbar | `/{lang}/products/[slug]` gibt 200 oder sinnvolles 404 |
 | 2 | Produkt-Daten angezeigt | Name, Bild geladen (`img.naturalWidth > 0`) oder expliziter Fallback-Container sichtbar, Preise sichtbar |
 | 3 | OfferList angezeigt | Mindestens 1 Angebot oder leerer Zustand |
 | 4 | Back-Button funktioniert | Klick navigiert zurück |
 | 5 | Kein JS-Fehler | Console ohne Errors |
 | 6 | Related-Products-Carousel | `[role="listitem"]` Count ≥ 1; bei Tablet-Breite (768px) mind. 2 Cards im sichtbaren Bereich (`getBoundingClientRect().right < carouselWidth`) |
 
-```typescript
-// Carousel-Check: DOM-Anzahl UND sichtbare Cards bei Tablet
-test('Related-Products-Carousel zeigt mehrere Items', async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 1024 })
-  await page.goto('/products/ferplast-ferplast-sport-g8-200-black-leash') // Produkt mit bekannten related items
-
-  const items = page.locator('[role="list"] [role="listitem"]')
-  await expect(items).toHaveCountGreaterThan(1) // mind. 2 im DOM
-
-  // Sichtbare Cards im Viewport zählen
-  const visibleCount = await page.evaluate(() => {
-    const list = document.querySelector('[role="list"]')
-    if (!list) return 0
-    const listRect = list.getBoundingClientRect()
-    return [...list.querySelectorAll('[role="listitem"]')]
-      .filter(el => el.getBoundingClientRect().left < listRect.right - 50).length
-  })
-  expect(visibleCount).toBeGreaterThanOrEqual(2)
-})
-```
+Carousel-Check als Vorlage: `e2e/main.spec.ts` bzw. `e2e/journeys/visual-smoke.spec.ts` (Selektor `[role="list"] [role="listitem"]`).
 
 ---
 
@@ -614,7 +496,7 @@ test('Related-Products-Carousel zeigt mehrere Items', async ({ page }) => {
 
 | # | Prüfung | Kriterium |
 |---|---------|-----------|
-| 1 | Route erreichbar | `/shops/[id]` gibt 200 |
+| 1 | Route erreichbar | `/{lang}/shops/[slug]` gibt 200 |
 | 2 | Shop-Daten angezeigt | Name, Adresse sichtbar |
 | 3 | Karte lädt | Leaflet-Container sichtbar (kein Rendering-Fehler) |
 | 4 | Kein JS-Fehler | Console ohne Errors |
@@ -646,9 +528,9 @@ test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 | # | Prüfung | Kriterium |
 |---|---------|-----------|
 | 1 | Backend nicht erreichbar | App zeigt sinnvollen Fehler (kein White Screen) |
-| 2 | Ungültige Produkt-Slug | `/products/nicht-vorhanden` → 404-Seite statt Crash |
-| 3 | Ungültige Shop-ID | `/shops/99999` → 404-Seite statt Crash |
-| 4 | Leere Suchergebnisse | `/search?q=xyzxyz` → leerer Zustand, kein Crash |
+| 2 | Ungültige Produkt-Slug | `/{lang}/products/nicht-vorhanden` → 404-Seite statt Crash |
+| 3 | Ungültiger Shop-Slug | `/{lang}/shops/nicht-vorhanden` → 404-Seite statt Crash |
+| 4 | Leere Suchergebnisse | `/{lang}/search?q=xyzxyz` → leerer Zustand, kein Crash |
 
 ---
 
@@ -679,7 +561,7 @@ test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 | 4 | RTL-Sprache (AR) | Nach Klick auf AR: Labels in Arabisch, `html[dir=rtl]` gesetzt |
 
 ```typescript
-// e2e/reactive-lang.spec.ts
+// Echte Spec: e2e/journeys/reactive-language-switch.spec.ts
 test('E2E-08: Header/Footer Labels aktualisieren via LanguageSwitcher ohne Reload', async ({ page }) => {
   await page.goto('http://localhost:3500/de')
 
@@ -718,7 +600,7 @@ test('E2E-08: Header/Footer Labels aktualisieren via LanguageSwitcher ohne Reloa
 
 ## Phase 3.5: Journey-Run
 
-**Kommt nach Phase 3 (Browser-E2E-Tests), vor Phase 4 (Qualitäts-Gate).**
+**Kommt nach Phase 3.1 (Browser-E2E-Tests), vor Phase 4.5 (Quality-Gate).**
 
 Führt alle `implemented`-Journeys aus der `mustRun`-Liste (aus Phase 0.5) aus. Nur `implemented`-Einträge werden ausgeführt — niemals `proposed`, `approved`, `skipped` oder `deprecated`.
 
@@ -749,11 +631,11 @@ Wenn `mustRun` leer ist: `"Phase 3.5: Keine mustRun-Journeys — übersprungen"`
 **Stale spec-file** (Datei fehlt trotz `status: implemented`):
 - Ergebnis: `FAIL`
 - Warnung im Abschlussbericht: `"Stale spec-file in <journey-id>: <pfad> existiert nicht"`
-- User-Entscheidung für Korrektur: Status zurück auf `approved`? (j/n)
+- Vorschlag unter „Entscheidungen für Bernhard“: Status zurück auf `approved`
 
 ### Schritt 3: last-run-Updates (OHNE User-Rückfrage)
 
-Phase 4 schreibt für jeden gelaufenen Journey-Eintrag in CATALOG.md **ohne User-Bestätigung**:
+Phase 3.5 schreibt für jeden gelaufenen Journey-Eintrag in CATALOG.md **ohne User-Bestätigung**:
 
 ```yaml
 last-run: 2026-04-23T15:30:00Z     # jetzt, ISO-8601 UTC
@@ -777,13 +659,13 @@ Wenn ein Journey-Schritt FAIL liefert:
 1. Screenshot und Trace automatisch gespeichert (Playwright-Standard)
 2. Assertion wird NICHT verändert
 3. Tester dokumentiert in Finding: Expected, Actual, mögliche Ursache
-4. Tester fragt User: "Step X failed. RCA: [mögliche Ursache]. Ist das ein Test-Fehler oder ein Funktions-Fehler? (test-fix/finding)"
-5. Bei `finding`: Eintrag in TESTSET.md unter `### Findings (unresolved)`, Katalog-`last-result: FAIL`
-6. Bei `test-fix`: Testfall mit Begründung korrigieren, dann erneut laufen
+4. Tester klassifiziert per RCA (Kategorien siehe Phase 4.5, Schritt 2) — keine Rückfrage im Lauf. Ist die Klassifikation unsicher: als Finding behandeln und unter „Entscheidungen für Bernhard“ aufführen.
+5. Finding: Eintrag in TESTSET.md unter `### Findings (unresolved)`, Katalog-`last-result: FAIL`, Bug-Datei (Phase 4.5)
+6. Testfehler: nur mit Bug-Datei `category: TESTFEHLER` + `## Korrektheits-Beweis` korrigieren (F8950), dann erneut laufen
 
 ### Was Phase 3.5 NICHT macht
 
-- **Niemals** `status` eines Eintrags ändern (außer FAIL-Korrektur bei stale spec-file — und nur mit User-Bestätigung).
+- **Niemals** `status` eines Eintrags ändern (außer FAIL-Korrektur bei stale spec-file — und nur nach Freigabe durch Bernhard).
 - **Niemals** `proposed`, `skipped` oder `deprecated`-Einträge ausführen.
 - **Keine neuen Journey-Vorschläge** anlegen (das ist Phase 0.5).
 
@@ -813,7 +695,7 @@ jeweiligen Vault-Bug-Datei. Ist er `GELÖST` → aus der Liste entfernen.
 
 ### Schritt 2 — Neue FAILs RCA-klassifizieren (Pflicht)
 
-Jeder FAIL aus Phase 1–4 bekommt verpflichtend eine Kategorie:
+Jeder FAIL aus Phase 1–3.5 bekommt verpflichtend eine Kategorie:
 
 | Kategorie | Bedeutung | Owner |
 |-----------|-----------|-------|
@@ -830,8 +712,9 @@ Für jeden FAIL (neu oder weiter offen):
 
 ```
 Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
-            20 Features/FG8 Admin & Operations/Bugs/B<id>/B<id>.md
-Template:   Bug-Template.md im selben Bugs/-Ordner
+            00 Überblick/__ Bugs & Hotfixes/B<id> <Titel>.md
+Template:   20 Features/FG8 Admin & Operations/Bugs/Bug-Template.md
+(Alte Bug-Dateien unter 20 Features/FG*/Bugs/ sind Altbestand — dort keine neuen anlegen.)
 ```
 
 Pflichtfelder: `id`, `type`, `category`, `status`, `repo: frontend`, `owner`,
@@ -889,14 +772,14 @@ Offene Bugs:
 
 Vault-Pfad Bug-Dateien:
   /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
-  20 Features/FG8 Admin & Operations/Bugs/B8950-NNN/B8950-NNN.md
+  00 Überblick/__ Bugs & Hotfixes/B8950-NNN <Titel>.md
 
 Nächster Schritt: /coder mit diesen Bug-Dateien als Input.
 ```
 
 ---
 
-## Phase 4: Qualitäts-Gate & Dokumentation
+## Phase 5: Qualitäts-Gate & Dokumentation
 
 ### .last_run Marker aktualisieren
 
@@ -968,7 +851,7 @@ Ergebnis: X/Y bestanden, Z übersprungen
 | Datei | Änderung | Grund |
 
 ### Open Failures (Bug-Register)
-Quelle der Wahrheit: Vault `FG8 Admin & Operations/Bugs/` — kein `pre-existing` mehr.
+Quelle der Wahrheit: Vault `00 Überblick/__ Bugs & Hotfixes/` — kein `pre-existing` mehr.
 `verdict:"SHIP"` nur wenn `open_failures: []` in `.last_run`.
 
 | Bug-ID | Kategorie | Status | Owner | Entdeckt |
@@ -1011,11 +894,16 @@ COVERAGE_GAPs (nicht blockierend):
 
 Known Issues:
   - <ID>: <Beschreibung>
+
+Entscheidungen für Bernhard:
+  - <Journey-Vorschläge, Katalog-/Status-Korrekturen, Docs-Patches, unsichere RCA>
+
+Vorgeschlagene Commit-Message (falls Tester Code/Tests geändert hat): <...> (nicht committen)
 ```
 
 ---
 
-## Phase 4.5: Living Docs Sync
+## Phase 5.5: Living Docs Sync
 
 Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.md`) und die **Repo-Docs** (`docs/`) noch zum tatsächlichen Code-Stand passen.
 
@@ -1036,7 +924,7 @@ Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.
 ---
 
 Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.md`) noch zum tatsächlichen Code-Stand passen.
-**Nicht-blocking** — läuft immer durch, egal ob User j oder n antwortet.
+**Nicht-blocking** — läuft immer durch.
 
 ### Schritt 1: Heuristik-Check
 
@@ -1079,15 +967,14 @@ Docs-Sync — Patch-Vorschlag für src/app/llms.txt/route.ts:
 +++ neu
 - Lokale Shops (shop_type: local): Geschäfte in Larnaca mit Adresse, Öffnungszeiten und Angeboten
 - Online-Shops (shop_type: online_only): Händler ohne physischen Standort, nur Lieferung
-
-Soll ich diese Änderung anwenden? (j/n)
 ```
 
-### Schritt 3: Anwenden oder überspringen
+Den Patch **nicht** selbst anwenden, sondern im Report unter „Entscheidungen für Bernhard“ aufführen.
 
-- User antwortet `j` → Datei patchen, weiter
-- User antwortet `n` → überspringen, weiter
-- Kein Blocker in beiden Fällen
+### Schritt 3: Weiter ohne Rückfrage
+
+- Patch-Vorschläge stehen im Report; angewendet wird erst nach Freigabe
+- Kein Blocker
 
 ### Schritt 4: In TESTSET.md dokumentieren
 
@@ -1097,9 +984,9 @@ Neue Zeile unter dem Abschlussbericht:
 ### Docs-Sync
 | Dokument | Status |
 |----------|--------|
-| llms.txt/route.ts | aktualisiert / unverändert / übersprungen / kein Signal |
-| README.md         | aktualisiert / unverändert / übersprungen / kein Signal |
-| AGENTS.md         | aktualisiert / unverändert / übersprungen / kein Signal |
+| llms.txt/route.ts | Patch vorgeschlagen / unverändert / kein Signal |
+| README.md         | Patch vorgeschlagen / unverändert / kein Signal |
+| AGENTS.md         | Patch vorgeschlagen / unverändert / kein Signal |
 ```
 
 ---
@@ -1111,7 +998,7 @@ Neue Zeile unter dem Abschlussbericht:
 
 ### Wann
 
-- Bug-Fix (`FG/Bugs/B*-*.md`) → Issue-Datei aktualisieren
+- Bug-Fix (`00 Überblick/__ Bugs & Hotfixes/B*.md`) → Issue-Datei aktualisieren
 - Feature-Implementierung (`FG/F*.md`) → Status/last-tested ergänzen
 
 ### Was eintragen
@@ -1120,7 +1007,7 @@ Neue Zeile unter dem Abschlussbericht:
 ```yaml
 status: fixed              # oder verified, in-progress (bei FIX-Verdict)
 fixed: YYYY-MM-DD          # Datum des erfolgreichen e2e-Laufs
-fixed-sha: <git-sha>       # commit-SHA der Lösung
+fixed-sha: <git-sha>       # commit-SHA der Lösung (nachgetragen nach Bernhards Commit-Freigabe)
 verdict: SHIP              # oder FIX / ESCALATE
 ```
 
@@ -1162,89 +1049,13 @@ Nicht verändern, wenn:
 
 ---
 
-## Phase 5: Produktions-Migration (nur bei SHIP-Verdict)
-
-**Trigger:** Verdict aus Phase 4 ist `SHIP` — alle Tests auf 3500/8500 grün.
-**Nie ausführen bei:** `FIX` oder `ESCALATE`.
-
-### Schritt 1: Prüfen ob Backend-Migrations ausstehen
-
-```bash
-BACKEND_REPO="/Users/bb_studio_2025/dev/github/pundo_main_backend"
-cd "$BACKEND_REPO"
-
-# Aktuellen Stand der Produktions-DB ermitteln
-CURRENT=$(.venv/bin/alembic current 2>&1 | grep -v INFO | tr -d ' ')
-
-# Verfügbarer Head
-HEAD=$(.venv/bin/alembic heads 2>&1 | grep -v INFO | awk '{print $1}')
-
-echo "DB aktuell: $CURRENT | Alembic head: $HEAD"
-```
-
-Wenn `CURRENT == HEAD (head)`: keine Migration nötig → Phase 5 übersprungen, im Bericht vermerken.
-
-Wenn `CURRENT != HEAD`: Migrations ausstehend → weiter mit Schritt 2.
-
-### Schritt 2: Migration prüfen (nur additive erlaubt)
-
-```bash
-# Zeige SQL-Preview der ausstehenden Migration(en)
-.venv/bin/alembic upgrade head --sql 2>&1 | head -60
-```
-
-Prüfe den Output auf:
-- `CREATE TABLE` / `CREATE INDEX` / `INSERT` → **sicher, fortfahren**
-- `DROP TABLE` / `DROP COLUMN` / `ALTER TABLE ... DROP` → **STOPP** — destruktive Migration, nicht automatisch anwenden, User benachrichtigen
-
-Bei destruktiver Migration: Verdict bleibt SHIP für Tests, aber Phase 5 gibt `MIGRATION_MANUAL` zurück:
-```
-⚠️  Phase 5: MIGRATION_MANUAL
-    Ausstehende Migration enthält destruktive Operationen (DROP).
-    Bitte manuell prüfen und mit: alembic upgrade head ausführen.
-```
-
-### Schritt 3: Migration anwenden
-
-```bash
-cd "$BACKEND_REPO"
-.venv/bin/alembic upgrade head 2>&1
-```
-
-Erwarteter Output: `Running upgrade <from> -> <to>, <description>`
-
-Verifizieren:
-```bash
-.venv/bin/alembic current 2>&1 | grep -v INFO
-# Muss "(head)" enthalten
-```
-
-### Schritt 4: Im Bericht dokumentieren
-
-```
-### Phase 5: Produktions-Migration
-| Schritt | Ergebnis |
-|---------|----------|
-| Migrations ausstehend | ja / nein |
-| Migrationstyp | additiv / destruktiv / keine |
-| Angewendet | <revision-id> → <revision-id> / übersprungen / MIGRATION_MANUAL |
-| DB-Stand nach Migration | <revision-id> (head) |
-```
-
-**Was Phase 5 NICHT macht:**
-- Produktions-Server (Port 3000/8000) neu starten — das bleibt dem User vorbehalten
-- Migrations auf `pundo_test` anwenden — das macht `prepare_e2e_db.py` automatisch
-- Bei Fehler weitermachen — bei unerwartetem Alembic-Fehler: `MIGRATION_MANUAL` + Fehlermeldung ausgeben
-
----
-
 ## Wichtige Hinweise
 
 - **NIEMALS Produktivdaten verändern.** Kein Schreiben in Produktiv-DB.
-- **Ausnahme Phase 5:** Alembic-Migrations auf `pundo` sind explizit erlaubt, aber nur additiv und nur nach SHIP-Verdict.
-- **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Produktiv: 3000/8000. Niemals direkt auf Produktiv testen.
-- **AGENTS.md lesen:** Next.js 16.2.2 hat Breaking Changes — Docs prüfen!
-- **RTL-Flag muss explizit gesetzt sein** — niemals raten.
+- **Keine Migrationen „für prod“:** Prod migriert beim Backend-Start im Container automatisch (siehe Conventions.md, „Datenbanken“).
+- **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Niemals gegen Produktiv testen.
+- **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — Docs prüfen!
+- **RTL:** `dir` kommt aus `isRTL()` in `src/lib/lang.ts` — keine eigenen Sprachlisten in Tests oder Code.
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
   - Backend-Skills: `.../pundo_main_backend/.claude/skills/`
 - **E2E-03 (RTL) hat hohe Priorität** — Fehler hier betrifft AR/HE-Nutzer vollständig.

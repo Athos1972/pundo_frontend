@@ -2,7 +2,10 @@
 
 Dieses Repo nutzt den automatischen Chain: **designer → architect → coder → e2e-tester**.
 
-Jeder Schritt schreibt in `specs/<feature-slug>/`:
+Jeder Schritt schreibt in den Pundo-Plattform-Vault (nicht ins Repo — Repo-Ordner `specs/` werden nicht mehr verwendet):
+
+- **Features:** `Pundo-Plattform/20 Features/<FG>/<Feature>/specs/<feature-slug>/`
+- **Bugs:** Bug-Datei zentral in `Pundo-Plattform/00 Überblick/__ Bugs & Hotfixes/B<id> <Titel>.md`, Specs daneben in `__ Bugs & Hotfixes/B<id> <Titel>/specs/<feature-slug>/` (Bugs überspringen den Designer)
 
 | Schritt | Datei | Leser | Schreiber |
 |---|---|---|---|
@@ -12,6 +15,10 @@ Jeder Schritt schreibt in `specs/<feature-slug>/`:
 | 4 | `04-test-report.md` | Mensch | e2e-tester |
 
 `<feature-slug>` = `YYYY-MM-DD-kebab-name`, z.B. `2026-04-22-invoice-pdf-export`.
+
+**Commit & Push:** Subagents/Skills der Kette committen und pushen nicht — Bernhard gibt frei. Ein Push auf `main` deployt per Webhook direkt nach Prod (gewollt).
+
+Kanonische Regeln (Cross-Repo-Marker, Rückfragen, Verdicts, Datenbanken): Vault `Pundo-Plattform/00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
 
 Die Subagent-Definitionen liegen user-level in `~/.claude/agents/`. Repo-Overrides nur wenn nötig in `.claude/agents/`.
 

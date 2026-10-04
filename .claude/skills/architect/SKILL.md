@@ -42,7 +42,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 - **API-Proxy:** Kein direkter Backend-Zugriff vom Browser — alles via `/api/v1/` Next.js-Rewrite
 - **Lean Typen:** TypeScript-Interfaces in `src/types/api.ts` spiegeln Backend-Schema; kein Over-Engineering
 - **Backend als Quelle der Wahrheit:** Kategorien und übersetzte Inhalte kommen vom Backend. RTL dagegen über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten
-- **Restart-Regel:** Test-Instanzen (Frontend 3500 / Backend 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
+- **Restart-Regel:** Test-Instanzen (Frontend 3500 / Backend 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) startet nur der User manuell oder auf ausdrückliche Aufforderung neu, weil dort Echtdaten und laufende Nutzer hängen.
 
 ---
 
@@ -60,7 +60,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 | Komponenten-Struktur, Route-Übersicht | **`/docs` im Repo** | `architecture.md` — wird mit dem Code gepflegt |
 | E2E-Setup, wie Tests ausführen | **`/docs` im Repo** | `e2e-testing.md` — Ports/Befehle hier, nie im Vault |
 
-**Nie:** Ports oder Test-Befehle nur im Vault dokumentieren — sie veralten sofort und stehen dem Operator nicht zur Verfügung. **Nie:** Architektur-Entscheidungen/Feature-Geschichte nur in `/docs` — sie gehören in den Vault wo sie mit Specs und Bug-Kontext verknüpft sind.
+Ports und Test-Befehle gehören in `/docs` statt nur in den Vault — im Vault veralten sie sofort und stehen dem Operator nicht zur Verfügung. Architektur-Entscheidungen und Feature-Geschichte gehören in den Vault statt nur in `/docs`, weil sie dort mit Specs und Bug-Kontext verknüpft sind.
 
 Wenn du `02-architecture.md` schreibst und dabei Ports, Befehle oder Komponentenstruktur änderst: tragt den `docs/architecture.md`-Update als Task in `03-implementation.md` ein, damit der Coder ihn im selben PR erledigt.
 
@@ -254,11 +254,11 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 
 6. **Keine Rückfrage im Lauf:** CATALOG.md nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und im Handoff unter „Entscheidungen für Bernhard“ bündeln (siehe Conventions.md, „Rückfragen“).
 
-### Was der Architect NICHT darf
+### Was der Architect nicht darf
 
-- **Niemals** `status: implemented` setzen — das ist ausschließlich Coder-Recht.
-- **Niemals** `last-run` / `last-result` ändern — das ist ausschließlich e2e-tester-Recht.
-- **Niemals** Katalog-Einträge ohne Bernhards Freigabe mutieren (außer als Vorschlag im Spec).
+- `status: implemented` setzt ausschließlich der Coder.
+- `last-run` / `last-result` ändert ausschließlich der e2e-tester.
+- Katalog-Einträge änderst du nur nach Bernhards Freigabe; bis dahin stehen Änderungen als Vorschlag im Spec.
 - **Darf** primär `touches-modules`-Korrekturen vorschlagen (Drift-Fix, umgesetzt nach Freigabe).
 
 ---

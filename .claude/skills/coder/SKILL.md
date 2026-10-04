@@ -30,13 +30,13 @@ den E2E-Tester, wenn deine Unit-Tests grün sind und TypeScript fehlerfrei kompi
 - Überschneidung ist kein Problem — lieber doppelt geprüft als gar nicht.
 
 **Grundregeln:**
-- NIEMALS Secrets (API-Keys, Passwörter) im Code hardcoden. Nur aus `.env.local` lesen!
+- Secrets (API-Keys, Passwörter) liest du aus `.env.local`, statt sie im Code zu hardcoden, weil der Code im Repo landet.
 - Keine spekulativen Abstraktionen. Kein Overengineering.
 - Kein Commit, kein Push — Commit-Message im Handoff vorschlagen, Bernhard gibt frei (Push auf `main` = Prod-Deploy). Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
 - RTL über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
 - `AGENTS.md` lesen: die installierte Next.js-Version (siehe `package.json`) hat Breaking Changes — Docs in `node_modules/next/dist/docs/` prüfen.
 - **Test-Umgebung zuerst:** Manuelle Tests und Verifikation immer auf Port **3500** (Frontend) + **8500** (Backend-Test-DB). Produktiv (3000/8000) erst nach erfolgreichem Test-Lauf.
-- **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
+- **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) startet nur der User manuell oder auf ausdrückliche Aufforderung neu, weil dort Echtdaten und laufende Nutzer hängen.
 
 ---
 
@@ -52,7 +52,7 @@ cat package.json | grep '"next"'
 # Falls unklar: node_modules/next/dist/docs/ lesen
 ```
 
-### Bug-Register prüfen (PFLICHT bei Bug-Fix-Aufträgen — F8950)
+### Bug-Register prüfen (bei jedem Bug-Fix-Auftrag — F8950)
 
 Wenn der /e2e-tester dir Bug-Dateien als Input übergeben hat (Vault-Pfad steht
 im Handoff-Block des Test-Reports): lies JEDE offene Bug-Datei bevor du Code änderst.
@@ -93,7 +93,7 @@ Lese mindestens:
 7. **Lint prüfen:** `npm run lint` — keine Fehler erlaubt
 8. **Übergeben:** Strukturiertes Protokoll für /e2e-tester
 
-### Was gehört NICHT hierher
+### Was gehört nicht hierher
 
 - Keine echten API-Calls in Unit-Tests (immer mocken oder MSW nutzen)
 - Keine Änderungen an Produktiv-Datenbank (liegt im Backend)
@@ -121,7 +121,7 @@ Lese mindestens:
 
 1. **Lies** `e2e/journeys/CATALOG.md`.
 
-2. **Filtere** Einträge mit **`status: approved`** UND **`proposed-in-spec == <aktueller-spec-slug>`**.
+2. **Filtere** Einträge mit `status: approved` und `proposed-in-spec == <aktueller-spec-slug>`.
 
 3. **Für jeden Treffer:**
    - (a) Lege/aktualisiere `e2e/journeys/<id>.spec.ts` nach dem im Body der Journey festgehaltenen Runbook.
@@ -156,11 +156,11 @@ Wenn beim Entwickeln einer Journey-Spec ein Test-Schritt nicht grün wird:
 3. Dokumentiere die Ursache im Spec-Kommentar, bevor du die Assertion anpasst.
 4. Wenn die Funktionalität fehlerhaft ist: Lass den Test FAIL und vermerke es in der Journey-Übergabe an den e2e-tester.
 
-### Was der Coder NICHT darf
+### Was der Coder nicht darf
 
-- **Niemals** Einträge mit `status: proposed`, `skipped` oder `deprecated` berühren. Diese werden wortlos übersprungen.
-- **Niemals** selbst neue Journey-Vorschläge anlegen. Der Coder ist **reiner Konsument** des Katalogs.
-- **Niemals** einen `proposed`-Eintrag direkt auf `implemented` setzen (Pflicht-Zwischenschritt: `approved`).
+- Einträge mit `status: proposed`, `skipped` oder `deprecated` lässt du unverändert und überspringst sie wortlos.
+- Neue Journey-Vorschläge legst du nicht selbst an; der Coder ist reiner Konsument des Katalogs.
+- Ein `proposed`-Eintrag geht immer erst über `approved`, bevor er auf `implemented` gesetzt wird.
 
 ---
 
@@ -278,7 +278,7 @@ vi.mock('@/lib/api', () => ({
 ### Regression-Schutz für Bugs
 
 Wenn du einen Bug fixt: **Zuerst einen Test schreiben der den Bug reproduziert,
-dann fixen.** Der Test muss VOR dem Fix rot sein, NACH dem Fix grün.
+dann fixen.** Der Test ist vor dem Fix rot und nach dem Fix grün.
 
 ```typescript
 describe('Bugregression', () => {
@@ -345,10 +345,10 @@ npx vitest run --coverage
 
 ---
 
-## 3.5 Anti-Schön-Test-Regel (PFLICHT — F8950)
+## 3.5 Anti-Schön-Test-Regel (F8950)
 
-Du darfst eine bestehende Assertion NUR dann abschwächen, ändern oder entfernen,
-wenn **BEIDE** Bedingungen erfüllt sind:
+Eine bestehende Assertion darfst du nur dann abschwächen, ändern oder entfernen,
+wenn beide Bedingungen erfüllt sind:
 
 1. Es existiert eine Bug-Datei mit `category: TESTFEHLER`, die genau diesen Test betrifft.
 2. Ihr Abschnitt `## Korrektheits-Beweis` ist ausgefüllt — mit einem konkreten Beleg,
@@ -359,14 +359,14 @@ Betroffene Assertion-Muster (Heuristik des e2e-tester-Diff-Checks):
 `.toBe(`, `.toEqual(`, `.toHaveLength(`, `.toBeGreaterThan(`, `.toContain(`,
 `.toHaveCount(`, `.toBeVisible(`, `.toBeGreaterThanOrEqual(`
 
-**Fehlt eine der zwei Bedingungen → lass die Assertion stehen und fixe den PRODUKTIONSCODE.**
+**Fehlt eine der zwei Bedingungen, lass die Assertion stehen und fixe den Produktionscode.**
 Eine grüne Suite durch aufgeweichte Assertions ist ein Verstoß; der e2e-tester
 meldet ihn als `SCHÖN-TEST-VERDACHT` → Verdict `ESCALATE`.
 
 Bug-Regression-Test (ergänzt die bestehende Regel aus §2):
 Beim Fix eines `FUNKTIONSFEHLER` zuerst einen Test schreiben der den Bug reproduziert
-(vor dem Fix ROT, nach dem Fix GRÜN). Diesen Test NICHT abschwächen um ihn grün zu
-bekommen — das ist der klassische Schöntestfall.
+(vor dem Fix rot, nach dem Fix grün). Diesen Test lässt du stehen, statt ihn abzuschwächen,
+bis er grün wird — Abschwächen wäre der klassische Schöntestfall.
 
 ---
 
@@ -412,7 +412,7 @@ Empfehlung an E2E-Tester:
 
 ## 5. Wichtige Hinweise
 
-- **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — immer Docs prüfen!
+- **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — prüfe vorher die Docs.
 - **Kein Overengineering:** Tests für den Code der da ist, nicht für hypothetische Features.
 - **Server Component by default:** Erst `'use client'` wenn wirklich nötig.
 - **RTL:** `dir` über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten.
@@ -421,15 +421,15 @@ Empfehlung an E2E-Tester:
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`
 - **Dokumentation im selben PR aktualisieren:** Wenn du Ports, Befehle, Env-Vars, Komponentenstruktur oder API-Routing änderst → `docs/architecture.md` oder `docs/e2e-testing.md` im selben PR mitpflegen. Nie "docs später". Operatives Wissen (wie/wo/was) lebt in `/docs`. Design-Entscheidungen (warum) und Feature-Geschichte leben im Vault — die schreibt der Architect.
 - Dokumentation immer auf Letztstand halten README.md
-- **Tooltip-Pflicht für UI-Elemente (PFLICHT):**
+- **Tooltips für UI-Elemente:**
   - Jede neue Komponente mit Icons (ohne sichtbares Label) → `<Tooltip content={tr.key}>` wrappen
   - Jede neue Komponente mit Sprach-Code-Badges (EL, EN, etc.) → Tooltip mit `community_vote_language_XX` key
   - Jede neue VoteToggle/Vote-Schaltfläche → Tooltip auf ✓ und ✗ Buttons via `vote_yes_tooltip` / `vote_no_tooltip`
   - Tooltip-Komponente: `src/components/ui/Tooltip.tsx` (Radix-basiert)
   - `TooltipProvider` ist in `src/app/(customer)/layout.tsx` — kein erneutes Wrappen nötig
   - Radix UI Mocks für Tests: global via `vitest.config.ts` Alias auf `src/tests/__mocks__/radix-tooltip.tsx` / `radix-popover.tsx`
-- **Shop-Admin Clean Boundary (PFLICHT, keine Ausnahmen):**
-  - `src/components/shop-admin/` → darf NUR aus `src/components/ui/` importieren, nicht aus `map/`, `product/`, `search/`, `shop/`
+- **Shop-Admin Clean Boundary (ohne Ausnahmen):**
+  - `src/components/shop-admin/` → importiert ausschließlich aus `src/components/ui/`, nicht aus `map/`, `product/`, `search/`, `shop/`
   - `src/lib/shop-admin-api.ts` → separates File, nicht in `api.ts` mischen
   - `src/types/shop-admin.ts` → separates File, nicht in `types/api.ts` mischen
   - Admin-Translations → eigene Dateien `src/lib/shop-admin-translations.ts` bzw. `src/lib/system-admin-translations.ts`, nicht in `translations.ts` mit Customer-Keys mischen

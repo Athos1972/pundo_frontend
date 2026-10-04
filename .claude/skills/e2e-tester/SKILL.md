@@ -28,20 +28,20 @@ TypeScript und Lint, schreibst fehlende Unit-Tests nach und führst erst dann
 Browser-E2E-Tests durch.
 
 **Grundregeln:**
-- NIEMALS Secrets hardcoden.
-- Produktivdaten nur lesen, niemals verändern.
+- Secrets kommen aus der Umgebung, statt hardcodet in Code oder Tests zu stehen.
+- Produktivdaten nur lesen, nicht verändern — es sind Echtdaten.
 - **Test-Umgebung:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB `pundo_test`). Am Studio gibt es keine Prod-DB (siehe AGENTS.md, Studio-Hinweis F6995).
-- **Pflicht-Voraussetzung für E2E/Smoke-Tests: BEIDE Dienste müssen laufen — Frontend (3500) UND Backend (8500).** Es gibt keine "nur-Frontend"-Tests. Ist das Backend down, sofort starten (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) oder beim User nachfragen — NICHT versuchen, Tests ohne Backend durchzuführen.
-- **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung.
-- Akzeptanzkriterien müssen MESSBAR sein (Selektor, URL, Text, CSS-Eigenschaft).
+- **Voraussetzung für E2E/Smoke-Tests:** Frontend (3500) und Backend (8500) laufen beide. Es gibt keine "nur-Frontend"-Tests. Ist das Backend down, starte es (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) oder frag beim User nach, statt Tests ohne Backend durchzuführen.
+- **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) startet nur der User manuell oder auf ausdrückliche Aufforderung neu, weil dort Echtdaten und laufende Nutzer hängen.
+- Akzeptanzkriterien sind messbar (Selektor, URL, Text, CSS-Eigenschaft).
 - Kein Commit, kein Push — Bernhard gibt frei (Push auf `main` = Prod-Deploy). Keine Rückfragen im Lauf: Vorschläge im Report unter „Entscheidungen für Bernhard“ sammeln. Kanonisch: Vault `00 Überblick/Conventions.md`, Abschnitt „Spec-Workflow“.
-- Nicht blockieren bei Coverage-Unterschreitung — dokumentieren und weitermachen.
+- Bei Coverage-Unterschreitung dokumentieren und weitermachen, statt zu blockieren.
 - **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
 - **Kein pre-existing-Label (F8950):** Es gibt keinen Status "pre-existing" mehr. Jedes FAIL ist `OFFEN`, `IN ARBEIT`, `GELÖST` oder `QUARANTÄNE` und hat eine Bug-Datei im zentralen Vault-Register (`00 Überblick/__ Bugs & Hotfixes/`). Ein FAIL blockiert das Verdict bis er GELÖST ist oder BB explizit entschieden hat. Quarantäne erfordert BB-Signatur (`test.fixme()` + `// QUARANTÄNE B<id> — <Grund> — <Datum>`).
 - **Gate-Invariante (F8950):** `verdict:"SHIP"` ist nur erlaubt wenn `open_failures` ein leeres Array ist. Vor dem SHIP-Verdict: `node scripts/verdict-gate.mjs` ausführen — bei exit≠0 ist SHIP verboten → Verdict `FIX` oder `ESCALATE`.
 - **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
 - **Test-Daten-Matrix:** Gegenseitig ausschließende Zustände bekommen eigene Fixtures. Nie Zustände "zusammenpappen" um einen Test zu vereinfachen.
-- **DB-Reset-Regel (KRITISCH):** `pundo_test` enthält Echtdaten aus Prod — **niemals automatisch resetten**. Weder `global-setup.ts` noch `pytest`-Fixtures dürfen die DB ohne explizites `E2E_RESET_DB=true` löschen. Tests müssen die bestehenden Daten nutzen und bei Bedarf neue Datensätze anlegen (via API), keine DROP/TRUNCATE.
+- **DB-Reset-Regel: `pundo_test` wird nie automatisch zurückgesetzt, weil es Echtdaten aus Prod enthält.** Weder `global-setup.ts` noch `pytest`-Fixtures dürfen die DB ohne explizites `E2E_RESET_DB=true` löschen. Tests nutzen die bestehenden Daten und legen bei Bedarf neue Datensätze per API an, statt DROP/TRUNCATE zu verwenden.
 - **Testdaten auffüllen:** Wenn `pundo_test` zu leer wirkt und Tests an fehlenden Daten scheitern, Prod→Test-Sync ausführen: `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && source .venv/bin/activate && ./scripts/sync_prod_to_test.sh`. Das Script holt echte Business-Daten (Shops, Items, Kategorien etc.) per SSH von Hetzner — kein Auth/PII, E2E-Fixtures bleiben erhalten.
 - **Expliziter Reset** nur wenn unbedingt nötig (Migrations-Test, CI): `E2E_RESET_DB=true npx playwright test` bzw. `E2E_RESET_DB=true pytest`.
 
@@ -60,14 +60,14 @@ Phase 3.5: Journey-Run          (mustRun-Journeys ausführen)
 Phase 4.5: Quality-Gate         (RCA-Klassifikation, Bug-Register, Gate, Schön-Test-Check, Coder-Trigger)
 Phase 5:   Qualitäts-Gate       (Zusammenfassung + TESTSET.md)
 Phase 5.5: Living Docs Sync     (llms.txt, README.md, AGENTS.md — nicht-blocking)
-Phase 5.6: Issue-Update         (Bug/Feature-Datei im Obsidian-Vault — PFLICHT)
+Phase 5.6: Issue-Update         (Bug/Feature-Datei im Obsidian-Vault)
 ```
 
 ---
 
-## Phase 3: Visual Smoke-Test (PFLICHT — läuft immer)
+## Phase 3: Visual Smoke-Test (läuft immer)
 
-**Warum Pflicht?** Feature-Tests prüfen nur was gerade geändert wurde. Regressions entstehen durch Seiteneffekte. Der Smoke-Test läuft IMMER, unabhängig davon was im Diff steht.
+**Warum bei jedem Lauf?** Feature-Tests prüfen nur was gerade geändert wurde. Regressions entstehen durch Seiteneffekte. Der Smoke-Test läuft deshalb bei jedem Lauf, unabhängig davon was im Diff steht.
 
 **Was er prüft:** Seiten die echte Daten rendern — nicht nur ob Routen erreichbar sind, sondern ob die gerendereten Daten korrekt sichtbar sind.
 
@@ -366,8 +366,8 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3500/ || echo "BLOCKED: 
 curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit=1" || echo "BLOCKED: Test-Backend nicht erreichbar"
 ```
 
-> **⚠️ PFLICHT:** Beide Dienste müssen 200 zurückgeben, BEVOR irgendein Playwright-Test startet.
-> Es gibt KEINE "nur-Frontend"-Tests — der Smoke-Test prüft auch datengetriebene Seiten.
+> Beide Dienste geben 200 zurück, bevor irgendein Playwright-Test startet.
+> Es gibt keine "nur-Frontend"-Tests — der Smoke-Test prüft auch datengetriebene Seiten.
 >
 > Wenn ein Dienst down ist:
 > - **Backend down:** `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && ./scripts/start_test_server.sh &`
@@ -375,9 +375,9 @@ curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit
 > - **Frontend down:** `lsof -ti:3500 | xargs kill -9 2>/dev/null; npm run dev:test &`
 >   Warten bis "Ready in Xms" erscheint.
 >
-> **NIEMALS mit down-Dienst testen — Tests enden mit ERR_ABORTED und maskieren echte Fehler.**
+> Teste erst, wenn beide Dienste laufen — mit einem down-Dienst enden Tests mit ERR_ABORTED und maskieren echte Fehler.
 
-> **⚠️ Umgebungsregel:** E2E-Tests laufen IMMER auf Port 3500 (Frontend) + 8500 (Backend).
+> **Umgebungsregel:** E2E-Tests laufen auf Port 3500 (Frontend) + 8500 (Backend), weil 3000/8000 Prod-Ports sind.
 
 ---
 
@@ -540,7 +540,7 @@ test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 
 **Priorität: Hoch** — Betrifft alle Layout-Komponenten, die `lang` als Server-Prop erhalten.
 
-**Trigger:** Dieser Test ist PFLICHT wenn der Diff eine der folgenden Dateien berührt:
+**Trigger:** Dieser Test läuft verpflichtend, sobald der Diff eine der folgenden Dateien berührt:
 - `src/app/(customer)/layout.tsx`
 - `src/lib/useLang.ts`
 - `src/components/layout/Header.tsx`, `Footer.tsx`, `NavLinks.tsx`, `FooterLinks.tsx`
@@ -657,21 +657,21 @@ Nach jedem Journey-Lauf schreibt der Tester einen Human-readable Report nach dem
 
 Wenn ein Journey-Schritt FAIL liefert:
 1. Screenshot und Trace automatisch gespeichert (Playwright-Standard)
-2. Assertion wird NICHT verändert
+2. Assertion bleibt unverändert
 3. Tester dokumentiert in Finding: Expected, Actual, mögliche Ursache
 4. Tester klassifiziert per RCA (Kategorien siehe Phase 4.5, Schritt 2) — keine Rückfrage im Lauf. Ist die Klassifikation unsicher: als Finding behandeln und unter „Entscheidungen für Bernhard“ aufführen.
 5. Finding: Eintrag in TESTSET.md unter `### Findings (unresolved)`, Katalog-`last-result: FAIL`, Bug-Datei (Phase 4.5)
 6. Testfehler: nur mit Bug-Datei `category: TESTFEHLER` + `## Korrektheits-Beweis` korrigieren (F8950), dann erneut laufen
 
-### Was Phase 3.5 NICHT macht
+### Was Phase 3.5 nicht macht
 
-- **Niemals** `status` eines Eintrags ändern (außer FAIL-Korrektur bei stale spec-file — und nur nach Freigabe durch Bernhard).
-- **Niemals** `proposed`, `skipped` oder `deprecated`-Einträge ausführen.
-- **Keine neuen Journey-Vorschläge** anlegen (das ist Phase 0.5).
+- `status` eines Eintrags bleibt unverändert (Ausnahme: FAIL-Korrektur bei stale spec-file, nur nach Freigabe durch Bernhard).
+- Einträge mit `proposed`, `skipped` oder `deprecated` werden übersprungen, nicht ausgeführt.
+- Neue Journey-Vorschläge entstehen in Phase 0.5, nicht hier.
 
 ---
 
-## Phase 4.5: Quality-Gate & Bug-Register (PFLICHT — F8950)
+## Phase 4.5: Quality-Gate & Bug-Register (F8950)
 
 **Kommt nach Phase 3.5 (Journey-Run), vor Phase 5 (Qualitäts-Gate & Dokumentation).**
 
@@ -919,7 +919,7 @@ Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.
 
 **Wenn du im Diff siehst:** Port-Änderungen, neue Env-Vars, neues Test-Script, neue Route-Gruppen → `docs/e2e-testing.md` oder `docs/architecture.md` prüfen und bei Drift patchen (Schritt 2 unten).
 
-**Nie:** Ports oder Befehle nur im Vault dokumentieren. **Nie:** Feature-Geschichte/Trade-offs nur in `/docs`.
+Ports und Befehle gehören in `/docs` statt nur in den Vault; Feature-Geschichte und Trade-offs gehören in den Vault statt nur in `/docs`.
 
 ---
 
@@ -991,7 +991,7 @@ Neue Zeile unter dem Abschlussbericht:
 
 ---
 
-## Phase 5.6: Issue-Update im Obsidian-Vault (PFLICHT)
+## Phase 5.6: Issue-Update im Obsidian-Vault
 
 **Trigger:** Jeder Testlauf, der ein Bug-Issue oder Feature-Spec aus dem Vault als Auslöser hatte.
 **Vault-Pfad:** `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/`
@@ -1051,9 +1051,9 @@ Nicht verändern, wenn:
 
 ## Wichtige Hinweise
 
-- **NIEMALS Produktivdaten verändern.** Kein Schreiben in Produktiv-DB.
+- Produktivdaten bleiben unverändert: kein Schreiben in die Produktiv-DB (siehe Grundregeln).
 - **Keine Migrationen „für prod“:** Prod migriert beim Backend-Start im Container automatisch (siehe Conventions.md, „Datenbanken“).
-- **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Niemals gegen Produktiv testen.
+- **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Getestet wird gegen diese Test-Instanzen, nicht gegen Produktiv.
 - **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — Docs prüfen!
 - **RTL:** `dir` kommt aus `isRTL()` in `src/lib/lang.ts` — keine eigenen Sprachlisten in Tests oder Code.
 - **Backend-Pfad:** Falls Backend-Änderungen nötig: `/Users/bb_studio_2025/dev/github/pundo_main_backend`

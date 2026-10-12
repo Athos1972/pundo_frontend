@@ -11,16 +11,16 @@
   },
   "dependencies": {
     "@playwright/test": "^1.44.0",
-    "js-yaml": "^4.1.0",
-    "nodemailer": "^9.0.1",
-    "zod": "^3.23.0",
-    "tsx": "^4.23.0"
+    "js-yaml": "^4.3.2",
+    "nodemailer": "^10.1.0",
+    "tsx": "^4.23.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/nodemailer": "^8.0.0",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.0",
     "typescript": "^5",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.11"
   }
 }

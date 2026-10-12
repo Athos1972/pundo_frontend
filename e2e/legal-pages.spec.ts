@@ -24,7 +24,7 @@ for (const { path, enTitle } of legalRoutes) {
     await expect(page).toHaveURL(new RegExp(path))
 
     // Kein Placeholder mehr im sichtbaren Text
-    const body = await page.locator('main').textContent()
+    const body = await page.getByRole('main').textContent()
     expect(body).not.toContain('⚠️ PLACEHOLDER')
 
     // Titel sichtbar
@@ -42,7 +42,7 @@ for (const lang of langs) {
     await page.context().addCookies([{ name: LANG_COOKIE, value: lang, domain: 'localhost', path: '/' }])
     await page.goto(`${BASE}/legal/imprint`)
 
-    const body = await page.locator('main').textContent()
+    const body = await page.getByRole('main').textContent()
     expect(body).not.toContain('⚠️ PLACEHOLDER')
     expect(body).not.toContain('PLACEHOLDER')
     // Firmenname immer vorhanden
@@ -82,7 +82,7 @@ test('Deutsch setzt dir=ltr auf Legal-Seite', async ({ page }) => {
 // E2E-04: Echte Firmendaten vorhanden
 test('Imprint enthält echte Firmendaten', async ({ page }) => {
   await page.goto(`${BASE}/legal/imprint`)
-  const body = await page.locator('main').textContent()
+  const body = await page.getByRole('main').textContent()
   expect(body).toContain('HE 329258')
   expect(body).toContain('CY10329258B')
   expect(body).toContain('Kimonos 1')
@@ -92,14 +92,14 @@ test('Imprint enthält echte Firmendaten', async ({ page }) => {
 
 test('Privacy Policy enthält GDPR-Rechte', async ({ page }) => {
   await page.goto(`${BASE}/legal/privacy`)
-  const body = await page.locator('main').textContent()
+  const body = await page.getByRole('main').textContent()
   expect(body).toContain('info@pundo.cy')
   expect(body).toContain('GDPR')
 })
 
 test('Terms enthält Datum', async ({ page }) => {
   await page.goto(`${BASE}/legal/terms`)
-  const body = await page.locator('main').textContent()
+  const body = await page.getByRole('main').textContent()
   expect(body).toContain('2026')
   expect(body).toContain('info@pundo.cy')
 })

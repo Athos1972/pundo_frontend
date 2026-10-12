@@ -33,7 +33,7 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, o
 
       <div className="flex items-center gap-3">
         <hr className="flex-1 border-gray-200" />
-        <span className="text-xs text-gray-400">oder</span>
+        <span className="text-xs text-gray-400">{tr.onboarding_or}</span>
         <hr className="flex-1 border-gray-200" />
       </div>
 

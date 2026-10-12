@@ -92,20 +92,10 @@ function FitBounds({ shops, center, zoom }: FitBoundsProps) {
   return null
 }
 
-// Map OSM language codes — fall back to English for unsupported locales
-const TILE_LANG: Record<string, string> = {
-  de: 'de', en: 'en', ru: 'ru', ar: 'ar', he: 'he',
-}
-
 export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAULT_LANG, highlightedShopId, onPinClick }: ShopMapProps) {
   const defaultCenter: [number, number] = center ?? (shops.length > 0 ? [shops[0].lat, shops[0].lng] : [34.9, 33.63])
+  // CARTO basemaps now require an API key (tiles render "API KEY REQUIRED") — OSM for all languages
   const tileUrl = `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
-  const langCode = TILE_LANG[lang] ?? 'en'
-  // Use Nominatim-style localised tiles via openstreetmap.fr/hot which respects Accept-Language
-  // For proper i18n we use the CartoDB Voyager tiles which default to latin script
-  const localizedUrl = langCode === 'en'
-    ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-    : tileUrl
 
   return (
     <div className={`${className} min-h-[200px]`}>
@@ -117,8 +107,8 @@ export function ShopMap({ shops, className = '', center, zoom = 15, lang = DEFAU
       >
         <FitBounds shops={shops} center={center} zoom={zoom} />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          url={localizedUrl}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url={tileUrl}
         />
         {shops.map(shop => (
           <Marker

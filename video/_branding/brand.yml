@@ -1,0 +1,81 @@
+# Shared brand + pipeline settings for ALL pundo videos.
+# Colors mirror the Tailwind tokens in src/app/globals.css (@theme).
+colors:
+  accent: "#D4622A"
+  accent_light: "#FAE8DF"
+  accent_dark: "#A04515"
+  bg: "#F7F5F2"
+  surface: "#FFFFFF"
+  surface_alt: "#F0EDE8"
+  border: "#E5E0D9"
+  text: "#1A1714"
+  text_muted: "#7A736B"
+  logo_green: "#2BBD6D"      # pundo wordmark color (public/brands/pundo/logo.svg)
+  success: "#2A8C5A"
+  subtitle_bg: "rgba(26,23,20,0.82)"
+  subtitle_text: "#FFFFFF"
+
+# Repo fonts: Space Grotesk (headings) + DM Sans (body), see src/app/(customer)/layout.tsx.
+# Neither has Greek glyphs -> Greek falls back to the system font (same as on the live site).
+fonts:
+  heading: "Space Grotesk"
+  body: "DM Sans"
+  fallback: "'Helvetica Neue', Helvetica, Arial, sans-serif"
+  files:
+    - { family: "Space Grotesk", file: "SpaceGrotesk-latin.woff2", weight: "300 700" }
+    - { family: "DM Sans", file: "DMSans-latin.woff2", weight: "100 900" }
+    - { family: "DM Sans", file: "DMSans-latinext.woff2", weight: "100 900" }
+
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  crf: 17
+  preset: medium
+  audio_bitrate: "192k"
+
+# edge-tts voices (free Microsoft neural voices)
+voices:
+  en: { voice: "en-GB-SoniaNeural", rate: "-5%", pitch: "+0Hz" }
+  el: { voice: "el-GR-AthinaNeural", rate: "-5%", pitch: "+0Hz" }
+
+timing:
+  lead_in_s: 0.6          # silence at scene start before narration
+  tail_s: 1.0             # pause after narration (0.8-1.2 s between scenes)
+  crossfade_s: 0.4        # xfade between scenes
+  intro_s: 6.0
+  outro_s: 11.0           # keep >= 10 s free for YouTube end screen elements
+
+# Device frame + layout (1920x1080 canvas). Phone left-centre, callout + subtitles right.
+layout:
+  phone_screen_h: 920     # px on canvas; width derived from recording aspect (390x844)
+  phone_bezel: 16
+  phone_radius: 58
+  phone_center_x: 540
+  phone_center_y: 540
+  right_x: 1030           # left edge of the callout/subtitle column
+  right_w: 800
+  subtitle_y: 790         # top of subtitle box
+  subtitle_h: 190
+  callout_y: 230          # top of callout block
+  subtitle_font_px: 42
+  subtitle_max_chars: 36  # per line
+  callout_font_px: 84
+  logo_corner: { x: 1650, y: 48, w: 220 }
+
+# Background music. Picked up automatically: put an mp3/wav/m4a into video/_branding/music/
+# (first file alphabetically), or set `file` explicitly. Looped/trimmed to video length, fade in/out,
+# ducked by sidechain under the narration. Set `enabled: false` to build without music.
+music:
+  enabled: true
+  dir: video/_branding/music
+  file: video/_branding/music/alexguz-funk-amp-breakbeat-upbeat-advertising-happy-cook-541097.mp3   # default track (see music/CREDITS.md); null = first file in dir
+  scene_db: -24           # level vs. narration during the scenes
+  intro_outro_db: -10     # fuller during intro/outro (no speech there)
+  duck_extra_db: -3       # (sidechain ducking while speaking, ratio 3:1)
+  loop_crossfade_s: 2.0   # equal-power crossfade at the best-matching loop point
+  fade_in_s: 1.5
+  fade_out_s: 3.0
+  ramp_s: 1.2             # transition time between the intro/outro and scene levels
+
+# Final mix: two-pass loudnorm to -14 LUFS integrated (YouTube), true peak <= -1 dBTP

@@ -75,3 +75,10 @@ seo-audit-*.md
 perf-report-*.json
 perf-report-*.md
 seo-perf-followups.md
+
+# video pipeline
+video/.venv/
+video/**/out/
+video/**/.cache/
+video/**/.recording-accounts.json
+video/**/cover-candidates/

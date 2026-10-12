@@ -29,6 +29,16 @@ def norm(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+PRON = (brand.get("pronunciation") or {}).get(lang) or {}
+
+
+def spoken(text):
+    """Respell words for the voice only (brand.yml `pronunciation`); subtitles keep the original text."""
+    for word, say in PRON.items():
+        text = re.sub(rf"(?<!\w){re.escape(word)}(?!\w)", say, text, flags=re.IGNORECASE)
+    return text
+
+
 async def synth(text, out, tries=25):
     for i in range(tries):
         try:
@@ -111,14 +121,18 @@ async def main():
         if sc.get("narration"):
             text = norm(sc["narration"][lang])
             out = cache / "audio" / f"{sc['id']}.mp3"
-            key = hashlib.sha1(f"{text}|{V}".encode()).hexdigest()
+            say = spoken(text)
+            key = hashlib.sha1(f"{say}|{V}".encode()).hexdigest()
             meta_f = cache / "audio" / f"{sc['id']}.json"
             if out.exists() and meta_f.exists() and json.loads(meta_f.read_text()).get("key") == key:
                 words = [tuple(w) for w in json.loads(meta_f.read_text())["words"]]  # cached
             else:
-                words, sents = await synth(text, out)
+                words, sents = await synth(say, out)
                 if words:
-                    words = align_to_text(text, words)
+                    words = align_to_text(say, words)
+                    orig = text.split(" ")  # respelling is word-for-word, so tokens line up 1:1
+                    if len(orig) == len(words):
+                        words = [(a, b, o) for (a, b, _), o in zip(words, orig)]
                 meta_f.write_text(json.dumps({"key": key, "words": words}))
             dur = probe(out)
             if not words:  # fallback: spread words evenly (voice without WordBoundary)

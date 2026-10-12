@@ -39,6 +39,12 @@ voices:
   en: { voice: "en-GB-SoniaNeural", rate: "-5%", pitch: "+0Hz" }
   el: { voice: "el-GR-AthinaNeural", rate: "-5%", pitch: "+0Hz" }
 
+# Respellings for the voice only (subtitles/callouts keep the original word).
+# Chosen by ear 2026-10-12 (local samples in _branding/pronunciation-test/, gitignored).
+pronunciation:
+  en: { pundo: "Poon-doe" }
+  el: { pundo: "Πούντο" }
+
 timing:
   lead_in_s: 0.6          # silence at scene start before narration
   tail_s: 1.0             # pause after narration (0.8-1.2 s between scenes)

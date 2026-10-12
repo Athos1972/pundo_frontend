@@ -82,3 +82,4 @@ video/**/out/
 video/**/.cache/
 video/**/.recording-accounts.json
 video/**/cover-candidates/
+video/_branding/pronunciation-test/

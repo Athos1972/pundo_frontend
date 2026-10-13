@@ -226,7 +226,7 @@ for st, s in zip(starts, segments):
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{mid:.2f}", "-i", final, "-frames:v", "1", qa / f"{name}.png"])
 # phone-only frame for the thumbnail: full-resolution recording frame near the end of step5 (photo visible)
 thumb_src = None
-tid = B.get("thumbnail_scene", "step5-name-photo")
+tid = tl["meta"].get("thumbnail_scene") or B.get("thumbnail_scene", "step5-name-photo")   # per video (scenes.yml meta) > brand
 if tid in rec_scenes:
     rs = rec_scenes[tid]; tt = rs["start"] + rs["dur"] * 0.9
     thumb_src = cache / "rec" / [f for f in frames if f["ts"] <= tt][-1]["file"]

@@ -65,14 +65,16 @@ export async function startSession({ lang, outDir, viewport = { width: 390, heig
     frames.push({ ts: metadata.timestamp, file })
     cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {})
   })
-  await cdp.send('Page.startScreencast', {
-    format: 'jpeg', quality: 92, maxWidth: viewport.width * dsf, maxHeight: viewport.height * dsf, everyNthFrame: 1,
-  })
+  const castOpts = { format: 'jpeg', quality: 92, maxWidth: viewport.width * dsf, maxHeight: viewport.height * dsf, everyNthFrame: 1 }
+  await cdp.send('Page.startScreencast', castOpts)
   const scenes = []
   return {
     page, ctx, browser,
     scenes,
     nowS: () => Date.now() / 1000,
+    /** Freeze the picture (compose.py holds the last frame) e.g. while a page loads; resume() cuts to the new state. */
+    pause: () => cdp.send('Page.stopScreencast').catch(() => {}),
+    resume: () => cdp.send('Page.startScreencast', castOpts).catch(() => {}),
     async finish() {
       await sleep(500)
       await cdp.send('Page.stopScreencast').catch(() => {})

@@ -1,0 +1,151 @@
+# Single source of truth for the product-create-new video (EN + EL), part 2 of "pundo for businesses".
+# Approved German draft: 01-skript.de.md (review only, not produced). Greek: informal "εσύ".
+# Pipeline reads: id, shot (what the recorder does), callout (side text overlay), narration.
+# UI terms in quotes match the live UI strings: src/lib/i18n/shop-admin-common.ts (nav_offers, save),
+# shop-admin-offers.ts (add_offer, price_type_fixed, photo_cover_badge), shop-admin-catalog.ts
+# (item_picker_add_new, item_type_product, edit), category name + unit label from pundo_test
+# (category 4608 "Breads & Buns" / "Άρτοι και ψωμάκια", price unit per_piece "Piece" / "Τεμάχιο").
+# Demo product names (typed in record.mjs): EN "Sourdough bread 750 g", EL "Ψωμί προζυμιού 750 γρ.".
+
+meta:
+  slug: product-create-new
+  title:
+    en: "Add your first product to pundo"
+    el: "Πρόσθεσε το πρώτο σου προϊόν στο pundo"
+  url:                       # shop-admin is a bypass path (no /{lang}/ prefix)
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Next video: Add a product that's already on pundo"
+    el: "Στο επόμενο βίντεο: Πρόσθεσε ένα προϊόν που υπάρχει ήδη στο pundo"
+  demo_shop:
+    name: { en: "Anna's Bakery", el: "Ο Φούρνος της Άννας" }
+    city: Limassol
+    provider_type: haendler
+  thumbnail_scene: photo     # compose.py: phone frame near the end of this scene (photo + cover badge visible)
+  target_duration_s: 120
+
+scenes:
+  - id: intro
+    branding: intro          # reusable block from video/_branding, no narration
+
+  - id: welcome
+    shot: shop-admin dashboard of Anna's Bakery ("Welcome back, ..."), still
+    callout:
+      en: "Your first product"
+      el: "Το πρώτο σου προϊόν"
+    narration:
+      en: >-
+        Welcome back! Your business is now on pundo. Next, we'll show you how to add
+        your first product, with your own photo and price. It only takes two minutes.
+      el: >-
+        Καλώς ήρθες ξανά! Η επιχείρησή σου είναι πλέον στο pundo. Τώρα θα σου δείξουμε
+        πώς να προσθέσεις το πρώτο σου προϊόν, με δική σου φωτογραφία και τιμή.
+        Χρειάζεται μόνο δύο λεπτά.
+
+  - id: to-offers
+    shot: menu (☰) -> "Offers"/"Προσφορές" -> tap "+ Add offer"/"+ Προσθήκη προσφοράς"
+    callout:
+      en: "pundo.cy/shop-admin"
+      el: "pundo.cy/shop-admin"
+    narration:
+      en: >-
+        Log in to your shop area and open "Offers". This is where you'll find everything you sell.
+        Tap "Add offer".
+      el: >-
+        Συνδέσου στον χώρο του καταστήματός σου και άνοιξε τις «Προσφορές». Εδώ βρίσκεις
+        όλα όσα πουλάς. Πάτησε «Προσθήκη προσφοράς».
+
+  - id: step1-search
+    shot: step "1. Select product or service", open picker, type "Sourdough"/"Ψωμί προζυμιού" into name search -> "No results found"
+    callout:
+      en: "Already on pundo? → next video"
+      el: "Υπάρχει ήδη; → επόμενο βίντεο"
+    narration:
+      en: >-
+        First, check whether your product is already on pundo. Branded products are often
+        there already, and you can even find them by their barcode. Anna bakes her sourdough
+        bread herself, so it isn't on pundo yet. That's why she adds it as a new product.
+      el: >-
+        Πρώτα ψάξε αν το προϊόν σου υπάρχει ήδη στο pundo. Τα επώνυμα προϊόντα συχνά
+        υπάρχουν ήδη, και τα βρίσκεις ακόμα και με το barcode. Η Άννα φτιάχνει μόνη της
+        το ψωμί προζυμιού, οπότε δεν υπάρχει ακόμα. Γι' αυτό το προσθέτει ως νέο προϊόν.
+
+  - id: new-product
+    shot: tap "+ Create new product or service", type name, tap "Product", tap suggested category "Breads & Buns"/"Άρτοι και ψωμάκια", Save
+    callout:
+      en: "Category suggested automatically"
+      el: "Η κατηγορία προτείνεται αυτόματα"
+    narration:
+      en: >-
+        Tap "Create new product or service". Enter the name the way your customers would
+        search for it, here "Sourdough bread 750 g". Just use your own language.
+        Choose "Product". pundo suggests the right category straight away: "Breads & Buns".
+        One tap is all it takes. You only need a barcode if your product has one.
+        Then tap "Save".
+      el: >-
+        Πάτησε «Δημιουργία νέου προϊόντος ή υπηρεσίας». Γράψε το όνομα έτσι όπως θα το
+        έψαχναν οι πελάτες σου, εδώ «Ψωμί προζυμιού 750 γρ.», απλά στη γλώσσα σου.
+        Διάλεξε «Προϊόν». Το pundo σου προτείνει αμέσως τη σωστή κατηγορία: «Άρτοι και ψωμάκια».
+        Ένα πάτημα αρκεί. Barcode χρειάζεσαι μόνο αν το προϊόν σου έχει. Μετά πάτησε «Αποθήκευση».
+
+  - id: photo
+    shot: step "2. Price & details" opens by itself, "Photos" section, "+ Add photo" -> assets/product-photo.jpg -> preview with "Cover photo" badge
+    callout:
+      en: "Tip · Daylight, calm background, up to 8 photos"
+      el: "Συμβουλή · Φως ημέρας, ήρεμο φόντο, έως 8 φωτογραφίες"
+    narration:
+      en: >-
+        Now for the most important part: a good photo. Take it in daylight, in front of a calm
+        background. You can upload up to eight photos, and the first one becomes your "Cover photo".
+        pundo automatically shrinks large photos from your phone.
+      el: >-
+        Τώρα το πιο σημαντικό: μια καλή φωτογραφία. Φωτογράφισε το προϊόν σου στο φως της ημέρας,
+        μπροστά σε ήρεμο φόντο. Μπορείς να ανεβάσεις έως οκτώ φωτογραφίες, και η πρώτη γίνεται
+        το «Εξώφυλλο». Τις μεγάλες φωτογραφίες από το κινητό σου το pundo τις μικραίνει αυτόματα.
+
+  - id: price
+    shot: scroll to "Standard price", price type "Fixed price", "+ Add pricing unit", unit "Piece"/"Τεμάχιο", price 4.50 / 4,50, tap "Save"
+    callout:
+      en: "Fixed price · €4.50 per piece"
+      el: "Σταθερή τιμή · 4,50 € το τεμάχιο"
+    narration:
+      en: >-
+        Below that, you set the price. Choose "Fixed price", and "Piece" as the unit,
+        since Anna sells her loaves one by one. Then enter the price: four euros fifty. Bulk discounts and promotional
+        prices are possible too, and we'll show you those in a separate video. Tap "Save".
+      el: >-
+        Από κάτω ορίζεις την τιμή. Διάλεξε «Σταθερή τιμή» και ως μονάδα «Τεμάχιο», αφού η Άννα
+        πουλάει το ψωμί της με το κομμάτι. Μετά γράψε την τιμή: τέσσερα ευρώ και πενήντα. Μπορείς να ορίσεις και
+        εκπτώσεις ποσότητας ή τιμές προσφοράς, θα σου τα δείξουμε σε ξεχωριστό βίντεο.
+        Πάτησε «Αποθήκευση».
+
+  - id: done
+    shot: offers list with the new bread, then customer shop page /{lang}/shops/<slug>, scroll to the product block (bread on top, photo + price)
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        Done! Your product is now in your list, and right at the top of your shop page, with photo
+        and price. Customers nearby can see it straight away. You can change it any time with "Edit".
+      el: >-
+        Έτοιμο! Το προϊόν σου είναι τώρα στη λίστα σου και πρώτο στη σελίδα του καταστήματός σου,
+        με φωτογραφία και τιμή. Οι πελάτες κοντά σου το βλέπουν αμέσως. Μπορείς να το αλλάξεις
+        όποτε θέλεις με την «Επεξεργασία».
+
+  - id: outlook
+    shot: shop page stays, "next video" card
+    callout:
+      en: "Next: a product that's already on pundo"
+      el: "Επόμενο: προϊόν που υπάρχει ήδη στο pundo"
+    narration:
+      en: >-
+        In the next video, we'll show you how to add a product that's already on pundo.
+        That's even quicker. See you there!
+      el: >-
+        Στο επόμενο βίντεο θα σου δείξουμε πώς να προσθέσεις ένα προϊόν που υπάρχει ήδη στο pundo.
+        Είναι ακόμα πιο γρήγορο. Τα λέμε εκεί!
+
+  - id: outro
+    branding: outro          # reusable block, includes YouTube end-screen area

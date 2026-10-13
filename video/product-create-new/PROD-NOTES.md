@@ -1,4 +1,7 @@
-# product-create-new: Produktionsnotizen (Stand 2026-10-13)
+# product-create-new: Produktionsnotizen (Stand 2026-10-13, abgeschlossen)
+
+> **Status:** aufgenommen, gebaut und veroeffentlicht am 2026-10-13 (EN 2:25, EL 2:36). Links und Upload-Einstellungen: Vault N7900.
+> Neu bauen: `video/build.sh product-create-new [en|el] --rerecord` (Voraussetzungen unten, keine parallelen Tests gegen `pundo_test`).
 
 Teil 2 von „pundo for businesses“: „Add your first product to pundo“ (EN + EL). Freigegebenes DE-Skript: `01-skript.de.md`.
 
@@ -34,16 +37,21 @@ TTS ist gelaufen (`.cache/<lang>/timeline.json`), Layer gerendert und Callouts s
 4. Native `<select>`-Popups erscheinen nicht im Screencast. Die Aufnahme zeigt den Tipp-Ripple und setzt den Wert direkt.
 
 ## Aufnahme
-Voraussetzung: Test-Instanz läuft (Frontend :3500 via `npm run dev:test`, Backend :8500), **kein paralleler E2E-Lauf** (wegen B5900-011, siehe 2c), Stand mit B5900-009…013 aktiv. Die Aufnahme hat ein eigenes Gate: Laut `01-skript.de.md` soll erst aufgenommen werden, wenn der Stand auf pundo.cy live ist.
+Voraussetzung: Test-Instanz laeuft (Frontend :3500 via `npm run dev:test`, Backend :8500), **kein paralleler E2E- oder pytest-Lauf** gegen `pundo_test` (wegen B5900-011, siehe 2c, und weil das Backend unter Testlast so langsam wird, dass Szenen stocken).
 
 ```
 video/build.sh product-create-new
 ```
 Das ist EN + EL komplett. TTS ist gecacht. `record.mjs` ruft `prepare.sh <lang>` selbst auf. Einzeln: `video/build.sh product-create-new el`, neu aufnehmen: `--rerecord`.
-Optional vorher prüfen, ohne zu schreiben: `video/product-create-new/prepare.sh en --dry-run`.
+Optional vorher pruefen, ohne zu schreiben: `video/product-create-new/prepare.sh en --dry-run`.
+
+## Verlauf 2026-10-13
+- Erste Fassung (10:54/10:59) zeigte in Szene `done` ~5 s das Lade-Skelett der Shop-Seite, waehrend der Sprecher "...on your shop page" sagt. Beide Fassungen waren schon hochgeladen (rbQPD1RP0Ek / I980wAOLL2E) und wurden nach Freigabe geloescht.
+- Ursache: Im Aufnahme-Browser rendert der Dev-Server `/<lang>/shops/<slug>` in ~5,5 s (curl, normales Chromium, gleiche Header/Cookies: ~0,1 s). Ursache nicht gefunden; Prod nicht betroffen. Vorladen per zweitem Tab oder `page.request` hilft nicht.
+- Loesung in `record.mjs` (Szene `done`): Hervorhebung des neuen Angebots schon in `prep`, dann ab Szenenbeginn `sess.pause()` -> Navigation -> warten bis die Brot-Karte da ist -> `sess.resume()`. Das Video haelt die hervorgehobene Liste und schneidet nach ~7 s auf die fertige Shop-Seite (Ende von "...shop page, with photo and price").
+- Neue Fassung hochgeladen: EN https://youtu.be/bMvFGnlSPK4, EL https://youtu.be/cRQcMGcr3ww (Titel/Beschreibung/Thumbnail der ersten Fassung + Kapitelmarken, SRT, Tags, Videosprache, KI "Ja").
 
 ## Offene Punkte
-- **Aussprache prüfen** (nach Gehör, wie bei „pundo“): EN „750 g“, EL „750 γρ.“ und „barcode“ im griechischen Text. Falls nötig, Respelling in `brand.yml → pronunciation`.
-- Nach der ersten Aufnahme die QA-Frames in `out/frames/<lang>/` sichten: Suche ohne Treffer, Kategorie-Vorschlag, Cover-Badge und Brot oben auf der Shopseite. Die Konsole meldet Abweichungen mit `!!`.
-- Callout Szene 3 folgt dem DE-Skript („Already on pundo? → next video“). Falls stattdessen ein Schritt-Label gewünscht ist: „Step 1 · Search first“.
-- `prepare.sh` deaktiviert E2E-Altlasten mit „sourdough“ im Namen. Läuft B5900-011 genau gleichzeitig, kann dessen frisch angelegtes Item betroffen sein. Deshalb nicht parallel zu E2E aufnehmen.
+- **Aussprache nicht nach Gehoer geprueft:** EN "750 g", EL "750 γρ." und "barcode" im griechischen Text. Falls noetig, Respelling in `brand.yml -> pronunciation` und `--no-record` neu bauen (danach neues Video, siehe README "Upload").
+- `prepare.sh` deaktiviert E2E-Altlasten mit "sourdough" im Namen. Laeuft B5900-011 genau gleichzeitig, kann dessen frisch angelegtes Item betroffen sein. Deshalb nicht parallel zu E2E aufnehmen.
+- Callout Szene 3 folgt dem DE-Skript ("Already on pundo? → next video"). Alternative: "Step 1 · Search first".

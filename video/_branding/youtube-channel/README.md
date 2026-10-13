@@ -2,6 +2,10 @@
 
 Assets erzeugen: `node video/_branding/youtube-channel/render.mjs` → `out/` (gitignored).
 
+> **Stand 2026-10-13: alles unten Aufgeführte ist im Kanal eingespielt** (Profilbild, Banner, Wasserzeichen „gesamtes Video“,
+> Beschreibung EN + Übersetzungen EL/RU, Keywords, 2 Links, Tab „Übersicht“ mit Kanaltrailer `channel-trailer` EN für Nicht-Abonnenten).
+> Offen: Playlists, Endscreens. Aktueller Kanalstand und Video-Links: Vault N7900. Bei Änderungen an Texten hier **und** in YouTube Studio pflegen.
+
 | Datei | Größe | Wo in YouTube Studio |
 |---|---|---|
 | `out/avatar.png` | 800×800 | Anpassung → Branding → Bild |
@@ -74,5 +78,5 @@ pundo, Cyprus, Κύπρος, Limassol, Paphos, Larnaca, Nicosia, local shops Cyp
   - „Για καταστηματάρχες (EL)“ — dasselbe auf Griechisch
   - später: „Find it with pundo“ (Kunden-Videos), „Living in Cyprus“ (Expat-Guides)
 - **Abschnitte** auf der Startseite: 1) Playlist For shop owners (EN), 2) Playlist Για καταστηματάρχες (EL), 3) Beliebte Videos
-- **Kanaltrailer für Nicht-Abonnenten**: vorerst das EN-Shop-Signup-Video; mittelfristig einen 30–45-s-Trailer mit der Video-Pipeline bauen (`video/channel-trailer/`, Kunden + Shops in einem Clip).
+- **Kanaltrailer für Nicht-Abonnenten**: `video/channel-trailer/` EN (https://youtu.be/4h9b3Ws5FTc) ist gesetzt; EL-Fassung: https://youtu.be/i2fbU-8QwiA.
 - **Endcards**: Outro hat bereits ≥ 10 s Platz — Element „Video: Nächstes“ + „Abonnieren“ setzen.

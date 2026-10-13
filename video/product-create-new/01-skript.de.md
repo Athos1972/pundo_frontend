@@ -8,7 +8,7 @@
 **Demo-Produkt:** Sauerteigbrot 750 g, 4,50 € pro Stück, eigenes Foto (Brotlaib auf Holzbrett)
 **Aufnahme:** Test-Instanz 3500/8500, Shop-Admin jeweils in EN bzw. EL
 
-> ✅ Blocker behoben (B5900-009 bis -012, alle SHIP am 2026-10-12). **Aufnahme erst, wenn der Stand auf pundo.cy live ist** (Push ausstehend).
+> ✅ Blocker behoben (B5900-009 bis -012, alle SHIP am 2026-10-12, live seit Push 34b2876). Video produziert und veröffentlicht am 2026-10-13 (siehe `PROD-NOTES.md`, Vault N7900).
 
 ---
 

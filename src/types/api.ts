@@ -34,6 +34,8 @@ export interface OfferDetail {
   shop_location: { lat: number; lng: number } | null;
   price: string | null; currency: string; price_type: PriceType; price_note: string | null;
   shop_phone: string | null;
+  /** B4900-002: E.164 WhatsApp number of the shop (preferred contact channel in Cyprus). */
+  shop_whatsapp_number?: string | null;
   is_available: boolean;
   // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   sku: string | null; url: string | null; crawled_at: string;

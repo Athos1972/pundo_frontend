@@ -113,10 +113,11 @@ export function pickImg(
 
 /**
  * Builds a wa.me WhatsApp link from an E.164 number and a pre-encoded message text.
- * The leading '+' is stripped as wa.me requires a plain international number.
+ * Everything but digits is stripped as wa.me requires a plain international number
+ * (B4900-002: some legacy rows are stored formatted, e.g. '+357 99 000 000').
  */
 export function buildWhatsAppUrl(whatsapp: string, text: string): string {
-  const number = whatsapp.replace(/^\+/, '')
+  const number = whatsapp.replace(/\D/g, '')
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`
 }
 

@@ -3,11 +3,14 @@ import type { OfferDetail } from '@/types/api'
 import { t } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
-import { formatCrawledAt, formatPriceOrLabel, formatAmount, parsePriceAmount } from '@/lib/utils'
+import { formatCrawledAt, formatPriceOrLabel, formatAmount, parsePriceAmount, buildWhatsAppUrl } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
+import { getSiteUrl } from '@/lib/seo'
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
 
-export function OfferList({ offers, lang, productName: _productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
+export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
   const tr = t(lang)
+  const siteHost = new URL(getSiteUrl()).hostname
 
   const sorted = [...offers].sort((a, b) => {
     // Available before unavailable
@@ -31,7 +34,7 @@ export function OfferList({ offers, lang, productName: _productName }: { offers:
     <div className="space-y-3">
       {sorted.map((offer, i) => {
         const safeUrl = sanitizeExternalUrl(offer.url)
-        const hasCta = offer.price_type === 'on_request' && (offer.shop_phone || safeUrl)
+        const hasCta = offer.price_type === 'on_request' && (offer.shop_whatsapp_number || offer.shop_phone || safeUrl)
 
         const promoPriceDisplay = formatAmount(offer.promo_price, offer.promo_currency ?? offer.currency)
         const stdLabel = formatPriceOrLabel(
@@ -58,6 +61,18 @@ export function OfferList({ offers, lang, productName: _productName }: { offers:
               </div>
               {hasCta && (
                 <div className="flex gap-2 mt-2 rtl:flex-row-reverse">
+                  {offer.shop_whatsapp_number && (
+                    <a
+                      href={buildWhatsAppUrl(offer.shop_whatsapp_number, tr.whatsapp_message_product(productName, siteHost))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${tr.whatsapp_contact}: ${offer.shop_name}`}
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#128C7E]/10 text-[#128C7E] hover:bg-[#128C7E]/20 transition-colors"
+                    >
+                      <WhatsAppIcon size={12} />
+                      {tr.whatsapp_contact}
+                    </a>
+                  )}
                   {offer.shop_phone && (
                     <a
                       href={`tel:${offer.shop_phone}`}

@@ -205,6 +205,29 @@ describe('OfferList sorting', () => {
     expect(telLink?.getAttribute('href')).toBe('tel:+357 99 000000')
   })
 
+  it('B4900-002: shows WhatsApp CTA with product message when shop_whatsapp_number is set', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offers = [makeOffer({
+      price_type: 'on_request',
+      shop_phone: null,
+      shop_whatsapp_number: '+35799000000',
+    })]
+    render(<OfferList offers={offers} lang="en" productName="Catering" />)
+    const waLink = screen.getByText('WhatsApp').closest('a')
+    const href = waLink?.getAttribute('href') ?? ''
+    expect(href.startsWith('https://wa.me/35799000000?text=')).toBe(true)
+    expect(decodeURIComponent(href)).toContain('Catering')
+    expect(waLink?.getAttribute('target')).toBe('_blank')
+    expect(screen.queryByText('Contact shop')).not.toBeInTheDocument()
+  })
+
+  it('B4900-002: no WhatsApp CTA for fixed-price offers', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    const offers = [makeOffer({ price: '9.99', price_type: 'fixed', shop_whatsapp_number: '+35799000000' })]
+    render(<OfferList offers={offers} lang="en" productName="Catering" />)
+    expect(screen.queryByText('WhatsApp')).not.toBeInTheDocument()
+  })
+
   it('no CTA when shop_phone null and no url', async () => {
     const { OfferList } = await import('@/components/product/OfferList')
     const offers = [makeOffer({

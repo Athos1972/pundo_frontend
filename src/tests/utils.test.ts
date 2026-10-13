@@ -253,6 +253,12 @@ describe('buildWhatsAppUrl', () => {
     )
   })
 
+  it('B4900-002: strips spaces and separators from formatted numbers', () => {
+    expect(buildWhatsAppUrl('+357 99-000 000', 'Hi')).toBe(
+      'https://wa.me/35799000000?text=Hi'
+    )
+  })
+
   it('URL-encodes text with spaces', () => {
     expect(buildWhatsAppUrl('+35799123456', 'Hello World')).toBe(
       'https://wa.me/35799123456?text=Hello%20World'

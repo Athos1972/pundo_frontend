@@ -34,6 +34,7 @@ video/
 | `product-create-new` | Teil 2: erstes Produkt mit Foto + Preis; `prepare.sh` bereitet `pundo_test` vor (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
 | `product-from-catalog` | Teil 3: Katalogprodukt per Barcode/Name übernehmen; `prepare_catalog.py` (Backend-venv) legt ein fiktives Katalog-Item an (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
 | `service-create-new` | Teil 4: Dienstleistung neu anlegen (Backkurs, Preis pro Session); `prepare_service.py` (Backend-venv) räumt den Kurs früherer Läufe auf; braucht Kategorie `px-cooking` | Test-Instanz 3500/8500 |
+| `service-from-catalog` | Teil 5: Katalog-Dienstleistung „Catering / events“ übernehmen, Preis „Auf Anfrage“; `prepare_catalog_service.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen
@@ -74,6 +75,8 @@ Neue Sprache: Stimme in `brand.yml -> voices`, Texte in `scenes.yml`, ggf. UI-La
   Kategorie "Praktische Tipps & Styling", nicht fuer Kinder, KI-Verwendung "Ja".
 - Upload ueber Claude in Chrome: Datei-Upload max. 10 MB je Datei. Bei groesseren Videos nur den Ton neu kodieren
   (Bild bleibt identisch): `ffmpeg -i in.mp4 -c:v copy -c:a aac -b:a 128k -movflags +faststart out/yt/<slug>.<lang>.mp4`.
+- Erst **privat** hochladen und speichern, Untertitel/Endscreen setzen, nach Abschluss der Vorabpruefung ueber die Video-Detailseite auf "Oeffentlich" stellen (sonst warnt YouTube vor Verwarnung).
+- Commits nur mit expliziten Pfaden (`git commit -m ... -- video/<slug> ...`): mehrere Sessions teilen sich den Git-Index.
 - YouTube kann die Datei eines veroeffentlichten Videos nicht ersetzen: neue Fassung = neues Video (alte loeschen nur nach Freigabe), Links in N7900 nachziehen.
 
 ## Musik

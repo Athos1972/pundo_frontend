@@ -1,0 +1,118 @@
+# Single source of truth for the service-from-catalog video (EN + EL), part 5 of "pundo for businesses".
+# Approved German draft: 01-skript.de.md (BB 2026-10-13: approved; next = prices/bulk/promotions).
+# Greek: informal "εσύ". Real catalog entry "Catering / events" (admin item, catalog photo "From Pundo").
+# Search uses the full name: "Catering" alone shows unrelated fuzzy matches (B1, separate task).
+
+meta:
+  slug: service-from-catalog
+  title:
+    en: "Add a service that's already on pundo"
+    el: "Πρόσθεσε μια υπηρεσία που υπάρχει ήδη στο pundo"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Next video: Prices, bulk discounts & promotions"
+    el: "Στο επόμενο βίντεο: Τιμές, εκπτώσεις ποσότητας & προσφορές"
+  demo:
+    search: { en: "Catering / events", el: "Catering / εκδηλώσεις" }
+    name: { en: "Catering / events", el: "Catering / εκδηλώσεις" }
+  thumbnail_scene: catalog-photo
+  target_duration_s: 90
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: welcome
+    shot: shop-admin dashboard of Anna's Bakery, still
+    callout:
+      en: "Services already on pundo"
+      el: "Υπηρεσίες που υπάρχουν ήδη"
+    narration:
+      en: >-
+        Many services are already on pundo, from repairs to catering. You take them over just as easily
+        as products: the photo and description are already there. Anna now offers catering for parties too.
+      el: >-
+        Πολλές υπηρεσίες υπάρχουν ήδη στο pundo, από επισκευές μέχρι catering. Τις προσθέτεις εξίσου
+        εύκολα με τα προϊόντα: η φωτογραφία και η περιγραφή υπάρχουν ήδη. Η Άννα προσφέρει πλέον
+        και catering για πάρτι.
+
+  - id: to-offers
+    shot: menu -> "Offers" -> "+ Add offer" -> open "Select product or service"
+    callout:
+      en: "pundo.cy/shop-admin"
+      el: "pundo.cy/shop-admin"
+    narration:
+      en: >-
+        Open "Offers", tap "Add offer" and open the selection.
+      el: >-
+        Άνοιξε τις «Προσφορές», πάτησε «Προσθήκη προσφοράς» και άνοιξε την επιλογή.
+
+  - id: pick
+    shot: type the full name into "Search by name" -> result with photo -> tap it (selects, step 2 opens)
+    callout:
+      en: "Already on pundo"
+      el: "Υπάρχει ήδη στο pundo"
+    narration:
+      en: >-
+        Search for the service, here "Catering". It's already there, with a photo.
+        One tap and it's selected.
+      el: >-
+        Ψάξε την υπηρεσία, εδώ «Catering». Υπάρχει ήδη, με φωτογραφία.
+        Ένα πάτημα και την επέλεξες.
+
+  - id: catalog-photo
+    shot: step "2. Price & details", photos block with the catalog photo ("From Pundo")
+    callout:
+      en: "Photo included"
+      el: "Η φωτογραφία υπάρχει ήδη"
+    narration:
+      en: >-
+        Here too, the photo is already there. You can add your own pictures from your events at any time.
+      el: >-
+        Και εδώ η φωτογραφία υπάρχει ήδη. Μπορείς να προσθέσεις όποτε θέλεις δικές σου φωτογραφίες
+        από τις εκδηλώσεις σου.
+
+  - id: price
+    shot: price type "On request", Save
+    callout:
+      en: "Price: on request"
+      el: "Τιμή: κατόπιν αιτήματος"
+    narration:
+      en: >-
+        With catering, the price depends on the event: number of guests, menu, location. So Anna chooses
+        "On request". Customers then see no price, but can contact Anna directly. Tap "Save".
+      el: >-
+        Στο catering η τιμή εξαρτάται από την εκδήλωση: αριθμό καλεσμένων, μενού, τοποθεσία. Γι' αυτό
+        η Άννα διαλέγει «Κατόπιν αιτήματος». Οι πελάτες δεν βλέπουν τιμή, αλλά μπορούν να επικοινωνήσουν
+        απευθείας με την Άννα. Πάτησε «Αποθήκευση».
+
+  - id: done
+    shot: offers list -> customer shop page, catering card "Price on request" -> scroll up to WhatsApp / phone
+    callout:
+      en: "Customers contact you directly"
+      el: "Οι πελάτες σε βρίσκουν απευθείας"
+    narration:
+      en: >-
+        Done! Anna's catering is now on her shop page. Anyone interested sees "On request"
+        and can contact her with a single tap.
+      el: >-
+        Έτοιμο! Το catering της Άννας είναι τώρα στη σελίδα του καταστήματός της. Όποιος ενδιαφέρεται
+        βλέπει «Κατόπιν αιτήματος» και μπορεί να επικοινωνήσει μαζί της με ένα πάτημα.
+
+  - id: outlook
+    shot: shop page stays, "next video" card
+    callout:
+      en: "Next: prices & promotions"
+      el: "Επόμενο: τιμές & προσφορές"
+    narration:
+      en: >-
+        In the next video, we'll show you everything about prices: bulk discounts and promotional prices.
+        See you there!
+      el: >-
+        Στο επόμενο βίντεο θα σου δείξουμε όλα όσα αφορούν τις τιμές: εκπτώσεις ποσότητας και τιμές
+        προσφοράς. Τα λέμε εκεί!
+
+  - id: outro
+    branding: outro

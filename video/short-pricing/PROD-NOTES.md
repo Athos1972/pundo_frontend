@@ -2,6 +2,10 @@
 
 YouTube Short S6 (9:16), Pilot der Shorts-Reihe: „Bulk discounts & sales in 30 seconds“ (EN 0:36, EL 0:39). Teaser für Teil 6 `pricing`.
 Konzept und Entscheidungen: `../shorts/00-konzept.de.md`. Links/Upload-Status: Vault N7900.
+Veröffentlicht 2026-10-14: EN https://youtube.com/shorts/6VUikL1jops · EL https://youtube.com/shorts/hpoAvPpsbcE — „Ähnliches Video“ = Teil 6 der jeweiligen Sprache, SRT hochgeladen, keine Playlist.
+
+## Upload (Shorts)
+Der Shorts-Upload-Dialog weicht vom normalen ab (Koordinaten-Klicks greifen nicht): Titel/Beschreibung über `#textbox` + `execCommand('insertText')`, KI-Radio `name=VIDEO_HAS_ALTERED_CONTENT_YES`, Tags-Input `aria-label=Tags` fokussieren und tippen, Sprache über `ytcp-form-language-input ytcp-dropdown-trigger` → `tp-yt-paper-item`, „Ähnliches Video“ im Schritt „Video-Elemente“ (erstes „Hinzufügen“), Sichtbarkeit `name=PRIVATE`/`PUBLIC`, `#next-button` / `#done-button`.
 
 ## Dateien
 | Datei | Inhalt |

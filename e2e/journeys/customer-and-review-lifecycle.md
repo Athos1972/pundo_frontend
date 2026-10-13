@@ -13,6 +13,8 @@ touches-modules:
   - src/app/(customer)/[lang]/products/[slug]/**
   - src/components/shop/**
   - src/lib/api.ts
+  - src/components/auth/**
+  - src/app/api/customer/customer/auth/signup/route.ts
 touches-roles:
   - customer
   - admin

@@ -11,18 +11,11 @@ vi.mock('next/headers', () => ({
   }),
 }))
 
-const verifyTurnstile = vi.fn()
-vi.mock('@/lib/turnstile-server', () => ({
-  verifyTurnstile: (...a: unknown[]) => verifyTurnstile(...a),
-}))
-
 const fetchMock = vi.fn()
 
 beforeEach(() => {
   vi.resetModules()
   fetchMock.mockReset()
-  verifyTurnstile.mockReset()
-  verifyTurnstile.mockResolvedValue(true)
   fetchMock.mockImplementation(async () => new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }))
   vi.stubGlobal('fetch', fetchMock)
 })
@@ -51,7 +44,6 @@ type Case = {
   load: () => Promise<Record<string, (...a: never[]) => Promise<Response>>>
   path: string
   call: (mod: Record<string, (...a: never[]) => Promise<Response>>, r: NextRequest) => Promise<Response>
-  turnstile?: boolean
 }
 const catchAll = (mod: Case['load'], path: string, name: string): Case => ({
   name, load: mod, path,
@@ -62,8 +54,8 @@ const cases: Case[] = [
   catchAll(() => import('@/app/api/customer/[...path]/route') as never, '/api/customer/x/y', 'customer catch-all'),
   catchAll(() => import('@/app/api/admin/[...path]/route') as never, '/api/admin/x/y', 'admin catch-all'),
   catchAll(() => import('@/app/api/shop-admin/[...path]/route') as never, '/api/shop-admin/x/y', 'shop-admin catch-all'),
-  { name: 'signup', load: () => import('@/app/api/customer/customer/auth/signup/route') as never, path: '/api/customer/customer/auth/signup', call: (m, r) => m.POST(r as never), turnstile: true },
-  { name: 'contact', load: () => import('@/app/api/contact/route') as never, path: '/api/contact', call: (m, r) => m.POST(r as never), turnstile: true },
+  { name: 'signup', load: () => import('@/app/api/customer/customer/auth/signup/route') as never, path: '/api/customer/customer/auth/signup', call: (m, r) => m.POST(r as never) },
+  { name: 'contact', load: () => import('@/app/api/contact/route') as never, path: '/api/contact', call: (m, r) => m.POST(r as never) },
   { name: 'crm opt-out', load: () => import('@/app/api/crm/opt-out/route') as never, path: '/api/crm/opt-out', call: (m, r) => m.POST(r as never) },
   { name: 'logout', load: () => import('@/app/api/customer/customer/auth/logout/route') as never, path: '/api/customer/customer/auth/logout', call: (m, r) => m.POST(r as never) },
   {
@@ -86,7 +78,6 @@ describe.each(cases)('$name', (c) => {
     expect(h.get('x-forwarded-for')).toBe('203.0.113.7')
     expect(h.get('cf-connecting-ip')).toBeNull()
     expect(h.get('x-real-ip')).toBeNull()
-    if (c.turnstile) expect(verifyTurnstile).toHaveBeenCalledWith(expect.anything(), '203.0.113.7')
   })
 
   it('sends no X-Forwarded-For for an invalid rightmost entry', async () => {
@@ -95,7 +86,6 @@ describe.each(cases)('$name', (c) => {
     const h = backendHeaders()
     expect(h.get('x-forwarded-for')).toBeNull()
     expect(h.get('cf-connecting-ip')).toBeNull()
-    if (c.turnstile) expect(verifyTurnstile).toHaveBeenCalledWith(expect.anything(), undefined)
   })
 
   it('sends no X-Forwarded-For when the header is missing (cf-connecting-ip alone is ignored)', async () => {

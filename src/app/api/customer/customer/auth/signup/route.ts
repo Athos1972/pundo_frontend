@@ -1,17 +1,18 @@
-// T16 — Customer Signup Route with Turnstile verification (F6990 Phase 2)
+// T16 — Customer Signup Route (F6990 Phase 2, B6220-003)
 //
 // This specific route takes precedence over the catch-all /api/customer/[...path]/route.ts
 // for POST /api/customer/customer/auth/signup calls.
 //
 // Responsibilities:
-// 1. Verify Turnstile token (frontend-side, fail fast)
-// 2. Forward to backend including turnstile_token in body (for backend-side verify once T12-BE is active)
+// 1. Forward to backend including turnstile_token in body. The BACKEND is the only
+//    Turnstile verifier (tokens are single-use; B6220-003).
+// 2. Map backend errors: 400 {detail:'captcha_failed'} -> {error:'captcha_failed'},
+//    429 -> {error:'rate_limited'}
 // 3. Forward Set-Cookie for customer_token on successful signup
 
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { getClientIp, clientIpForwardHeaders } from '@/lib/proxy/client-ip'
-import { verifyTurnstile } from '@/lib/turnstile-server'
+import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -23,18 +24,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ detail: 'Invalid request' }, { status: 400 })
   }
 
-  const turnstileToken = typeof body?.turnstile_token === 'string' ? body.turnstile_token : ''
-
-  // Client IP: rightmost X-Forwarded-For entry set by nginx (B6220-002)
-  const ip = getClientIp(request.headers)
-
-  // Frontend-side Turnstile verification (fail fast before hitting backend)
-  const captchaOk = await verifyTurnstile(turnstileToken, ip)
-  if (!captchaOk) {
-    return NextResponse.json({ error: 'captcha_failed' }, { status: 400 })
-  }
-
-  // Forward to backend — token included so backend can verify independently (T12-BE)
+  // Forward to backend — token included, the backend verifies it
   const acceptLang = request.headers.get('accept-language')
   const store = await cookies()
   const existingToken = store.get('customer_token')?.value
@@ -68,6 +58,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (backendRes.status === 204) {
     return new NextResponse(null, { status: 204, headers: responseHeaders })
+  }
+
+  if (backendRes.status === 429) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
+
+  if (backendRes.status === 400) {
+    const text = await backendRes.text()
+    let detail: unknown
+    try {
+      detail = JSON.parse(text)?.detail
+    } catch {
+      detail = undefined
+    }
+    if (detail === 'captcha_failed') {
+      return NextResponse.json({ error: 'captcha_failed' }, { status: 400 })
+    }
+    return new NextResponse(text, { status: 400, headers: responseHeaders })
   }
 
   const responseBody = await backendRes.blob()

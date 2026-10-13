@@ -20,7 +20,7 @@ vi.mock('next/link', () => ({
 // capturedOnError is set on each render so tests can imperatively trigger failure.
 let capturedOnError: (() => void) | undefined
 
-vi.mock('@/components/security/TurnstileWidget', async () => {
+vi.mock('@/components/ui/TurnstileWidget', async () => {
   const { useEffect } = await import('react')
   return {
     TurnstileWidget: ({
@@ -57,6 +57,7 @@ describe('Contact translation keys — alle 6 Sprachen', () => {
     'contact_cat_other',
     'contact_success',
     'contact_error',
+    'contact_rate_limited',
     'contact_sending',
   ] as const
 
@@ -193,6 +194,21 @@ describe('ContactForm — Interaktionen', () => {
     })
     // Button bleibt sichtbar
     expect(screen.getByRole('button')).toBeInTheDocument()
+  })
+
+  it('zeigt contact_rate_limited bei 429 (B6220-003)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: 'rate_limited' }),
+    }) as unknown as typeof fetch
+
+    render(<ContactForm lang="en" />)
+    fireEvent.submit(screen.getByRole('button'))
+
+    await waitFor(() => {
+      expect(screen.getByText(t('en').contact_rate_limited)).toBeInTheDocument()
+    })
   })
 
   it('zeigt Fehlermeldung bei Netzwerkfehler', async () => {

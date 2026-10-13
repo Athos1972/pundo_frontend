@@ -42,6 +42,8 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
       : { type: 'google' as const },
     lang: navigator.language?.slice(0, 2) ?? 'en',
     ...(otherOfferText ? { other_offer_text: otherOfferText } : {}),
+    // B6220-003: backend verifies the captcha for the email path only (Google path: none)
+    ...(emailCreds && payload.turnstileToken ? { turnstile_token: payload.turnstileToken } : {}),
   }
 
   const res = await fetch('/api/shop-admin/onboarding', {
@@ -52,6 +54,9 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
 
   if (res.status === 400) {
     const body = await res.json().catch(() => ({})) as { detail?: unknown }
+    if (body.detail === 'captcha_failed') {
+      throw Object.assign(new Error('CAPTCHA_FAILED'), { code: 'CAPTCHA_FAILED' })
+    }
     const detail = Array.isArray(body.detail) ? body.detail : []
     const shopNameErr = detail.find((d: unknown) => {
       const e = d as { field?: string }
@@ -69,6 +74,9 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
   if (res.status === 409) {
     const body = await res.json().catch(() => ({})) as { detail?: string }
     throw Object.assign(new Error(body.detail ?? 'EMAIL_TAKEN'), { code: 'EMAIL_TAKEN' })
+  }
+  if (res.status === 429) {
+    throw Object.assign(new Error('RATE_LIMITED'), { code: 'RATE_LIMITED' })
   }
   if (!res.ok) {
     throw new Error('ONBOARDING_FAILED')

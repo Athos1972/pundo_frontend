@@ -13,6 +13,7 @@ touches-modules:
   - src/lib/onboarding/**
   - src/lib/shop-admin-translations.ts
   - src/components/shop-admin/OfferList.tsx
+  - src/components/ui/TurnstileWidget.tsx
 touches-roles:
   - shop-owner
   - admin

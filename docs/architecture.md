@@ -111,10 +111,18 @@ Client Components rufen `/api/v1/…` relativ auf (geht durch den Rewrite).
 Backend-Rate-Limits sind pro Client-IP. Damit nicht alle Nutzer einen Bucket teilen (Peer = Frontend-Container), senden die Next.js-Route-Handler (`src/app/api/**/route.ts`, jeder mit `BACKEND_URL`) die IP weiter:
 
 - Helper `src/lib/proxy/client-ip.ts`: `getClientIp(headers)` liest den **rechtesten** Eintrag von `x-forwarded-for` (von nginx gesetzt, vertrauenswuerdig), validiert ihn per `node:net.isIP`, Header > 1024 Zeichen oder ungueltiger Eintrag -> `undefined` (kein Rueckfall auf linkere Eintraege oder `cf-connecting-ip`). `clientIpForwardHeaders(headers)` liefert `{ 'X-Forwarded-For': ip }` oder `{}`.
-- Ans Backend geht ausschliesslich dieser eine `X-Forwarded-For`; `CF-Connecting-IP`, `X-Real-IP` und `Forwarded` des Clients werden nie weitergereicht. Turnstile (`signup`, `contact`) nutzt denselben Wert als `remoteip`.
+- Ans Backend geht ausschliesslich dieser eine `X-Forwarded-For`; `CF-Connecting-IP`, `X-Real-IP` und `Forwarded` des Clients werden nie weitergereicht. Turnstile wird nur noch im Backend geprueft (siehe unten) und nutzt dort denselben Wert als `remoteip`.
 - `next.config.ts`-Rewrites (`/api/v1/*`) reichen Client-Header unveraendert durch; sie sind nur sicher, weil nginx `X-Forwarded-For`/`X-Real-IP`/`CF-Connecting-IP` mit `$remote_addr` ueberschreibt (prod, `snippets/proxy-client-ip.conf`).
 - Backend wertet `X-Forwarded-For` nur von Peers in `FORWARDED_ALLOW_IPS` aus (siehe Backend `docs/api.md`, "Client-IP (B6220-002)").
 - Neue Route-Handler mit `BACKEND_URL` muessen den Helper einbinden; `src/tests/proxy-client-ip-routes.test.ts` prueft das statisch.
+
+## Turnstile (B6220-003)
+
+- **Widget im Browser, Pruefung nur im Backend.** `src/components/ui/TurnstileWidget.tsx` (generisches Primitive, Props `loadingText`, `resetKey`; kein Customer-Import, auch im Shop-Admin nutzbar) liefert den Token. Turnstile-Tokens sind einmalig; eine Pruefung im Route-Handler wuerde die Backend-Pruefung scheitern lassen. `src/lib/turnstile-server.ts` existiert deshalb nicht mehr.
+- **Token-Feld** `turnstile_token` im JSON-Body von `POST /api/contact`, `POST /api/customer/customer/auth/signup` und `POST /api/shop-admin/onboarding` (nur E-Mail-Pfad; Google-Pfad ohne Captcha). Die Route-Handler reichen den Body unveraendert durch.
+- **Fehlervertrag:** Backend `400 {detail:"captcha_failed"}` -> Contact/Signup-Route `400 {error:"captcha_failed"}`; Backend `429` -> `429 {error:"rate_limited"}`; Onboarding (Catch-all, Body unveraendert) -> `onboardingApi.ts` mappt auf `CAPTCHA_FAILED` / `RATE_LIMITED`. Nach jedem Fehlschlag wird `resetKey` erhoeht (neuer, einmaliger Token ohne Seiten-Reload).
+- **Build/E2E:** `NEXT_PUBLIC_TURNSTILE_SITEKEY` wird zur Build-Zeit eingebettet. `scripts/e2e-frontend.cjs` baut den E2E-Standalone mit Cloudflares Test-Sitekey `1x00000000000000000000AA`, falls nichts gesetzt ist; das Test-Backend (`pundo_test`, kein Secret) laesst den Dummy-Token zu.
+- **Deploy-Reihenfolge:** Frontend vor Backend (sonst verbraucht das alte Frontend den Token vor der Backend-Pruefung).
 
 ## Auth-Cookie-Architektur
 

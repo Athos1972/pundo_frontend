@@ -378,6 +378,8 @@ export interface OnboardingSubmitPayload {
   credentials: { email: string; password: string } | { type: 'google' }
   /** F2970: only sent when "Other" is selected; trimmed, max 120 characters. */
   otherOfferText?: string
+  /** B6220-003: Cloudflare Turnstile token, verified by the backend (email path only). */
+  turnstileToken?: string
 }
 
 export interface OnboardingSubmitResponse {

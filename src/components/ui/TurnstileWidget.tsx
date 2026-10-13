@@ -1,14 +1,16 @@
 'use client'
-// T13 — Cloudflare Turnstile Widget (F6990 Phase 2)
+// T13 — Cloudflare Turnstile Widget (F6990 Phase 2, B6220-003)
 //
 // Loads the Turnstile script lazily and renders the challenge widget.
 // Falls back to immediate dev-bypass when NEXT_PUBLIC_TURNSTILE_SITEKEY is
 // absent (local development without Cloudflare).
+//
+// The token is verified ONLY by the backend (tokens are single-use). This is a
+// generic primitive (no customer imports) so Shop-Admin may use it too: the
+// loading text is passed in by the caller.
 
 import Script from 'next/script'
 import { useEffect, useRef, useState } from 'react'
-import { t } from '@/lib/translations'
-import { getLangFromCookie } from '@/lib/lang'
 
 // Cloudflare Turnstile adds these to the global window object.
 declare global {
@@ -17,7 +19,7 @@ declare global {
     onTurnstileError?: () => void
     turnstile?: {
       render: (container: string | HTMLElement, options: Record<string, unknown>) => string
-      reset: (widgetId: string) => void
+      reset: (widgetId: string | HTMLElement) => void
       remove: (widgetId: string) => void
     }
   }
@@ -26,13 +28,15 @@ declare global {
 interface TurnstileWidgetProps {
   onToken: (token: string) => void
   onError?: () => void
+  /** Visible hint until the widget issued a token (already translated by the caller). */
+  loadingText: string
+  /** Increment to discard the current challenge and request a fresh token (after captcha_failed). */
+  resetKey?: number
   className?: string
 }
 
-export function TurnstileWidget({ onToken, onError, className }: TurnstileWidgetProps) {
+export function TurnstileWidget({ onToken, onError, loadingText, resetKey, className }: TurnstileWidgetProps) {
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY
-  const lang = getLangFromCookie()
-  const tr = t(lang)
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
   const [tokenReceived, setTokenReceived] = useState(false)
@@ -55,6 +59,21 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
   // onToken/onError intentionally excluded — run once on mount only.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sitekey])
+
+  // Fresh challenge after a rejected token (single-use) without reloading the page.
+  const firstResetKey = useRef(resetKey)
+  useEffect(() => {
+    if (!sitekey || resetKey === firstResetKey.current) return
+    setTokenReceived(false)
+    const target = widgetIdRef.current ?? containerRef.current
+    if (target && window.turnstile) {
+      try {
+        window.turnstile.reset(target)
+      } catch {
+        // Widget not rendered yet - nothing to reset.
+      }
+    }
+  }, [resetKey, sitekey])
 
   // Register global callbacks that Cloudflare Turnstile calls.
   useEffect(() => {
@@ -110,7 +129,7 @@ export function TurnstileWidget({ onToken, onError, className }: TurnstileWidget
       {/* Visible loading hint until the widget issues a token. Hidden once ready. */}
       {!tokenReceived && (
         <p className="text-xs text-text-muted mt-1" aria-live="polite">
-          {tr.turnstile_loading}
+          {loadingText}
         </p>
       )}
 

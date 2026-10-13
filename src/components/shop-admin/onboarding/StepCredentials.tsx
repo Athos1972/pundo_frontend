@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { FormField } from '@/components/shop-admin/FormField'
+import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
 import { ShopOwnerOAuthButton } from './ShopOwnerOAuthButton'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
 
@@ -11,18 +12,28 @@ interface StepCredentialsProps {
   emailTakenError: boolean
   submitError: string | null
   isPending: boolean
-  onSubmit: (email: string, password: string) => void
+  /** Increment after a rejected captcha / failed submit: a fresh single-use token is requested. */
+  captchaResetKey: number
+  onSubmit: (email: string, password: string, turnstileToken: string) => void
   onBack: () => void
 }
 
-export function StepCredentials({ tr, emailTakenError, submitError, isPending, onSubmit, onBack }: StepCredentialsProps) {
+export function StepCredentials({ tr, emailTakenError, submitError, isPending, captchaResetKey, onSubmit, onBack }: StepCredentialsProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [seenResetKey, setSeenResetKey] = useState(captchaResetKey)
+  // A reset means the old token was consumed/rejected: drop it until the widget issues a new one.
+  if (seenResetKey !== captchaResetKey) {
+    setSeenResetKey(captchaResetKey)
+    setTurnstileToken(null)
+  }
+  const handleToken = useCallback((token: string) => setTurnstileToken(token), [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email || !password) return
-    onSubmit(email, password)
+    if (!email || !password || !turnstileToken) return
+    onSubmit(email, password, turnstileToken)
   }
 
   return (
@@ -58,6 +69,12 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, o
           onChange={e => setPassword(e.target.value)}
         />
 
+        <TurnstileWidget
+          onToken={handleToken}
+          loadingText={tr.onboarding_turnstile_loading}
+          resetKey={captchaResetKey}
+        />
+
         {submitError && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700" role="alert">
             {submitError}
@@ -82,7 +99,7 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, o
           </button>
           <button
             type="submit"
-            disabled={isPending || !email || !password}
+            disabled={isPending || !email || !password || !turnstileToken}
             className="flex-1 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPending ? '…' : tr.onboarding_submit}

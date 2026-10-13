@@ -13,6 +13,7 @@ touches-modules:
   - src/app/(shop-admin)/shop-admin/pending-approval/**
   - src/app/(shop-admin)/shop-admin/login/**
   - src/components/shop-admin/onboarding/**
+  - src/components/ui/TurnstileWidget.tsx
 touches-roles:
   - shop-owner
   - admin

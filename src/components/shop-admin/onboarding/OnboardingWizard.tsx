@@ -49,6 +49,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<Omit<OnboardingDraft, 'version' | 'expiresAt'>>(EMPTY_DRAFT)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   // SSR-safe: start hidden, reveal on client after localStorage read (avoids hydration mismatch)
   const [showDraftBanner, setShowDraftBanner] = useState(false)
   const [draftAge, setDraftAge] = useState(0)
@@ -152,7 +153,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     setStep(5)
   }
 
-  function handleFinalSubmit(email: string, password: string) {
+  function handleFinalSubmit(email: string, password: string, turnstileToken: string) {
     setEmailTakenError(false)
     setSubmitError(null)
     if (!draft.providerType || !draft.location) return
@@ -168,6 +169,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           contact: draft.contact,
           shopName: draft.shopName,
           credentials: { email, password },
+          turnstileToken,
         })
         if (photoFile) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }
@@ -184,9 +186,15 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           // Backend rejected shop_name — jump back to step 4 (photo+name step)
           setStep(4)
           setSubmitError(tr.onboarding_step5_name_required_error)
+        } else if (code === 'CAPTCHA_FAILED') {
+          setSubmitError(tr.onboarding_error_captcha)
+        } else if (code === 'RATE_LIMITED') {
+          setSubmitError(tr.onboarding_error_rate_limited)
         } else {
           setSubmitError(tr.onboarding_error_generic)
         }
+        // The token is single-use: whatever failed, the next attempt needs a fresh one.
+        setCaptchaResetKey(k => k + 1)
       }
     })
   }
@@ -318,6 +326,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             emailTakenError={emailTakenError}
             submitError={submitError}
             isPending={isPending}
+            captchaResetKey={captchaResetKey}
             onSubmit={handleFinalSubmit}
             onBack={() => setStep(4)}
           />

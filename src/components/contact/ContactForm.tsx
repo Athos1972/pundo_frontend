@@ -3,14 +3,14 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { t } from '@/lib/translations'
-import { TurnstileWidget } from '@/components/security/TurnstileWidget'
+import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
 import { useSession } from '@/components/auth/SessionProvider'
 
 interface Props {
   lang: string
 }
 
-type Status = 'idle' | 'sending' | 'success' | 'error' | 'captcha_failed'
+type Status = 'idle' | 'sending' | 'success' | 'error' | 'captcha_failed' | 'rate_limited'
 
 const CATEGORIES = [
   'contact_cat_missing_shop',
@@ -30,6 +30,7 @@ export function ContactForm({ lang }: Props) {
 
   const [status, setStatus] = useState<Status>('idle')
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const [form, setForm] = useState(() => ({
     subject: '',
     category: CATEGORIES[0],
@@ -85,9 +86,14 @@ export function ContactForm({ lang }: Props) {
       const data = await res.json().catch(() => ({}))
       if (data?.error === 'captcha_failed') {
         setStatus('captcha_failed')
+      } else if (res.status === 429 || data?.error === 'rate_limited') {
+        setStatus('rate_limited')
       } else {
         setStatus('error')
       }
+      // The token is single-use: whatever the outcome, get a fresh one for the next try.
+      setTurnstileToken(null)
+      setCaptchaResetKey(k => k + 1)
     } catch {
       setStatus('error')
     }
@@ -189,11 +195,22 @@ export function ContactForm({ lang }: Props) {
         </>
       )}
 
-      <TurnstileWidget onToken={handleToken} onError={handleTurnstileError} />
+      <TurnstileWidget
+        onToken={handleToken}
+        onError={handleTurnstileError}
+        loadingText={tr.turnstile_loading}
+        resetKey={captchaResetKey}
+      />
 
       {status === 'captcha_failed' && (
         <p className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
           {tr.turnstile_failed}
+        </p>
+      )}
+
+      {status === 'rate_limited' && (
+        <p role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
+          {tr.contact_rate_limited}
         </p>
       )}
 

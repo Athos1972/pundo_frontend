@@ -184,7 +184,13 @@ function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console
   }
   log('[E2E Frontend] Standalone-Build fehlt oder veraltet - baue neu (ca. 3 min)...')
   fs.rmSync(path.join(repoRoot, '.next/standalone'), { recursive: true, force: true })
-  run('npx', ['next', 'build'], { env: { ...process.env, BACKEND_URL: backend } })
+  // B6220-003 (E7): the backend is the only Turnstile verifier and the widget needs a sitekey
+  // in a production build. Default to Cloudflare's always-passes TEST sitekey (inlined at build
+  // time; the E2E backend runs without a secret and bypasses verification on pundo_test).
+  const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || '1x00000000000000000000AA'
+  run('npx', ['next', 'build'], {
+    env: { ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey },
+  })
   const sa = path.join(repoRoot, '.next/standalone')
   fs.rmSync(path.join(sa, '.next/static'), { recursive: true, force: true })
   fs.rmSync(path.join(sa, 'public'), { recursive: true, force: true })

@@ -77,8 +77,8 @@ describe('parseCatalog — Seed-Datei', () => {
     // (shop-city-hub-and-completeness, B5900-006/B5900-007 journey). Total: 29 + 2 + 1 = 32.
     // Updated 2026-10-13 (coder, F2970): +1 entry consumer-service-discovery (P1) -> 33.
     // Updated 2026-10-13 (coder, B8950-012): +7 <id>.md (admin-catalog-review, b5900-009..013,
-    // import-page-ac-check; Katalog-Drift §8) -> 40.
-    expect(entries).toHaveLength(40)
+    // import-page-ac-check; Katalog-Drift §8) -> 40; +contact-form (B6220-003) -> 41.
+    expect(entries).toHaveLength(41)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -415,8 +415,8 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the test above — 29 + 2
     // (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
     // Updated 2026-10-13 (coder, F2970): +1 (consumer-service-discovery) = 33.
-    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40.
-    expect(entries).toHaveLength(40)
+    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40. +1 contact-form (B6220-003) = 41.
+    expect(entries).toHaveLength(41)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -442,8 +442,8 @@ describe('parseCatalogDirectory', () => {
     // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the first test in this
     // describe block — 29 + 2 (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
     // Updated 2026-10-13 (coder, F2970): +1 (consumer-service-discovery) = 33.
-    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40.
-    expect(entries).toHaveLength(40)
+    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40. +1 contact-form (B6220-003) = 41.
+    expect(entries).toHaveLength(41)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

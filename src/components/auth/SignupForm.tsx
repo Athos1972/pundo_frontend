@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { GoogleOAuthButton } from './GoogleOAuthButton'
-import { TurnstileWidget } from '@/components/security/TurnstileWidget'
+import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
 
 interface Props {
   lang: string
@@ -21,6 +21,7 @@ export function SignupForm({ lang }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
 
   const handleToken = useCallback((token: string) => {
     setTurnstileToken(token)
@@ -60,9 +61,17 @@ export function SignupForm({ lang }: Props) {
       }
 
       if (!res.ok) {
-        // Turnstile failed at frontend proxy level
+        // Backend rejected the Turnstile token (single-use): request a fresh one
         if (data?.error === 'captcha_failed') {
           setError(tr.turnstile_failed)
+          setTurnstileToken(null)
+          setCaptchaResetKey((k) => k + 1)
+          return
+        }
+        if (res.status === 429 || data?.error === 'rate_limited') {
+          setError(tr.rate_limited)
+          setTurnstileToken(null)
+          setCaptchaResetKey((k) => k + 1)
           return
         }
 
@@ -148,7 +157,12 @@ export function SignupForm({ lang }: Props) {
         <p className="text-xs text-text-muted mt-1">{tr.auth_password_min}</p>
       </div>
 
-      <TurnstileWidget onToken={handleToken} onError={handleTurnstileError} />
+      <TurnstileWidget
+        onToken={handleToken}
+        onError={handleTurnstileError}
+        loadingText={tr.turnstile_loading}
+        resetKey={captchaResetKey}
+      />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

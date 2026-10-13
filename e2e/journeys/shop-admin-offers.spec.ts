@@ -653,6 +653,84 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     expect(delRes.status, 'C3: Expected 409').toBe(409)
   })
 
+  // B5200-001: every price change archives the offer and creates a new one. A PATCH with the
+  // stale (archived) ID used to create a second active offer → IntegrityError → HTTP 500.
+  const B5200_TIERS = (price: string) => [
+    { unit: 'per_piece', steps: [{ min_quantity: 1, max_quantity: null, price, currency: 'EUR' }] },
+  ]
+
+  /** Create offer A, change its price via API → returns { oldId: A (archived), newId: B (active) }. */
+  async function createAndSupersede(token: string, title: string) {
+    const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId!, {
+      title,
+      price_type: 'fixed',
+      price_tiers: B5200_TIERS('4.50'),
+    })
+    expect(status, `${title} setup: create offer failed`).toBe(201)
+    const oldId = (data as { id: number }).id
+    ctx.createdOfferIds.push(oldId)
+    const first = await apiPatch(`/api/v1/shop-owner/offers/${oldId}`, { price_tiers: B5200_TIERS('5.00') }, token)
+    expect(first.status, `${title} setup: first price change failed`).toBe(200)
+    const newId = (first.data as { id: number }).id
+    ctx.createdOfferIds.push(newId)
+    expect(newId, `${title} setup: price change must create a new offer`).not.toBe(oldId)
+    return { oldId, newId }
+  }
+
+  test('C4 — PATCH on archived offer (stale ID) → 409 offer_archived + active_offer_id (B5200-001)', async () => {
+    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+
+    const token = await getOwnerToken()
+    const { oldId, newId } = await createAndSupersede(token, 'C4 Stale Offer')
+
+    for (const body of [
+      { price_tiers: B5200_TIERS('6.00') }, // price change on archived offer (was 500)
+      { archived: false },                  // restore next to the active offer (was 500)
+      { title: 'C4 rewritten history' },    // metadata edit on price history (was silently 200)
+    ]) {
+      const res = await apiPatch(`/api/v1/shop-owner/offers/${oldId}`, body, token)
+      expect(res.status, `C4: ${JSON.stringify(body)} → expected 409`).toBe(409)
+      const detail = (res.data as { detail: { code: string; active_offer_id: number | null } }).detail
+      expect(detail.code).toBe('offer_archived')
+      expect(detail.active_offer_id).toBe(newId)
+    }
+
+    // Exactly one active offer for the listing, and it is B with the price from the first change
+    const { data } = await apiGet('/api/v1/shop-owner/offers?archived=false&limit=500', token)
+    const active = (data as { items: Array<{ id: number; shop_listing_id: number; price_tiers: Array<{ steps: Array<{ price: string }> }> }> })
+      .items.filter(o => o.shop_listing_id === ctx.defaultShopListingId)
+    expect(active.map(o => o.id), 'C4: exactly one active offer (B)').toEqual([newId])
+    expect(Number(active[0].price_tiers[0].steps[0].price)).toBe(5)
+
+    // Archived A stays untouched
+    const old = await apiGet(`/api/v1/shop-owner/offers/${oldId}`, token)
+    expect((old.data as { title: string; archived: boolean }).title).toBe('C4 Stale Offer')
+    expect((old.data as { archived: boolean }).archived).toBe(true)
+  })
+
+  test('C5 — Save edit form of archived offer → redirect to current offer + hint (B5200-001)', async ({ page }) => {
+    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+
+    const token = await getOwnerToken()
+    const { oldId, newId } = await createAndSupersede(token, 'C5 Stale Tab')
+
+    // Simulates the stale tab: edit page of the meanwhile archived offer A
+    await page.goto(FRONTEND_URL + `/shop-admin/offers/${oldId}/edit`)
+    await waitHydrated(page)
+
+    const patchResponse = page.waitForResponse(
+      r => r.url().includes(`/api/shop-admin/offers/${oldId}`) && r.request().method() === 'PATCH',
+    )
+    await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
+    expect((await patchResponse).status(), 'C5: PATCH on archived offer must be 409, not 500').toBe(409)
+
+    await expect(page).toHaveURL(new RegExp(`/shop-admin/offers/${newId}/edit$`), { timeout: 15_000 })
+    await expect(
+      page.getByText(/changed in the meantime|inzwischen geändert/i).first(),
+      'C5: hint offer_archived_conflict visible',
+    ).toBeVisible({ timeout: 10_000 })
+  })
+
   // ═══════════════════════════════════════════════════════════════════════════
   // GROUP D — Customer-Facing Visibility
   // ═══════════════════════════════════════════════════════════════════════════

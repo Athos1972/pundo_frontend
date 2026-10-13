@@ -31,9 +31,39 @@ last-run-sha: 312ae62
 
 **Ziel:** Shop-Owner legt Angebote an (6 Kombinationen), bearbeitet und archiviert sie. Kunde sieht aktive Angebote auf der Shop-Seite.
 
-**Gruppen:** A (Create 6 Kombinationen), B (Edit 4 Cases), C (Archive + Delete), D (Customer-Visibility), E (Item-Details, Filter & Dashboard-Aufräumen).
+**Gruppen:** A (Create 6 Kombinationen), B (Edit 4 Cases), C (Archive + Delete, C4/C5 veraltete Offer-ID B5200-001), D (Customer-Visibility), E (Item-Details, Filter & Dashboard-Aufräumen).
 
 **Finding F1 (offen):** `POST /shop-owner/products` Legacy-Endpoint versucht INSERT in `shop_owner_products` (Tabelle entfernt) → HTTP 500. Fixture-Setup schlägt fehl. Spec braucht Rewrite auf `/shop-owner/items` + `/shop-owner/shop-listings`.
+
+## Gruppe C — Ergänzung: veraltete Offer-ID nach Preisänderung (B5200-001, 2026-10-13)
+
+Jede Preisänderung archiviert das Offer und legt ein neues an. Ein PATCH mit der alten (archivierten) ID lieferte HTTP 500 (`uq_offers_active_manual_per_listing`). Seit B5200-001: 409 `offer_archived` mit `active_offer_id`; das Formular öffnet das aktuelle Offer.
+
+### C4: PATCH auf archiviertes Offer → 409 (API)
+
+**Precondition:** Offer A (fixed 4,50 €) auf dem Default-Listing, per PATCH auf 5,00 € geändert → A archiviert, neues aktives Offer B.
+**Steps:**
+1. PATCH A mit `price_tiers` (6,00 €).
+2. PATCH A mit `{archived: false}`.
+3. PATCH A mit `{title}`.
+**Expected:**
+- Alle drei → 409, `detail.code = "offer_archived"`, `detail.active_offer_id = B`.
+- Genau ein aktives Offer auf dem Listing (B, 5,00 €); A unverändert (Titel, `archived = true`).
+**Backend-Abhängigkeit:** B5200-001 (backend `b41368d`).
+**Test-ID:** C4
+
+### C5: Bearbeiten-Formular eines archivierten Offers speichern → Weiterleitung (UI)
+
+**Precondition:** wie C4 (A archiviert, B aktiv) — simuliert einen veralteten Tab.
+**Steps:**
+1. `/shop-admin/offers/<A>/edit` öffnen.
+2. „Speichern“ klicken.
+**Expected:**
+- PATCH-Antwort 409 (kein 500).
+- Weiterleitung auf `/shop-admin/offers/<B>/edit`.
+- Hinweis-Toast `offer_archived_conflict` („…inzwischen geändert…“) sichtbar.
+**Backend-Abhängigkeit:** B5200-001 (frontend `6773447`).
+**Test-ID:** C5
 
 ## Gruppe E — Item-Details, Filter & Dashboard-Aufräumen (2026-05-19-offer-list-item-details)
 

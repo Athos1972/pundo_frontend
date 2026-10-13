@@ -339,6 +339,28 @@ describe('buildLocalBusinessSchema', () => {
     expect(hours.some(h => h.startsWith('Su'))).toBe(false)
   })
 
+  it('B5950-001: Objekt-Slots mit zweitem Fenster -> ein Eintrag pro Fenster', () => {
+    const shop = {
+      ...baseShop,
+      opening_hours: {
+        '0': { open: '07:00', close: '14:00', closed: false, second_open: '16:30', second_close: '19:00' },
+        '1': { open: '09:00', close: '18:00', closed: false, second_open: null, second_close: null },
+        '6': null,
+      },
+    }
+    const hours = buildLocalBusinessSchema(shop, SITE_URL)['openingHours'] as string[]
+    expect(hours).toEqual(['Mo 07:00-14:00', 'Mo 16:30-19:00', 'Tu 09:00-18:00'])
+  })
+
+  it('B5950-001: geschlossene Tage fehlen, keine Duplikate bei beiden Key-Sätzen', () => {
+    const shop = {
+      ...baseShop,
+      opening_hours: { mon: null, '0': { open: '09:00', close: '17:00', closed: false }, '2': { closed: true } },
+    }
+    const hours = buildLocalBusinessSchema(shop, SITE_URL)['openingHours'] as string[]
+    expect(hours).toEqual(['Mo 09:00-17:00'])
+  })
+
   it('omits openingHours when null', () => {
     const shop = { ...baseShop, opening_hours: null }
     const schema = buildLocalBusinessSchema(shop, SITE_URL)

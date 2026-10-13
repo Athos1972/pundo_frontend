@@ -51,3 +51,51 @@ export function buildShopPin(shop: Pick<ShopDetailResponse, 'id' | 'name' | 'loc
   }
   return []
 }
+
+// B5950-001: internes opening_hours (Owner-gepflegt) inkl. zweitem Fenster.
+export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+export interface HoursWindow { open: string; close: string }
+export interface HoursRow { dayKey: DayKey; closed: boolean; windows: HoursWindow[] }
+
+const DAY_ORDER: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+const isNonEmpty = (v: unknown): v is string => typeof v === 'string' && v.length > 0
+
+/**
+ * Liest internes `opening_hours` ("0".."6" bevorzugt, Fallback mon..sun).
+ * - Key fehlt -> Tag ausgelassen
+ * - null / closed:true -> closed, keine Fenster
+ * - offen ohne gültiges open/close (oder Nicht-Objekt, z.B. Legacy-String) -> Tag ausgelassen
+ * - second_* nur, wenn beide nicht-leere Strings sind
+ */
+export function getInternalHoursRows(oh: Record<string, unknown> | null | undefined): HoursRow[] {
+  if (!oh || typeof oh !== 'object' || Array.isArray(oh)) return []
+  const rows: HoursRow[] = []
+  DAY_ORDER.forEach((dayKey, idx) => {
+    const numKey = String(idx)
+    const val = numKey in oh ? oh[numKey] : oh[dayKey]
+    if (val === undefined) return
+    if (val === null) {
+      rows.push({ dayKey, closed: true, windows: [] })
+      return
+    }
+    if (typeof val !== 'object' || Array.isArray(val)) return
+    const slot = val as Record<string, unknown>
+    if (slot.closed === true) {
+      rows.push({ dayKey, closed: true, windows: [] })
+      return
+    }
+    if (!isNonEmpty(slot.open) || !isNonEmpty(slot.close)) return
+    const windows: HoursWindow[] = [{ open: slot.open, close: slot.close }]
+    if (isNonEmpty(slot.second_open) && isNonEmpty(slot.second_close)) {
+      windows.push({ open: slot.second_open, close: slot.second_close })
+    }
+    rows.push({ dayKey, closed: false, windows })
+  })
+  return rows
+}
+
+/** "07:00 – 14:00, 16:30 – 19:00" */
+export function formatHoursWindows(windows: HoursWindow[]): string {
+  return windows.map((w) => `${w.open} – ${w.close}`).join(', ')
+}

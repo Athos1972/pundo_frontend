@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { getShop, searchProducts, getShopOffers, getRelatedShops, getShopCities } from '@/lib/api'
 import { findCityByName } from '@/lib/shop-city-index'
-import { buildShopPin, getWeekdayDescriptions, getSpecialDays } from '@/lib/shop-opening-hours'
+import { buildShopPin, getWeekdayDescriptions, getSpecialDays, getInternalHoursRows, formatHoursWindows } from '@/lib/shop-opening-hours'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
@@ -378,25 +378,16 @@ export default async function ShopPage({ params }: Props) {
               </ul>
             ) : shop.opening_hours ? (
               <div className="space-y-1">
-                {(['mon','tue','wed','thu','fri','sat','sun'] as const).map((dayKey, idx) => {
-                  // OpeningHoursEditor saves with numeric keys '0'-'6' (Mon-Sun)
-                  const numKey = String(idx)
-                  const oh = shop.opening_hours!
-                  const hours = (numKey in oh ? oh[numKey] : oh[dayKey]) as
-                    { open?: string; close?: string; closed?: boolean } | null | undefined
-                  if (hours === undefined) return null
-                  const isClosed = !hours || (hours as { closed?: boolean }).closed === true
-                  // B5900-012: open day without times (bad legacy data) -> omit the day, never render "undefined"
-                  if (!isClosed && (!hours!.open || !hours!.close)) return null
-                  return (
-                    <div key={dayKey} className="flex justify-between text-sm">
-                      <span className="text-text-muted">{tr.days[dayKey]}</span>
-                      <span className={isClosed ? 'text-text-light' : 'text-text'}>
-                        {isClosed ? tr.closed : `${hours!.open} – ${hours!.close}`}
-                      </span>
-                    </div>
-                  )
-                }).filter(Boolean)}
+                {getInternalHoursRows(shop.opening_hours).map(({ dayKey, closed, windows }) => (
+                  <div key={dayKey} data-testid={`shop-hours-${dayKey}`} className="flex justify-between gap-x-3 text-sm">
+                    <span className="text-text-muted">{tr.days[dayKey]}</span>
+                    {closed ? (
+                      <span className="text-text-light text-end">{tr.closed}</span>
+                    ) : (
+                      <span dir="ltr" className="text-text text-end">{formatHoursWindows(windows)}</span>
+                    )}
+                  </div>
+                ))}
                 {'ph' in shop.opening_hours && (
                   <div className="flex justify-between text-sm">
                     <span className="text-text-muted">{tr.days['ph']}</span>

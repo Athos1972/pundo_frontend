@@ -23,6 +23,8 @@ interface ShopListItem {
   dist_km: number | null   // nur bei Geo-Suche befüllt
   phone: string | null
   website: string | null
+  // Keys "0".."6" (0 = Montag) -> { open, close, second_open?, second_close? } | null (B5950-001: optionales zweites Fenster/Mittagspause);
+  // Legacy-Crawler-Format mon..sun wird als Fallback gelesen (src/lib/shop-opening-hours.ts::getInternalHoursRows)
   opening_hours: Record<string, unknown> | null
   status: string           // 'active' | 'inactive'
   product_count: number

@@ -2,6 +2,7 @@ import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 import { toRelativeImageUrl, parsePriceAmount } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 import { buildPriceSpecifications } from '@/lib/price-tiers'
+import { getInternalHoursRows } from '@/lib/shop-opening-hours'
 
 /**
  * Converts a potentially relative image URL to an absolute URL using the site base.
@@ -40,6 +41,13 @@ function toOpeningHoursSpec(
     if (typeof val === 'string' && val) {
       const abbr = DAY_ABBR[key]
       result.push(`${abbr} ${val}`)
+    }
+  }
+  // B5950-001: Objekt-Slots ("0".."6" bzw. mon..sun), ein Eintrag pro Fenster
+  for (const row of getInternalHoursRows(hours)) {
+    if (row.closed) continue
+    for (const w of row.windows) {
+      result.push(`${DAY_ABBR[row.dayKey]} ${w.open}-${w.close}`)
     }
   }
   return result

@@ -49,6 +49,7 @@
 | [b5900-010-offer-form-labels](b5900-010-offer-form-labels.md) | Shop-Admin Angebotsformular Beschriftungen/Sprachen (B5900-010) | implemented | P2 | PASS (2026-10-12) |
 | [b5900-011-category-picker](b5900-011-category-picker.md) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |
 | [b5900-012-shop-hours-validation](b5900-012-shop-hours-validation.md) | Shop-Admin Öffnungszeiten-Validierung (B5900-012) | implemented | P2 | PASS (AK2 skip ohne DATABASE_URL_TEST) |
+| [b5950-001-second-opening-slot](b5950-001-second-opening-slot.md) | Zweites Öffnungszeitfenster Kundensicht + is_open_now (B5950-001) | implemented | P2 | PASS (7/7, 2026-10-13) |
 | [b5900-013-null-price-display](b5900-013-null-price-display.md) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
 | [customer-offer-price-tiers](customer-offer-price-tiers.md) | Staffelpreise & Einheiten in der Kundensicht: Produktseite + Shop-Seite, mit/ohne Aktion, 6 Sprachen, RTL, 390 px (F5200) | implemented | P2 | PASS (11/11, 2026-10-13) |
 | [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | — |

@@ -69,6 +69,12 @@ export interface ProductDetailResponse {
   review_stats?: { average_stars: number; total_count: number } | null;
 }
 
+/** B5950-001: Slot-Format in `ShopListItem.opening_hours` (Keys "0".."6" = Mo..So). Nur dokumentierend. */
+export interface OpeningHoursInternalSlot {
+  open?: string; close?: string; closed?: boolean;
+  second_open?: string | null; second_close?: string | null;
+}
+
 export interface ShopListItem {
   id: number; slug: string; name: string | null; address_raw: string | null;
   location: { lat: number; lng: number } | null; dist_km: number | null;

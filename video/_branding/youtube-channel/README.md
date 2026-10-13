@@ -4,7 +4,7 @@ Assets erzeugen: `node video/_branding/youtube-channel/render.mjs` → `out/` (g
 
 > **Stand 2026-10-13: alles unten Aufgeführte ist im Kanal eingespielt** (Profilbild, Banner, Wasserzeichen „gesamtes Video“,
 > Beschreibung EN + Übersetzungen EL/RU, Keywords, 2 Links, Tab „Übersicht“ mit Kanaltrailer `channel-trailer` EN für Nicht-Abonnenten).
-> Offen: Playlists, Endscreens. Aktueller Kanalstand und Video-Links: Vault N7900. Bei Änderungen an Texten hier **und** in YouTube Studio pflegen.
+> Playlists EN/EL und Endscreens aller Videos sind ebenfalls angelegt (Details und Regeln für neue Videos: Vault N7900). Bei Änderungen an Texten hier **und** in YouTube Studio pflegen.
 
 | Datei | Größe | Wo in YouTube Studio |
 |---|---|---|

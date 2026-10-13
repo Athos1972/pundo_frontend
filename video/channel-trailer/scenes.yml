@@ -1,0 +1,90 @@
+# Channel trailer for youtube.com/@pundocy (EN + EL), ~45 s.
+# Shown to non-subscribers on the channel page: what pundo is, who it's for, why subscribe.
+# Customer scenes are recorded read-only on the public site (https://pundo.cy) because the local
+# test DB has no product images; see record.mjs. No sign-in, no form submits.
+
+meta:
+  slug: channel-trailer
+  title:
+    en: "Find it nearby. Anywhere in Cyprus."
+    el: "Βρες το κοντά σου. Σε όλη την Κύπρο."
+  url:
+    en: "pundo.cy"
+    el: "pundo.cy"
+  next_video:
+    en: "Subscribe for new videos"
+    el: "Κάνε εγγραφή για νέα βίντεο"
+  thumbnail_scene: none        # trailer autoplays on the channel page, no custom thumbnail
+  timing:
+    intro_s: 5.0
+    outro_s: 10.0              # >= 10 s for the end screen (subscribe + video)
+    tail_s: 0.6
+  demo:
+    query: "royal canin"
+    product: royal-royal-canin-maxi-digestive-care-12kg   # 3 shops, 78.75 / 84.00 / 105.00 EUR
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: homepage, slow scroll down to the category grid
+    callout:
+      en: "Shops, products & services"
+      el: "Καταστήματα, προϊόντα & υπηρεσίες"
+    narration:
+      en: >-
+        Looking for something in Cyprus? pundo shows you which shops nearby have it,
+        in your language.
+      el: >-
+        Ψάχνεις κάτι στην Κύπρο; Το pundo σου δείχνει ποια καταστήματα κοντά σου το έχουν,
+        στη γλώσσα σου.
+
+  - id: search
+    shot: tap search box on homepage, type query, submit, results list
+    callout:
+      en: "Search once"
+      el: "Μία αναζήτηση"
+    narration:
+      en: >-
+        Search for a product or a service, and see who has it close by.
+      el: >-
+        Αναζήτησε ένα προϊόν ή μια υπηρεσία και δες ποιος το έχει κοντά σου.
+
+  - id: compare
+    shot: product page with three offers, prices highlighted
+    callout:
+      en: "Compare prices"
+      el: "Σύγκρινε τιμές"
+    narration:
+      en: >-
+        Compare prices between shops at a glance, and see exactly where to go.
+      el: >-
+        Σύγκρινε με μια ματιά τις τιμές των καταστημάτων και δες ακριβώς πού να πας.
+
+  - id: shops
+    shot: /{lang}/for-shops hero, slow scroll
+    callout:
+      en: "Free for businesses"
+      el: "Δωρεάν για επιχειρήσεις"
+    narration:
+      en: >-
+        Run a local business? List it on pundo for free, in under five minutes.
+      el: >-
+        Έχεις τοπική επιχείρηση; Καταχώρισέ την στο pundo δωρεάν, σε λιγότερο από πέντε λεπτά.
+
+  - id: subscribe
+    shot: /{lang}/guides, slow scroll through guide cards
+    callout:
+      en: "Subscribe"
+      el: "Κάνε εγγραφή"
+    narration:
+      en: >-
+        Subscribe for quick how-tos, tutorials for shop owners,
+        and guides to everyday life in Cyprus.
+      el: >-
+        Κάνε εγγραφή για σύντομους οδηγούς, βίντεο για καταστηματάρχες
+        και συμβουλές για την καθημερινή ζωή στην Κύπρο.
+
+  - id: outro
+    branding: outro

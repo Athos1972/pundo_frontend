@@ -14,6 +14,7 @@ brand = yaml.safe_load((ROOT / "_branding/brand.yml").read_text())
 scenes = yaml.safe_load((ROOT / slug / "scenes.yml").read_text())
 cache = ROOT / slug / ".cache" / lang
 (cache / "audio").mkdir(parents=True, exist_ok=True)
+brand["timing"].update((scenes.get("meta") or {}).get("timing") or {})   # per-video override (e.g. short trailer)
 T = brand["timing"]
 V = brand["voices"][lang]
 MAXC = brand["layout"]["subtitle_max_chars"]

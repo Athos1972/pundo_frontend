@@ -79,6 +79,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           providerType: saved.providerType!,
           domainSlugs: saved.domainSlugs,
           specialtySlugs: saved.specialtySlugs,
+          otherOfferText: saved.otherOfferText,
           location: saved.location!,
           contact: saved.contact,
           shopName: saved.shopName ?? '',
@@ -99,6 +100,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       providerType: saved.providerType,
       domainSlugs: saved.domainSlugs,
       specialtySlugs: saved.specialtySlugs,
+      otherOfferText: saved.otherOfferText,
       location: saved.location,
       contact: saved.contact,
       shopName: saved.shopName ?? '',
@@ -129,8 +131,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     setStep(1)
   }
 
-  function handleStep2Next(domainSlugs: string[], specialtySlugs: string[]) {
-    persistDraft({ domainSlugs, specialtySlugs })
+  function handleStep2Next(domainSlugs: string[], specialtySlugs: string[], otherOfferText?: string) {
+    persistDraft({ domainSlugs, specialtySlugs, otherOfferText })
     setStep(2)
   }
 
@@ -161,6 +163,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           providerType: draft.providerType!,
           domainSlugs: draft.domainSlugs,
           specialtySlugs: draft.specialtySlugs,
+          otherOfferText: draft.otherOfferText,
           location: draft.location!,
           contact: draft.contact,
           shopName: draft.shopName,
@@ -196,6 +199,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           providerType: draft.providerType!,
           domainSlugs: draft.domainSlugs,
           specialtySlugs: draft.specialtySlugs,
+          otherOfferText: draft.otherOfferText,
           location: draft.location!,
           contact: draft.contact,
           shopName: draft.shopName,
@@ -278,6 +282,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             providerType={draft.providerType}
             selectedDomainSlugs={draft.domainSlugs}
             selectedSpecialtySlugs={draft.specialtySlugs}
+            selectedOtherOfferText={draft.otherOfferText ?? ''}
             onNext={handleStep2Next}
             onBack={() => setStep(0)}
           />

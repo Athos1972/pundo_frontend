@@ -46,6 +46,8 @@ const searchTranslations = {
     result_service_cta: 'View providers',
     result_service_providers_in_view: (n: number) => `${n} provider${n === 1 ? '' : 's'} nearby`,
     result_service_providers_in_view_zero: 'No providers nearby',
+    result_service_provider_prompt: 'Do you offer this service?',
+    result_service_become_provider: 'List your business for free',
   },
   de: {
     search_page_title: 'Produkte & Shops in Zypern finden | Pundo',
@@ -93,6 +95,8 @@ const searchTranslations = {
     result_service_cta: 'Anbieter ansehen',
     result_service_providers_in_view: (n: number) => `${n} Anbieter in der Nähe`,
     result_service_providers_in_view_zero: 'Keine Anbieter in der Nähe',
+    result_service_provider_prompt: 'Du bietest das an?',
+    result_service_become_provider: 'Kostenlos eintragen',
   },
   ru: {
     search_page_title: 'Найти товары и магазины на Кипре | Pundo',
@@ -140,6 +144,8 @@ const searchTranslations = {
     result_service_cta: 'Посмотреть исполнителей',
     result_service_providers_in_view: (n: number) => `${n} исполнител${n === 1 ? 'ь' : 'ей'} рядом`,
     result_service_providers_in_view_zero: 'Нет исполнителей рядом',
+    result_service_provider_prompt: 'Вы предлагаете эту услугу?',
+    result_service_become_provider: 'Бесплатно добавить свой бизнес',
   },
   el: {
     search_page_title: 'Βρες Προϊόντα & Καταστήματα στην Κύπρο | Pundo',
@@ -187,6 +193,8 @@ const searchTranslations = {
     result_service_cta: 'Δες παρόχους',
     result_service_providers_in_view: (n: number) => `${n} πάροχ${n === 1 ? 'ος' : 'οι'} κοντά`,
     result_service_providers_in_view_zero: 'Κανένας πάροχος κοντά',
+    result_service_provider_prompt: 'Προσφέρετε αυτή την υπηρεσία;',
+    result_service_become_provider: 'Καταχωρίστε δωρεάν την επιχείρησή σας',
   },
   ar: {
     search_page_title: 'ابحث عن المنتجات والمحلات في قبرص | Pundo',
@@ -234,6 +242,8 @@ const searchTranslations = {
     result_service_cta: 'عرض مقدمي الخدمة',
     result_service_providers_in_view: (n: number) => `${n} مزود${n === 1 ? '' : 'ون'} قريبًا`,
     result_service_providers_in_view_zero: 'لا يوجد مزودون قريبًا',
+    result_service_provider_prompt: 'هل تقدّم هذه الخدمة؟',
+    result_service_become_provider: 'سجّل نشاطك مجانًا',
   },
   he: {
     search_page_title: 'מצא מוצרים וחנויות בקפריסין | Pundo',
@@ -281,6 +291,8 @@ const searchTranslations = {
     result_service_cta: 'הצג ספקים',
     result_service_providers_in_view: (n: number) => `${n} ספק${n === 1 ? '' : 'ים'} בקרבת מקום`,
     result_service_providers_in_view_zero: 'אין ספקים בקרבת מקום',
+    result_service_provider_prompt: 'האם אתם מציעים שירות זה?',
+    result_service_become_provider: 'הוסיפו את העסק שלכם בחינם',
   },
 } as const
 

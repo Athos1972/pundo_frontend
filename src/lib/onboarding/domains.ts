@@ -2,6 +2,9 @@ import type { OnboardingDomain, OnboardingProviderType } from '@/types/shop-admi
 
 export const OTHER_DOMAIN_SLUG = 'other' as const
 
+/** F2970: max length of the optional "What do you offer?" free text (mirrors the backend). */
+export const OTHER_OFFER_MAX_LENGTH = 120
+
 // ─── Static fallback catalog (used when backend endpoint is unavailable) ─────
 // Labels are in German (de) as the most common fallback language.
 // The backend delivers fully localised labels in all 6 languages (en/de/el/ru/ar/he).
@@ -181,13 +184,15 @@ export async function getDomains(lang: string, providerType: OnboardingProviderT
   try {
     const res = await fetch(`/api/shop-admin/onboarding/domains?lang=${lang}&type=${providerType}`)
     if (!res.ok) throw new Error('fetch failed')
-    const data = ((await res.json()) as { domains: OnboardingDomain[] }).domains
+    // F2970 AC11: chips are ordered alphabetically in the registration language
+    // (the backend delivers them in sort_order, which is not meaningful to the owner).
+    const data = sortDomains(((await res.json()) as { domains: OnboardingDomain[] }).domains, lang)
     cache.set(key, data)
     return data
   } catch {
     // Backend not yet available — use static fallback
     const fallback = FALLBACK_DOMAINS[providerType] ?? []
-    const sorted = [...fallback].sort((a, b) => a.label.localeCompare(b.label, lang))
+    const sorted = sortDomains(fallback, lang)
     cache.set(key, sorted)
     return sorted
   }

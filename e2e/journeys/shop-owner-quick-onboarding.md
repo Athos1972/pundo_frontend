@@ -156,3 +156,12 @@ reads `localStorage` which differs between SSR and client. Fix: move to `useEffe
 
 **T6 FAIL — TEST-AUTHORING:** `?lang=de` URL param does not switch UI language.
 Language comes from `app_lang` cookie. Fix spec to set cookie instead of URL param.
+
+### T10 (F2970): Dienstleister-Domains, Friseur-Spezialitäten, „Andere“-Freitext
+
+Seit F2970 hat „Dienstleister“ 22 Domains. Schritte: Dienstleister wählen → ≥ 22 Domain-Chips + „Sonstiges“, 390 px ohne horizontalen Scroll →
+„Friseur & Barbier“ wählen → Weiter → Spezialitäten „Herren“, „Kinder“, „Hausbesuch“ sichtbar → zurück, „Sonstiges“ wählen → Freitextfeld
+(`input#onboarding-other-offer`, `maxlength=120`) sichtbar, Weiter aktiv. Kein Submit (keine Schreibzugriffe).
+Spec: `shop-owner-quick-onboarding.spec.ts` (T10). Hinweis: T9 erwartet Auto-Assign-Listings für die **Handwerker**-Domain `elektriker`; die Tabelle
+`item_domain_mappings` ist in pundo_test nur für die Dienstleister-Domains befüllt (F2970 Seed) — T9 war schon vor F2970 rot (leere Tabelle).
+

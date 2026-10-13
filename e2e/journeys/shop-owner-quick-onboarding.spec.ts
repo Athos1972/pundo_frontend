@@ -640,4 +640,43 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await expect(skipBtn, 'T8: Skip must be disabled without name').toBeDisabled()
   })
 
+  // ── T10 (F2970): 22 Dienstleister-Chips, Friseur + Barber, "Andere"-Freitext ────────────
+
+  test('T10 — F2970: Dienstleister-Domains (22 Chips, 390 px ohne horizontalen Scroll), Friseur-Spezialitaet, Freitext bei "Andere"', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.context().addCookies([{ name: 'app_lang', value: 'de', url: BASE_URL }])
+    await page.goto(BASE_URL + '/shop-admin/onboarding')
+    const tile = page.locator('button[aria-pressed]', { hasText: /dienstleister|service provider/i })
+    await expect(tile.first()).toBeVisible({ timeout: 15_000 })
+    await tile.first().click()
+
+    // Step 2: alle Dienstleister-Domains aus dem Backend (>= 22 inkl. "Sonstiges" = 23 Chip-Buttons)
+    const friseurChip = page.locator('button', { hasText: /^Friseur & Barbier$/ })
+    await expect(friseurChip.first(), 'T10: Friseur & Barbier Chip').toBeVisible({ timeout: 15_000 })
+    const chips = page.locator('button[aria-pressed]')
+    expect(await chips.count(), 'T10: >= 22 Domain-Chips + Sonstiges').toBeGreaterThanOrEqual(23)
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      'T10: kein horizontaler Scroll bei 390 px'
+    ).toBe(true)
+
+    // Friseur waehlen -> Weiter -> Spezialitaeten enthalten Barber-/Herren-Variante, Kinder, Hausbesuch
+    await friseurChip.first().click()
+    await page.locator('button', { hasText: /^weiter$/i }).last().click()
+    await expect(page.locator('button', { hasText: /^Herren$/ }).first(), 'T10: Spezialitaet Herren').toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('button', { hasText: /^Kinder$/ }).first(), 'T10: neue Spezialitaet Kinder').toBeVisible()
+    await expect(page.locator('button', { hasText: /^Hausbesuch$/ }).first(), 'T10: neue Spezialitaet Hausbesuch').toBeVisible()
+
+    // zurueck -> "Sonstiges" zeigt das optionale Freitextfeld (max. 120 Zeichen)
+    await page.locator('button', { hasText: /^zurück$/i }).last().click()
+    await friseurChip.first().click() // abwaehlen
+    await page.locator('button', { hasText: /^Sonstiges$/ }).first().click()
+    const other = page.locator('input#onboarding-other-offer')
+    await expect(other, 'T10: Freitextfeld bei "Sonstiges"').toBeVisible()
+    expect(await other.getAttribute('maxlength')).toBe('120')
+    await other.fill('Hufschmied')
+    // nur "Sonstiges" + Text: Weiter ist aktiv (Backend akzeptiert domain_slugs=[] seit F2970)
+    await expect(page.locator('button', { hasText: /^weiter$/i }).last()).toBeEnabled()
+  })
+
 })

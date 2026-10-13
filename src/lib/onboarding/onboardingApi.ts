@@ -1,7 +1,7 @@
 'use client'
 
 import type { OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/shop-admin'
-import { OTHER_DOMAIN_SLUG } from '@/lib/onboarding/domains'
+import { OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
 
 export async function submitOnboarding(payload: OnboardingSubmitPayload): Promise<OnboardingSubmitResponse> {
   // Transform camelCase frontend types to snake_case backend API format.
@@ -11,6 +11,11 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
   // Strip the frontend-only "Other" sentinel — backend receives [] for "no domain"
   const domainSlugsForBackend = payload.domainSlugs.filter(s => s !== OTHER_DOMAIN_SLUG)
   const specialtySlugsForBackend = domainSlugsForBackend.length > 0 ? payload.specialtySlugs : []
+
+  // F2970: free text of the "Other" chip feeds the service gap report (optional, max 120)
+  const otherOfferText = payload.domainSlugs.includes(OTHER_DOMAIN_SLUG)
+    ? (payload.otherOfferText ?? '').trim().slice(0, OTHER_OFFER_MAX_LENGTH)
+    : ''
 
   const backendPayload = {
     provider_type: payload.providerType,
@@ -36,6 +41,7 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
       ? { type: 'email' as const, email: emailCreds.email, password: emailCreds.password, name: payload.shopName }
       : { type: 'google' as const },
     lang: navigator.language?.slice(0, 2) ?? 'en',
+    ...(otherOfferText ? { other_offer_text: otherOfferText } : {}),
   }
 
   const res = await fetch('/api/shop-admin/onboarding', {

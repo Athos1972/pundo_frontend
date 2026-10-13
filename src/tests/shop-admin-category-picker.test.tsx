@@ -173,6 +173,25 @@ describe('CategoryPicker', () => {
     expect(onChange).toHaveBeenCalledWith(rootB)
   })
 
+  it('F2970 A3: service roots keep the backend-pinned first root, the rest is sorted by locale', async () => {
+    const pinned: PickerCategory = { id: 16, parent_id: null, taxonomy_type: 'unspsc', name: 'Haus- & Personendienste', path_names: [], child_count: 3 }
+    const zeta: PickerCategory = { id: 30, parent_id: null, taxonomy_type: 'unspsc', name: 'Zeta Dienste', path_names: [], child_count: 1 }
+    const alpha: PickerCategory = { id: 31, parent_id: null, taxonomy_type: 'unspsc', name: 'Ärzte Dienste', path_names: [], child_count: 1 }
+    route({ roots: [pinned, zeta, alpha] })
+    render(<CategoryPicker lang="de" itemType="service" itemName="" value={null} onChange={vi.fn()} />)
+    fireEvent.click(screen.getByTestId('category-browse'))
+    const rows = await screen.findAllByTestId('category-browse-item')
+    expect(rows.map((r) => r.textContent)).toEqual(['Haus- & Personendienste', 'Ärzte Dienste', 'Zeta Dienste'])
+  })
+
+  it('F2970 A3: pinned order applies to service ROOTS only, products stay fully alphabetical', async () => {
+    route({ roots: [rootA, rootB] }) // backend order Zebra, Ärzte
+    render(<CategoryPicker lang="de" itemType="product" itemName="" value={null} onChange={vi.fn()} />)
+    fireEvent.click(screen.getByTestId('category-browse'))
+    const rows = await screen.findAllByTestId('category-browse-item')
+    expect(rows.map((r) => r.textContent)).toEqual(['Ärzte', 'Zebra'])
+  })
+
   it('drill-down: leaf row selects directly', async () => {
     route({ roots: [rootA] })
     const onChange = vi.fn()

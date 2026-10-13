@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { OnboardingDomain, OnboardingProviderType } from '@/types/shop-admin'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
-import { getDomains, OTHER_DOMAIN_SLUG } from '@/lib/onboarding/domains'
+import { getDomains, OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
 import { DomainChip } from './DomainChip'
 
 interface StepDomainsProps {
@@ -12,15 +12,19 @@ interface StepDomainsProps {
   providerType: OnboardingProviderType
   selectedDomainSlugs: string[]
   selectedSpecialtySlugs: string[]
-  onNext: (domainSlugs: string[], specialtySlugs: string[]) => void
+  /** F2970: previously entered "Other" free text (draft). */
+  selectedOtherOfferText?: string
+  /** `otherOfferText` is only passed (3rd argument) when "Other" is selected and the text is non-empty. */
+  onNext: (domainSlugs: string[], specialtySlugs: string[], otherOfferText?: string) => void
   onBack: () => void
 }
 
-export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selectedSpecialtySlugs, onNext, onBack }: StepDomainsProps) {
+export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selectedSpecialtySlugs, selectedOtherOfferText = '', onNext, onBack }: StepDomainsProps) {
   const [domains, setDomains] = useState<OnboardingDomain[]>([])
   const [domainSlugs, setDomainSlugs] = useState<string[]>(selectedDomainSlugs)
   const [specialtySlugs, setSpecialtySlugs] = useState<string[]>(selectedSpecialtySlugs)
   const [showSpecialties, setShowSpecialties] = useState(false)
+  const [otherOfferText, setOtherOfferText] = useState(selectedOtherOfferText)
   // Derived: show skeleton while domains haven't loaded yet (cleanup resets to [] on dep change)
   const loading = domains.length === 0
 
@@ -74,7 +78,12 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
       setShowSpecialties(true)
       return
     }
-    onNext(domainSlugs, specialtySlugs)
+    const text = otherOfferText.trim()
+    if (isOtherSelected && text) {
+      onNext(domainSlugs, specialtySlugs, text)
+    } else {
+      onNext(domainSlugs, specialtySlugs)
+    }
   }
 
   const stepTitle = showSpecialties ? tr.onboarding_step2_5_title : tr.onboarding_step2_title
@@ -113,7 +122,22 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
                 />
               </div>
               {isOtherSelected && (
-                <p className="text-xs text-gray-500">{tr.onboarding_domain_other_hint}</p>
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs text-gray-500">{tr.onboarding_domain_other_hint}</p>
+                  {/* F2970: optional free text - feeds the service gap report */}
+                  <label htmlFor="onboarding-other-offer" className="text-sm font-medium text-gray-700">
+                    {tr.onboarding_other_offer_label}
+                  </label>
+                  <input
+                    id="onboarding-other-offer"
+                    type="text"
+                    value={otherOfferText}
+                    maxLength={OTHER_OFFER_MAX_LENGTH}
+                    onChange={e => setOtherOfferText(e.target.value)}
+                    placeholder={tr.onboarding_other_offer_placeholder}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
               )}
             </>
           )}

@@ -364,6 +364,8 @@ export interface OnboardingDraft {
   location: OnboardingLocation | null
   contact: OnboardingContact
   shopName: string
+  /** F2970: optional free text when "Other" is the chosen domain (max 120 chars). */
+  otherOfferText?: string
 }
 
 export interface OnboardingSubmitPayload {
@@ -374,6 +376,8 @@ export interface OnboardingSubmitPayload {
   contact: OnboardingContact
   shopName: string
   credentials: { email: string; password: string } | { type: 'google' }
+  /** F2970: only sent when "Other" is selected; trimmed, max 120 characters. */
+  otherOfferText?: string
 }
 
 export interface OnboardingSubmitResponse {

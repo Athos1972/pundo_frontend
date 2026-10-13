@@ -43,6 +43,30 @@ describe('domains.ts', () => {
     expect(domains).toEqual(mockData)
   })
 
+  it('orders backend domains alphabetically in the registration language (F2970 AC11)', async () => {
+    const apiOrder: OnboardingDomain[] = [
+      { slug: 'photo', label: 'Φωτογράφος', specialties: [] },
+      { slug: 'acc', label: 'Λογιστής', specialties: [] },
+      { slug: 'hair', label: 'Κομμωτήριο', specialties: [] },
+      { slug: 'alpha', label: 'Αρχιτέκτονας', specialties: [] },
+    ]
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ domains: apiOrder }) }))
+    const domains = await getDomains('el', 'dienstleister')
+    expect(domains.map(d => d.label)).toEqual(['Αρχιτέκτονας', 'Κομμωτήριο', 'Λογιστής', 'Φωτογράφος'])
+    // the cached result is sorted as well
+    expect((await getDomains('el', 'dienstleister')).map(d => d.slug)).toEqual(['alpha', 'hair', 'acc', 'photo'])
+  })
+
+  it('sorts per language: same domains, different order in de and ru', async () => {
+    const api: OnboardingDomain[] = [
+      { slug: 'x', label: 'Ärzte', specialties: [] },
+      { slug: 'y', label: 'Zahnarzt', specialties: [] },
+      { slug: 'z', label: 'Bäcker', specialties: [] },
+    ]
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ domains: api }) }))
+    expect((await getDomains('de', 'gastro')).map(d => d.slug)).toEqual(['x', 'z', 'y'])
+  })
+
   it('caches results across calls with the same lang+type', async () => {
     const mockData: OnboardingDomain[] = [
       { slug: 'cached', label: 'Cached', specialties: [] },

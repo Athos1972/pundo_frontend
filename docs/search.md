@@ -123,6 +123,22 @@ Zeigt alle Angebote eines Produkts sortiert nach Preis:
 
 ---
 
+## Service-Karten (`ServiceResultCard`, F2970)
+
+Die Suche zeigt über den Produkten bis zu **8 Service-Karten** (Kategorie der Dienstleistung, z. B. „Friseur & Barbier“ mit `provider_count`).
+Klick → `/{lang}/shops?service=<category_id>` (Anbieterliste, gleiche Regel wie `provider_count`; Backend: Onboarding, Service-Listing,
+Google-Ortstyp, jeweils inklusive Unterkategorien).
+
+Karten **ohne Anbieter** (`provider_count === 0`) bleiben sichtbar (Entscheidung O2). Darunter steht ein Hinweis
+„Du bietest das an? Kostenlos eintragen“ (Keys `result_service_provider_prompt` / `result_service_become_provider` in `src/lib/i18n/search.ts`)
+mit Link auf `/shop-admin/onboarding` — ein **Bypass-Pfad** (kein `localePath`). Der Link ist ein Geschwister des Karten-`<button>`
+(kein interaktives Element im Button), RTL über `rtl:`-Modifier.
+
+Shop-Admin-Picker (`CategoryPicker`): Im Browse für Dienstleistungen steht die vom Backend gepinnte Wurzel „Haus- & Personendienste“ zuerst,
+der Rest wird locale-aware sortiert; Produkte bleiben vollständig alphabetisch.
+
+---
+
 ## Shop-Detailseite (`/shops/[slug]`)
 
 Zeigt Informationen zu einem einzelnen Shop:

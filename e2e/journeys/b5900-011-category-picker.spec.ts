@@ -30,7 +30,7 @@ const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state
 }
 test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
-type Lang = 'en' | 'de' | 'el' | 'he'
+type Lang = 'en' | 'de' | 'el' | 'ru' | 'he'
 const E2E_FIXTURE_IDS = [8458, 8459, 8460, 8461, 8462]
 
 interface Picked { id: number; taxonomy_type: string; name: string; path_names: string[] }
@@ -230,4 +230,66 @@ test('AK6: Mobile 390x844 -> kein horizontaler Scroll, Touch-Ziele >= 44px', asy
     expect(box, tid).not.toBeNull()
     expect(box!.height, `${tid} Touch-Ziel`).toBeGreaterThanOrEqual(43.5)
   }
+})
+
+// ─── F2970: Endkunden-Dienstleistungen im Picker ─────────────────────────────
+
+/** Switches the open create-item form to "service" and types the item name. */
+async function typeServiceName(form: Awaited<ReturnType<typeof openCreateForm>>, name: string) {
+  await form.locator('input[name="item_type"][value="service"]').check()
+  await form.locator('input[type="text"]').first().fill(name)
+}
+
+// AC8: Vorschlag aus dem Artikelnamen; AC6/7: kein Tierpflege-Fehltreffer auf Platz 1
+const AK7: Array<{ lang: Lang; name: string; top: RegExp }> = [
+  { lang: 'de', name: 'Herrenhaarschnitt', top: /Herrenfriseur & Barbier/ },
+  { lang: 'el', name: 'Κούρεμα', top: /Κομμωτήριο & Κουρείο|Παιδικό Κούρεμα|Ανδρικό Κουρείο/ },
+  { lang: 'ru', name: 'Тайский массаж 60 мин', top: /Тайский.*массаж/ },
+  { lang: 'en', name: 'Babysitting evening', top: /Childcare & Babysitting/ },
+  { lang: 'el', name: 'Μανικιούρ ημιμόνιμο', top: /Μανικιούρ/ },
+]
+for (const c of AK7) {
+  test(`AK7 (F2970) [${c.lang}] Dienstleistung "${c.name}": passender Vorschlag in den Top 3`, async ({ page }) => {
+    const form = await openCreateForm(page, c.lang)
+    await typeServiceName(form, c.name)
+    const sug = form.getByTestId('category-suggestion')
+    await expect(sug.first()).toBeVisible({ timeout: 8000 })
+    const texts = (await sug.allTextContents()).slice(0, 3)
+    expect(texts.join(' | '), 'Top 3').toMatch(c.top)
+    expect(texts[0], 'Platz 1 ist kein Tierpflege-Treffer').not.toMatch(/Tierpflege|Grooming|Груминг|Περιποίηση Κατοικίδιων/)
+  })
+}
+
+test('AK8 (F2970): Picker-Suche "Friseur" (de) / "hairdresser" (en) -> Friseur-Knoten, nicht Tierpflege', async ({ page }) => {
+  for (const [lang, q, re] of [['de', 'Friseur', /Friseur & Barbier/], ['en', 'hairdresser', /Hairdresser & Barber/], ['el', 'κομμωτήριο', /Κομμωτήριο & Κουρείο/]] as Array<[Lang, string, RegExp]>) {
+    const form = await openCreateForm(page, lang)
+    await form.locator('input[name="item_type"][value="service"]').check()
+    const resp = categoriesResponse(page, (u) => u.searchParams.get('q') === q && u.searchParams.get('item_type') === 'service')
+    await form.getByTestId('category-search').fill(q)
+    const { items } = (await (await resp).json()) as { items: Picked[] }
+    expect(items[0].name, `${lang}: Platz 1`).toMatch(re)
+    expect(items.slice(0, 3).map((i) => i.name).join('|')).toMatch(re)
+    await expect(form.getByTestId('category-option').first()).toContainText(re)
+  }
+})
+
+test('AK9 (F2970): Browse fuer Dienstleistungen beginnt mit "Haus- & Personendienste"; Friseur in wenigen Taps', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const form = await openCreateForm(page, 'de')
+  await form.locator('input[name="item_type"][value="service"]').check()
+  await form.getByTestId('category-browse').click()
+  const items = form.getByTestId('category-browse-item')
+  await expect(items.first()).toBeVisible()
+  await expect(items.first()).toContainText('Haus- & Personendienste')
+  // Tap 1: Wurzel, Tap 2: Familie, Tap 3: "Friseur & Barbier" oeffnen, dort ist ein Blatt (Herrenfriseur) waehlbar
+  await items.first().click()
+  await form.getByTestId('category-browse-item').filter({ hasText: 'Schönheit, Wellness & Fitness' }).first().click()
+  const friseur = form.getByTestId('category-browse-item').filter({ hasText: /^Friseur & Barbier/ }).first()
+  await expect(friseur).toBeVisible()
+  await friseur.click()
+  await expect(form.getByTestId('category-browse-item').filter({ hasText: 'Herrenfriseur & Barbier' })).toBeVisible()
+  await form.getByTestId('category-choose-current').click()
+  await expect(form.getByTestId('category-selected')).toContainText('Friseur & Barbier')
+  // kein horizontaler Scroll
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

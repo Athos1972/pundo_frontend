@@ -50,6 +50,7 @@
 | [b5900-011-category-picker](b5900-011-category-picker.spec.ts) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |
 | [b5900-012-shop-hours-validation](b5900-012-shop-hours-validation.spec.ts) | Shop-Admin Öffnungszeiten-Validierung (B5900-012) | implemented | P2 | PASS (AK2 skip ohne DATABASE_URL_TEST) |
 | [b5900-013-null-price-display](b5900-013-null-price-display.spec.ts) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
+| [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | — |
 
 ## Smoketest Coverage
 

@@ -139,8 +139,15 @@ export function CategoryPicker({ lang, itemType, itemName, value, onChange, erro
   const browseSorted = useMemo(() => {
     if (!browseResult) return []
     const collator = new Intl.Collator(lang)
-    return [...browseResult.items].sort((a, b) => collator.compare(a.name, b.name))
-  }, [browseResult, lang])
+    const items = browseResult.items
+    // F2970 A3: for services the backend pins "Haus- & Personendienste" as FIRST root; keep it
+    // there and sort only the rest (locale-aware). Products / sub-levels: fully alphabetical.
+    if (itemType === 'service' && parent === null && items.length > 1) {
+      const [pinned, ...rest] = items
+      return [pinned, ...rest.sort((a, b) => collator.compare(a.name, b.name))]
+    }
+    return [...items].sort((a, b) => collator.compare(a.name, b.name))
+  }, [browseResult, lang, itemType, parent])
 
   function choose(c: PickerCategory) {
     setUi({ itemType, query: '', browseOpen: false, stack: [] })

@@ -87,6 +87,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 Use my location',
     onboarding_domain_other: 'Other',
     onboarding_domain_other_hint: 'No offers will be pre-filled — you add them yourself later.',
+    onboarding_other_offer_label: 'What do you offer? (optional)',
+    onboarding_other_offer_placeholder: 'e.g. farrier, tutoring, bike repair',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -173,6 +175,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 Meine Position verwenden',
     onboarding_domain_other: 'Sonstiges',
     onboarding_domain_other_hint: 'Es werden keine Angebote vorbefüllt — du legst sie später selbst an.',
+    onboarding_other_offer_label: 'Was bietest du an? (optional)',
+    onboarding_other_offer_placeholder: 'z. B. Hufschmied, Nachhilfe, Fahrradreparatur',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -259,6 +263,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 Χρήση της θέσης μου',
     onboarding_domain_other: 'Άλλο',
     onboarding_domain_other_hint: 'Δεν θα συμπληρωθούν προσφορές αυτόματα — τις προσθέτεις αργότερα μόνος σου.',
+    onboarding_other_offer_label: 'Τι προσφέρεις; (προαιρετικό)',
+    onboarding_other_offer_placeholder: 'π.χ. πεταλωτής, φροντιστήριο, επισκευή ποδηλάτων',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -345,6 +351,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 Использовать моё местоположение',
     onboarding_domain_other: 'Другое',
     onboarding_domain_other_hint: 'Предложения не будут заполнены автоматически — ты добавишь их сам позже.',
+    onboarding_other_offer_label: 'Что ты предлагаешь? (необязательно)',
+    onboarding_other_offer_placeholder: 'например: коваль, репетитор, ремонт велосипедов',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -431,6 +439,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 استخدام موقعي',
     onboarding_domain_other: 'أخرى',
     onboarding_domain_other_hint: 'لن يتم ملء العروض مسبقاً — ستضيفها بنفسك لاحقاً.',
+    onboarding_other_offer_label: 'ماذا تقدّم؟ (اختياري)',
+    onboarding_other_offer_placeholder: 'مثال: حدّاد خيول، دروس خصوصية، إصلاح دراجات',
   },
   he: {
     register_title: 'רישום החנות',
@@ -517,6 +527,8 @@ const shopAdminAuthTranslations = {
     onboarding_location_use_my_location: '📍 השתמש במיקום שלי',
     onboarding_domain_other: 'אחר',
     onboarding_domain_other_hint: 'לא יתמלאו הצעות מראש — תוסיף אותן בעצמך מאוחר יותר.',
+    onboarding_other_offer_label: 'מה אתה מציע? (לא חובה)',
+    onboarding_other_offer_placeholder: 'לדוגמה: מנעלן סוסים, שיעורים פרטיים, תיקון אופניים',
   },
 } as const
 

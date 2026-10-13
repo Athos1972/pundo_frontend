@@ -7,22 +7,10 @@ import type { SysAdminShop, SysAdminShopType, DayHours } from '@/types/system-ad
 import type { SocialLinksMap } from '@/types/shop-admin'
 import { pickName } from '@/types/system-admin'
 
-// Normalizes legacy dict format {"0": {...}} → list format [{day: 0, ...}].
-// Needed for shops whose opening_hours predate the DB migration.
-function normalizeOpeningHours(raw: unknown): DayHours[] | null {
-  if (!raw) return null
-  if (Array.isArray(raw)) return raw as DayHours[]
-  if (typeof raw === 'object') {
-    return Object.entries(raw as Record<string, unknown>)
-      .filter(([k, v]) => /^\d$/.test(k) && v !== null && typeof v === 'object')
-      .map(([k, v]) => ({ day: parseInt(k, 10), ...(v as Omit<DayHours, 'day'>) }))
-      .sort((a, b) => a.day - b.day)
-  }
-  return null
-}
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { OpeningHoursEditor } from './OpeningHoursEditor'
+import { normalizeOpeningHours } from './opening-hours'
 import { LocationEditor } from './LocationEditor'
 import { showToast } from './Toast'
 import { ShopHardDeleteSection } from './ShopHardDeleteSection'

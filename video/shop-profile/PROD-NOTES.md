@@ -1,7 +1,8 @@
 # shop-profile: Produktionsnotizen (Stand 2026-10-14)
 
 Teil 7 von „pundo for businesses“ (Ergänzung nach dem Serienende in Teil 6): „Keep your shop profile up to date“ (EN 1:48, EL 1:52). Freigegebenes DE-Skript: `01-skript.de.md`.
-Links, Upload-Status, Endscreens/Playlists: Vault N7900.
+Veröffentlicht 2026-10-14: EN https://youtu.be/diyI6i8TI04 · EL https://youtu.be/9LQAaIuNA7I (SRT, Thumbnail, Kapitel, Playlists, Endscreen Playlist + Abo). Details: Vault N7900.
+Upload: EL-Datei > 10 MB → Ton auf 128k neu kodiert (`ffmpeg -c:v copy -c:a aac -b:a 128k`, `out/*.up.mp4`).
 
 ## Voraussetzung
 Bug [[B5950-001]] (zweites Öffnungszeitfenster in Kundensicht und `is_open_now`), behoben 2026-10-13 (Backend `adc536a`, Frontend `4f50afd`). Ohne den Fix zeigt die Shop-Seite nur „07:00 – 14:00“.

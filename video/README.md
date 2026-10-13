@@ -32,11 +32,13 @@ video/
 |---|---|---|
 | `shop-signup` | Teil 1: Shop registrieren (legt Demo-Konten an) | Test-Instanz 3500/8500 |
 | `product-create-new` | Teil 2: erstes Produkt mit Foto + Preis; `prepare.sh` bereitet `pundo_test` vor (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
+| `product-from-catalog` | Teil 3: Katalogprodukt per Barcode/Name übernehmen; `prepare_catalog.py` (Backend-venv) legt ein fiktives Katalog-Item an (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen
 - ffmpeg/ffprobe (Homebrew), Node (Playwright aus dem Repo, Chromium installiert), Python 3.12 (`video/.venv` wird von build.sh angelegt: edge-tts, pyyaml, pillow, numpy).
 - Fuer die Aufnahme: **Test-Instanz** laeuft - Frontend `npm run dev:test` (:3500), Backend `./scripts/start_test_server.sh` im pundo_main_backend (:8500). Niemals 3000/8000 (`record-lib` bricht ab). DB `pundo_test` wird nicht zurueckgesetzt.
+- Auf 3500 muss der **Dev-Server dieses Repos** laufen (`lsof -iTCP:3500` -> `next dev`). E2E-Laeufe anderer Sessions starten dort einen Standalone-Build ohne lokale Aenderungen.
 - **Keine parallelen Test-Laeufe** (pytest/Playwright) gegen `pundo_test` waehrend der Aufnahme: das Backend wird dann so langsam (Angebot speichern 8-17 s statt 30 ms), dass Szenen ins Stocken geraten.
 - Internet: edge-tts (Microsoft; antwortet gelegentlich mit 403/Handshake-Fehler -> tts.py wiederholt automatisch, Ergebnisse werden gecacht), Nominatim/OSM-Kacheln waehrend der Aufnahme.
 

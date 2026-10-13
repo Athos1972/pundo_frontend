@@ -1,0 +1,133 @@
+# Single source of truth for the product-from-catalog video (EN + EL), part 3 of "pundo for businesses".
+# Approved German draft: 01-skript.de.md (BB 2026-10-13: approved; name search as its own scene; next = services).
+# Greek: informal "εσύ". UI terms in quotes match src/lib/i18n/shop-admin-*.ts.
+# Demo product is fictional and only exists in pundo_test (prepare_catalog.py): "Troodos Valley Carob Syrup 500 ml",
+# EAN 2001234567893 (GS1 internal range), catalog photo "From Pundo". Anna's sourdough bread from part 2 stays in the shop.
+
+meta:
+  slug: product-from-catalog
+  title:
+    en: "Add a product that's already on pundo"
+    el: "Πρόσθεσε ένα προϊόν που υπάρχει ήδη στο pundo"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Next video: Add your services"
+    el: "Στο επόμενο βίντεο: Πρόσθεσε τις υπηρεσίες σου"
+  demo:
+    ean: "2001234567893"
+    search: { en: "Troodos", el: "χαρουπόμελο" }    # EN "carob"/"carob syrup" list dog treats + a "similar products" box
+    price: { en: "6.90", el: "6,90" }
+  thumbnail_scene: catalog-photo
+  target_duration_s: 105
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: welcome
+    shot: shop-admin dashboard of Anna's Bakery, still
+    callout:
+      en: "Already on pundo? Take it over"
+      el: "Υπάρχει ήδη; Απλώς πρόσθεσέ το"
+    narration:
+      en: >-
+        Welcome back! In the last video, you created a brand-new product. But many products are
+        already on pundo, especially branded goods. You don't need to create those again: just take
+        them over, with photo and description, and add your price.
+      el: >-
+        Καλώς ήρθες ξανά! Στο προηγούμενο βίντεο δημιούργησες ένα εντελώς καινούργιο προϊόν.
+        Πολλά προϊόντα όμως υπάρχουν ήδη στο pundo, κυρίως επώνυμα. Αυτά δεν χρειάζεται να τα
+        δημιουργήσεις ξανά: απλώς τα προσθέτεις, με φωτογραφία και περιγραφή, και βάζεις μόνο την τιμή σου.
+
+  - id: to-offers
+    shot: menu -> "Offers" -> "+ Add offer" -> open "Select product or service"
+    callout:
+      en: "pundo.cy/shop-admin"
+      el: "pundo.cy/shop-admin"
+    narration:
+      en: >-
+        Open "Offers" again and tap "Add offer".
+      el: >-
+        Άνοιξε ξανά τις «Προσφορές» και πάτησε «Προσθήκη προσφοράς».
+
+  - id: barcode
+    shot: picker open, type EAN into "EAN / Barcode" -> match card with photo appears (highlight, not tapped)
+    callout:
+      en: "Barcode · fastest way"
+      el: "Barcode · ο πιο γρήγορος τρόπος"
+    narration:
+      en: >-
+        The fastest way is the barcode: simply type in the numbers below the barcode on the package.
+        Anna sells carob syrup from the Troodos mountains, and there it is, with a photo.
+      el: >-
+        Ο πιο γρήγορος τρόπος είναι το barcode: απλώς πληκτρολόγησε τους αριθμούς κάτω από
+        το barcode στη συσκευασία. Η Άννα πουλάει χαρουπόμελο από το Τρόοδος, και να το, με φωτογραφία.
+
+  - id: name-search
+    shot: type the name into "Search by name" -> result with photo -> tap it (selects, step 2 opens)
+    callout:
+      en: "Or search by name"
+      el: "Ή ψάξε με το όνομα"
+    narration:
+      en: >-
+        No barcode to hand? Then just search by name. pundo finds the product in other languages too.
+        Tap it to select it.
+      el: >-
+        Δεν έχεις barcode πρόχειρο; Τότε απλώς ψάξε με το όνομα. Το pundo βρίσκει το προϊόν
+        και σε άλλες γλώσσες. Πάτησέ το για να το επιλέξεις.
+
+  - id: catalog-photo
+    shot: step "2. Price & details", product header + photos block with the catalog photo ("From Pundo")
+    callout:
+      en: "Photo already included"
+      el: "Η φωτογραφία υπάρχει ήδη"
+    narration:
+      en: >-
+        The photo is already there, so there's nothing to photograph. If you like, you can still add
+        your own pictures, for example of the product on your shelf.
+      el: >-
+        Η φωτογραφία υπάρχει ήδη, δεν χρειάζεται να φωτογραφίσεις τίποτα. Αν θέλεις, μπορείς να
+        προσθέσεις και δικές σου φωτογραφίες, για παράδειγμα πώς είναι το προϊόν στο ράφι σου.
+
+  - id: price
+    shot: price type "Fixed price", "+ Add pricing unit", unit "Piece", 6.90 / 6,90, Save
+    callout:
+      en: "Fixed price · €6.90 per piece"
+      el: "Σταθερή τιμή · 6,90 € το τεμάχιο"
+    narration:
+      en: >-
+        Now just your price: fixed price, per piece, six euros ninety. Every shop sets its own price,
+        so customers can compare and see where to find the product nearby. Tap "Save".
+      el: >-
+        Τώρα μόνο η τιμή σου: σταθερή τιμή, ανά τεμάχιο, έξι ευρώ και ενενήντα. Κάθε κατάστημα
+        βάζει τη δική του τιμή, έτσι οι πελάτες μπορούν να συγκρίνουν και να δουν πού θα το βρουν
+        κοντά τους. Πάτησε «Αποθήκευση».
+
+  - id: done
+    shot: offers list (syrup + bread) -> customer shop page with both products
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        Done! The carob syrup is now on Anna's shop page, right next to her sourdough bread,
+        and customers nearby can see it straight away.
+      el: >-
+        Έτοιμο! Το χαρουπόμελο είναι τώρα στη σελίδα του καταστήματος της Άννας, δίπλα στο ψωμί
+        προζυμιού της, και οι πελάτες κοντά σου το βλέπουν αμέσως.
+
+  - id: outlook
+    shot: shop page stays, "next video" card
+    callout:
+      en: "Next: your services"
+      el: "Επόμενο: οι υπηρεσίες σου"
+    narration:
+      en: >-
+        In the next video, we'll show you how to add your services. See you there!
+      el: >-
+        Στο επόμενο βίντεο θα σου δείξουμε πώς να προσθέσεις τις υπηρεσίες σου. Τα λέμε εκεί!
+
+  - id: outro
+    branding: outro

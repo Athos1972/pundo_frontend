@@ -200,7 +200,7 @@ export function ItemPickerModal({ isOpen, onClose, onSelect, lang }: ItemPickerM
                   onClick={() => handleSelectItem(eanMatch)}
                   className="shrink-0 bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-accent-dark transition-colors"
                 >
-                  {tr.item_picker_selected}
+                  {tr.item_picker_select}
                 </button>
               </div>
             )}

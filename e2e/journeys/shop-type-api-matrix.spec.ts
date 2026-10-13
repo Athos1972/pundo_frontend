@@ -24,8 +24,8 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { randomUUID } from 'crypto'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
+import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
 import fs from 'fs'
 import path from 'path'
 
@@ -71,47 +71,24 @@ async function onboardShopOwner(
   providerType: string,
   domainSlug: string,
 ): Promise<{ ownerId: number; shopId: number; token: string }> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
-    method: 'POST',
-    // pundo_int_ prefix bypasses the 5/min rate limiter (internal-key exemption in limiter.py)
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer pundo_int_e2e_matrix' },
-    body: JSON.stringify({
-      email,
-      provider_type: providerType,
-      domain_slugs: [domainSlug],
-      shop_name: `Matrix ${providerType} ${domainSlug}`,
-      location: { lat: 34.917, lng: 33.636 },
-      contact: { phone: '+35799000001' },
-      credentials: { type: 'email', email, password: PASSWORD, name: email.split('@')[0] },
-      lang: 'en',
-    }),
-    signal: AbortSignal.timeout(30_000),
+  const data = await shopOwnerOnboardWithRetry({
+    email,
+    provider_type: providerType,
+    domain_slugs: [domainSlug],
+    shop_name: e2eName('MATRIX', `${providerType} ${domainSlug}`), // Marker am Anfang (B8950-012)
+    location: { lat: 34.917, lng: 33.636 },
+    contact: { phone: '+35799000001' },
+    credentials: { type: 'email', email, password: PASSWORD, name: email.split('@')[0] },
+    lang: 'en',
   })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Onboarding ${email}: HTTP ${res.status} — ${text}`)
-  }
-  const data = await res.json()
   if (data.status !== 'approved') {
     throw new Error(
       `Onboarding ${email}: expected status=approved but got "${data.status}". Is Auto-Approve deployed?`
     )
   }
 
-  // Login
-  const loginRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer pundo_int_e2e_matrix' },
-    body: JSON.stringify({ email, password: PASSWORD }),
-    signal: AbortSignal.timeout(30_000),
-  })
-  if (!loginRes.ok) {
-    throw new Error(`Login ${email}: HTTP ${loginRes.status}`)
-  }
-  const cookieHeader = loginRes.headers.get('set-cookie') ?? ''
-  const tokenMatch = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!tokenMatch) throw new Error(`Login ${email}: no shop_owner_token in Set-Cookie`)
-  const token = tokenMatch[1]
+  // Login (retries on 429)
+  const token = await shopOwnerLogin(email, PASSWORD)
 
   // Resolve IDs via /me
   const meRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/me`, {
@@ -147,7 +124,7 @@ async function createItem(
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({
-      name_de: `Matrix-Item ${domain} ${uuid}`,
+      name_de: e2eName('MATRIX', `Item ${domain} ${uuid}`),
       category_id: categoryId,
       confirmed: true,
     }),
@@ -161,14 +138,6 @@ async function createItem(
   return item.id as number
 }
 
-async function deleteShopOwner(ownerId: number, adminToken: string): Promise<void> {
-  await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${adminToken}` },
-    signal: AbortSignal.timeout(15_000),
-  }).catch(() => null)
-}
-
 // ─── Matrix runner ────────────────────────────────────────────────────────────
 
 // Run API-only tests (no page fixture needed)
@@ -179,26 +148,24 @@ const failedDomains: string[] = []
 
 function matrixDescribe(providerType: string, domains: string[]) {
   test.describe(`${providerType} — ${domains.length} Unterarten`, () => {
-    let adminToken: string | null = null
-
-    test.beforeAll(async () => {
-      adminToken = await adminApiLogin().catch(() => null)
-    })
-
+    // Onboarding/login are rate-limited (no internal-key bypass, B6220-001): retries may take minutes.
+    test.setTimeout(600_000)
     for (const domain of domains) {
       test(`${providerType}/${domain} — Onboarding → Login → Item → Shop-Check`, async () => {
-        const uuid = randomUUID().slice(0, 6)
-        const email = `matrix-${domain}-${uuid}@pundo.com`
-        let ownerId: number | null = null
+        const uuid = Math.random().toString(16).slice(2, 8)
+        const email = e2eEmail(`MATRIX-${domain}`, 'pundo.com')
+        const tracker = new TestDataTracker()
 
         try {
           // Step 1–3: Onboard + Login
           const { ownerId: id, shopId, token } = await onboardShopOwner(email, providerType, domain)
-          ownerId = id
+          tracker.owner(id)
+          tracker.shop(shopId)
 
           // Step 4: Create minimal item (skip if no categories in test DB — studio mode)
           const categoryId = await getFirstCategoryId()
           const itemId = await createItem(token, categoryId, domain, uuid)
+          if (itemId !== null) tracker.item(itemId)
           if (itemId === null) {
             findings.push(`WARN: ${providerType}/${domain} — item creation skipped (no categories in test DB)`)
           }
@@ -218,10 +185,8 @@ function matrixDescribe(providerType: string, domains: string[]) {
           failedDomains.push(`${providerType}/${domain}: ${err}`)
           throw err
         } finally {
-          // Step 6: Cleanup
-          if (ownerId && adminToken) {
-            await deleteShopOwner(ownerId, adminToken)
-          }
+          // Step 6: Cleanup (B8950-012): Admin-Shop-Delete kaskadiert Owner, Listings und exklusive Items
+          await tracker.cleanup()
         }
       })
     }

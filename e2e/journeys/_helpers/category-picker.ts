@@ -51,3 +51,23 @@ export async function pickCategory(page: Page, scope: Page | Locator, opts: Pick
   }
   await expect(scope.getByTestId('category-selected')).toBeVisible()
 }
+
+/**
+ * Trägt den Artikelnamen ein und wartet auf die Kategorie-Vorschläge (B8950-012).
+ *
+ * Zwei getrennte Schritte statt einem 8-s-Sichtbarkeits-Timeout: (1) die Antwort von
+ * `/api/shop-admin/categories/suggest` (Debounce 400 ms + Proxy + Backend) mit Statusprüfung,
+ * (2) erst dann die Sichtbarkeit. Schlägt der Request fehl (Status != 200) oder dauert er > 20 s,
+ * nennt die Fehlermeldung Status und Dauer statt "nicht sichtbar" — die UI verschluckt Fetch-Fehler
+ * absichtlich (keine Vorschläge), der Test soll die Ursache zeigen.
+ */
+export async function fillNameAndAwaitSuggestions(page: Page, form: Locator, name: string): Promise<Locator> {
+  const started = Date.now()
+  const resp = page.waitForResponse((r) => new URL(r.url()).pathname === '/api/shop-admin/categories/suggest', { timeout: 20_000 })
+  await form.locator('input[type="text"]').first().fill(name)
+  const r = await resp
+  expect(r.status(), `suggest antwortete ${r.status()} nach ${Date.now() - started} ms für "${name}"`).toBe(200)
+  const sug = form.getByTestId('category-suggestion')
+  await expect(sug.first(), `suggest-Antwort OK nach ${Date.now() - started} ms, Vorschlag nicht gerendert`).toBeVisible({ timeout: 5_000 })
+  return sug
+}

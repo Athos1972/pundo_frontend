@@ -2,16 +2,17 @@
  * B5900-010 — Shop-Admin Angebotsformular: Beschriftungen + Namenssprache
  *
  * Nur gegen Test-Instanz 3500 / 8500. Kein DB-Reset.
- * Items sind global und vom Owner nicht löschbar -> eindeutiger Name `E2E-B5900-010-<uuid>`;
- * das Item bleibt (Test-DB), das Angebot gibt es nicht (nur Item-Anlage über die UI).
+ * B8950-012: alle Tests laufen im WORKER-Shop (eigener Shop pro Worker, Impersonation, kein Passwort-Login).
+ * Items tragen den Marker `E2E-<RUN>-B5900-010-…` am Namensanfang und werden getrackt:
+ * afterAll räumt Listings/Offers weg, der Worker-Teardown löscht Shop und Items (Admin-API).
  *
  * Fixtures (zur Laufzeit): frisches Item mit griechischem Namen (EL-UI, Cookie app_lang=el).
  */
-import { test, expect, type Page } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
-import { randomUUID } from 'crypto'
+import { test, expect, type WorkerShop } from './_helpers/worker-shop'
+import { e2eName } from './_helpers/test-data'
+import type { Page } from '@playwright/test'
 import { pickCategory } from './_helpers/category-picker'
+import { openItemPickerModal } from './_helpers/hydration'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -19,16 +20,21 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-010] Safety: NEVER use production ports!')
 }
 
-const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as {
-  storageState: { cookies: unknown[]; origins: unknown[] }
+let shop: WorkerShop
+test.beforeAll(({ workerShop }) => { shop = workerShop })
+test.afterAll(async () => { await shop.cleanupSpecData() })
+
+/** UI-angelegte Items (haben id + slug in der Antwort) für den Teardown merken. */
+function track(body: { id?: number; slug?: string }) {
+  expect(body.id, 'Item-Antwort ohne id').toBeTruthy()
+  shop.tracker.item(body.id as number, body.slug)
 }
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
 test('EL: Item mit griechischem Namen -> names.el, kein names.de', async ({ page, context }) => {
-  const name = `E2E-B5900-010-Χωριάτικο-${randomUUID().slice(0, 8)}`
+  const name = e2eName('B5900-010', 'Χωριάτικο')
   await context.addCookies([{ name: 'app_lang', value: 'el', url: FRONTEND_URL }])
   await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: /^\+ /i }).first().click()
+  await openItemPickerModal(page.getByRole('button', { name: /^\+ /i }))
   await page.getByRole('button', { name: /^\+ Δημιουργία νέου προϊόντος ή υπηρεσίας/ }).click()
   const form = page.locator('form').filter({ has: page.locator('fieldset legend') })
   await expect(form.locator('legend')).toContainText('Τύπος')
@@ -38,8 +44,9 @@ test('EL: Item mit griechischem Namen -> names.el, kein names.de', async ({ page
   const respPromise = page.waitForResponse((r) => r.url().includes('/api/shop-admin/items') && r.request().method() === 'POST')
   await form.locator('button[type="submit"]').click()
   const resp = await respPromise
-  const body = (await resp.json()) as { slug?: string; names?: Record<string, string>; detail?: unknown }
+  const body = (await resp.json()) as { id?: number; slug?: string; names?: Record<string, string>; detail?: unknown }
   expect(resp.status(), JSON.stringify(body)).toBe(201)
+  track(body)
   expect(body.names?.el).toBe(name)
   expect(body.names?.de).toBeUndefined()
   // Kundensicht: Detail-API liefert names.el
@@ -51,34 +58,7 @@ test('EL: Item mit griechischem Namen -> names.el, kein names.de', async ({ page
 })
 
 // ─── Erweiterung (e2e-tester): Kundensicht, DE-Preisarten, EN-Name ───────────────────────────────────
-// Die Tests legen Item + Angebot an, prüfen die Kundenansicht im Browser und räumen danach
-// Angebot (archivieren + löschen), Listing auf. Das Item selbst bleibt (Owner kann Items nicht löschen).
-
-const SHOP = STATE as unknown as { email: string; password: string; shopId: number }
-
-async function ownerToken(): Promise<string> {
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: SHOP.email, password: SHOP.password }),
-  })
-  return (r.headers.get('set-cookie') ?? '').match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-}
-
-async function cleanupItem(slug: string): Promise<void> {
-  const tok = await ownerToken()
-  const h = { Authorization: `Bearer ${tok}` }
-  const l = (await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings?limit=500`, { headers: h }).then((r) => r.json())) as
-    { items: Array<{ id: number; item: { slug: string }; current_offer?: { id: number } | null }> }
-  const listing = l.items.find((x) => x.item.slug === slug)
-  if (!listing) return
-  if (listing.current_offer) {
-    await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers/${listing.current_offer.id}`, {
-      method: 'PATCH', headers: { ...h, 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }),
-    })
-    await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers/${listing.current_offer.id}`, { method: 'DELETE', headers: h })
-  }
-  await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings/${listing.id}`, { method: 'DELETE', headers: h })
-}
+// Die Tests legen Item + Angebot an und prüfen die Kundenansicht im Browser. Aufräumen: siehe Kopf.
 
 const PICKER_BTN: Record<string, RegExp> = {
   en: /^\+ Select product or service/, de: /^\+ Artikel auswählen/, el: /^\+ Επιλογή προϊόντος ή υπηρεσίας/,
@@ -91,7 +71,7 @@ const CREATE_BTN: Record<string, RegExp> = {
 async function createItemInLang(page: Page, context: import('@playwright/test').BrowserContext, lang: 'en' | 'de' | 'el', name: string) {
   await context.addCookies([{ name: 'app_lang', value: lang, url: FRONTEND_URL }])
   await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: PICKER_BTN[lang] }).click()
+  await openItemPickerModal(page.getByRole('button', { name: PICKER_BTN[lang] }))
   await page.getByRole('button', { name: CREATE_BTN[lang] }).click()
   const form = page.locator('form').filter({ has: page.locator('fieldset legend') })
   await form.locator('input[type="text"]').first().fill(name)
@@ -100,7 +80,9 @@ async function createItemInLang(page: Page, context: import('@playwright/test').
   await form.locator('button[type="submit"]').click()
   const resp = await respPromise
   expect(resp.status()).toBe(201)
-  return (await resp.json()) as { slug: string; names: Record<string, string> }
+  const item = (await resp.json()) as { id: number; slug: string; names: Record<string, string> }
+  track(item)
+  return item
 }
 
 /** Schritt 2: Festpreis 5,00 eintragen und speichern. */
@@ -114,14 +96,11 @@ async function savePrice(page: Page) {
 
 test.describe('Kundensicht + Sprachen (e2e-tester)', () => {
   test.describe.configure({ mode: 'serial' })
-  const created: string[] = []
-  test.afterAll(async () => { for (const slug of created) await cleanupItem(slug).catch(() => {}) })
 
   test('AK1 EL: griechischer Name erscheint in der griechischen Kundenansicht (Detail + Suche), EN-Ansicht Fallback statt Slug', async ({ page, context, browser }) => {
     page.setDefaultTimeout(20_000)
-    const name = `E2E-B5900-010-Ψωμί-${randomUUID().slice(0, 8)}`
+    const name = e2eName('B5900-010', 'Ψωμί')
     const item = await createItemInLang(page, context, 'el', name)
-    created.push(item.slug)
     expect(item.names.el).toBe(name)
     expect(item.names.de).toBeUndefined()
     await savePrice(page)
@@ -135,16 +114,15 @@ test.describe('Kundensicht + Sprachen (e2e-tester)', () => {
     await c.goto(`${FRONTEND_URL}/en/products/${item.slug}`, { waitUntil: 'domcontentloaded' })
     await expect(c.locator('h1').first()).toHaveText(name)
     // Suche (el) findet das Produkt über den Namen
-    await c.goto(`${FRONTEND_URL}/el/search?shop_id=${SHOP.shopId}&q=${encodeURIComponent(name)}`, { waitUntil: 'domcontentloaded' })
+    await c.goto(`${FRONTEND_URL}/el/search?shop_id=${shop.id}&q=${encodeURIComponent(name)}`, { waitUntil: 'domcontentloaded' })
     await expect(c.locator(`a[href*="/products/${item.slug}"]`).first()).toBeAttached()
     await cust.close()
   })
 
   test('AK1 EN: englischer Name -> names.en, EN-Ansicht zeigt ihn, DE-Ansicht fällt auf EN zurück', async ({ page, context, browser }) => {
     page.setDefaultTimeout(20_000)
-    const name = `E2E-B5900-010-Bread-${randomUUID().slice(0, 8)}`
+    const name = e2eName('B5900-010', 'Bread')
     const item = await createItemInLang(page, context, 'en', name)
-    created.push(item.slug)
     expect(item.names.en).toBe(name)
     expect(item.names.de).toBeUndefined()
     await savePrice(page)
@@ -162,7 +140,7 @@ test.describe('Kundensicht + Sprachen (e2e-tester)', () => {
     page.setDefaultTimeout(20_000)
     await context.addCookies([{ name: 'app_lang', value: 'de', url: FRONTEND_URL }])
     await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
-    await page.getByRole('button', { name: PICKER_BTN.de }).click()
+    await openItemPickerModal(page.getByRole('button', { name: PICKER_BTN.de }))
     await page.getByRole('button', { name: CREATE_BTN.de }).click()
     const form = page.locator('form').filter({ has: page.locator('fieldset legend') })
     await expect(form.locator('legend')).toHaveText(/^Art( \*)?$/)
@@ -173,13 +151,13 @@ test.describe('Kundensicht + Sprachen (e2e-tester)', () => {
     await expect(form.getByText('Dienstleistung', { exact: true })).toBeVisible()
 
     // Preisarten im Angebotsformular (Schritt 2) — braucht ein Item
-    const name = `E2E-B5900-010-Preisarten-${randomUUID().slice(0, 8)}`
+    const name = e2eName('B5900-010', 'Preisarten')
     await form.locator('input[type="text"]').first().fill(name)
     await pickCategory(page, form, { random: true })
     const respPromise = page.waitForResponse((r) => r.url().includes('/api/shop-admin/items') && r.request().method() === 'POST')
     await form.locator('button[type="submit"]').click()
-    const item = (await (await respPromise).json()) as { slug: string }
-    created.push(item.slug)
+    const item = (await (await respPromise).json()) as { id: number; slug: string }
+    track(item)
 
     const expected = ['Festpreis', 'Auf Anfrage', 'Kostenlos', 'Variabler Preis']
     await expect(page.getByText('Preisart', { exact: true }).first()).toBeVisible()

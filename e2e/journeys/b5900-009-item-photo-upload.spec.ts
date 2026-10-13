@@ -2,8 +2,10 @@
  * B5900-009 — Shop-Admin: Produktfoto-Upload im Angebotsflow (Schritt 2)
  *
  * Läuft ausschließlich gegen Test-Instanz 3500 / 8500. Kein DB-Reset.
- * Items sind global und vom Owner nicht löschbar -> eindeutiger Name `E2E-B5900-009-<uuid>`;
- * Angebot wird am Ende gelöscht (Item bleibt, siehe Architektur R10).
+ * B8950-012: läuft in einem EIGENEN Spec-Shop (specShop, Impersonation) — Foto-Dateien hängen am Item, und
+ * nur der Admin-Shop-Delete (afterAll) räumt Item, item_photos UND die Dateien sauber weg (R16).
+ * Der Item-Name trägt den Marker `E2E-<RUN>-B5900-009-…`. Weil der Shop leer startet, steht das neue
+ * Produkt im Produktblock der Shop-Seite zwingend an Index 0 (AK5b ohne Toleranz).
  *
  * Fixtures (alles zur Laufzeit erzeugt):
  *  - e2e-b5900-009-item:  frisch angelegtes Item (Name mit uuid) + Angebot
@@ -14,11 +16,11 @@
  * Mobile-Viewport.
  */
 import { test, expect, type Page } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
 import zlib from 'zlib'
-import { randomUUID } from 'crypto'
 import { pickCategory } from './_helpers/category-picker'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { e2eName } from './_helpers/test-data'
+import { openItemPickerModal } from './_helpers/hydration'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -26,15 +28,6 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-009] Safety: NEVER use production ports!')
 }
 
-interface TestState {
-  email: string
-  password: string
-  shopId: number
-  shopSlug: string
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-const STATE: TestState = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8'))
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 test.describe.configure({ mode: 'serial' })
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -75,15 +68,8 @@ function makePng(shade: number): Buffer {
 }
 const png = (shade: number, name = `p${shade}.png`) => ({ name, mimeType: 'image/png', buffer: makePng(shade) })
 
-async function login(): Promise<string> {
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-  })
-  return (r.headers.get('set-cookie') ?? '').match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-}
-
-const ITEM_NAME = `E2E-B5900-009-${randomUUID().slice(0, 8)}`
+const ITEM_NAME = e2eName('B5900-009', 'photo')
+let shop: WorkerShop
 let token = ''
 let itemId = 0
 let itemSlug = ''
@@ -99,7 +85,7 @@ async function itemPhotos(): Promise<Array<{ id: number; sort_order: number }>> 
 
 async function createItemViaUi(page: Page) {
   await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: /^\+ (select (item|product or service)|artikel auswählen|item auswählen)/i }).click()
+  await openItemPickerModal(page.getByRole('button', { name: /^\+ (select (item|product or service)|artikel auswählen|item auswählen)/i }))
   // the modal's role=dialog wrapper does not enclose all content -> use page-level locators
   const dialog = page
   await dialog.getByRole('button', { name: /create new (item|product or service)|neues item anlegen|neuen artikel/i }).click()
@@ -109,30 +95,18 @@ async function createItemViaUi(page: Page) {
 }
 
 test.beforeAll(async () => {
-  token = await login()
-  expect(token, 'Login fehlgeschlagen').not.toBe('')
+  shop = await specShop('B5900-009')
+  token = shop.ownerToken
 })
 
+// Shop-Delete entfernt Offer, Listing, Item, item_photos und die Foto-Dateien (exklusives shop_manual-Item)
 test.afterAll(async () => {
-  const auth = { Authorization: `Bearer ${token}` }
-  if (offerId) {
-    // aktive Angebote sind nicht löschbar (409) -> erst archivieren
-    await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers/${offerId}`, {
-      method: 'PATCH', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ archived: true }),
-    }).catch(() => {})
-    await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers/${offerId}`, { method: 'DELETE', headers: auth }).catch(() => {})
-  }
-  if (itemId) {
-    // Fotos entfernen (DB-Zeilen) und Listing löschen, damit der Test-Shop nicht mit E2E-Items zuwächst
-    // (Produktblock der Shop-Seite zeigt nur 12 Items). Item selbst bleibt (Owner kann Items nicht löschen).
-    for (const ph of await itemPhotos().catch(() => [])) {
-      await fetch(`${BACKEND_URL}/api/v1/shop-owner/items/${itemId}/photos/${ph.id}`, { method: 'DELETE', headers: auth }).catch(() => {})
-    }
-    const l = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings?limit=500`, { headers: auth }).then((r) => r.json()).catch(() => null) as
-      { items?: Array<{ id: number; item_id: number }> } | null
-    const listing = l?.items?.find((x) => x.item_id === itemId)
-    if (listing) await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings/${listing.id}`, { method: 'DELETE', headers: auth }).catch(() => {})
-  }
+  await shop?.destroy()
+})
+
+// Browser-Kontexte des Spec-Shops (Impersonation-Cookie); Kunden-Kontexte (browser.newContext()) bleiben anonym
+test.beforeEach(async ({ context }) => {
+  await context.addCookies(shop.storageState.cookies)
 })
 
 // ─── AK1 + Preis speichern ───────────────────────────────────────────────────
@@ -172,12 +146,12 @@ test('AK4/AK5: Kundenseite zeigt Produkt mit Foto; Suche nach shop_id findet es'
   await expect(page.locator('h1').first()).toContainText(ITEM_NAME)
   await expect(page.locator('img[src*="product_images"], img[src*="item_photos"], img[src*="photo"]').first()).toBeVisible()
 
-  const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${STATE.shopId}&q=${encodeURIComponent(ITEM_NAME)}&limit=5`)
+  const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${shop.id}&q=${encodeURIComponent(ITEM_NAME)}&limit=5`)
   const j = await res.json() as { items?: Array<{ slug: string }> }
   expect(j.items?.some((i) => i.slug === itemSlug), 'Produkt nicht über shop_id-Suche auffindbar').toBe(true)
 
   // AK5 (Kundensicht, Browser): Shop-Suche (Link „Alle“ der Shop-Seite) zeigt das neue Produkt mit Foto
-  await page.goto(`${FRONTEND_URL}/en/search?shop_id=${STATE.shopId}&q=${encodeURIComponent(ITEM_NAME)}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${FRONTEND_URL}/en/search?shop_id=${shop.id}&q=${encodeURIComponent(ITEM_NAME)}`, { waitUntil: 'domcontentloaded' })
   const hit = page.locator(`a[href*="/products/${itemSlug}"]`).first()
   // Titel-Link ist ein Overlay-Link (after:absolute) -> Karte über den Link finden
   await expect(hit, 'neues Produkt nicht in der Kunden-Suche (shop_id)').toBeAttached()
@@ -185,8 +159,10 @@ test('AK4/AK5: Kundenseite zeigt Produkt mit Foto; Suche nach shop_id findet es'
   await expect(resultCard.locator('img').first()).toBeVisible()
 
   // AK5b-Messung: Produktblock der Shop-Seite (Auswertung im letzten Test)
-  await page.goto(`${FRONTEND_URL}/en/shops/${STATE.shopSlug}`, { waitUntil: 'domcontentloaded' })
-  shopPageShowsProduct = (await page.locator(`a[href*="/products/${itemSlug}"]`).count()) > 0
+  await page.goto(`${FRONTEND_URL}/en/shops/${shop.slug}`, { waitUntil: 'domcontentloaded' })
+  // Produktblock wird gestreamt (Suspense) -> auf den Link warten statt direkt nach DOMContentLoaded zu zählen
+  shopPageShowsProduct = await page.locator(`a[href*="/products/${itemSlug}"]`).first()
+    .waitFor({ state: 'attached', timeout: 15_000 }).then(() => true, () => false)
   const hrefs = await page.locator('a[href*="/products/"]').evaluateAll((els) =>
     els.map((e) => (e as HTMLAnchorElement).getAttribute('href') ?? ''))
   const ordered = hrefs.filter((h, i) => hrefs.indexOf(h) === i)
@@ -281,9 +257,7 @@ test('AK5b: Kunden-Shop-Seite (Produktblock) zeigt das neu angelegte Produkt', a
     shopPageShowsProduct,
     'neues Produkt nicht im Produktblock der Kunden-Shop-Seite (limit 12, Item.id asc — bei Shops mit >12 Items strukturell nie sichtbar)',
   ).toBe(true)
-  // sort=newest (Runde 2): das neu angelegte Produkt steht ganz oben im Produktblock. Toleranz bis Index 2,
-  // weil parallel laufende Specs (z. B. b5900-010) im selben Test-Shop ebenfalls frische Listings anlegen.
-  // Ohne Toleranz (Einzellauf) ist der Wert 0.
-  expect(shopPageProductIndex, 'neues Produkt steht nicht oben im Produktblock der Shop-Seite').toBeGreaterThanOrEqual(0)
-  expect(shopPageProductIndex, 'neues Produkt steht nicht oben im Produktblock der Shop-Seite').toBeLessThanOrEqual(2)
+  // sort=newest: das neu angelegte Produkt steht ganz oben im Produktblock. Seit B8950-012 strikt Index 0
+  // (eigener Spec-Shop, kein Fremd-Listing möglich) — die frühere Toleranz bis Index 2 ist entfallen.
+  expect(shopPageProductIndex, 'neues Produkt steht nicht oben im Produktblock der Shop-Seite').toBe(0)
 })

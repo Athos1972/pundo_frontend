@@ -3,9 +3,10 @@
  * ID: shop-owner-self-deactivate
  * Spec: shop-delete-deactivate-20260605
  *
- * Fixtures:
- *   - e2e-owner@pundo-e2e.io (approved shop-owner, has active shop + exclusive offer)
- *   - Cleanup REQUIRED: Admin API reaktiviert Owner/Shop nach dem Test
+ * Fixtures (B8950-012):
+ *   - EIGENER Owner + Shop (`e2e-<run>-self-deact-…@pundo.com`, Auto-Approve via Onboarding) — die Spec
+ *     deaktiviert den Shop; das darf nie den geteilten e2e-test-shop/e2e-owner treffen.
+ *   - Cleanup: Admin-Shop-Delete (kaskadiert den Owner)
  *
  * PREREQUISITE: Backend must implement POST /api/v1/shop-owner/shop/deactivate
  * Until that endpoint exists, Step 7 will fail with 404.
@@ -15,58 +16,53 @@
 import { test, expect } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
+import { TestDataTracker, adminApi, e2eEmail, e2eName } from './_helpers/test-data'
 
 const BASE = 'http://localhost:3500'
-const BACKEND = 'http://localhost:8500'
-const OWNER_EMAIL = 'e2e-owner@pundo-e2e.io'
-const OWNER_PASSWORD = 'E2eTestPassword!99'
+const OWNER_EMAIL = e2eEmail('SELF-DEACT', 'pundo.com')
+const OWNER_PASSWORD = 'E2eSelfDeact!99'
+const tracker = new TestDataTracker()
 
 const REPORT_DIR = path.join(__dirname, 'reports')
 const REPORT_FILE = path.join(REPORT_DIR, `shop-owner-self-deactivate-${new Date().toISOString().slice(0, 10)}.md`)
 
 let shopSlug: string | null = null
-let shopId: number | null = null
-let adminToken: string | null = null
+let ownerToken = ''
 
 test.describe('shop-owner-self-deactivate', () => {
-  test.beforeAll(async ({ request }) => {
-    // Get admin token for cleanup
-    const loginRes = await request.post(`${BACKEND}/api/v1/admin/login`, {
-      data: { email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' },
+  test.beforeAll(async () => {
+    test.setTimeout(120_000)
+    // Eigener Owner + Shop per Onboarding (@pundo.com → auto-approved)
+    const onb = await shopOwnerOnboardWithRetry({
+      email: OWNER_EMAIL,
+      password: OWNER_PASSWORD,
+      provider_type: 'haendler',
+      domain_slugs: ['kleidung-mode'],
+      shop_name: e2eName('SELF-DEACT', 'Shop'),
+      location: { lat: 34.917, lng: 33.636 },
+      contact: { phone: '+35799000002' },
+      credentials: { type: 'email', email: OWNER_EMAIL, password: OWNER_PASSWORD, name: 'E2E Self Deactivate' },
+      lang: 'en',
     })
-    if (loginRes.ok()) {
-      const body = await loginRes.json()
-      adminToken = body.access_token ?? null
-    }
+    if (onb.status !== 'approved') throw new Error(`SETUP BROKEN: Onboarding status=${String(onb.status)} (Auto-Approve für @pundo.com erwartet)`)
 
-    // Get owner's shop info for cleanup
-    const ownerLogin = await request.post(`${BACKEND}/api/v1/shop-owner/login`, {
-      data: { email: OWNER_EMAIL, password: OWNER_PASSWORD },
-    })
-    if (ownerLogin.ok()) {
-      const body = await ownerLogin.json()
-      const ownerToken = body.access_token
-      const shopRes = await request.get(`${BACKEND}/api/v1/shop-owner/shop`, {
-        headers: { Authorization: `Bearer ${ownerToken}` },
-      })
-      if (shopRes.ok()) {
-        const shop = await shopRes.json()
-        shopSlug = shop.slug
-        shopId = shop.id
-      }
-    }
+    // Owner → Shop (für Cleanup und den Kunden-Check in S5) per Admin-API
+    const owners = await adminApi<{ items: Array<{ id: number; email: string; shop_id: number | null }> }>(
+      'GET', `/shop-owners?q=${encodeURIComponent(OWNER_EMAIL)}&limit=20`)
+    const owner = owners.json?.items?.find((o) => o.email === OWNER_EMAIL)
+    if (!owner?.shop_id) throw new Error(`SETUP BROKEN: Owner ${OWNER_EMAIL} nicht in der Admin-Liste gefunden`)
+    tracker.owner(owner.id)
+    // EIN API-Login mit Retry (10/min, geteilt mit allen Specs); S1 prüft den UI-Login, S2–S4 setzen das Cookie
+    ownerToken = await shopOwnerLogin(OWNER_EMAIL, OWNER_PASSWORD)
+    const shop = await adminApi<{ slug: string }>('GET', `/shops/${owner.shop_id}`)
+    shopSlug = shop.json?.slug ?? null
+    if (!shopSlug) throw new Error(`SETUP BROKEN: Slug von Shop ${owner.shop_id} nicht ermittelbar`)
   })
 
-  test.afterAll(async ({ request }) => {
-    // CLEANUP: Reaktiviere Shop und Owner via Admin API
-    if (shopId && adminToken) {
-      await request.patch(`${BACKEND}/api/v1/admin/shops/${shopId}`, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-        data: { status: 'active' },
-      })
-      // Reactivate owner — patch owner status
-      // (exact endpoint depends on backend implementation)
-    }
+  test.afterAll(async () => {
+    // Cleanup (B8950-012): Admin-Shop-Delete statt "Reaktivieren" — der Shop gehört dieser Spec allein
+    await tracker.cleanup()
 
     // Write journey report
     if (!fs.existsSync(REPORT_DIR)) fs.mkdirSync(REPORT_DIR, { recursive: true })
@@ -96,12 +92,9 @@ test.describe('shop-owner-self-deactivate', () => {
   })
 
   test('S2: Settings page loads with Danger Zone', async ({ page }) => {
-    // Log in first
-    await page.goto(`${BASE}/shop-admin/login`)
-    await page.fill('input[name="email"]', OWNER_EMAIL)
-    await page.fill('input[name="password"]', OWNER_PASSWORD)
-    await page.click('button[type="submit"]')
-    await page.waitForURL(`${BASE}/shop-admin/dashboard`)
+    // Login-Limit (10/min) wird mit allen Specs geteilt → Session per Cookie statt vierten UI-Login (B8950-012)
+    await page.context().addCookies([{ name: 'shop_owner_token', value: ownerToken, domain: new URL(BASE).hostname, path: '/' }])
+    await page.goto(`${BASE}/shop-admin/dashboard`)
 
     await page.goto(`${BASE}/shop-admin/settings`)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -110,11 +103,9 @@ test.describe('shop-owner-self-deactivate', () => {
   })
 
   test('S3: Deactivate dialog opens and can be cancelled', async ({ page }) => {
-    await page.goto(`${BASE}/shop-admin/login`)
-    await page.fill('input[name="email"]', OWNER_EMAIL)
-    await page.fill('input[name="password"]', OWNER_PASSWORD)
-    await page.click('button[type="submit"]')
-    await page.waitForURL(`${BASE}/shop-admin/dashboard`)
+    // Login-Limit (10/min) wird mit allen Specs geteilt → Session per Cookie statt vierten UI-Login (B8950-012)
+    await page.context().addCookies([{ name: 'shop_owner_token', value: ownerToken, domain: new URL(BASE).hostname, path: '/' }])
+    await page.goto(`${BASE}/shop-admin/dashboard`)
 
     await page.goto(`${BASE}/shop-admin/settings`)
     await page.click('button:has-text("Close shop"), button:has-text("Shop schließen")')
@@ -128,11 +119,9 @@ test.describe('shop-owner-self-deactivate', () => {
   test('S4: Confirming deactivate → logout → login redirect with banner', async ({ page }) => {
     // PREREQUISITE: Backend must have POST /api/v1/shop-owner/shop/deactivate
     // This step will fail with a 404/500 until the backend endpoint is implemented
-    await page.goto(`${BASE}/shop-admin/login`)
-    await page.fill('input[name="email"]', OWNER_EMAIL)
-    await page.fill('input[name="password"]', OWNER_PASSWORD)
-    await page.click('button[type="submit"]')
-    await page.waitForURL(`${BASE}/shop-admin/dashboard`)
+    // Login-Limit (10/min) wird mit allen Specs geteilt → Session per Cookie statt vierten UI-Login (B8950-012)
+    await page.context().addCookies([{ name: 'shop_owner_token', value: ownerToken, domain: new URL(BASE).hostname, path: '/' }])
+    await page.goto(`${BASE}/shop-admin/dashboard`)
 
     await page.goto(`${BASE}/shop-admin/settings`)
     await page.click('button:has-text("Close shop"), button:has-text("Shop schließen")')
@@ -146,7 +135,7 @@ test.describe('shop-owner-self-deactivate', () => {
   })
 
   test('S5: Customer cannot access deactivated shop', async ({ page }) => {
-    if (!shopSlug) test.skip()
+    expect(shopSlug, 'Slug aus beforeAll').toBeTruthy()
     // Shop detail page should return 404 or not-found
     const response = await page.goto(`${BASE}/de/shops/${shopSlug}`)
     expect([404, 200]).toContain(response?.status()) // 200 with "not found" content acceptable

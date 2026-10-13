@@ -34,7 +34,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
-import { shopOwnerLogin } from './_helpers'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
 
 // ─── Port-Safety ──────────────────────────────────────────────────────────────
 
@@ -45,43 +45,29 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[shop-admin-profile-phone-logo] Safety: Niemals gegen Produktiv-Ports laufen!')
 }
 
-// ─── State-Datei laden (vom global-setup) ─────────────────────────────────────
+// ─── Spec-Shop (B8950-012) ────────────────────────────────────────────────────
+// Eigener Shop per Admin-API + Impersonation (statt des geteilten e2e-test-shop mit Passwort-Login):
+// die Spec schreibt Telefon und Logo des Shops. afterAll löscht den Shop (Admin-Delete).
+// Hinweis: hochgeladene Logo-Dateien (/shop_logos) löscht der Shop-Delete nicht.
 
-interface TestState {
-  email: string
-  password: string
-  shop_name: string
-  ownerId: number
-  shopId: number | null
-  shopSlug: string | null
-}
+let shop: WorkerShop
 
-function loadTestState(): TestState {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
-  if (!fs.existsSync(stateFile)) {
-    throw new Error('[shop-admin-profile-phone-logo] .test-state.json nicht gefunden — bitte globalSetup ausführen.')
-  }
-  return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
-}
+test.beforeAll(async () => {
+  shop = await specShop('PROFILE-PHONE-LOGO')
+})
 
-test.use({
-  storageState: (() => {
-    const stateFile = path.join(__dirname, '..', '.test-state.json')
-    if (fs.existsSync(stateFile)) {
-      return JSON.parse(fs.readFileSync(stateFile, 'utf8')).storageState
-    }
-    return undefined
-  })(),
+test.afterAll(async () => {
+  await shop?.destroy()
+})
+
+test.beforeEach(async ({ context }) => {
+  await context.addCookies(shop.storageState.cookies)
 })
 
 // ─── API-Helpers ───────────────────────────────────────────────────────────────
 
 function ownerAuthHeader(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-}
-
-async function getOwnerToken(email: string, password: string): Promise<string> {
-  return shopOwnerLogin(email, password)
 }
 
 async function getShopProfile(token: string): Promise<Record<string, unknown>> {
@@ -115,13 +101,13 @@ async function waitProfileForm(page: Page) {
 // ─── Szenario C: Phone Field ──────────────────────────────────────────────────
 
 test.describe.serial('Szenario C — Phone Field: FINDING-1', () => {
-  const state = loadTestState()
-  const shopSlug = state.shopSlug
+  let shopSlug = ''
   let ownerToken = ''
 
   test.beforeAll(async () => {
     test.setTimeout(120_000)
-    ownerToken = await getOwnerToken(state.email, state.password)
+    ownerToken = shop.ownerToken
+    shopSlug = shop.slug
     // Reset phone to null before tests
     await patchShopProfile(ownerToken, { phone: null })
   })
@@ -234,8 +220,7 @@ test.describe.serial('Szenario C — Phone Field: FINDING-1', () => {
 // WebP variants.
 
 test.describe.serial('Szenario D — Logo Upload: FINDING-3', () => {
-  const state = loadTestState()
-  const shopSlug = state.shopSlug
+  let shopSlug = ''
   let ownerToken = ''
 
   // Path to test JPEG, created in beforeAll
@@ -247,7 +232,8 @@ test.describe.serial('Szenario D — Logo Upload: FINDING-3', () => {
 
   test.beforeAll(async () => {
     test.setTimeout(120_000)
-    ownerToken = await getOwnerToken(state.email, state.password)
+    ownerToken = shop.ownerToken
+    shopSlug = shop.slug
 
     // Create a valid 200x200 JPEG using backend Pillow
 

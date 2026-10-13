@@ -17,8 +17,10 @@ const PRODUCT_SLUG = 'schesir-schesir-cat-baby-kitten-salmon-chicken-mousse-pouc
 
 // Customer credentials — register fresh per run
 import { randomUUID } from 'crypto'
+import { RUN_ID } from './journeys/_helpers/test-data'
 const UUID = randomUUID().slice(0, 8)
-const CUSTOMER_EMAIL = `fav-test-${UUID}@pundo.com`
+// B8950-012: Marker-Konvention e2e-<run>-… (verankerter Selektor für das Cleanup-Skript)
+const CUSTOMER_EMAIL = `e2e-${RUN_ID}-favtest-${UUID}@pundo.com`
 const CUSTOMER_PASSWORD = 'FavTestPw!99'
 
 async function apiFetch(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>) {

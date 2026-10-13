@@ -3,14 +3,19 @@
  *
  * Voraussetzungen:
  *   - global-setup.ts hat erfolgreich durchlaufen
- *   - Backend läuft auf Port 8002 gegen pundo_test
- *   - Frontend läuft auf Port 3002 (next start, Standalone-Build)
+ *   - Backend läuft auf Port 8500 gegen pundo_test
+ *   - Frontend läuft auf Port 3500 (webServer: Standalone-Build oder next dev)
  *
  * Testet den vollständigen Shop-Owner-Workflow:
  *   Login → Dashboard → Profil → Öffnungszeiten → Produkte → Angebote
+ *
+ * B8950-012: Login/Logout laufen mit dem echten Passwort-Owner des globalen e2e-test-shop (Prüfgegenstand);
+ * alle schreibenden Tests laufen im WORKER-Shop (Impersonation) mit eigenem Marker-Item. Der Angebots-Test
+ * identifiziert die Zeile über den eindeutigen Item-Namen (OfferList zeigt Item-Namen, keine Angebots-Titel).
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type WorkerShop } from './journeys/_helpers/worker-shop'
+import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 
@@ -34,16 +39,10 @@ function loadStorageState() {
   }
 }
 
-// Alle Tests in dieser Datei verwenden den gespeicherten Auth-State
-test.use({
-  storageState: (() => {
-    const stateFile = path.join(__dirname, '.test-state.json')
-    if (fs.existsSync(stateFile)) {
-      return JSON.parse(fs.readFileSync(stateFile, 'utf8')).storageState
-    }
-    return undefined
-  })(),
-})
+// Alle schreibenden Tests nutzen den Worker-Shop (storageState aus der Fixture, Impersonation).
+let W: WorkerShop
+test.beforeAll(({ workerShop }) => { W = workerShop })
+test.afterAll(async () => { await W?.cleanupSpecData() })
 
 // Helper: Wait for React hydration (production build)
 // networkidle alone is insufficient — React attaches event handlers asynchronously after JS loads.
@@ -57,7 +56,7 @@ async function waitHydrated(page: Page) {
 // ─── Login-Seite ───────────────────────────────────────────────────────────────
 
 test.describe('Login', () => {
-  // Login-Test ohne gespeicherten State — frische Session
+  // Login-Test ohne gespeicherten State — frische Session (echter Passwort-Owner des globalen e2e-test-shop)
   test.use({ storageState: undefined })
 
   test('login mit korrekten Daten leitet zu Dashboard weiter', async ({ page }) => {
@@ -97,10 +96,13 @@ test.describe('Dashboard', () => {
 
   test('Navigation zeigt alle Menüpunkte', async ({ page }) => {
     await page.goto('/shop-admin/dashboard')
-    await expect(page.getByRole('link', { name: /dashboard/i }).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: /products|produkte/i }).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: /offers|angebote/i }).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: /api keys/i }).first()).toBeVisible()
+    // Menüpunkte laut AdminNav.tsx (sprachunabhängig über href). Seit 834b160 (2026-04-24) gibt es KEINEN
+    // Products-Eintrag mehr (Produktverwaltung steckt in /offers) — das wird jetzt negativ geprüft.
+    const nav = page.getByRole('navigation', { name: 'Shop admin navigation' }).first()
+    for (const href of ['dashboard', 'profile', 'hours', 'offers', 'catalog-review', 'import', 'api-keys']) {
+      await expect(nav.locator(`a[href="/shop-admin/${href}"]`), `Nav-Link ${href}`).toBeVisible()
+    }
+    await expect(page.locator('a[href="/shop-admin/products"]'), 'kein Products-Link in der Nav').toHaveCount(0)
   })
 })
 
@@ -227,42 +229,58 @@ async function selectItemViaModal(page: Page, searchQuery: string) {
 }
 
 test.describe('Angebote CRUD', () => {
+  test.describe.configure({ mode: 'serial' })
   const TEST_OFFER = 'E2E Sommer-Angebot 2026'
+  let itemName = ''
+  let row: ReturnType<Page['locator']>
+
+  test.beforeAll(async () => {
+    // Eigenes Marker-Item im Worker-Shop (statt eines echten Prod-Items wie "avicentra")
+    itemName = (await W.createItem('SHOP-ADMIN-E2E', 'offer-item')).name
+  })
 
   test('Angebot anlegen', async ({ page }) => {
     await page.goto('/shop-admin/offers/new')
     await waitHydrated(page)
 
-    // Schritt 1: Item über den Picker auswählen
-    await selectItemViaModal(page, 'avicentra')
+    // Schritt 1: Item über den Picker auswählen (eindeutiger Marker-Name → erster Treffer ist unser Item)
+    await selectItemViaModal(page, itemName)
+    await expect(page.locator('form')).toBeVisible({ timeout: 10_000 })
 
-    // Schritt 2 erscheint automatisch nach der Item-Auswahl
-    // Preis-Typ auf "on_request" setzen (kein PriceTierEditor nötig)
+    // Schritt 2: Preis-Typ on_request; Aktionszeitraum liegt im aufklappbaren Aktionsblock
+    // (Felder heißen seit c32a61c/2026-05-20 promo_valid_from / promo_valid_until, vorher valid_from/valid_until)
     await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
     await page.locator('select').first().selectOption('on_request')
-
-    // Aktionszeitraum und Titel befüllen
-    await page.locator('input[name="valid_from"]').fill('2026-06-01')
-    await page.locator('input[name="valid_until"]').fill('2026-08-31')
+    await page.getByRole('button', { name: /promotion|aktionspreis|promo/i }).click()
+    await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first().click()
+    await page.locator('select').last().selectOption('per_piece')
+    await page.locator('input[inputmode="decimal"]').first().fill('9.99')
+    await page.locator('input[name="promo_valid_from"]').fill('2026-06-01')
+    await page.locator('input[name="promo_valid_until"]').fill('2026-08-31')
     await page.locator('input[name="title"]').fill(TEST_OFFER)
 
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
-    await expect(page.getByText(TEST_OFFER)).toBeVisible()
+    // OfferList zeigt den Item-Namen (nicht den Angebots-Titel) → genau eine Zeile mit unserem Marker-Namen
+    row = page.locator('div.items-start').filter({ hasText: itemName })
+    await expect(row).toHaveCount(1)
+    await expect(row).toBeVisible()
   })
 
   test('Angebot archivieren', async ({ page }) => {
     await page.goto('/shop-admin/offers')
     await waitHydrated(page)
-    // Archive → Cancel sichtbar abwarten → Archive bestätigen
-    await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
-    await page.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
-    await page.getByRole('button', { name: /archive|archivieren/i }).first().click()
+    row = page.locator('div.items-start').filter({ hasText: itemName })
+    await expect(row).toHaveCount(1)
+    // Archive → Cancel sichtbar abwarten → Archive bestätigen (nur in der Zeile unseres Items)
+    await row.getByRole('button', { name: /archive|archivieren/i }).click()
+    await row.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
+    await row.getByRole('button', { name: /archive|archivieren/i }).first().click()
     // Angebot verschwindet aus Active-Tab
-    await expect(page.getByText(TEST_OFFER)).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(itemName)).not.toBeVisible({ timeout: 10_000 })
     // Im Expired-Tab sichtbar
     await page.getByRole('button', { name: /expired|abgelaufen/i }).click()
-    await expect(page.getByText(TEST_OFFER).first()).toBeVisible()
+    await expect(page.getByText(itemName).first()).toBeVisible()
   })
 })
 

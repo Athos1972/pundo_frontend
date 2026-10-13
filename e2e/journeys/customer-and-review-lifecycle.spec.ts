@@ -18,6 +18,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { RUN_ID } from './_helpers/test-data'
 import { adminLogin as adminApiLogin } from './_helpers'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
@@ -29,7 +30,8 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
-const PREFIX = `e2e-carl-${UUID}`
+// B8950-012: Run-ID im Präfix → verankerter Selektor ^e2e-<run>- (Reporter-Cleanup der Kunden)
+const PREFIX = `e2e-${RUN_ID}-carl-${UUID}`
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 

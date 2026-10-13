@@ -17,6 +17,7 @@
 
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
+import { RUN_ID } from './_helpers/test-data'
 import { adminLogin as adminApiLogin } from './_helpers'
 import fs from 'fs'
 import path from 'path'
@@ -37,9 +38,10 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 const UUID = randomUUID().slice(0, 8)
 const PASSWORD = 'E2eTestPassword!99'
 
-const FAV_EMAIL = `fav-${UUID}@pundo.com`
-const DEL_EMAIL = `del-${UUID}@pundo.com`
-const MCP_EMAIL = `mcp-${UUID}@pundo.com`
+// B8950-012: Marker-Konvention e2e-<run>-… (vorher fav-/del-/mcp-<uuid>@pundo.com ohne Run-ID)
+const FAV_EMAIL = `e2e-${RUN_ID}-fav-${UUID}@pundo.com`
+const DEL_EMAIL = `e2e-${RUN_ID}-del-${UUID}@pundo.com`
+const MCP_EMAIL = `e2e-${RUN_ID}-mcp-${UUID}@pundo.com`
 
 // ─── Shared context ───────────────────────────────────────────────────────────
 

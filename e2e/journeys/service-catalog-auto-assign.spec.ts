@@ -27,6 +27,10 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { adminLogin as adminApiLogin } from './_helpers'
+import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
+
+// B8950-012: Marker-Konvention + Admin-Shop-Delete (Owner-Delete allein ließ Shop + Auto-Assign-Listings liegen)
+const tracker = new TestDataTracker()
 
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
 const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -138,6 +142,7 @@ interface Ctx {
   shopSlug: string | null
   ownerEmail: string
   ownerPassword: string
+  shopName: string
   adminCookie: string | null
   autoListingId: number | null
   createdMappingId: number | null
@@ -150,6 +155,7 @@ const ctx: Ctx = {
   shopSlug: null,
   ownerEmail: '',
   ownerPassword: '',
+  shopName: '',
   adminCookie: null,
   autoListingId: null,
   createdMappingId: null,
@@ -160,8 +166,9 @@ const ctx: Ctx = {
 test.beforeAll(async () => {
   test.setTimeout(120_000)
   ctx.uuid = randomUUID().slice(0, 8)
-  ctx.ownerEmail = `e2e-sca-${ctx.uuid}@pundo-e2e.io`
+  ctx.ownerEmail = e2eEmail('SCA')
   ctx.ownerPassword = 'E2eTestPassword!99'
+  ctx.shopName = e2eName('SCA', 'Shop')
 
   // 1. Admin einloggen
   ctx.adminCookie = await adminLogin()
@@ -182,7 +189,7 @@ test.beforeAll(async () => {
     contact: {
       phone: '+35799000000',
     },
-    shop_name: `E2E SCA Shop ${ctx.uuid}`,
+    shop_name: ctx.shopName,
     credentials: {
       type: 'email',
       email: ctx.ownerEmail,
@@ -201,7 +208,7 @@ test.beforeAll(async () => {
       email: ctx.ownerEmail,
       password: ctx.ownerPassword,
       name: `SCA-Test ${ctx.uuid}`,
-      shop_name: `E2E SCA Shop ${ctx.uuid}`,
+      shop_name: ctx.shopName,
       shop_address: 'Teststraße 1, Larnaca',
     }) as Record<string, unknown>
     ownerData = regData
@@ -212,6 +219,7 @@ test.beforeAll(async () => {
   ctx.ownerId = (ownerData?.user_id ?? ownerData?.id) as number ?? null
   ctx.shopId = ownerData?.shop_id as number ?? null
 
+  if (ctx.ownerId) tracker.owner(ctx.ownerId)
   if (!ctx.ownerId) {
     throw new Error(`beforeAll: ownerId not set. Response: ${JSON.stringify(ownerData)}`)
   }
@@ -240,15 +248,8 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  // Cleanup: Owner löschen (kaskadiert zu Shop + Listings)
-  if (ctx.ownerId && ctx.adminCookie) {
-    try {
-      await apiDelete(
-        `${BACKEND_URL}/api/v1/admin/shop-owners/${ctx.ownerId}`,
-        { Cookie: `admin_token=${ctx.adminCookie}` }
-      )
-    } catch { /* Non-critical */ }
-  }
+  // Cleanup (B8950-012): Shop + Owner + Auto-Assign-Listings per Admin-Shop-Delete
+  await tracker.cleanup()
 
   // Cleanup: eventuell erstelltes IDM-Mapping löschen
   if (ctx.createdMappingId && ctx.adminCookie) {

@@ -36,10 +36,18 @@
  * If either pre-condition isn't met, the chain-driving steps are skipped with
  * a clear console warning rather than failing the whole suite (see `chainReady`).
  *
+ * B8950-012: läuft im WORKER-Shop (Catalog-Case für workerShop.id, eigene eindeutige webshop_url pro Lauf,
+ * Intake-Namen mit Marker `E2E-<RUN>-CATALOG-REVIEW-…`). Ohne Gateway 8600 werden die Kettenschritte
+ * T0/T1/T2/T4 mit Begründung übersprungen (sichtbar im Report; Entscheidung 7 / R11), nie still grün.
+ * afterAll: Listings/Offers des Worker-Shops weg, Marker-Items (scraper-Quelle, auch ohne Listing) per
+ * Admin-API gelöscht; der Reporter ist das Sicherheitsnetz.
+ *
  * Ports: Frontend 3500, Backend 8500, Gateway 8600, DB: pundo_test — NEVER 3000/8000/8100.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type WorkerShop } from './_helpers/worker-shop'
+import { RUN_ID, e2eName, psql } from './_helpers/test-data'
+import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
@@ -56,25 +64,8 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000') || GATEWAY_U
   throw new Error('[admin-catalog-review] Safety: NEVER run against production ports 3000/8000/8100!')
 }
 
-// ─── Load test state (e2e-owner) ─────────────────────────────────────────────
+let W: WorkerShop
 
-interface TestState {
-  email: string
-  password: string
-  shopId: number
-  shopSlug: string | null
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-
-function loadState(): TestState {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
-  if (!fs.existsSync(stateFile)) {
-    throw new Error('[admin-catalog-review] .test-state.json not found — run global-setup first')
-  }
-  return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
-}
-
-const STATE = loadState()
 const PY = `${BACKEND_REPO}/.venv/bin/python`
 
 function runPython(code: string): string {
@@ -109,33 +100,34 @@ function getInternalApiKey(): string {
   return internalApiKey
 }
 
-/** Create a new catalog_case (status=consent_given) for STATE.shopId, 24h SLA. */
+/** Create a new catalog_case (status=consent_given) for the worker shop, 24h SLA. */
 function createCatalogCase(): number {
   const out = runPython(
     'from datetime import datetime, timedelta, timezone\n' +
     'from ingestor.db.connection import get_session\n' +
     'from ingestor.models.catalog_case import CatalogCase\n' +
     'with get_session() as s:\n' +
-    `    c = CatalogCase(shop_id=${STATE.shopId}, status='consent_given', sla_deadline_at=datetime.now(timezone.utc)+timedelta(hours=24))\n` +
+    `    c = CatalogCase(shop_id=${W.id}, status='consent_given', sla_deadline_at=datetime.now(timezone.utc)+timedelta(hours=24))\n` +
     '    s.add(c); s.commit(); s.refresh(c)\n' +
     '    print(c.id)\n'
   )
   return parseInt(out.trim(), 10)
 }
 
-/** Ensure the e2e shop's webshop_url matches the intake shop_url used below. */
+/** Ensure the worker shop's webshop_url matches the intake shop_url used below. */
 function ensureShopWebshopUrl(url: string): void {
   runPython(
     'from ingestor.db.connection import get_session\n' +
     'from ingestor.models.shop import Shop\n' +
     'with get_session() as s:\n' +
-    `    shop = s.get(Shop, ${STATE.shopId})\n` +
+    `    shop = s.get(Shop, ${W.id})\n` +
     `    shop.webshop_url = ${JSON.stringify(url)}\n` +
     '    s.commit()\n'
   )
 }
 
-const SHOP_URL = 'https://e2e-catalog-review-shop.example'
+// eindeutig pro Lauf + Worker: der Intake korreliert über shop_url genau einen Shop
+const SHOP_URL = `https://e2e-${RUN_ID}-catalog-review.example`
 
 // ─── Intake / Gateway HTTP helpers ────────────────────────────────────────────
 
@@ -245,23 +237,14 @@ async function waitHydrated(page: Page) {
   await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 }).catch(() => {})
 }
 
-async function ownerLoginCookie(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`login failed: ${res.status}`)
-  const cookieHeader = res.headers.get('set-cookie') ?? ''
-  const match = cookieHeader.match(/shop_owner_token=([^;]+)/)
-  if (!match) throw new Error('shop_owner_token not found in Set-Cookie')
-  return match[1]
+/** Owner-Token des Worker-Shops (Impersonation) — kein Passwort-Login mehr. */
+async function ownerLoginCookie(): Promise<string> {
+  return W.ownerToken
 }
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
-  test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
   /** Whether the backend→gateway dispatch path is actually wired up in this
    * environment (LLM_GATEWAY_URL override + matching INTERNAL_API_KEY). If not,
@@ -269,21 +252,30 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   let chainReady = false
   let goldenCaseId: number | null = null
   let rejectCaseId: number | null = null
+  const GOLDEN_NAME = e2eName('CATALOG-REVIEW', 'Golden Path Widget')
+  const REJECT_NAME = e2eName('CATALOG-REVIEW', 'Reject Rework Widget')
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ workerShop }) => {
     test.setTimeout(120_000)
+    W = workerShop
     ensureShopWebshopUrl(SHOP_URL)
 
     // Probe: does dispatching a describe.item task actually reach the gateway
     // through the currently-running backend test server?
     goldenCaseId = createCatalogCase()
     const probe = await intakeBatch(goldenCaseId, [
-      { name: 'Golden Path Widget', description: 'raw scraped description for golden path test' },
+      { name: GOLDEN_NAME, description: 'raw scraped description for golden path test' },
     ])
     expect(probe.status, 'intake batch must succeed (200)').toBe(200)
 
     await new Promise(r => setTimeout(r, 1500))
-    const task = await gatewayNextTask()
+    // Gateway 8600 nicht erreichbar (kein Test-Gateway gestartet) → Kette nicht prüfbar: sichtbar überspringen
+    let task: Awaited<ReturnType<typeof gatewayNextTask>> = null
+    try {
+      task = await gatewayNextTask()
+    } catch (err) {
+      console.warn(`[admin-catalog-review] Gateway ${GATEWAY_URL} nicht erreichbar (${err instanceof Error ? err.message : err}) — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
+    }
     if (task !== null) {
       chainReady = true
       // Complete this describe.item task now so it doesn't leak into later steps.
@@ -299,8 +291,18 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     }
   })
 
+  test.afterAll(async () => {
+    // Marker-Items dieses Laufs (scraper-Quelle → nicht vom Shop-Delete erfasst), auch ohne Listing
+    const ids = psql(`select id || ':' || slug from items where slug ~ '^e2e-${RUN_ID}-catalog-review-'`)
+    for (const row of ids.split('\n').filter(Boolean)) {
+      const [id, slug] = row.split(':')
+      W.tracker.item(Number(id), slug)
+    }
+    await W.cleanupSpecData()
+  })
+
   test('T0 — Overview shows a case in enrichment_in_progress with progress bar, no actions', async ({ page }) => {
-    test.skip(!chainReady, 'dispatch to gateway not wired up in this environment')
+    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
     await page.goto(FRONTEND_URL + '/shop-admin/catalog-review')
     await waitHydrated(page)
 
@@ -315,14 +317,14 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test('T1 — Drive the auto-chain to awaiting_owner_review, sample shows enriched data', async ({ page }) => {
-    test.skip(!chainReady, 'dispatch to gateway not wired up in this environment')
+    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
     test.setTimeout(60_000)
 
     const processed = await driveChain(20)
     expect(processed, 'expected at least 4 more chain steps (translate/categorize/attribute/embed)').toBeGreaterThan(0)
 
     // Poll the shop-owner API until the case reaches awaiting_owner_review (chain is async).
-    const cookie = await ownerLoginCookie(STATE.email, STATE.password)
+    const cookie = await ownerLoginCookie()
     let status = ''
     for (let i = 0; i < 15; i++) {
       const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
@@ -343,11 +345,11 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     await expect(page.getByRole('button', { name: /approve|freigeben|publish/i })).toBeVisible({ timeout: 10_000 })
     await expect(page.getByRole('button', { name: /reject|ablehnen/i })).toBeVisible()
     const body = await page.locator('body').innerText()
-    expect(body).toContain('Golden Path Widget')
+    expect(body).toContain(GOLDEN_NAME)
   })
 
   test('T2 — Approve publishes the case and item becomes visible in product search (Publish-Gate)', async ({ page }) => {
-    test.skip(!chainReady, 'dispatch to gateway not wired up in this environment')
+    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
 
     await page.goto(FRONTEND_URL + `/shop-admin/catalog-review/${goldenCaseId}`)
     await waitHydrated(page)
@@ -360,7 +362,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     expect(body.toLowerCase()).toContain('published'.toLowerCase().slice(0, 4)) // loose: some localized "veröffentlicht"/"published" text present somewhere is validated via API below instead
 
     // Authoritative check: API status + product search visibility.
-    const cookie = await ownerLoginCookie(STATE.email, STATE.password)
+    const cookie = await ownerLoginCookie()
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
       headers: { Cookie: `shop_owner_token=${cookie}` },
     })
@@ -375,20 +377,18 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     // is redundant with unit/API tests already run by the tester — here we assert the
     // concrete cross-tenant 404 contract using the case created in this run.
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases/999999999/sample?n=10`, {
-      headers: { Cookie: `shop_owner_token=${STATE.storageState.cookies.find(
-        (c) => (c as { name: string }).name === 'shop_owner_token'
-      ) ? (STATE.storageState.cookies.find((c) => (c as { name: string }).name === 'shop_owner_token') as { value: string }).value : ''}` },
+      headers: { Cookie: `shop_owner_token=${W.ownerToken}` },
     })
     expect(res.status).toBe(404)
   })
 
   test('T4 — Reject with feedback starts a rework cycle (progress bar again, no actions)', async ({ page }) => {
-    test.skip(!chainReady, 'dispatch to gateway not wired up in this environment')
+    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
     test.setTimeout(90_000)
 
     rejectCaseId = createCatalogCase()
     const intake = await intakeBatch(rejectCaseId, [
-      { name: 'Reject Rework Widget', description: 'raw desc for reject rework test' },
+      { name: REJECT_NAME, description: 'raw desc for reject rework test' },
     ])
     expect(intake.status).toBe(200)
 
@@ -396,7 +396,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     let reachedReview = false
     for (let i = 0; i < 6 && !reachedReview; i++) {
       await driveChain(5)
-      const cookie = await ownerLoginCookie(STATE.email, STATE.password)
+      const cookie = await ownerLoginCookie()
       const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
         headers: { Cookie: `shop_owner_token=${cookie}` },
       })
@@ -422,7 +422,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
 
     // Authoritative check: API status is rework_in_progress, and describe.item is
     // re-dispatched with the owner_feedback prompt-injection contract intact.
-    const cookie = await ownerLoginCookie(STATE.email, STATE.password)
+    const cookie = await ownerLoginCookie()
     const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
       headers: { Cookie: `shop_owner_token=${cookie}` },
     })

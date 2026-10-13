@@ -5,6 +5,7 @@
  * For backend-dependent pages (search, shops) a degraded-gracefully check is performed.
  */
 import { test, expect } from '@playwright/test'
+import { RUN_ID } from './journeys/_helpers/test-data'
 
 test.describe('Visual Smoke-Test', () => {
 
@@ -121,7 +122,7 @@ test.describe('Visual Smoke-Test', () => {
 //   5. Header-Avatar prüfen: img sichtbar + naturalWidth > 0 (kein broken image)
 //
 // Ports: Frontend 3500 · Backend 8500 · DB: pundo_test
-// Cleanup: User bleibt in pundo_test (@pundo.com → erkennbar als Testdaten)
+// Cleanup: Kunde mit Marker e2e-<run>-… → vom Reporter cleanup-test-data.ts (--run-id) gelöscht
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -148,7 +149,8 @@ test.describe('Avatar-Upload Smoke-Test', () => {
 
     // ── Schritt 2: @pundo.com-User registrieren ───────────────────────────
     // Direkt ans Backend (kein Turnstile), @pundo.com → auto-approve → kein OTP
-    const email = `smoke-avatar-${Date.now()}@pundo.com`
+    // B8950-012: Marker-Konvention (verankerter Selektor ^e2e-<run>-) → der Reporter räumt den Kunden nach grünem Lauf weg
+    const email = `e2e-${RUN_ID}-smoke-avatar-${Date.now()}@pundo.com`
     const signupRes = await fetch(`${BACKEND}/api/v1/customer/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

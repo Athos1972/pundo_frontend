@@ -20,6 +20,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
+import { TestDataTracker, RUN_ID } from './_helpers/test-data'
 import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
@@ -31,7 +32,9 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
-const PREFIX = `e2e-lifecycle-${UUID}`
+// B8950-012: Run-ID im Präfix → verankerter Selektor ^e2e-<run>- für Skript/Reporter
+const PREFIX = `e2e-${RUN_ID}-lifecycle-${UUID}`
+const tracker = new TestDataTracker()
 
 // ─── Helper-Typen ─────────────────────────────────────────────────────────────
 
@@ -154,37 +157,8 @@ function adminHeaders(): Record<string, string> {
 // ─── Cleanup helper ───────────────────────────────────────────────────────────
 
 async function cleanupAll() {
-  if (!ctx.adminToken) return
-
-  // Delete products (admin)
-  const productSlugs = [ctx.productFixedSlug, ctx.productOnRequestSlug, ctx.productFreeSlug, ctx.productVariableSlug]
-  for (const slug of productSlugs) {
-    if (!slug) continue
-    try {
-      // Try to find product by slug
-      const searchRes = await apiFetch('GET', `/api/v1/admin/products?q=${slug}`, undefined, adminHeaders())
-      const items = (searchRes.data as { items?: Array<{ id: number; slug?: string }> })?.items ?? []
-      const product = items.find((p) => p.slug === slug || JSON.stringify(p).includes(slug))
-      if (product?.id) {
-        await apiFetch('DELETE', `/api/v1/admin/products/${product.id}`, undefined, adminHeaders())
-      }
-    } catch { /* ignore cleanup errors */ }
-  }
-
-  // Delete shops via admin
-  for (const shopId of [ctx.shopAId, ctx.shopBId]) {
-    if (!shopId) continue
-    try {
-      await apiFetch('DELETE', `/api/v1/admin/shops/${shopId}`, undefined, adminHeaders())
-    } catch { /* ignore */ }
-  }
-
-  // Reject owner
-  if (ctx.ownerId) {
-    try {
-      await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.ownerId}`, { status: 'rejected' }, adminHeaders())
-    } catch { /* ignore */ }
-  }
+  // Admin-Delete: Shops (Owner-Shop A kaskadiert den Owner, Shop B), danach die Marker-Items. Wirft bei Fehlern.
+  await tracker.cleanup()
 }
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
@@ -230,8 +204,10 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
         )
       }
       ctx.ownerId = (loginRes.data as { id: number }).id
+      tracker.owner(ctx.ownerId)
     } else {
       ctx.ownerId = (regRes.data as { id: number }).id
+      tracker.owner(ctx.ownerId)
     }
     if (!ctx.ownerId) {
       throw new Error('SETUP BROKEN: ownerId is null after register + login attempts')
@@ -295,6 +271,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     }
     const shopB = shopBRes.data as { id: number; slug?: string }
     ctx.shopBId = shopB.id
+    tracker.shop(shopB.id)
     ctx.shopBSlug = shopB.slug ?? null
     ctx.fixtures.push({ name: `${PREFIX}-shop-B`, id: ctx.shopBId, slug: ctx.shopBSlug, built: true, deleted: false, type: 'shop' })
 
@@ -344,6 +321,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
           ctx.fixtures[fixIdx].id = prod.id
           ctx.fixtures[fixIdx].slug = prod.slug ?? itemSlug
           ctx.fixtures[fixIdx].built = true
+          tracker.item(prod.id, prod.slug ?? itemSlug)
           if (def.key === 'fixed') ctx.productFixedSlug = prod.slug ?? itemSlug
           if (def.key === 'on_request') ctx.productOnRequestSlug = prod.slug ?? itemSlug
           if (def.key === 'free') ctx.productFreeSlug = prod.slug ?? itemSlug

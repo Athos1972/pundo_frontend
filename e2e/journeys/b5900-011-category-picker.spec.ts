@@ -2,8 +2,8 @@
  * B5900-011 — Shop-Admin: Kategorie-Auswahl beim Artikel-Anlegen
  *
  * Nur gegen Test-Instanz 3500 / 8500. Kein DB-Reset.
- * Items sind global und vom Owner nicht löschbar -> AK5 legt ein Item mit eindeutigem Namen
- * `E2E-B5900-011-<timestamp>` an; am Ende wird nur das Listing des Test-Shops entfernt (Item bleibt).
+ * B8950-012: läuft im WORKER-Shop (Impersonation); AK5 legt ein Item mit Marker am Namensanfang an
+ * (`E2E-<RUN>-B5900-011-Sourdough bread <ts>`), merkt es im Tracker und der Worker-Teardown löscht es per Admin-API.
  *
  * Fixtures (zur Laufzeit): keine; die Tests nutzen die synchronisierte Google-/UNSPSC-Taxonomie
  * in pundo_test (4608 "Breads & Buns" unter 4605 "Bakery"/"Backwaren").
@@ -11,24 +11,18 @@
  * AK1 Vorschlag in <=1 Interaktion (EN/DE/EL), AK2 Typfilter, AK3 keine Dubletten/Fixtures,
  * AK4 RTL (he) + Griechisch (el), AK5 Eltern-Kategorie findet das Item, AK6 Mobile 390x844.
  */
-import { test, expect, type Page, type Response } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
+import { test, expect, type WorkerShop } from './_helpers/worker-shop'
+import type { Page, Response } from '@playwright/test'
+import { marker } from './_helpers/test-data'
 import { tAdmin } from '../../src/lib/shop-admin-translations'
-import { pickCategory } from './_helpers/category-picker'
+import { fillNameAndAwaitSuggestions, pickCategory } from './_helpers/category-picker'
+import { openItemPickerModal } from './_helpers/hydration'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-011] Safety: NEVER use production ports!')
 }
-
-const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as {
-  email: string
-  password: string
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
 type Lang = 'en' | 'de' | 'el' | 'ru' | 'he'
 const E2E_FIXTURE_IDS = [8458, 8459, 8460, 8461, 8462]
@@ -40,7 +34,7 @@ async function openCreateForm(page: Page, lang: Lang) {
   await page.context().addCookies([{ name: 'app_lang', value: lang, url: FRONTEND_URL }])
   await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
   const tr = tAdmin(lang)
-  await page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_title)}`) }).click()
+  await openItemPickerModal(page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_title)}`) }))
   await page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_add_new)}`) }).click()
   const form = page.locator('form').filter({ has: page.locator('fieldset legend') })
   await expect(form.getByTestId('category-picker')).toBeVisible()
@@ -55,26 +49,14 @@ function categoriesResponse(page: Page, match: (url: URL) => boolean) {
   })
 }
 
-let token = ''
-let createdItemId = 0
+let shop: WorkerShop
 let createdSlug = ''
 
-test.beforeAll(async () => {
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-  })
-  token = (r.headers.get('set-cookie') ?? '').match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-  expect(token, 'Login fehlgeschlagen').not.toBe('')
-})
+test.beforeAll(({ workerShop }) => { shop = workerShop })
 
 test.afterAll(async () => {
-  if (!createdItemId) return
-  const auth = { Authorization: `Bearer ${token}` }
-  const l = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings?limit=500`, { headers: auth })
-    .then((r) => r.json()).catch(() => null) as { items?: Array<{ id: number; item_id: number }> } | null
-  const listing = l?.items?.find((x) => x.item_id === createdItemId)
-  if (listing) await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings/${listing.id}`, { method: 'DELETE', headers: auth }).catch(() => {})
+  // Listing(s) des Tests entfernen; das Marker-Item löscht der Worker-Teardown (Tracker)
+  await shop.cleanupSpecData()
 })
 
 // ─── AK1 ─────────────────────────────────────────────────────────────────────
@@ -89,9 +71,7 @@ for (const c of AK1) {
   test(`AK1 [${c.lang}] "${c.name}": Vorschlag Backwaren, ein Tap waehlt aus`, async ({ page }) => {
     const form = await openCreateForm(page, c.lang)
     // Interaktion 1: Namen eingeben
-    await form.locator('input[type="text"]').first().fill(c.name)
-    const sug = form.getByTestId('category-suggestion')
-    await expect(sug.first()).toBeVisible({ timeout: 8000 })
+    const sug = await fillNameAndAwaitSuggestions(page, form, c.name)
     const texts = await sug.allTextContents()
     expect(texts.slice(0, 5).join(' | ')).toMatch(c.expect)
     // Interaktion 2: Tap auf den passenden Vorschlag -> ausgewaehlt
@@ -164,9 +144,8 @@ test('AK4: he -> dir=rtl und hebraeische Namen; el -> Pfad auf Griechisch', asyn
   await expect(form.getByTestId('category-browse-item').first()).toContainText(/[֐-׿]/)
 
   form = await openCreateForm(page, 'el')
-  await form.locator('input[type="text"]').first().fill('Ψωμί προζυμιού 750 γρ')
-  const first = form.getByTestId('category-suggestion').first()
-  await expect(first).toBeVisible({ timeout: 8000 })
+  const sugEl = await fillNameAndAwaitSuggestions(page, form, 'Ψωμί προζυμιού 750 γρ')
+  const first = sugEl.first()
   await expect(first).toContainText(/[Ͱ-Ͽἀ-῿]/)
   const sugText = (await form.getByTestId('category-suggestion').filter({ hasText: /ψωμάκια/ }).first().textContent()) ?? ''
   expect(sugText).toMatch(/Τρόφιμα|Αρτοποιείο/)
@@ -177,7 +156,7 @@ test('AK4: he -> dir=rtl und hebraeische Namen; el -> Pfad auf Griechisch', asyn
 test('AK5: Item in "Brot & Broetchen" erscheint unter der Eltern-Kategorie Backwaren (4605)', async ({ page }) => {
   const form = await openCreateForm(page, 'en')
   const uniq = String(Date.now()) // digits only: no extra letter tokens for the suggestion heuristic
-  const name = `Sourdough bread E2E-B5900-011-${uniq}`
+  const name = `${marker('B5900-011')}-Sourdough bread ${uniq}`
   await form.locator('input[type="text"]').first().fill(name)
   await pickCategory(page, form, { query: 'bread' })
   await expect(form.getByTestId('category-selected')).toContainText('Breads & Buns')
@@ -193,11 +172,11 @@ test('AK5: Item in "Brot & Broetchen" erscheint unter der Eltern-Kategorie Backw
   const reused = resp.status() === 409 && raw.detail?.code === 'fuzzy_match' ? raw.detail.similar_items?.[0] : undefined
   expect([201, 409], JSON.stringify(raw)).toContain(resp.status())
   const item = (reused ?? raw) as { id: number; slug: string; category_id: number }
-  createdItemId = reused ? 0 : item.id // only clean up a listing we created ourselves
+  if (!reused) shop.tracker.item(item.id, item.slug) // nur selbst angelegte Items löschen
   createdSlug = item.slug
   expect(item.category_id, 'Vorschlag sollte Breads & Buns (4608) liefern').toBe(4608)
 
-  const r = await fetch(`${BACKEND_URL}/api/v1/products?category_id=4605&q=${encodeURIComponent('E2E-B5900-011')}&limit=100`)
+  const r = await fetch(`${BACKEND_URL}/api/v1/products?category_id=4605&q=${encodeURIComponent(marker('B5900-011'))}&limit=100`)
   const list = (await r.json()) as { items: Array<{ slug: string }> }
   const slugs = list.items.map((i) => i.slug)
   // Eltern-Kategorie 4605 enthaelt Items aus dem ganzen Teilbaum (rekursiver CTE im Backend)
@@ -209,8 +188,7 @@ test('AK5: Item in "Brot & Broetchen" erscheint unter der Eltern-Kategorie Backw
 test('AK6: Mobile 390x844 -> kein horizontaler Scroll, Touch-Ziele >= 44px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const form = await openCreateForm(page, 'en')
-  await form.locator('input[type="text"]').first().fill('Sourdough bread 750 g')
-  await expect(form.getByTestId('category-suggestion').first()).toBeVisible({ timeout: 8000 })
+  await fillNameAndAwaitSuggestions(page, form, 'Sourdough bread 750 g')
   const browseBtn = await form.getByTestId('category-browse').boundingBox()
   expect(browseBtn!.height, 'category-browse Touch-Ziel').toBeGreaterThanOrEqual(43.5)
   await form.getByTestId('category-browse').click()
@@ -234,12 +212,6 @@ test('AK6: Mobile 390x844 -> kein horizontaler Scroll, Touch-Ziele >= 44px', asy
 
 // ─── F2970: Endkunden-Dienstleistungen im Picker ─────────────────────────────
 
-/** Switches the open create-item form to "service" and types the item name. */
-async function typeServiceName(form: Awaited<ReturnType<typeof openCreateForm>>, name: string) {
-  await form.locator('input[name="item_type"][value="service"]').check()
-  await form.locator('input[type="text"]').first().fill(name)
-}
-
 // AC8: Vorschlag aus dem Artikelnamen; AC6/7: kein Tierpflege-Fehltreffer auf Platz 1
 const AK7: Array<{ lang: Lang; name: string; top: RegExp }> = [
   { lang: 'de', name: 'Herrenhaarschnitt', top: /Herrenfriseur & Barbier/ },
@@ -251,9 +223,8 @@ const AK7: Array<{ lang: Lang; name: string; top: RegExp }> = [
 for (const c of AK7) {
   test(`AK7 (F2970) [${c.lang}] Dienstleistung "${c.name}": passender Vorschlag in den Top 3`, async ({ page }) => {
     const form = await openCreateForm(page, c.lang)
-    await typeServiceName(form, c.name)
-    const sug = form.getByTestId('category-suggestion')
-    await expect(sug.first()).toBeVisible({ timeout: 8000 })
+    await form.locator('input[name="item_type"][value="service"]').check()
+    const sug = await fillNameAndAwaitSuggestions(page, form, c.name)
     const texts = (await sug.allTextContents()).slice(0, 3)
     expect(texts.join(' | '), 'Top 3').toMatch(c.top)
     expect(texts[0], 'Platz 1 ist kein Tierpflege-Treffer').not.toMatch(/Tierpflege|Grooming|Груминг|Περιποίηση Κατοικίδιων/)

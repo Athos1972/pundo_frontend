@@ -11,8 +11,14 @@
  *   3. FREE       — Kostenloser Service  (z.B. Erstberatung gratis)
  *   4. VARIABLE   — Variabler Preis      (z.B. Tierpflege pro Stunde)
  *
- * Teardown: Offers werden archiviert + gelöscht, Listings gelöscht.
- * Shop-Owner + Shop bleiben in pundo_test (keine Lösch-API für shop-owner).
+ * Registrierung/Approve/Login sind hier Prüfgegenstand und bleiben (B8950-012: Owner-E-Mail, Shop-Name und
+ * Item-Namen tragen den Marker `E2E-<RUN>-SMOKE…`).
+ * Teardown (B8950-012): Admin-Shop-Delete kaskadiert Owner, Listings, Offers und die exklusiven
+ * shop_manual-Items; Reste fängt der Reporter über den Run-Marker ab.
+ *
+ * S3 prüft den Endpoint-Vertrag von GET /shops/by-slug/{slug}/offers: er liefert NUR Angebote mit aktiver
+ * Aktion (Docstring get_shop_offers_by_slug, shop_query.py). Normale Listings stehen im Produktblock
+ * (GET /products?shop_id=) → S3 prüft diesen Weg, S3b den Aktions-Endpoint mit echter Aktion.
  *
  * Ports: Frontend 3500 · Backend 8500 · DB: pundo_test — NIEMALS 3000/8000
  */
@@ -22,6 +28,7 @@ import fs from 'fs'
 import path from 'path'
 import { test, expect } from '@playwright/test'
 import { adminLogin as _adminLogin } from './journeys/_helpers'
+import { TestDataTracker, e2eEmail, e2eName } from './journeys/_helpers/test-data'
 
 // Pfad zum Backend-Repo (gleiche Konvention wie global-setup.ts)
 const BACKEND_REPO =
@@ -150,6 +157,7 @@ interface SmokeState {
 }
 
 let state: SmokeState | null = null
+const tracker = new TestDataTracker()
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
@@ -188,9 +196,9 @@ test.beforeAll(async () => {
 
   // 2. Unique Email + Shop-Name
   const ts = Date.now()
-  const ownerEmail = `smoketest-${ts}@pundo.com`
+  const ownerEmail = e2eEmail('SMOKE', 'pundo.com')
   const ownerPassword = `SmokeTest!${ts % 1_000_000}`
-  const shopName = `Smoke Shop G${gruppe.nr} ${ts}`
+  const shopName = e2eName('SMOKE', `G${gruppe.nr}`)
 
   // 3. Shop-Owner registrieren
   console.log(`[Smoke] Registriere ${ownerEmail}…`)
@@ -239,6 +247,7 @@ test.beforeAll(async () => {
   )
   const shopSlug = (geoRes.data as { slug?: string }).slug
   if (!shopSlug) throw new Error('[Smoke] shopSlug not found after geo-patch')
+  tracker.shop(shopId)
   console.log(`[Smoke] Shop: id=${shopId}, slug=${shopSlug}`)
 
   // 7. Shop-Owner einloggen → Bearer-Token
@@ -276,22 +285,20 @@ test.beforeAll(async () => {
   // 9. Items erstellen (Anzahl gemäß Gruppe)
   const itemIds: number[] = []
   for (let i = 0; i < gruppe.item_count; i++) {
-    const itemName = `${gruppe.item_name_de} ${ts}-${i + 1}`
+    const itemName = e2eName('SMOKE', `${gruppe.item_name_de}-${i + 1}`)
     const itemRes = await api(
       'POST',
       '/api/v1/shop-owner/items',
-      { item_type: 'product', name_de: itemName, category_id: categoryId },
+      { item_type: 'product', name_de: itemName, category_id: categoryId, confirmed: true },
       { bearer: ownerToken }
     )
     if (itemRes.status === 201) {
-      itemIds.push((itemRes.data as { id: number }).id)
-    } else if (itemRes.status === 409) {
-      const existing = (itemRes.data as { detail?: { similar_items?: Array<{ id: number }> } })
-        .detail?.similar_items?.[0]?.id
-      if (existing) itemIds.push(existing)
-      else console.warn(`[Smoke] Item ${i + 1}: 409 ohne similar_items — übersprungen`)
+      const created = itemRes.data as { id: number; slug: string }
+      itemIds.push(created.id)
+      tracker.item(created.id, created.slug)
     } else {
-      console.warn(`[Smoke] Item ${i + 1}: ${itemRes.status} — ${JSON.stringify(itemRes.data)}`)
+      // Kein Wiederverwenden fremder Items bei 409 (B8950-012): der Marker-Name ist eindeutig → Fehler.
+      throw new Error(`[Smoke] Item ${i + 1}: ${itemRes.status} — ${JSON.stringify(itemRes.data)}`)
     }
   }
   if (itemIds.length === 0) throw new Error('[Smoke] Kein Item erstellt — Testabbruch')
@@ -322,9 +329,6 @@ test.beforeAll(async () => {
 
   // 11. Offers erstellen (1 Offer pro Listing)
   const offerIds: number[] = []
-  const today = new Date()
-  const validFrom = today.toISOString().slice(0, 10)
-  const validUntil = `${today.getFullYear() + 1}-12-31`
   for (const listingId of listingIds) {
     const offerRes = await api(
       'POST',
@@ -333,8 +337,6 @@ test.beforeAll(async () => {
         shop_listing_id: listingId,
         price_type: gruppe.price_type,
         price_tiers: gruppe.price_tiers,
-        valid_from: validFrom,
-        valid_until: validUntil,
       },
       { bearer: ownerToken }
     )
@@ -354,25 +356,17 @@ test.beforeAll(async () => {
 // ─── Teardown ────────────────────────────────────────────────────────────────
 
 test.afterAll(async () => {
-  if (!state) return
-  const { ownerToken, offerIds, listingIds } = state
-  for (const id of offerIds) {
-    await api('PATCH', `/api/v1/shop-owner/offers/${id}`, { archived: true }, { bearer: ownerToken }).catch(() => {})
-    await api('DELETE', `/api/v1/shop-owner/offers/${id}`, undefined, { bearer: ownerToken }).catch(() => {})
-  }
-  for (const id of listingIds) {
-    await api('DELETE', `/api/v1/shop-owner/shop-listings/${id}`, undefined, { bearer: ownerToken }).catch(() => {})
-  }
-  console.log(`[Smoke] Teardown: ${offerIds.length} Offers, ${listingIds.length} Listings bereinigt.`)
+  const report = await tracker.cleanup()
+  console.log(`[Smoke] Teardown: ${report.shopsDeleted} Shop(s), ${report.itemsDeleted} Item(s) per Admin-API gelöscht.`)
 })
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 test('S1 — Shop-Seite: H1 enthält Shop-Namen', async ({ page }) => {
-  if (!state) { test.skip(true, 'Setup fehlgeschlagen'); return }
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug, shopName } = state
 
-  await page.goto(`${FRONTEND_URL}/shops/${shopSlug}`)
+  await page.goto(`${FRONTEND_URL}/en/shops/${shopSlug}`)
   await page.waitForLoadState('networkidle')
 
   const h1 = page.locator('h1').first()
@@ -381,10 +375,10 @@ test('S1 — Shop-Seite: H1 enthält Shop-Namen', async ({ page }) => {
 })
 
 test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', async ({ page }) => {
-  if (!state) { test.skip(true, 'Setup fehlgeschlagen'); return }
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug, offerIds } = state
 
-  await page.goto(`${FRONTEND_URL}/shops/${shopSlug}`)
+  await page.goto(`${FRONTEND_URL}/en/shops/${shopSlug}`)
   await page.waitForLoadState('networkidle')
 
   // Warte bis mindestens ein Produkt-Link geladen ist (max 10s)
@@ -399,27 +393,59 @@ test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', async ({ page }
   console.log(`[Smoke] S2: ${count} Produkt-Link(s) auf Shop-Seite sichtbar.`)
 })
 
-test('S3 — Angebote-API: Offers erscheinen im öffentlichen Endpoint', async () => {
-  if (!state) { test.skip(true, 'Setup fehlgeschlagen'); return }
-  const { shopSlug, offerIds } = state
+test('S3 — Produkte-API: alle angelegten Items stehen im öffentlichen Produktblock des Shops', async () => {
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
+  const { shopId, itemIds } = state
+
+  // Vertrag (get_shop_offers_by_slug-Docstring): normale Listings stehen im Produktblock via GET /products?shop_id=
+  const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${shopId}&limit=50`, {
+    signal: AbortSignal.timeout(10_000),
+  })
+  expect(res.ok, `GET /products?shop_id=${shopId}: ${res.status}`).toBeTruthy()
+  const body = await res.json() as { items?: Array<{ id: number }> }
+  const returnedIds = (body.items ?? []).map(i => i.id)
+  const allPresent = itemIds.every(id => returnedIds.includes(id))
+  expect(
+    allPresent,
+    `Nicht alle Items erscheinen im Produktblock. Erwartet: ${itemIds}, Gefunden: ${returnedIds}`
+  ).toBeTruthy()
+  console.log(`[Smoke] S3: ${returnedIds.length} Produkt(e) im Produktblock — alle ${itemIds.length} erwarteten vorhanden.`)
+})
+
+test('S3b — Angebote-API: Angebot mit aktiver Aktion erscheint im Aktions-Endpoint', async () => {
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
+  const { shopSlug, ownerToken, offerIds } = state
+
+  // GET /shops/by-slug/{slug}/offers liefert nur Angebote mit aktiver Aktion (promo_valid_from <= heute <= promo_valid_until)
+  const today = new Date()
+  const until = new Date(today.getTime() + 30 * 86_400_000)
+  const patch = await api(
+    'PATCH',
+    `/api/v1/shop-owner/offers/${offerIds[0]}`,
+    {
+      promo_price_type: 'fixed',
+      promo_price_tiers: [{ unit: 'piece', steps: [{ min_quantity: 1, price: 4.99, currency: 'EUR' }] }],
+      promo_valid_from: today.toISOString().slice(0, 10),
+      promo_valid_until: until.toISOString().slice(0, 10),
+    },
+    { bearer: ownerToken }
+  )
+  expect(patch.status, `PATCH Aktion: ${JSON.stringify(patch.data)}`).toBe(200)
+  const promoOfferId = (patch.data as { id: number }).id
 
   const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${shopSlug}/offers`, {
     signal: AbortSignal.timeout(10_000),
   })
   expect(res.ok, `GET /shops/by-slug/${shopSlug}/offers: ${res.status}`).toBeTruthy()
-
   const offers = await res.json() as Array<{ id: number }>
-  const returnedIds = offers.map(o => o.id)
-  const allPresent = offerIds.every(id => returnedIds.includes(id))
   expect(
-    allPresent,
-    `Nicht alle Offers erscheinen in der API. Erwartet: ${offerIds}, Gefunden: ${returnedIds}`
-  ).toBeTruthy()
-  console.log(`[Smoke] S3: ${returnedIds.length} Offer(s) in API — alle ${offerIds.length} erwarteten vorhanden.`)
+    offers.map(o => o.id),
+    `Aktions-Angebot ${promoOfferId} fehlt im öffentlichen Endpoint`
+  ).toContain(promoOfferId)
 })
 
 test('S4 — Shop-Admin: Offers in der Verwaltungsliste sichtbar', async () => {
-  if (!state) { test.skip(true, 'Setup fehlgeschlagen'); return }
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { ownerToken, offerIds } = state
 
   const res = await api('GET', '/api/v1/shop-owner/offers?limit=50', undefined, { bearer: ownerToken })
@@ -436,15 +462,15 @@ test('S4 — Shop-Admin: Offers in der Verwaltungsliste sichtbar', async () => {
 })
 
 test('S5 — Shop-Suche: Shop erscheint in Shop-Suchergebnissen', async ({ page }) => {
-  if (!state) { test.skip(true, 'Setup fehlgeschlagen'); return }
+  if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug } = state
 
   // Suche auf der /shops-Seite via URL-Param
-  await page.goto(`${FRONTEND_URL}/shops?q=${encodeURIComponent(shopSlug)}`)
+  await page.goto(`${FRONTEND_URL}/en/shops?q=${encodeURIComponent(shopSlug)}`)
   await page.waitForLoadState('networkidle')
 
   // Mindestens ein Link zum neu erstellten Shop muss erscheinen
-  const shopLink = page.locator(`a[href="/shops/${shopSlug}"]`)
+  const shopLink = page.locator(`a[href$="/shops/${shopSlug}"]`)
   const count = await shopLink.count()
   if (count === 0) {
     // Fallback: Shop-Seite direkt erreichbar (Suche evtl. nicht live)

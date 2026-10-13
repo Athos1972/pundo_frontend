@@ -18,6 +18,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
+import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -31,6 +32,7 @@ const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/gith
 // Shared context für Cleanup und Report
 interface JourneyCtx {
   uuid: string
+  shopName: string
   email: string
   password: string
   ownerId: number | null
@@ -79,14 +81,6 @@ async function apiPatch(
   return res.json()
 }
 
-async function apiDelete(url: string, headers: Record<string, string> = {}): Promise<void> {
-  const res = await fetch(url, { method: 'DELETE', headers })
-  if (!res.ok && res.status !== 404) {
-    const text = await res.text()
-    throw new Error(`DELETE ${url} → ${res.status}: ${text}`)
-  }
-}
-
 async function adminLogin(): Promise<string> {
   const { execSync } = await import('child_process')
   const pyBin = `${BACKEND_REPO}/.venv/bin/python`
@@ -115,9 +109,12 @@ async function adminLogin(): Promise<string> {
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
+const tracker = new TestDataTracker()
+
 test.describe.serial('Shop-Owner Lifecycle', () => {
   const ctx: JourneyCtx = {
     uuid: randomUUID().slice(0, 8),
+    shopName: e2eName('SOL', 'Shop'), // Marker-Konvention B8950-012 (Slug e2e-<run>-sol-shop-…)
     email: '',
     password: 'E2eOwnerPw!99',
     ownerId: null,
@@ -137,9 +134,9 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
   test.beforeAll(async () => {
     test.setTimeout(120_000)
-    ctx.email = `e2e-sol-owner-${ctx.uuid}@pundo-e2e.io`
+    ctx.email = e2eEmail('SOL-OWNER')
     ctx.fixtures.push({ name: `e2e-sol-owner-${ctx.uuid}`, id: null, built: false, deleted: false })
-    ctx.fixtures.push({ name: `e2e-sol-product-${ctx.uuid}`, id: null, built: false, deleted: false })
+    ctx.fixtures.push({ name: e2eName('SOL', 'Product'), id: null, built: false, deleted: false })
 
     // Healthcheck
     const health = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`)
@@ -149,11 +146,12 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
     const reg = await apiPost(`${BACKEND_URL}/api/v1/shop-owner/register`, {
       email: ctx.email,
       password: ctx.password,
-      name: `E2E SOL Owner ${ctx.uuid}`,
-      shop_name: `e2e-sol-shop-${ctx.uuid}`,
+      name: e2eName('SOL', 'Owner'),
+      shop_name: ctx.shopName,
       shop_address: 'Larnaca Test Street 1, Cyprus',
     }) as { id: number; status: string }
     ctx.ownerId = reg.id
+    tracker.owner(reg.id)
     ctx.fixtures[0].id = reg.id
     ctx.fixtures[0].built = true
 
@@ -189,32 +187,9 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
   test.afterAll(async () => {
     const endedAt = new Date().toISOString()
 
-    // Cleanup fixtures
-    if (ctx.adminToken) {
-      if (ctx.productId) {
-        try {
-          await apiDelete(
-            `${BACKEND_URL}/api/v1/admin/products/${ctx.productId}`,
-            { Cookie: `admin_token=${ctx.adminToken}` }
-          )
-          ctx.fixtures[1].deleted = true
-        } catch (e) {
-          console.warn('[sol] Product cleanup failed:', e)
-        }
-      }
-      if (ctx.ownerId) {
-        try {
-          await apiPatch(
-            `${BACKEND_URL}/api/v1/admin/shop-owners/${ctx.ownerId}`,
-            { status: 'rejected' },
-            { Cookie: `admin_token=${ctx.adminToken}` }
-          )
-          ctx.fixtures[0].deleted = true
-        } catch (e) {
-          console.warn('[sol] Owner cleanup failed:', e)
-        }
-      }
-    }
+    // Cleanup (B8950-012): Admin-Shop-Delete kaskadiert Owner, Listings, Offers und exklusive Items
+    await tracker.cleanup()
+    for (const f of ctx.fixtures) f.deleted = true
 
     // Write report
     const reportsDir = path.join(__dirname, 'reports')
@@ -297,7 +272,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
     // Produkt via Admin-API anlegen
     const productBody: Record<string, unknown> = {
-      name: `e2e-sol-product-${ctx.uuid}`,
+      name: e2eName('SOL', 'Product'),
       shop_id: ctx.shopId,
       available: true,
     }
@@ -332,7 +307,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
 
   // Step 6: Als Guest: Suche nach Produkt
   test('Schritt 6 — Guest findet Shop in der Suche', async ({ page }) => {
-    const shopName = `e2e-sol-shop-${ctx.uuid}`
+    const shopName = ctx.shopName
     await page.goto(`${BASE_URL}/`)
     await page.waitForLoadState('load')
 
@@ -374,7 +349,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
     await page.goto(`${BASE_URL}/shops/${ctx.shopSlug}`)
     await page.waitForLoadState('load')
 
-    const shopName = `e2e-sol-shop-${ctx.uuid}`
+    const shopName = ctx.shopName
     const found = await page.getByText(shopName, { exact: false }).count()
     logStep(7, 'Shop-Detailseite zeigt Shop-Name', `"${shopName}" sichtbar`, found > 0 ? 'gefunden' : 'nicht gefunden', found > 0 ? 'PASS' : 'FAIL')
     expect(found, `Shop-Name "${shopName}" auf Detailseite nicht gefunden`).toBeGreaterThan(0)
@@ -408,7 +383,7 @@ test.describe.serial('Shop-Owner Lifecycle', () => {
     await page.goto(`${BASE_URL}/shops/${ctx.shopSlug}`)
     await page.waitForLoadState('load')
     const url = page.url()
-    const is404 = url.includes('404') || url.includes('not-found') || !(await page.getByText(`e2e-sol-shop-${ctx.uuid}`, { exact: false }).count())
+    const is404 = url.includes('404') || url.includes('not-found') || !(await page.getByText(ctx.shopName, { exact: false }).count())
 
     logStep(9, 'Inaktiver Shop — Direktaufruf', '404 oder "nicht verfügbar"', is404 ? '404/nicht sichtbar' : 'Shop noch sichtbar', is404 ? 'PASS' : 'SKIP')
 

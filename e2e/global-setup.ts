@@ -2,6 +2,8 @@
  * Playwright Global Setup — pundo E2E Tests gegen pundo_test DB
  *
  * Läuft einmalig vor allen Tests:
+ *   0. Run-ID (E2E_RUN_ID) + Lauf-Lock; Frontend auf 3500 NUR prüfen (assertFrontendFresh) —
+ *      gestartet wird es ausschließlich von Playwright `webServer` (scripts/e2e-frontend.cjs), B8950-012
  *   1. Test-Backend auf Port 8500 killen und neu starten (sauberer Zustand)
  *   2. Wartet bis Backend-Healthcheck antwortet
  *   3. Ruft prepare_e2e_db.py auf → reset pundo_test + Kategorien kopieren
@@ -17,6 +19,8 @@ import { execSync, spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { chromium } from '@playwright/test'
+import { assertFrontendFresh } from '../scripts/e2e-frontend.cjs'
+import { acquireLock, generateRunId } from './run-lock'
 
 // Port 8000/8001 ist der Produktiv-Port — niemals für E2E.
 const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -109,6 +113,15 @@ async function adminLogin(): Promise<string> {
 }
 
 export default async function globalSetup() {
+  // ── 0. Run-ID + Lauf-Lock (B8950-012) ──────────────────────────────────────
+  const reuse = process.env.E2E_REUSE_STATE === '1' && fs.existsSync(STATE_FILE)
+  if (reuse) {
+    try { process.env.E2E_RUN_ID ??= JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')).runId } catch { /* egal */ }
+  }
+  const RUN_ID = (process.env.E2E_RUN_ID ||= generateRunId())
+  if (!reuse) acquireLock(RUN_ID)
+  console.log(`\n[E2E Setup] Run-ID: ${RUN_ID}`)
+
   // ── E2E_REUSE_STATE: Schnellpfad für lokale Entwicklung ───────────────────
   // Wenn E2E_REUSE_STATE=1 gesetzt ist UND ein frisches .test-state.json existiert
   // (< 8h alt), werden alle Kill/Restart-Schritte übersprungen.
@@ -131,84 +144,14 @@ export default async function globalSetup() {
     }
   }
 
-  // ── 0a. Test-Frontend auf Port 3500 killen und neu starten ─────────────────
-  // Stellt sicher, dass der Frontend-Server immer den aktuellen Code lädt.
-  //
-  // Stabilitäts-Strategie (nach wiederholten Dev-Server-Crashes unter Playwright-Last):
-  //   1. Bevorzuge Standalone-Server (.next/standalone/server.js) — stabiler als Dev.
-  //   2. Falls kein Standalone-Build vorhanden: baue ihn einmalig (dauert ~3 min).
-  //   3. E2E_SKIP_FRONTEND_RESTART=1: Überspringt Kill+Restart — Frontend läuft bereits.
-  //      Nutze dies wenn ein stabiler Standalone-Server extern gestartet wurde.
-
+  // ── 0a. Frontend auf Port 3500: NUR prüfen, nie killen/starten (B8950-012, AK6) ──
+  // Einziger Owner des Frontend-Prozesses ist Playwright `webServer` → scripts/e2e-frontend.cjs start
+  // (Standalone mit Fingerabdruck-Cache oder E2E_FRONTEND_MODE=dev). Läuft bereits ein Server
+  // (reuseExistingServer), muss er aktuellen Code ausliefern, sonst Abbruch mit Anleitung.
   if (process.env.E2E_SKIP_FRONTEND_RESTART === '1') {
-    console.log(`\n[E2E Setup] E2E_SKIP_FRONTEND_RESTART=1 — Frontend-Restart übersprungen.`)
-    // Nur Healthcheck — wir setzen voraus, dass das Frontend läuft
-    let feRunning = false
-    for (let i = 0; i < 5; i++) {
-      try {
-        const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
-        if (res.ok || res.status === 404 || res.status === 308) { feRunning = true; break }
-      } catch { /* noch nicht bereit */ }
-      await new Promise(r => setTimeout(r, 1000))
-    }
-    if (!feRunning) throw new Error(`[E2E Setup] E2E_SKIP_FRONTEND_RESTART=1 aber Frontend auf ${FRONTEND_URL} antwortet nicht.`)
-    console.log('[E2E Setup] Test-Frontend bereit (kein Restart — External).')
-  } else {
-    console.log(`\n[E2E Setup] Starte Test-Frontend neu (Port ${frontendPort})...`)
-    try {
-      execSync(`lsof -ti TCP:${frontendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
-      console.log(`[E2E Setup] Altes Frontend auf Port ${frontendPort} beendet.`)
-    } catch { /* kein Prozess lief — ok */ }
-    await new Promise(r => setTimeout(r, 500))
-
-    const repoRoot = path.join(__dirname, '..')
-    const standaloneServer = path.join(repoRoot, '.next/standalone/server.js')
-    const standaloneStatic = path.join(repoRoot, '.next/standalone/.next/static')
-
-    let frontendProc: ReturnType<typeof spawn>
-
-    if (fs.existsSync(standaloneServer) && fs.existsSync(standaloneStatic)) {
-      console.log('[E2E Setup] Standalone-Build gefunden — starte node .next/standalone/server.js (stabil).')
-      frontendProc = spawn('node', [standaloneServer], {
-        cwd: repoRoot,
-        detached: false,
-        stdio: 'pipe',
-        env: { ...process.env, PORT: frontendPort, BACKEND_URL: BACKEND_URL },
-      })
-    } else {
-      console.log('[E2E Setup] Kein Standalone-Build — starte npm run dev:test.')
-      console.log('[E2E Setup] Tipp: "npm run build" + Playwright-Start baut Standalone für stabilere Tests.')
-      frontendProc = spawn('npm', ['run', 'dev:test'], {
-        cwd: repoRoot,
-        detached: false,
-        stdio: 'pipe',
-      })
-    }
-
-    frontendProc.stderr?.on('data', (d: Buffer) => {
-      const line = d.toString().trim()
-      if (line && !line.includes('ExperimentalWarning')) console.log(`[frontend] ${line}`)
-    })
-
-    console.log('[E2E Setup] Warte auf Frontend-Healthcheck...')
-    const feDeadline = Date.now() + 120_000
-    let feHealthy = false
-    while (Date.now() < feDeadline) {
-      try {
-        const res = await fetch(`${FRONTEND_URL}/`, { signal: AbortSignal.timeout(3000) })
-        if (res.ok || res.status === 404 || res.status === 308) { feHealthy = true; break }
-      } catch { /* noch nicht bereit */ }
-      await new Promise(r => setTimeout(r, 2000))
-    }
-    if (!feHealthy) {
-      frontendProc.kill()
-      throw new Error(
-        `\n[E2E Setup] Test-Frontend auf ${FRONTEND_URL} antwortet nach 120s nicht.\n` +
-        `  Prüfe ob 'npm run dev:test' im Frontend-Repo funktioniert.\n`
-      )
-    }
-    console.log('[E2E Setup] Test-Frontend bereit.')
+    console.log('[E2E Setup] E2E_SKIP_FRONTEND_RESTART ist obsolet (No-op): das Setup startet kein Frontend mehr.')
   }
+  assertFrontendFresh({ backendUrl: BACKEND_URL })
 
   // ── 0b. Test-Backend auf Port 8500 killen und neu starten ──────────────────
   const backendPort = new URL(BACKEND_URL).port || '8500'
@@ -236,6 +179,9 @@ export default async function globalSetup() {
     detached: false,
     stdio: 'pipe',
   })
+  // stdout MUSS gelesen werden: uvicorn schreibt Access-Logs nach stdout; ein ungeleertes Pipe-Puffer (64 KB)
+  // blockiert den Backend-Prozess nach einigen Minuten (B8950-012: hängender 8500 mitten im Lauf).
+  backendProc.stdout?.on('data', () => { /* drain */ })
   backendProc.stderr?.on('data', (d: Buffer) => {
     const line = d.toString().trim()
     if (line) console.log(`[backend] ${line}`)
@@ -263,6 +209,19 @@ export default async function globalSetup() {
     )
   }
   console.log('[E2E Setup] Test-Backend bereit.')
+
+  // ── 0c. Reste abgebrochener Läufe (nur laufbezogene Marker, älter als E2E_STALE_HOURS) ──────
+  // Legacy-Daten ohne Run-ID fasst das Setup nie an (nur manuell: e2e_test_data.py cleanup --legacy).
+  try {
+    const staleHours = process.env.E2E_STALE_HOURS ?? '6'
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/e2e_test_data.py cleanup --stale-hours ${staleHours} --apply`,
+      { cwd: BACKEND_REPO, encoding: 'utf8', timeout: 120_000, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONPATH: BACKEND_REPO } }
+    )
+    console.log(`[E2E Setup] Stale-Cleanup (> ${staleHours} h): ${out.trim().split('\n').at(-1)}`)
+  } catch (err) {
+    console.warn('[E2E Setup] Stale-Cleanup fehlgeschlagen (nicht kritisch):', err instanceof Error ? err.message.split('\n')[0] : err)
+  }
 
   // ── 1. DB reset (opt-in via E2E_RESET_DB=true) ────────────────────────────
   // By default the DB is NOT reset — prod data synced via sync_prod_to_test.sh
@@ -399,6 +358,7 @@ export default async function globalSetup() {
       detached: false,
       stdio: 'pipe',
     })
+    backendProc2.stdout?.on('data', () => { /* drain, siehe oben */ })
     backendProc2.stderr?.on('data', (d: Buffer) => {
       const line = d.toString().trim()
       if (line) console.log(`[backend] ${line}`)
@@ -424,13 +384,14 @@ export default async function globalSetup() {
 
   // ── 1b. Generierte Test-Kategorien (B5900-011 T11) ────────────────────────
   // Pro Lauf werden eindeutig markierte Kategorien (external_id `e2e-tmp-<run>-*`,
-  // Name `[E2E-TMP] …`) angelegt und vom Reporter `e2e/reporters/cleanup-test-categories.ts`
+  // Name `[E2E-TMP] …`) angelegt und vom Reporter `e2e/reporters/cleanup-test-data.ts`
   // nach erfolgreichem Lauf wieder gelöscht (Items werden auf echte Kategorien umgehängt).
-  // Reste fehlgeschlagener Läufe räumt der nächste Seed-Lauf zuerst weg.
+  // Der Reporter cleanup-test-data.ts räumt laufbezogen (--run-id) auf.
+  // Reste fehlgeschlagener Läufe (älter als E2E_STALE_HOURS) räumt der nächste Seed-Lauf weg.
   let testCategoryIds: number[] = []
   try {
     const out = execSync(
-      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --seed-test-categories`,
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --seed-test-categories --run-id ${RUN_ID}`,
       {
         cwd: BACKEND_REPO,
         encoding: 'utf8',
@@ -598,7 +559,7 @@ export default async function globalSetup() {
   }
 
   // ── 6. State + Credentials speichern ──────────────────────────────────────
-  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState, adminToken, testCategoryIds }
+  const state = { ...creds, runId: RUN_ID, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState, adminToken, testCategoryIds }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
   console.log(`[E2E Setup] State gespeichert: ${STATE_FILE}`)
   console.log('[E2E Setup] Setup abgeschlossen.\n')

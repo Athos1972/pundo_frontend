@@ -6,10 +6,10 @@
  * Google-Ortstypen). Keine hartcodierten Kategorie-IDs: IDs kommen aus der Such-API.
  *
  * Fixtures (zur Laufzeit):
- *   - e2e-service-listing   Service-Item "Herrenhaarschnitt E2E-F2970-<ts>" des E2E-Shops
- *                           (e2e-owner@pundo-e2e.io) in "Herrenfriseur & Barbier" -> Regel (b)
+ *   - e2e-service-listing   Service-Item "E2E-<RUN>-CSD-Herrenhaarschnitt <ts>" des WORKER-Shops
+ *                           (B8950-012: Impersonation, Marker am Namensanfang) in "Herrenfriseur & Barbier" -> Regel (b)
  *   - Google-Ortstyp-Shops  echte importierte Shops (hair_salon, massage ...) -> Regel (c)
- *   Teardown: entfernt NUR das Listing des E2E-Shops (Items sind fuer Owner nicht loeschbar).
+ *   Teardown: Listing weg (cleanupSpecData), das Marker-Item loescht der Worker-Teardown per Admin-API.
  *
  * AC15 Spezifische Karte in 6 Sprachen (UI)      AC16 Massage im richtigen Zweig
  * AC17 Listing -> Anbieterliste (UI + API)       AC18 Eltern-Kategorie enthaelt Kinder, jeder Shop 1x
@@ -18,24 +18,17 @@
  * AC21 (naidivse): das Backend kennt keine Brand-Logik fuer die Suche (Architektur §4); gleiche API,
  *      gleiche Karte. Hier als API-Gleichheit ueber zwei Accept-Language-Aufrufe abgesichert.
  */
-import { test, expect } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
+import { test, expect, type WorkerShop } from './_helpers/worker-shop'
+import { marker } from './_helpers/test-data'
 import { tAdmin } from '../../src/lib/shop-admin-translations'
+import { openItemPickerModal } from './_helpers/hydration'
+import { fillNameAndAwaitSuggestions } from './_helpers/category-picker'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[consumer-service-discovery] Safety: NEVER use production ports!')
 }
-
-const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as {
-  email: string
-  password: string
-  shopSlug: string
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 
 type Lang = 'de' | 'en' | 'el' | 'ru' | 'he' | 'ar'
 interface ServiceCard { result_type: 'service'; category_id: number; name: string; provider_count: number; score: number }
@@ -59,19 +52,13 @@ async function shopSlugs(categoryId: number, q?: string): Promise<string[]> {
   return ((await r.json()) as { items: Array<{ slug: string }> }).items.map((s) => s.slug)
 }
 
-let token = ''
+let shop: WorkerShop
 let hairId = 0
 let barberId = 0
 let beautyId = 0
-let createdListingId = 0
 
-test.beforeAll(async () => {
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-  })
-  token = (r.headers.get('set-cookie') ?? '').match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-  expect(token, 'Login fehlgeschlagen').not.toBe('')
+test.beforeAll(async ({ workerShop }) => {
+  shop = workerShop
 
   const hair = await searchApi('Friseur', 'de')
   expect(hair[0]?.name, 'Seed nicht angewendet? Erwartet Karte "Friseur & Barbier"').toBe('Friseur & Barbier')
@@ -81,10 +68,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  if (!createdListingId) return
-  await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings/${createdListingId}`, {
-    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {})
+  await shop?.cleanupSpecData()
 })
 
 // ─── AC15: spezifische Karte in 6 Sprachen (UI) ─────────────────────────────
@@ -138,43 +122,49 @@ test('AC17/AC18: Service-Listing "Herrenhaarschnitt" macht den E2E-Shop zum Anbi
   await page.context().addCookies([{ name: 'app_lang', value: 'de', url: FRONTEND_URL }])
   await page.goto(`${FRONTEND_URL}/shop-admin/offers/new`, { waitUntil: 'domcontentloaded' })
   const tr = tAdmin('de')
-  await page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_title)}`) }).click()
+  await openItemPickerModal(page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_title)}`) }))
   await page.getByRole('button', { name: new RegExp(`^\\+ ${escapeRe(tr.item_picker_add_new)}`) }).click()
   const form = page.locator('form').filter({ has: page.locator('fieldset legend') })
   await expect(form.getByTestId('category-picker')).toBeVisible()
   await form.locator('input[name="item_type"][value="service"]').check()
-  await form.locator('input[type="text"]').first().fill(`Herrenhaarschnitt E2E-F2970-${Date.now()}`)
-  const sug = form.getByTestId('category-suggestion')
-  await expect(sug.first()).toBeVisible({ timeout: 8000 })
+  const sug = await fillNameAndAwaitSuggestions(page, form, `${marker('CSD')}-Herrenhaarschnitt ${Date.now()}`)
   await sug.filter({ hasText: 'Herrenfriseur & Barbier' }).first().click()
   await expect(form.getByTestId('category-selected')).toContainText('Herrenfriseur & Barbier')
   const created = page.waitForResponse((r) => r.url().includes('/api/shop-admin/items') && r.request().method() === 'POST')
   await form.locator('button[type="submit"]').click()
   const resp = await created
-  const raw = (await resp.json()) as { id?: number; detail?: { code?: string; similar_items?: Array<{ id: number }> } }
+  const raw = (await resp.json()) as { id?: number; slug?: string; detail?: { code?: string; similar_items?: Array<{ id: number }> } }
   // Items sind nicht loeschbar: ein Rest-Item eines frueheren Laufs blockiert per Fuzzy-Match (409) -> wiederverwenden
   const reused = resp.status() === 409 && raw.detail?.code === 'fuzzy_match' ? raw.detail.similar_items?.[0] : undefined
   expect([201, 409], JSON.stringify(raw)).toContain(resp.status())
   const itemId = (reused ?? raw).id!
   expect(itemId).toBeTruthy()
+  if (!reused) shop.tracker.item(itemId, (raw as { slug?: string }).slug)
 
   // 2) Listing sicherstellen (Item-Anlage legt es an; bei wiederverwendetem Item ggf. nachziehen)
-  const auth = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-  const list = (await (await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings?limit=500`, { headers: auth })).json()) as { items?: Array<{ id: number; item_id: number }> }
-  let listing = list.items?.find((l) => l.item_id === itemId)
-  if (!listing) {
-    const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, { method: 'POST', headers: auth, body: JSON.stringify({ item_id: itemId }) })
-    const text = await r.text()
-    expect([200, 201], text).toContain(r.status)
-    listing = JSON.parse(text) as { id: number; item_id: number }
+  // Das Formular legt das Listing NACH der Item-Antwort selbst an (zweiter Request im Browser). Erst warten,
+  // dann ggf. selbst anlegen: ein paralleles POST aus dem Test löst einen Unique-Konflikt aus, den das Backend
+  // als 500 statt 409 meldet (Race, Lauf B8950-012: "Internal Server Error").
+  const findListing = async () => {
+    const list = await shop.api<{ items?: Array<{ id: number; item_id: number }> }>('GET', '/shop-listings?limit=500')
+    return list.json?.items?.find((l) => l.item_id === itemId)
   }
-  createdListingId = listing.id
+  let listing = await expect.poll(findListing, { timeout: reused ? 2_000 : 10_000, intervals: [250, 500, 1_000] })
+    .toBeTruthy().then(() => findListing(), () => undefined)
+  if (!listing) {
+    const r = await shop.api<{ id: number; item_id: number; detail?: { shop_listing_id?: number } }>('POST', '/shop-listings', { item_id: itemId })
+    // 409 listing_exists: die Item-Anlage im Wizard hat das Listing inzwischen selbst angelegt (Race) → verwenden
+    expect([200, 201, 409], r.text).toContain(r.status)
+    const existing = (r.json as { detail?: { shop_listing_id?: number } })?.detail?.shop_listing_id
+    listing = r.status === 409 ? { id: existing as number, item_id: itemId } : r.json
+  }
+  expect(listing.id).toBeTruthy()
 
   // 3) API: Anbieterliste der Karte enthaelt den E2E-Shop; Eltern-Karte "Friseur & Barbier" und
   //    "Schoenheit, Wellness & Fitness" zaehlen ihn mit - jeder Shop genau 1x (AC18)
   for (const id of [barberId, hairId, beautyId]) {
-    const slugs = await shopSlugs(id, 'E2E Test Shop')
-    expect(slugs.filter((s) => s === STATE.shopSlug), `category ${id}`).toHaveLength(1)
+    const slugs = await shopSlugs(id, shop.name)
+    expect(slugs.filter((s) => s === shop.slug), `category ${id}`).toHaveLength(1)
   }
   const barber = (await searchApi('Herrenfriseur', 'de')).find((c) => c.category_id === barberId)!
   expect(barber.provider_count, 'Karte zaehlt Listing-Shop und Google-Barbershops').toBeGreaterThanOrEqual(1)

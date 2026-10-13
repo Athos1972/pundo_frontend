@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { randomUUID } from 'crypto'
+import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
 import { adminLogin as adminApiLogin, shopOwnerLogin } from './_helpers'
 import fs from 'fs'
 import path from 'path'
@@ -33,7 +33,8 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 // ─── Identity ─────────────────────────────────────────────────────────────────
 
-const UUID = randomUUID().slice(0, 8)
+// B8950-012: Marker-Konvention (E-Mail/Shop-Name) + Admin-Delete statt "rejected" im Teardown
+const tracker = new TestDataTracker()
 const PASSWORD = 'E2eApprovalPw!99'
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -44,11 +45,11 @@ interface Fixture { name: string; id: number | null; built: boolean; deleted: bo
 const ctx = {
   adminToken: null as string | null,
   // Fixture A: pending owner with shop
-  approvalEmail: `e2e-approval-${UUID}@pundo-e2e.io`,
+  approvalEmail: e2eEmail('APPROVAL'),
   approvalOwnerId: null as number | null,
   approvalShopId: null as number | null,
   // Fixture B: pre_signup owner (no shop)
-  presignupEmail: `e2e-presignup-${UUID}@pundo-e2e.io`,
+  presignupEmail: e2eEmail('PRESIGNUP'),
   presignupOwnerId: null as number | null,
   stepLog: [] as StepLog[],
   fixtures: [] as Fixture[],
@@ -93,8 +94,8 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   test.beforeAll(async () => {
     test.setTimeout(120_000)
 
-    ctx.fixtures.push({ name: `e2e-approval-${UUID}`, id: null, built: false, deleted: false })
-    ctx.fixtures.push({ name: `e2e-presignup-${UUID}`, id: null, built: false, deleted: false })
+    ctx.fixtures.push({ name: ctx.approvalEmail, id: null, built: false, deleted: false })
+    ctx.fixtures.push({ name: ctx.presignupEmail, id: null, built: false, deleted: false })
 
     // Health-Check
     const health = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`)
@@ -107,8 +108,8 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     const regA = await apiFetch('POST', '/api/v1/shop-owner/register', {
       email: ctx.approvalEmail,
       password: PASSWORD,
-      name: `E2E Approval Owner ${UUID}`,
-      shop_name: `e2e-approval-shop-${UUID}`,
+      name: e2eName('APPROVAL', 'Owner'),
+      shop_name: e2eName('APPROVAL', 'Shop'),
       shop_address: 'Finikoudes Beach, Larnaca, Cyprus',
     }) as { ok: boolean; status: number; data: unknown }
 
@@ -117,6 +118,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     }
     const regAData = regA.data as { id: number; shop_id?: number }
     ctx.approvalOwnerId = regAData.id
+    tracker.owner(regAData.id)
     ctx.approvalShopId = regAData.shop_id ?? null
     ctx.fixtures[0].id = regAData.id
     ctx.fixtures[0].built = true
@@ -127,8 +129,8 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     const regB = await apiFetch('POST', '/api/v1/shop-owner/register', {
       email: ctx.presignupEmail,
       password: PASSWORD,
-      name: `E2E Presignup Owner ${UUID}`,
-      shop_name: `e2e-presignup-shop-${UUID}`,
+      name: e2eName('PRESIGNUP', 'Owner'),
+      shop_name: e2eName('PRESIGNUP', 'Shop'),
       shop_address: 'Makenzie Beach, Larnaca, Cyprus',
     })
     if (!regB.ok) {
@@ -136,6 +138,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     }
     const regBData = regB.data as { id: number }
     ctx.presignupOwnerId = regBData.id
+    tracker.owner(regBData.id)
     ctx.fixtures[1].id = regBData.id
 
     // Patch fixture B to pre_signup (admin allows this since we added it to allowed set)
@@ -210,11 +213,11 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
       domain: new URL(BASE_URL).hostname, path: '/',
     }])
 
-    await page.goto(`${BASE_URL}/admin/shop-owners?status=pending`)
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=pending&q=${encodeURIComponent(ctx.approvalEmail)}`)
     await page.waitForLoadState('networkidle')
 
     // Fixture A email should appear
-    const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: `e2e-approval-${UUID}` })
+    const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.approvalEmail })
     await expect(emailCell.first(), `Fixture A (${ctx.approvalEmail}) muss in pending-Filter sichtbar sein`).toBeVisible({ timeout: 5_000 })
 
     logStep(3, 'Filter pending', 'Fixture A sichtbar', ctx.approvalEmail, 'PASS')
@@ -229,10 +232,10 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
       domain: new URL(BASE_URL).hostname, path: '/',
     }])
 
-    await page.goto(`${BASE_URL}/admin/shop-owners?status=pre_signup`)
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=pre_signup&q=${encodeURIComponent(ctx.presignupEmail)}`)
     await page.waitForLoadState('networkidle')
 
-    const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: `e2e-presignup-${UUID}` })
+    const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.presignupEmail })
     await expect(emailCell.first(), `Fixture B (${ctx.presignupEmail}) muss in pre_signup-Filter sichtbar sein`).toBeVisible({ timeout: 5_000 })
 
     logStep(4, 'Filter pre_signup', 'Fixture B sichtbar', ctx.presignupEmail, 'PASS')
@@ -277,9 +280,9 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     logStep(6, 'API-Verifikation status=approved', 'approved', verifyData.status, 'PASS')
 
     // In approved-Liste sichtbar
-    await page.goto(`${BASE_URL}/admin/shop-owners?status=approved`)
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=approved&q=${encodeURIComponent(ctx.approvalEmail)}`)
     await page.waitForLoadState('networkidle')
-    const approvedRow = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: `e2e-approval-${UUID}` })
+    const approvedRow = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.approvalEmail })
     await expect(approvedRow.first()).toBeVisible({ timeout: 5_000 })
     logStep(6, 'In approved-Filter sichtbar', 'Fixture A in approved-Liste', ctx.approvalEmail, 'PASS')
   })
@@ -378,27 +381,10 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     const endedAt = new Date().toISOString()
     const date = endedAt.slice(0, 10)
 
-    // Cleanup: reject beide Fixtures
-    for (const [id, name] of [
-      [ctx.approvalOwnerId, 'approval'],
-      [ctx.presignupOwnerId, 'presignup'],
-    ] as [number | null, string][]) {
-      if (id && ctx.adminToken) {
-        try {
-          await apiFetch(
-            'PATCH',
-            `/api/v1/admin/shop-owners/${id}`,
-            { status: 'rejected' },
-            adminHeaders()
-          )
-          const fixture = ctx.fixtures.find(f => f.name.includes(name))
-          if (fixture) fixture.deleted = true
-          console.log(`[approval-flow] Cleanup: owner ${id} → rejected`)
-        } catch (e) {
-          console.warn(`[approval-flow] Cleanup failed for ${name} (id=${id}):`, e)
-        }
-      }
-    }
+    // Cleanup (B8950-012): beide Fixtures per Admin-API löschen (Shop-Delete kaskadiert den Owner)
+    const cleanup = await tracker.cleanup()
+    for (const f of ctx.fixtures) f.deleted = true
+    console.log(`[approval-flow] Cleanup: ${cleanup.shopsDeleted} Shop(s) gelöscht`)
 
     // Report schreiben
     const overallStatus = ctx.stepLog.some(s => s.status === 'FAIL') ? 'FAIL' : 'PASS'

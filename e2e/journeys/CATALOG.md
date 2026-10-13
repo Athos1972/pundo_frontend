@@ -17,7 +17,7 @@
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
 | [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | PASS |
-| [import-page-ac-check](import-page-ac-check.spec.ts) | Import Page Acceptance Criteria Check | implemented | P2 | PASS |
+| [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check | implemented | P2 | PASS |
 | [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow | implemented | P2 | PASS |
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
@@ -32,7 +32,7 @@
 | [shop-admin-profile-phone-logo](shop-admin-profile-phone-logo.md) | Shop-Admin Phone + Logo — DEPRECATED | deprecated | P2 | — |
 | [service-catalog-auto-assign](service-catalog-auto-assign.md) | Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7 | implemented | P1 | PASS |
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
-| [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD + Foto-Upload (F6710) | implemented | P2 | — |
+| [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD (F6710) | implemented | P2 | — |
 | [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |
 | [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
@@ -44,12 +44,12 @@
 | [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
-| [admin-catalog-review](admin-catalog-review.spec.ts) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (6/6, re-verified 2026-07-16 nach Test-Infra-Fix + Selector-Fix, siehe 04-test-report.md Re-Verifikation) |
-| [b5900-009-item-photo-upload](b5900-009-item-photo-upload.spec.ts) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |
-| [b5900-010-offer-form-labels](b5900-010-offer-form-labels.spec.ts) | Shop-Admin Angebotsformular Beschriftungen/Sprachen (B5900-010) | implemented | P2 | PASS (2026-10-12) |
-| [b5900-011-category-picker](b5900-011-category-picker.spec.ts) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |
-| [b5900-012-shop-hours-validation](b5900-012-shop-hours-validation.spec.ts) | Shop-Admin Öffnungszeiten-Validierung (B5900-012) | implemented | P2 | PASS (AK2 skip ohne DATABASE_URL_TEST) |
-| [b5900-013-null-price-display](b5900-013-null-price-display.spec.ts) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
+| [admin-catalog-review](admin-catalog-review.md) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (6/6, re-verified 2026-07-16 nach Test-Infra-Fix + Selector-Fix, siehe 04-test-report.md Re-Verifikation) |
+| [b5900-009-item-photo-upload](b5900-009-item-photo-upload.md) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |
+| [b5900-010-offer-form-labels](b5900-010-offer-form-labels.md) | Shop-Admin Angebotsformular Beschriftungen/Sprachen (B5900-010) | implemented | P2 | PASS (2026-10-12) |
+| [b5900-011-category-picker](b5900-011-category-picker.md) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |
+| [b5900-012-shop-hours-validation](b5900-012-shop-hours-validation.md) | Shop-Admin Öffnungszeiten-Validierung (B5900-012) | implemented | P2 | PASS (AK2 skip ohne DATABASE_URL_TEST) |
+| [b5900-013-null-price-display](b5900-013-null-price-display.md) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
 | [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | — |
 
 ## Smoketest Coverage

@@ -4,7 +4,10 @@ import { defineConfig } from '@playwright/test'
 //   Produktion:  Backend 8000, Frontend 3000
 //   E2E-Tests:   Backend 8500, Frontend 3500
 //
-// Der global-setup startet das Test-Backend automatisch (kill + restart).
+// Der global-setup startet das Test-Backend automatisch (kill + restart) und prüft nur noch,
+// dass das Frontend auf 3500 aktuellen Code ausliefert (scripts/e2e-frontend.cjs). Das Frontend
+// startet ausschließlich dieses webServer-Plugin: Standalone-Build mit Fingerabdruck-Cache,
+// E2E_FRONTEND_MODE=dev → `npm run dev:test`. Läuft schon ein aktueller Server, wird er genutzt.
 // BACKEND_URL kann weggelassen werden → default http://localhost:8500.
 // Port 8000 wird explizit abgelehnt.
 //
@@ -34,23 +37,23 @@ export default defineConfig({
   // not Playwright browser tests. Journey spec files (without `_`) are included via testDir.
   testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
   globalSetup: './e2e/global-setup.ts',
-  // list = Konsolenausgabe wie bisher (Default); der zweite Reporter räumt nach grünem Lauf
-  // die generierten Test-Kategorien (e2e-tmp-*) wieder auf (B5900-011 T11).
-  reporter: [[process.env.CI ? 'dot' : 'list'], ['./e2e/reporters/cleanup-test-categories.ts']],
-  // workers:2 keeps concurrent login bursts below the backend's 10/min rate limit;
-  // combined with retry logic in e2e/journeys/_helpers.ts this eliminates 429 flakiness.
+  globalTeardown: './e2e/global-teardown.ts',
+  // list = Konsolenausgabe wie bisher (Default); der zweite Reporter räumt nach grünem Lauf alle
+  // Testdaten des Laufs (Marker e2e-<RUN>-…) und die generierten Kategorien auf (B8950-012).
+  reporter: [[process.env.CI ? 'dot' : 'list'], ['./e2e/reporters/cleanup-test-data.ts']],
+  // workers:2 + Retry-Helper in e2e/journeys/_helpers.ts; die strikten App-Limits (B6220-001) entschärft
+  // die Test-Instanz selbst: scripts/start_test_server.sh setzt RATE_LIMIT_TEST_MULTIPLIER (nur pundo_test, B8950-012).
   workers: 2,
   use: {
     baseURL: frontendUrl,
   },
   webServer: {
-    // Build with the right BACKEND_URL (bakes rewrites), then start standalone.
-    // next start is incompatible with output:standalone — use server.js directly.
-    // After build, static assets must be copied into the standalone dir (Next.js requirement).
-    command: `BACKEND_URL=${backendUrl} npm run build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public && PORT=${frontendPort} BACKEND_URL=${backendUrl} node .next/standalone/server.js`,
+    // Standalone-Build mit Fingerabdruck-Cache (kein veralteter Build, kein Rebuild ohne Codeänderung);
+    // E2E_FRONTEND_MODE=dev startet stattdessen `npm run dev:test`. Siehe scripts/e2e-frontend.cjs.
+    command: 'node scripts/e2e-frontend.cjs start',
     url: frontendUrl,
     reuseExistingServer: true,
-    timeout: 300_000,
+    timeout: 600_000,
     env: {
       BACKEND_URL: backendUrl,
       PORT: frontendPort,

@@ -12,10 +12,14 @@
  * Ports: Frontend 3500, Backend 8500, DB: pundo_test — NEVER 3000/8000
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
-import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
+// B8950-012: Block 1 + Group E laufen im WORKER-Shop (Impersonation, kein Passwort-Login, kein geteilter
+// e2e-test-shop); der Cross-Shop-Block legt Shop B per Admin-API an (specShop) und löscht ihn per Admin-Delete.
+// Jede Gruppe räumt in afterAll ihre Offers/Listings weg (workerShop.cleanupSpecData). Echte Prod-Items
+// (avicentra …) werden nur im Worker-Shop gelistet; gelöscht wird dabei nur das Listing, nie das Item.
+import { test, expect, specShop, type WorkerShop } from './_helpers/worker-shop'
+import type { Page } from '@playwright/test'
+import { getAdminToken as adminApiLogin, e2eName } from './_helpers/test-data'
+import { openItemPickerModal } from './_helpers/hydration'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -26,38 +30,13 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[shop-admin-offers] Safety: NEVER run against production ports 3000/8000!')
 }
 
-// ─── Load test state ─────────────────────────────────────────────────────────
+// ─── Worker-Shop (B8950-012) ─────────────────────────────────────────────────
 
-interface TestState {
-  email: string
-  password: string
-  shop_name: string
-  shop_address: string
-  ownerId: number
-  shopId: number
-  shopSlug: string | null
-  storageState: { cookies: unknown[]; origins: unknown[] }
-  fixtures?: {
-    shop_slug?: string
-    shop_id?: number
-    product_slugs?: Record<string, string>
-    product_ids?: Record<string, number>
-  }
-}
+let W: WorkerShop
+const ITEM_BUDGIE = 21476 // avicentra-avicentra-classic-menu-budgie-1kg (echtes Prod-Item, nur Listing im Worker-Shop)
+const ITEM_CANARY = 21477 // avicentra-avicentra-classic-menu-canary-1kg
 
-function loadState(): TestState {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
-  if (!fs.existsSync(stateFile)) {
-    throw new Error('[shop-admin-offers] .test-state.json not found — run global-setup first')
-  }
-  return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
-}
-
-const STATE = loadState()
-
-// ─── Playwright auth state ────────────────────────────────────────────────────
-
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
+test.beforeAll(({ workerShop }) => { W = workerShop })
 
 // ─── Shared context ───────────────────────────────────────────────────────────
 
@@ -81,7 +60,7 @@ const ctx: OfferCtx = {
   createdOfferIds: [],
   editOfferId: null,
   archiveOfferId: null,
-  shopSlug: STATE.shopSlug ?? null,
+  shopSlug: null,
   findings: [],
 }
 
@@ -120,12 +99,8 @@ async function apiDelete(urlPath: string, token: string) {
   return { status: res.status }
 }
 
-let _cachedOwnerToken: string | null = null
 async function getOwnerToken(): Promise<string> {
-  if (!_cachedOwnerToken) {
-    _cachedOwnerToken = await shopOwnerLogin(STATE.email, STATE.password)
-  }
-  return _cachedOwnerToken
+  return W.ownerToken
 }
 
 /** Create a ShopListing for the given item. Returns shop_listing_id, or null on failure (e.g. 422 if item_id not in catalog). */
@@ -177,7 +152,7 @@ async function waitHydrated(page: Page) {
  */
 async function selectItemViaModal(page: Page, searchQuery: string) {
   // Click the dashed "Select item" button in Step 1
-  await page.locator('button.border-dashed, button[class*="border-dashed"]').click()
+  await openItemPickerModal(page.locator('button.border-dashed, button[class*="border-dashed"]'))
 
   // Wait for modal to appear
   await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 })
@@ -243,11 +218,11 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     const health = await fetch(`${BACKEND_URL}/api/v1/categories`)
     if (!health.ok) throw new Error(`Backend health check failed: ${health.status}`)
 
+    ctx.shopSlug = W.slug
     const token = await getOwnerToken()
 
     // Create a ShopListing for the default item (used by most tests).
-    // Falls back to known real item_id 21476 (avicentra-avicentra-classic-menu-budgie-1kg) if fixtures not set.
-    const defaultItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
+    const defaultItemId = ITEM_BUDGIE
     ctx.defaultShopListingId = await getOrCreateShopListing(token, defaultItemId)
     console.log(`[offers-spec] defaultShopListingId=${ctx.defaultShopListingId} (item_id=${defaultItemId})`)
 
@@ -261,7 +236,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     // the default listing and the backend auto-archives the previous active offer for that
     // listing. If we used the same listing here, the archive target would be silently archived
     // by A1 before C1 gets to test it.
-    const archiveItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-canary-1kg'] ?? 21477
+    const archiveItemId = ITEM_CANARY
     const archiveListingId = await getOrCreateShopListing(token, archiveItemId)
     if (archiveListingId) {
       const archiveSetup = await apiCreateOffer(token, archiveListingId, {
@@ -276,13 +251,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test.afterAll(async () => {
-    if (ctx.createdOfferIds.length === 0) return
-    const token = await getOwnerToken()
-    for (const id of ctx.createdOfferIds) {
-      await apiPatch(`/api/v1/shop-owner/offers/${id}`, { archived: true }, token).catch(() => {})
-      const del = await apiDelete(`/api/v1/shop-owner/offers/${id}`, token)
-      console.log(`[offers-spec] Cleanup offer ${id}: DELETE → ${del.status}`)
-    }
+    await W.cleanupSpecData()
     if (ctx.findings.length > 0) {
       console.log('\n[offers-spec] FINDINGS:')
       ctx.findings.forEach(f => console.log(`  - ${f}`))
@@ -695,6 +664,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     }
 
     const token = await getOwnerToken()
+    // Marker-Titel (B8950-012): eindeutig pro Lauf; der Worker-Shop gehört dieser Spec allein
+    const d1Title = e2eName('OFFERS', 'D1 Customer Visible Offer')
 
     // The customer-facing /shops/by-slug/{slug}/offers API only returns offers with an
     // ACTIVE promo period (promo_valid_from <= today <= promo_valid_until) AND promo price set.
@@ -708,7 +679,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
       promo_price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 9.99, currency: 'EUR' }] }],
       promo_valid_from: TODAY_ISO,
       promo_valid_until: daysFromToday(30),
-      title: 'D1 Customer Visible Offer',
+      title: d1Title,
     }, token)
     const { status, data } = d1Res as { status: number; data: { id: number } }
     expect(status, 'D1 setup: create offer failed').toBe(201)
@@ -731,7 +702,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     }
     expect(offerVisible, 'D1: offer not visible in public backend API after 2s').toBe(true)
 
-    await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${ctx.shopSlug}`)
     // load: networkidle never settles on customer pages after RSC prefetch fix (2026-05-21)
     await page.waitForLoadState('load')
 
@@ -740,11 +711,13 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     expect(url).not.toContain('not-found')
 
     // Wait explicitly for the offer title to appear (streamed RSC content)
-    await expect(page.getByText('D1 Customer Visible Offer')).toBeVisible({ timeout: 10_000 })
+    // Genau EINE Karte (B8950-012: strenger als zuvor — zwei Karten wären ein Doppel-Render-Produktdefekt)
+    await expect(page.getByText(d1Title)).toHaveCount(1, { timeout: 10_000 })
+    await expect(page.getByText(d1Title)).toBeVisible()
 
     const bodyText = await page.locator('body').innerText()
     expect(
-      bodyText.includes('D1 Customer Visible Offer'),
+      bodyText.includes(d1Title),
       'D1: offer title not visible on customer shop page'
     ).toBe(true)
   })
@@ -769,7 +742,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     // Archive it — public endpoint must not show it
     await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
 
-    await page.goto(FRONTEND_URL + `/shops/${ctx.shopSlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${ctx.shopSlug}`)
     await page.waitForLoadState('networkidle')
 
     const bodyText = await page.locator('body').innerText()
@@ -844,10 +817,6 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { buildAdminShopPayload as _buildAdminShopPayload } from './_helpers/admin-shop-payload'
-import { randomUUID } from 'crypto'
-
-const LEGACY_UUID = randomUUID().slice(0, 8)
-const LEGACY_PREFIX = `e2e-legacy-${LEGACY_UUID}`
 
 // ─── Two-shop context ─────────────────────────────────────────────────────────
 
@@ -869,7 +838,7 @@ interface TwoShopCtx {
 const twoShopCtx: TwoShopCtx = {
   shopAToken: null,
   shopAListingId: null,
-  shopASlug: STATE.shopSlug ?? null,
+  shopASlug: null,
   shopBId: null,
   shopBSlug: null,
   shopBOwnerId: null,
@@ -883,65 +852,7 @@ async function getAdminToken(): Promise<string> {
   return adminApiLogin()
 }
 
-async function adminFetch(
-  method: string,
-  path: string,
-  body?: unknown,
-  adminTok?: string
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const tok = adminTok ?? twoShopCtx.adminToken
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    method,
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      Cookie: `admin_token=${tok}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  let data: unknown = {}
-  try { if (res.status !== 204) data = await res.json() } catch { /* empty */ }
-  return { ok: res.ok, status: res.status, data }
-}
-
-
-async function registerAndApprove(
-  email: string,
-  password: string,
-  name: string,
-  shopName: string,
-  shopAddress: string,
-  adminTok: string
-): Promise<{ ownerId: number; shopId: number; token: string }> {
-  let ownerId: number | null = null
-
-  const regRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name, shop_name: shopName, shop_address: shopAddress }),
-  })
-  if (regRes.ok) {
-    const reg = await regRes.json() as { id?: number }
-    ownerId = reg.id ?? null
-  } else if (regRes.status === 400) {
-    console.log(`[two-shop] ${email} already registered`)
-  } else {
-    throw new Error(`[two-shop] Registration failed for ${email}: ${regRes.status}`)
-  }
-
-  if (!ownerId) {
-    const listRes = await adminFetch('GET', '/api/v1/admin/shop-owners?limit=100', undefined, adminTok)
-    const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
-    const found = owners.find(o => o.email === email)
-    if (found) ownerId = found.id
-  }
-  if (!ownerId) throw new Error(`[two-shop] Could not find owner ID for ${email}`)
-
-  const approveRes = await adminFetch('PATCH', `/api/v1/admin/shop-owners/${ownerId}`, { status: 'approved' }, adminTok)
-  const shopId = (approveRes.data as { shop_id?: number })?.shop_id ?? 0
-
-  const token = await shopOwnerLogin(email, password)
-  return { ownerId, shopId, token }
-}
+let shopB: WorkerShop | null = null
 
 // ─── Today helpers ────────────────────────────────────────────────────────────
 
@@ -962,74 +873,33 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     // ── Admin login ────────────────────────────────────────────────────────────
     twoShopCtx.adminToken = await getAdminToken()
 
-    // ── Shop A: use existing e2e owner from .test-state.json ──────────────────
+    // ── Shop A: Worker-Shop (Impersonation) ───────────────────────────────────
     twoShopCtx.shopAToken = await getOwnerToken()
-    // ShopListing for Shop A — use real item_id 21476 (avicentra-avicentra-classic-menu-budgie-1kg)
-    const shopAItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
-    twoShopCtx.shopAListingId = await getOrCreateShopListing(twoShopCtx.shopAToken, shopAItemId)
+    twoShopCtx.shopASlug = W.slug
+    // ShopListing for Shop A — echtes Item 21476 (nur das Listing gehört dem Test)
+    twoShopCtx.shopAListingId = await getOrCreateShopListing(twoShopCtx.shopAToken, ITEM_BUDGIE)
     if (!twoShopCtx.shopAListingId) {
-      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop A (item_id=${shopAItemId})`)
+      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop A (item_id=${ITEM_BUDGIE})`)
     }
 
-    // ── Shop B: register a second owner + shop ────────────────────────────────
-    const shopBEmail = `${LEGACY_PREFIX}-shopb@pundo-e2e.io`
-    const shopBPassword = 'ShopBLegacy!99'
+    // ── Shop B: eigener Spec-Shop per Admin-API (kein Register/Login → kein Rate-Limit) ──
+    shopB = await specShop('OFFERS-XS')
+    twoShopCtx.shopBId = shopB.id
+    twoShopCtx.shopBSlug = shopB.slug
+    twoShopCtx.shopBOwnerToken = shopB.ownerToken
 
-    const shopBData = await registerAndApprove(
-      shopBEmail,
-      shopBPassword,
-      `E2E Legacy Shop B ${LEGACY_UUID}`,
-      `${LEGACY_PREFIX}-shop-B`,
-      'Mackenzie Beach, Larnaca, Cyprus',
-      twoShopCtx.adminToken
-    )
-    twoShopCtx.shopBOwnerId = shopBData.ownerId
-    twoShopCtx.shopBOwnerToken = shopBData.token
-
-    // Retrieve shop B details + set geo so slug is returned
-    const ownerDetailRes = await adminFetch(
-      'GET',
-      `/api/v1/admin/shop-owners/${twoShopCtx.shopBOwnerId}`
-    )
-    if (!ownerDetailRes.ok) {
-      throw new Error(`SETUP BROKEN: Could not get shop-B owner detail: ${ownerDetailRes.status}`)
-    }
-    const ownerDetail = ownerDetailRes.data as { shop_id?: number }
-    if (!ownerDetail.shop_id) {
-      throw new Error('SETUP BROKEN: Shop B owner has no shop_id')
-    }
-    twoShopCtx.shopBId = ownerDetail.shop_id
-
-    // Set geo for shop B
-    const patchRes = await adminFetch('PATCH', `/api/v1/admin/shops/${twoShopCtx.shopBId}`, {
-      lat: 34.9050,
-      lng: 33.6183,
-    })
-    twoShopCtx.shopBSlug = (patchRes.data as { slug?: string })?.slug ?? null
-
-    // ShopListing for Shop B — use the same real item_id
-    const shopBItemId = STATE.fixtures?.product_ids?.['avicentra-avicentra-classic-menu-budgie-1kg'] ?? 21476
-    twoShopCtx.shopBListingId = await getOrCreateShopListing(twoShopCtx.shopBOwnerToken, shopBItemId)
+    // ShopListing for Shop B — dasselbe echte Item
+    twoShopCtx.shopBListingId = await getOrCreateShopListing(twoShopCtx.shopBOwnerToken, ITEM_BUDGIE)
     if (!twoShopCtx.shopBListingId) {
-      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop B (item_id=${shopBItemId})`)
+      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop B (item_id=${ITEM_BUDGIE})`)
     }
   })
 
   test.afterAll(async () => {
-    if (!twoShopCtx.adminToken) return
-
-    // Archive + delete created offers
-    if (twoShopCtx.shopAToken) {
-      for (const id of twoShopCtx.createdOfferIds) {
-        await apiPatch(`/api/v1/shop-owner/offers/${id}`, { archived: true }, twoShopCtx.shopAToken).catch(() => {})
-        await apiDelete(`/api/v1/shop-owner/offers/${id}`, twoShopCtx.shopAToken).catch(() => {})
-      }
-    }
-
-    // Reject shop B owner
-    if (twoShopCtx.shopBOwnerId) {
-      await adminFetch('PATCH', `/api/v1/admin/shop-owners/${twoShopCtx.shopBOwnerId}`, { status: 'rejected' }).catch(() => {})
-    }
+    // Shop B: Admin-Shop-Delete kaskadiert Owner/Listing/Offers (das echte Item bleibt)
+    await shopB?.destroy()
+    // Shop A (Worker-Shop): Offers + Listings der Gruppe entfernen
+    await W.cleanupSpecData()
   })
 
   // ── Cross-Shop Isolation ───────────────────────────────────────────────────
@@ -1070,7 +940,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     expect(offerRes.status, 'XS2 setup: create Shop-B offer').toBe(201)
 
     // Navigate to Shop A page — must NOT show Shop B's offer
-    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
     await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
@@ -1105,7 +975,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     // Archive it
     await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
 
-    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
     await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
@@ -1216,7 +1086,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     const offerId = (res.data as { id: number }).id
     twoShopCtx.createdOfferIds.push(offerId)
 
-    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
     await page.waitForLoadState('load')
 
     const url = page.url()
@@ -1267,7 +1137,7 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
     const offerId = (res.data as { id: number }).id
     twoShopCtx.createdOfferIds.push(offerId)
 
-    await page.goto(FRONTEND_URL + `/shops/${twoShopCtx.shopASlug}`)
+    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
     await page.waitForLoadState('load')
 
     const body = await page.locator('body').innerText()
@@ -1291,9 +1161,6 @@ test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staf
 //   den Embed noch nicht liefert, skipped der Test (SKIP, kein FAIL).
 //   E1, E5, E6b (Fallback), E7 laufen rein frontend-seitig sofort.
 // =============================================================================
-
-const E2E_OWNER_EMAIL = 'e2e-owner@pundo-e2e.io'
-const E2E_OWNER_PASSWORD = 'E2eTestPassword!99'
 
 test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
 
@@ -1321,7 +1188,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         item_type: 'product',
-        name_de: 'E2E Group-E Testartikel',
+        name_de: e2eName('OFFERS', 'GroupE-Testartikel'),
         category_id: categoryId,
       }),
     })
@@ -1329,15 +1196,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
       const data = await res.json() as { id: number }
       return data.id
     }
-    if (res.status === 409) {
-      // Backend meldet fuzzy-match — vorhandenes ähnliches Item wiederverwenden
-      const body = await res.json() as { detail?: { similar_items?: Array<{ id: number }> } }
-      const existingId = body.detail?.similar_items?.[0]?.id ?? null
-      if (existingId) {
-        console.log(`[Group E] createTestItem: 409 fuzzy-match — reuse item ${existingId}`)
-        return existingId
-      }
-    }
+    // Kein Wiederverwenden fremder Items bei 409 (B8950-012): der Marker-Name ist eindeutig.
     console.warn(`[Group E] createTestItem failed: ${res.status}`)
     return null
   }
@@ -1348,12 +1207,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
     const health = await fetch(`${BACKEND_URL}/api/v1/categories`)
     if (!health.ok) throw new Error(`[Group E] Backend health check failed: ${health.status}`)
 
-    // Login
-    try {
-      eOwnerToken = await shopOwnerLogin(E2E_OWNER_EMAIL, E2E_OWNER_PASSWORD)
-    } catch (err) {
-      console.warn(`[Group E] Login failed: ${err} — some tests will be skipped`)
-    }
+    eOwnerToken = W.ownerToken
 
     if (eOwnerToken) {
       // 1. Finde eine gültige category_id dynamisch (statt hardcoded item_id=1)
@@ -1365,6 +1219,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
         const itemId = await createTestItem(eOwnerToken, categoryId)
         if (itemId) {
           eCreatedItemIds.push(itemId)
+          W.tracker.item(itemId)
           // 3. Erstelle ein ShopListing für dieses Item
           const listingId = await getOrCreateShopListing(eOwnerToken, itemId)
           if (listingId) {
@@ -1383,15 +1238,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
   })
 
   test.afterAll(async () => {
-    if (!eOwnerToken) return
-    for (const id of eCreatedOfferIds) {
-      await apiPatch(`/api/v1/shop-owner/offers/${id}`, { archived: true }, eOwnerToken).catch(() => {})
-      await apiDelete(`/api/v1/shop-owner/offers/${id}`, eOwnerToken).catch(() => {})
-    }
-    for (const id of eCreatedListingIds) {
-      await apiDelete(`/api/v1/shop-owner/shop-listings/${id}`, eOwnerToken).catch(() => {})
-    }
-    // Items können nicht via shop-owner gelöscht werden — bleiben in Test-DB (0-cost)
+    await W.cleanupSpecData()
   })
 
   // ──────────────────────────────────────────────────────────────────────────

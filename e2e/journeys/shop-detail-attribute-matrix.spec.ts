@@ -28,7 +28,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
-import { adminLogin, shopOwnerLogin } from './_helpers'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
 
 // ─── Port-Safety ──────────────────────────────────────────────────────────────
 
@@ -41,10 +41,9 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 // ─── Fresh Owner Setup ────────────────────────────────────────────────────────
 
-const UNIQUE_SUFFIX = Date.now().toString(36)
-const FRESH_EMAIL = `e2e-attrib-${UNIQUE_SUFFIX}@pundo-e2e.io`
-const FRESH_PASSWORD = 'E2eAttribTest!99'
-const FRESH_SHOP_NAME = `E2E Attribute Shop ${UNIQUE_SUFFIX}`
+// B8950-012: eigener Spec-Shop per Admin-API + Impersonation (statt Registrierung + Passwort-Login);
+// afterAll löscht ihn per Admin-Delete.
+let specShopRef: WorkerShop | null = null
 
 interface FreshOwner {
   token: string
@@ -75,67 +74,15 @@ async function ensureAuth(page: Page) {
 
 test.beforeAll(async () => {
   test.setTimeout(120_000)
+  specShopRef = await specShop('ATTRIB')
+  freshOwner.token = specShopRef.ownerToken
+  freshOwner.shopId = specShopRef.id
+  freshOwner.shopSlug = specShopRef.slug
+  console.log(`[shop-detail-attribute-matrix] Spec-Shop ready: shopId=${freshOwner.shopId} shopSlug=${freshOwner.shopSlug}`)
+})
 
-  // Register owner — correct field names per backend API
-  const regRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: FRESH_EMAIL,
-      password: FRESH_PASSWORD,
-      name: `E2E Attribute Owner ${UNIQUE_SUFFIX}`,
-      shop_name: FRESH_SHOP_NAME,
-      shop_address: 'Finikoudes Beach, Larnaca, Cyprus',
-    }),
-  })
-  if (!regRes.ok) {
-    console.warn(`[shop-detail-attribute-matrix] Registration failed (${regRes.status}) — backend may not support new columns yet. Skipping.`)
-    return
-  }
-  const regBody = await regRes.json() as { id?: number; shop_id?: number }
-  const ownerId = regBody.id
-
-  // Approve via admin API (cookie-based auth)
-  const adminToken = await adminLogin()
-  const approveRes = await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
-    body: JSON.stringify({ status: 'approved' }),
-  })
-  const approveBody = approveRes.ok ? await approveRes.json() as { shop_id?: number } : {}
-  const shopId = approveBody.shop_id ?? regBody.shop_id ?? null
-
-  // Set geo so slug is generated
-  if (shopId) {
-    await fetch(`${BACKEND_URL}/api/v1/admin/shops/${shopId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
-      body: JSON.stringify({ lat: 34.9009, lng: 33.6230 }),
-    })
-  }
-
-  // Login to obtain shop_owner_token (HttpOnly cookie value)
-  freshOwner.token = await shopOwnerLogin(FRESH_EMAIL, FRESH_PASSWORD)
-
-  // Set shopId from approval
-  freshOwner.shopId = shopId ?? 0
-
-  // Get slug via admin endpoint (shop-owner/shop endpoint does not expose slug)
-  if (shopId) {
-    const adminShopRes = await fetch(`${BACKEND_URL}/api/v1/admin/shops/${shopId}`, {
-      headers: { Cookie: `admin_token=${adminToken}` },
-    })
-    if (adminShopRes.ok) {
-      const adminShopBody = await adminShopRes.json() as { slug?: string }
-      freshOwner.shopSlug = adminShopBody.slug ?? null
-    }
-  }
-
-  console.log(
-    `[shop-detail-attribute-matrix] Fresh owner ready: ${FRESH_EMAIL}`,
-    `shopId=${freshOwner.shopId}`,
-    `shopSlug=${freshOwner.shopSlug ?? 'null (no geo yet)'}`
-  )
+test.afterAll(async () => {
+  await specShopRef?.destroy()
 })
 
 // ─── AC-01: Owner sets service_radius_km=30 ───────────────────────────────────

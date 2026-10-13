@@ -2,14 +2,13 @@
  * B5900-013 — Kundenseiten zeigen nie "null/None/NaN EUR"
  *
  * Läuft ausschließlich gegen Test-Instanz 3500 / 8500. Kein DB-Reset.
- * Legt eigene Fixtures an (3 Items im E2E-Test-Shop: fixed / on_request / free) und setzt per psql
+ * Legt eigene Fixtures an (3 Items im WORKER-Shop: fixed / on_request / free; B8950-012) und setzt per psql
  * NUR das eigene fixed-Offer auf den Altdaten-Zustand (price_tiers = []). Braucht DATABASE_URL_TEST + psql,
- * sonst skip. Aufräumen: eigene Offers archivieren/löschen, eigene Listings löschen (Items bleiben).
+ * sonst Fehler (kein stiller Skip). Aufräumen: workerShop.cleanupSpecData() (Offers archivieren, Listings löschen); die
+ * Marker-Items (E2E-<RUN>-B5900-013-…) löscht der Worker-Teardown bzw. der Reporter.
  */
-import { test, expect } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
-import { execFileSync } from 'child_process'
+import { test, expect, type WorkerShop } from './_helpers/worker-shop'
+import { marker, rand4, psql } from './_helpers/test-data'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -17,43 +16,21 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-013] Safety: NEVER use production ports!')
 }
 
-const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as {
-  email: string; password: string; shopId: number; shopSlug: string
-}
 test.describe.configure({ mode: 'serial' })
 
-const DB = (process.env.DATABASE_URL_TEST ?? '').replace('+psycopg', '')
-const HAVE_DB = DB.includes('pundo_test')
-function psql(sql: string): string {
-  return execFileSync('psql', [DB, '-Atc', sql], { encoding: 'utf8' }).trim()
-}
-
-const TS = Date.now()
-const PREFIX = `E2E-B5900-013-${TS}`
+const PREFIX = `${marker('B5900-013')}-${rand4()}`
 const KINDS = ['fixed', 'onreq', 'free'] as const
 type Kind = (typeof KINDS)[number]
 const created: Record<Kind, { itemId: number; slug: string; listingId: number; offerId: number }> =
   {} as never
-let token = ''
+let shop: WorkerShop
 const BAD = /\b(null|undefined|NaN|None)\b\s*(EUR|€)?/
 
-const headers = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' })
-async function api(method: string, p: string, body?: unknown) {
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner${p}`, {
-    method, headers: headers(), body: body ? JSON.stringify(body) : undefined,
-  })
-  const text = await r.text()
-  return { status: r.status, json: text ? JSON.parse(text) : null }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untypisierte Backend-JSON-Antworten
+const api = (method: string, p: string, body?: unknown) => shop.api<any>(method, p, body)
 
-test.beforeAll(async () => {
-  test.skip(!HAVE_DB, 'DATABASE_URL_TEST (pundo_test) + psql nötig')
-  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-  })
-  token = (r.headers.get('set-cookie') ?? '').match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-  expect(token, 'Login fehlgeschlagen').not.toBe('')
+test.beforeAll(async ({ workerShop }) => {
+  shop = workerShop
   const categoryId = Number(psql('select category_id from items where category_id is not null limit 1'))
 
   for (const kind of KINDS) {
@@ -78,17 +55,11 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  for (const kind of KINDS) {
-    const c = created[kind]
-    if (!c) continue
-    await api('PATCH', `/offers/${c.offerId}`, { archived: true }).catch(() => {})
-    await api('DELETE', `/offers/${c.offerId}`).catch(() => {})
-    await api('DELETE', `/shop-listings/${c.listingId}`).catch(() => {})
-  }
+  await shop?.cleanupSpecData()
 })
 
 test('Shop-Seite (en): No price listed / Price on request / Free, nie "null EUR"', async ({ page }) => {
-  await page.goto(`${FRONTEND_URL}/en/shops/${STATE.shopSlug}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${FRONTEND_URL}/en/shops/${shop.slug}`, { waitUntil: 'domcontentloaded' })
   const main = page.locator('body')
   await expect(main.getByText(`${PREFIX}-fixed`).first()).toBeAttached()
   await expect(main.getByText('No price listed').first()).toBeVisible()

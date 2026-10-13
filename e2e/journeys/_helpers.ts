@@ -7,6 +7,9 @@
  * parallel (workers: 3) and hit the backend's rate limit of 10 logins/minute.
  */
 
+import fs from 'fs'
+import path from 'path'
+
 const BACKEND_URL =
   process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -59,6 +62,43 @@ async function loginWithRetry(
 }
 
 /**
+ * POST /api/v1/shop-owner/onboarding with retry on HTTP 429 (5/min per worker/IP).
+ * No auth header: internal-key prefixes do NOT bypass rate limits (B6220-001).
+ * Backoff is long enough (up to ~7 retries, 15s base x1.5 + jitter) to span the 60s window.
+ * Returns the parsed JSON response; throws on any non-OK status.
+ */
+export async function shopOwnerOnboardWithRetry(
+  body: Record<string, unknown>,
+  maxRetries = 7,
+  baseDelayMs = 15_000
+): Promise<Record<string, unknown>> {
+  const tag = `shopOwnerOnboard(${String((body as { email?: unknown }).email ?? '')})`
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    })
+
+    if (res.status === 429 && attempt < maxRetries) {
+      const jitter = Math.random() * 10_000
+      const delay = Math.min(Math.round(baseDelayMs * Math.pow(1.5, attempt) + jitter), 60_000)
+      console.log(`[e2e-helpers] 429 Rate limit (${tag}) — retry ${attempt + 1}/${maxRetries} in ${delay}ms`)
+      await new Promise(r => setTimeout(r, delay))
+      continue
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`${tag}: HTTP ${res.status} — ${text}`)
+    }
+    return (await res.json()) as Record<string, unknown>
+  }
+  throw new Error(`${tag}: still 429 after ${maxRetries} retries`)
+}
+
+/**
  * Log in as a shop-owner and return the raw shop_owner_token cookie value.
  * Retries on HTTP 429 with exponential backoff + jitter.
  */
@@ -71,14 +111,31 @@ export function shopOwnerLogin(email: string, password: string): Promise<string>
   )
 }
 
+/** Admin-Token aus dem globalen Setup (e2e/.test-state.json, ein Login pro Lauf) — vermeidet Login-Bursts. */
+function cachedStateAdminToken(): string | undefined {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as { adminToken?: string | null }
+    return raw.adminToken ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Log in as an admin and return the raw admin_token cookie value.
+ * Mit den Default-Credentials wird (B8950-012) zuerst der Admin-Token aus dem globalen Setup wiederverwendet:
+ * ~30 beforeAll-Hooks riefen sonst /admin/auth/login auf und rissen das Limit von 10/min — der UI-Login-Test
+ * (shop-owner-admin-approval-flow AC-1) lief dadurch in 429. Ein anderer Account loggt weiterhin echt ein.
  * Retries on HTTP 429 with exponential backoff + jitter.
  */
 export function adminLogin(
   email = 'e2e-admin@pundo-e2e.io',
   password = 'E2eAdminPassword!99'
 ): Promise<string> {
+  if (email === 'e2e-admin@pundo-e2e.io' && password === 'E2eAdminPassword!99') {
+    const cached = cachedStateAdminToken()
+    if (cached) return Promise.resolve(cached)
+  }
   return loginWithRetry(
     `${BACKEND_URL}/api/v1/admin/auth/login`,
     { email, password },

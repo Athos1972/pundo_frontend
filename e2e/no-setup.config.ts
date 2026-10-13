@@ -13,7 +13,8 @@ const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort
 export default defineConfig({
   testDir: '.',
   testIgnore: ['**/_*.spec.ts', '**/_*.ts'],
-  // Kein globalSetup — .test-state.json muss bereits vorhanden sein
+  // Kein volles globalSetup — .test-state.json muss bereits vorhanden sein; nur Frontend-Frische prüfen
+  globalSetup: './frontend-freshness.ts',
   workers: 2,
   use: {
     baseURL: frontendUrl,

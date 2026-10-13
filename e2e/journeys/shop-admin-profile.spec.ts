@@ -17,7 +17,8 @@
  *     übernommen werden.
  *
  * Design-Prinzip: Kein .test-state.json / kein DB-Reset nötig.
- *   - Jeder Testlauf registriert einen eigenen Owner (Suffix = Timestamp-basiert)
+ *   - B8950-012: Jeder Testlauf legt per Admin-API einen eigenen Spec-Shop an (specShop, Impersonation —
+ *     keine Registrierung/kein Login, kein Rate-Limit) und löscht ihn in afterAll per Admin-Delete
  *   - Tests laufen daher auch mit E2E_REUSE_STATE=1 stabil
  *   - Szenarien A → B → C teilen denselben frischen Shop (natürliche Sequenz)
  *
@@ -42,7 +43,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
-import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
 
 // ─── Port-Safety ──────────────────────────────────────────────────────────────
 
@@ -55,18 +56,12 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const FRONTEND_HOST = new URL(BASE_URL).hostname  // '127.0.0.1' or 'localhost'
 
-const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
-
 // ─── Fresh-Owner — pro Testlauf einmalig registriert ─────────────────────────
 //
 // Kein .test-state.json, kein DB-Reset nötig.
 // Der frische Owner ist nach der Registrierung garantiert leer.
 
-const UNIQUE_SUFFIX = Date.now().toString(36)
-const FRESH_EMAIL = `e2e-profile-${UNIQUE_SUFFIX}@pundo-e2e.io`
-const FRESH_PASSWORD = 'E2eProfileTest!99'
-const FRESH_SHOP_NAME = `E2E Profile Shop ${UNIQUE_SUFFIX}`
-const FRESH_SHOP_ADDRESS = 'Finikoudes Beach, Larnaca, Cyprus'
+let shop: WorkerShop
 
 interface FreshOwner {
   token: string
@@ -79,7 +74,7 @@ const freshOwner: FreshOwner = {
   token: '',
   shopId: 0,
   shopSlug: null,
-  shopName: FRESH_SHOP_NAME,
+  shopName: '',
 }
 
 // Empty storageState — auth wird pro Test via Cookie-Injection gesetzt (ensureAuth)
@@ -87,39 +82,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 // ─── Admin-Credentials (für Approve + Cross-Role-Tests) ──────────────────────
 
-const ADMIN_EMAIL = 'e2e-admin@pundo-e2e.io'
-const ADMIN_PASSWORD = 'E2eAdminPassword!99'
-
 // ─── API-Helpers ──────────────────────────────────────────────────────────────
-
-async function adminLogin(): Promise<string> {
-  const { execSync } = await import('child_process')
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
-  try {
-    execSync(
-      `${pyBin} scripts/seed_admin.py --email ${ADMIN_EMAIL} --password ${ADMIN_PASSWORD}`,
-      { cwd: BACKEND_REPO, stdio: 'pipe' }
-    )
-  } catch { /* admin may already exist */ }
-  return adminApiLogin(ADMIN_EMAIL, ADMIN_PASSWORD)
-}
-
-/** Generic admin fetch helper — uses Cookie auth (admin_token=...) */
-async function adminFetch(
-  method: string,
-  urlPath: string,
-  body: Record<string, unknown> | undefined,
-  adminToken: string
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const opts: RequestInit = {
-    method,
-    headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
-  }
-  if (body !== undefined) opts.body = JSON.stringify(body)
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, opts)
-  const data = res.status !== 204 ? await res.json() : {}
-  return { ok: res.ok, status: res.status, data }
-}
 
 async function _adminPatchShop(adminToken: string, shopId: number, body: Record<string, unknown>): Promise<void> {
   const res = await fetch(`${BACKEND_URL}/api/v1/admin/shops/${shopId}`, {
@@ -132,10 +95,6 @@ async function _adminPatchShop(adminToken: string, shopId: number, body: Record<
 
 function ownerAuthHeader(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-}
-
-async function getOwnerToken(email: string, password: string): Promise<string> {
-  return shopOwnerLogin(email, password)
 }
 
 async function getShopProfile(token: string): Promise<Record<string, unknown>> {
@@ -205,87 +164,18 @@ async function waitHydrated(page: Page) {
 
 test.beforeAll(async () => {
   test.setTimeout(120_000)
-  const adminToken = await adminLogin()
-
-  // Registrieren
-  const regRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: FRESH_EMAIL,
-      password: FRESH_PASSWORD,
-      name: `E2E Profile Owner ${UNIQUE_SUFFIX}`,
-      shop_name: FRESH_SHOP_NAME,
-      shop_address: FRESH_SHOP_ADDRESS,
-    }),
-  })
-  if (!regRes.ok && regRes.status !== 400) {
-    throw new Error(`[profile-spec] Registrierung fehlgeschlagen: ${regRes.status} ${await regRes.text()}`)
-  }
-
-  // Owner-ID ermitteln
-  let ownerId: number | null = null
-  if (regRes.ok) {
-    const reg = await regRes.json() as { id?: number }
-    ownerId = reg.id ?? null
-  }
-  if (!ownerId) {
-    // Fallback: aus Admin-Liste suchen (wenn bereits registriert)
-    const listRes = await adminFetch('GET', '/api/v1/admin/shop-owners?limit=200', undefined, adminToken)
-    const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
-    const found = owners.find(o => o.email === FRESH_EMAIL)
-    ownerId = found?.id ?? null
-  }
-  if (!ownerId) {
-    throw new Error(`[profile-spec] Owner-ID für ${FRESH_EMAIL} nicht gefunden`)
-  }
-
-  // Approve → liefert shop_id
-  const approveRes = await adminFetch(
-    'PATCH', `/api/v1/admin/shop-owners/${ownerId}`, { status: 'approved' }, adminToken
-  )
-  const shopId = (approveRes.data as { shop_id?: number })?.shop_id
-  if (!shopId) {
-    throw new Error(`[profile-spec] Approval hat keine shop_id zurückgeliefert: ${JSON.stringify(approveRes.data)}`)
-  }
-  freshOwner.shopId = shopId
-
-  // Geo setzen → damit ein Slug generiert wird (für Customer-Sicht-Tests)
-  const patchRes = await adminFetch(
-    'PATCH', `/api/v1/admin/shops/${shopId}`,
-    { lat: 34.9100, lng: 33.6190 },
-    adminToken
-  )
-  freshOwner.shopSlug = (patchRes.data as { slug?: string })?.slug ?? null
-
-  // Owner einloggen → Token für API-Calls + Browser-Cookie-Injection
-  freshOwner.token = await getOwnerToken(FRESH_EMAIL, FRESH_PASSWORD)
-
-  console.log(
-    `[profile-spec] Frischer Owner registriert: ${FRESH_EMAIL}`,
-    `shopId=${freshOwner.shopId}`,
-    `shopSlug=${freshOwner.shopSlug ?? 'null (kein Geo)'}`
-  )
+  shop = await specShop('PROFILE')
+  freshOwner.shopId = shop.id
+  freshOwner.shopSlug = shop.slug
+  freshOwner.shopName = shop.name
+  freshOwner.token = shop.ownerToken
+  console.log(`[profile-spec] Spec-Shop ${shop.id} (${shop.slug}), Owner per Impersonation`)
 })
 
-// ─── File-Level Teardown: Frischen Owner deaktivieren ────────────────────────
-//
-// Hält die Test-DB sauber. Fehler werden nur geloggt, nie geworfen.
+// ─── File-Level Teardown: Spec-Shop löschen (Admin-API) ──────────────────────
 
 test.afterAll(async () => {
-  if (!freshOwner.shopId) return
-  try {
-    const adminToken = await adminLogin()
-    const listRes = await adminFetch('GET', '/api/v1/admin/shop-owners?limit=200', undefined, adminToken)
-    const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
-    const found = owners.find(o => o.email === FRESH_EMAIL)
-    if (found) {
-      await adminFetch('PATCH', `/api/v1/admin/shop-owners/${found.id}`, { status: 'rejected' }, adminToken)
-      console.log(`[profile-spec] afterAll: Owner ${FRESH_EMAIL} auf rejected gesetzt.`)
-    }
-  } catch (err) {
-    console.warn('[profile-spec] afterAll: Cleanup fehlgeschlagen (nicht kritisch):', err)
-  }
+  await shop?.destroy()
 })
 
 // ─── Szenario A: Tabula Rasa — alle Felder zum ersten Mal befüllen ────────────
@@ -532,10 +422,12 @@ test.describe.serial('Szenario A — Tabula Rasa: Erstes Befüllen aller Felder'
       return
     }
 
-    await page.goto(`${BASE_URL}/shops/${shopSlug}`)
+    await page.goto(`${BASE_URL}/en/shops/${shopSlug}`)
     await page.waitForLoadState('load')
 
     const url = page.url()
+    // Gestreamte Sektionen (Suspense) abwarten, bevor der Body-Text gelesen wird (B8950-012)
+    await expect(page.getByRole('heading', { name: 'Opening hours' })).toBeVisible({ timeout: 20_000 })
     const bodyText = await page.locator('body').innerText()
     expect(url.includes('404') || url.includes('not-found'), 'Shop-Seite kein 404').toBe(false)
 
@@ -923,12 +815,14 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
       return
     }
 
-    await page.goto(`${BASE_URL}/shops/${shopSlug}`)
+    await page.goto(`${BASE_URL}/en/shops/${shopSlug}`)
     await page.waitForLoadState('load')
 
     const url = page.url()
     expect(url.includes('404') || url.includes('not-found'), 'Kein 404').toBe(false)
 
+    // Gestreamte Sektionen (Suspense) abwarten, bevor der Body-Text gelesen wird (B8950-012)
+    await expect(page.getByRole('heading', { name: 'Opening hours' })).toBeVisible({ timeout: 20_000 })
     const bodyText = await page.locator('body').innerText()
 
     // WhatsApp-Link (B8 hat +35799888777 gesetzt)
@@ -963,8 +857,10 @@ test.describe.serial('Szenario B — Edit-Flow: Gezielte Änderungen + Revert', 
       await putOpeningHours(ownerToken, updated)
     }
 
-    await page.goto(`${BASE_URL}/shops/${shopSlug}`)
+    await page.goto(`${BASE_URL}/en/shops/${shopSlug}`)
     await page.waitForLoadState('load')
+    // Gestreamte Sektion (Suspense) abwarten, bevor der Body-Text gelesen wird (B8950-012)
+    await expect(page.getByRole('heading', { name: 'Opening hours' })).toBeVisible({ timeout: 20_000 })
 
     const bodyText = await page.locator('body').innerText()
     const hasClosedText = /closed|geschlossen|κλειστό|закрыто/i.test(bodyText)

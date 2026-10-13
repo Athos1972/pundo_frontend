@@ -19,6 +19,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { adminLogin as adminApiLogin } from './_helpers'
+import { RUN_ID, TestDataTracker } from './_helpers/test-data'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -29,7 +30,9 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
-const PREFIX = `e2e-adm-${UUID}`
+// B8950-012: Run-ID im Präfix (verankerter Selektor ^e2e-<run>-); der angelegte Pending-Owner wird per Admin-Shop-Delete entfernt
+const PREFIX = `e2e-${RUN_ID}-adm-${UUID}`
+const tracker = new TestDataTracker()
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 
@@ -256,6 +259,7 @@ test.describe.serial('Admin Data Management Sweep', () => {
       if (pendingRegRes.ok) {
         ctx.pendingOwnerId = (pendingRegRes.data as { id: number }).id
         ctx.fixtures.push({ name: `${PREFIX}-pending-owner`, id: ctx.pendingOwnerId, built: true, deleted: false, type: 'owner' })
+        tracker.owner(ctx.pendingOwnerId)
       }
     } else {
       ctx.pendingOwnerId = pendingOwners[0].id
@@ -282,10 +286,8 @@ test.describe.serial('Admin Data Management Sweep', () => {
       if (ctx.guideId) {
         try { await apiFetch('DELETE', `/api/v1/admin/guides/${ctx.guideId}`, undefined, adminHeaders()) } catch { /* ok */ }
       }
-      // Reject pending owner (if we created them)
-      if (ctx.pendingOwnerId && ctx.fixtures.find(f => f.name === `${PREFIX}-pending-owner`)) {
-        try { await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.pendingOwnerId}`, { status: 'rejected' }, adminHeaders()) } catch { /* ok */ }
-      }
+      // Pending-Owner (falls von uns angelegt) samt Shop löschen — statt nur auf "rejected" zu setzen
+      await tracker.cleanup()
     }
 
     for (const f of ctx.fixtures) {

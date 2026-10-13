@@ -3,9 +3,7 @@
  * Minimale Verifikation: API + Page-Load + PriceTierEditor-Dropdown
  */
 
-import { test, expect } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
+import { test, expect } from './_helpers/worker-shop'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -14,16 +12,11 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-001] Safety: NEVER use production ports!')
 }
 
-interface TestState {
-  email: string
-  password: string
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-const STATE: TestState = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')
-)
-
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
+// B8950-012: läuft im Worker-Shop (storageState aus der Fixture) mit eigenem Marker-Item
+// statt eines echten Prod-Items; keine stillen Skips.
+test.afterAll(async ({ workerShop }) => {
+  await workerShop.cleanupSpecData()
+})
 
 // ─── AC-1: API liefert Einheiten ─────────────────────────────────────────────
 
@@ -37,49 +30,17 @@ test('AC-1 API: price-units endpoint liefert Daten', async () => {
 
 // ─── AC-2: Seite lädt, Select hat Optionen ───────────────────────────────────
 
-test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', async ({ page }) => {
+test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', async ({ page, workerShop }) => {
   // Short timeouts — fail fast if something is broken
   page.setDefaultTimeout(20_000)
 
-  // Direkte API-Route für Offer-Erstellung nutzen, dann Edit-Seite öffnen
-  const token = await (async () => {
-    const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: STATE.email, password: STATE.password }),
-    })
-    const h = r.headers.get('set-cookie') ?? ''
-    return h.match(/shop_owner_token=([^;]+)/)?.[1] ?? ''
-  })()
-
-  expect(token, 'Login fehlgeschlagen').not.toBe('')
-
-  // Fetch a valid item_id from the products API (item_id: 1 does not exist in test DB)
-  const itemsRes = await fetch(`${BACKEND_URL}/api/v1/products?limit=1`, { signal: AbortSignal.timeout(5000) })
-  const itemsBody = await itemsRes.json() as { items?: Array<{ id: number }> }
-  const itemId = itemsBody.items?.[0]?.id
-  if (!itemId) { test.skip(true, 'No items in test DB'); return }
-  console.log(`[AC-2] Using item_id=${itemId} for ShopListing`)
-
-  // ShopListing + Offer via API
-  const slR = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ item_id: itemId }),
+  // Eigenes Marker-Item + Listing + Offer via Owner-API (Impersonation-Token des Worker-Shops)
+  const { listingId } = await workerShop.createItem('B5900-001', 'units', { listing: true })
+  const ofR = await workerShop.api<{ id?: number }>('POST', '/offers', {
+    shop_listing_id: listingId, price_type: 'on_request', price_tiers: [],
   })
-  const slBody = await slR.json() as { id?: number; shop_listing_id?: number; detail?: { shop_listing_id?: number } }
-  const shopListingId = slBody.id ?? slBody.shop_listing_id ?? slBody.detail?.shop_listing_id
-
-  if (!shopListingId) { test.skip(true, `ShopListing not available (response: ${JSON.stringify(slBody)})`); return }
-
-  const ofR = await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ shop_listing_id: shopListingId, price_type: 'on_request', price_tiers: [] }),
-  })
-  const ofBody = await ofR.json() as { id?: number }
-  const offerId = ofBody.id
-  if (!offerId) { test.skip(true, 'Offer could not be created'); return }
+  expect(ofR.status, ofR.text).toBe(201)
+  const offerId = ofR.json.id as number
 
   console.log(`[AC-2] Offer ${offerId} erstellt, navigiere zu Edit-Seite...`)
 
@@ -112,9 +73,4 @@ test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', 
   const optCount = await unitSelect.evaluate((el: HTMLSelectElement) => el.options.length)
   expect(optCount, `Unit-Dropdown hat nur ${optCount} Option(en)`).toBeGreaterThan(2)
   console.log(`AC-2 PASS: Unit-Dropdown hat ${optCount} Optionen`)
-
-  // Cleanup
-  await fetch(`${BACKEND_URL}/api/v1/shop-owner/offers/${offerId}`, {
-    method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {})
 })

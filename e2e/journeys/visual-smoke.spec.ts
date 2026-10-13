@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
+import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
+import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
 
 // Produktseite mit bekannten lokalen product_images — ändere slug wenn Testdaten anders
 const PRODUCT_WITH_IMAGES = 'ferplast-ferplast-sport-g8-200-black-leash'
@@ -102,7 +104,9 @@ test.describe('Visual Smoke-Test', () => {
 
 test.describe('Shop-Owner Smoke — @pundo.com Auto-Approve (F6710)', () => {
   const UUID = randomUUID().slice(0, 8)
-  const EMAIL = `smoke-shop-${UUID}@pundo.com`
+  // B8950-012: Marker-Konvention + Admin-Shop-Delete; Setup-Fehler werfen (statt S1–S3 still zu überspringen)
+  const EMAIL = e2eEmail('VISUAL-SMOKE', 'pundo.com')
+  const tracker = new TestDataTracker()
   const PASSWORD = 'E2eTestPassword!99'
 
   let ownerId: number | null = null
@@ -110,68 +114,39 @@ test.describe('Shop-Owner Smoke — @pundo.com Auto-Approve (F6710)', () => {
   let ownerToken: string | null = null
 
   test.beforeAll(async () => {
+    test.setTimeout(300_000) // Onboarding (5/min) und Login (10/min) sind rate-limitiert (kein Bypass, B6220-001)
     // Register via onboarding — @pundo.com must be auto-approved
-    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: EMAIL,
-        password: PASSWORD,
-        provider_type: 'dienstleister',
-        domain_slugs: ['friseur'],
-        shop_name: `Smoke Shop ${UUID}`,
-        location: { lat: 34.917, lng: 33.636 },
-        contact: { phone: '+35799000001' },
-        credentials: { type: 'email', email: EMAIL, password: PASSWORD, name: `Smoke ${UUID}` },
-        lang: 'en',
-      }),
-      signal: AbortSignal.timeout(30_000),
+    const data = await shopOwnerOnboardWithRetry({
+      email: EMAIL,
+      password: PASSWORD,
+      provider_type: 'dienstleister',
+      domain_slugs: ['friseur'],
+      shop_name: e2eName('VISUAL-SMOKE', `Shop ${UUID}`),
+      location: { lat: 34.917, lng: 33.636 },
+      contact: { phone: '+35799000001' },
+      credentials: { type: 'email', email: EMAIL, password: PASSWORD, name: `Smoke ${UUID}` },
+      lang: 'en',
     })
-    if (!res.ok) return // tests will skip individually
+    if (data.status !== 'approved') {
+      throw new Error(`SETUP BROKEN: expected status=approved for @pundo.com, got "${String(data.status)}" — is Auto-Approve deployed?`)
+    }
 
-    const data = await res.json()
-    if (data.status !== 'approved') return
-
-    // Login
-    const loginRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
-      signal: AbortSignal.timeout(30_000),
-    })
-    if (!loginRes.ok) return
-
-    const cookieHeader = loginRes.headers.get('set-cookie') ?? ''
-    const tokenMatch = cookieHeader.match(/shop_owner_token=([^;]+)/)
-    if (!tokenMatch) return
-    ownerToken = tokenMatch[1]
+    // Login (retries on 429)
+    ownerToken = await shopOwnerLogin(EMAIL, PASSWORD)
 
     const meRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/me`, {
       headers: { Authorization: `Bearer ${ownerToken}` },
     })
-    if (!meRes.ok) return
+    if (!meRes.ok) throw new Error(`SETUP BROKEN: GET /shop-owner/me → ${meRes.status}`)
     const me = await meRes.json()
     ownerId = me.id as number
     shopId = me.shop_id as number
+    tracker.owner(ownerId)
   })
 
   test.afterAll(async () => {
-    if (!ownerId) return
-    // Cleanup via admin API
-    const adminLoginRes = await fetch(`${BACKEND_URL}/api/v1/admin/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'e2e-admin@pundo-e2e.io', password: 'E2eAdminPassword!99' }),
-      signal: AbortSignal.timeout(15_000),
-    }).catch(() => null)
-    if (!adminLoginRes?.ok) return
-    const cookieHeader = adminLoginRes.headers.get('set-cookie') ?? ''
-    const adminTokenMatch = cookieHeader.match(/admin_token=([^;]+)/)
-    if (!adminTokenMatch) return
-    await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${adminTokenMatch[1]}` },
-    }).catch(() => null)
+    // Admin-Shop-Delete kaskadiert den Owner (Owner-Delete allein ließ den Shop liegen)
+    await tracker.cleanup()
   })
 
   test('S1 — @pundo.com onboarding → status=approved (kein pending)', async () => {

@@ -18,7 +18,8 @@
 
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
-import { adminLogin, shopOwnerLogin } from './_helpers'
+import { adminLogin, shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
+import { RUN_ID, TestDataTracker, adminApi } from './_helpers/test-data'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -36,7 +37,15 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 // ─── Test identity ────────────────────────────────────────────────────────────
 
 const UUID = randomUUID().slice(0, 8)
-const PREFIX = `e2e-quick-ob-${UUID}`
+// B8950-012: Run-ID im Präfix (verankerter Selektor ^e2e-<run>-); afterAll löscht alle Owner/Shops dieses Präfixes
+const PREFIX = `e2e-${RUN_ID}-quick-ob-${UUID}`
+
+test.afterAll(async () => {
+  const tracker = new TestDataTracker()
+  const owners = await adminApi<{ items: Array<{ id: number }> }>('GET', `/shop-owners?q=${encodeURIComponent(PREFIX)}&limit=100`)
+  for (const o of owners.json?.items ?? []) tracker.owner(o.id)
+  await tracker.cleanup()
+})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -446,14 +455,16 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     //   - customer search uses Accept-Language header (not lang= query param)
     //   - pre-approval draft check via admin API
 
+    // Onboarding (5/min) und Login (10/min) sind rate-limitiert: parallele Specs können Wartezeiten von
+    // Minuten erzwingen (B6220-001: kein Bypass) → großzügiges Timeout + Retry-Helper (B8950-012).
+    test.setTimeout(300_000)
+
     const email = `${PREFIX}-t9@pundo-e2e.io`
     const password = 'E2eTestPassword!99'
 
     // ── 1. Onboarding-Submit via API ─────────────────────────────────────────
-    const submitRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const submitData = await shopOwnerOnboardWithRetry(
+      {
         provider_type: 'handwerker',
         domain_slugs: ['elektriker'],
         specialty_slugs: ['solaranlagen'],
@@ -467,10 +478,8 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
         shop_name: `${PREFIX}-t9-shop`,
         credentials: { type: 'email', email, password, name: `${PREFIX} T9` },
         lang: 'de',
-      }),
-    })
-    expect(submitRes.ok, 'T9: onboarding submit must succeed').toBeTruthy()
-    const submitData = await submitRes.json() as { shop_id?: number; shop?: { id: number }; owner_id?: number }
+      }
+    ) as { shop_id?: number; shop?: { id: number }; owner_id?: number }
     const shopId: number = submitData.shop_id ?? submitData.shop?.id ?? 0
     expect(shopId, 'T9: submit must return shop_id').toBeGreaterThan(0)
 

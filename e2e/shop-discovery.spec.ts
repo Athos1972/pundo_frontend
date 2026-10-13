@@ -15,6 +15,9 @@
  */
 
 import { test, expect } from '@playwright/test'
+// B8950-012: schreibende Blöcke (Angebot anlegen, Öffnungszeiten) laufen im Worker-Shop statt im geteilten e2e-test-shop
+import { test as shopTest } from './journeys/_helpers/worker-shop'
+import { marker } from './journeys/_helpers/test-data'
 import fs from 'fs'
 import path from 'path'
 
@@ -238,22 +241,14 @@ test.describe('Shop-Detailseite', () => {
 
 // ─── Shop-Admin: Produkt anlegen → via API abrufbar ──────────────────────────
 
-test.describe('Shop-Produkt via Admin anlegen', () => {
-  // Nutzt gespeicherten Auth-State des Shop-Owners
-  test.use({
-    storageState: (() => {
-      const stateFile = path.join(__dirname, '.test-state.json')
-      if (fs.existsSync(stateFile)) {
-        return JSON.parse(fs.readFileSync(stateFile, 'utf8')).storageState
-      }
-      return undefined
-    })(),
+shopTest.describe('Shop-Produkt via Admin anlegen', () => {
+  shopTest.afterAll(async ({ workerShop }) => {
+    await workerShop.cleanupSpecData()
   })
 
-  const TEST_OFFER_TITLE = 'E2E Geo-Test Olivenöl Angebot'
+  const TEST_OFFER_TITLE = `${marker('SHOP-DISCOVERY')} Geo-Test Olivenöl Angebot`
 
-  test('Produkt anlegen und via API abrufen', async ({ page }) => {
-    const state = loadStorageState()
+  shopTest('Produkt anlegen und via API abrufen', async ({ page, workerShop }) => {
 
     // Angebot mit neuem Item anlegen — neuer Unified Flow (Produkte → Angebote)
     await page.goto('/shop-admin/offers/new')
@@ -287,50 +282,20 @@ test.describe('Shop-Produkt via Admin anlegen', () => {
     // Kurze Pause für DB-Commit
     await page.waitForTimeout(500)
 
-    // Via API prüfen: Angebot gehört dem e2e-Shop
-    // fetchShopByOwner kann mehrere Shops zurückgeben wenn owner_id=1 auf Produktionsdaten zeigt.
-    // Bevorzuge den e2e-Shop-Slug aus dem test-state oder suche per Name.
-    const savedSlug = (state as Record<string, unknown>).shopSlug as string | null ?? null
-    let targetSlug: string | null = savedSlug
-
-    if (!targetSlug) {
-      // Suche per Shop-Name — findet den e2e-registrierten Shop
-      const searchRes = await fetch(`${BACKEND_URL}/api/v1/shops?q=${encodeURIComponent(state.shop_name)}&limit=20`)
-      if (searchRes.ok) {
-        const data = await searchRes.json()
-        const items = (Array.isArray(data) ? data : data?.items ?? []) as ShopRecord[]
-        const eShop = items.find(s => s.slug?.includes('e2e')) ?? items[0] ?? null
-        targetSlug = eShop?.slug ?? null
-      }
-    }
-
-    if (targetSlug) {
-      const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${targetSlug}/offers`)
-      if (res.ok) {
-        const offers: Array<{ title?: string | null }> = await res.json()
-        const found = offers.some((o) => (o.title ?? '').includes('Olivenöl'))
-        expect(found, 'Angebot nicht in API gefunden').toBe(true)
-      }
-    }
+    // Via Owner-API prüfen: das Angebot gehört dem Worker-Shop. (Der öffentliche Endpoint
+    // /shops/by-slug/{slug}/offers liefert nur Angebote mit aktiver AKTION — dieses on_request-Angebot hat keine;
+    // der alte Check lief deshalb ins Leere, B8950-012.)
+    const res = await workerShop.api<{ items: Array<{ title?: string | null }> }>('GET', '/offers?limit=100')
+    expect(res.status, res.text).toBe(200)
+    const found = res.json.items.some((o) => (o.title ?? '').includes('Olivenöl'))
+    expect(found, 'Angebot nicht in der Owner-API gefunden').toBe(true)
   })
 })
 
 // ─── Öffnungszeiten via Admin setzen → API prüfen ────────────────────────────
 
-test.describe('Öffnungszeiten via Admin setzen', () => {
-  test.use({
-    storageState: (() => {
-      const stateFile = path.join(__dirname, '.test-state.json')
-      if (fs.existsSync(stateFile)) {
-        return JSON.parse(fs.readFileSync(stateFile, 'utf8')).storageState
-      }
-      return undefined
-    })(),
-  })
-
-  test('Öffnungszeiten speichern und via API verifizieren', async ({ page }) => {
-    const state = loadStorageState()
-
+shopTest.describe('Öffnungszeiten via Admin setzen', () => {
+  shopTest('Öffnungszeiten speichern und via API verifizieren', async ({ page, workerShop }) => {
     await page.goto('/shop-admin/hours')
     // Days default to Closed — uncheck the first "Closed" checkbox to reveal time inputs
     const closedCheckboxes = page.locator('input[type="checkbox"][aria-label*="Closed"]')
@@ -345,16 +310,10 @@ test.describe('Öffnungszeiten via Admin setzen', () => {
     await page.getByRole('button', { name: /save hours|öffnungszeiten speichern/i }).click()
     await expect(page.getByRole('status')).toContainText(/saved|gespeichert/i, { timeout: 8_000 })
 
-    // Via API verifizieren
-    const shop = await fetchShopByOwner(state.ownerId)
-    if (shop?.id) {
-      const res = await fetch(`${BACKEND_URL}/api/v1/shops/${shop.id}/hours`)
-      if (res.ok) {
-        const hours = await res.json()
-        // Mindestens ein Slot vorhanden
-        const slots = Array.isArray(hours) ? hours : hours?.items ?? []
-        expect(slots.length).toBeGreaterThan(0)
-      }
-    }
+    // Via Owner-API verifizieren (die alte öffentliche Route /shops/{id}/hours gibt es nicht mehr → 404, der Check war wirkungslos)
+    const res = await workerShop.api<Array<{ day: number; closed: boolean; open?: string }>>('GET', '/shop/hours')
+    expect(res.status, res.text).toBe(200)
+    const first = res.json.find((d) => d.day === 0)
+    expect(first, 'Montag in den gespeicherten Öffnungszeiten').toMatchObject({ closed: false, open: '09:00' })
   })
 })

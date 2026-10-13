@@ -16,6 +16,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { e2eName, e2eSlug } from './_helpers/test-data'
 import { adminLogin as adminApiLogin } from './_helpers'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
@@ -27,7 +28,9 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
-const SHOP_NAME = `E2E Shop ${UUID}`
+// B8950-012: Marker am Anfang von Name und Slug (verankerter Selektor ^e2e-<run>-)
+const SHOP_NAME = e2eName('ADMIN-SHOP', 'Shop')
+const SHOP_SLUG = e2eSlug('ADMIN-SHOP', 'shop')
 
 interface StepEntry {
   step: number
@@ -196,9 +199,9 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
     // Slug wird aus Name auto-generiert — ggf. UUID-Suffix für Eindeutigkeit
     const slugInput = page.locator('input[name="slug"]')
     await expect(slugInput).toBeVisible({ timeout: 3_000 })
-    await slugInput.fill(`e2e-shop-${UUID}`)
+    await slugInput.fill(SHOP_SLUG)
     await page.locator('input[name="city"]').fill('E2E-City')
-    logStep(3, `Name+Slug eingegeben: ${SHOP_NAME} / e2e-shop-${UUID}`, 'Felder ausgefüllt', SHOP_NAME, 'PASS')
+    logStep(3, `Name+Slug eingegeben: ${SHOP_NAME} / ${SHOP_SLUG}`, 'Felder ausgefüllt', SHOP_NAME, 'PASS')
     logStep(4, 'Stadt: E2E-City', 'Feld ausgefüllt', 'E2E-City', 'PASS')
 
     // Step 5: Speichern → Redirect zu /admin/shops
@@ -241,13 +244,15 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
       path: '/',
     }])
 
-    // Navigiere zur gefilterten Shops-Liste
-    await page.goto(`${BASE_URL}/admin/shops?q=${encodeURIComponent(SHOP_NAME)}`)
+    // Drift-Fix (B8950-012): Seit fe5b5b6 (2026-06-05, "Shop-Delete") gibt es in der Shops-LISTE keinen Delete-Button
+    // mehr (EntityTable ohne deleteUrl). Der Hard-Delete lebt auf der Edit-Seite (ShopHardDeleteSection):
+    // "Delete shop…" → Dialog → Shop-Name zur Bestätigung eintippen → Löschen → Redirect auf /admin/shops.
+    await page.goto(`${BASE_URL}/admin/shops/${ctx.createdShopId}/edit`)
     await page.waitForLoadState('networkidle')
 
     // Step 8: Delete-Button klicken → Confirm-Dialog erscheint
-    const deleteBtn = page.locator('button', { hasText: /delete|löschen/i }).first()
-    await expect(deleteBtn).toBeVisible()
+    const deleteBtn = page.getByRole('button', { name: /^(delete shop|shop löschen)/i })
+    await expect(deleteBtn).toBeVisible({ timeout: 15_000 })
     await deleteBtn.click()
     logStep(8, 'Delete-Button geklickt', 'Confirm-Dialog erscheint', 'Button geklickt', 'PASS')
 
@@ -257,18 +262,21 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
     await expect(dialog).toBeVisible({ timeout: 5_000 })
     logStep(9, 'Confirm-Dialog sichtbar', 'Dialog erscheint', 'Dialog sichtbar', 'PASS')
 
-    // AC-3: Bestätigen klicken — Confirm-Button INNERHALB des Dialogs
-    // (nicht .last() der Gesamtseite, da beide Buttons denselben Text "Delete" haben)
-    const confirmBtn = dialog.locator('button', { hasText: /delete|löschen|bestätigen|confirm/i })
-    await expect(confirmBtn).toBeVisible({ timeout: 5_000 })
+    // AC-3: Bestätigung erst nach Eingabe des Shop-Namens aktiv
+    const confirmBtn = dialog.getByRole('button', { name: /^(delete shop|shop löschen)$/i })
+    await expect(confirmBtn, 'Confirm bleibt ohne Namenseingabe deaktiviert').toBeDisabled()
+    await dialog.locator('#shop-delete-confirm-name').fill(SHOP_NAME)
+    await expect(confirmBtn).toBeEnabled({ timeout: 5_000 })
     await confirmBtn.click()
 
-    // Warte auf Seiten-Refresh (router.refresh() nach erfolgreichem Delete)
+    // Nach erfolgreichem Delete: Redirect auf die Shops-Liste
+    await page.waitForURL(`${BASE_URL}/admin/shops`, { timeout: 15_000 })
     await page.waitForLoadState('networkidle')
-    logStep(9, 'Delete bestätigt', '204 + Liste aktualisiert', 'Confirm geklickt', 'PASS')
+    logStep(9, 'Delete bestätigt', '204 + Redirect auf /admin/shops', 'Confirm geklickt', 'PASS')
 
     // Step 10: Shop darf nicht mehr in der Liste erscheinen
-    await page.waitForTimeout(1_000) // kurz warten auf DOM-Update
+    await page.goto(`${BASE_URL}/admin/shops?q=${encodeURIComponent(SHOP_NAME)}`)
+    await page.waitForLoadState('networkidle')
     const deletedRow = page.locator('td', { hasText: SHOP_NAME })
     await expect(deletedRow).not.toBeVisible({ timeout: 8_000 })
     logStep(10, 'Shop nicht mehr in Liste', 'Zeile weg', 'Zeile nicht sichtbar', 'PASS')

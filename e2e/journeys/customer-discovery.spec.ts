@@ -5,6 +5,9 @@
  * Fixtures: Keine eigenen — nutzt Seed-Daten aus global-setup.ts (pundo_test DB).
  * Voraussetzung: mindestens 1 aktiver Shop mit Produkt in pundo_test existiert.
  *
+ * B8950-012: Setup-Lücken (kein Produkt mit Angebot, kein Seed-Shop) lassen beforeAll FEHLSCHLAGEN statt Schritte
+ * still zu überspringen; Schritt 1/2 warten auf das Suchfeld (expect statt isVisible()-Momentaufnahme).
+ *
  * | Fixture-Name | Was wird aufgebaut | Was wird geprüft |
  * |---|---|---|
  * | (Seed-Daten) | Test-Shop aus global-setup.ts | Discovery-Flow für Gäste |
@@ -56,6 +59,7 @@ test.describe.serial('Customer Discovery Flow', () => {
   let seedShopName: string | null = null
   let seedShopSlug: string | null = null
   let productSlug: string | null = null
+  let productName: string | null = null
   const _startedAt = new Date().toISOString()
 
   test.beforeAll(async () => {
@@ -69,14 +73,17 @@ test.describe.serial('Customer Discovery Flow', () => {
       seedShopSlug = state.shopSlug ?? null
     }
 
-    // Try to find at least one product for discovery
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=5`)
-      if (res.ok) {
-        const data = await res.json() as { items?: Array<{ slug: string }> }
-        productSlug = data.items?.[0]?.slug ?? null
-      }
-    } catch { /* ignore */ }
+    // Produkt für Schritte 4-6: erstes Produkt MIT Angebot (kein Blindgriff auf items[0] fremder Daten)
+    const res = await fetch(`${BACKEND_URL}/api/v1/products?limit=50`)
+    if (!res.ok) throw new Error(`SETUP BROKEN: GET /products → ${res.status}`)
+    const data = await res.json() as { items?: Array<{ slug: string; name?: string; best_offer?: unknown }> }
+    const product = data.items?.find(i => i.best_offer)
+    productSlug = product?.slug ?? null
+    productName = product?.name ?? null
+    if (!productSlug) throw new Error('SETUP BROKEN: kein Produkt mit best_offer in pundo_test (Seed-Daten fehlen)')
+    if (!seedShopSlug || !seedShopName) {
+      throw new Error('SETUP BROKEN: seedShopSlug/shop_name fehlen in .test-state.json (global-setup nicht gelaufen?)')
+    }
   })
 
   test.afterAll(async () => {
@@ -122,9 +129,10 @@ test.describe.serial('Customer Discovery Flow', () => {
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"], input[placeholder*="search"]')
       .first()
-    const visible = await searchInput.isVisible().catch(() => false)
+    // Auto-wartend (B8950-012): isVisible() ist eine Momentaufnahme direkt nach `load` und war in 3 von 4 Läufen zu früh
+    const visible = await expect(searchInput).toBeVisible({ timeout: 10_000 }).then(() => true, () => false)
     logStep(1, 'Startseite zeigt Suchleiste', 'Suchfeld sichtbar', visible ? 'gefunden' : 'nicht gefunden', visible ? 'PASS' : 'FAIL')
-    expect(visible, 'Suchfeld auf Startseite nicht sichtbar').toBe(true)
+    await expect(searchInput, 'Suchfeld auf Startseite nicht sichtbar').toBeVisible({ timeout: 1_000 })
   })
 
   // Step 2: Suchbegriff eingeben
@@ -139,12 +147,7 @@ test.describe.serial('Customer Discovery Flow', () => {
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"], input[placeholder*="search"]')
       .first()
-    const visible = await searchInput.isVisible().catch(() => false)
-    if (!visible) {
-      logStep(2, 'Suchbegriff eingeben', 'URL enthält /search oder /shops', 'Suchfeld nicht gefunden', 'SKIP')
-      test.skip(true, 'Reason: Suchfeld nicht gefunden auf Startseite')
-      return
-    }
+    await expect(searchInput, 'Suchfeld auf Startseite nicht sichtbar').toBeVisible({ timeout: 10_000 })
 
     // Nutze Seed-Shop-Name wenn verfügbar, sonst generischen Begriff
     const query = seedShopName ?? 'shop'
@@ -180,7 +183,9 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 3: Suchergebnisse — mindestens 1 ProductCard oder ShopCard
   test('Schritt 3 — Suchergebnisse zeigen mindestens 1 Karte', async ({ page }) => {
-    const query = seedShopName ?? 'shop'
+    // Die Produktsuche findet Produkte (keine Shops): nach dem Namen des Produkts aus dem Setup suchen. Zuvor wurde
+    // nach dem Shop-Namen gesucht → 0 Treffer → stiller Skip (B8950-012: Suchtreffer sind Pflicht).
+    const query = productName ?? 'shop'
     await page.goto(BASE_URL + `/search?q=${encodeURIComponent(query)}`)
     await page.waitForLoadState('load')
 
@@ -192,29 +197,24 @@ test.describe.serial('Customer Discovery Flow', () => {
       '.shop-card',
       'article',
       '[data-testid="search-result"]',
+      // Aktuelle Suchergebnis-Karten tragen keine data-testids: sie sind Overlay-Links auf /<lang>/products/<slug>
+      // (B8950-012: die alten Selektoren trafen nie → Schritt 3 war ein stiller Skip)
+      'a[href*="/products/"]',
     ]
+    // Karten kommen clientseitig/gestreamt → kurz auf die erste warten (Snapshot-count() direkt nach load ist zu früh)
+    await page.locator(cardSelectors.join(', ')).first().waitFor({ timeout: 10_000 }).catch(() => {})
     let found = 0
     for (const sel of cardSelectors) {
       found = await page.locator(sel).count()
       if (found > 0) break
     }
 
-    logStep(3, 'Suchergebnisse — mindestens 1 Karte', '≥1 Karte sichtbar', found > 0 ? `${found} Karten gefunden` : 'keine Karten', found > 0 ? 'PASS' : 'SKIP')
-    if (found === 0) {
-      // No results may be a data issue (empty test DB), not a UI bug
-      test.skip(true, 'Reason: Keine Suchergebnisse — Test-DB möglicherweise leer oder Suche erfordert Geodaten')
-    }
-    expect(found).toBeGreaterThan(0)
+    logStep(3, 'Suchergebnisse — mindestens 1 Karte', '≥1 Karte sichtbar', found > 0 ? `${found} Karten gefunden` : 'keine Karten', found > 0 ? 'PASS' : 'FAIL')
+    expect(found, 'Keine Suchergebnisse (kein stiller Skip mehr, B8950-012)').toBeGreaterThan(0)
   })
 
   // Step 4: Klick auf ProductCard → Produkt-Detailseite
   test('Schritt 4 — Klick auf ProductCard lädt Detailseite', async ({ page }) => {
-    if (!productSlug) {
-      logStep(4, 'Klick auf ProductCard', 'URL /products/<slug>', 'kein productSlug aus API', 'SKIP')
-      test.skip(true, 'Reason: Kein productSlug aus API verfügbar — Test-DB leer?')
-      return
-    }
-
     await page.goto(BASE_URL + `/products/${productSlug}`)
     await page.waitForLoadState('load')
     const url = page.url()
@@ -225,12 +225,6 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 5: Produktname, Preis, Angebote sichtbar
   test('Schritt 5 — Produktdetailseite zeigt Produktname und Preis/Angebote', async ({ page }) => {
-    if (!productSlug) {
-      logStep(5, 'Produktname + Preis sichtbar', 'Text sichtbar', 'kein productSlug', 'SKIP')
-      test.skip(true, 'Reason: kein productSlug')
-      return
-    }
-
     await page.goto(BASE_URL + `/products/${productSlug}`)
     await page.waitForLoadState('load')
 
@@ -246,12 +240,6 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 6: Karte zeigt Shop-Pin (Leaflet)
   test('Schritt 6 — Karten-Element auf Produktdetailseite vorhanden', async ({ page }) => {
-    if (!productSlug) {
-      logStep(6, 'Karten-Element prüfen', 'Karten-Element vorhanden', 'kein productSlug', 'SKIP')
-      test.skip(true, 'Reason: kein productSlug')
-      return
-    }
-
     await page.goto(BASE_URL + `/products/${productSlug}`)
     await page.waitForLoadState('load')
 
@@ -270,12 +258,6 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 7: Shop-Detailseite per Slug erreichbar
   test('Schritt 7 — Shop-Detailseite als Guest erreichbar', async ({ page }) => {
-    if (!seedShopSlug) {
-      logStep(7, 'Shop-Detailseite aufrufen', 'Seite lädt ohne Fehler', 'seedShopSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: seedShopSlug nicht in .test-state.json')
-      return
-    }
-
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
@@ -290,28 +272,17 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 8: Shop-Name, Adresse, Öffnungszeiten sichtbar
   test('Schritt 8 — Shop-Detailseite zeigt Shop-Name und Adresse', async ({ page }) => {
-    if (!seedShopSlug || !seedShopName) {
-      logStep(8, 'Shop-Name + Adresse sichtbar', 'Shop-Name sichtbar', 'seedShopSlug/Name fehlt', 'SKIP')
-      test.skip(true, 'Reason: seedShopSlug oder seedShopName nicht verfügbar')
-      return
-    }
-
     await page.goto(BASE_URL + `/shops/${seedShopSlug}`)
     await page.waitForLoadState('load')
 
-    const nameCount = await page.getByText(seedShopName, { exact: false }).count()
+    await page.getByText(seedShopName!, { exact: false }).first().waitFor({ timeout: 10_000 }).catch(() => {})
+    const nameCount = await page.getByText(seedShopName!, { exact: false }).count()
     logStep(8, 'Shop-Name sichtbar', `"${seedShopName}" auf Seite`, nameCount > 0 ? 'gefunden' : 'nicht gefunden', nameCount > 0 ? 'PASS' : 'FAIL')
     expect(nameCount, `Shop-Name "${seedShopName}" nicht sichtbar`).toBeGreaterThan(0)
   })
 
   // Step 9: Back-Navigation funktioniert
   test('Schritt 9 — Back-Navigation (History-Stack intakt)', async ({ page }) => {
-    if (!seedShopSlug) {
-      logStep(9, 'Back-Navigation', 'zurück zur vorherigen Seite', 'seedShopSlug fehlt', 'SKIP')
-      test.skip(true, 'Reason: seedShopSlug fehlt')
-      return
-    }
-
     // Navigate: home → shops/slug → back()
     await page.goto(BASE_URL + '/')
     await page.waitForLoadState('load')

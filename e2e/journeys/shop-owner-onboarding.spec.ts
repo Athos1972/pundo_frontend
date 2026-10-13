@@ -15,6 +15,7 @@ import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { getVerificationToken } from './_helpers/dev-token'
 import { adminLogin as adminApiLogin } from './_helpers'
+import { TestDataTracker, RUN_ID } from './_helpers/test-data'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -28,7 +29,9 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 // ─── Test identity ────────────────────────────────────────────────────────────
 
 const UUID = randomUUID().slice(0, 8)
-const PREFIX = `e2e-onboard-${UUID}`
+// B8950-012: Run-ID im Präfix (verankerter Selektor ^e2e-<run>-) + Admin-Delete statt "rejected"
+const PREFIX = `e2e-${RUN_ID}-onboard-${UUID}`
+const tracker = new TestDataTracker()
 
 // ─── Shared context ───────────────────────────────────────────────────────────
 
@@ -70,19 +73,8 @@ const getAdminToken = () => adminApiLogin()
 test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve → Login', () => {
 
   test.afterAll(async () => {
-    // Cleanup: reject the owner to free up the email for re-runs
-    if (!ctx.ownerId || !ctx.adminToken) return
-    try {
-      await apiFetch(
-        'PATCH',
-        `/api/v1/admin/shop-owners/${ctx.ownerId}`,
-        { status: 'rejected' },
-        { Cookie: `admin_token=${ctx.adminToken}` }
-      )
-      console.log(`[onboarding-cleanup] Owner ${ctx.ownerId} set to rejected`)
-    } catch (err) {
-      console.warn(`[onboarding-cleanup] Could not reject owner ${ctx.ownerId}:`, err)
-    }
+    // Cleanup (B8950-012): Shop + Owner per Admin-API löschen (statt nur auf "rejected" zu setzen)
+    await tracker.cleanup()
   })
 
   // ── Test 1: Register form UI ───────────────────────────────────────────────
@@ -123,7 +115,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
     })
     const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
     const found = owners.find(o => o.email === ctx.email)
-    if (found) ctx.ownerId = found.id
+    if (found) { ctx.ownerId = found.id; tracker.owner(found.id) }
   })
 
   // ── Test 2: Check-Email page content ──────────────────────────────────────
@@ -205,7 +197,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
       })
       const owners = ((listRes.data as { items?: Array<{ id: number; email: string }> })?.items ?? [])
       const found = owners.find(o => o.email === ctx.email)
-      if (found) ctx.ownerId = found.id
+      if (found) { ctx.ownerId = found.id; tracker.owner(found.id) }
     }
     if (!ctx.ownerId) throw new Error('SETUP BROKEN: ownerId not available — registration in T1 may have failed')
 

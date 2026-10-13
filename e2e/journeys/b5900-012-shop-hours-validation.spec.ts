@@ -2,19 +2,17 @@
  * B5900-012 — Öffnungszeiten-Validierung (Shop-Admin) + robuste Kunden-Shop-Seite
  *
  * Läuft ausschließlich gegen Test-Instanz 3500 / 8500. Kein DB-Reset.
- * Ändert nur die Öffnungszeiten des E2E-Test-Shops (State-Datei, global-setup) und stellt sie
- * am Ende wieder her (Rohwert aus der DB, falls DATABASE_URL_TEST + psql vorhanden; sonst per API).
+ * B8950-012: ändert die Öffnungszeiten eines EIGENEN Spec-Shops (specShop, Impersonation-Token) — nie des
+ * geteilten e2e-test-shop; `psql` greift nur auf diese Shop-ID zu. afterAll löscht den Shop (Admin-API).
  *
  * AK1 (API):    PUT /shop-owner/shop/hours mit closed=false ohne Zeiten -> 422 (+ Randfälle)
  * AK1 (UI):     HoursEditor sendet keinen offenen Tag ohne Zeiten; echte 422 -> lokalisierte Meldung (en, de)
  * AK2 (Kunde):  Shop-Seite rendert (200) bei Bestandsdaten mit defektem Tag; übrige Tage korrekt.
- *               Braucht direkten DB-Zugriff (Backend lehnt solche Daten jetzt ab) -> nur mit DATABASE_URL_TEST.
+ *               Braucht direkten DB-Zugriff (Backend lehnt solche Daten jetzt ab); fehlt er, schlägt der Test fehl.
  */
 import { test, expect } from '@playwright/test'
-import fs from 'fs'
-import path from 'path'
-import { execFileSync } from 'child_process'
-import { shopOwnerLogin } from './_helpers'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { psql } from './_helpers/test-data'
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -22,38 +20,26 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-012] Safety: NEVER use production ports!')
 }
 
-const STATE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as {
-  email: string; password: string; shopId: number; shopSlug: string
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
 test.describe.configure({ mode: 'serial' })
 
-const DB = (process.env.DATABASE_URL_TEST ?? '').replace('+psycopg', '')
-const HAVE_DB = DB.includes('pundo_test')
-function psql(sql: string): string {
-  return execFileSync('psql', [DB, '-Atc', sql], { encoding: 'utf8' }).trim()
-}
-
-let token = ''
-let originalRaw: string | null = null
-const auth = () => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' })
+let shop: WorkerShop
+const auth = () => ({ Authorization: `Bearer ${shop.ownerToken}`, 'Content-Type': 'application/json' })
 const allClosed = () => Array.from({ length: 7 }, (_, d) => ({ day: d, closed: true }))
 const put = (body: unknown) =>
   fetch(`${BACKEND_URL}/api/v1/shop-owner/shop/hours`, { method: 'PUT', headers: auth(), body: JSON.stringify(body) })
 
 test.beforeAll(async () => {
-  token = await shopOwnerLogin(STATE.email, STATE.password)
-  if (HAVE_DB) originalRaw = psql(`select opening_hours::text from shops where id=${STATE.shopId}`)
+  shop = await specShop('B5900-012')
   expect((await put(allClosed())).status).toBe(200) // definierter Ausgangszustand
 })
 
 test.afterAll(async () => {
-  if (HAVE_DB && originalRaw !== null) {
-    psql(`update shops set opening_hours='${originalRaw.replace(/'/g, "''")}'::jsonb where id=${STATE.shopId}`)
-  } else {
-    await put(allClosed())
-  }
+  await shop?.destroy()
+})
+
+// Kontext des Spec-Shops: Owner-Cookie aus der Impersonation (kein Passwort-Login)
+test.beforeEach(async ({ context }) => {
+  await context.addCookies(shop.storageState.cookies)
 })
 
 test('AK1 API: offener Tag ohne Zeiten / ungültige Zeiten -> 422, gültig -> 200', async () => {
@@ -118,7 +104,7 @@ test('AK1 UI (en): offener Tag ohne Zeiten wird nicht gesendet; echte 422 zeigt 
 })
 
 test('AK1 UI (de): 422 wird auf Deutsch angezeigt', async ({ browser }) => {
-  const ctx = await browser.newContext({ storageState: STATE.storageState as never })
+  const ctx = await browser.newContext({ storageState: shop.storageState })
   await ctx.addCookies([{ name: 'app_lang', value: 'de', url: FRONTEND_URL }])
   const page = await ctx.newPage()
   page.setDefaultTimeout(20_000)
@@ -134,7 +120,6 @@ test('AK1 UI (de): 422 wird auf Deutsch angezeigt', async ({ browser }) => {
 })
 
 test('AK2 Kunde: Shop-Seite rendert (200) bei Bestandsdaten mit offenem Tag ohne Zeiten', async ({ browser }) => {
-  test.skip(!HAVE_DB, 'DATABASE_URL_TEST (pundo_test) nicht gesetzt — Datenmanipulation nicht möglich')
   const broken = {
     '0': { open: null, close: null, closed: false },
     '1': { open: '10:00', close: '16:00', closed: false },
@@ -144,10 +129,10 @@ test('AK2 Kunde: Shop-Seite rendert (200) bei Bestandsdaten mit offenem Tag ohne
     '5': { closed: true },
     '6': { closed: true },
   }
-  psql(`update shops set opening_hours='${JSON.stringify(broken)}'::jsonb where id=${STATE.shopId}`)
+  psql(`update shops set opening_hours='${JSON.stringify(broken)}'::jsonb where id=${shop.id}`)
   const ctx = await browser.newContext() // Kunde, ohne Login
   const page = await ctx.newPage()
-  const res = await page.goto(`${FRONTEND_URL}/en/shops/${STATE.shopSlug}`, { waitUntil: 'domcontentloaded' })
+  const res = await page.goto(`${FRONTEND_URL}/en/shops/${shop.slug}`, { waitUntil: 'domcontentloaded' })
   expect(res?.status()).toBe(200)
   await expect(page.getByRole('heading', { name: 'Opening hours' })).toBeVisible({ timeout: 20_000 }) // Streaming abwarten
   const body = await page.locator('div').filter({ has: page.getByRole('heading', { name: 'Opening hours' }) }).last().innerText()
@@ -155,7 +140,7 @@ test('AK2 Kunde: Shop-Seite rendert (200) bei Bestandsdaten mit offenem Tag ohne
   expect(body).not.toContain('null')
   expect(body).toContain('10:00 – 16:00')
   expect(body).toContain('08:30 – 12:30')
-  const api = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${STATE.shopSlug}`)
+  const api = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${shop.slug}`)
   expect(api.status).toBe(200)
   const j = (await api.json()) as { opening_hours?: Record<string, unknown> }
   expect(j.opening_hours?.['1']).toMatchObject({ open: '10:00', close: '16:00' })

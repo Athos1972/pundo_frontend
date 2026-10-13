@@ -7,8 +7,8 @@
  *   Test-Frontend: 3500, Test-Backend: 8500, DB: pundo_test
  *
  * Setup:
- *   - Uses global-setup (e2e/.test-state.json) for shop-owner + admin tokens
- *   - global-setup seeds admin, restarts backend, resets pundo_test DB
+ *   - B8950-012: eigener Spec-Shop (specShop, Impersonation) — die Spec schreibt social_links des Shops;
+ *     Admin-Token kommt aus globalSetup. afterAll löscht den Spec-Shop per Admin-API.
  *
  * Failure policy:
  *   - beforeAll throws if backend is reachable but social-link-moderation
@@ -20,6 +20,8 @@ import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { getAdminToken } from './_helpers/test-data'
 
 // ─── Port Safety ─────────────────────────────────────────────────────────────
 
@@ -30,43 +32,16 @@ if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[social-link-moderation] Safety: NEVER run against production ports 3000/8000!')
 }
 
-// ─── Load test state ─────────────────────────────────────────────────────────
-
-interface TestState {
-  email: string
-  password: string
-  ownerId: number
-  shopId: number
-  shopSlug: string | null
-  adminToken: string | null
-  storageState: { cookies: unknown[]; origins: unknown[] }
-}
-
-function loadState(): TestState {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
-  if (!fs.existsSync(stateFile)) {
-    throw new Error('[social-link-moderation] .test-state.json not found — run: npx playwright test --global-setup')
-  }
-  return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
-}
-
-const STATE = loadState()
-
-test.use({ storageState: STATE.storageState as Parameters<typeof test.use>[0]['storageState'] })
+let shop: WorkerShop
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const UUID = randomUUID().slice(0, 8)
 
-function shopOwnerToken(): string {
-  const cookies = STATE.storageState.cookies as Array<{ name: string; value: string }>
-  return cookies.find((c) => c.name === 'shop_owner_token')?.value ?? ''
-}
-
 // ─── Shared context populated in beforeAll ────────────────────────────────────
 
 const ctx = {
-  adminToken: STATE.adminToken as string | null,
+  adminToken: null as string | null,
   ownerToken: '',
 }
 
@@ -91,7 +66,9 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       )
     }
 
-    ctx.ownerToken = shopOwnerToken()
+    shop = await specShop('SOCIAL-LINK')
+    ctx.ownerToken = shop.ownerToken
+    ctx.adminToken = await getAdminToken()
 
     // ── 2. Prüfe ob Backend social-link-moderation kennt ─────────────────────
     // Sende onlyfans.com — wenn Backend 200 zurückgibt, ist das Feature nicht deployed.
@@ -129,6 +106,15 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
         `   Fix: global-setup neu ausführen — npx playwright test\n`
       )
     }
+  })
+
+  test.afterAll(async () => {
+    await shop?.destroy()
+  })
+
+  // Browser-Kontexte des Spec-Shops (Impersonation-Cookie)
+  test.beforeEach(async ({ context }) => {
+    await context.addCookies(shop.storageState.cookies)
   })
 
   // ─── AC1 — Direkter Block: onlyfans.com ────────────────────────────────────
@@ -545,10 +531,14 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   // ─── AC8 — Übersetzungen in allen 6 Sprachen ───────────────────────────────
 
   test('AC8 — All 9 translation keys exist in all 6 languages (static source analysis)', async () => {
-    const translationsPath = path.join(
-      __dirname, '..', '..', 'src', 'lib', 'shop-admin-translations.ts'
-    )
-    const content = fs.readFileSync(translationsPath, 'utf8')
+    // Pfad-Drift (B8950-012): die Shop-Admin-Übersetzungen liegen seit 0217599 (T3 split) in
+    // src/lib/i18n/shop-admin-*.ts; shop-admin-translations.ts selbst enthält die Keys nicht mehr.
+    // Die Assertions (>= 6 Vorkommen je Key, FSI) bleiben unverändert und gelten über alle Namespace-Dateien.
+    const i18nDir = path.join(__dirname, '..', '..', 'src', 'lib', 'i18n')
+    const content = fs.readdirSync(i18nDir)
+      .filter((f) => /^shop-admin-.*\.ts$/.test(f))
+      .map((f) => fs.readFileSync(path.join(i18nDir, f), 'utf8'))
+      .join('\n')
 
     const requiredKeys = [
       'social_blocked_generic',
@@ -568,7 +558,8 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     }
 
     // FSI/PDI bidi isolation present in via_shortener template for ar/he
-    const fsiCount = (content.match(/\\u2068/g) ?? []).length
+    // FSI als Escape-Text (alt: shop-admin-translations.ts) ODER als echtes Zeichen (neu: i18n/shop-admin-*.ts)
+    const fsiCount = (content.match(/\\u2068|\u2068/g) ?? []).length
     expect(fsiCount, 'AC8: FSI bidi isolation (\\u2068) must be present for RTL languages').toBeGreaterThan(0)
   })
 

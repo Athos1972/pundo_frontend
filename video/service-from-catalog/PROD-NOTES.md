@@ -1,7 +1,7 @@
 # service-from-catalog: Produktionsnotizen (Stand 2026-10-13)
 
-Teil 5 von „pundo for businesses“: „Add a service that's already on pundo“ (EN 1:29, EL 1:38). Freigegebenes DE-Skript: `01-skript.de.md`.
-Links, Upload-Status, Endscreens/Playlists: Vault N7900.
+Teil 5 von „pundo for businesses“: „Add a service that's already on pundo“ (EN 1:30, EL 1:39). Freigegebenes DE-Skript: `01-skript.de.md`.
+Veröffentlicht 2026-10-13: EN https://youtu.be/OJY0ic_m1bk · EL https://youtu.be/llOaO9dZko0 (SRT, Thumbnail, Kapitel, Playlists, Endscreen). Endscreens/Playlists im Detail: Vault N7900.
 
 ## Dateien
 | Datei | Inhalt |
@@ -26,4 +26,5 @@ Voraussetzungen wie Teil 3/4 (Dev-Server dieses Repos auf 3500, keine parallelen
 
 ## Offene Punkte
 - Aussprache nicht nach Gehör geprüft (EN/EL „Catering“).
-- Nach dem Upload: Endscreen von `service-create-new` → dieses Video, dieses Video in beide Playlists (siehe N7900).
+- Sobald Teil 6 (`pricing`) online ist: Endscreen dieses Videos (derzeit „automatisch ausgewählt“) darauf umstellen.
+- Content-ID-Anspruch „Funk & Breakbeat“ auf der Hintergrundmusik wie bei allen Teilen (ohne Auswirkung, siehe `video/README.md`).

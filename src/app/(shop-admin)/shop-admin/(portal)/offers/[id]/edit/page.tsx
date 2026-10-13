@@ -2,7 +2,7 @@ import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { OfferForm } from '@/components/shop-admin/OfferForm'
 import { OfferItemHeader, resolveLocalizedName } from '@/components/shop-admin/OfferItemHeader'
-import { getAdminOffer, getAdminPriceUnits } from '@/lib/shop-admin-api'
+import { getAdminOffer, getAdminPriceUnits, getMe } from '@/lib/shop-admin-api'
 import { notFound } from 'next/navigation'
 import type { ItemSearchResult } from '@/types/shop-admin'
 
@@ -18,14 +18,17 @@ export default async function EditOfferPage({ params }: Props) {
   let offer = null
   let priceUnits: Awaited<ReturnType<typeof getAdminPriceUnits>> = []
   let preloadedItem: ItemSearchResult | null = null
+  let ownShopId: number | null = null
 
   try {
-    const [fetchedOffer, units] = await Promise.all([
+    const [fetchedOffer, units, me] = await Promise.all([
       getAdminOffer(Number(id), lang).catch(() => null),
       getAdminPriceUnits(lang),
+      getMe(lang).catch(() => null),
     ])
     offer = fetchedOffer
     priceUnits = units
+    ownShopId = me?.shop_id ?? null
 
     if (offer?.item) {
       const itm = offer.item
@@ -56,6 +59,7 @@ export default async function EditOfferPage({ params }: Props) {
         preloadedItem={preloadedItem}
         priceUnits={priceUnits}
         lang={lang}
+        ownShopId={ownShopId}
       />
     </div>
   )

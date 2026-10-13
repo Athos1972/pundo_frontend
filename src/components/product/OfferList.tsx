@@ -3,7 +3,7 @@ import type { OfferDetail } from '@/types/api'
 import { t } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
-import { formatCrawledAt, formatPriceOrLabel, fmtPrice } from '@/lib/utils'
+import { formatCrawledAt, formatPriceOrLabel, formatAmount, parsePriceAmount } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 
 export function OfferList({ offers, lang, productName: _productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
@@ -14,7 +14,12 @@ export function OfferList({ offers, lang, productName: _productName }: { offers:
     if (a.is_available !== b.is_available) return a.is_available ? -1 : 1
     // Fixed-price offers first, sorted by price ascending
     if (a.price_type === 'fixed' && b.price_type === 'fixed') {
-      return parseFloat(a.price!) - parseFloat(b.price!)
+      const pa = parsePriceAmount(a.price)
+      const pb = parsePriceAmount(b.price)
+      if (pa === pb) return 0
+      if (pa === null) return 1
+      if (pb === null) return -1
+      return pa - pb
     }
     if (a.price_type === 'fixed') return -1
     if (b.price_type === 'fixed') return 1
@@ -28,10 +33,7 @@ export function OfferList({ offers, lang, productName: _productName }: { offers:
         const safeUrl = sanitizeExternalUrl(offer.url)
         const hasCta = offer.price_type === 'on_request' && (offer.shop_phone || safeUrl)
 
-        const hasPromo = !!offer.promo_price
-        const promoPriceDisplay = hasPromo
-          ? `${fmtPrice(offer.promo_price!)} ${offer.promo_currency ?? offer.currency}`
-          : null
+        const promoPriceDisplay = formatAmount(offer.promo_price, offer.promo_currency ?? offer.currency)
         const stdLabel = formatPriceOrLabel(
           offer.standard_price ?? offer.price,
           offer.standard_currency ?? offer.currency,

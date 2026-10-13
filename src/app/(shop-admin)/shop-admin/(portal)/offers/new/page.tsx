@@ -1,7 +1,7 @@
 import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { OfferForm } from '@/components/shop-admin/OfferForm'
-import { getAdminPriceUnits } from '@/lib/shop-admin-api'
+import { getAdminPriceUnits, getMe } from '@/lib/shop-admin-api'
 
 export default async function NewOfferPage() {
   const lang = await getLangServer()
@@ -14,10 +14,13 @@ export default async function NewOfferPage() {
     // Backend not yet available
   }
 
+  const me = await getMe(lang).catch(() => null)
+  const ownShopId = me?.shop_id ?? null
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-gray-900">{tr.add_offer}</h1>
-      <OfferForm priceUnits={priceUnits} lang={lang} />
+      <OfferForm priceUnits={priceUnits} lang={lang} ownShopId={ownShopId} />
     </div>
   )
 }

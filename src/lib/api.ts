@@ -30,8 +30,9 @@ async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Prom
 }
 
 export async function searchProducts(
-  params: { q?: string; category_id?: number; shop_id?: number; available?: boolean; lat?: number; lng?: number; max_dist_km?: number; limit?: number; offset?: number },
-  lang: string
+  params: { q?: string; category_id?: number; shop_id?: number; available?: boolean; lat?: number; lng?: number; max_dist_km?: number; limit?: number; offset?: number; sort?: 'newest' },
+  lang: string,
+  opts?: { noStore?: boolean }
 ): Promise<ProductListResponse> {
   const qs = new URLSearchParams();
   if (params.q) qs.set('q', params.q);
@@ -43,8 +44,13 @@ export async function searchProducts(
   if (params.max_dist_km != null) qs.set('max_dist_km', String(params.max_dist_km));
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.offset != null) qs.set('offset', String(params.offset));
+  if (params.sort) qs.set('sort', params.sort);
   const q = qs.toString();
-  return apiFetch<ProductListResponse>(`/products${q ? `?${q}` : ''}`, lang);
+  return apiFetch<ProductListResponse>(
+    `/products${q ? `?${q}` : ''}`,
+    lang,
+    opts?.noStore ? { cache: 'no-store' } : undefined,
+  );
 }
 
 /**

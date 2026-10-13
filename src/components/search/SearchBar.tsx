@@ -7,7 +7,7 @@ import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
 import { t, tSearch } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
-import { fmtPrice, toRelativeImageUrl } from '@/lib/utils'
+import { formatAmount, toRelativeImageUrl } from '@/lib/utils'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
 import { ShopAvatar } from '@/components/shop/ShopAvatar'
 
@@ -239,6 +239,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
               {suggestions.products.map((item, idx) => {
                 const globalIdx = catCount + shopCount + idx
                 const offer = item.best_offer
+                const priceText = offer?.price_type === 'fixed' ? formatAmount(offer.price, offer.currency) : null
                 return (
                   <li key={`prod-${item.id}`}>
                     <button
@@ -258,10 +259,8 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
                         <p className="text-sm font-medium text-text truncate">{item.name || item.slug}</p>
                         {item.brand && <p className="text-xs text-text-muted">{item.brand}</p>}
                       </div>
-                      {offer?.price_type === 'fixed' && offer.price && (
-                        <span className="flex-shrink-0 text-sm font-bold text-accent">
-                          {fmtPrice(offer.price)} {offer.currency}
-                        </span>
+                      {priceText && (
+                        <span className="flex-shrink-0 text-sm font-bold text-accent">{priceText}</span>
                       )}
                     </button>
                   </li>

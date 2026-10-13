@@ -9,6 +9,7 @@ import { FormField } from './FormField'
 import { showToast } from './Toast'
 import { PriceTierEditor } from './PriceTierEditor'
 import { ItemPickerModal } from './ItemPickerModal'
+import { OfferItemPhotos } from './OfferItemPhotos'
 import type { AdminOffer, ItemSearchResult, PriceTier, PriceUnitOption } from '@/types/shop-admin'
 
 interface OfferFormProps {
@@ -17,9 +18,13 @@ interface OfferFormProps {
   preloadedItem?: ItemSearchResult | null
   priceUnits?: PriceUnitOption[]
   lang: string
+  /** Shop of the logged-in owner (decides which item photos may be changed) */
+  ownShopId?: number | null
 }
 
-export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: OfferFormProps) {
+const PRICE_TYPES = ['fixed', 'on_request', 'free', 'variable'] as const
+
+export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShopId = null }: OfferFormProps) {
   const tr = tAdmin(lang)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -46,6 +51,12 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
     if (listingId) setShopListingId(listingId)
     setShowPicker(false)
     setStep(2)
+  }
+
+  function handleCoverChange(coverUrl: string | null) {
+    setSelectedItem((prev) => (prev ? { ...prev, photo_url: coverUrl } : prev))
+    // Edit mode: refresh server-rendered OfferItemHeader (client state is preserved)
+    if (isEdit) router.refresh()
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -164,6 +175,10 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
     }
   }
 
+  const priceTypeOptions = PRICE_TYPES.map((pt) => (
+    <option key={pt} value={pt}>{tr[`price_type_${pt}` as const]}</option>
+  ))
+
   return (
     <>
       {/* Step indicator */}
@@ -268,20 +283,30 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
             </div>
           )}
 
+          {/* Item photos (B5900-009) */}
+          {selectedItem && (
+            <div className="border border-gray-200 rounded-xl p-4">
+              <OfferItemPhotos
+                key={selectedItem.id}
+                itemId={selectedItem.id}
+                ownShopId={ownShopId}
+                lang={lang}
+                onCoverChange={handleCoverChange}
+              />
+            </div>
+          )}
+
           {/* Standardpreis */}
           <div className="border border-gray-200 rounded-xl p-4 space-y-3">
             <p className="text-sm font-semibold text-gray-700">{tr.standard_price ?? 'Standard price'}</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{tr.price}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{tr.price_type_label}</label>
               <select
                 value={priceType}
                 onChange={(e) => setPriceType(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
               >
-                <option value="fixed">{tr.price}</option>
-                <option value="on_request">On request</option>
-                <option value="free">Free</option>
-                <option value="variable">Variable</option>
+                {priceTypeOptions}
               </select>
             </div>
             {(priceType === 'fixed' || priceType === 'variable') && (
@@ -319,10 +344,7 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang }: Offer
                     onChange={(e) => setPromoType(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
-                    <option value="fixed">{tr.price}</option>
-                    <option value="on_request">On request</option>
-                    <option value="free">Free</option>
-                    <option value="variable">Variable</option>
+                    {priceTypeOptions}
                   </select>
                 </div>
                 {(promoType === 'fixed' || promoType === 'variable') && (

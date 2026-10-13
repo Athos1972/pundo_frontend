@@ -38,6 +38,10 @@ vi.mock('@/components/shop-admin/ItemPickerModal', () => ({
   ItemPickerModal: () => null,
 }))
 
+vi.mock('@/components/shop-admin/OfferItemPhotos', () => ({
+  OfferItemPhotos: () => <div data-testid="offer-item-photos-mock" />,
+}))
+
 vi.mock('@/components/shop-admin/FormField', () => ({
   FormField: ({ label, children }: { label: string; children?: React.ReactNode }) => (
     <div><label>{label}</label>{children}</div>

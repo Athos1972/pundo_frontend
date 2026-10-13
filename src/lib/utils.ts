@@ -1,8 +1,29 @@
 import type { PriceType, ProductImages } from '@/types/api'
 import type { Translations } from '@/lib/translations'
 
+/**
+ * Endlicher Betrag >= 0 oder null. Akzeptiert string|number;
+ * "None", "null", "", "NaN", "abc" und negative Werte ergeben null (B5900-013).
+ */
+export function parsePriceAmount(price: string | number | null | undefined): number | null {
+  if (price === null || price === undefined) return null
+  const n = typeof price === 'number' ? price : /^\s*-?\d+(\.\d+)?\s*$/.test(price) ? parseFloat(price) : NaN
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+/** "7.99 EUR" oder null, wenn kein gueltiger Betrag vorliegt. */
+export function formatAmount(price: string | number | null | undefined, currency: string): string | null {
+  const n = parsePriceAmount(price)
+  return n === null ? null : `${n.toFixed(2)} ${currency}`
+}
+
+/** true nur bei price_type 'fixed' UND gueltigem Betrag (Filter "Nur mit Preis"). */
+export function hasNumericPrice(o: { price_type: PriceType; price: string | null }): boolean {
+  return o.price_type === 'fixed' && parsePriceAmount(o.price) !== null
+}
+
 export function formatPriceOrLabel(
-  price: string | null,
+  price: string | null | undefined,
   currency: string,
   priceType: PriceType,
   priceNote: string | null,
@@ -10,7 +31,13 @@ export function formatPriceOrLabel(
 ): { display: string; isNumeric: boolean; note: string | null } {
   switch (priceType) {
     case 'fixed':
-      return { display: `${fmtPrice(price!)} ${currency}`, isNumeric: true, note: priceNote }
+    {
+      const amount = formatAmount(price, currency)
+      if (amount === null) {
+        return { display: tr.price_not_available, isNumeric: false, note: priceNote }
+      }
+      return { display: amount, isNumeric: true, note: priceNote }
+    }
     case 'free':
       return { display: tr.price_free, isNumeric: false, note: priceNote }
     case 'variable':

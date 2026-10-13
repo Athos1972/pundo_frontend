@@ -80,7 +80,7 @@ export async function searchItems(
 
 /** Create a new item — POST /api/v1/shop-owner/items */
 export async function createItem(
-  data: { name_de: string; item_type: ItemType; category_id: number; ean?: string; brand_id?: number },
+  data: { name: string; name_lang: string; item_type: ItemType; category_id: number; ean?: string; brand_id?: number; confirmed?: boolean },
   lang: string,
 ): Promise<AdminItem> {
   return apiFetchAdmin<AdminItem>('/items', lang, {

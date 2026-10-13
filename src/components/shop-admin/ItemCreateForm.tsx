@@ -1,14 +1,11 @@
 'use client'
 // Clean Boundary: only imports from src/components/ui/, @/lib/shop-admin-*, @/types/shop-admin
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
-import type { ItemSearchResult, ItemType } from '@/types/shop-admin'
-
-interface Category {
-  id: number
-  name: string
-}
+import { taxonomyForItemType } from '@/lib/shop-admin-categories'
+import { CategoryPicker } from '@/components/shop-admin/CategoryPicker'
+import type { ItemSearchResult, ItemType, PickerCategory } from '@/types/shop-admin'
 
 interface ItemCreateFormProps {
   lang: string
@@ -19,26 +16,18 @@ interface ItemCreateFormProps {
   confirmed?: boolean
 }
 
+const ADMIN_NAME_LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he']
+
 export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', confirmed = false }: ItemCreateFormProps) {
   const tr = tAdmin(lang)
+  const nameLang = ADMIN_NAME_LANGS.includes(lang) ? lang : 'en'
   const [name, setName] = useState(initialName)
   const [itemType, setItemType] = useState<ItemType>('product')
-  const [categoryId, setCategoryId] = useState<number | ''>('')
+  const [category, setCategory] = useState<PickerCategory | null>(null)
   const [ean, setEan] = useState('')
-  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    fetch('/api/v1/categories?limit=200')
-      .then((r) => r.json())
-      .then((d: unknown) => {
-        const data = d as { items?: { id: number; name?: string | null }[] }
-        setCategories((data.items ?? []).map((c) => ({ id: c.id, name: c.name ?? '' })))
-      })
-      .catch(() => {})
-  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -47,16 +36,17 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
 
     const errs: Record<string, string> = {}
     if (!name.trim() || name.trim().length < 2) errs.name = tr.required
-    if (!categoryId) errs.category = tr.required
+    if (!category) errs.category = tr.required
     if (Object.keys(errs).length > 0) { setFieldErrors(errs); return }
 
     setLoading(true)
     try {
       // Step 1: create item
       const itemBody: Record<string, unknown> = {
-        name_de: name.trim(),
+        name: name.trim(),
+        name_lang: nameLang,
         item_type: itemType,
-        category_id: Number(categoryId),
+        category_id: category!.id,
         ...(ean ? { ean } : {}),
         ...(confirmed ? { confirmed: true } : {}),
       }
@@ -69,9 +59,15 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
 
       if (!itemRes.ok) {
         const body = await itemRes.json().catch(() => ({}))
-        const detail = (body as { detail?: string | { similar_items?: unknown } }).detail
+        const detail = (body as { detail?: string | { similar_items?: unknown; code?: string } }).detail
         if (itemRes.status === 409 && detail && typeof detail === 'object' && 'similar_items' in detail) {
           setError(tr.fuzzy_match_warning)
+        } else if (
+          itemRes.status === 422 && detail && typeof detail === 'object' &&
+          (detail as { code?: string }).code === 'invalid_category'
+        ) {
+          setCategory(null)
+          setFieldErrors({ category: tr.category_picker_invalid_category })
         } else {
           setError(tr.error_generic)
         }
@@ -100,7 +96,7 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
         id: itemData.id,
         slug: itemData.slug,
         item_type: (itemData.item_type ?? 'product') as ItemType,
-        name: itemData.names ? (itemData.names[lang] ?? itemData.names['de'] ?? itemData.names['en'] ?? name) : name,
+        name: itemData.names ? (itemData.names[lang] ?? itemData.names['en'] ?? Object.values(itemData.names)[0] ?? name) : name,
         category_id: itemData.category_id,
         ean: itemData.ean ?? null,
         photo_url: itemData.photos?.[0]?.url ?? null,
@@ -120,10 +116,10 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 border border-gray-200 rounded-xl p-4 bg-gray-50">
       <p className="text-sm font-semibold text-gray-800">{tr.item_picker_add_new}</p>
 
-      {/* Name DE */}
+      {/* Name (in current UI language) */}
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">
-          {tr.product_name} (DE) <span className="text-red-500">*</span>
+          {tr.product_name} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -137,10 +133,10 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
       </div>
 
       {/* Item type */}
-      <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">
-          {tr.category} <span className="text-red-500">*</span>
-        </label>
+      <fieldset className="border-0 p-0 m-0">
+        <legend className="block text-xs font-medium text-gray-700 mb-1">
+          {tr.item_type_label} <span className="text-red-500">*</span>
+        </legend>
         <div className="flex gap-4">
           {(['product', 'service'] as const).map((t) => (
             <label key={t} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -149,32 +145,31 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
                 name="item_type"
                 value={t}
                 checked={itemType === t}
-                onChange={() => setItemType(t)}
+                onChange={() => {
+                  setItemType(t)
+                  if (category && category.taxonomy_type !== taxonomyForItemType(t)) setCategory(null)
+                }}
                 className="accent-accent"
               />
               {t === 'product' ? tr.item_type_product : tr.item_type_service}
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       {/* Category */}
       <div>
         <label className="block text-xs font-medium text-gray-700 mb-1">
           {tr.category} <span className="text-red-500">*</span>
         </label>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value === '' ? '' : Number(e.target.value))}
-          className={inputCls}
-          required
-        >
-          <option value="">— {tr.category}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        {fieldErrors.category && <p className="text-xs text-red-600 mt-1">{fieldErrors.category}</p>}
+        <CategoryPicker
+          lang={lang}
+          itemType={itemType}
+          itemName={name}
+          value={category}
+          onChange={setCategory}
+          error={fieldErrors.category}
+        />
       </div>
 
       {/* EAN optional */}

@@ -294,7 +294,7 @@ export interface FavoriteListItem {
   product_name: string
   brand: string | null
   image_url: string | null
-  best_offer_price: string | null
+  best_offer_price: string | number | null
   best_offer_currency: string
   best_offer_shop: string | null
   best_offer_dist_km: number | null

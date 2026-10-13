@@ -422,6 +422,28 @@ export default async function globalSetup() {
     console.log('[E2E Setup] DB-Reset übersprungen (E2E_RESET_DB nicht gesetzt) — nutze bestehende pundo_test-Daten.')
   }
 
+  // ── 1b. Generierte Test-Kategorien (B5900-011 T11) ────────────────────────
+  // Pro Lauf werden eindeutig markierte Kategorien (external_id `e2e-tmp-<run>-*`,
+  // Name `[E2E-TMP] …`) angelegt und vom Reporter `e2e/reporters/cleanup-test-categories.ts`
+  // nach erfolgreichem Lauf wieder gelöscht (Items werden auf echte Kategorien umgehängt).
+  // Reste fehlgeschlagener Läufe räumt der nächste Seed-Lauf zuerst weg.
+  let testCategoryIds: number[] = []
+  try {
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --seed-test-categories`,
+      {
+        cwd: BACKEND_REPO,
+        encoding: 'utf8',
+        timeout: 60_000,
+        env: { ...process.env, PYTHONPATH: BACKEND_REPO },
+      }
+    )
+    testCategoryIds = JSON.parse(out.trim().split('\n').at(-1)!).test_category_ids ?? []
+    console.log(`[E2E Setup] Test-Kategorien angelegt: ${testCategoryIds.join(', ')}`)
+  } catch (err) {
+    console.warn('[E2E Setup] Test-Kategorien konnten nicht angelegt werden (nicht kritisch):', err)
+  }
+
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
   // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)
@@ -576,7 +598,7 @@ export default async function globalSetup() {
   }
 
   // ── 6. State + Credentials speichern ──────────────────────────────────────
-  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState, adminToken }
+  const state = { ...creds, ownerId, shopId: testShopId, shopSlug: testShopSlug, storageState, adminToken, testCategoryIds }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
   console.log(`[E2E Setup] State gespeichert: ${STATE_FILE}`)
   console.log('[E2E Setup] Setup abgeschlossen.\n')

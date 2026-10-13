@@ -55,7 +55,7 @@ src/
 │   ├── product/         # ProductCard, OfferList, RelatedProductsCarousel, PriceHistory*
 │   ├── search/          # SearchBar, FilterChips, CategoryChips, ServiceResultCard, SearchSimilarButton
 │   ├── shop/            # ShopCard, ShopOfferCard, NearbyShops, RelatedShopsWidget
-│   ├── shop-admin/      # Isolierte Admin-Komponenten (nur ui/ importieren — Clean Boundary!)
+│   ├── shop-admin/      # Isolierte Admin-Komponenten (nur ui/ importieren — Clean Boundary!); u. a. CategoryPicker (Kategorie-Auswahl, B5900-011)
 │   ├── system-admin/    # System-Admin-Komponenten
 │   ├── layout/          # Header, Footer, BottomTabBar
 │   ├── activity-feed/   # ActivityFeed, LiveFeed
@@ -67,6 +67,7 @@ src/
 │   ├── api.ts                   # API-Client für Server Components
 │   ├── customer-api.ts          # Customer-spezifische Endpoints
 │   ├── shop-admin-api.ts        # Shop-Admin API-Client (Clean Boundary)
+│   ├── shop-admin-categories.ts # Kategorie-Picker-Client (Browser-Fetch via /api/shop-admin, B5900-011)
 │   ├── lang.ts                  # Spracherkennung, isRTL, Cookie-Utils
 │   ├── translations.ts          # Customer-UI-Strings (6 Sprachen, kein i18n-Framework)
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings

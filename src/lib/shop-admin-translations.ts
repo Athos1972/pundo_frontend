@@ -9,12 +9,14 @@ import { shopAdminCatalogTranslationsMap } from './i18n/shop-admin-catalog'
 import { shopAdminOffersTranslationsMap } from './i18n/shop-admin-offers'
 import { shopAdminCommonTranslationsMap } from './i18n/shop-admin-common'
 import { shopAdminCatalogReviewTranslationsMap } from './i18n/shop-admin-catalog-review'
+import { shopAdminCategoryPickerTranslationsMap } from './i18n/shop-admin-category-picker'
 
 export { tShopAdminAuth, type ShopAdminAuthTranslations } from './i18n/shop-admin-auth'
 export { tShopAdminCatalog, type ShopAdminCatalogTranslations } from './i18n/shop-admin-catalog'
 export { tShopAdminOffers, type ShopAdminOffersTranslations } from './i18n/shop-admin-offers'
 export { tShopAdminCommon, type ShopAdminCommonTranslations } from './i18n/shop-admin-common'
 export { tShopAdminCatalogReview, type ShopAdminCatalogReviewTranslations } from './i18n/shop-admin-catalog-review'
+export { tShopAdminCategoryPicker, type ShopAdminCategoryPickerTranslations } from './i18n/shop-admin-category-picker'
 
 type Lang = 'en' | 'de' | 'el' | 'ru' | 'ar' | 'he'
 
@@ -23,7 +25,8 @@ type MergedLang =
   typeof shopAdminCatalogTranslationsMap.en &
   typeof shopAdminOffersTranslationsMap.en &
   typeof shopAdminCommonTranslationsMap.en &
-  typeof shopAdminCatalogReviewTranslationsMap.en
+  typeof shopAdminCatalogReviewTranslationsMap.en &
+  typeof shopAdminCategoryPickerTranslationsMap.en
 
 function mergeLang(lang: Lang): MergedLang {
   return {
@@ -32,6 +35,7 @@ function mergeLang(lang: Lang): MergedLang {
     ...shopAdminOffersTranslationsMap[lang],
     ...shopAdminCommonTranslationsMap[lang],
     ...shopAdminCatalogReviewTranslationsMap[lang],
+    ...shopAdminCategoryPickerTranslationsMap[lang],
   } as MergedLang
 }
 

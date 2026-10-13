@@ -34,6 +34,9 @@ export default defineConfig({
   // not Playwright browser tests. Journey spec files (without `_`) are included via testDir.
   testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
   globalSetup: './e2e/global-setup.ts',
+  // list = Konsolenausgabe wie bisher (Default); der zweite Reporter räumt nach grünem Lauf
+  // die generierten Test-Kategorien (e2e-tmp-*) wieder auf (B5900-011 T11).
+  reporter: [[process.env.CI ? 'dot' : 'list'], ['./e2e/reporters/cleanup-test-categories.ts']],
   // workers:2 keeps concurrent login bursts below the backend's 10/min rate limit;
   // combined with retry logic in e2e/journeys/_helpers.ts this eliminates 429 flakiness.
   workers: 2,

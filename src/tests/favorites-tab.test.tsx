@@ -68,6 +68,23 @@ describe('FavoritesTab', () => {
     expect(screen.getByText(/2\.99.*EUR/)).toBeInTheDocument()
   })
 
+  it('B5900-013: price 0 renders "0.00 EUR", never a bare "0"; null/None render no price', async () => {
+    for (const [price, expected] of [[0, '0.00 EUR'], [null, null], ['None', null]] as const) {
+      mockFetch.mockReset()
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ default_alert_interval: 'täglich' }) })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ items: [makeFav({ best_offer_price: price as unknown as string, best_offer_shop: null })], total: 1, page: 1, limit: 20 }),
+        })
+      const { container, unmount } = render(<FavoritesTab lang="en" />)
+      await waitFor(() => expect(screen.getByText('Test Produkt')).toBeInTheDocument())
+      if (expected) expect(screen.getByText(expected)).toBeInTheDocument()
+      else expect(container.textContent).not.toMatch(/EUR|None|null/)
+      unmount()
+    }
+  })
+
   it('shows delete confirm on trash click, then deletes', async () => {
     mockFetch.mockReset()
     mockFetch

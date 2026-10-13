@@ -255,9 +255,21 @@ test.beforeAll(async () => {
   const ownerToken = tokenMatch[1]
 
   // 8. Erste verfügbare Kategorie holen (Leaf-Level bevorzugt)
+  // Bevorzugt: generierte Test-Kategorie (global-setup, `e2e-tmp-*`, Wurzel ohne Kinder).
+  // Fallback (z. B. E2E_REUSE_STATE nach bereinigtem Lauf): erstes Kind einer Google-Wurzel,
+  // damit der Test nicht an einer Wurzel-Kategorie der falschen Taxonomie hängt.
   const catRes = await api('GET', '/api/v1/categories?limit=50')
   const categories = (catRes.data as { items: Array<{ id: number; child_count: number }> }).items ?? []
-  const leafCat = categories.find(c => c.child_count === 0) ?? categories[0]
+  let leafCat: { id: number } | undefined = categories.find(c => c.child_count === 0)
+  if (!leafCat) {
+    const gRes = await api('GET', '/api/v1/categories?taxonomy_type=google&limit=1')
+    const root = (gRes.data as { items: Array<{ id: number }> }).items?.[0]
+    if (root) {
+      const kids = await api('GET', `/api/v1/categories?parent_id=${root.id}&limit=1`)
+      leafCat = (kids.data as { items: Array<{ id: number }> }).items?.[0] ?? root
+    }
+  }
+  leafCat = leafCat ?? categories[0]
   if (!leafCat) throw new Error('[Smoke] Keine Kategorie verfügbar')
   const categoryId = leafCat.id
 

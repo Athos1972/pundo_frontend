@@ -45,6 +45,11 @@
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
 | [admin-catalog-review](admin-catalog-review.spec.ts) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (6/6, re-verified 2026-07-16 nach Test-Infra-Fix + Selector-Fix, siehe 04-test-report.md Re-Verifikation) |
+| [b5900-009-item-photo-upload](b5900-009-item-photo-upload.spec.ts) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |
+| [b5900-010-offer-form-labels](b5900-010-offer-form-labels.spec.ts) | Shop-Admin Angebotsformular Beschriftungen/Sprachen (B5900-010) | implemented | P2 | PASS (2026-10-12) |
+| [b5900-011-category-picker](b5900-011-category-picker.spec.ts) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |
+| [b5900-012-shop-hours-validation](b5900-012-shop-hours-validation.spec.ts) | Shop-Admin Öffnungszeiten-Validierung (B5900-012) | implemented | P2 | PASS (AK2 skip ohne DATABASE_URL_TEST) |
+| [b5900-013-null-price-display](b5900-013-null-price-display.spec.ts) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
 
 ## Smoketest Coverage
 

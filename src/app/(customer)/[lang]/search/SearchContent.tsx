@@ -15,6 +15,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { FilterChips } from '@/components/search/FilterChips'
 import { DistanceSlider } from '@/components/search/DistanceSlider'
 import { localePath } from '@/lib/routing'
+import { hasNumericPrice } from '@/lib/utils'
 import { ContactCtaLink } from '@/components/contact/ContactCtaLink'
 import { CategoryEmptyState } from '@/components/search/CategoryEmptyState'
 import { SearchMapBottomSheet, type SheetSnap } from '@/components/map/SearchMapBottomSheet'
@@ -267,7 +268,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
 
   // Apply product-level filters (price, distance) — services are never filtered out
   const filteredProducts = withPrice
-    ? productItems.filter(item => item.best_offer?.price_type === 'fixed')
+    ? productItems.filter(item => item.best_offer != null && hasNumericPrice(item.best_offer))
     : productItems
 
   const localItems = filteredProducts.filter(item => !isOnlineOffer(item.best_offer))

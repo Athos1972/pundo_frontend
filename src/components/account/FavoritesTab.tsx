@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
+import { formatAmount } from '@/lib/utils'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
 import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
@@ -170,9 +171,9 @@ export function FavoritesTab({ lang }: Props) {
                   </span>
                 )}
                 {fav.brand && <p className="text-xs text-text-muted">{fav.brand}</p>}
-                {fav.best_offer_price && (
+                {formatAmount(fav.best_offer_price, fav.best_offer_currency) && (
                   <p className="text-xs text-accent font-medium mt-0.5">
-                    {fav.best_offer_price} {fav.best_offer_currency}
+                    {formatAmount(fav.best_offer_price, fav.best_offer_currency)}
                     {fav.best_offer_shop && ` @ ${fav.best_offer_shop}`}
                   </p>
                 )}

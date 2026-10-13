@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import type { Lang } from '@/lib/lang'
 import { getProduct, getRelatedProducts, getRelatedCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
-import { formatSizeAttr, toRelativeImageUrl, pickImg } from '@/lib/utils'
+import { formatSizeAttr, toRelativeImageUrl, pickImg, hasNumericPrice, formatPriceOrLabel } from '@/lib/utils'
 import { getSiteUrl } from '@/lib/seo'
 import { truncateTitle, truncateDescription, DESC_MIN } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const product = await getProduct(slug, lang)
     const tr = t(lang)
-    const name = product.names[lang] ?? product.names.en ?? slug
+    const name = product.names[lang] ?? product.names.en ?? Object.values(product.names)[0] ?? slug
     const brandName = product.brand?.name ?? 'Pundo'
 
     // T5/AC-38: Title — truncate name to fit " | Pundo" suffix, no price in title
@@ -116,19 +116,20 @@ export default async function ProductPage({ params, searchParams }: Props) {
     : []
 
   const siteUrl = getSiteUrl()
-  const name = product.names[lang] ?? product.names.en ?? slug
+  const name = product.names[lang] ?? product.names.en ?? Object.values(product.names)[0] ?? slug
   const sizeStr = formatSizeAttr(product.attributes?.size)
 
   const firstImgUrl = pickImg(product.images, 'detail', product.thumbnail_url)
   const origImgUrl  = toRelativeImageUrl(product.images?.orig) ?? firstImgUrl ?? undefined
   const visibleOffers = withPrice
-    ? product.offers.filter(o => o.price_type === 'fixed')
+    ? product.offers.filter(hasNumericPrice)
     : product.offers
 
   const firstOffer = product.offers[0]
-  const priceDisplay = firstOffer?.price_type === 'fixed' && firstOffer.price
-    ? `${firstOffer.price} €`
+  const firstPrice = firstOffer
+    ? formatPriceOrLabel(firstOffer.price, firstOffer.currency, firstOffer.price_type, null, tr)
     : null
+  const priceDisplay = firstPrice?.isNumeric ? firstPrice.display : null
 
   return (
     <main className="min-h-screen bg-bg">

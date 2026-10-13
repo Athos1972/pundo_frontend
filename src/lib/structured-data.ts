@@ -1,5 +1,5 @@
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
-import { toRelativeImageUrl } from '@/lib/utils'
+import { toRelativeImageUrl, parsePriceAmount } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 
 /**
@@ -59,7 +59,7 @@ export function buildProductSchema(
   )
 
   const fixedOffers = product.offers.filter(
-    (o) => o.price_type === 'fixed' && o.price != null,
+    (o) => o.price_type === 'fixed' && parsePriceAmount(o.price) !== null,
   )
 
   // Merchant listing fields required/recommended by Google.

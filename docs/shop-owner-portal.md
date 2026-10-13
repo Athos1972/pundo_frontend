@@ -104,6 +104,19 @@ So bleibt der JWT-Token im HttpOnly Cookie — er verlässt nie den Server-seiti
 - Archivieren statt Löschen (aktive Angebote können nicht direkt gelöscht werden)
 - Endpunkte: `GET/POST/PATCH/DELETE /api/v1/shop-owner/offers`
 
+### Fotos zu Produkten/Dienstleistungen (B5900-009)
+- Ort: Schritt 2 „Preis & Details“ des Angebotsformulars (`OfferForm`) — für Neuanlage (nach „Neues Item anlegen“ / Item-Auswahl) und auf `/shop-admin/offers/[id]/edit`. Komponenten: `OfferItemPhotos` (lädt Fotos) → `ItemPhotoUpload` (UI).
+- Limits: max. 8 Fotos pro Item, JPEG/PNG/WebP, 5 MB. Große Handyfotos werden clientseitig verkleinert (`src/lib/shop-admin-image-resize.ts`, max. 2560 px). Mehrfachauswahl möglich; mobil Kamera und Galerie (kein `capture`).
+- Regeln: Das erste Foto ist das Titelbild für Kunden. Löschen / „Als Titelbild“ nur bei Fotos des eigenen Shops (`contributed_by_shop_id === shop_id`). „Als Titelbild“ nur, wenn alle Fotos des Items eigene sind (gemeinsam genutzte Items: Hinweis statt Button).
+- Endpunkte (über Proxy `/api/shop-admin/items/...`): `GET /items/{id}`, `POST /items/{id}/photos` (multipart `file`), `DELETE|PATCH /items/{id}/photos/{photo_id}`.
+
+### Kategorie-Auswahl (B5900-011)
+- Ort: Formular „Neu anlegen“ (`ItemCreateForm`, im `ItemPickerModal`). Komponente: `CategoryPicker` (inline, kein verschachteltes Modal); Fetch-Helper `src/lib/shop-admin-categories.ts`; Texte `src/lib/i18n/shop-admin-category-picker.ts` (Präfix `category_picker_`).
+- Taxonomie nach Typ: Produkt = Google Product Taxonomy, Dienstleistung = UNSPSC. Typwechsel verwirft eine gewählte Kategorie der anderen Taxonomie.
+- Bedienung: (1) Vorschläge aus dem Artikelnamen (Debounce 400 ms, Tap wählt aus), (2) Suche (`type="search"`, ab 2 Zeichen, relevanzsortiert), (3) „Alle Kategorien durchsuchen“ (Drill-down, auch Zwischenebenen wählbar). Namen und Pfade in der UI-Sprache, `E2E-*`-Fixtures und die Wurzel „Mature“ sind ausgeblendet (per Suche/Vorschlag weiter erreichbar).
+- Endpunkte (über Proxy): `GET /api/shop-admin/categories?item_type=&parent_id=&q=&limit=` und `GET /api/shop-admin/categories/suggest?name=&item_type=`. `POST /items` mit unbekannter `category_id` → 422 `invalid_category` (Auswahl wird zurückgesetzt).
+- E2E-Helper: `e2e/journeys/_helpers/category-picker.ts` (`pickCategory`); Spec `e2e/journeys/b5900-011-category-picker.spec.ts`.
+
 ### Import (`/shop-admin/import`)
 Zwei Import-Wege:
 

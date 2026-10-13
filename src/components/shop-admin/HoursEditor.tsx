@@ -28,6 +28,13 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
         return
       }
 
+      // B5900-012: an open day needs open+close, otherwise the backend answers 422
+      const incomplete = hours.some((h) => !h.closed && (!h.open || !h.close))
+      if (incomplete) {
+        showToast(tr.error_hours_incomplete, 'error')
+        return
+      }
+
       // T2: Payload cleanup — closed days send only {day, closed:true}; no time fields
       const payload = hours.map((h) =>
         h.closed
@@ -52,7 +59,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
         if (res.ok) {
           showToast(tr.saved, 'success')
         } else {
-          showToast(tr.error_generic, 'error')
+          showToast(res.status === 422 ? tr.error_hours_incomplete : tr.error_generic, 'error')
         }
       } catch {
         showToast(tr.error_generic, 'error')
@@ -75,7 +82,14 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
               <input
                 type="checkbox"
                 checked={slot.closed}
-                onChange={(e) => updateDay(slot.day, { closed: e.target.checked })}
+                onChange={(e) =>
+                  updateDay(
+                    slot.day,
+                    e.target.checked
+                      ? { closed: true }
+                      : { closed: false, open: slot.open || '09:00', close: slot.close || '18:00' },
+                  )
+                }
                 className="w-4 h-4 rounded accent-accent"
                 aria-label={`${tr.days[idx]} ${tr.closed}`}
               />
@@ -88,7 +102,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                 <span className="text-gray-400">{tr.open_from}</span>
                 <input
                   type="time"
-                  value={slot.open ?? '09:00'}
+                  value={slot.open ?? ''}
                   onChange={(e) => updateDay(slot.day, { open: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
                   aria-label={`${tr.days[idx]} open from`}
@@ -96,7 +110,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                 <span className="text-gray-400">{tr.open_until}</span>
                 <input
                   type="time"
-                  value={slot.close ?? '18:00'}
+                  value={slot.close ?? ''}
                   onChange={(e) => updateDay(slot.day, { close: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
                   aria-label={`${tr.days[idx]} close at`}

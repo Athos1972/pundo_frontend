@@ -441,3 +441,22 @@ export interface CatalogCaseRejectResponse {
   status: CatalogCaseStatus
   rework_cycle_count: number
 }
+
+// ─── B5900-011: Category picker ──────────────────────────────────────────────
+
+export interface PickerCategory {
+  id: number
+  parent_id: number | null
+  taxonomy_type: 'google' | 'unspsc'
+  name: string
+  /** Translated ancestors, root → parent. Empty for roots. */
+  path_names: string[]
+  child_count: number
+}
+
+export type CategorySuggestionSource = 'name' | 'recent' | 'domain'
+
+export interface CategorySuggestion extends PickerCategory {
+  source: CategorySuggestionSource
+  score: number
+}

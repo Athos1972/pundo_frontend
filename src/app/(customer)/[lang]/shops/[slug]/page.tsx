@@ -162,7 +162,8 @@ export default async function ShopPage({ params }: Props) {
 
   const [topProductsResult, offers, relatedShops, charityVotesResult] = await Promise.all([
     // T4/B5900-003: Gate removed — always fetch products (limit 12, BE-3 fix required for full coverage)
-    searchProducts({ shop_id: shop.id, limit: 12 }, lang).then(r => r.items),
+    // B5900-009/AK5: no data cache (new/deleted products must show immediately) + newest first.
+    searchProducts({ shop_id: shop.id, limit: 12, sort: 'newest' }, lang, { noStore: true }).then(r => r.items),
     getShopOffers(slug, lang),
     getRelatedShops(slug, lang),
     // F3800 Phase 2 — fetch charity vote aggregate for CharityVoteControl
@@ -385,6 +386,8 @@ export default async function ShopPage({ params }: Props) {
                     { open?: string; close?: string; closed?: boolean } | null | undefined
                   if (hours === undefined) return null
                   const isClosed = !hours || (hours as { closed?: boolean }).closed === true
+                  // B5900-012: open day without times (bad legacy data) -> omit the day, never render "undefined"
+                  if (!isClosed && (!hours!.open || !hours!.close)) return null
                   return (
                     <div key={dayKey} className="flex justify-between text-sm">
                       <span className="text-text-muted">{tr.days[dayKey]}</span>

@@ -6,7 +6,7 @@ Angebote können einen konkreten Fixpreis haben — oder auch nicht. Das `price_
 
 | Wert | Bedeutung | Preis-Feld | Beispiel |
 |---|---|---|---|
-| `fixed` | Konkreter Fixpreis | `string` (Pflicht) | "7.99 EUR" |
+| `fixed` | Konkreter Fixpreis | `string` (Pflicht; Altdaten ohne Preis möglich, werden als `price_not_available` angezeigt) | "7.99 EUR" |
 | `on_request` | Preis auf Anfrage | `null` | Tierarzt-Beratung, Hundetraining |
 | `free` | Kostenlos | `null` | Erstberatung gratis, Probepackung |
 | `variable` | Variabler Preis | `null` | "ab 5 € / kg", "pro Stunde" |
@@ -35,6 +35,17 @@ formatPriceOrLabel(
 
 - `isNumeric: true` → Preis in `text-accent`
 - `isNumeric: false` → Label in `text-text-muted`
+- `fixed` ohne gültigen Betrag (`null`, `"None"`, `""`, negativ) → `tr.price_not_available` mit `isNumeric: false`
+
+### Defensive Formatierung (B5900-013)
+
+Helfer in `src/lib/utils.ts`:
+
+- `parsePriceAmount(price)` → endlicher Betrag >= 0 oder `null` (`"None"`, `"null"`, `""`, `"abc"`, negativ → `null`)
+- `formatAmount(price, currency)` → `"7.99 EUR"` oder `null`
+- `hasNumericPrice(offer)` → `price_type === 'fixed'` UND gültiger Betrag (Filter „Nur mit Preis“)
+
+Regel: nie einen Rohpreis in Template-Strings (`` `${price} €` ``) oder per `price && …` rendern. Immer `formatAmount` bzw. `formatPriceOrLabel` nutzen. `fmtPrice` bleibt nur für Shop-Admin (Passthrough-Verhalten).
 
 ### CTA bei `on_request`
 
@@ -62,6 +73,7 @@ Nur wenn `price_type === 'on_request'` UND mindestens ein Kontaktweg vorhanden:
 | `price_on_request` | Price on request | Preis auf Anfrage |
 | `price_free` | Free | Kostenlos |
 | `price_variable` | Variable price | Variabler Preis |
+| `price_not_available` | No price listed | Kein Preis angegeben |
 | `filter_price_only` | With price only | Nur mit Preis |
 | `contact_shop` | Contact shop | Shop kontaktieren |
 

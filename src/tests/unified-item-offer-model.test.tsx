@@ -126,10 +126,8 @@ describe('ItemPickerModal', () => {
 
 describe('ItemCreateForm', () => {
   beforeEach(() => {
-    // Mock categories endpoint
-    mockFetch.mockResolvedValue(new Response(JSON.stringify({
-      items: [{ id: 1, name: 'Electronics' }, { id: 2, name: 'Services' }],
-    }), { status: 200 }))
+    // B5900-011: category picker endpoints (suggest / browse / search)
+    mockFetch.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ items: [] }), { status: 200 })))
   })
 
   it('renders name, item_type radios, category select', async () => {
@@ -221,7 +219,7 @@ describe('ItemPhotoUpload', () => {
       id: 1, item_id: 1, contributed_by_shop_id: 42,
       url: 'https://example.com/p.jpg', thumbnail_url: null, sort_order: 0,
     }]
-    render(<ItemPhotoUpload itemId={1} photos={photos} onChange={vi.fn()} lang="en" />)
+    render(<ItemPhotoUpload itemId={1} photos={photos} onChange={vi.fn()} lang="en" ownShopId={42} />)
     expect(screen.getByText(tr.photo_from_shop)).toBeInTheDocument()
   })
 
@@ -364,5 +362,82 @@ describe('AdminShopListing and AdminItem types', () => {
       photo_url: null,
     }
     expect(typeof result.name).toBe('string')
+  })
+})
+
+// ─── B5900-010: ItemCreateForm labels + language ──────────────────────────────
+
+describe('ItemCreateForm B5900-010', () => {
+  beforeEach(() => {
+    // B5900-011: URL-routed mock — suggestions endpoint returns one picker suggestion
+    mockFetch.mockImplementation((url: string) => {
+      const body = String(url).includes('/categories/suggest')
+        ? { items: [{ id: 1, parent_id: null, taxonomy_type: 'google', name: 'Bakery', path_names: [], child_count: 0, source: 'name', score: 3 }] }
+        : { items: [] }
+      return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
+    })
+  })
+
+  it('has no "(DE)" in label; type legend differs from category label', async () => {
+    const { ItemCreateForm } = await import('@/components/shop-admin/ItemCreateForm')
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    for (const lang of ['de', 'el']) {
+      const tr = tAdmin(lang)
+      const { container, unmount } = render(<ItemCreateForm lang={lang} onCreated={vi.fn()} onCancel={vi.fn()} />)
+      expect(container.textContent).not.toContain('(DE)')
+      const legend = container.querySelector('fieldset > legend')!
+      expect(legend.textContent).toContain(tr.item_type_label)
+      expect(legend.textContent).not.toContain(tr.category)
+      unmount()
+    }
+  })
+
+  it('sends name + name_lang (no name_de) for lang=el', async () => {
+    const { ItemCreateForm } = await import('@/components/shop-admin/ItemCreateForm')
+    const { container } = render(<ItemCreateForm lang="el" onCreated={vi.fn()} onCancel={vi.fn()} initialName="Χωριάτικο ψωμί" />)
+    fireEvent.click(await screen.findByTestId('category-suggestion'))
+    expect(screen.getByTestId('category-selected')).toBeInTheDocument()
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      id: 5, slug: 'x', item_type: 'product', names: { el: 'Χωριάτικο ψωμί' }, category_id: 1,
+    }), { status: 201 }))
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ id: 9 }), { status: 201 }))
+    fireEvent.submit(container.querySelector('form')!)
+    await waitFor(() => {
+      expect(mockFetch.mock.calls.some((c) => c[0] === '/api/shop-admin/items')).toBe(true)
+    })
+    const call = mockFetch.mock.calls.find((c) => c[0] === '/api/shop-admin/items')!
+    const body = JSON.parse(call[1].body)
+    expect(body.name).toBe('Χωριάτικο ψωμί')
+    expect(body.name_lang).toBe('el')
+    expect(body).not.toHaveProperty('name_de')
+    expect(body.category_id).toBe(1)
+  })
+
+  it('422 invalid_category resets the selection and shows the hint (B5900-011)', async () => {
+    const { ItemCreateForm } = await import('@/components/shop-admin/ItemCreateForm')
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    const { container } = render(<ItemCreateForm lang="en" onCreated={vi.fn()} onCancel={vi.fn()} initialName="Sourdough bread" />)
+    fireEvent.click(await screen.findByTestId('category-suggestion'))
+    mockFetch.mockImplementationOnce(() => Promise.resolve(new Response(JSON.stringify({ detail: { code: 'invalid_category' } }), { status: 422 })))
+    fireEvent.submit(container.querySelector('form')!)
+    expect(await screen.findByText(tAdmin('en').category_picker_invalid_category)).toBeInTheDocument()
+    expect(screen.queryByTestId('category-selected')).toBeNull()
+  })
+
+  it('submit without category shows required error (B5900-011)', async () => {
+    const { ItemCreateForm } = await import('@/components/shop-admin/ItemCreateForm')
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    const { container } = render(<ItemCreateForm lang="en" onCreated={vi.fn()} onCancel={vi.fn()} initialName="Bread" />)
+    fireEvent.submit(container.querySelector('form')!)
+    expect(await screen.findByText(tAdmin('en').required)).toBeInTheDocument()
+  })
+
+  it('switching item type clears a selected category (B5900-011)', async () => {
+    const { ItemCreateForm } = await import('@/components/shop-admin/ItemCreateForm')
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    render(<ItemCreateForm lang="en" onCreated={vi.fn()} onCancel={vi.fn()} initialName="Sourdough bread" />)
+    fireEvent.click(await screen.findByTestId('category-suggestion'))
+    fireEvent.click(screen.getByLabelText(tAdmin('en').item_type_service))
+    await waitFor(() => expect(screen.queryByTestId('category-selected')).toBeNull())
   })
 })

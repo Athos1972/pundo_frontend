@@ -130,6 +130,8 @@ npx playwright test --ui
 
 5. Speichert alles in `e2e/.test-state.json` (gitignored)
 
+**Test-Kategorien:** Der Setup legt pro Lauf generierte Kategorien `e2e-tmp-<run>-*` / `[E2E-TMP] …` an (`prepare_e2e_db.py --seed-test-categories`). Der Reporter `e2e/reporters/cleanup-test-categories.ts` (in `playwright.config.ts`) löscht sie nach einem **erfolgreichen** Lauf wieder; bei Fehlern bleiben sie stehen und werden vom nächsten Lauf vor dem Seed entfernt. Mit `--reporter=…` auf der CLI entfällt der Cleanup (manuell: `prepare_e2e_db.py --cleanup-test-categories`).
+
 **Wichtig:** `pundo_test` enthält Echtdaten aus Prod (via `sync_prod_to_test.sh`). Tests resetten die DB **nicht** automatisch. Expliziter Reset nur mit `E2E_RESET_DB=true npx playwright test`.
 
 ---

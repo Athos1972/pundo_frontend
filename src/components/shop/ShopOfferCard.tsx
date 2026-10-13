@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
-import { fmtPrice, formatPriceOrLabel } from '@/lib/utils'
+import { formatAmount, formatPriceOrLabel } from '@/lib/utils'
 import { absolutizeImageUrl } from '@/lib/seo/absolutize'
 import { getSiteUrl } from '@/lib/seo'
 import type { ShopOffer } from '@/types/api'
@@ -25,9 +25,10 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
     : null
 
   // Promo price display (already "active" — backend guarantees this)
-  const promoPriceDisplay = offer.promo_price
-    ? `${fmtPrice(offer.promo_price)} ${offer.promo_currency ?? offer.standard_currency}`
-    : null
+  const promoPriceDisplay = formatAmount(
+    offer.promo_price,
+    offer.promo_currency ?? offer.standard_currency,
+  )
 
   // Standard price display via formatPriceOrLabel for proper "on request" / "free" handling
   const stdLabel = formatPriceOrLabel(

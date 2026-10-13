@@ -106,6 +106,16 @@ Browser → /product_images/*  →  Rewrite  →  BACKEND_URL/product_images/*
 Server Components rufen `BACKEND_URL` direkt auf (kein Rewrite-Overhead).  
 Client Components rufen `/api/v1/…` relativ auf (geht durch den Rewrite).
 
+## Client-IP-Weitergabe (B6220-002)
+
+Backend-Rate-Limits sind pro Client-IP. Damit nicht alle Nutzer einen Bucket teilen (Peer = Frontend-Container), senden die Next.js-Route-Handler (`src/app/api/**/route.ts`, jeder mit `BACKEND_URL`) die IP weiter:
+
+- Helper `src/lib/proxy/client-ip.ts`: `getClientIp(headers)` liest den **rechtesten** Eintrag von `x-forwarded-for` (von nginx gesetzt, vertrauenswuerdig), validiert ihn per `node:net.isIP`, Header > 1024 Zeichen oder ungueltiger Eintrag -> `undefined` (kein Rueckfall auf linkere Eintraege oder `cf-connecting-ip`). `clientIpForwardHeaders(headers)` liefert `{ 'X-Forwarded-For': ip }` oder `{}`.
+- Ans Backend geht ausschliesslich dieser eine `X-Forwarded-For`; `CF-Connecting-IP`, `X-Real-IP` und `Forwarded` des Clients werden nie weitergereicht. Turnstile (`signup`, `contact`) nutzt denselben Wert als `remoteip`.
+- `next.config.ts`-Rewrites (`/api/v1/*`) reichen Client-Header unveraendert durch; sie sind nur sicher, weil nginx `X-Forwarded-For`/`X-Real-IP`/`CF-Connecting-IP` mit `$remote_addr` ueberschreibt (prod, `snippets/proxy-client-ip.conf`).
+- Backend wertet `X-Forwarded-For` nur von Peers in `FORWARDED_ALLOW_IPS` aus (siehe Backend `docs/api.md`, "Client-IP (B6220-002)").
+- Neue Route-Handler mit `BACKEND_URL` muessen den Helper einbinden; `src/tests/proxy-client-ip-routes.test.ts` prueft das statisch.
+
 ## Auth-Cookie-Architektur
 
 ### Cookie-Setzen

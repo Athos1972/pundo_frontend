@@ -15,6 +15,7 @@
 // Local dev: COOKIE_DOMAIN="" (empty) — Google OAuth not testable locally anyway.
 
 import { NextRequest, NextResponse } from 'next/server'
+import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN ?? ''
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       await fetch(`${BACKEND}/api/v1/customer/auth/logout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, ...clientIpForwardHeaders(request.headers) },
       })
     } catch {
       // Backend unreachable — proceed with cookie deletion anyway.

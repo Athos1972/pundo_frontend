@@ -10,6 +10,7 @@
 
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { getClientIp, clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 import { verifyTurnstile } from '@/lib/turnstile-server'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -24,11 +25,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const turnstileToken = typeof body?.turnstile_token === 'string' ? body.turnstile_token : ''
 
-  // Client IP from Cloudflare header or x-forwarded-for
-  const ip =
-    request.headers.get('cf-connecting-ip') ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    undefined
+  // Client IP: rightmost X-Forwarded-For entry set by nginx (B6220-002)
+  const ip = getClientIp(request.headers)
 
   // Frontend-side Turnstile verification (fail fast before hitting backend)
   const captchaOk = await verifyTurnstile(turnstileToken, ip)
@@ -45,6 +43,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     'Content-Type': 'application/json',
   }
   if (acceptLang) headers['Accept-Language'] = acceptLang
+  Object.assign(headers, clientIpForwardHeaders(request.headers))
   if (existingToken) headers['Authorization'] = `Bearer ${existingToken}`
 
   let backendRes: Response

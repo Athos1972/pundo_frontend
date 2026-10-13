@@ -4,6 +4,7 @@
 
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -11,7 +12,7 @@ interface RouteContext {
   params: Promise<{ shopId: string }>
 }
 
-export async function POST(_request: NextRequest, context: RouteContext): Promise<NextResponse> {
+export async function POST(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   const { shopId } = await context.params
   const store = await cookies()
   const adminToken = store.get('admin_token')?.value
@@ -24,7 +25,7 @@ export async function POST(_request: NextRequest, context: RouteContext): Promis
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/admin/shops/${shopId}/impersonate`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: { Authorization: `Bearer ${adminToken}`, ...clientIpForwardHeaders(request.headers) },
     })
   } catch {
     return NextResponse.json({ detail: 'Backend unreachable' }, { status: 502 })

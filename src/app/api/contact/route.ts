@@ -1,6 +1,7 @@
 // T15 — Contact API Route with Turnstile verification (F6990 Phase 2)
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getClientIp, clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 import { verifyTurnstile } from '@/lib/turnstile-server'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -16,11 +17,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const turnstileToken = typeof body?.turnstile_token === 'string' ? body.turnstile_token : ''
 
-  // Client IP from Cloudflare header or x-forwarded-for
-  const ip =
-    request.headers.get('cf-connecting-ip') ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    undefined
+  // Client IP: rightmost X-Forwarded-For entry set by nginx (B6220-002)
+  const ip = getClientIp(request.headers)
 
   const captchaOk = await verifyTurnstile(turnstileToken, ip)
   if (!captchaOk) {
@@ -34,7 +32,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/contact`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...clientIpForwardHeaders(request.headers) },
       body: JSON.stringify(forwardBody),
     })
   } catch {

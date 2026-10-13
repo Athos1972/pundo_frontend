@@ -1,7 +1,7 @@
 // T13 — Cloudflare Turnstile server-side verification helper (F6990 Phase 2)
 //
 // Usage in a Next.js Route Handler:
-//   const ok = await verifyTurnstile(token, request.headers.get('cf-connecting-ip') ?? undefined)
+//   const ok = await verifyTurnstile(token, getClientIp(request.headers))
 //   if (!ok) return Response.json({ detail: 'captcha_failed' }, { status: 400 })
 
 interface TurnstileVerifyResponse {

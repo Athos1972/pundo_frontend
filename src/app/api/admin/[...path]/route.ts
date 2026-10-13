@@ -5,6 +5,7 @@
 
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -28,6 +29,9 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   // Forward client host so backend can set cookie-domain per brand (B6200-001)
   const clientHost = request.headers.get('host')
   if (clientHost) headers['X-Forwarded-Host'] = clientHost
+
+  // Client IP for backend rate limits (B6220-002)
+  Object.assign(headers, clientIpForwardHeaders(request.headers))
 
   const hasBody = !['GET', 'HEAD'].includes(request.method)
   const body = hasBody ? await request.blob() : undefined

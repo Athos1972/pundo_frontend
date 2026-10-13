@@ -4,6 +4,7 @@
 // Always returns neutral 200 to avoid enumeration.
 
 import { NextRequest, NextResponse } from 'next/server'
+import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const res = await fetch(`${BACKEND}/api/v1/crm/opt-out`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...clientIpForwardHeaders(request.headers) },
       body: JSON.stringify(body),
     })
     // Neutral: always 200 to frontend regardless of backend response

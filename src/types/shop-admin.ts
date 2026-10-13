@@ -335,6 +335,8 @@ export interface OnboardingSpecialty {
 export interface OnboardingDomain {
   slug: string
   label: string
+  /** B5910-004: heterogeneous domain (no default offer) - at least one specialty must be chosen. Default false. */
+  specialtyRequired?: boolean
   specialties: OnboardingSpecialty[]
 }
 

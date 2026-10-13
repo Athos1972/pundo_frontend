@@ -41,6 +41,8 @@ const UUID = randomUUID().slice(0, 8)
 const PREFIX = `e2e-${RUN_ID}-quick-ob-${UUID}`
 
 test.afterAll(async () => {
+  // B5910-004: T9/T12 legen Entwurfs-Angebote an; deren Cleanup braucht mehr als die 30 s Hook-Default
+  test.setTimeout(180_000)
   const tracker = new TestDataTracker()
   const owners = await adminApi<{ items: Array<{ id: number }> }>('GET', `/shop-owners?q=${encodeURIComponent(PREFIX)}&limit=100`)
   for (const o of owners.json?.items ?? []) tracker.owner(o.id)
@@ -686,6 +688,96 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await other.fill('Hufschmied')
     // nur "Sonstiges" + Text: Weiter ist aktiv (Backend akzeptiert domain_slugs=[] seit F2970)
     await expect(page.locator('button', { hasText: /^weiter$/i }).last()).toBeEnabled()
+  })
+
+  // ── T11 (B5910-004): Tattoo & Piercing ohne Spezialität ist nicht absendbar ───────────────
+
+  test('T11 — B5910-004: Tattoo & Piercing ohne Spezialität: Weiter gesperrt, API antwortet 422', async ({ page }) => {
+    await page.context().addCookies([{ name: 'app_lang', value: 'de', url: BASE_URL }])
+    await page.goto(BASE_URL + '/shop-admin/onboarding')
+    const tile = page.locator('button[aria-pressed]', { hasText: /dienstleister|service provider/i })
+    await expect(tile.first()).toBeVisible({ timeout: 15_000 })
+    await tile.first().click()
+
+    const tattooChip = page.locator('button', { hasText: /^Tattoo & Piercing$/ })
+    await expect(tattooChip.first(), 'T11: Tattoo & Piercing Chip').toBeVisible({ timeout: 15_000 })
+    await tattooChip.first().click()
+    await page.locator('button', { hasText: /^weiter$/i }).last().click()
+
+    // Spezialitäten-Schritt: Hinweis sichtbar, Weiter gesperrt
+    const hint = page.getByTestId('specialty-required-hint')
+    await expect(hint, 'T11: Pflicht-Hinweis').toBeVisible({ timeout: 10_000 })
+    const next = page.locator('button', { hasText: /^weiter$/i }).last()
+    await expect(next, 'T11: Weiter ohne Spezialität gesperrt').toBeDisabled()
+
+    // Spezialität wählen -> Weiter frei
+    await page.locator('button', { hasText: /^Piercing$/ }).first().click()
+    await expect(hint).toBeHidden()
+    await expect(next, 'T11: Weiter mit Spezialität aktiv').toBeEnabled()
+
+    // Backend lehnt den direkten Submit ohne Spezialität ab (422, nichts angelegt)
+    const email = `${PREFIX}-t11@pundo-e2e.io`
+    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider_type: 'dienstleister',
+        domain_slugs: ['tattoo-piercing'],
+        specialty_slugs: [],
+        location: { lat: 34.917, lng: 33.636, address: 'T11 Street, Larnaca', is_b2c_storefront: true },
+        contact: { phone: '+35799000099' },
+        shop_name: `${PREFIX}-t11-shop`,
+        credentials: { type: 'email', email, password: 'E2eTestPassword!99', name: `${PREFIX} T11` },
+        lang: 'de',
+      }),
+    })
+    expect(res.status, 'T11: Tattoo ohne Spezialität -> 422').toBe(422)
+    const body = await res.json() as { detail?: Array<{ code?: string }> }
+    expect(body.detail?.[0]?.code).toBe('specialty_required')
+  })
+
+  // ── T12 (B5910-004): Haarentfernung ohne Spezialität -> genau das Item "Haarentfernung" ──
+
+  test('T12 — B5910-004: Haarentfernung ohne Spezialität ergibt genau das Item "Haarentfernung"', async () => {
+    test.setTimeout(300_000)
+    const email = `${PREFIX}-t12@pundo-e2e.io`
+    const password = 'E2eTestPassword!99'
+
+    await shopOwnerOnboardWithRetry({
+      provider_type: 'dienstleister',
+      domain_slugs: ['haarentfernung'],
+      specialty_slugs: [],
+      location: { lat: 34.917, lng: 33.636, address: 'T12 Street, Larnaca', is_b2c_storefront: true },
+      contact: { phone: '+35799000099' },
+      shop_name: `${PREFIX}-t12-shop`,
+      credentials: { type: 'email', email, password, name: `${PREFIX} T12` },
+      lang: 'de',
+    })
+
+    const adminToken = await adminLogin()
+    const ownersRes = await fetch(
+      `${BACKEND_URL}/api/v1/admin/shop-owners?q=${encodeURIComponent(email)}&limit=5`,
+      { headers: { Cookie: `admin_token=${adminToken}` } }
+    )
+    const ownersData = await ownersRes.json() as { items?: { id: number; email: string }[] }
+    const owner = (ownersData.items ?? []).find((o) => o.email === email)
+    expect(owner, `T12: must find shop-owner by email ${email}`).toBeTruthy()
+    const approveRes = await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${owner!.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${adminToken}` },
+      body: JSON.stringify({ status: 'approved' }),
+    })
+    expect(approveRes.ok, 'T12: admin approval must succeed').toBeTruthy()
+
+    const shopToken = await shopOwnerLogin(email, password)
+    const listingsRes = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, {
+      headers: { Cookie: `shop_owner_token=${shopToken}`, 'Accept-Language': 'de' },
+    })
+    expect(listingsRes.ok, 'T12: GET /shop-owner/shop-listings must succeed').toBeTruthy()
+    const data = await listingsRes.json() as { items?: Array<{ item: { slug: string; name: string } }> } | Array<{ item: { slug: string; name: string } }>
+    const listings = Array.isArray(data) ? data : (data.items ?? [])
+    expect(listings.map(l => l.item.slug), 'T12: genau ein Entwurfs-Angebot').toEqual(['haarentfernung-haarentfernung'])
+    expect(listings[0].item.name).toBe('Haarentfernung')
   })
 
 })

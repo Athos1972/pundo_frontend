@@ -186,7 +186,8 @@ export async function getDomains(lang: string, providerType: OnboardingProviderT
     if (!res.ok) throw new Error('fetch failed')
     // F2970 AC11: chips are ordered alphabetically in the registration language
     // (the backend delivers them in sort_order, which is not meaningful to the owner).
-    const data = sortDomains(((await res.json()) as { domains: OnboardingDomain[] }).domains, lang)
+    const raw = ((await res.json()) as { domains: Array<OnboardingDomain & { specialty_required?: boolean }> }).domains
+    const data = sortDomains(raw.map(normalizeDomain), lang)
     cache.set(key, data)
     return data
   } catch {
@@ -196,6 +197,12 @@ export async function getDomains(lang: string, providerType: OnboardingProviderT
     cache.set(key, sorted)
     return sorted
   }
+}
+
+/** Backend delivers snake_case `specialty_required` (B5910-004); absent means false (field stays unset). */
+export function normalizeDomain(raw: OnboardingDomain & { specialty_required?: boolean }): OnboardingDomain {
+  const { specialty_required, ...rest } = raw
+  return specialty_required === undefined ? rest : { ...rest, specialtyRequired: specialty_required }
 }
 
 export function sortDomains(domains: OnboardingDomain[], lang: string): OnboardingDomain[] {

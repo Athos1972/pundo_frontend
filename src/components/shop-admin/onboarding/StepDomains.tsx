@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { OnboardingDomain, OnboardingProviderType } from '@/types/shop-admin'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
 import { getDomains, OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
+import { domainsMissingSpecialty } from '@/lib/onboarding/specialtyGate'
 import { DomainChip } from './DomainChip'
 
 interface StepDomainsProps {
@@ -40,6 +41,10 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
     ? []
     : domains.filter(d => domainSlugs.includes(d.slug) && d.specialties.length > 0)
   const hasSpecialties = specialtyDomains.length > 0
+  // B5910-004: domains that need a specialty before the wizard may continue
+  const missingSpecialty = isOtherSelected ? [] : domainsMissingSpecialty(domains, domainSlugs, specialtySlugs)
+  const specialtyGateActive = showSpecialties && missingSpecialty.length > 0
+  const hasRequiredDomain = specialtyDomains.some(d => d.specialtyRequired)
 
   function toggleDomain(slug: string) {
     setDomainSlugs(prev => {
@@ -74,6 +79,7 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
   }
 
   function handleNext() {
+    if (specialtyGateActive) return
     if (hasSpecialties && !showSpecialties) {
       setShowSpecialties(true)
       return
@@ -86,7 +92,9 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
     }
   }
 
-  const stepTitle = showSpecialties ? tr.onboarding_step2_5_title : tr.onboarding_step2_title
+  const stepTitle = showSpecialties
+    ? (hasRequiredDomain ? tr.onboarding_step2_5_title_required : tr.onboarding_step2_5_title)
+    : tr.onboarding_step2_title
 
   return (
     <div className="flex flex-col gap-6">
@@ -147,6 +155,11 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
         </>
       ) : (
         <div className="flex flex-col gap-4">
+          {specialtyGateActive && (
+            <p role="alert" data-testid="specialty-required-hint" className="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3 ltr:text-left rtl:text-right">
+              {tr.onboarding_specialty_required_hint.replace('{domains}', missingSpecialty.map(d => d.label).join(', '))}
+            </p>
+          )}
           {specialtyDomains.map(domain => (
             <div key={domain.slug} className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-gray-700">{domain.label}</p>
@@ -176,7 +189,7 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
         <button
           type="button"
           onClick={handleNext}
-          disabled={domainSlugs.length === 0}
+          disabled={domainSlugs.length === 0 || specialtyGateActive}
           className="flex-1 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {showSpecialties ? tr.onboarding_next : (hasSpecialties ? tr.onboarding_next : tr.onboarding_next)}

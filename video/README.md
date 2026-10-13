@@ -35,6 +35,7 @@ video/
 | `product-from-catalog` | Teil 3: Katalogprodukt per Barcode/Name übernehmen; `prepare_catalog.py` (Backend-venv) legt ein fiktives Katalog-Item an (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
 | `service-create-new` | Teil 4: Dienstleistung neu anlegen (Backkurs, Preis pro Session); `prepare_service.py` (Backend-venv) räumt den Kurs früherer Läufe auf; braucht Kategorie `px-cooking` | Test-Instanz 3500/8500 |
 | `service-from-catalog` | Teil 5: Katalog-Dienstleistung „Catering / events“ übernehmen, Preis „Auf Anfrage“; `prepare_catalog_service.py` (Backend-venv) | Test-Instanz 3500/8500 |
+| `pricing` | Teil 6 (Serienende): Brot-Angebot bearbeiten, Staffel „ab 6 Stück“, Aktionspreis mit Zeitraum, Kundensicht (braucht F5200 „Staffelpreise Kundensicht“); `prepare_pricing.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

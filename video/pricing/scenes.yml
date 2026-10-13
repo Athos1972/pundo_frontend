@@ -1,0 +1,138 @@
+# Single source of truth for the pricing video (EN + EL), part 6 (last) of "pundo for businesses".
+# Approved German draft: 01-skript.de.md (BB 2026-10-13: approved; series end with playlist, no "next video").
+# Greek: informal "εσύ". Demo offer: sourdough bread from part 2 (4.50 EUR per piece), edited twice:
+# 1) bulk step from 6 pieces 4.00 -> product page, 2) promotion 3.90 for 7 days -> shop page promo block.
+# Needs feature F5200 "staffelpreise-kundensicht" (tiers visible to customers; A1: during a promo only promo tiers count).
+# UI terms match src/lib/i18n/shop-admin-offers.ts (standard_price, price_type_fixed, add_step, step_max_qty,
+# promo_section, add_price_tier, valid_from/valid_until) and shop-admin-common.ts (nav_offers, edit, save).
+
+meta:
+  slug: pricing
+  title:
+    en: "Prices, bulk discounts & promotions"
+    el: "Τιμές, εκπτώσεις ποσότητας & προσφορές"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:                 # series end: points to the playlist instead of a next part
+    en: "All tutorials: playlist \"pundo for businesses\""
+    el: "Όλοι οι οδηγοί: playlist «pundo για επιχειρήσεις»"
+  demo:
+    name: { en: "Sourdough bread 750 g", el: "Ψωμί προζυμιού 750 γρ." }
+    price: { en: "4.50", el: "4,50" }
+    bulk_from: 6
+    bulk_price: { en: "4.00", el: "4,00" }
+    promo_price: { en: "3.90", el: "3,90" }
+    promo_days: 7
+  thumbnail_scene: promo
+  target_duration_s: 135
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: welcome
+    shot: 'shop-admin dashboard of Anna''s Bakery, still'
+    callout:
+      en: "Your prices, your rules"
+      el: "Οι τιμές σου, οι κανόνες σου"
+    narration:
+      en: >-
+        Anna wants to sell more bread: cafés that buy a lot get a bulk discount, and at the weekend
+        there's a special offer. You can set up both in just a few seconds.
+      el: >-
+        Η Άννα θέλει να πουλάει περισσότερο ψωμί: τα καφέ που παίρνουν πολλά έχουν έκπτωση ποσότητας,
+        και το Σαββατοκύριακο υπάρχει προσφορά. Και τα δύο τα ρυθμίζεις σε λίγα δευτερόλεπτα.
+
+  - id: open-offer
+    shot: 'menu -> "Offers" -> bread row "Edit"'
+    callout:
+      en: "pundo.cy/shop-admin"
+      el: "pundo.cy/shop-admin"
+    narration:
+      en: >-
+        Open "Offers" and tap "Edit" next to the sourdough bread.
+      el: >-
+        Άνοιξε τις «Προσφορές» και πάτησε «Επεξεργασία» δίπλα στο ψωμί προζυμιού.
+
+  - id: unit-price
+    shot: 'standard-price block with price type fixed, unit piece, price 4.50 highlighted'
+    callout:
+      en: "Price per unit"
+      el: "Τιμή ανά μονάδα"
+    narration:
+      en: >-
+        Here is Anna's price: a fixed price of 4 euros 50 per piece. You choose the unit yourself:
+        per piece, per kilo, per hour, or your own.
+      el: >-
+        Εδώ είναι η τιμή της Άννας: σταθερή τιμή, 4,50 ευρώ το τεμάχιο. Τη μονάδα τη διαλέγεις εσύ:
+        ανά τεμάχιο, ανά κιλό, ανά ώρα ή μια δική σου.
+
+  - id: bulk
+    shot: 'first step "until qty" 5 -> "+ Add step" -> from 6, price 4.00, until empty -> Save'
+    callout:
+      en: "Bulk discount"
+      el: "Έκπτωση ποσότητας"
+    narration:
+      en: >-
+        For larger quantities, just add a step. Up to five pieces it stays at 4 euros 50,
+        from six pieces the bread costs only 4 euros. An empty "Until qty" field means no limit.
+        Tap "Save".
+      el: >-
+        Για μεγαλύτερες ποσότητες πρόσθεσε απλώς μια βαθμίδα. Έως πέντε τεμάχια μένει στα 4,50 ευρώ,
+        από έξι τεμάχια το ψωμί κοστίζει μόνο 4 ευρώ. Κενό πεδίο στο «Έως ποσότητα» σημαίνει χωρίς όριο.
+        Πάτησε «Αποθήκευση».
+
+  - id: customer-tiers
+    shot: 'customer product page of the bread, Anna''s row: "4.50 EUR / piece", tier line "from 6: 4.00 EUR / piece" highlighted'
+    callout:
+      en: "Customers see your prices"
+      el: "Οι πελάτες βλέπουν τις τιμές σου"
+    narration:
+      en: >-
+        On the product page, customers now see the price and the unit, and that it gets cheaper from six pieces.
+      el: >-
+        Στη σελίδα του προϊόντος οι πελάτες βλέπουν τώρα την τιμή και τη μονάδα, και ότι από έξι τεμάχια
+        γίνεται φθηνότερο.
+
+  - id: promo
+    shot: 'back -> "Edit" -> open "Promotion (optional)" -> fixed price -> "+ Add pricing unit" -> piece, 3.90 -> valid from today, until +7 days -> Save'
+    callout:
+      en: "Promotion with dates"
+      el: "Προσφορά με ημερομηνίες"
+    narration:
+      en: >-
+        Now the weekend offer: open "Promotion", choose the unit and the price, 3 euros 90, and the dates.
+        After the end date your normal price applies again automatically, so there's nothing to undo.
+        Tap "Save".
+      el: >-
+        Τώρα η προσφορά του Σαββατοκύριακου: άνοιξε την «Τιμή προσφοράς», διάλεξε μονάδα και τιμή,
+        3,90 ευρώ, και τις ημερομηνίες. Μετά τη λήξη ισχύει αυτόματα ξανά η κανονική σου τιμή,
+        δεν χρειάζεται να αλλάξεις τίποτα. Πάτησε «Αποθήκευση».
+
+  - id: customer-promo
+    shot: 'customer shop page, promo block: bread card "3.90 EUR / piece", "4.50 EUR" struck through, badge "Sale until <date>"'
+    callout:
+      en: "Customers see the deal"
+      el: "Οι πελάτες βλέπουν την προσφορά"
+    narration:
+      en: >-
+        On Anna's shop page, the bread now appears with the offers: with the sale price,
+        the normal price crossed out, and the date the offer runs until.
+      el: >-
+        Στη σελίδα του καταστήματος της Άννας το ψωμί εμφανίζεται τώρα στις προσφορές: με την τιμή
+        προσφοράς, την κανονική τιμή διαγραμμένη και την ημερομηνία λήξης.
+
+  - id: wrap-up
+    shot: 'shop page stays, playlist card'
+    callout:
+      en: "All tutorials in one playlist"
+      el: "Όλοι οι οδηγοί σε μία playlist"
+    narration:
+      en: >-
+        That's it! You'll find all videos of this series in our playlist. Good luck with your shop on pundo!
+      el: >-
+        Αυτό ήταν! Όλα τα βίντεο της σειράς θα τα βρεις στην playlist μας. Καλή επιτυχία με το κατάστημά σου στο pundo!
+
+  - id: outro
+    branding: outro

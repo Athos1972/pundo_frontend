@@ -203,11 +203,13 @@ export interface SitemapSlugsResponse {
   shops: { slug: string; last_scraped: string | null }[];
 }
 
-// Wird ausschliesslich von sitemap.ts aufgerufen — liefert alle product/shop
-// slugs in einem Request, damit die Sitemap-Regeneration nicht ~320 paginierte
-// Calls ins Backend ballert. Siehe auch: ingestor/api/sitemap.py.
+// Wird ausschliesslich von getSitemap() (lib/seo.ts) aufgerufen — liefert alle
+// product/shop slugs in einem Request, damit die Sitemap-Regeneration nicht ~320
+// paginierte Calls ins Backend ballert. Siehe auch: ingestor/api/sitemap.py.
+// no-store: Die Antwort ist > 2 MB und passt nicht in den Next.js-Data-Cache;
+// gecacht wird stattdessen im Prozess (getSitemap, 1 h TTL).
 export async function getSitemapSlugs(): Promise<SitemapSlugsResponse> {
-  return apiFetch<SitemapSlugsResponse>('/sitemap/slugs', 'en');
+  return apiFetch<SitemapSlugsResponse>('/sitemap/slugs', 'en', { cache: 'no-store' });
 }
 
 export async function getCategories(

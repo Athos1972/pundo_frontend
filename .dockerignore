@@ -1,0 +1,30 @@
+# Build-Kontext für das Frontend-Image (Dockerfile: COPY . . nach npm ci).
+# Ohne diese Datei würde ein lokales node_modules (z. B. macOS-Binaries von
+# sharp/swc) das im Container per npm ci installierte überschreiben.
+
+# Abhängigkeiten und Build-Ausgaben — werden im Image neu erzeugt
+node_modules
+smoketests/node_modules
+.next
+out
+build
+
+# VCS, Agent-Worktrees, Tooling
+.git
+.claude
+graphify-out
+.idea
+.DS_Store
+
+# Test-Ausgaben
+coverage
+test-results
+playwright-report
+
+# Video-Pipeline (Renders, nicht Teil der App)
+video
+
+# Lokale Secrets/Overrides — Build-Variablen kommen über ARG/ENV im Dockerfile
+.env*.local
+*.pem
+npm-debug.log*

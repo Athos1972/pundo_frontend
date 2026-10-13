@@ -5,7 +5,10 @@
 import { getSiteUrl, getSitemap } from '@/lib/seo'
 import { LANGS } from '@/lib/lang'
 
-export const revalidate = false
+// Statisch mit stuendlicher ISR. getSitemap() fetcht mit no-store (Antwort > 2 MB,
+// siehe lib/seo.ts) — force-static haelt die Route trotzdem statisch.
+export const dynamic = 'force-static'
+export const revalidate = 3600
 
 function buildXml(entries: { url: string; lastmod?: string }[]): string {
   const items = entries

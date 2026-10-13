@@ -69,6 +69,9 @@ export async function crmRequest<T>(
 
   if (res.status === 401) {
     if (typeof window !== 'undefined') {
+      // Utility ausserhalb von React (kein useRouter); Hard-Navigation verwirft
+      // zudem den Client-State der abgelaufenen Session.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/admin/login'
     }
     return { ok: false, status: 401 }

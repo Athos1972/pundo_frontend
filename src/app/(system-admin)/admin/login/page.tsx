@@ -36,6 +36,7 @@ export default function AdminLoginPage() {
         // Hard navigation bypasses the Next.js router cache entirely.
         // router.push would hit the cached redirect (→ /admin/login) that was
         // stored before the cookie existed; a full reload always sees the cookie.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- bewusst Hard-Navigation, siehe oben
         window.location.href = '/admin/dashboard'
       } catch {
         setError(tr.error_backend)

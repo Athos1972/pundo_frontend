@@ -1,7 +1,7 @@
 # pricing: Produktionsnotizen (Stand 2026-10-13)
 
 Teil 6 (letzter Teil) von „pundo for businesses“: „Prices, bulk discounts & promotions“ (EN 1:45, EL 1:53). Freigegebenes DE-Skript: `01-skript.de.md`.
-Links, Upload-Status, Endscreens/Playlists: Vault N7900.
+Veröffentlicht 2026-10-13: EN https://youtu.be/3gFK37esaIE · EL https://youtu.be/ikUN4_vj2ic (SRT, Thumbnail, Kapitel, Playlists, Endscreen mit Playlist-Element + Abo). Details: Vault N7900.
 
 ## Voraussetzung
 Feature F5200 „Staffelpreise in der Kundensicht“ (Vault `F5200 Dienstleistungen Mengenangaben/specs/2026-10-13-staffelpreise-kundensicht/`): Backend liefert `price_tiers`/`promo_price_tiers` mit Einheiten-Label, Frontend zeigt Einheit + Staffelzeilen (`PriceTierSummary`). Ohne das Feature fehlen in Szene `customer-tiers` die Staffelzeile und in `customer-promo` das „/ Piece“.
@@ -30,4 +30,4 @@ Voraussetzungen wie Teil 3–5 (Dev-Server dieses Repos auf 3500, Backend 8500 m
 ## Offene Punkte
 - Aussprache nicht nach Gehör geprüft (EN „4 euros 50“, EL „4,50 ευρώ“).
 - Content-ID-Anspruch auf der Hintergrundmusik wie bei allen Teilen (siehe `video/README.md`).
-- Nach dem Upload: Endscreen von `service-from-catalog` → dieses Video; dieses Video in beide Playlists; eigener Endscreen = Playlist/automatisch + Abo (Serienende).
+- Kapitel: YouTube verlangt ≥ 10 s je Kapitel → Intro und Begrüßung als ein Kapitel „0:00“ zusammengefasst.

@@ -1,4 +1,6 @@
-# product-from-catalog: Produktionsnotizen (Stand 2026-10-13)
+# product-from-catalog: Produktionsnotizen (Stand 2026-10-13, veröffentlicht)
+
+> EN https://youtu.be/sgnLYIeMkOk · EL https://youtu.be/6JhpJabNF2E
 
 Teil 3 von „pundo for businesses“: „Add a product that's already on pundo“ (EN 1:45, EL 1:52). Freigegebenes DE-Skript: `01-skript.de.md`.
 Links, Upload-Status, Endscreens/Playlists: Vault N7900.
@@ -27,4 +29,4 @@ Voraussetzungen: Test-Instanz (Frontend :3500 = **Dev-Server** dieses Repos, Bac
 
 ## Offene Punkte
 - Aussprache nicht nach Gehör geprüft: EL „barcode“, „Troodos Valley“; EN „Troodos“.
-- Nach dem Upload: Endscreen von `product-create-new` EN/EL auf dieses Video umstellen, dieses Video in beide Playlists aufnehmen (siehe N7900).
+- Erledigt beim Upload: Playlists, Endscreen (automatisch + Abo), Endscreen von `product-create-new` → dieses Video. Sobald Teil 4 online ist, den Endscreen hier gezielt auf Teil 4 umstellen.

@@ -23,7 +23,7 @@ touches-states:
 status-changed-at: 2026-10-13T00:00:00Z
 status-changed-by-spec: 2026-10-13-staffelpreise-kundensicht
 last-run: 2026-10-13T16:22:00Z
-last-result: PASS (11/11)
+last-result: PASS
 last-run-sha: —
 ---
 

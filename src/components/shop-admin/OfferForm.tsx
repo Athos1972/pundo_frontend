@@ -138,6 +138,21 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
           showToast(tr.saved, 'success')
           router.push('/shop-admin/offers')
           router.refresh()
+        } else if (res.status === 409) {
+          // B5200-001: offer was archived (e.g. stale tab after a price change).
+          // Backend names the current offer → open it instead of overwriting it.
+          const json = await res.json().catch(() => null) as
+            { detail?: { code?: string; active_offer_id?: number | null } } | null
+          const detail = json?.detail
+          if (detail?.code === 'offer_archived' && detail.active_offer_id) {
+            showToast(tr.offer_archived_conflict, 'error')
+            router.push(`/shop-admin/offers/${detail.active_offer_id}/edit`)
+          } else if (detail?.code === 'offer_archived') {
+            showToast(tr.offer_archived_readonly, 'error')
+            router.push('/shop-admin/offers')
+          } else {
+            showToast(tr.error_generic, 'error')
+          }
         } else if (res.status === 422) {
           const json = await res.json().catch(() => null) as { detail?: unknown } | null
           console.error('[OfferForm] 422 detail:', JSON.stringify(json), 'body sent:', JSON.stringify(body))

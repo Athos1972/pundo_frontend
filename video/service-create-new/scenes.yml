@@ -1,0 +1,134 @@
+# Single source of truth for the service-create-new video (EN + EL), part 4 of "pundo for businesses".
+# Approved German draft: 01-skript.de.md (BB 2026-10-13: approved; new taxonomy category "Cooking & Baking Classes").
+# Greek: informal "εσύ". UI terms in quotes match src/lib/i18n/shop-admin-*.ts; unit "Session"/"Συνεδρία" from price_units.
+# Anna's bread (part 2) and carob syrup (part 3) stay in the demo shop; prepare_service.py removes only the workshop.
+
+meta:
+  slug: service-create-new
+  title:
+    en: "Add your services to pundo"
+    el: "Πρόσθεσε τις υπηρεσίες σου στο pundo"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Next video: Services that are already on pundo"
+    el: "Στο επόμενο βίντεο: Υπηρεσίες που υπάρχουν ήδη στο pundo"
+  demo:
+    search: { en: "Baking workshop", el: "Εργαστήρι ψωμιού με προζύμι" }
+    name: { en: "Sourdough baking workshop (2 h)", el: "Εργαστήρι ψωμιού με προζύμι (2 ώρες)" }
+    category: { en: "Cooking & Baking Classes", el: "Μαθήματα Μαγειρικής & Ζαχαροπλαστικής" }
+    price: { en: "35", el: "35" }
+  thumbnail_scene: photo
+  target_duration_s: 110
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: welcome
+    shot: shop-admin dashboard of Anna's Bakery, still
+    callout:
+      en: "Your services"
+      el: "Οι υπηρεσίες σου"
+    narration:
+      en: >-
+        Not just products: your services belong on pundo too. Whether it's repairs, advice, a class
+        or delivery, customers nearby should know what you offer. Anna is now running a baking class.
+      el: >-
+        Όχι μόνο προϊόντα: και οι υπηρεσίες σου ανήκουν στο pundo. Είτε πρόκειται για επισκευές,
+        συμβουλές, μαθήματα ή παράδοση, οι πελάτες κοντά σου πρέπει να ξέρουν τι προσφέρεις.
+        Η Άννα ξεκινά από τώρα ένα εργαστήρι ψωμιού.
+
+  - id: to-offers
+    shot: menu -> "Offers" -> "+ Add offer" -> open "Select product or service"
+    callout:
+      en: "pundo.cy/shop-admin"
+      el: "pundo.cy/shop-admin"
+    narration:
+      en: >-
+        Open "Offers", tap "Add offer" and open the selection.
+      el: >-
+        Άνοιξε τις «Προσφορές», πάτησε «Προσθήκη προσφοράς» και άνοιξε την επιλογή.
+
+  - id: search
+    shot: type the search term into "Search by name" -> "No results found" -> tap "+ Create new product or service"
+    callout:
+      en: "Search first, then create"
+      el: "Πρώτα αναζήτηση, μετά δημιουργία"
+    narration:
+      en: >-
+        As always, search first. There's no baking class yet, so Anna creates a new one.
+      el: >-
+        Όπως πάντα, πρώτα κάνε μια αναζήτηση. Εργαστήρι ψωμιού δεν υπάρχει ακόμα,
+        οπότε η Άννα δημιουργεί ένα καινούργιο.
+
+  - id: new-service
+    shot: type the name, tap "Service", tap the suggested category "Cooking & Baking Classes", Save
+    callout:
+      en: "Type: Service"
+      el: "Τύπος: Υπηρεσία"
+    narration:
+      en: >-
+        Enter the name the way customers would search for it: "Sourdough baking workshop, two hours".
+        Important: this time, choose "Service". pundo suggests matching categories, and Anna picks
+        "Cooking and Baking Classes". Then tap "Save".
+      el: >-
+        Γράψε το όνομα όπως θα το έψαχναν οι πελάτες: «Εργαστήρι ψωμιού με προζύμι, δύο ώρες».
+        Σημαντικό: αυτή τη φορά διάλεξε «Υπηρεσία». Το pundo σου προτείνει κατάλληλες κατηγορίες
+        και η Άννα διαλέγει «Μαθήματα μαγειρικής και ζαχαροπλαστικής». Μετά πάτησε «Αποθήκευση».
+
+  - id: photo
+    shot: step "2. Price & details", add the workshop photo -> cover badge
+    callout:
+      en: "Show your work"
+      el: "Δείξε τη δουλειά σου"
+    narration:
+      en: >-
+        For services, too, a photo says more than a thousand words. Show your work, your shop,
+        or what the class looks like.
+      el: >-
+        Και για τις υπηρεσίες, μια φωτογραφία λέει περισσότερα από χίλιες λέξεις. Δείξε τη δουλειά σου,
+        το μαγαζί σου ή πώς είναι το εργαστήριο.
+
+  - id: price
+    shot: tap the price type field (options named in narration/callout), "Fixed price", "+ Add pricing unit", unit "Session", 35, Save
+    callout:
+      en: "Fixed · On request · Variable"
+      el: "Σταθερή · Κατόπιν αιτήματος · Μεταβλητή"
+    narration:
+      en: >-
+        For services, you have more pricing options: "On request", when the price depends on the job,
+        or a variable price. Anna's class costs a flat thirty-five euros per session, so it's "Fixed price",
+        with "Session" as the unit. Tap "Save".
+      el: >-
+        Στις υπηρεσίες έχεις περισσότερες επιλογές τιμής: «Κατόπιν αιτήματος», όταν η τιμή εξαρτάται
+        από τη δουλειά, ή μεταβλητή τιμή. Το εργαστήριο της Άννας κοστίζει τριάντα πέντε ευρώ τη συνεδρία,
+        οπότε «Σταθερή τιμή» με μονάδα «Συνεδρία». Πάτησε «Αποθήκευση».
+
+  - id: done
+    shot: offers list (workshop, syrup, bread) -> customer shop page with the workshop
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        Done! Anna's baking class is now on her shop page, next to her bread and syrup. Customers
+        nearby will find it when they search for cooking or baking classes.
+      el: >-
+        Έτοιμο! Το εργαστήριο της Άννας είναι τώρα στη σελίδα του καταστήματός της, δίπλα στο ψωμί
+        και στο χαρουπόμελο. Οι πελάτες κοντά σου θα το βρουν όταν ψάχνουν μαθήματα μαγειρικής ή ζαχαροπλαστικής.
+
+  - id: outlook
+    shot: shop page stays, "next video" card
+    callout:
+      en: "Next: services already on pundo"
+      el: "Επόμενο: υπηρεσίες που υπάρχουν ήδη"
+    narration:
+      en: >-
+        In the next video, we'll show you how to take over services that are already on pundo. See you there!
+      el: >-
+        Στο επόμενο βίντεο θα σου δείξουμε πώς να προσθέσεις υπηρεσίες που υπάρχουν ήδη στο pundo. Τα λέμε εκεί!
+
+  - id: outro
+    branding: outro

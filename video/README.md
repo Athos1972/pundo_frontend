@@ -33,6 +33,7 @@ video/
 | `shop-signup` | Teil 1: Shop registrieren (legt Demo-Konten an) | Test-Instanz 3500/8500 |
 | `product-create-new` | Teil 2: erstes Produkt mit Foto + Preis; `prepare.sh` bereitet `pundo_test` vor (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
 | `product-from-catalog` | Teil 3: Katalogprodukt per Barcode/Name übernehmen; `prepare_catalog.py` (Backend-venv) legt ein fiktives Katalog-Item an (siehe `PROD-NOTES.md`) | Test-Instanz 3500/8500 |
+| `service-create-new` | Teil 4: Dienstleistung neu anlegen (Backkurs, Preis pro Session); `prepare_service.py` (Backend-venv) räumt den Kurs früherer Läufe auf; braucht Kategorie `px-cooking` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

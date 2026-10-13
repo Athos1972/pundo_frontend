@@ -11,7 +11,12 @@ import { getSiteUrl } from '@/lib/seo'
 import { getShopCities } from '@/lib/api'
 import { LANGS } from '@/lib/lang'
 
-export const revalidate = false
+// Nicht beim Build prerendern: Der prod-Build-Container erreicht kein Backend,
+// der catch unten lieferte dann eine leere Sitemap, die gecacht und bis zum
+// naechsten Revalidate (bzw. Deploy) ausgeliefert wurde. Zur Laufzeit gerendert;
+// Cache-Control (1 h) entlastet, getShopCities nutzt den Data-Cache
+// (revalidate 3600).
+export const dynamic = 'force-dynamic'
 
 function buildXml(entries: { url: string }[]): string {
   const items = entries

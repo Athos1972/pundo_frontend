@@ -5,10 +5,12 @@
 import { getSiteUrl, getSitemap } from '@/lib/seo'
 import { LANGS } from '@/lib/lang'
 
-// Statisch mit stuendlicher ISR. getSitemap() fetcht mit no-store (Antwort > 2 MB,
-// siehe lib/seo.ts) — force-static haelt die Route trotzdem statisch.
-export const dynamic = 'force-static'
-export const revalidate = 3600
+// Nicht beim Build prerendern: Der prod-Build-Container erreicht kein Backend,
+// der catch unten lieferte dann eine leere Sitemap, die gecacht und bis zum
+// naechsten Revalidate (bzw. Deploy) ausgeliefert wurde. Zur Laufzeit gerendert;
+// Cache-Control (1 h) entlastet, die Slugs kommen aus dem Prozess-Cache
+// von getSitemap() (lib/seo.ts).
+export const dynamic = 'force-dynamic'
 
 function buildXml(entries: { url: string; lastmod?: string }[]): string {
   const items = entries

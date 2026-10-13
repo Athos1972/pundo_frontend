@@ -22,6 +22,16 @@ const T3 = '2026-04-19T10:00:00Z'
 // ─────────────────────────────────────────────
 
 describe('aggregatePriceHistory', () => {
+  it('B4900-003: skips items with crawled_at = null (no epoch point)', () => {
+    const items: PriceHistoryItem[] = [
+      { shop_id: 1, price: '1.00', crawled_at: null },
+      item('5.00', T1),
+    ]
+    const result = aggregatePriceHistory(items)
+    expect(result).toHaveLength(1)
+    expect(result[0].price).toBe(5)
+  })
+
   it('returns [] for empty input', () => {
     expect(aggregatePriceHistory([])).toEqual([])
   })

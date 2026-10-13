@@ -48,8 +48,11 @@ export function formatPriceOrLabel(
   }
 }
 
-export function formatCrawledAt(crawledAt: string, lang: string): string {
+/** B4900-003: returns null when there is no (valid) crawl timestamp — callers hide the label. */
+export function formatCrawledAt(crawledAt: string | null | undefined, lang: string): string | null {
+  if (!crawledAt) return null
   const date = new Date(crawledAt)
+  if (Number.isNaN(date.getTime())) return null
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))

@@ -52,9 +52,11 @@ export interface PriceStats {
 export function aggregatePriceHistory(items: PriceHistoryItem[]): PricePoint[] {
   // Step 1: parse & filter
   const valid = items
+    // B4900-003: crawled_at can be null — new Date(null) would be epoch 0 (finite)
+    .filter(item => item.crawled_at)
     .map(item => {
       const price = parseFloat(item.price)
-      const crawledAt = new Date(item.crawled_at).getTime()
+      const crawledAt = new Date(item.crawled_at as string).getTime()
       return { price, crawledAt }
     })
     .filter(p => Number.isFinite(p.price) && Number.isFinite(p.crawledAt))

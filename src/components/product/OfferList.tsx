@@ -44,6 +44,7 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
           offer.price_note,
           tr,
         )
+        const lastChecked = formatCrawledAt(offer.crawled_at, lang)
         const promoBadgeDate = offer.promo_valid_until
           ? new Date(offer.promo_valid_until).toLocaleDateString(lang, { day: 'numeric', month: 'short' })
           : null
@@ -57,7 +58,7 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${offer.is_available ? 'bg-success/10 text-success' : 'bg-surface-alt text-text-muted'}`}>
                   {offer.is_available ? tr.available : tr.unavailable}
                 </span>
-                <span className="text-xs text-text-light">{tr.last_checked}: {formatCrawledAt(offer.crawled_at, lang)}</span>
+                {lastChecked && <span className="text-xs text-text-light">{tr.last_checked}: {lastChecked}</span>}
               </div>
               {hasCta && (
                 <div className="flex gap-2 mt-2 rtl:flex-row-reverse">

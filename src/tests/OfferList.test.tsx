@@ -120,3 +120,24 @@ describe('OfferList — URL sanitization', () => {
     expect(websiteLinks[0].getAttribute('href')).toBe('https://valid.cy')
   })
 })
+
+describe('OfferList — Last checked (B4900-003)', () => {
+  it('blendet "Last checked" aus, wenn crawled_at null ist (Shop-Admin-Offer)', async () => {
+    const { OfferList } = await import('@/components/product/OfferList')
+    render(<OfferList offers={[{ ...baseOffer, crawled_at: null }]} lang="en" productName="Catering" />)
+    expect(screen.queryByText(/Last checked/)).toBeNull()
+    expect(screen.queryByText(/days ago/)).toBeNull()
+  })
+
+  it('zeigt "Last checked" wenn crawled_at gesetzt ist', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-04T10:00:00Z'))
+    try {
+      const { OfferList } = await import('@/components/product/OfferList')
+      render(<OfferList offers={[baseOffer]} lang="en" productName="Catering" />)
+      expect(screen.getByText('Last checked: 3 days ago')).toBeTruthy()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

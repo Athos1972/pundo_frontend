@@ -12,7 +12,7 @@ export interface ProductImages {
 export interface BestOffer {
   price: string | null; currency: string; price_type: PriceType; price_note: string | null;
   shop_id: number; shop_slug: string | null; shop_name: string;
-  dist_km: number | null; is_available: boolean; crawled_at: string;
+  dist_km: number | null; is_available: boolean; crawled_at: string | null;
   // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   url: string | null;
   shop_location: { lat: number; lng: number } | null;
@@ -28,7 +28,7 @@ export interface ProductListItem {
 }
 export interface ProductListResponse { total: number; items: ProductListItem[]; }
 
-export interface PriceHistoryItem { shop_id: number; price: string; crawled_at: string; }
+export interface PriceHistoryItem { shop_id: number; price: string; crawled_at: string | null; }
 export interface OfferDetail {
   shop_id: number; shop_slug: string; shop_name: string; shop_address: string | null;
   shop_location: { lat: number; lng: number } | null;
@@ -38,7 +38,8 @@ export interface OfferDetail {
   shop_whatsapp_number?: string | null;
   is_available: boolean;
   // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
-  sku: string | null; url: string | null; crawled_at: string;
+  /** B4900-003: null for shop-admin offers (never crawled) — backend `datetime | None`. */
+  sku: string | null; url: string | null; crawled_at: string | null;
   shop_type?: 'local' | 'online_only';
   delivery_available?: boolean;
   standard_price?: string | null;

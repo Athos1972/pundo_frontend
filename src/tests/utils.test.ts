@@ -74,6 +74,17 @@ describe('formatCrawledAt', () => {
     vi.setSystemTime(new Date('2026-04-10T12:00:00Z'))
     expect(formatCrawledAt('2026-04-08T12:00:00Z', 'xx')).toBe('2 days ago')
   })
+
+  // B4900-003: shop-admin offers have crawled_at = null → must not render epoch ("20739 days ago")
+  it('returns null for null / undefined / empty crawled_at', () => {
+    expect(formatCrawledAt(null, 'en')).toBeNull()
+    expect(formatCrawledAt(undefined, 'en')).toBeNull()
+    expect(formatCrawledAt('', 'de')).toBeNull()
+  })
+
+  it('returns null for an unparseable timestamp', () => {
+    expect(formatCrawledAt('not-a-date', 'en')).toBeNull()
+  })
 })
 
 // ─── fmtPrice ────────────────────────────────────────────────────────────────

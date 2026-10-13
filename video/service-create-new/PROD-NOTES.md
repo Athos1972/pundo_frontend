@@ -1,4 +1,6 @@
-# service-create-new: Produktionsnotizen (Stand 2026-10-13)
+# service-create-new: Produktionsnotizen (Stand 2026-10-13, veröffentlicht)
+
+> EN https://youtu.be/mZZliUsNsC8 · EL https://youtu.be/GvH9BTpISIU
 
 Teil 4 von „pundo for businesses“: „Add your services to pundo“ (EN 1:50, EL 2:01). Freigegebenes DE-Skript: `01-skript.de.md`.
 Links, Upload-Status, Endscreens/Playlists: Vault N7900.
@@ -29,5 +31,5 @@ Voraussetzungen wie Teil 3 (Dev-Server dieses Repos auf 3500, keine parallelen T
 
 ## Offene Punkte
 - Aussprache nicht nach Gehör geprüft (EL „pundo“-Kontext unverändert; neu: keine Fremdwörter).
-- Upload + Endscreens/Playlists: siehe N7900. Endscreen von `product-from-catalog` danach gezielt auf dieses Video umstellen.
-- Prod: Kategorie `px-cooking` muss vor dem Upload auf Prod ausgerollt sein (sonst gibt es sie für Händler nicht). Ops-Schritt über `to-prod`.
+- Erledigt beim Upload: Playlists, Endscreen (automatisch + Abo), Endscreen von `product-from-catalog` → dieses Video. Sobald Teil 5 online ist, den Endscreen hier gezielt auf Teil 5 umstellen.
+- Prod: Kategorie `px-cooking` — Backend gepusht, Seed-Lauf auf Prod per to-prod `20261013-1745-f2970-w2-kategorie-kochkurse.md` angefragt (wartet auf BB-Freigabe). Bis dahin finden Händler auf Prod die Kategorie noch nicht.

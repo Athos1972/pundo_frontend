@@ -2,8 +2,8 @@
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { searchProducts, getCategories, getShops } from '@/lib/api'
-import { getLangFromCookie } from '@/lib/lang'
-import type { Lang } from '@/lib/lang'
+import { DEFAULT_LANG, type Lang } from '@/lib/lang'
+import { useLang } from '@/lib/useLang'
 import { localePath } from '@/lib/routing'
 import { t, tSearch } from '@/lib/translations'
 import type { ProductListItem, CategoryItem, ShopListItem } from '@/types/api'
@@ -25,8 +25,8 @@ interface SuggestionGroup {
 
 export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Props) {
   const router = useRouter()
-  const langFromCookie = getLangFromCookie()
-  const lang = langProp ?? langFromCookie
+  const langFromUrl = useLang(DEFAULT_LANG)  // not document.cookie: unreadable during SSR -> hydration mismatch
+  const lang = langProp ?? langFromUrl
   const tr = tSearch(lang)
   const [value, setValue] = useState(defaultValue)
   const [suggestions, setSuggestions] = useState<SuggestionGroup>({ categories: [], shops: [], products: [] })

@@ -1,11 +1,15 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { getLangFromCookie } from '@/lib/lang'
+import { DEFAULT_LANG, type Lang } from '@/lib/lang'
+import { useLang } from '@/lib/useLang'
 import { t } from '@/lib/translations'
 
-export function BackButton({ fallback: _fallback = '/' }: { fallback?: string }) {
+// Lang comes from the URL (or the `lang` prop on un-prefixed routes like /account), never from
+// document.cookie: the cookie is invisible during SSR, so reading it here rendered "Back" on the
+// server and e.g. "Πίσω" on the client -> React hydration mismatch (#418).
+export function BackButton({ fallback: _fallback = '/', lang: langProp }: { fallback?: string; lang?: Lang }) {
   const router = useRouter()
-  const lang = getLangFromCookie()
+  const lang = useLang(langProp ?? DEFAULT_LANG)
   const tr = t(lang)
   return (
     <button

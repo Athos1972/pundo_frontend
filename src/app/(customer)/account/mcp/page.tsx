@@ -27,7 +27,7 @@ export default async function McpPage() {
   return (
     <main className="min-h-screen bg-bg">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <BackButton />
+        <BackButton lang={lang} />
 
         <div className="bg-surface border border-border rounded-2xl p-5 mb-6">
           <h1 className="text-xl font-extrabold text-text mb-1 font-heading">

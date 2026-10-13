@@ -2,12 +2,14 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { t } from '@/lib/translations'
-import { getLangFromCookie } from '@/lib/lang'
+import { DEFAULT_LANG } from '@/lib/lang'
+import { useLang } from '@/lib/useLang'
 
 export function PriceFilterToggle() {
   const params = useSearchParams()
   const router = useRouter()
-  const tr = t(getLangFromCookie())
+  // URL-derived lang: document.cookie is not readable during SSR -> hydration mismatch
+  const tr = t(useLang(DEFAULT_LANG))
   const active = params.get('with_price') === '1'
 
   const toggle = () => {

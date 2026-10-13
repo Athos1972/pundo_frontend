@@ -1,0 +1,124 @@
+# Single source of truth for the shop-profile video (EN + EL), part 7 of "pundo for businesses" (after the series end in part 6).
+# Approved German draft: 01-skript.de.md (BB 2026-10-13: approved, mention social links briefly).
+# Greek: informal "εσύ". Needs bug fix B5950-001 (second opening slot shown on the shop page / in is_open_now).
+# UI terms match src/lib/i18n/shop-admin-common.ts (nav_hours, nav_profile, second_slot, closed, hours_save,
+# description, spoken_languages, payment_methods_label, service_radius_label, social_links_title, save).
+
+meta:
+  slug: shop-profile
+  title:
+    en: "Keep your shop profile up to date"
+    el: "Κράτα ενημερωμένο το προφίλ του καταστήματός σου"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "All tutorials: playlist \"pundo for businesses\""
+    el: "Όλοι οι οδηγοί: playlist «pundo για επιχειρήσεις»"
+  demo:
+    hours: { open: "07:00", close: "14:00", second_open: "16:30", second_close: "19:00", sat_close: "14:00" }
+    description:
+      en: "Fresh sourdough bread and pastries, baked every morning in Limassol."
+      el: "Φρέσκο ψωμί προζυμιού και αρτοσκευάσματα, ψημένα κάθε πρωί στη Λεμεσό."
+    languages: [EN, EL, RU]
+    payments: [cash, card, revolut]
+    radius_km: 10
+  thumbnail_scene: languages-payment
+  target_duration_s: 120
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: welcome
+    shot: 'shop-admin dashboard of Anna''s Bakery, still'
+    callout:
+      en: "A complete profile builds trust"
+      el: "Ένα πλήρες προφίλ χτίζει εμπιστοσύνη"
+    narration:
+      en: >-
+        Customers want to know right away: are you open? Do you speak their language? Can they pay by card?
+        You set all of this up in your shop profile, once, in two minutes.
+      el: >-
+        Οι πελάτες θέλουν να ξέρουν αμέσως: είσαι ανοιχτά; Μιλάς τη γλώσσα τους; Μπορούν να πληρώσουν με κάρτα;
+        Όλα αυτά τα ρυθμίζεις στο προφίλ του καταστήματός σου, μία φορά, σε δύο λεπτά.
+
+  - id: hours
+    shot: 'menu -> Opening Hours -> Monday 07:00-14:00, + Second time slot 16:30-19:00 -> Tue-Fri the same (quick) -> Saturday 07:00-14:00 -> Sunday Closed -> Save hours'
+    callout:
+      en: "Opening hours"
+      el: "Ώρες λειτουργίας"
+    narration:
+      en: >-
+        Start with your opening hours. Anna bakes from seven in the morning, takes a lunch break and opens
+        again in the late afternoon. For the break, just add a second time slot. Saturdays mornings only,
+        Sundays closed. Tap "Save hours".
+      el: >-
+        Ξεκίνα με τις ώρες λειτουργίας. Η Άννα ψήνει από τις επτά το πρωί, κάνει μεσημεριανό διάλειμμα και ανοίγει
+        ξανά αργά το απόγευμα. Για το διάλειμμα πρόσθεσε απλώς ένα δεύτερο χρονικό διάστημα. Το Σάββατο μόνο
+        το πρωί, την Κυριακή κλειστά. Πάτησε «Αποθήκευση ωραρίου».
+
+  - id: description
+    shot: 'menu -> Shop Profile -> Description: type one sentence'
+    callout:
+      en: "Tell customers who you are"
+      el: "Πες στους πελάτες ποιος είσαι"
+    narration:
+      en: >-
+        In your shop profile, describe in one sentence what makes you special. Short and specific works best.
+      el: >-
+        Στο προφίλ του καταστήματός σου περιέγραψε με μία πρόταση τι σε κάνει ξεχωριστό. Σύντομα και συγκεκριμένα είναι το καλύτερο.
+
+  - id: languages-payment
+    shot: 'Languages spoken: EN, EL, RU -> Accepted payment methods: Cash, Visa / Mastercard, Revolut'
+    callout:
+      en: "Languages & payment"
+      el: "Γλώσσες & πληρωμή"
+    narration:
+      en: >-
+        People from all over the world live in Cyprus. Show which languages you speak in your shop:
+        at Anna's, English, Greek and Russian. Below, choose how customers can pay: cash, by card or with Revolut.
+      el: >-
+        Στην Κύπρο ζουν άνθρωποι από όλο τον κόσμο. Δείξε ποιες γλώσσες μιλάτε στο κατάστημα: στης Άννας
+        αγγλικά, ελληνικά και ρωσικά. Από κάτω διάλεξε πώς μπορούν να πληρώσουν οι πελάτες: μετρητά, με κάρτα ή με Revolut.
+
+  - id: delivery
+    shot: 'service radius 10 km -> glide to Social media (highlight only) -> Save'
+    callout:
+      en: "Delivery area"
+      el: "Περιοχή παράδοσης"
+    narration:
+      en: >-
+        Do you deliver or come to your customers? Then enter your radius: Anna delivers within ten kilometres.
+        Further down you can add your social media links too, for example Instagram. Tap "Save".
+      el: >-
+        Κάνεις παραδόσεις ή πηγαίνεις στους πελάτες; Τότε συμπλήρωσε την ακτίνα σου: η Άννα παραδίδει σε ακτίνα
+        δέκα χιλιομέτρων. Πιο κάτω μπορείς να προσθέσεις και τα κοινωνικά σου δίκτυα, για παράδειγμα Instagram.
+        Πάτησε «Αποθήκευση».
+
+  - id: customer-view
+    shot: 'customer shop page (freeze while loading): description, language chips, delivery radius, payment methods, opening hours highlighted one after another'
+    callout:
+      en: "All on your shop page"
+      el: "Όλα στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        And this is what your customers see: your description, languages, delivery area, payment methods
+        and your opening hours, all at a glance.
+      el: >-
+        Και αυτό βλέπουν οι πελάτες σου: την περιγραφή, τις γλώσσες, την περιοχή παράδοσης, τους τρόπους
+        πληρωμής και τις ώρες λειτουργίας, όλα με μια ματιά.
+
+  - id: wrap-up
+    shot: 'shop page stays, playlist card'
+    callout:
+      en: "All tutorials in one playlist"
+      el: "Όλοι οι οδηγοί σε μία playlist"
+    narration:
+      en: >-
+        A complete profile brings you more enquiries. You'll find all videos of this series in our playlist.
+      el: >-
+        Ένα πλήρες προφίλ σού φέρνει περισσότερα αιτήματα. Όλα τα βίντεο της σειράς θα τα βρεις στην playlist μας.
+
+  - id: outro
+    branding: outro

@@ -13,6 +13,7 @@ import { guidesTranslations } from './i18n/guides'
 import { contactTranslations } from './i18n/contact'
 import { consentTranslations } from './i18n/consent'
 import { homeTranslations } from './i18n/home'
+import { seoTranslations } from './i18n/seo'
 
 // Re-export namespace helpers for direct use
 export { tCommon, type CommonTranslations } from './i18n/common'
@@ -26,6 +27,7 @@ export { tGuides, type GuidesTranslations } from './i18n/guides'
 export { tContact, type ContactTranslations } from './i18n/contact'
 export { tConsent, type ConsentTranslations } from './i18n/consent'
 export { tHome, type HomeTranslations } from './i18n/home'
+export { tSeo, type SeoTranslations } from './i18n/seo'
 
 export const translations = {
   en: {
@@ -40,6 +42,7 @@ export const translations = {
     ...contactTranslations.en,
     ...consentTranslations.en,
     ...homeTranslations.en,
+    ...seoTranslations.en,
   },
   de: {
     ...commonTranslations.de,
@@ -53,6 +56,7 @@ export const translations = {
     ...contactTranslations.de,
     ...consentTranslations.de,
     ...homeTranslations.de,
+    ...seoTranslations.de,
   },
   ru: {
     ...commonTranslations.ru,
@@ -66,6 +70,7 @@ export const translations = {
     ...contactTranslations.ru,
     ...consentTranslations.ru,
     ...homeTranslations.ru,
+    ...seoTranslations.ru,
   },
   el: {
     ...commonTranslations.el,
@@ -79,6 +84,7 @@ export const translations = {
     ...contactTranslations.el,
     ...consentTranslations.el,
     ...homeTranslations.el,
+    ...seoTranslations.el,
   },
   ar: {
     ...commonTranslations.ar,
@@ -92,6 +98,7 @@ export const translations = {
     ...contactTranslations.ar,
     ...consentTranslations.ar,
     ...homeTranslations.ar,
+    ...seoTranslations.ar,
   },
   he: {
     ...commonTranslations.he,
@@ -105,6 +112,7 @@ export const translations = {
     ...contactTranslations.he,
     ...consentTranslations.he,
     ...homeTranslations.he,
+    ...seoTranslations.he,
   },
 } as const
 

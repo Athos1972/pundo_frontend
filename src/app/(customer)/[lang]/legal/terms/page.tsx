@@ -3,47 +3,27 @@ import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getLegalContentForBrand } from '@/lib/legal-content'
 import { getBrandFromHeaders } from '@/config/brands'
-import { buildHreflang } from '@/lib/routing'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+
 import { BackButton } from '@/components/ui/BackButton'
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
 
 interface Props {
   params: Promise<{ lang: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const [{ lang }, brand] = await Promise.all([params as Promise<{ lang: Lang }>, getBrandFromHeaders()])
-  const tr = t(lang)
-  const siteUrl = brand.meta.siteUrl
-  const pageUrl = `${siteUrl}/${lang}/legal/terms`
-  const title = `${tr.page_title_terms} — ${brand.name}`
-  const description = tr.meta_desc_terms
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title,
-    description,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
+  const { lang } = await params as { lang: Lang }
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/legal/terms',
+    title: s.seo_terms_title,
+    description: s.seo_terms_desc,
     siteName: brand.name,
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: brand.name,
-    },
+    siteUrl: brand.meta.siteUrl,
   })
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/legal/terms'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function TermsPage({ params }: Props) {

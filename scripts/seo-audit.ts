@@ -42,6 +42,15 @@ import { computeOrphans, formatOrphanPagesSection, type OrphanPage } from './seo
 import { checkInternalLink, formatInternalRedirectsSection, type InternalRedirect } from './seo-audit/checks/internal-redirects.js'
 
 const BASE_URL = auditConfig.baseUrl
+
+// Port safety — never run against production (:3000), same as seo-perf.ts
+if (BASE_URL.includes(':3000')) {
+  console.error(
+    '[seo-audit] ERROR: SEO_AUDIT_BASE_URL points to port 3000 (production). ' +
+    'Audits must target the test instance on port 3500.',
+  )
+  process.exit(1)
+}
 const BRAND_DEFAULT_TITLES = ['pundo', 'naidivse']
 const TIMEOUT_MS = 15_000
 const EXTERNAL_TIMEOUT_MS = 10_000

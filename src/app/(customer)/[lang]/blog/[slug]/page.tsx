@@ -5,7 +5,7 @@ import Image from 'next/image'
 import type { Lang } from '@/lib/lang'
 import { LANGS } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { truncateTitle } from '@/lib/seo/metadata-defaults'
+import { truncateTitle, truncateDescription, getSiteUrl } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getBlogPost, getBlogSlugs } from '@/lib/blog'
 import { localePath, buildHreflang } from '@/lib/routing'
@@ -21,19 +21,20 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params as { lang: Lang; slug: string }
   const post = getBlogPost(slug, lang)
-  if (!post) return {}
+  if (!post) notFound()
 
   const { title, description, date, image } = post.meta
-  const siteUrl = 'https://pundo.cy'
+  const siteUrl = getSiteUrl()
   const canonicalUrl = `${siteUrl}/${lang}/blog/${slug}`
 
-  const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' — pundo').length })
-  const pageTitle = `${truncatedTitle} — pundo`
+  const metaDescription = truncateDescription(description ?? '')
+  const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' | Pundo').length })
+  const pageTitle = `${truncatedTitle} | Pundo`
 
   const ogImageUrl = image ?? `${siteUrl}/og/shop-fallback-default.jpg`
   const og = buildCompleteOpenGraph({
     title: pageTitle,
-    description: description ?? '',
+    description: metaDescription,
     url: canonicalUrl,
     type: 'article',
     locale: lang,
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: { absolute: pageTitle },
-    description,
+    description: metaDescription,
     alternates: {
       canonical: canonicalUrl,
       languages: buildHreflang(siteUrl, `/blog/${slug}`),
@@ -54,6 +55,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ...(og.other ? { other: og.other } : {}),
   }
 }
+
+// Unknown slugs must yield a real HTTP 404 (not a streamed 200 soft-404)
+export const dynamicParams = false
 
 export function generateStaticParams() {
   return LANGS.flatMap(lang =>
@@ -89,12 +93,12 @@ export default async function BlogPostPage({ params }: Props) {
             datePublished: meta.date,
             ...(meta.image ? { image: meta.image } : {}),
             inLanguage: lang,
-            author: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
+            author: { '@type': 'Organization', name: 'Pundo', url: getSiteUrl() },
             publisher: {
               '@type': 'Organization',
               name: 'Pundo',
-              url: 'https://pundo.cy',
-              logo: { '@type': 'ImageObject', url: 'https://pundo.cy/brands/pundo/logo.png' },
+              url: getSiteUrl(),
+              logo: { '@type': 'ImageObject', url: `${getSiteUrl()}/brands/pundo/logo.png` },
             },
             // breadcrumb intentionally omitted — standalone <Breadcrumb> component
             // emits a correct BreadcrumbList with absolute URLs (T-01 fix). Having

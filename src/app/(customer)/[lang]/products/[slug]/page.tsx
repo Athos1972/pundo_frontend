@@ -4,6 +4,7 @@ import type { Lang } from '@/lib/lang'
 import { getProduct, getRelatedProducts, getRelatedCategories } from '@/lib/api'
 import { t } from '@/lib/translations'
 import { formatSizeAttr, toRelativeImageUrl, pickImg, hasNumericPrice, formatPriceOrLabel } from '@/lib/utils'
+import { isNotFoundError } from '@/lib/api-errors'
 import { getSiteUrl } from '@/lib/seo'
 import { truncateTitle, truncateDescription, DESC_MIN } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
@@ -34,12 +35,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const product = await getProduct(slug, lang)
     const tr = t(lang)
     const name = product.names[lang] ?? product.names.en ?? Object.values(product.names)[0] ?? slug
-    const brandName = product.brand?.name ?? 'Pundo'
+    const brandName = product.brand?.name ?? null // Herstellermarke (nur Beschreibung/Titel-Präfix)
+    const platformName = 'Pundo'
 
     // T5/AC-38: Title — truncate name to fit " | Pundo" suffix, no price in title
-    const suffixLen = Array.from(` | ${brandName}`).length
+    const suffixLen = Array.from(` | ${platformName}`).length
     const truncatedName = truncateTitle(name, { max: 60, reserved: suffixLen })
-    const pageTitle = `${truncatedName} | ${brandName}`
+    const pageTitle = `${truncatedName} | ${platformName}`
 
     // T5/AC-36 + T-12: Description — pad short descriptions so they reach DESC_MIN
     // characters. Descriptions under 110 chars (Ahrefs threshold) are padded with
@@ -49,8 +51,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const baseDesc = rawDesc.length >= DESC_MIN
       ? rawDesc
       : rawDesc
-        ? `${rawDesc} ${tr.product_desc_fallback(name, brandName)}`
-        : tr.product_desc_fallback(name, brandName)
+        ? `${rawDesc} ${tr.product_desc_fallback(name, brandName ?? platformName)}`
+        : tr.product_desc_fallback(name, brandName ?? platformName)
     const description = truncateDescription(baseDesc, { max: 155 })
 
     const relativeImg = toRelativeImageUrl(product.images?.card) ?? toRelativeImageUrl(product.thumbnail_url)
@@ -59,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // Choose OG image: use product image or fallback
     const ogImage = relativeImg
-      ? { url: relativeImg.startsWith('http') ? relativeImg : `${siteUrl}${relativeImg}`, width: 1200 as const, height: 630 as const, alt: name }
+      ? { url: relativeImg.startsWith('http') ? relativeImg : `${siteUrl}${relativeImg}`, alt: name }
       : pickShopFallbackOgImage(product.id ?? 0, siteUrl)
 
     const og = buildCompleteOpenGraph({
@@ -68,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonicalUrl,
       type: 'product',
       locale: lang,
-      siteName: brandName,
+      siteName: platformName,
       image: ogImage,
     })
 
@@ -84,8 +86,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       twitter: og.twitter,
       ...(og.other ? { other: og.other } : {}),
     }
-  } catch {
-    return { title: 'Produkt' }
+  } catch (err) {
+    // Backend 404 → echtes HTTP 404 statt Soft-404
+    if (isNotFoundError(err)) notFound()
+    // Netzwerk-/5xx-Fehler: sprachneutraler Titel, nicht indexieren
+    return {
+      title: { absolute: `${slug} | Pundo` },
+      robots: { index: false, follow: true },
+    }
   }
 }
 
@@ -102,7 +110,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
     getCustomerSession(lang),
   ])
 
-  if (productResult.status === 'rejected') notFound()
+  if (productResult.status === 'rejected') {
+    if (isNotFoundError(productResult.reason)) notFound()
+    throw productResult.reason
+  }
   const product = productResult.value
   // Filter out the current product defensively in case the backend misses it.
   const relatedItems = relatedResult.status === 'fulfilled'

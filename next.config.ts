@@ -41,6 +41,7 @@ const SECURITY_HEADERS = [
 
 const config: NextConfig = {
   output: 'standalone',
+  poweredByHeader: false,
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -63,6 +64,11 @@ const config: NextConfig = {
         source: '/(.*)',
         headers: SECURITY_HEADERS,
       },
+      // Nicht-öffentliche Bereiche: nie indexieren (zusätzlich zu robots.txt + Layout-Metadata)
+      ...['/admin/:path*', '/shop-admin/:path*', '/account/:path*', '/auth/:path*'].map(source => ({
+        source,
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      })),
     ]
   },
   async rewrites() {

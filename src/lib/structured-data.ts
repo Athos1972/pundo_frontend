@@ -98,7 +98,7 @@ export function buildProductSchema(
     availability: o.is_available
       ? 'https://schema.org/InStock'
       : 'https://schema.org/OutOfStock',
-    url: sanitizeExternalUrl(o.url) ?? `${siteUrl}/products/${product.slug}`,
+    url: sanitizeExternalUrl(o.url) ?? `${siteUrl}/${lang}/products/${product.slug}`,
     seller: {
       '@type': 'Organization',
       name: o.shop_name,
@@ -108,23 +108,9 @@ export function buildProductSchema(
     }
   })
 
-  // Google requires at least one of: offers, review, or aggregateRating in a
-  // Product schema. Provide a minimal fallback offer so the schema is always valid
-  // even when no fixed-price offers exist.
-  const offers =
-    schemaOffers.length > 0
-      ? schemaOffers
-      : [
-          {
-            '@type': 'Offer',
-            availability: 'https://schema.org/InStock',
-            priceCurrency: 'EUR',
-            price: '0',
-            url: `${siteUrl}/products/${product.slug}`,
-            hasMerchantReturnPolicy: merchantReturnPolicy,
-            shippingDetails,
-          },
-        ]
+  // Kein Fallback-Offer mit erfundenem Preis: ohne echten Festpreis wird
+  // `offers` weggelassen (Google akzeptiert Product ohne offers).
+  const offers = schemaOffers
 
   const stats = product.review_stats
   const aggregateRating =
@@ -147,7 +133,7 @@ export function buildProductSchema(
     ...(product.brand?.name
       ? { brand: { '@type': 'Brand', name: product.brand.name } }
       : {}),
-    offers,
+    ...(offers.length > 0 ? { offers } : {}),
     ...(aggregateRating ? { aggregateRating } : {}),
   }
 }
@@ -163,7 +149,7 @@ export function buildOrganizationSchema(siteUrl: string): Record<string, unknown
   }
 }
 
-export function buildWebSiteSchema(siteUrl: string): Record<string, unknown> {
+export function buildWebSiteSchema(siteUrl: string, lang: string = 'en'): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -173,7 +159,7 @@ export function buildWebSiteSchema(siteUrl: string): Record<string, unknown> {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/${lang}/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -237,6 +223,7 @@ export function buildArticleSchema(input: {
 export function buildLocalBusinessSchema(
   shop: ShopDetailResponse,
   siteUrl: string,
+  lang: string = 'en',
 ): Record<string, unknown> {
   const openingHours = toOpeningHoursSpec(shop.opening_hours)
 
@@ -248,7 +235,7 @@ export function buildLocalBusinessSchema(
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: shop.name ?? 'Shop',
-    url: `${siteUrl}/shops/${shop.slug}`,
+    url: `${siteUrl}/${lang}/shops/${shop.slug}`,
     ...(image ? { image } : {}),
     ...(shop.address_raw
       ? {

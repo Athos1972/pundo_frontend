@@ -3,11 +3,12 @@ import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getGuides, getFeaturedGuide } from '@/lib/guides'
 import { FeaturedGuideHero } from '@/components/guides/FeaturedGuideHero'
-import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang } from '@/lib/routing'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+
 import { GuidesGrid } from '@/components/guides/GuidesGrid'
 import { BackButton } from '@/components/ui/BackButton'
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -15,36 +16,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const pageTitle = `${tr.page_title_guides} — pundo`
-  const pageUrl = `${siteUrl}/${lang}/guides`
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title: pageTitle,
-    description: tr.guides_index_subtitle,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
-    siteName: 'Pundo',
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: 'Pundo Guides',
-    },
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/guides',
+    title: s.seo_guides_title,
+    description: s.seo_guides_desc,
+    siteName: brand.name,
   })
-
-  return {
-    title: pageTitle,
-    description: tr.guides_index_subtitle,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/guides'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function GuidesIndexPage({ params }: Props) {

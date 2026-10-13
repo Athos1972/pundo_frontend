@@ -135,18 +135,20 @@ describe('buildProductSchema', () => {
     expect(shipping['doesNotShip']).toBe(true)
   })
 
-  it('fallback offer also includes merchant return policy and shipping', () => {
+  it('omits offers entirely when there is no real fixed price (no fake 0 EUR offer)', () => {
     const product = {
       ...baseProduct,
       offers: [{ ...baseProduct.offers[0], price_type: 'on_request' as const, price: null }],
     }
     const schema = buildProductSchema(product, 'en', SITE_URL)
-    const offers = schema['offers'] as Array<Record<string, unknown>>
-    expect(offers).toHaveLength(1)
-    const policy = offers[0]['hasMerchantReturnPolicy'] as Record<string, unknown>
-    expect(policy['@type']).toBe('MerchantReturnPolicy')
-    const shipping = offers[0]['shippingDetails'] as Record<string, unknown>
-    expect(shipping['doesNotShip']).toBe(true)
+    expect(schema['offers']).toBeUndefined()
+    expect(JSON.stringify(schema)).not.toContain('"price":"0"')
+  })
+
+  it('falls back to a language-prefixed product URL for offers without own url', () => {
+    const product = { ...baseProduct, offers: [{ ...baseProduct.offers[0], url: null }] }
+    const offers = buildProductSchema(product, 'de', SITE_URL)['offers'] as Array<Record<string, unknown>>
+    expect(offers[0]['url']).toBe(`${SITE_URL}/de/products/${product.slug}`)
   })
 
   it('marks unavailable offers as OutOfStock', () => {
@@ -226,9 +228,9 @@ describe('buildLocalBusinessSchema', () => {
   })
 
   it('includes name and url', () => {
-    const schema = buildLocalBusinessSchema(baseShop, SITE_URL)
+    const schema = buildLocalBusinessSchema(baseShop, SITE_URL, 'en')
     expect(schema['name']).toBe('PetShop Larnaca')
-    expect(schema['url']).toBe('https://pundo.cy/shops/petshop-larnaca')
+    expect(schema['url']).toBe('https://pundo.cy/en/shops/petshop-larnaca')
   })
 
   it('includes address with full PostalAddress (streetAddress, addressLocality, postalCode, addressCountry)', () => {
@@ -305,7 +307,7 @@ describe('buildLocalBusinessSchema', () => {
     expect(schema['geo']).toBeUndefined()
     expect(schema['image']).toBeUndefined()
     expect(schema['name']).toBe('PetShop Larnaca')
-    expect(schema['url']).toBe('https://pundo.cy/shops/petshop-larnaca')
+    expect(schema['url']).toBe('https://pundo.cy/en/shops/petshop-larnaca')
     expect(schema['@type']).toBe('LocalBusiness')
   })
 
@@ -499,26 +501,26 @@ describe('buildArticleSchema', () => {
 
 describe('buildWebSiteSchema', () => {
   it('returns correct @type and @context', () => {
-    const schema = buildWebSiteSchema(SITE_URL)
+    const schema = buildWebSiteSchema(SITE_URL, 'en')
     expect(schema['@context']).toBe('https://schema.org')
     expect(schema['@type']).toBe('WebSite')
   })
 
   it('includes potentialAction SearchAction', () => {
-    const schema = buildWebSiteSchema(SITE_URL)
+    const schema = buildWebSiteSchema(SITE_URL, 'en')
     const action = schema['potentialAction'] as Record<string, unknown>
     expect(action['@type']).toBe('SearchAction')
   })
 
   it('urlTemplate contains search path and placeholder', () => {
-    const schema = buildWebSiteSchema(SITE_URL)
+    const schema = buildWebSiteSchema(SITE_URL, 'en')
     const action = schema['potentialAction'] as Record<string, unknown>
     const target = action['target'] as Record<string, unknown>
-    expect(target['urlTemplate']).toBe(`${SITE_URL}/search?q={search_term_string}`)
+    expect(target['urlTemplate']).toBe(`${SITE_URL}/en/search?q={search_term_string}`)
   })
 
   it('query-input is set correctly', () => {
-    const schema = buildWebSiteSchema(SITE_URL)
+    const schema = buildWebSiteSchema(SITE_URL, 'en')
     const action = schema['potentialAction'] as Record<string, unknown>
     expect(action['query-input']).toBe('required name=search_term_string')
   })

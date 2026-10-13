@@ -15,6 +15,7 @@ import { getShopCities, getAllShopsInCity } from '@/lib/api'
 import { findCityBySlug } from '@/lib/shop-city-index'
 import { BackButton } from '@/components/ui/BackButton'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { safeJson } from '@/lib/structured-data'
 import { ShopLinkRow } from '@/components/shop/ShopLinkRow'
 
 interface Props {
@@ -125,7 +126,7 @@ export default async function ShopCityPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJson({
             '@context': 'https://schema.org',
             '@type': 'ItemList',
             itemListElement: shops.map((shop, index) => ({

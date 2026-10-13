@@ -3,12 +3,15 @@ import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { forShopsContent } from '@/lib/for-shops-content'
 import type { Lang } from '@/lib/lang'
-import { getSiteUrl } from '@/lib/seo'
-import { localePath, buildHreflang } from '@/lib/routing'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+
+import { localePath } from '@/lib/routing'
+
 import { ForShopsHeroVisual } from './ForShopsHeroVisual'
 import { ForShopsFaqGrid } from './ForShopsFaqGrid'
 import { buildFAQSchema, safeJson } from '@/lib/structured-data'
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -16,37 +19,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const content = forShopsContent[lang] ?? forShopsContent.en
-  const pageUrl = `${siteUrl}/${lang}/for-shops`
-  const title = `${tr.page_title_for_shops} — pundo`
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title,
-    description: content.meta_description,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
-    siteName: 'pundo',
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: 'pundo — Get your business on the map',
-    },
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/for-shops',
+    title: s.seo_for_shops_title,
+    description: s.seo_for_shops_desc,
+    siteName: brand.name,
   })
-
-  return {
-    title,
-    description: content.meta_description,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/for-shops'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function ForShopsPage({ params }: Props) {

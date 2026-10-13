@@ -136,13 +136,22 @@ export function proxy(request: NextRequest) {
     const segments = pathname.split('/')
     const firstSegment = segments[1] ?? ''
     if (!LANG_SET.has(firstSegment)) {
-      // No lang prefix → redirect to detected lang
+      // Erstes Segment ist eine gültige Sprache in anderer Schreibweise (/EN, /De/shops)
+      // → auf Kleinschreibung umleiten (nicht nutzerabhängig, daher permanent)
+      if (LANG_SET.has(firstSegment.toLowerCase())) {
+        const url = request.nextUrl.clone()
+        segments[1] = firstSegment.toLowerCase()
+        url.pathname = segments.join('/')
+        return NextResponse.redirect(url, 308)
+      }
+      // No lang prefix → redirect to detected lang. Ziel hängt von Cookie /
+      // Accept-Language ab → temporär (307) und Vary, damit nichts gecacht wird.
       const preferredLang = detectLang(request)
       const url = request.nextUrl.clone()
       url.pathname = `/${preferredLang}${pathname === '/' ? '' : pathname}`
-      // 307 in dev (avoids caching), 308 in production (SEO-friendly permanent)
-      const statusCode = process.env.NODE_ENV === 'development' ? 307 : 308
-      return NextResponse.redirect(url, statusCode)
+      const redirectResponse = NextResponse.redirect(url, 307)
+      redirectResponse.headers.set('Vary', 'Accept-Language, Cookie')
+      return redirectResponse
     }
     // Valid lang prefix present — forward lang via header so getLangServer()
     // reads the correct value even on first visit (before cookie is stored).

@@ -7,7 +7,7 @@ import type { CategoryItem } from '@/types/api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang } from '@/lib/routing'
+
 import { buildOrganizationSchema, buildWebSiteSchema, safeJson } from '@/lib/structured-data'
 import { Hero } from '@/components/layout/Hero'
 import { CommunityCard } from '@/components/community/CommunityCard'
@@ -20,6 +20,8 @@ import { HomepageStatsStrip } from '@/components/home/HomepageStatsStrip'
 import { HomepageCategoryGrid } from '@/components/home/HomepageCategoryGrid'
 import { ForBusinessesBand } from '@/components/home/ForBusinessesBand'
 import { CharityHomepageSection } from '@/components/home/CharityHomepageSection'
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -31,45 +33,16 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const siteUrl = getSiteUrl()
-  const title = 'Find Local Shops, Products & Services in Cyprus — Pundo'
-  // 156 chars — within DESC_MAX=160 (was 168, SEO-feedback-review-20260603 M2)
-  const description = 'Find local shops, products and services in Limassol, Paphos, Larnaca and across Cyprus. Compare prices, check stock and discover nearby businesses near you.'
-  // No trailing slash: Next.js trailingSlash=false (default) 308-redirects '/en/' → '/en'
-  // Canonical must match the non-redirecting URL (SEO-feedback-review-20260603 M1)
-  const canonicalUrl = `${siteUrl}/${lang}`
-  return {
-    title: { absolute: title },
-    description,
-    alternates: {
-      canonical: canonicalUrl,
-      languages: buildHreflang(siteUrl, '/'),
-    },
-    openGraph: {
-      type: 'website',
-      url: canonicalUrl,
-      title,
-      description,
-      siteName: 'Pundo',
-      images: [{ url: `${siteUrl}/og/shop-fallback-default.jpg`, width: 1200, height: 630, alt: 'Pundo — local price comparison' }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      images: [`${siteUrl}/og/shop-fallback-default.jpg`],
-    },
-    // Explicit robots directive — homepage was missing this (SEO-feedback-review-20260603 M3)
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
-  }
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/',
+    title: s.seo_home_title,
+    description: s.seo_home_desc,
+    siteName: brand.name,
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
+  })
 }
 
 export default async function HomePage({ params }: Props) {
@@ -99,7 +72,7 @@ export default async function HomePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-bg">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildOrganizationSchema(siteUrl)) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildWebSiteSchema(siteUrl)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson(buildWebSiteSchema(siteUrl, lang)) }} />
 
       {/* Hero — revised 2-column layout with Cyprus map visual */}
       <Hero brand={brand} categories={categories} lang={lang} preserveOrder={!!featuredIds} />

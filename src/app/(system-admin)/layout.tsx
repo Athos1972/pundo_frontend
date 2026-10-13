@@ -7,6 +7,7 @@ const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], vari
 
 export const metadata: Metadata = {
   title: 'System Admin',
+  robots: { index: false, follow: false },
   description: 'System Administration',
 }
 

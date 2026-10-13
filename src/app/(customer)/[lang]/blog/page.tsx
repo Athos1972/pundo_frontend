@@ -4,10 +4,14 @@ import Image from 'next/image'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
 import { getBlogPosts } from '@/lib/blog'
-import { localePath, buildHreflang } from '@/lib/routing'
-import { getSiteUrl } from '@/lib/seo'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+import { localePath } from '@/lib/routing'
+
 import { BackButton } from '@/components/ui/BackButton'
+import { tSeo } from '@/lib/translations'
+import { safeJson } from '@/lib/structured-data'
+import { getSiteUrl } from '@/lib/seo'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -15,36 +19,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const pageTitle = `${tr.page_title_blog} — pundo`
-  const pageUrl = `${siteUrl}/${lang}/blog`
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title: pageTitle,
-    description: tr.blog_index_subtitle,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
-    siteName: 'Pundo',
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: 'Pundo Blog',
-    },
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/blog',
+    title: s.seo_blog_title,
+    description: s.seo_blog_desc,
+    siteName: brand.name,
   })
-
-  return {
-    title: pageTitle,
-    description: tr.blog_index_subtitle,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/blog'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function BlogPage({ params }: Props) {
@@ -57,18 +40,18 @@ export default async function BlogPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJson({
             '@context': 'https://schema.org',
             '@type': 'Blog',
             name: 'Pundo Blog',
-            url: 'https://pundo.cy/blog',
-            publisher: { '@type': 'Organization', name: 'Pundo', url: 'https://pundo.cy' },
+            url: `${getSiteUrl()}/${lang}/blog`,
+            publisher: { '@type': 'Organization', name: 'Pundo', url: getSiteUrl() },
             blogPost: posts.map((p) => ({
               '@type': 'BlogPosting',
               headline: p.title,
               description: p.description,
               datePublished: p.date,
-              url: `https://pundo.cy/blog/${p.slug}`,
+              url: `${getSiteUrl()}/${lang}/blog/${p.slug}`,
               ...(p.image ? { image: p.image } : {}),
             })),
           }),

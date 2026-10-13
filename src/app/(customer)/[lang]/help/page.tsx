@@ -4,9 +4,10 @@ import { helpContent } from '@/lib/help-content'
 import { FaqAccordion } from '@/components/ui/FaqAccordion'
 import { BackButton } from '@/components/ui/BackButton'
 import type { Lang } from '@/lib/lang'
-import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang } from '@/lib/routing'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -14,37 +15,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const pageUrl = `${siteUrl}/${lang}/help`
-  const title = `${tr.page_title_help} — pundo`
-  const description = tr.meta_desc_help
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title,
-    description,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
-    siteName: 'pundo',
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: 'pundo',
-    },
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/help',
+    title: s.seo_help_title,
+    description: s.seo_help_desc,
+    siteName: brand.name,
   })
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/help'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function HelpPage({ params }: Props) {

@@ -97,8 +97,14 @@ describe('proxy.ts — i18n routing (F6300)', () => {
     expect(proxySrc).toMatch(/response\.cookies\.set\(LANG_COOKIE[\s\S]*?secure:\s*true/)
   })
 
-  it('uses 307 in dev and 308 in production', () => {
-    expect(proxySrc).toContain("NODE_ENV === 'development' ? 307 : 308")
+  it('uses 307 + Vary for the user-dependent lang redirect', () => {
+    expect(proxySrc).toContain('NextResponse.redirect(url, 307)')
+    expect(proxySrc).toContain("'Vary', 'Accept-Language, Cookie'")
+    expect(proxySrc).not.toContain("NODE_ENV === 'development' ? 307 : 308")
+  })
+
+  it('redirects a wrongly-cased lang segment (/EN) to lowercase', () => {
+    expect(proxySrc).toContain('firstSegment.toLowerCase()')
   })
 
   it('strips lang prefix before applying SEO Cache-Control', () => {

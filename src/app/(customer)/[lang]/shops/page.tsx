@@ -2,11 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Lang } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { getSiteUrl } from '@/lib/seo'
-import { buildHreflang, localePath } from '@/lib/routing'
-import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
+
+import { localePath } from '@/lib/routing'
+
 import { BackButton } from '@/components/ui/BackButton'
 import { ShopsContent } from './ShopsContent'
+import { tSeo } from '@/lib/translations'
+import { buildStaticPageMetadata } from '@/lib/seo/static-page-metadata'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   params: Promise<{ lang: string }>
@@ -14,37 +17,15 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params as { lang: Lang }
-  const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const pageUrl = `${siteUrl}/${lang}/shops`
-  const title = `${tr.page_title_shops} — pundo`
-  const description = tr.meta_desc_shops
-
-  const { openGraph, twitter } = buildCompleteOpenGraph({
-    title,
-    description,
-    url: pageUrl,
-    type: 'website',
-    locale: lang,
-    siteName: 'pundo',
-    image: {
-      url: `${siteUrl}/og/shop-fallback-default.jpg`,
-      width: 1200,
-      height: 630,
-      alt: 'pundo',
-    },
+  const brand = await getBrandFromHeaders()
+  const s = tSeo(lang)
+  return buildStaticPageMetadata({
+    lang,
+    path: '/shops',
+    title: s.seo_shops_title,
+    description: s.seo_shops_desc,
+    siteName: brand.name,
   })
-
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: pageUrl,
-      languages: buildHreflang(siteUrl, '/shops'),
-    },
-    openGraph,
-    twitter,
-  }
 }
 
 export default async function ShopsIndexPage({ params }: Props) {

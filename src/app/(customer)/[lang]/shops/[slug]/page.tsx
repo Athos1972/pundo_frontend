@@ -14,6 +14,7 @@ import { t } from '@/lib/translations'
 import { getSiteUrl } from '@/lib/seo'
 import { padShopTitle, truncateDescription } from '@/lib/seo/metadata-defaults'
 import { isShopComplete, slugToDisplayName } from '@/lib/seo/shop-completeness'
+import { isNotFoundError } from '@/lib/api-errors'
 import { buildCompleteOpenGraph, pickShopFallbackOgImage } from '@/lib/seo/og-defaults'
 import type { ShopDetailResponse } from '@/types/api'
 import { buildLocalBusinessSchema, safeJson } from '@/lib/structured-data'
@@ -53,7 +54,7 @@ interface Props { params: Promise<{ lang: string; slug: string }> }
 function incompleteShopMetadata(
   slug: string,
   lang: Lang,
-  opts?: { displayName?: string; cityHint?: string | null; categoryHint?: string | null },
+  opts?: { displayName?: string; cityHint?: string | null; categoryHint?: string | null; shopId?: number },
 ): Metadata {
   const tr = t(lang)
   const siteUrl = getSiteUrl()
@@ -68,6 +69,18 @@ function incompleteShopMetadata(
     { max: 155 },
   )
 
+  const og = buildCompleteOpenGraph({
+    title: pageTitle,
+    description,
+    url: canonicalUrl,
+    type: 'website',
+    locale: lang,
+    siteName: 'Pundo',
+    image: opts?.shopId != null
+      ? pickShopFallbackOgImage(opts.shopId, siteUrl)
+      : pickShopFallbackOgImage(0, siteUrl),
+  })
+
   return {
     title: { absolute: pageTitle },
     description,
@@ -76,6 +89,9 @@ function incompleteShopMetadata(
       languages: buildHreflang(siteUrl, `/shops/${slug}`),
     },
     robots: { index: false, follow: true },
+    openGraph: og.openGraph,
+    twitter: og.twitter,
+    ...(og.other ? { other: og.other } : {}),
   }
 }
 
@@ -85,9 +101,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   let shop: ShopDetailResponse
   try {
     shop = await getShop(slug, lang)
-  } catch {
-    // Real fetch failure (e.g. network error) — no shop data at all.
-    // Explicit noindex + slug-derived title, never a crash or a generic "Shop" title.
+  } catch (err) {
+    // Backend 404 → echtes HTTP 404 (kein Soft-404).
+    if (isNotFoundError(err)) notFound()
+    // Netzwerk-/5xx-Fehler — keine Shop-Daten. Explicit noindex + slug-derived title.
     return incompleteShopMetadata(slug, lang)
   }
 
@@ -102,7 +119,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // AC-2/AC-3 (neu): explicit, testable "incomplete" branch instead of an
     // accidental Catch-fallback. Shop still gets a sensible title + H1 for
     // human visitors coming via internal links (e.g. the search map).
-    return incompleteShopMetadata(slug, lang, { displayName, cityHint, categoryHint })
+    return incompleteShopMetadata(slug, lang, { displayName, cityHint, categoryHint, shopId: shop.id })
   }
 
   // T6/AC-38b: Pad short shop names to reach TITLE_MIN
@@ -154,8 +171,9 @@ export default async function ShopPage({ params }: Props) {
   let shop
   try {
     shop = await getShop(slug, lang)
-  } catch {
-    notFound()
+  } catch (err) {
+    if (isNotFoundError(err)) notFound()
+    throw err
   }
 
   const session = await getCustomerSession(lang)
@@ -457,7 +475,7 @@ export default async function ShopPage({ params }: Props) {
       </div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJson(buildLocalBusinessSchema(shop, siteUrl)) }}
+        dangerouslySetInnerHTML={{ __html: safeJson(buildLocalBusinessSchema(shop, siteUrl, lang)) }}
       />
     </main>
   )

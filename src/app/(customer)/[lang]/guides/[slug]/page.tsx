@@ -4,7 +4,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import type { Lang } from '@/lib/lang'
 import { LANGS } from '@/lib/lang'
 import { t } from '@/lib/translations'
-import { truncateTitle } from '@/lib/seo/metadata-defaults'
+import { truncateTitle, truncateDescription, getSiteUrl } from '@/lib/seo/metadata-defaults'
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
 import { getImageMeta, hasImageMeta } from '@/lib/guide-images'
@@ -23,21 +23,22 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params as { lang: Lang; slug: string }
   const guide = getGuide(slug, lang)
-  if (!guide) return {}
+  if (!guide) notFound()
 
   const { title, description } = guide.meta
-  const siteUrl = 'https://pundo.cy'
+  const siteUrl = getSiteUrl()
   const canonicalUrl = `${siteUrl}/${lang}/guides/${slug}`
+  const metaDescription = truncateDescription(description ?? '')
 
   // T7/AC-37: Truncate title to fit 60-char limit with " — pundo" suffix (8 chars)
-  const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' — pundo').length })
-  const pageTitle = `${truncatedTitle} — pundo`
+  const truncatedTitle = truncateTitle(title, { max: 60, reserved: Array.from(' | Pundo').length })
+  const pageTitle = `${truncatedTitle} | Pundo`
 
   // Build a guaranteed-complete OG block
   const ogImageUrl = `${siteUrl}/og/shop-fallback-default.jpg`
   const og = buildCompleteOpenGraph({
     title: pageTitle,
-    description: description ?? '',
+    description: metaDescription,
     url: canonicalUrl,
     type: 'article',
     locale: lang,
@@ -50,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Use absolute title to bypass the layout template (which would append " | Pundo"
     // and push the total over 60 chars — the truncation already reserves for that).
     title: { absolute: pageTitle },
-    description,
+    description: metaDescription,
     alternates: {
       canonical: canonicalUrl,
       languages: buildHreflang(siteUrl, `/guides/${slug}`),
@@ -60,6 +61,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ...(og.other ? { other: og.other } : {}),
   }
 }
+
+// Unknown slugs must yield a real HTTP 404 (not a streamed 200 soft-404)
+export const dynamicParams = false
 
 export function generateStaticParams() {
   return LANGS.flatMap(lang =>
@@ -93,7 +97,7 @@ export default async function GuideDetailPage({ params }: Props) {
     .filter((g) => g.category === meta.category && g.slug !== slug)
     .slice(0, 2)
 
-  const siteUrl = 'https://pundo.cy'
+  const siteUrl = getSiteUrl()
   const canonicalUrl = `${siteUrl}/${lang}/guides/${slug}`
 
   // image: Hero-Bild wenn vorhanden (dieselbe Quelle wie <GuideHeroImage>),

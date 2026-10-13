@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getSiteUrl } from '@/lib/seo'
+import { safeJson } from '@/lib/structured-data'
 import { isIndexable } from '@/lib/seo/metadata-defaults'
 
 export interface BreadcrumbItem {
@@ -57,7 +58,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJson(jsonLd) }}
       />
       <nav aria-label="breadcrumb" className="mb-2">
         <ol className="flex flex-wrap items-center gap-1 text-xs text-text-muted">

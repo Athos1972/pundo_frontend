@@ -8,6 +8,7 @@ const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], vari
 
 export const metadata: Metadata = {
   title: 'Shop Portal',
+  robots: { index: false, follow: false },
   description: 'Shop-Owner Portal',
 }
 

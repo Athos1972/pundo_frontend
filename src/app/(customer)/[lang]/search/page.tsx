@@ -17,13 +17,17 @@ interface Props {
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const sp = await searchParams
-  const hasQuery = typeof sp['q'] === 'string' && sp['q'].length > 0
-  const hasCategoryId = typeof sp['category_id'] === 'string' && sp['category_id'].length > 0
+  // Any non-empty query parameter (q, category_id, filters, utm_*, ...) makes the URL non-indexable
+  const hasParams = Object.values(sp).some(v =>
+    Array.isArray(v) ? v.some(x => x.length > 0) : typeof v === 'string' && v.length > 0,
+  )
   const siteUrl = getSiteUrl()
 
-  if (hasQuery || hasCategoryId) {
-    // Parametrised search / category URLs must not be indexed (index bloat)
+  if (hasParams) {
+    // Parametrised URLs must not be indexed (index bloat); canonical stays the clean URL
+    const { lang: l } = await params as { lang: Lang }
     return {
+      alternates: { canonical: `${siteUrl}/${l}/search` },
       robots: { index: false, follow: true },
     }
   }

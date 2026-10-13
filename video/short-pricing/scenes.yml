@@ -1,0 +1,78 @@
+# YouTube Short S6 (9:16), teaser for part 6 "Prices, bulk discounts & promotions" (video/pricing).
+# Concept + decisions: video/shorts/00-konzept.de.md (BB 2026-10-14: own recording, pilot S6 EN + EL).
+# meta.format: vertical -> brand.yml formats.vertical (1080x1920, hook card intro, short outro, no thumbnail).
+# Same demo data as part 6: bread offer of Anna's Bakery (prepare: ../pricing/prepare_pricing.py).
+
+meta:
+  slug: short-pricing
+  format: vertical
+  title:                    # = hook card (intro)
+    en: "Bulk discounts & sales in 30 seconds"
+    el: "Εκπτώσεις ποσότητας & προσφορές σε 30 δευτερόλεπτα"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:               # outro text; the full tutorial is linked as "related video" in Studio
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    name: { en: "Sourdough bread 750 g", el: "Ψωμί προζυμιού 750 γρ." }
+    bulk_from: 6
+    bulk_price: { en: "4.00", el: "4,00" }
+    promo_price: { en: "3.90", el: "3,90" }
+    promo_days: 7
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: bulk
+    shot: 'offer edit form (opened in prep): step 1 until 5, + Add step, from 6 at 4.00, Save'
+    callout:
+      en: "Bulk discount"
+      el: "Έκπτωση ποσότητας"
+    narration:
+      en: >-
+        Anna sells sourdough bread on pundo. Cafés buying six or more pay just 4 euros a loaf.
+        Add one price step and save.
+      el: >-
+        Η Άννα πουλάει ψωμί προζυμιού στο pundo. Τα καφέ που παίρνουν έξι ή περισσότερα πληρώνουν μόνο 4 ευρώ.
+        Πρόσθεσε μια βαθμίδα τιμής και αποθήκευσε.
+
+  - id: customer-tiers
+    shot: 'customer product page, Anna''s row with the "from 6" line highlighted'
+    callout:
+      en: "Customers see it"
+      el: "Το βλέπουν οι πελάτες"
+    narration:
+      en: >-
+        Customers see it right on the product page.
+      el: >-
+        Οι πελάτες το βλέπουν αμέσως στη σελίδα του προϊόντος.
+
+  - id: promo
+    shot: 'edit again: Promotion, + Add pricing unit, piece 3.90, today until +7 days, Save'
+    callout:
+      en: "Sale with an end date"
+      el: "Προσφορά με λήξη"
+    narration:
+      en: >-
+        Weekend sale? Set 3 euros 90 and an end date. Afterwards the normal price is back automatically.
+      el: >-
+        Προσφορά για το Σαββατοκύριακο; Βάλε 3,90 ευρώ και ημερομηνία λήξης. Μετά επιστρέφει αυτόματα η κανονική τιμή.
+
+  - id: customer-promo
+    shot: 'customer shop page, promo card: 3.90, 4.50 crossed out, "Sale until"'
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        Sale price, the old price crossed out, and the end date. Done!
+      el: >-
+        Τιμή προσφοράς, η παλιά τιμή διαγραμμένη και η ημερομηνία λήξης. Έτοιμο!
+
+  - id: outro
+    branding: outro

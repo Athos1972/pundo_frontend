@@ -9,6 +9,7 @@ Run with the BACKEND venv (DB settings from its .env):
   fixed price, one step 1–∞ at 4.50 EUR per piece, no promotion, no title/description, not archived;
 * every price change in the shop-admin archives the offer and creates a new one (one active manual offer per
   listing), so the ACTIVE offer of the bread listing is reset (fallback: newest archived one, re-activated);
+* re-activates the bread item (product-create-new/prepare.sh deactivates demo items of all video shops);
 * only touches the shop of the given owner email (= the recorded language).
 Prints {"shops": {owner_email: shop_slug}, "offers": {shop_slug: {"id": offer_id, "item_slug": slug}}} as JSON on the last line.
 """
@@ -56,6 +57,10 @@ with psycopg.connect(url) as conn:
                               title=null, description=null, archived=false
                         where id=%s""", (Jsonb(START_TIERS), offer_id))
         cur.execute("update shop_listings set available=true where id=(select shop_listing_id from offers where id=%s)", (offer_id,))
+        # product-create-new/prepare.sh deactivates the shop_manual items of ALL video demo shops before each run
+        # (so recording part 2 in one language hides the other language's bread) -> make sure it is active again.
+        cur.execute("""update items set status='active', updated_at=now() where status<>'active'
+                        and id=(select sl.item_id from offers o join shop_listings sl on sl.id=o.shop_listing_id where o.id=%s)""", (offer_id,))
         offers[shop_slug] = {"id": offer_id, "item_slug": item_slug}
     print(f"reset bread offers {offers}" + (" [dry-run, rolled back]" if DRY else ""))
     conn.rollback() if DRY else conn.commit()

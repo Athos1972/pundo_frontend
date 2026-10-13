@@ -37,6 +37,7 @@ video/
 | `service-from-catalog` | Teil 5: Katalog-Dienstleistung „Catering / events“ übernehmen, Preis „Auf Anfrage“; `prepare_catalog_service.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `pricing` | Teil 6 (Serienende): Brot-Angebot bearbeiten, Staffel „ab 6 Stück“, Aktionspreis mit Zeitraum, Kundensicht (braucht F5200 „Staffelpreise Kundensicht“); `prepare_pricing.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `shop-profile` | Teil 7: Öffnungszeiten mit Mittagspause (braucht B5950-001), Beschreibung, Sprachen, Zahlungsarten, Liefer-Umkreis, Social Links kurz, Kundenansicht; `prepare_profile.py` (Backend-venv) | Test-Instanz 3500/8500 |
+| `short-pricing` | Short S6 (9:16, `meta.format: vertical`): Staffel, Kundensicht, Aktion; nutzt `../pricing/prepare_pricing.py`. Konzept aller Shorts: `shorts/00-konzept.de.md` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

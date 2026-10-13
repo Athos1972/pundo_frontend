@@ -69,6 +69,29 @@ layout:
   callout_font_px: 84
   logo_corner: { x: 1650, y: 48, w: 220 }
 
+# Alternative canvas formats, selected per video with `meta.format` in scenes.yml (tts.py merges them into
+# brand.video / brand.layout / brand.timing; meta.timing still wins). Default (no meta.format) = 16:9 above.
+formats:
+  vertical:               # YouTube Shorts 9:16: hook card, phone centred, callout on top, subtitles at the bottom
+    video: { width: 1080, height: 1920 }
+    timing: { intro_s: 2.6, outro_s: 4.0, tail_s: 0.6 }
+    layout:
+      vertical: true
+      phone_screen_h: 1250
+      phone_bezel: 16
+      phone_radius: 58
+      phone_center_x: 540
+      phone_center_y: 985
+      right_x: 60           # callout + subtitle column = full width minus margins
+      right_w: 960
+      callout_y: 150
+      subtitle_y: 1630
+      subtitle_h: 230
+      subtitle_font_px: 52
+      subtitle_max_chars: 28
+      callout_font_px: 70
+      logo_corner: { x: 420, y: 44, w: 240 }
+
 # Background music. Picked up automatically: put an mp3/wav/m4a into video/_branding/music/
 # (first file alphabetically), or set `file` explicitly. Looped/trimmed to video length, fade in/out,
 # ducked by sidechain under the narration. Set `enabled: false` to build without music.

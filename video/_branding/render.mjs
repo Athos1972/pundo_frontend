@@ -64,8 +64,8 @@ async function layers() {
     const isUrl = /^[\w.-]+\.\w+\//.test(co)
     const fs_ = (title.length > 30 ? 72 : title.length > 20 ? 80 : LY.callout_font_px) * (isUrl ? 0.8 : 1)
     const body = `${shadow}
-      <div style="position:absolute;left:${LY.right_x}px;top:${LY.callout_y || 230}px;width:${LY.right_w}px;${rtl ? 'text-align:right;' : ''}">
-        ${label ? `<div class="h" style="display:inline-block;background:${C.accent};color:#fff;font-size:38px;padding:10px 28px;border-radius:999px;margin-bottom:34px">${esc(label)}</div>` : '<div style="width:96px;height:10px;border-radius:5px;background:' + C.accent + ';margin-bottom:40px"></div>'}
+      <div style="position:absolute;left:${LY.right_x}px;top:${LY.callout_y || 230}px;width:${LY.right_w}px;${LY.vertical ? 'text-align:center;' : rtl ? 'text-align:right;' : ''}">
+        ${label ? `<div class="h" style="display:inline-block;background:${C.accent};color:#fff;font-size:38px;padding:10px 28px;border-radius:999px;margin-bottom:34px">${esc(label)}</div>` : '<div style="width:96px;height:10px;border-radius:5px;background:' + C.accent + ';margin:' + (LY.vertical ? '0 auto 28px' : '0 0 40px') + '"></div>'}
         <div class="h" style="font-size:${fs_}px;line-height:1.08;color:${isUrl ? C.accent_dark : C.text}">${esc(title)}</div>
       </div>
       <div style="position:absolute;left:${LY.logo_corner.x}px;top:${LY.logo_corner.y}px">${logoSvg(LY.logo_corner.w)}</div>`
@@ -113,7 +113,38 @@ const seg=(t,a,b)=>ease((t-a)/(b-a));
 const svgAt=(id,t)=>{const s=document.querySelector('#'+id+' svg');if(!s)return;s.pauseAnimations();s.setCurrentTime(Math.max(0,t))};
 `
 
+// Shorts (9:16): short hook card - logo draws in on top, the hook (meta.title) pops in big in the middle.
+async function introVertical() {
+  const title = tl.meta.title[lang]
+  const svg = asset('splash-intro.svg').replace(/width="1024" height="768"/, 'width="760" height="570" style="overflow:visible"')
+  const body = `<div id="logo" style="position:absolute;left:${(VW - 760) / 2}px;top:150px;width:760px;height:570px">${svg}</div>
+    <div id="tt" style="position:absolute;left:70px;right:70px;top:820px;text-align:center;opacity:0">
+      <div class="h" style="font-size:${title.length > 34 ? 92 : 108}px;line-height:1.05;text-wrap:balance">${esc(title)}</div>
+      <div id="bar" style="height:12px;border-radius:6px;background:${C.accent};margin:48px auto 0;width:0"></div></div>`
+  await sequence('intro', B.timing.intro_s, () => html(body, `body{${bgCss}}`), `(t)=>{${HELPERS}
+    svgAt('logo', 0.6 + t*1.6);
+    const tt=document.getElementById('tt'); const k=seg(t,0.25,0.85); tt.style.opacity=k; tt.style.transform='scale('+(0.92+0.08*k)+')';
+    document.getElementById('bar').style.width=(320*seg(t,0.8,1.4))+'px';
+  }`)
+}
+
+// Shorts (9:16): logo, URL and "full tutorial" hint; no end-screen slots (Shorts have none).
+async function outroVertical() {
+  const url = tl.meta.url[lang], nxt = tl.meta.next_video[lang]
+  const dur = B.timing.outro_s
+  const body = `<div id="logo" style="position:absolute;left:${(VW - 800) / 2}px;top:330px;width:800px;height:600px">${asset('splash-intro.svg').replace(/width="1024" height="768"/, 'width="800" height="600" style="overflow:visible"')}</div>
+    <div id="nx" class="h" style="position:absolute;left:80px;right:80px;top:1040px;text-align:center;font-size:84px;line-height:1.1;opacity:0;text-wrap:balance">${esc(nxt)}</div>
+    <div id="url" class="h" style="position:absolute;left:80px;right:80px;top:1330px;text-align:center;font-size:60px;color:${C.accent_dark};opacity:0">${esc(url)}</div>
+    <div id="fade" style="position:absolute;inset:0;background:${C.bg};opacity:0"></div>`
+  await sequence('outro', dur, () => html(body, `body{${bgCss}}`), `(t)=>{${HELPERS}
+    svgAt('logo', 1.2 + t*1.4);
+    for(const [id,a] of [['nx',0.25],['url',0.7]]){const e=document.getElementById(id);const k=seg(t,a,a+0.6);e.style.opacity=k;e.style.transform='translateY('+(30*(1-k))+'px)'}
+    document.getElementById('fade').style.opacity=seg(t,${dur}-0.4,${dur});
+  }`)
+}
+
 async function intro() {
+  if (LY.vertical) return introVertical()
   const title = tl.meta.title[lang]
   const svg = asset('splash-intro.svg').replace(/width="1024" height="768"/, 'width="1100" height="825" style="overflow:visible"')
   const body = `<div id="logo" style="position:absolute;left:${(VW - 1100) / 2}px;top:${(VH - 825) / 2}px;width:1100px;height:825px;transform-origin:50% 50%">${svg}</div>
@@ -131,6 +162,7 @@ async function intro() {
 }
 
 async function outro() {
+  if (LY.vertical) return outroVertical()
   const url = tl.meta.url[lang], nxt = tl.meta.next_video[lang]
   const slot = (x, y, w, h, r, id) => `<div id="${id}" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${r}px;background:${C.surface};box-shadow:0 14px 40px rgba(26,23,20,.12);border:2px solid ${C.border};display:flex;align-items:center;justify-content:center;opacity:0">
       <div style="width:0;height:0;border-style:solid;border-width:26px 0 26px 44px;border-color:transparent transparent transparent ${C.border}"></div></div>`

@@ -52,7 +52,7 @@ src/app/
 src/
 ├── components/
 │   ├── map/             # Leaflet-Karte + SearchMapBottomSheet (Client-only, dynamic import)
-│   ├── product/         # ProductCard, OfferList, RelatedProductsCarousel, PriceHistory*
+│   ├── product/         # ProductCard, OfferList, PriceTierSummary (F5200 Staffelblock), RelatedProductsCarousel, PriceHistory*
 │   ├── search/          # SearchBar, FilterChips, CategoryChips, ServiceResultCard, SearchSimilarButton
 │   ├── shop/            # ShopCard, ShopOfferCard, NearbyShops, RelatedShopsWidget
 │   ├── shop-admin/      # Isolierte Admin-Komponenten (nur ui/ importieren — Clean Boundary!); u. a. CategoryPicker (Kategorie-Auswahl, B5900-011)
@@ -72,6 +72,7 @@ src/
 │   ├── translations.ts          # Customer-UI-Strings (6 Sprachen, kein i18n-Framework)
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
 │   ├── system-admin-translations.ts
+│   ├── price-tiers.ts           # F5200: Staffelpreis-View-Model (Hauptpreis/Suffix/Zeilen) + JSON-LD priceSpecification
 │   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
 │   ├── seo/                     # metadata-defaults, og-defaults, structured-data
 │   ├── i18n/                    # common.ts, guides.ts (tCommon, tGuides)

@@ -29,6 +29,10 @@ export interface ProductListItem {
 export interface ProductListResponse { total: number; items: ProductListItem[]; }
 
 export interface PriceHistoryItem { shop_id: number; price: string; crawled_at: string | null; }
+/** F5200: Preisstufe einer Staffel (Backend sortiert nach min_quantity ASC). */
+export interface PublicPriceStep { min_quantity: number; max_quantity: number | null; price: string; currency: string }
+/** F5200: Preisstaffel je Einheit; unit_label ist vom Backend lokalisiert (null = kein Suffix). */
+export interface PublicPriceTier { unit: string; unit_label: string | null; steps: PublicPriceStep[] }
 export interface OfferDetail {
   shop_id: number; shop_slug: string; shop_name: string; shop_address: string | null;
   shop_location: { lat: number; lng: number } | null;
@@ -47,6 +51,12 @@ export interface OfferDetail {
   promo_price?: string | null;
   promo_currency?: string | null;
   promo_valid_until?: string | null;
+  /** F5200: ISO-Datum, Beginn der Aktion. */
+  promo_valid_from?: string | null;
+  /** F5200: Standard-Staffeln (optional: aeltere API-Staende liefern sie nicht). */
+  price_tiers?: PublicPriceTier[];
+  /** F5200: nur bei aktiver Aktion befuellt. */
+  promo_price_tiers?: PublicPriceTier[] | null;
 }
 export interface ProductDetailResponse {
   id: number; slug: string;
@@ -138,6 +148,10 @@ export interface ShopOffer {
   promo_price_type: PriceType | null
   promo_currency: string | null
   promo_valid_until: string | null  // ISO-8601, für Badge-Anzeige
+
+  // F5200: Staffeln (optional — aeltere API-Staende liefern sie nicht)
+  price_tiers?: PublicPriceTier[]
+  promo_price_tiers?: PublicPriceTier[] | null
 }
 
 export interface CategoryItem {

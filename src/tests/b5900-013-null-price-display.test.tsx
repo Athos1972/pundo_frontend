@@ -151,3 +151,32 @@ describe('buildProductSchema', () => {
     expect(json).toContain('"price":"2.50"')
   })
 })
+
+describe('F5200 Staffelpreise — nie null/undefined/NaN (AK12)', () => {
+  const dirty = [
+    { unit: 'per_hour', unit_label: null, steps: [] },
+    { unit: 'piece', unit_label: null, steps: [
+      { min_quantity: 1, max_quantity: null, price: '5.0000', currency: 'EUR' },
+      { min_quantity: 6, max_quantity: null, price: 'None', currency: 'EUR' },
+      { min_quantity: 12, max_quantity: null, price: '4.00', currency: 'EUR' },
+    ] },
+  ]
+  it.each(LANGS)('OfferList + ShopOfferCard (%s)', (lang) => {
+    const offer: OfferDetail = {
+      shop_id: 1, shop_slug: 'a', shop_name: 'A', shop_address: null, shop_location: null, price: '5.00',
+      currency: 'EUR', price_type: 'fixed', price_note: null, shop_phone: null, is_available: true,
+      sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z', price_tiers: dirty, promo_price_tiers: null,
+    }
+    const a = render(<OfferList lang={lang} productName="p" offers={[offer]} />)
+    expect(a.container.textContent).not.toMatch(BAD)
+    cleanup()
+    const card: ShopOffer = {
+      id: 1, item_name: 'X', item_slug: 'x', item_photo_url: null, item_brand: null, item_description: null,
+      standard_price: '5.00', standard_price_type: 'fixed', standard_currency: 'EUR',
+      promo_price: '4.00', promo_price_type: 'fixed', promo_currency: 'EUR', promo_valid_until: '2099-12-31T00:00:00Z',
+      price_tiers: dirty, promo_price_tiers: dirty,
+    }
+    const b = render(<ShopOfferCard offer={card} lang={lang} />)
+    expect(b.container.textContent).not.toMatch(BAD)
+  })
+})

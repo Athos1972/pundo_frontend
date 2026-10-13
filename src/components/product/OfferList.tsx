@@ -7,6 +7,8 @@ import { formatCrawledAt, formatPriceOrLabel, formatAmount, parsePriceAmount, bu
 import { sanitizeExternalUrl } from '@/lib/url-safety'
 import { getSiteUrl } from '@/lib/seo'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
+import { buildOfferPriceView } from '@/lib/price-tiers'
+import { PriceTierSummary } from './PriceTierSummary'
 
 export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]; lang: string; productName: string }) {
   const tr = t(lang)
@@ -44,13 +46,30 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
           offer.price_note,
           tr,
         )
+        const view = buildOfferPriceView({
+          priceType: offer.price_type,
+          isPromo: promoPriceDisplay !== null,
+          priceTiers: offer.price_tiers,
+          promoPriceTiers: offer.promo_price_tiers,
+        })
+        const main = view.main
+        const mainAmount = view.hasTiers && main ? main.amount : null
+        const suffix = view.hasTiers && main ? main.unitSuffix : null
+        const fromPrefix = view.hasTiers && view.mainShowMinQty && main ? tr.tier_from(main.minQty) : null
+        // A2: Durchstreichen nur bei gleicher Einheit; ohne Tier-Daten wie bisher
+        const showStrike =
+          view.compareStrike === 'same-unit' ? true
+            : view.compareStrike === 'different-unit' || view.compareStrike === 'none' ? false
+            : stdLabel.isNumeric
+        const strikeText = view.compareStrike === 'same-unit' && view.compareAmount ? view.compareAmount : stdLabel.display
         const lastChecked = formatCrawledAt(offer.crawled_at, lang)
         const promoBadgeDate = offer.promo_valid_until
           ? new Date(offer.promo_valid_until).toLocaleDateString(lang, { day: 'numeric', month: 'short' })
           : null
 
         return (
-          <div key={i} className={`flex items-start justify-between gap-3 py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
+          <div key={i} className={`py-3 ${i > 0 ? 'border-t border-border' : ''}`}>
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Link href={localePath(lang as Lang,`/shops/${offer.shop_slug}`)} className="font-medium text-sm text-accent underline truncate hover:opacity-80 block">{offer.shop_name}</Link>
               {offer.shop_address && <p className="text-xs text-text-muted">{offer.shop_address}</p>}
@@ -99,9 +118,13 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
             <div className="flex-shrink-0 text-right rtl:text-left">
               {promoPriceDisplay ? (
                 <>
-                  <p className="font-bold text-accent">{promoPriceDisplay}</p>
-                  {stdLabel.isNumeric && (
-                    <s className="text-xs text-text-muted">{stdLabel.display}</s>
+                  <p className="font-bold text-accent">
+                    {fromPrefix && <span className="text-xs font-normal text-text-muted">{fromPrefix} · </span>}
+                    <bdi>{mainAmount ?? promoPriceDisplay}</bdi>
+                  </p>
+                  {suffix && <p className="text-xs text-text-muted">/ {suffix}</p>}
+                  {showStrike && (
+                    <s className="text-xs text-text-muted"><bdi>{strikeText}</bdi></s>
                   )}
                   {promoBadgeDate && (
                     <p className="text-xs text-red-600 mt-0.5">{tr.promo_badge} {promoBadgeDate}</p>
@@ -110,14 +133,18 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
               ) : (
                 <>
                   <p className={`font-bold ${stdLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
-                    {stdLabel.display}
+                    {fromPrefix && <span className="text-xs font-normal text-text-muted">{fromPrefix} · </span>}
+                    <bdi>{mainAmount ?? stdLabel.display}</bdi>
                   </p>
+                  {suffix && <p className="text-xs text-text-muted">/ {suffix}</p>}
                   {stdLabel.note && (
                     <p className="text-xs text-text-light mt-0.5">{stdLabel.note}</p>
                   )}
                 </>
               )}
             </div>
+          </div>
+          <PriceTierSummary rows={view.extraRows} lang={lang} />
           </div>
         )
       })}

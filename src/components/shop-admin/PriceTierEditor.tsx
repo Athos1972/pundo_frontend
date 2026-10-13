@@ -20,7 +20,7 @@ function emptyTier(): PriceTier {
 }
 
 function stepError(step: PriceTierStep, tr: ReturnType<typeof tAdmin>): string | null {
-  if (step.max_quantity !== undefined && step.max_quantity < step.min_quantity) {
+  if (step.max_quantity != null && step.max_quantity < step.min_quantity) {
     return tr.tier_step_error_max_lt_min
   }
   if (!step.price || parseFloat(step.price) <= 0) {
@@ -139,7 +139,7 @@ export function PriceTierEditor({ tiers, onChange, priceUnits, lang }: Props) {
               const err = stepError(step, tr)
               return (
                 <div key={stepIdx} className="flex flex-col gap-1">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end">
+                  <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end">
                     <div>
                       <label className="block text-xs text-gray-500 mb-0.5">{tr.step_min_qty}</label>
                       <input
@@ -191,7 +191,7 @@ export function PriceTierEditor({ tiers, onChange, priceUnits, lang }: Props) {
                       type="button"
                       onClick={() => removeStep(tierIdx, stepIdx)}
                       disabled={tier.steps.length <= 1}
-                      className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-30 pb-1"
+                      className="col-span-2 sm:col-span-1 justify-self-end text-xs text-gray-400 hover:text-red-500 disabled:opacity-30 pb-1"
                     >
                       {tr.remove_step}
                     </button>

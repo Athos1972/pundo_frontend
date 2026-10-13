@@ -501,3 +501,60 @@ describe('buildWebSiteSchema', () => {
     expect(action['query-input']).toBe('required name=search_term_string')
   })
 })
+
+describe('buildProductSchema — Mengenpreise (F5200)', () => {
+  const step = (min_quantity: number, max_quantity: number | null, price: string) => ({ min_quantity, max_quantity, price, currency: 'EUR' })
+  const mk = (extra: Record<string, unknown>) =>
+    ({
+      id: 1, slug: 'brot', names: { en: 'Bread' }, descriptions: null, brand: null, category: null,
+      thumbnail_url: null, images: null, attributes: null, price_history: [],
+      offers: [{
+        shop_id: 1, shop_slug: 's', shop_name: 'Anna', shop_address: null, shop_location: null,
+        price: '4.5000', currency: 'EUR', price_type: 'fixed', price_note: null, shop_phone: null,
+        is_available: true, sku: null, url: null, crawled_at: null, ...extra,
+      }],
+    }) as unknown as ProductDetailResponse
+  type Offer = { price: string; priceSpecification?: Record<string, unknown>[]; priceValidUntil?: string }
+  const offerOf = (p: ProductDetailResponse) => (buildProductSchema(p, 'de', SITE_URL).offers as Offer[])[0]
+
+  it('≥2 Steps → priceSpecification, Offer.price unverändert', () => {
+    const o = offerOf(mk({ price_tiers: [{ unit: 'per_piece', unit_label: 'Stück', steps: [step(1, 5, '4.5000'), step(6, null, '4.0000')] }], promo_price_tiers: null }))
+    expect(o.price).toBe('4.5000')
+    expect(o.priceSpecification).toHaveLength(2)
+    expect(o.priceSpecification![1]).toMatchObject({ price: '4.00', eligibleQuantity: { minValue: 6, unitCode: 'H87', unitText: 'Stück' } })
+    expect(o.priceValidUntil).toBeUndefined()
+  })
+
+  it('zwei Einheiten', () => {
+    const o = offerOf(mk({ price_tiers: [
+      { unit: 'per_hour', unit_label: 'Stunde', steps: [step(1, null, '45')] },
+      { unit: 'per_m2', unit_label: 'm²', steps: [step(1, null, '30')] },
+    ] }))
+    expect(o.priceSpecification!.map((s) => (s.eligibleQuantity as { unitCode: string }).unitCode)).toEqual(['HUR', 'MTK'])
+  })
+
+  it('Aktion: validFrom/validThrough, Strikethrough, priceValidUntil', () => {
+    const o = offerOf(mk({
+      price: '3.9000',
+      price_tiers: [{ unit: 'per_piece', unit_label: 'Stück', steps: [step(1, null, '4.5000')] }],
+      promo_price_tiers: [{ unit: 'per_piece', unit_label: 'Stück', steps: [step(1, null, '3.9000')] }],
+      promo_valid_from: '2026-10-13', promo_valid_until: '2026-10-19T00:00:00Z',
+    }))
+    expect(o.priceSpecification![0]).toMatchObject({ price: '3.90', validFrom: '2026-10-13', validThrough: '2026-10-19' })
+    expect(o.priceSpecification![1]).toMatchObject({ priceType: 'https://schema.org/StrikethroughPrice', price: '4.50' })
+    expect(o.priceValidUntil).toBe('2026-10-19')
+  })
+
+  it('Ein-Step-Crawl ohne Aktion: kein Feld', () => {
+    const o = offerOf(mk({ price_tiers: [{ unit: 'piece', unit_label: null, steps: [step(1, null, '4.5000')] }] }))
+    expect(o).not.toHaveProperty('priceSpecification')
+    expect(offerOf(mk({}))).not.toHaveProperty('priceSpecification')
+  })
+
+  it('Custom-Label in unitText bleibt XSS-sicher in safeJson', () => {
+    const p = mk({ price_tiers: [{ unit: 'custom', unit_label: '<b>Laib</b>', steps: [step(1, null, '4'), step(6, null, '3')] }] })
+    const json = safeJson(buildProductSchema(p, 'de', SITE_URL))
+    expect(json).not.toContain('<b>')
+    expect(JSON.parse(json).offers[0].priceSpecification[0].eligibleQuantity.unitText).toBe('<b>Laib</b>')
+  })
+})

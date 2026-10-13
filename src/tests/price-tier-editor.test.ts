@@ -4,7 +4,7 @@ import type { PriceTier, PriceTierStep } from '@/types/shop-admin'
 // Pure logic extracted from PriceTierEditor and ProductForm for unit testing
 
 function stepError(step: PriceTierStep): string | null {
-  if (step.max_quantity !== undefined && step.max_quantity < step.min_quantity) {
+  if (step.max_quantity != null && step.max_quantity < step.min_quantity) {
     return 'max_lt_min'
   }
   if (!step.price || parseFloat(step.price) <= 0) {
@@ -20,7 +20,7 @@ function tiersAreValid(tiers: PriceTier[]): boolean {
     if (tier.steps.length === 0) return false
     for (const step of tier.steps) {
       if (!step.price || parseFloat(step.price) <= 0) return false
-      if (step.max_quantity !== undefined && step.max_quantity < step.min_quantity) return false
+      if (step.max_quantity != null && step.max_quantity < step.min_quantity) return false
     }
   }
   return true
@@ -37,6 +37,12 @@ function lowestStepPrice(tier: PriceTier): string | null {
 describe('stepError', () => {
   it('gibt null zurück für gültige Step', () => {
     expect(stepError({ min_quantity: 1, price: '10.00', currency: 'EUR' })).toBeNull()
+  })
+
+  it('akzeptiert max_quantity null aus der API (unbegrenzt)', () => {
+    // Backend liefert für „unbegrenzt“ null statt undefined
+    const step = { min_quantity: 6, max_quantity: null as unknown as undefined, price: '4.00', currency: 'EUR' }
+    expect(stepError(step)).toBeNull()
   })
 
   it('erkennt max_quantity < min_quantity', () => {

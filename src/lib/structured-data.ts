@@ -1,6 +1,7 @@
 import type { ProductDetailResponse, ShopDetailResponse } from '@/types/api'
 import { toRelativeImageUrl, parsePriceAmount } from '@/lib/utils'
 import { sanitizeExternalUrl } from '@/lib/url-safety'
+import { buildPriceSpecifications } from '@/lib/price-tiers'
 
 /**
  * Converts a potentially relative image URL to an absolute URL using the site base.
@@ -75,9 +76,16 @@ export function buildProductSchema(
     doesNotShip: true,
   }
 
-  const schemaOffers = fixedOffers.map((o) => ({
+  const schemaOffers = fixedOffers.map((o) => {
+    // F5200: Mengenpreise / Aktion als priceSpecification (Offer.price bleibt Hauptpreis)
+    const priceSpecification = buildPriceSpecifications(o)
+    const promoActive = !!priceSpecification && (o.promo_price_tiers?.length ?? 0) > 0
+    const validUntil = promoActive ? o.promo_valid_until?.match(/^\d{4}-\d{2}-\d{2}/)?.[0] : undefined
+    return {
     '@type': 'Offer',
     price: o.price,
+    ...(priceSpecification ? { priceSpecification } : {}),
+    ...(validUntil ? { priceValidUntil: validUntil } : {}),
     priceCurrency: o.currency,
     availability: o.is_available
       ? 'https://schema.org/InStock'
@@ -89,7 +97,8 @@ export function buildProductSchema(
     },
     hasMerchantReturnPolicy: merchantReturnPolicy,
     shippingDetails,
-  }))
+    }
+  })
 
   // Google requires at least one of: offers, review, or aggregateRating in a
   // Product schema. Provide a minimal fallback offer so the schema is always valid

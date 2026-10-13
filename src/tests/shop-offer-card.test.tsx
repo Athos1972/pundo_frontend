@@ -196,3 +196,63 @@ describe('ShopOfferCard — no promo badge when promo_valid_until null', () => {
     expect(screen.queryByText(/sale until/i)).toBeNull()
   })
 })
+
+// ─── F5200 Staffelpreise ──────────────────────────────────────────────────────
+describe('ShopOfferCard — Staffelpreise (F5200)', () => {
+  const tier = (steps: Array<[number, number | null, string]>, label: string | null = 'Stück', unit = 'per_piece') => ({
+    unit,
+    unit_label: label,
+    steps: steps.map(([min_quantity, max_quantity, price]) => ({ min_quantity, max_quantity, price, currency: 'EUR' })),
+  })
+  const promo = (tiers: ReturnType<typeof tier>[], lang = 'de') => {
+    const offer: ShopOffer = {
+      ...OFFER_WITH_PROMO,
+      standard_price: '4.5000', promo_price: '3.9000',
+      price_tiers: [tier([[1, 5, '4.5000'], [6, null, '4.0000']])],
+      promo_price_tiers: tiers,
+    }
+    return render(<ShopOfferCard offer={offer} lang={lang} />)
+  }
+
+  it('AK3: Promo-Preis + Suffix + Durchstreichung, keine Standard-Staffel, Beschreibung bleibt', () => {
+    const { container } = promo([tier([[1, null, '3.9000']])])
+    expect(screen.getByText('3.90 EUR')).toBeInTheDocument()
+    expect(screen.getByText('/ Stück')).toBeInTheDocument()
+    expect(container.querySelector('s')?.textContent).toBe('4.50 EUR')
+    expect(container.textContent).not.toContain('4.00 EUR')
+    expect(screen.getByText('Komplette Installation inklusive')).toBeInTheDocument()
+  })
+
+  it('AK5: genau eine Zusatzzeile, kein "weitere Preise"', () => {
+    const { container } = promo([tier([[1, null, '3.9000'], [6, null, '3.5000']])])
+    expect(container.textContent).toContain('ab 6: 3.50 EUR / Stück')
+    expect(container.textContent).not.toContain('+ weitere Preise')
+    expect(screen.queryByText('Komplette Installation inklusive')).toBeNull() // FA3
+  })
+
+  it('AK8: max. eine Zeile + "+ weitere Preise"', () => {
+    const { container } = promo([tier([[1, null, '3.9'], [6, null, '3.5'], [12, null, '3.2']])])
+    expect(container.textContent).toContain('ab 6: 3.50 EUR / Stück')
+    expect(container.textContent).not.toContain('3.20 EUR')
+    expect(screen.getByText('+ weitere Preise')).toBeInTheDocument()
+  })
+
+  it('A2: andere Einheit → kein Durchstreichen', () => {
+    const { container } = promo([tier([[1, null, '30']], 'm²', 'per_m2')])
+    expect(container.querySelector('s')).toBeNull()
+  })
+
+  it('Legacy ohne Tiers: unverändert', () => {
+    const { container } = render(<ShopOfferCard offer={OFFER_WITH_PROMO} lang="de" />)
+    expect(screen.getByText('990.00 EUR')).toBeInTheDocument()
+    expect(container.querySelector('s')?.textContent).toBe('1200.00 EUR')
+    expect(container.textContent).not.toMatch(/null|undefined|NaN/)
+  })
+
+  it('RTL (ar): Karte bleibt gespiegelt, Präfix übersetzt, Beträge in bdi', () => {
+    const { container } = promo([tier([[1, null, '3.9'], [6, null, '3.5']])], 'ar')
+    expect(container.firstElementChild).toHaveClass('rtl:flex-row-reverse')
+    expect(container.textContent).toContain('من 6')
+    expect(screen.getByText('3.50 EUR').tagName).toBe('BDI')
+  })
+})

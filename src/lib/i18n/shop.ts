@@ -62,6 +62,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `from ${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'Quantity prices',
+    tier_show_all: (n: number) => `All prices (${n})`,
+    tier_more_prices: '+ more prices',
   },
   de: {
     all_offers: 'Alle Angebote',
@@ -125,6 +131,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `ab ${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'Mengenpreise',
+    tier_show_all: (n: number) => `Alle Preise (${n})`,
+    tier_more_prices: '+ weitere Preise',
   },
   ru: {
     all_offers: 'Все предложения',
@@ -188,6 +200,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `от ${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'Цены по количеству',
+    tier_show_all: (n: number) => `Все цены (${n})`,
+    tier_more_prices: '+ другие цены',
   },
   el: {
     all_offers: 'Όλες οι προσφορές',
@@ -251,6 +269,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `από ${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'Τιμές ανά ποσότητα',
+    tier_show_all: (n: number) => `Όλες οι τιμές (${n})`,
+    tier_more_prices: '+ περισσότερες τιμές',
   },
   ar: {
     all_offers: 'جميع العروض',
@@ -314,6 +338,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `من ${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'أسعار حسب الكمية',
+    tier_show_all: (n: number) => `كل الأسعار (${n})`,
+    tier_more_prices: '+ أسعار أخرى',
   },
   he: {
     all_offers: 'כל ההצעות',
@@ -377,6 +407,12 @@ const shopTranslations = {
     payment_card: 'Visa / Mastercard',
     payment_revolut: 'Revolut',
     payment_klarna: 'Klarna',
+    // F5200 Staffelpreise
+    tier_from: (n: number) => `החל מ-${n}`,
+    tier_range: (a: number, b: number) => `${a}–${b}`,
+    tier_prices_label: 'מחירים לפי כמות',
+    tier_show_all: (n: number) => `כל המחירים (${n})`,
+    tier_more_prices: '+ מחירים נוספים',
   },
 } as const
 

@@ -8,6 +8,7 @@ import { absolutizeImageUrl } from '@/lib/seo/absolutize'
 import { getSiteUrl } from '@/lib/seo'
 import type { ShopOffer } from '@/types/api'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
+import { buildOfferPriceView, formatTierRow } from '@/lib/price-tiers'
 
 interface ShopOfferCardProps {
   offer: ShopOffer
@@ -39,6 +40,24 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
     tr,
   )
 
+  const view = buildOfferPriceView({
+    priceType: promoPriceDisplay ? (offer.promo_price_type ?? offer.standard_price_type) : offer.standard_price_type,
+    isPromo: promoPriceDisplay !== null,
+    priceTiers: offer.price_tiers,
+    promoPriceTiers: offer.promo_price_tiers,
+  })
+  const main = view.hasTiers ? view.main : null
+  const suffix = main?.unitSuffix ?? null
+  const fromPrefix = main && view.mainShowMinQty ? tr.tier_from(main.minQty) : null
+  // A2: Durchstreichen nur bei gleicher Einheit; ohne Tier-Daten wie bisher
+  const showStrike =
+    view.compareStrike === 'same-unit' ? true
+      : view.compareStrike === 'different-unit' || view.compareStrike === 'none' ? false
+      : stdLabel.isNumeric
+  const strikeText = view.compareStrike === 'same-unit' && view.compareAmount ? view.compareAmount : stdLabel.display
+  const extra = view.hasTiers && view.extraRows.length > 0 ? formatTierRow(view.extraRows[0], tr) : null
+  const hasMore = view.hasTiers && view.extraRows.length > 1
+
   return (
     <div className="relative bg-surface border border-border rounded-xl overflow-hidden hover:border-accent transition-colors flex rtl:flex-row-reverse">
       {/* Image — fixed 120×120px left */}
@@ -65,7 +84,7 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
         )}
 
         {/* Description */}
-        {offer.item_description && (
+        {offer.item_description && !extra && (
           <p className="text-xs text-text-light mt-0.5 line-clamp-1">{offer.item_description}</p>
         )}
 
@@ -74,10 +93,14 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
           {promoPriceDisplay ? (
             <>
               {/* Aktionspreis prominent */}
-              <span className="font-bold text-sm text-accent">{promoPriceDisplay}</span>
+              <span className="font-bold text-sm text-accent">
+                {fromPrefix && <span className="text-xs font-normal text-text-muted">{fromPrefix} · </span>}
+                <bdi>{main?.amount ?? promoPriceDisplay}</bdi>
+              </span>
+              {suffix && <span className="text-xs text-text-muted">/ {suffix}</span>}
               {/* Standardpreis durchgestrichen */}
-              {stdLabel.isNumeric && (
-                <s className="text-xs text-text-muted">{stdLabel.display}</s>
+              {showStrike && (
+                <s className="text-xs text-text-muted"><bdi>{strikeText}</bdi></s>
               )}
               {/* Aktions-Badge */}
               {promoBadgeDate && (
@@ -87,11 +110,25 @@ export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
               )}
             </>
           ) : (
-            <span className={`font-bold text-sm ${stdLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
-              {stdLabel.display}
-            </span>
+            <>
+              <span className={`font-bold text-sm ${stdLabel.isNumeric ? 'text-accent' : 'text-text-muted'}`}>
+                {fromPrefix && <span className="text-xs font-normal text-text-muted">{fromPrefix} · </span>}
+                <bdi>{main?.amount ?? stdLabel.display}</bdi>
+              </span>
+              {suffix && <span className="text-xs text-text-muted">/ {suffix}</span>}
+            </>
           )}
         </div>
+
+        {/* Staffel-Hinweis: max. eine Zeile (Karte ist komplett verlinkt, daher nur Text) */}
+        {extra && (
+          <p className="text-xs text-text-muted mt-0.5 truncate">
+            {extra.prefix && (<><bdi>{extra.prefix}</bdi>{': '}</>)}
+            <bdi>{extra.amount}</bdi>
+            {extra.suffix && <span>{' / '}{extra.suffix}</span>}
+            {hasMore && <span className="ms-2">{tr.tier_more_prices}</span>}
+          </p>
+        )}
       </div>
     </div>
   )

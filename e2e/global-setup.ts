@@ -38,6 +38,20 @@ const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const _ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
 export const STATE_FILE = path.join(__dirname, '.test-state.json')
+export const ADMIN_STATE_FILE = path.join(__dirname, '.auth', 'admin.json')
+
+/** Schreibt den Admin-Token als Playwright-storageState (T2, F8950). Host = Host von FRONTEND_URL (127.0.0.1). */
+function writeAdminStorageState(token: string): void {
+  fs.mkdirSync(path.dirname(ADMIN_STATE_FILE), { recursive: true })
+  const state = {
+    cookies: [{
+      name: 'admin_token', value: token, domain: new URL(FRONTEND_URL).hostname, path: '/',
+      expires: -1, httpOnly: true, secure: false, sameSite: 'Lax',
+    }],
+    origins: [],
+  }
+  fs.writeFileSync(ADMIN_STATE_FILE, JSON.stringify(state, null, 2))
+}
 
 interface TestCredentials {
   email: string
@@ -119,7 +133,8 @@ export default async function globalSetup() {
     try { process.env.E2E_RUN_ID ??= JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')).runId } catch { /* egal */ }
   }
   const RUN_ID = (process.env.E2E_RUN_ID ||= generateRunId())
-  if (!reuse) acquireLock(RUN_ID)
+  // Auch im Reuse-Modus (A1, F8950): so raeumt der Reporter weiter auf und `--list` bleibt geschuetzt.
+  acquireLock(RUN_ID)
   console.log(`\n[E2E Setup] Run-ID: ${RUN_ID}`)
 
   // ── E2E_REUSE_STATE: Schnellpfad für lokale Entwicklung ───────────────────
@@ -134,6 +149,10 @@ export default async function globalSetup() {
       if (ageMs < 8 * 60 * 60 * 1000) {
         console.log(`\n[E2E Setup] E2E_REUSE_STATE=1 — verwende bestehenden State (${Math.round(ageMs / 60000)}min alt).`)
         console.log('[E2E Setup] Überspringe DB-Reset und Server-Restart.')
+        try {
+          const t = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')).adminToken
+          if (t) writeAdminStorageState(t)
+        } catch { /* admin.spec scheitert dann laut (kein storageState) */ }
         console.log('[E2E Setup] Setup übersprungen (Reuse-Modus).\n')
         return
       } else {
@@ -384,9 +403,9 @@ export default async function globalSetup() {
 
   // ── 1b. Generierte Test-Kategorien (B5900-011 T11) ────────────────────────
   // Pro Lauf werden eindeutig markierte Kategorien (external_id `e2e-tmp-<run>-*`,
-  // Name `[E2E-TMP] …`) angelegt und vom Reporter `e2e/reporters/cleanup-test-data.ts`
+  // Name `[E2E-TMP] …`) angelegt und vom globalTeardown (`e2e/cleanup-run.ts`)
   // nach erfolgreichem Lauf wieder gelöscht (Items werden auf echte Kategorien umgehängt).
-  // Der Reporter cleanup-test-data.ts räumt laufbezogen (--run-id) auf.
+  // Der Teardown cleanup-run.ts räumt laufbezogen (--run-id) auf.
   // Reste fehlgeschlagener Läufe (älter als E2E_STALE_HOURS) räumt der nächste Seed-Lauf weg.
   let testCategoryIds: number[] = []
   try {
@@ -585,8 +604,11 @@ export default async function globalSetup() {
   let adminToken: string | null = null
   try {
     adminToken = await adminLogin()
+    writeAdminStorageState(adminToken)
   } catch (err) {
-    console.warn('[E2E Setup] Admin-Token konnte nicht ermittelt werden (System-Admin-Tests werden geskippt):', err)
+    // Kein Skip mehr (T2): fehlt der storageState, scheitert admin.spec.ts laut.
+    fs.rmSync(ADMIN_STATE_FILE, { force: true })
+    console.warn('[E2E Setup] Admin-Token konnte nicht ermittelt werden (admin.spec.ts wird fehlschlagen):', err)
   }
 
   // ── 6. State + Credentials speichern ──────────────────────────────────────

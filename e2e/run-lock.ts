@@ -13,7 +13,8 @@ export function generateRunId(now: Date = new Date()): string {
   return now.toISOString().replace(/[-:T]/g, '').slice(0, 14)
 }
 
-export const LOCK_FILE = path.join(os.tmpdir(), 'pundo-e2e-run.lock')
+/** `E2E_LOCK_FILE` nur fuer Unit-Tests (damit sie nie den echten Lock eines laufenden Laufs anfassen). */
+export const LOCK_FILE = process.env.E2E_LOCK_FILE ?? path.join(os.tmpdir(), 'pundo-e2e-run.lock')
 
 export interface LockInfo { pid: number; runId: string; startedAt: string }
 
@@ -52,4 +53,15 @@ export function releaseLock(runId?: string, file = LOCK_FILE, pid = process.pid)
   if (!existing) return
   if (existing.pid !== pid && (runId === undefined || existing.runId !== runId)) return
   try { fs.unlinkSync(file) } catch { /* schon weg */ }
+}
+
+/**
+ * True nur, wenn der Lock auf genau diesen Prozess UND diese Run-ID zeigt (T1, F8950).
+ * `globalSetup` und Reporter laufen im selben Runner-Prozess; ein Prozess, der das Setup nie
+ * durchlaufen hat (`playwright test --list`), hat den Lock nie genommen und darf nichts aufraeumen.
+ */
+export function ownsLock(runId: string | undefined, file = LOCK_FILE, pid = process.pid): boolean {
+  if (!runId) return false
+  const l = readLock(file)
+  return !!l && l.pid === pid && l.runId === runId
 }

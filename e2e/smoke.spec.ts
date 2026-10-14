@@ -122,7 +122,7 @@ test.describe('Visual Smoke-Test', () => {
 //   5. Header-Avatar prüfen: img sichtbar + naturalWidth > 0 (kein broken image)
 //
 // Ports: Frontend 3500 · Backend 8500 · DB: pundo_test
-// Cleanup: Kunde mit Marker e2e-<run>-… → vom Reporter cleanup-test-data.ts (--run-id) gelöscht
+// Cleanup: Kunde mit Marker e2e-<run>-… → vom Teardown e2e/cleanup-run.ts (--run-id) gelöscht
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 

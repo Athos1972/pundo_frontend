@@ -38,9 +38,13 @@ export default defineConfig({
   testIgnore: ['**/e2e/journeys/_*.spec.ts', '**/e2e/journeys/_*.ts'],
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
-  // list = Konsolenausgabe wie bisher (Default); der zweite Reporter räumt nach grünem Lauf alle
-  // Testdaten des Laufs (Marker e2e-<RUN>-…) und die generierten Kategorien auf (B8950-012).
-  reporter: [[process.env.CI ? 'dot' : 'list'], ['./e2e/reporters/cleanup-test-data.ts']],
+  // list = Konsolenausgabe wie bisher (Default).
+  // json = Laufzeit je Datei fuer scripts/e2e-durations.mjs (T3, F8950). Ein CLI-`--reporter` ersetzt ALLE
+  // Config-Reporter (der JSON-Report entfaellt dann). Der Cleanup liegt im globalTeardown und ist davon unabhaengig.
+  reporter: [
+    [process.env.CI ? 'dot' : 'list'],
+    ['json', { outputFile: 'test-results/e2e-report.json' }],
+  ],
   // workers:2 + Retry-Helper in e2e/journeys/_helpers.ts; die strikten App-Limits (B6220-001) entschärft
   // die Test-Instanz selbst: scripts/start_test_server.sh setzt RATE_LIMIT_TEST_MULTIPLIER (nur pundo_test, B8950-012).
   workers: 2,

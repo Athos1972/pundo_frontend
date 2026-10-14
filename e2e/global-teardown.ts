@@ -1,9 +1,9 @@
 /**
- * Playwright Global Teardown (B8950-012): Lauf-Lock freigeben.
- * (Der Cleanup-Reporter ist nicht garantiert der letzte Hook, daher hier.)
+ * Playwright Global Teardown (B8950-012 / T1 F8950): Testdaten des Laufs aufraeumen und Lauf-Lock freigeben.
+ * Bewusst hier und nicht in einem Reporter: CLI-`--reporter=…` ersetzt Config-Reporter, globalTeardown nicht.
  */
-import { releaseLock } from './run-lock'
+import { cleanupRun } from './cleanup-run'
 
 export default async function globalTeardown() {
-  releaseLock(process.env.E2E_RUN_ID)
+  cleanupRun()
 }

@@ -87,3 +87,5 @@ video/_branding/pronunciation-test/
 
 # E2E runtime state (contains test JWTs) — B8950-012
 /e2e/.test-state.json
+# Admin-storageState (Test-JWT) — F8950 (test-results/ ist oben schon ignoriert)
+/e2e/.auth/

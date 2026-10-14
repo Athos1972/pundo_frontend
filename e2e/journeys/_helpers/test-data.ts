@@ -7,7 +7,7 @@
  * `scripts/e2e_test_data.py` raeumen Reste nach dem Lauf weg. NIE `LIKE '%e2e%'`.
  *
  * Aufraeumen primaer ueber die Admin-API (Shop-Delete kaskadiert Owner, Listings, Offers,
- * exklusive Items samt Foto-Dateien). Der Reporter `cleanup-test-data.ts` ist das Sicherheitsnetz.
+ * exklusive Items samt Foto-Dateien). Der Teardown `e2e/cleanup-run.ts` ist das Sicherheitsnetz.
  */
 import { execFileSync } from 'child_process'
 import crypto from 'crypto'

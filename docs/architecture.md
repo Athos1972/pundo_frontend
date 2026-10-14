@@ -238,7 +238,7 @@ Alle `fixed`- und `sticky`-Elemente folgen dieser Skala. Kein Element darf einen
 - [Shop-Sprachen](./shop-languages.md)
 - [SEO](./seo.md)
 
-**E2E-Infrastruktur (B8950-012):** Playwright-`webServer` startet das Frontend (`scripts/e2e-frontend.cjs`, Standalone-Build mit Fingerabdruck-Cache oder `E2E_FRONTEND_MODE=dev`); das Global Setup prüft nur, startet nichts. Schreibende Specs laufen in einem Shop pro Worker (`e2e/journeys/_helpers/worker-shop.ts`, Admin-Create + Impersonation) bzw. in eigenen Spec-Shops; Testdaten tragen den Marker `E2E-<RUN>-…`, der Reporter `e2e/reporters/cleanup-test-data.ts` räumt per Backend-Skript `scripts/e2e_test_data.py` auf. Details: [E2E-Testing](./e2e-testing.md).
+**E2E-Infrastruktur (B8950-012):** Playwright-`webServer` startet das Frontend (`scripts/e2e-frontend.cjs`, Standalone-Build mit Fingerabdruck-Cache oder `E2E_FRONTEND_MODE=dev`); das Global Setup prüft nur, startet nichts. Schreibende Specs laufen in einem Shop pro Worker (`e2e/journeys/_helpers/worker-shop.ts`, Admin-Create + Impersonation) bzw. in eigenen Spec-Shops; Testdaten tragen den Marker `E2E-<RUN>-…`, der globalTeardown (`e2e/cleanup-run.ts`, nur als Lock-Inhaber) räumt per Backend-Skript `scripts/e2e_test_data.py` auf. Details: [E2E-Testing](./e2e-testing.md).
 
 **Technische Dokumentation:**
 - [i18n & RTL](./i18n.md)

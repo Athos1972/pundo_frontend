@@ -65,7 +65,9 @@ test.describe('E2E-05: Shop-Detail mit Tooltips', () => {
     const enChip = page.locator('[data-state="closed"]').filter({ hasText: /^EN$/ }).first()
     await enChip.hover()
     await page.waitForTimeout(300) // Radix delayDuration=200
-    const tooltip = page.locator('[role="tooltip"]')
+    // Seit dem FAB-Onboarding-Hint ("Missing something from home?") existiert ein zweites role=tooltip
+    // auf der Seite - strict mode: auf den Radix-Tooltip des EN-Chips einschraenken (Assertion unveraendert).
+    const tooltip = page.getByRole('tooltip', { name: 'English' })
     await expect(tooltip).toBeVisible()
     await expect(tooltip).toContainText('English')
   })

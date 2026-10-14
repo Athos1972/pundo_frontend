@@ -61,6 +61,7 @@ const config: NextConfig = {
   // via .claude/launch.json): Dateiänderungen aus der Claude-Code-Bash-Sandbox erzeugen keine
   // FSEvents, die Turbopack sieht → ohne Polling bleibt der Dev-Server auf altem Stand.
   // Normales `npm run dev:test` bleibt ohne Polling (Next-Doku: Polling nur als letzter Ausweg).
+  // Doku: Vault Pundo-Plattform/10 Wissen/70 Install & Deployment.md → „Dev-Server zeigt alten Stand“.
   ...(process.env.NEXT_DEV_POLL_INTERVAL_MS
     ? { watchOptions: { pollIntervalMs: Number(process.env.NEXT_DEV_POLL_INTERVAL_MS) } }
     : {}),

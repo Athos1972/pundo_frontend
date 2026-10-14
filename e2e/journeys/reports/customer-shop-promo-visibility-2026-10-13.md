@@ -1,10 +1,10 @@
 # Journey Report: Kunden-Sicht Shop-Aktionen
-**Date:** 2026-10-13T15:34:57.049Z
+**Date:** 2026-10-13T16:21:40.262Z
 **Verdict:** SHIP
 
 ## Notes
-Started: 2026-10-13T15:34:54.121Z
-Finished: 2026-10-13T15:34:57.049Z
+Started: 2026-10-13T16:21:36.847Z
+Finished: 2026-10-13T16:21:40.262Z
 Shop slug: e2e-test-shop
 Backend promo support: depends on BE-1–BE-4 deployment
 

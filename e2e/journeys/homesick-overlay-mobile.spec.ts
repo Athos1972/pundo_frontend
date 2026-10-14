@@ -8,7 +8,7 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
     await page.waitForLoadState('networkidle')
 
     // Verlauf-Leiste (BottomTabBar nav) muss initial sichtbar sein
-    const nav = page.locator('nav[aria-label="Bottom navigation"]')
+    const nav = page.locator('[data-testid="bottom-tab-bar"]')
     await expect(nav).toBeVisible()
 
     // FAB öffnen
@@ -40,7 +40,7 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
     await page.goto('http://localhost:3500/de')
     await page.waitForLoadState('networkidle')
 
-    const nav = page.locator('nav[aria-label="Bottom navigation"]')
+    const nav = page.locator('[data-testid="bottom-tab-bar"]')
     const fab = page.locator('button[title="AI-Suche"]')
 
     await fab.click()
@@ -59,7 +59,7 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
     await expect(fab).toBeVisible()
 
     const fabBox = await fab.boundingBox()
-    const navBox = await page.locator('nav[aria-label="Bottom navigation"]').boundingBox()
+    const navBox = await page.locator('[data-testid="bottom-tab-bar"]').boundingBox()
 
     expect(fabBox).not.toBeNull()
     expect(navBox).not.toBeNull()
@@ -76,7 +76,7 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
     await page.waitForLoadState('networkidle')
 
     // BottomTabBar ist auf Desktop nicht sichtbar
-    const nav = page.locator('nav[aria-label="Bottom navigation"]')
+    const nav = page.locator('[data-testid="bottom-tab-bar"]')
     await expect(nav).not.toBeVisible()
 
     // Modal funktioniert trotzdem

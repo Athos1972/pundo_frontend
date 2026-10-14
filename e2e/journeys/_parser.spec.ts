@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { parseCatalog, parseCatalogDirectory, serializeCatalog, findOverlap, JourneyCatalogError } from './_parser'
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 
 // ---------------------------------------------------------------------------
@@ -18,6 +18,16 @@ import { join } from 'path'
 // ---------------------------------------------------------------------------
 
 const JOURNEYS_DIR = __dirname
+
+// Expected counts are derived from the journey files themselves instead of being hard-coded:
+// every `<id>.md` (except CATALOG*, README and `_`-files) must parse to exactly one entry.
+// A hard-coded number broke the suite on every new journey without testing anything extra.
+const JOURNEY_FILES = readdirSync(JOURNEYS_DIR).filter(
+  (f) => f.endsWith('.md') && !f.startsWith('_') && !['CATALOG.md', 'CATALOG_SCHEMA.md', 'README.md'].includes(f),
+)
+const EXPECTED_P1 = JOURNEY_FILES.filter((f) =>
+  /^priority:\s*P1\s*$/m.test(readFileSync(join(JOURNEYS_DIR, f), 'utf8')),
+).length
 
 /** Load a single journey file — used for parseCatalog() single-entry tests. */
 function loadJourneyFile(id: string): string {
@@ -64,23 +74,8 @@ last-result: N/A
 describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
-    // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
-    // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    // Updated 2026-07-08 (e2e-tester, RCA): count had drifted stale — CRM Stufe 2 added
-    // admin-crm-contact-lifecycle + admin-crm-needs-review (2 entries) without updating this
-    // assertion (pre-existing, unrelated to the Ahrefs SEO-remediation batch verified same day —
-    // confirmed via `git log` timestamps: CATALOG.md/this file last touched by cd64a8f/ed091c7,
-    // both before any of the 12 SEO bug-fix commits). +1 more entry added by e2e-tester itself
-    // (shop-city-hub-and-completeness, B5900-006/B5900-007 journey). Total: 29 + 2 + 1 = 32.
-    // Updated 2026-10-13 (coder, F2970): +1 entry consumer-service-discovery (P1) -> 33.
-    // Updated 2026-10-13 (coder, B8950-012): +7 <id>.md (admin-catalog-review, b5900-009..013,
-    // import-page-ac-check; Katalog-Drift §8) -> 40; +contact-form (B6220-003) -> 41; +customer-offer-price-tiers (F5200), +consumer-service-eldercare-w4 (F2970) -> 43.
-    // Updated 2026-10-14 (Doku-Sync): consumer-service-eldercare-w4 + reactive-language-switch
-    // erhalten YAML-Frontmatter (vorher nicht geparst) -> 45.
-    expect(entries).toHaveLength(45)
+    expect(entries).toHaveLength(JOURNEY_FILES.length)
+    expect(JOURNEY_FILES.length).toBeGreaterThanOrEqual(45)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
@@ -98,10 +93,7 @@ describe('parseCatalog — Seed-Datei', () => {
     // updating this assertion; not caused by the Ahrefs SEO-remediation batch, see above).
     // First alphabetically among P1 is now admin-crm-contact-lifecycle (status: implemented).
     const p1Entries = entries.filter((e) => e.priority === 'P1')
-    // Updated 2026-10-13 (coder, F2970): 14 -> 15 (consumer-service-discovery, P1).
-    // Updated 2026-10-13 (coder, B8950-012): 15 -> 17 (+ admin-catalog-review, b5900-011-category-picker, beide P1).
-    // Updated 2026-10-14 (Doku-Sync): 17 -> 18 (reactive-language-switch, P1, jetzt mit Frontmatter).
-    expect(p1Entries.length).toBe(18)
+    expect(p1Entries.length).toBe(EXPECTED_P1)
     expect(p1Entries[0].status).toBe('implemented') // admin-crm-contact-lifecycle is first alphabetically
   })
 
@@ -407,21 +399,10 @@ describe('Edge Cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseCatalogDirectory', () => {
-  it('findet alle Journey-Dateien und liefert 29 Einträge', () => {
+  it('findet alle Journey-Dateien (ein Eintrag pro <id>.md)', () => {
     const entries = parseCatalogDirectory(JOURNEYS_DIR)
 
-    // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
-    // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the test above — 29 + 2
-    // (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
-    // Updated 2026-10-13 (coder, F2970): +1 (consumer-service-discovery) = 33.
-    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40. +1 contact-form (B6220-003) = 41. +customer-offer-price-tiers, +consumer-service-eldercare-w4 = 43.
-    // Updated 2026-10-14 (Doku-Sync): consumer-service-eldercare-w4 + reactive-language-switch
-    // erhalten YAML-Frontmatter (vorher nicht geparst) -> 45.
-    expect(entries).toHaveLength(45)
+    expect(entries).toHaveLength(JOURNEY_FILES.length)
 
     const ids = entries.map((e) => e.id)
     expect(ids).toContain('shop-owner-lifecycle')
@@ -439,18 +420,7 @@ describe('parseCatalogDirectory', () => {
     // CATALOG.md is an index — no frontmatter blocks → would return 0 entries
     // CATALOG_SCHEMA.md, README.md are docs — not journey files
     // None of these should produce entries in the directory scan
-    // Updated 2026-05-22: +1 entry (category-discovery, F2350)
-    // Updated 2026-06-01: +1 entry (admin-shop-create-delete, Shop-Delete-Feature)
-    // Updated 2026-06-05: +1 entry (customer-shop-all-products-flow now parseable after --- fix)
-    // Updated 2026-06-05: +1 entry (shop-owner-admin-approval-flow)
-    // Updated 2026-06-05: +1 entry (shop-owner-self-deactivate, F8300 shop-delete-deactivate)
-    // Updated 2026-07-08 (e2e-tester, RCA): see identical note in the first test in this
-    // describe block — 29 + 2 (CRM Stufe 2) + 1 (shop-city-hub-and-completeness) = 32.
-    // Updated 2026-10-13 (coder, F2970): +1 (consumer-service-discovery) = 33.
-    // Updated 2026-10-13 (coder, B8950-012): +7 neue <id>.md = 40. +1 contact-form (B6220-003) = 41. +customer-offer-price-tiers, +consumer-service-eldercare-w4 = 43.
-    // Updated 2026-10-14 (Doku-Sync): consumer-service-eldercare-w4 + reactive-language-switch
-    // erhalten YAML-Frontmatter (vorher nicht geparst) -> 45.
-    expect(entries).toHaveLength(45)
+    expect(entries).toHaveLength(JOURNEY_FILES.length)
 
     // Also verify sort order: P1 entries come before P2, P2 before P3
     const priorities = entries.map((e) => e.priority)

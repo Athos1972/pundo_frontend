@@ -19,7 +19,8 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 const LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
 
 async function fillForm(page: import('@playwright/test').Page) {
-  const form = page.locator('form')
+  // :visible — Next keeps the previous route's segment hidden in the DOM (B8950-013 #7)
+  const form = page.locator('form:visible')
   await form.locator('input[type="text"]').nth(0).fill('B6220-003 subject')
   await form.locator('textarea').fill('Automated contact form journey, please ignore.')
   await form.locator('input[type="text"]').nth(1).fill('E2E Contact')

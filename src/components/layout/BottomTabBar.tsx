@@ -37,6 +37,7 @@ export function BottomTabBar({ lang, recentlyViewed, hidden = false }: BottomTab
       <nav
         className={`md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border flex items-stretch${hidden ? ' hidden' : ''}`}
         aria-label={tr.nav_bottom_aria}
+        data-testid="bottom-tab-bar"
       >
         {/* Recently Viewed tab */}
         <button

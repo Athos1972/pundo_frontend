@@ -1,10 +1,10 @@
 # Journey Report: Kunden-Sicht Shop-Aktionen
-**Date:** 2026-10-14T08:37:59.585Z
+**Date:** 2026-10-14T09:37:00.696Z
 **Verdict:** SHIP
 
 ## Notes
-Started: 2026-10-14T08:37:57.760Z
-Finished: 2026-10-14T08:37:59.585Z
+Started: 2026-10-14T09:36:59.237Z
+Finished: 2026-10-14T09:37:00.696Z
 Shop slug: happy-pets-nicosia
 Backend promo support: depends on BE-1–BE-4 deployment
 

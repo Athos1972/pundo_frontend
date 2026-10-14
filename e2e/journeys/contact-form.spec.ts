@@ -44,7 +44,7 @@ async function openAndFill(page: import('@playwright/test').Page, url: string) {
 
 test.describe('contact-form journey (B6220-003)', () => {
   for (const lang of LANGS) {
-    test(`C1 ${lang}: Absenden mit Turnstile-Token passiert Captcha und Rate-Limit`, async ({ page }) => {
+    test(`C1 ${lang}: Absenden mit Turnstile-Token passiert Captcha und Rate-Limit`, { tag: lang === 'en' ? '@smoke' : [] }, async ({ page }) => {
       await openAndFill(page, `${BASE_URL}/${lang}/contact`)
       if (lang === 'ar' || lang === 'he') {
         await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
@@ -59,7 +59,10 @@ test.describe('contact-form journey (B6220-003)', () => {
       expect(typeof sent.turnstile_token).toBe('string')
       expect(sent.turnstile_token.length).toBeGreaterThan(0)
       // 200 = SMTP konfiguriert, 503 = Captcha + Rate-Limit ok, aber kein SMTP (Studio)
-      expect([200, 503]).toContain(res.status())
+      // 429 hier = globales Tageslimit des Endpoints (100/Tag x Test-Multiplikator 40 = 4000) ausgeschoepft: C4 verbraucht
+      // pro Lauf ca. 120 davon (~33 Laeufe/Tag). Abhilfe: Zaehler 'LIMITER/contact:global//api/v1/contact/4000/1/day'
+      // in pundo_test.rate_limit_counters laeuft nach 24 h ab (F8950 T15).
+      expect([200, 503], `HTTP ${res.status()} vom Kontakt-Endpoint (429 = globales Tageslimit, siehe Kommentar)`).toContain(res.status())
     })
   }
 

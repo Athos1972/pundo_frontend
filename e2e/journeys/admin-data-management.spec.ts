@@ -61,11 +61,9 @@ const ctx = {
   brandWithoutLogoId: null as number | null,
   categoryParentId: null as number | null,
   categoryChildId: null as number | null,
-  guideId: null as number | null,
   guideSlug: null as string | null,
   logoUploadSupported: false,
   categoryAdminSupported: false,
-  guideSupported: false,
   pendingOwnerId: null as number | null,
   stepLog: [] as StepEntry[],
   fixtures: [] as FixtureRecord[],
@@ -148,9 +146,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
     const catAdminCheckRes = await apiFetch('GET', '/api/v1/admin/categories?limit=1', undefined, adminHeaders())
     ctx.categoryAdminSupported = catAdminCheckRes.ok
 
-    const guideCheckRes = await apiFetch('GET', '/api/v1/guides?limit=1')
-    ctx.guideSupported = guideCheckRes.ok
-
     // ── Setup: Brand without logo ─────────────────────────────────────────────
     ctx.fixtures.push({ name: `${PREFIX}-brand-without-logo`, id: null, built: false, deleted: false, type: 'brand' })
     const brandRes = await apiFetch('POST', '/api/v1/admin/brands', {
@@ -222,27 +217,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
       }
     }
 
-    // ── Setup: Guide published ────────────────────────────────────────────────
-    ctx.fixtures.push({ name: `${PREFIX}-guide-published`, id: null, built: false, deleted: false, type: 'guide' })
-    if (ctx.guideSupported) {
-      const guideAdminCheckRes = await apiFetch('POST', '/api/v1/admin/guides', {}, adminHeaders())
-      if (guideAdminCheckRes.status !== 404) {
-        const guideRes = await apiFetch('POST', '/api/v1/admin/guides', {
-          title: `${PREFIX}-guide-published`,
-          slug: `${PREFIX}-guide-published`,
-          content: 'E2E Test Guide Content',
-          status: 'published',
-        }, adminHeaders())
-        if (guideRes.ok) {
-          const guide = guideRes.data as { id: number; slug?: string }
-          ctx.guideId = guide.id
-          ctx.guideSlug = guide.slug ?? `${PREFIX}-guide-published`
-          ctx.fixtures[4].id = ctx.guideId
-          ctx.fixtures[4].built = true
-        }
-      }
-    }
-
     // ── Setup: Find a pending shop-owner for moderation test ─────────────────
     const pendingOwnersRes = await apiFetch('GET', '/api/v1/admin/shop-owners?status=pending&limit=5', undefined, adminHeaders())
     const pendingOwners = (pendingOwnersRes.data as { items?: Array<{ id: number }> })?.items ?? []
@@ -283,9 +257,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
       if (ctx.brandWithoutLogoId) {
         try { await apiFetch('DELETE', `/api/v1/admin/brands/${ctx.brandWithoutLogoId}`, undefined, adminHeaders()) } catch { /* ok */ }
       }
-      if (ctx.guideId) {
-        try { await apiFetch('DELETE', `/api/v1/admin/guides/${ctx.guideId}`, undefined, adminHeaders()) } catch { /* ok */ }
-      }
       // Pending-Owner (falls von uns angelegt) samt Shop löschen — statt nur auf "rejected" zu setzen
       await tracker.cleanup()
     }
@@ -313,7 +284,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
       '### Endpoint-Unterstützung',
       `- Logo-Upload: ${ctx.logoUploadSupported ? 'ja' : 'nein (404)'}`,
       `- Admin-Categories: ${ctx.categoryAdminSupported ? 'ja' : 'nein'}`,
-      `- Guides: ${ctx.guideSupported ? 'ja' : 'nein'}`,
       '',
       '### Schritt-für-Schritt-Protokoll',
       '| # | Beschreibung | Erwartet | Tatsächlich | Status |',
@@ -488,63 +458,34 @@ test.describe.serial('Admin Data Management Sweep', () => {
     }
   })
 
-  test('Schritt 7 — Guide published erscheint auf /guides', async ({ page }) => {
-    if (!ctx.guideSupported) {
-      logStep(7, 'Guide auf /guides', 'Guide sichtbar', 'Guides-Endpoint nicht verfügbar (404)', 'SKIP')
-      test.skip(true, 'Reason: /api/v1/guides Endpoint nicht verfügbar')
-      return
-    }
-    if (!ctx.guideId) {
-      logStep(7, 'Guide auf /guides', 'Guide sichtbar', 'Guide-Fixture nicht angelegt', 'SKIP')
-      test.skip(true, 'Reason: Guide-Fixture konnte nicht angelegt werden (POST /api/v1/admin/guides fehlgeschlagen)')
-      return
-    }
+  // F8950 T20: Guides sind Dateiinhalt (content/guides/*), die API /api/v1/guides und /admin/guides gibt es nicht
+  // mehr; die frueheren Schritte 7/8 (per Admin-API angelegter Guide) liefen nie. Neu: Guide-Liste und
+  // -Detail aus dem Dateibestand (entspricht den Smoketest-Eintraegen guides-list / guide-detail-sample).
 
-    await page.goto(BASE_URL + '/guides')
-    await page.waitForLoadState('networkidle')
-
-    const url = page.url()
-    const is404 = url.includes('404') || url.includes('not-found')
-
-    if (is404) {
-      logStep(7, 'Guide auf /guides', 'Seite lädt ohne 404', '404', 'SKIP')
-      test.skip(true, 'Reason: /guides Route liefert 404 — Frontend-Route nicht implementiert')
-      return
-    }
-
-    const guideTitle = `${PREFIX}-guide-published`
-    const found = await page.getByText(guideTitle, { exact: false }).count()
-    logStep(7, 'Guide auf /guides sichtbar', `"${guideTitle}" sichtbar`, found > 0 ? 'gefunden' : 'nicht gefunden', found > 0 ? 'PASS' : 'FAIL')
-    expect(found, `Guide "${guideTitle}" nicht auf /guides sichtbar`).toBeGreaterThan(0)
+  test('Schritt 7 — Guide-Übersicht /guides listet Guides', async ({ page }) => {
+    const res = await page.goto(BASE_URL + '/guides')
+    expect(res?.status(), '/guides HTTP-Status').toBe(200)
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
+    const guideLinks = page.locator('a[href*="/guides/"]:visible')
+    await expect(guideLinks.first(), 'mindestens ein Guide verlinkt').toBeVisible()
+    logStep(7, 'Guide-Übersicht', '≥1 Guide-Link', String(await guideLinks.count()), 'PASS')
+    ctx.guideSlug = ((await guideLinks.first().getAttribute('href')) ?? '').split('/guides/')[1]?.split(/[/?#]/)[0] ?? null
+    expect(ctx.guideSlug, 'Slug des ersten Guides').toBeTruthy()
   })
 
   test('Schritt 8 — Guide-Detailseite: Inhalt + RTL (lang=ar)', async ({ page }) => {
-    if (!ctx.guideSupported || !ctx.guideSlug) {
-      logStep(8, 'Guide-Detailseite', 'Inhalt + RTL', 'guideSlug fehlt oder Guide nicht unterstützt', 'SKIP')
-      test.skip(true, 'Reason: Guide nicht angelegt oder Guides nicht unterstützt')
-      return
-    }
+    expect(ctx.guideSlug, 'Guide-Slug aus Schritt 7').toBeTruthy()
 
-    // Test normal Guide page
-    await page.goto(BASE_URL + `/guides/${ctx.guideSlug}`)
-    await page.waitForLoadState('networkidle')
-
-    const url = page.url()
-    const is404 = url.includes('404') || url.includes('not-found')
-    logStep(8, 'Guide-Detailseite aufrufen', 'Kein 404', url, !is404 ? 'PASS' : 'SKIP')
-
-    if (is404) {
-      test.skip(true, 'Reason: Guide-Detailseite liefert 404 — /guides/[slug] Route ggf. nicht implementiert')
-      return
-    }
+    const res = await page.goto(BASE_URL + `/guides/${ctx.guideSlug}`)
+    expect(res?.status(), 'Guide-Detail HTTP-Status').toBe(200)
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
+    logStep(8, 'Guide-Detailseite aufrufen', 'HTTP 200 + H1', page.url(), 'PASS')
 
     // RTL test
-    await page.goto(BASE_URL + `/guides/${ctx.guideSlug}?lang=ar`)
-    await page.waitForLoadState('networkidle')
-
-    const htmlDir = await page.locator('html').getAttribute('dir')
-    logStep(8, 'Guide RTL (lang=ar)', 'html[dir=rtl]', String(htmlDir), htmlDir === 'rtl' ? 'PASS' : 'FAIL')
-    expect(htmlDir, 'RTL: html[dir] ist nicht rtl für lang=ar').toBe('rtl')
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: new URL(BASE_URL).hostname, path: '/' }])
+    await page.goto(BASE_URL + `/guides/${ctx.guideSlug}`)
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+    logStep(8, 'Guide RTL (lang=ar)', 'html[dir=rtl]', 'rtl', 'PASS')
   })
 
   test('Schritt 9 — Brands in Brand-Übersicht sichtbar', async ({ page }) => {

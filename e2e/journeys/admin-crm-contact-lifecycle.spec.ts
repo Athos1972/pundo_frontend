@@ -23,6 +23,7 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { adminLogin as adminApiLogin } from './_helpers'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -67,6 +68,18 @@ async function apiFetch(
   return { ok: res.ok, status: res.status, data }
 }
 
+/** F8950 T22: pollt den Kontakt im Backend, bis `pred` gilt (ersetzt networkidle + waitForTimeout nach UI-Mutationen). */
+async function contactWhen<T>(pred: (c: T) => boolean, message: string): Promise<T> {
+  let last: T | undefined
+  await expect.poll(async () => {
+    const r = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    if (!r.ok) return false
+    last = r.data as T
+    return pred(last)
+  }, { message, timeout: 15_000 }).toBe(true)
+  return last as T
+}
+
 async function getContactVersion(id: number): Promise<number> {
   const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${id}`)
   return (res.data as { version: number }).version
@@ -103,7 +116,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await setCookie(page)
 
     await page.goto(`${BASE_URL}/admin/crm/contacts/new`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     await expect(page.locator('form')).toBeVisible({ timeout: 10_000 })
 
@@ -128,7 +141,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     expect(urlMatch, 'Redirect zur Detail-Page mit ID erwartet').not.toBeNull()
     ctx.contactId = parseInt(urlMatch![1], 10)
 
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // SOURCED-Badge visible (LifecycleBadge renders a <span> with the state label)
     const badge = page.locator('span', { hasText: /^Sourced$/ }).first()
@@ -157,7 +170,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await page.goto(`${BASE_URL}/admin`)
     await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // ContactEditForm renders a button with tr.edit = "Edit"
     const editBtn = page.locator('button', { hasText: /^Edit$|^Bearbeiten$/ }).first()
@@ -173,13 +186,11 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(saveBtn).toBeVisible({ timeout: 5_000 })
     await saveBtn.click()
 
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_500)
-
     // API-Verifikation: Stadt aktualisiert, kein State-Change
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
-    expect(res.ok).toBe(true)
-    const contact = res.data as { org: { city: string }; version: number; lifecycle_state: string }
+    // F8950 T22: statt networkidle + waitForTimeout(1500) pollen, bis das Backend die Aenderung zeigt
+    const contact = await contactWhen<{ org: { city: string }; version: number; lifecycle_state: string }>(
+      c => c.org.city === 'Limassol', 'Stadt wird auf Limassol aktualisiert',
+    )
     expect(contact.org.city).toBe('Limassol')
     expect(contact.lifecycle_state).toBe('SOURCED')
     ctx.contactVersion = contact.version
@@ -194,7 +205,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await page.goto(`${BASE_URL}/admin`)
     await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Ensure contact has only 1 channel (email) before this test runs
     // (Previous test-run leftovers could have added channels already)
@@ -210,7 +221,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     }
     // Reload after potential cleanup
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // ChannelEditor: "+ Add channel" button
     const addBtn = page.locator('button', { hasText: /Add channel|Kanal hinzufügen/ }).first()
@@ -240,16 +251,11 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(submitBtn).toBeVisible({ timeout: 5_000 })
     await submitBtn.click()
 
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_500)
-
     // API-Verifikation: phone channel now exists
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
-    expect(res.ok).toBe(true)
-    const contact = res.data as {
+    const contact = await contactWhen<{
       channels: Array<{ id: number; kind: string; value_normalized: string }>
       version: number
-    }
+    }>(c => c.channels.some(ch => ch.kind === 'phone_call'), 'Phone-Kanal wird angelegt')
     const phoneChannel = contact.channels.find((c) => c.kind === 'phone_call')
     expect(phoneChannel, 'Phone channel should be added').toBeDefined()
     expect(contact.channels.length).toBeGreaterThanOrEqual(2)
@@ -265,7 +271,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await page.goto(`${BASE_URL}/admin`)
     await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Verify 2+ channels exist before trying to remove
     const preCheck = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
@@ -284,13 +290,10 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(removeBtn).toBeEnabled({ timeout: 5_000 })
     await removeBtn.click()
 
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_500)
-
     // API-Verifikation: email-Kanal weg, phone-Kanal bleibt
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
-    expect(res.ok).toBe(true)
-    const contact = res.data as { channels: Array<{ id: number; kind: string }>; version: number }
+    const contact = await contactWhen<{ channels: Array<{ id: number; kind: string }>; version: number }>(
+      c => !c.channels.some(ch => ch.kind === 'email'), 'Email-Kanal wird entfernt',
+    )
     const emailChannel = contact.channels.find((c) => c.kind === 'email')
     expect(emailChannel, 'Email channel should be removed').toBeUndefined()
     const phoneChannel = contact.channels.find((c) => c.kind === 'phone_call')
@@ -307,7 +310,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await page.goto(`${BASE_URL}/admin`)
     await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // "Confirm business" Button (tr.crm_action_confirm_business = "Confirm business")
     const confirmBtn = page.locator('button', { hasText: /Confirm business|Business bestätigen/ }).first()
@@ -323,13 +326,10 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(confirmInDialog).toBeVisible({ timeout: 5_000 })
     await confirmInDialog.click()
 
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_500)
-
     // API-Verifikation: business_status=confirmed
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
-    expect(res.ok).toBe(true)
-    const contact = res.data as { org: { business_status: string }; version: number }
+    const contact = await contactWhen<{ org: { business_status: string }; version: number }>(
+      c => c.org.business_status === 'confirmed', 'business_status wird confirmed',
+    )
     expect(contact.org.business_status).toBe('confirmed')
     ctx.contactVersion = contact.version
   })
@@ -343,7 +343,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await page.goto(`${BASE_URL}/admin`)
     await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // "Suppress / Opt-out" Button (tr.crm_action_suppress = "Suppress / Opt-out")
     const suppressBtn = page.locator('button', { hasText: /Suppress|Opt-out|Unterdrücken/ }).first()
@@ -359,9 +359,6 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(suppressConfirmBtn).toBeVisible({ timeout: 5_000 })
     await suppressConfirmBtn.click()
 
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_500)
-
     // Terminal-State-Meldung (ContactDetailActions: isTerminal → <p>...terminal state...</p>)
     const terminalMsg = page.locator('p', { hasText: /terminal state/i }).first()
     await expect(terminalMsg).toBeVisible({ timeout: 10_000 })
@@ -374,9 +371,9 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(setStateBtn).not.toBeVisible({ timeout: 3_000 })
 
     // API-Verifikation: HARD_OPTOUT
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
-    expect(res.ok).toBe(true)
-    const contact = res.data as { lifecycle_state: string }
+    const contact = await contactWhen<{ lifecycle_state: string }>(
+      c => c.lifecycle_state === 'HARD_OPTOUT', 'Kontakt wird HARD_OPTOUT',
+    )
     expect(contact.lifecycle_state).toBe('HARD_OPTOUT')
   })
 

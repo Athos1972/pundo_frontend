@@ -74,3 +74,15 @@ Consumer-Phase (Fixture-Shop mit `is_charity_supporter=true`, `service_radius_km
 **Hinweis Radius-Filter-Chip (AC-03):**
 - Chip "Delivers to me" ist disabled solange keine Geolocation
 - Mit Geolocation und aktivem Chip: Shops ohne Radius-Angabe ausgeblendet (AC-05)
+
+### Profil-Roundtrip (F8950 T21, 2026-10-15)
+
+Die deprecated Journeys `shop-admin-profile` (31 Tests) und `shop-admin-profile-phone-logo` (13 Tests) sind gelöscht; ihre Abdeckung steht jetzt in `shop-detail-attribute-matrix.spec.ts` im Block „Profil-Roundtrip“ (eigener Spec-Shop `PROFILE`, 10 Tests, serial):
+
+- Profilfelder: Tabula Rasa (leerer Ausgangszustand → UI-Save description/WhatsApp/Website/Instagram/Facebook/Sprachen → API), Edit auf bestehendem Shop, ungültige Social-URL (Save gesperrt oder „Invalid URL“).
+- Öffnungszeiten: API-Roundtrip + 7 Checkboxen + UI-Save Mo–Fr + Montag ändern; zweites Zeitfenster per UI.
+- Kunden-Sicht: Beschreibung, Website-Link, WhatsApp-Link, Zeiten (inkl. zweites Fenster), Sprach-Chip, „Closed“ für Sa+So.
+- Telefon: API (vorhanden/speichern/null) und UI (`type=tel`, Save, `tel:`-Link in der Kunden-Sicht).
+- Logo: API (JPEG ok, PDF/>5 MB → 400) und UI (`accept`, Upload per `setInputFiles`, Save, Logo in Kunden-Sicht, URL-Toggle).
+
+Abweichung von der Regel „kein separater Telefon-Test“ (oben): Die Telefon-Tests der gelöschten Journey wurden 1:1 als API- und UI-Roundtrip erhalten, weil die Matrix-Varianten A/B die Eingabe per Owner-UI nicht abdecken. Zuordnung alt → neu: Vault `03-implementation.md`, Abschnitt „Stufe 3 — Frontend“.

@@ -9,6 +9,7 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { waitForPageHydrated } from './journeys/_helpers/hydration'
 
 const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
 
@@ -17,6 +18,19 @@ async function setLang(page: import('@playwright/test').Page, lang: string) {
     name: 'app_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
   }])
 }
+
+// F8950 T22: statt networkidle - Seite hydriert UND die Shop-Liste ist geladen (Skeleton `h-28 animate-pulse`
+// verschwunden; danach steht Liste, Leer-Zustand oder Fehlertext).
+async function gotoShops(page: import('@playwright/test').Page) {
+  await page.goto('/shops')
+  await waitForPageHydrated(page)
+  await expect(page.locator('div.h-28.animate-pulse')).toHaveCount(0, { timeout: 15_000 })
+}
+
+// ShopCard-Anker (Klassen aus ShopCard.tsx). Der Link traegt den Sprachpraefix (/en/shops/<slug>); der fruehere
+// Selektor `a[href^="/shops/"]` traf deshalb nie und machte die Karten-Tests wirkungslos (stiller Early-Return).
+// pundo_test ist eine Prod-Kopie: Karten sind immer da, ein Early-Return bei "leerer DB" gibt es nicht mehr.
+const SHOP_CARD = 'a.block.bg-surface[href*="/shops/"]'
 
 // ─── E2E-S1: Shops-Seite — Grundlegendes Laden ───────────────────────────────
 
@@ -34,8 +48,7 @@ test.describe('E2E-S1: Shops-Seite laden', () => {
         errors.push(e.message)
       }
     })
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     expect(errors).toHaveLength(0)
   })
 
@@ -58,15 +71,13 @@ test.describe('E2E-S1: Shops-Seite laden', () => {
 
 test.describe('E2E-S2: Filter-UI', () => {
   test('Entfernung-Slider vorhanden', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const slider = page.locator('input[type="range"]')
     await expect(slider).toBeVisible({ timeout: 8_000 })
   })
 
   test('Entfernung-Slider hat korrekte min/max Werte', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const slider = page.locator('input[type="range"]')
     await expect(slider).toBeVisible({ timeout: 8_000 })
     const min = await slider.getAttribute('min')
@@ -77,24 +88,21 @@ test.describe('E2E-S2: Filter-UI', () => {
 
   test('"Open now" / "Jetzt geöffnet" Toggle-Button vorhanden (EN)', async ({ page }) => {
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const toggle = page.getByRole('button', { name: /open now/i })
     await expect(toggle).toBeVisible({ timeout: 8_000 })
   })
 
   test('"Jetzt geöffnet" Toggle in Deutsch', async ({ page }) => {
     await setLang(page, 'de')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const toggle = page.getByRole('button', { name: /jetzt geöffnet/i })
     await expect(toggle).toBeVisible({ timeout: 8_000 })
   })
 
   test('"مفتوح الآن" Toggle in Arabisch', async ({ page }) => {
     await setLang(page, 'ar')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const toggle = page.getByRole('button', { name: /مفتوح الآن/ })
     await expect(toggle).toBeVisible({ timeout: 8_000 })
   })
@@ -105,27 +113,23 @@ test.describe('E2E-S2: Filter-UI', () => {
       if (!e.message.includes('Hydration') && !e.message.includes('#418')) errors.push(e.message)
     })
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const toggle = page.getByRole('button', { name: /open now/i })
     await toggle.click()
-    await page.waitForTimeout(500)
+    // statt waitForTimeout(500): Chip aktiv (State-Wechsel) und die neu geladene Liste steht
+    await expect(toggle).toHaveClass(/bg-green-600/)
+    await expect(page.locator('div.h-28.animate-pulse')).toHaveCount(0, { timeout: 15_000 })
     expect(errors).toHaveLength(0)
   })
 
   test('Alle-Button erscheint wenn Shop-Typen vorhanden', async ({ page }) => {
     // Nur prüfen wenn Shop-Typ-Pills überhaupt sichtbar — bei leerer DB entfallen die Pills
     await setLang(page, 'de')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
 
+    // pundo_test ist eine Prod-Kopie mit Shop-Typen -> der "Alle"-Button ist immer da (vorher bei leerer DB
+    // stillschweigend uebersprungen; das ist kein erwarteter Zustand dieser Umgebung).
     const allBtn = page.getByRole('button', { name: /^alle$/i })
-    const isVisible = await allBtn.isVisible().catch(() => false)
-    if (!isVisible) {
-      // Leere Test-DB: kein Shop-Typ → kein "Alle"-Button. Das ist korrekt.
-      console.log('[E2E-S2] Keine Shop-Typen in Test-DB — "Alle"-Button nicht sichtbar (erwartet)')
-      return
-    }
     await expect(allBtn).toBeVisible()
   })
 })
@@ -133,31 +137,10 @@ test.describe('E2E-S2: Filter-UI', () => {
 // ─── E2E-S3: RTL auf /shops ──────────────────────────────────────────────────
 
 test.describe('E2E-S3: RTL auf /shops', () => {
-  test('Arabisch: html[dir=rtl] auf /shops', async ({ page }) => {
-    await setLang(page, 'ar')
-    await page.goto('/shops')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
-
-  test('Hebräisch: html[dir=rtl] auf /shops', async ({ page }) => {
-    await setLang(page, 'he')
-    await page.goto('/shops')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
-
-  test('Deutsch: html[dir=ltr] auf /shops', async ({ page }) => {
-    await setLang(page, 'de')
-    await page.goto('/shops')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('ltr')
-  })
-
+  // F8950 T17: html[dir]-Tests (ar/he/de) gestrichen -> language-smoke.spec.ts (/shops, 6 Sprachen).
   test('Filter-Bar rtl:flex-row-reverse class vorhanden bei ar', async ({ page }) => {
     await setLang(page, 'ar')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     // Der Open-Now Toggle-Container hat rtl:flex-row-reverse
     const filterRow = page.locator('.rtl\\:flex-row-reverse').first()
     const count = await filterRow.count()
@@ -176,38 +159,31 @@ test.describe('E2E-S4: ShopCard-Felder mit echten Daten', () => {
     page.on('pageerror', e => {
       if (!e.message.includes('Hydration') && !e.message.includes('#418')) errors.push(e.message)
     })
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     // Entweder Shop-Cards ODER Leer-State — beides ist korrekt
-    const hasContent = await page.locator('a[href^="/shops/"]').count()
+    const hasContent = await page.locator(SHOP_CARD).count()
       .then(n => n > 0)
       .catch(() => false)
     const hasEmptyMsg = await page.getByText(/no shops|keine shops/i).isVisible()
       .catch(() => false)
     // Einer der beiden Zustände muss sichtbar sein
-    expect(hasContent || hasEmptyMsg || true).toBe(true) // Seite crashed nicht
+    expect(hasContent || hasEmptyMsg, 'Shop-Karten oder Leer-Zustand sichtbar').toBe(true)
     expect(errors).toHaveLength(0)
   })
 
   test('ShopCard-Links führen zu /shops/[slug]', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    const cards = page.locator('a[href^="/shops/"]')
-    const count = await cards.count()
-    if (count === 0) {
-      console.log('[E2E-S4] Keine Shop-Cards sichtbar (leere Test-DB) — Test übersprungen')
-      return
-    }
+    await gotoShops(page)
+    const cards = page.locator(SHOP_CARD)
+    await expect(cards.first()).toBeVisible()
     // Erster Card-Link zeigt auf /shops/[slug]
     const href = await cards.first().getAttribute('href')
-    expect(href).toMatch(/^\/shops\/[a-z0-9-]+$/)
+    expect(href).toMatch(/^\/[a-z]{2}\/shops\/[a-z0-9-]+$/)
   })
 
   test('ShopCard zeigt Produktanzahl', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    const cards = page.locator('a[href^="/shops/"]')
-    if (await cards.count() === 0) return // leere DB
+    await gotoShops(page)
+    const cards = page.locator(SHOP_CARD)
+    await expect(cards.first()).toBeVisible()
 
     // Produktanzahl ist immer sichtbar (auch 0)
     const firstCard = cards.first()
@@ -222,16 +198,14 @@ test.describe('E2E-S5: Responsive Mobile /shops', () => {
   test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 
   test('keine horizontale Scrollbar auf /shops (mobile)', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth)
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 2) // 2px Toleranz
   })
 
   test('Slider auf Mobile nicht abgeschnitten', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     const slider = page.locator('input[type="range"]')
     await expect(slider).toBeVisible({ timeout: 8_000 })
     const box = await slider.boundingBox()
@@ -243,10 +217,9 @@ test.describe('E2E-S5: Responsive Mobile /shops', () => {
 
 test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
   test('ShopCard zeigt Avatar-Kreis (Bild oder Fallback-Initial)', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    const cards = page.locator('a[href^="/shops/"]')
-    if (await cards.count() === 0) return // leere DB — kein Fehler
+    await gotoShops(page)
+    const cards = page.locator(SHOP_CARD)
+    await expect(cards.first()).toBeVisible()
 
     const firstCard = cards.first()
     // Avatar ist ein div oder img mit rounded-full
@@ -255,14 +228,14 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
   })
 
   test('ShopCard Avatar hat Fallback-Farbe basiert auf Shop-ID (deterministisch)', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    const cards = page.locator('a[href^="/shops/"]')
-    if (await cards.count() < 2) return // brauchen mind. 2 Shops zum Vergleichen
+    await gotoShops(page)
+    const cards = page.locator(SHOP_CARD)
+    await expect(cards.nth(1)).toBeVisible() // mind. 2 Shops zum Vergleichen
 
     // Zwei verschiedene Shop-Cards sollten verschiedene Fallback-Farben haben
-    const card1Avatar = cards.nth(0).locator('[role="img"]').first()
-    const card2Avatar = cards.nth(1).locator('[role="img"]').first()
+    // Bild-Favicon (img) ODER Fallback-Kreis (role=img): nicht jeder Shop hat ein Fallback, die Klassen-Pruefung gilt fuer beide
+    const card1Avatar = cards.nth(0).locator('[role="img"], img').first()
+    const card2Avatar = cards.nth(1).locator('[role="img"], img').first()
 
     const card1Class = await card1Avatar.getAttribute('class')
     const card2Class = await card2Avatar.getAttribute('class')
@@ -275,13 +248,12 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
   })
 
   test('Shop-Detail-Seite zeigt große Avatar (80×80px)', async ({ page }) => {
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    const firstShopLink = page.locator('a[href^="/shops/"]').first()
-    if (!await firstShopLink.isVisible()) return // leere DB
+    await gotoShops(page)
+    const firstShopLink = page.locator(SHOP_CARD).first()
+    await expect(firstShopLink).toBeVisible()
 
     await firstShopLink.click()
-    await page.waitForLoadState('networkidle')
+    await expect(page).toHaveURL(/\/shops\/[^/]+$/)
 
     // Avatar auf Detail-Seite: sollte größer sein
     // Prüfe dass ein img oder role="img" Div mit großer Größe vorhanden ist
@@ -298,8 +270,7 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
   test('Broken Favicon fällt auf Fallback-Initial zurück', async ({ page }) => {
     // Dieser Test prüft, dass onError Handler funktioniert
     // Falls ein Favicon-URL ungültig ist, sollte der Fallback-Circle sichtbar sein
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
 
     // Suche nach einem Avatar-Div mit Text (Fallback mit Initial)
     // Fallback-Avatar hat role="img" und eine Farben-Klasse + Text
@@ -318,11 +289,10 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
     await page.context().addCookies([{
       name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
     }])
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
 
-    const cards = page.locator('a[href^="/shops/"]')
-    if (await cards.count() === 0) return
+    const cards = page.locator(SHOP_CARD)
+    await expect(cards.first()).toBeVisible()
 
     // Prüfe dass HTML dir="rtl" gesetzt ist
     const htmlDir = await page.locator('html').getAttribute('dir')
@@ -339,29 +309,25 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
 test.describe('E2E-S7: Neue Filter-Chips', () => {
   test('Parking-Chip sichtbar (EN)', async ({ page }) => {
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     await expect(page.getByRole('button', { name: 'Parking' })).toBeVisible()
   })
 
   test('Delivery-Chip sichtbar (EN)', async ({ page }) => {
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     await expect(page.getByRole('button', { name: 'Delivery' })).toBeVisible()
   })
 
   test('Online-only-Chip sichtbar (EN)', async ({ page }) => {
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     await expect(page.getByRole('button', { name: 'Online only' })).toBeVisible()
   })
 
   test('Parking-Chip sichtbar (DE: Parkplatz)', async ({ page }) => {
     await setLang(page, 'de')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     await expect(page.getByRole('button', { name: 'Parkplatz' })).toBeVisible()
   })
 
@@ -369,18 +335,18 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     const errors: string[] = []
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: 'Parking', exact: true }).click()
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
+    const parking = page.getByRole('button', { name: 'Parking', exact: true })
+    await parking.click()
+    await expect(parking).toHaveClass(/bg-accent/)
+    await expect(page.locator('div.h-28.animate-pulse')).toHaveCount(0, { timeout: 15_000 })
     const relevant = errors.filter(e => !e.includes('favicon') && !e.includes('WebSocket') && !e.includes('webpack-hmr'))
     expect(relevant).toHaveLength(0)
   })
 
   test('alle 6 Sprach-Chips sichtbar', async ({ page }) => {
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     // Scope to spoken-lang-filter to avoid matching the LanguageSwitcher buttons (EN/DE/RU conflict)
     const filterRow = page.locator('[data-testid="spoken-lang-filter"]')
     await expect(filterRow).toBeVisible()
@@ -393,18 +359,18 @@ test.describe('E2E-S7: Neue Filter-Chips', () => {
     const errors: string[] = []
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
     await setLang(page, 'en')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
-    await page.getByRole('button', { name: 'EL', exact: true }).click()
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
+    const elChip = page.getByRole('button', { name: 'EL', exact: true })
+    await elChip.click()
+    await expect(elChip).toHaveClass(/bg-accent/)
+    await expect(page.locator('div.h-28.animate-pulse')).toHaveCount(0, { timeout: 15_000 })
     const relevant = errors.filter(e => !e.includes('favicon') && !e.includes('WebSocket') && !e.includes('webpack-hmr'))
     expect(relevant).toHaveLength(0)
   })
 
   test('Filter-Chips RTL: Chips-Zeile hat rtl:flex-row-reverse bei ar', async ({ page }) => {
     await setLang(page, 'ar')
-    await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await gotoShops(page)
     // Check the chip row containing the parking button
     const parkingBtn = page.getByRole('button', { name: 'موقف سيارات', exact: true })
     await expect(parkingBtn).toBeVisible()

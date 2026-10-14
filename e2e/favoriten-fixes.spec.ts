@@ -3,6 +3,7 @@
  * ACs aus 01-design.md: 1-3 (Fix a), 5-7 (Fix b), 8-10 (Fix c)
  */
 
+import { waitForPageHydrated, clickHydrated } from './journeys/_helpers/hydration'
 import { test, expect } from '@playwright/test'
 
 const BASE_URL = process.env.TEST_BASE_URL ?? 'http://localhost:3500'
@@ -100,13 +101,12 @@ test.describe('Fix a: FavoriteButton im Produkt-Hero', () => {
 
   test('AC1: Herz-Button im Hero sichtbar (anon)', async ({ page }) => {
     await page.goto(`${BASE_URL}/en/products/${PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
 
     // Hero-specific: FavoriteButton neben H1 (size="md" → p-2)
-    const heroBtn = page.locator('h1').locator('..').locator('button[aria-pressed]')
+    const heroBtn = page.locator('h1:visible').locator('..').locator('button[aria-pressed]')
     await expect(heroBtn).toBeVisible()
     // Und das ist der einzige Button direkt neben dem H1 (nicht im Carousel)
-    const heroParent = page.locator('.flex.items-start.justify-between').first()
+    const heroParent = page.locator('.flex.items-start.justify-between:visible').first()
     await expect(heroParent.locator('h1')).toBeVisible()
     await expect(heroParent.locator('button[aria-pressed]')).toBeVisible()
   })
@@ -118,24 +118,23 @@ test.describe('Fix a: FavoriteButton im Produkt-Hero', () => {
     }
     await withCustomerAuth(page)
     await page.goto(`${BASE_URL}/en/products/${PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
-    const heroParent = page.locator('.flex.items-start.justify-between').first()
+    const heroParent = page.locator('.flex.items-start.justify-between:visible').first()
     const heroBtn = heroParent.locator('button[aria-pressed]')
     await expect(heroBtn).toBeVisible()
     const initialPressed = await heroBtn.getAttribute('aria-pressed')
     // Toggle
-    await heroBtn.click()
-    await page.waitForTimeout(500)
-    const afterPressed = await heroBtn.getAttribute('aria-pressed')
-    expect(afterPressed).not.toBe(initialPressed)
+    await clickHydrated(heroBtn)
+    // F8950 T22: statt waitForTimeout(500) auf den Zustandswechsel warten
+    await expect.poll(() => heroBtn.getAttribute('aria-pressed')).not.toBe(initialPressed)
   })
 
   test('AC3: Anon → Klick auf Herz → Redirect zu /auth/login', async ({ page }) => {
     await page.goto(`${BASE_URL}/en/products/${PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
-    const heroParent = page.locator('.flex.items-start.justify-between').first()
+    const heroParent = page.locator('.flex.items-start.justify-between:visible').first()
     const heroBtn = heroParent.locator('button[aria-pressed]')
     await heroBtn.click()
     await expect(page).toHaveURL(/\/auth\/login/)
@@ -191,7 +190,7 @@ test.describe('Fix b: Korrekter Produktlink aus Favoriten-Liste', () => {
     // Navigate directly to /account/favorites (Fix c — eigene Route) statt Tab-Klick
     // der durch das Sprachauswahl-Modal blockiert werden kann
     await page.goto(`${BASE_URL}/account/favorites`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // No /products/undefined links
     const badLinks = page.locator('a[href*="/products/undefined"], a[href*="/products/null"]')
@@ -225,7 +224,7 @@ test.describe('Fix c: My Favorites Dropdown + /account/favorites Route', () => {
     }
     await withCustomerAuth(page)
     await page.goto(`${BASE_URL}/en/`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const userMenuBtn = page.locator('button[aria-haspopup="true"]')
     await expect(userMenuBtn).toBeVisible()
@@ -242,7 +241,7 @@ test.describe('Fix c: My Favorites Dropdown + /account/favorites Route', () => {
     }
     await withCustomerAuth(page)
     await page.goto(`${BASE_URL}/en/`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const userMenuBtn = page.locator('button[aria-haspopup="true"]')
     await userMenuBtn.click()
@@ -258,10 +257,11 @@ test.describe('Fix c: My Favorites Dropdown + /account/favorites Route', () => {
     }
     await withCustomerAuth(page)
     await page.goto(`${BASE_URL}/account/favorites`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     expect(page.url()).toContain('/account/favorites')
-    const heading = page.locator('h2').filter({ hasText: /Favorites|Favoriten|Избранн|Αγαπημέν|مفضل|מועדפ/ })
+    // getByRole: waehrend des Streamings liegt kurz eine versteckte Kopie (<div hidden id="S:0">) im DOM (F8950 T22)
+    const heading = page.getByRole('heading', { name: /Favorites|Favoriten|Избранн|Αγαπημέν|مفضل|מועדפ/ })
     await expect(heading).toBeVisible()
   })
 

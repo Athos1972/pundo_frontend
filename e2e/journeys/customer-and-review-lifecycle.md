@@ -22,8 +22,8 @@ touches-roles:
 touches-states:
   - Customer.is_authenticated:false
   - Customer.is_authenticated:true
-  - Review.status:pending
-  - Review.status:approved
+  - Review.is_visible:true
+  - Review.is_visible:false
 status-changed-at: 2026-04-23T15:00:00Z
 status-changed-by-spec: journey-catalog-system-20260423
 last-run: 2026-05-22T14:06:15Z
@@ -33,39 +33,34 @@ last-run-sha: 309239e58967e8aaa506a176c41ee5d7a88ad35c
 
 ### Journey: Customer Auth + Interaction + Review Lifecycle
 
-**Ziel:** Customer registriert sich, loggt sich ein, interagiert mit Shops (Review, Spotted), Shop-Owner verwaltet seinen API-Key, Admin moderiert Reviews — in einer zusammenhängenden Kette.
+**Ziel:** Customer registriert sich, loggt sich ein und aus, gibt eine Review ab und der Admin moderiert sie (invalidate/restore) — in einer zusammenhängenden Kette. (F8950 T20: auf die aktuelle API umgestellt; Spotted und API-Key-Zyklus siehe unten.)
 
-**Trigger-Regel:** Pflicht wenn auth/**, ReviewForm, ReviewSection, SpottedFeature oder api-keys im Diff (P2).
+**Trigger-Regel:** Pflicht wenn auth/**, ReviewForm, ReviewSection oder die Admin-Review-Moderation im Diff sind (P2).
 
 **Test-Daten-Matrix:**
 
-Voraussetzung: mind. 1 aktiver Shop mit mind. 1 Produkt in pundo_test (entweder aus shop-owner-full-lifecycle oder eigener Fixture-Shop).
-
 | Fixture | Was | Warum |
 |---|---|---|
-| `customer-account` | Frischer Customer-Account, unverifiziert → dann verifiziert | Auth-State-Transitions testen |
-| `review-pending` | Review vom Customer, noch nicht moderiert | Moderation-Workflow testen |
-| `review-approved` | Review nach Admin-Approval | Sichtbarkeit post-Approval |
-| `api-key-active` | API-Key vom Shop-Owner | Generate/Revoke-Cycle |
+| `customer` | Frischer Customer `e2e-<run>-carl-<uuid>@pundo.com` (@pundo.com = automatisch verifiziert, kein OTP) | Signup/Login/Logout |
+| `spec-shop` | Eigener Shop (`specShop('CARL')`) | Review-Ziel, sichtbar auf `/en/shops/<slug>` |
+| `review` | Review des Customers auf den Spec-Shop (`POST /customer/reviews`) | Sichtbarkeit und Moderation |
 
-**Schritte (Runbook):**
+**Schritte (Runbook, = die 8 Tests der Spec):**
 
 PHASE 1 — Customer-Auth
-1. Customer registriert sich (/auth/register)
-2. Vor E-Mail-Verify: geschützte Seiten leiten um → Pending-Seite korrekt angezeigt
-3. E-Mail-Verifizierung (via Test-Endpoint oder Admin-Bypass)
-4. Login → Redirect zu Account-Seite
-5. Logout → public-only Zustand wiederhergestellt
+1. Signup (`POST /customer/auth/signup`) → 201, `is_verified=true`
+2. Auth-Guard: `/account` ohne Login leitet auf `/auth/login`
+3. Login (`POST /customer/auth/login`) → Cookie `customer_token`, `/customer/auth/me` liefert den Account
+4. Logout (`POST /customer/auth/logout`) → Cookie wird gelöscht (das JWT selbst bleibt zustandslos gültig)
 
 PHASE 2 — Customer Interaction
-6. Customer loggt sich wieder ein, navigiert zu einem Test-Shop
-7. Review-Formular ausgefüllt und submitted → Review erscheint als "pending"
-8. Spotted-Feature: Produkt als "vor Ort gesehen" markiert → Bestätigung erscheint
-9. API-Key: Shop-Owner generiert Key → Key wird einmalig angezeigt → löschen → weg
+5. Shop-Seite lädt (200, keine JS-Fehler) und zeigt den Review-Bereich
+6. Review abgeben (`POST /customer/reviews`, `entity_type=shop`) → 201 und in `/shops/{id}/reviews` gelistet
 
 PHASE 3 — Admin Moderation
-10. Admin sieht pending Review in Moderation-Liste
-11. Admin approved Review → erscheint jetzt öffentlich auf Shop-Detail
-12. Admin rejected zweiten Review → verschwindet, Customer-Feedback angezeigt
+7. `/admin/reviews` ist mit Admin-Session erreichbar
+8. Admin invalidiert die Review (`POST /admin/reviews/{id}/invalidate`) → nicht mehr öffentlich; `restore` → wieder öffentlich
+
+**Nicht mehr Teil dieser Journey (Zuordnung in `03-implementation.md`):** E-Mail-Verify per Admin-Bypass (Schritt 3 alt; @pundo.com ist auto-verifiziert, der OTP-Fluss ist Backend-pytest), Spotted (Schritt 9 alt; seit dem Umbau Foto-Upload mit KI-Erkennung, braucht Gateway/LLM), Admin-„Approve" (Schritt 11 alt; Reviews sind sofort sichtbar, moderiert wird per invalidate/restore) und der API-Key-Zyklus (Schritt 12 alt; `shop-admin-e2e.spec.ts` „API Key anlegen/löschen").
 
 **Reporting-Anforderungen:** (wie Journey 1)

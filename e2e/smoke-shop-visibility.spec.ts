@@ -362,24 +362,22 @@ test.afterAll(async () => {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-test('S1 — Shop-Seite: H1 enthält Shop-Namen', async ({ page }) => {
+test('S1 — Shop-Seite: H1 enthält Shop-Namen', { tag: '@smoke' }, async ({ page }) => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug, shopName } = state
 
   await page.goto(`${FRONTEND_URL}/en/shops/${shopSlug}`)
-  await page.waitForLoadState('networkidle')
 
   const h1 = page.locator('h1').first()
   await expect(h1).toBeVisible()
   await expect(h1).toContainText(shopName)
 })
 
-test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', async ({ page }) => {
+test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', { tag: '@smoke' }, async ({ page }) => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug, offerIds } = state
 
   await page.goto(`${FRONTEND_URL}/en/shops/${shopSlug}`)
-  await page.waitForLoadState('networkidle')
 
   // Warte bis mindestens ein Produkt-Link geladen ist (max 10s)
   // Produkt-URLs haben lang-Präfix: /{lang}/products/slug — daher href*= statt href^=
@@ -393,7 +391,7 @@ test('S2 — Shop-Seite: Angebote erscheinen als Produkt-Links', async ({ page }
   console.log(`[Smoke] S2: ${count} Produkt-Link(s) auf Shop-Seite sichtbar.`)
 })
 
-test('S3 — Produkte-API: alle angelegten Items stehen im öffentlichen Produktblock des Shops', async () => {
+test('S3 — Produkte-API: alle angelegten Items stehen im öffentlichen Produktblock des Shops', { tag: '@smoke' }, async () => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopId, itemIds } = state
 
@@ -412,7 +410,7 @@ test('S3 — Produkte-API: alle angelegten Items stehen im öffentlichen Produkt
   console.log(`[Smoke] S3: ${returnedIds.length} Produkt(e) im Produktblock — alle ${itemIds.length} erwarteten vorhanden.`)
 })
 
-test('S3b — Angebote-API: Angebot mit aktiver Aktion erscheint im Aktions-Endpoint', async () => {
+test('S3b — Angebote-API: Angebot mit aktiver Aktion erscheint im Aktions-Endpoint', { tag: '@smoke' }, async () => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug, ownerToken, offerIds } = state
 
@@ -444,7 +442,7 @@ test('S3b — Angebote-API: Angebot mit aktiver Aktion erscheint im Aktions-Endp
   ).toContain(promoOfferId)
 })
 
-test('S4 — Shop-Admin: Offers in der Verwaltungsliste sichtbar', async () => {
+test('S4 — Shop-Admin: Offers in der Verwaltungsliste sichtbar', { tag: '@smoke' }, async () => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { ownerToken, offerIds } = state
 
@@ -461,16 +459,18 @@ test('S4 — Shop-Admin: Offers in der Verwaltungsliste sichtbar', async () => {
   console.log(`[Smoke] S4: ${adminOfferIds.length} Admin-Offers — alle ${offerIds.length} erwarteten vorhanden.`)
 })
 
-test('S5 — Shop-Suche: Shop erscheint in Shop-Suchergebnissen', async ({ page }) => {
+test('S5 — Shop-Suche: Shop erscheint in Shop-Suchergebnissen', { tag: '@smoke' }, async ({ page }) => {
   if (!state) throw new Error('SETUP BROKEN: beforeAll hat keinen State geliefert')
   const { shopSlug } = state
 
   // Suche auf der /shops-Seite via URL-Param
   await page.goto(`${FRONTEND_URL}/en/shops?q=${encodeURIComponent(shopSlug)}`)
-  await page.waitForLoadState('networkidle')
 
   // Mindestens ein Link zum neu erstellten Shop muss erscheinen
   const shopLink = page.locator(`a[href$="/shops/${shopSlug}"]`)
+  // F8950 T22: statt networkidle bis zu 15 s auf den Link warten (Liste wird per Client-Fetch geladen);
+  // erscheint er nicht, greift der API-Fallback unten.
+  await expect(shopLink.first()).toBeAttached({ timeout: 15_000 }).catch(() => {})
   const count = await shopLink.count()
   if (count === 0) {
     // Fallback: Shop-Seite direkt erreichbar (Suche evtl. nicht live)

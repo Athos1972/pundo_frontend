@@ -16,6 +16,7 @@
 import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -142,7 +143,8 @@ test.describe.serial('Customer Discovery Flow', () => {
     const cookieDomain = new URL(BASE_URL).hostname
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + '/')
-    await page.waitForLoadState('load')
+    // F8950 T22: hydriert, bevor getippt/Enter gedrueckt wird (statt load + festem Timeout)
+    await waitForPageHydrated(page)
 
     const searchInput = page
       .locator('input[type="search"], input[name="q"], input[placeholder*="Search"], input[placeholder*="Such"], input[placeholder*="search"]')
@@ -154,8 +156,8 @@ test.describe.serial('Customer Discovery Flow', () => {
     // Use click + type (not fill) to reliably trigger React's controlled input onChange
     await searchInput.click()
     await searchInput.type(query)
-    // Wait a moment for React state to settle, then submit
-    await page.waitForTimeout(200)
+    // React-State hat den Wert uebernommen (controlled input), dann absenden
+    await expect(searchInput).toHaveValue(query)
 
     // Submit via Enter key; if URL doesn't change, try clicking the submit button
     const [navigationPromise] = [page.waitForURL(/\/search|\/shops|\?q=/, { timeout: 5_000 }).catch(() => null)]
@@ -170,11 +172,10 @@ test.describe.serial('Customer Discovery Flow', () => {
       const submitBtn = page.locator('button[type="submit"]').first()
       if (await submitBtn.count() > 0) {
         await submitBtn.click()
-        await page.waitForLoadState('networkidle', { timeout: 8_000 })
+        await page.waitForURL(/\/search|\/shops|\?q=/, { timeout: 8_000 }).catch(() => null)
       }
     }
 
-    await page.waitForLoadState('networkidle', { timeout: 5_000 })
     const finalUrl = page.url()
     const finalNavigated = finalUrl.includes('/search') || finalUrl.includes('/shops') || finalUrl.includes('q=')
     logStep(2, 'Suchbegriff eingeben → Navigation', 'URL enthält /search oder q=', finalUrl, finalNavigated ? 'PASS' : 'FAIL')

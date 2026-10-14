@@ -19,7 +19,7 @@
 import { test, expect, specShop, type WorkerShop } from './_helpers/worker-shop'
 import type { Page } from '@playwright/test'
 import { getAdminToken as adminApiLogin, e2eName } from './_helpers/test-data'
-import { openItemPickerModal } from './_helpers/hydration'
+import { openItemPickerModal, waitForPageHydrated } from './_helpers/hydration'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -161,11 +161,12 @@ async function selectItemViaModal(page: Page, searchQuery: string) {
   const textInputs = page.getByRole('dialog').locator('input[type="text"]')
   // Second input is the name search (first is EAN)
   const searchInput = textInputs.nth(1)
+  // F8950 T22: statt waitForTimeout(500) auf die debounced Such-Antwort (300 ms Debounce) warten
+  const searchResponse = page.waitForResponse(
+    r => r.url().includes(`/api/shop-admin/items?q=${encodeURIComponent(searchQuery.trim())}`),
+  )
   await searchInput.fill(searchQuery)
-
-  // Wait for results list
-  await page.waitForTimeout(500) // debounce: 300ms
-  await page.waitForLoadState('load')
+  await searchResponse
 
   // Click the first result button in the list
   const resultButtons = page.getByRole('dialog').locator('ul li button')
@@ -192,16 +193,13 @@ async function addPriceTierStep(page: Page, price: string) {
   const addTierBtn = page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i })
   await expect(addTierBtn.first()).toBeVisible({ timeout: 5_000 })
   await addTierBtn.first().click()
-  await page.waitForTimeout(300)
 
   // 2. Select unit 'piece' from the tier's unit <select> (second select: first is price_type)
+  // F8950 T22: statt waitForTimeout(300) warten, bis der Tier gerendert ist (zweites <select> erscheint)
   const selects = page.locator('select')
-  const selectCount = await selects.count()
-  if (selectCount >= 2) {
-    // The unit select is the last select in the form (after price_type select)
-    await selects.last().selectOption('per_piece')
-    await page.waitForTimeout(200)
-  }
+  await expect.poll(() => selects.count(), { message: 'Preiseinheit-Select erscheint' }).toBeGreaterThanOrEqual(2)
+  // The unit select is the last select in the form (after price_type select)
+  await selects.last().selectOption('per_piece')
 
   // 3. Fill the price input of the (only) step — inputMode="decimal"
   const priceInputs = page.locator('input[inputmode="decimal"]')
@@ -278,7 +276,6 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
 
     // Expand the promo accordion — promo dates live inside a collapsed section
     await page.getByRole('button', { name: /promotion|aktionspreis|promo/i }).click()
-    await page.waitForTimeout(200)
 
     // Default promo type is 'fixed' — add a promo price tier
     await addPriceTierStep(page, '9.99')
@@ -385,7 +382,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     // DON'T complete step 1 — try to click Step 2 tab directly
     const step2Tab = page.getByRole('button', { name: /2\. price|2\. preis/i })
     await step2Tab.click()
-    await page.waitForTimeout(500)
+    // F8950 T22: kein Timeout - der Klick-Handler setzt State synchron (discrete event)
 
     // Step 2 should not be accessible without step 1
     // Either still on step 1 or form shows validation error
@@ -395,8 +392,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     // If form is shown (shouldn't be without item), submit it
     if (formVisible) {
       await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-      await page.waitForTimeout(1000)
       // Should show shop_listing_id error or stay on form
+      await expect(page.locator('[class*="text-red"]').first(), 'No error shown for missing item').toBeVisible()
       const errorCount = await page.locator('[class*="text-red"]').count()
       expect(errorCount, 'No error shown for missing item').toBeGreaterThan(0)
     } else {
@@ -421,11 +418,11 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await page.locator('input[name="title"]').fill('A6 No Tiers')
 
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-    await page.waitForTimeout(1000)
+    // Should show price_tiers validation error (web-first statt waitForTimeout(1000))
+    await expect(page.locator('[class*="text-red"]').first(), 'No error shown for missing price tiers').toBeVisible()
 
     // Should remain on form (not navigate to list)
     expect(page.url()).not.toMatch(/\/shop-admin\/offers$/)
-    // Should show price_tiers validation error
     const tierError = await page.locator('[class*="text-red"]').count()
     expect(tierError, 'No error shown for missing price tiers').toBeGreaterThan(0)
   })
@@ -593,7 +590,8 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await page.goto(FRONTEND_URL + '/shop-admin/offers')
     await waitHydrated(page)
     await page.getByRole('button', { name: /expired|abgelaufen/i }).click()
-    await page.waitForTimeout(500) // let client-side tab switch render
+    // F8950 T22: statt waitForTimeout(500) - Tab-Wechsel gerendert, sobald der archivierte Artikel in der Liste steht
+    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG').first()).toBeVisible()
 
     // Use double-filter to find the specific row (innermost div with item name AND delete button)
     // OfferList shows item name "AVICENTRA CLASSIC MENU CANARY 1KG" (item 21477), not the offer title
@@ -606,14 +604,15 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     const hasDeleteInUI = await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).count() > 0
 
     if (hasDeleteInUI) {
+      // F8950 T22: statt waitForTimeout(500) auf die DELETE-Antwort warten
+      const deleted = page.waitForResponse(r => r.request().method() === 'DELETE' && r.url().includes('/offers/'))
       await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).click()
       const cancelBtn = archiveTargetRow.getByRole('button', { name: /cancel|abbrechen/i })
       if (await cancelBtn.count() > 0) {
         await cancelBtn.waitFor({ state: 'visible' })
         await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).click()
       }
-      // Wait briefly for the client-side state update to remove the row
-      await page.waitForTimeout(500)
+      await deleted
     } else {
       ctx.findings.push('C2: No delete button in UI for archived offers — delete only possible via API')
       const delRes = await apiDelete(`/api/v1/shop-owner/offers/${ctx.archiveOfferId}`, token)
@@ -821,7 +820,9 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
 
     await page.goto(FRONTEND_URL + `/en/shops/${ctx.shopSlug}`)
-    await page.waitForLoadState('networkidle')
+    // F8950 T22: statt networkidle - hydriert und Shop-Ueberschrift gerendert, dann den Text lesen
+    await waitForPageHydrated(page)
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
     const bodyText = await page.locator('body').innerText()
     expect(bodyText.includes('D2 Archived Should Be Hidden'), 'D2: Archived offer visible on customer page').toBe(false)
@@ -851,8 +852,11 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await setPriceType(page, 'on_request')
     await page.locator('input[name="title"]').fill('REGRESSION Test Offer')
 
+    // F8950 T22: statt waitForTimeout(2000) + bedingter Pruefung auf den POST warten (Pruefung jetzt unbedingt)
+    const offerPost = page.waitForRequest(req => req.url().includes('/api/shop-admin/offers') && req.method() === 'POST')
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-    await page.waitForTimeout(2000)
+    await offerPost
+    expect(capturedBody, 'REGRESSION: kein POST /api/shop-admin/offers erfasst').not.toBeNull()
 
     if (capturedBody) {
       const body = capturedBody as Record<string, unknown>
@@ -1249,13 +1253,18 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
   const eCreatedListingIds: number[] = []
   const eCreatedItemIds: number[] = []
 
-  /** Holt die erste verfügbare category_id aus dem Backend. */
+  /**
+   * Holt eine verfügbare category_id aus dem Backend. F8950 T16/AK5: zufällig aus den ersten 50 statt immer die erste -
+   * der Fuzzy-409 des Backends vergleicht Item-Namen innerhalb einer Kategorie; zwei parallele Läufe (--repeat-each,
+   * mehrere Worker) mit demselben Namensmuster in derselben Kategorie liefen sonst in 409 und skippten Group E.
+   */
   async function getFirstCategoryId(): Promise<number | null> {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/categories?limit=1`)
+      const res = await fetch(`${BACKEND_URL}/api/v1/categories?limit=50`)
       if (!res.ok) return null
       const data = await res.json() as { items?: Array<{ id: number }> }
-      return data.items?.[0]?.id ?? null
+      const items = data.items ?? []
+      return items.length ? items[Math.floor(Math.random() * items.length)].id : null
     } catch { return null }
   }
 
@@ -1406,14 +1415,15 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
 
     // Fill search with no-match term
     await searchInput.fill('zzz-no-match')
-    await page.waitForTimeout(300)
+    // F8950 T22: statt waitForTimeout(300) - Filter ist State-getrieben, die Leer-Meldung erscheint
+    await expect(page.locator('p.text-gray-400')).toBeVisible()
 
     // Clear search
     await searchInput.fill('')
-    await page.waitForTimeout(300)
 
     // After clearing: no-results message should NOT be visible (unless list is truly empty)
     const noResultsFiltered = page.locator('p', { hasText: /no offers match the filter|keine angebote entsprechen dem filter/i })
+    await expect(noResultsFiltered).toHaveCount(0)
     const hasFilterMsg = await noResultsFiltered.count() > 0
     expect(hasFilterMsg, 'E5c: "no results filtered" Meldung noch sichtbar nach Leeren des Suchfelds').toBe(false)
   })
@@ -1427,7 +1437,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
 
     // Force a no-match
     await searchInput.fill('zzz-absolutely-no-match-xyzxyz')
-    await page.waitForTimeout(400)
+    await expect(page.locator('p.text-gray-400')).toBeVisible()
 
     // Page must not crash (no error boundary, no blank page)
     await expect(page.locator('body')).toBeVisible()

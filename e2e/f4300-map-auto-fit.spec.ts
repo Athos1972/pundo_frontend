@@ -15,6 +15,7 @@
  *   - RTL-Sprachen (ar, he): kein JS-Fehler beim Laden der Karte
  */
 import { test, expect } from '@playwright/test'
+import { waitForPageHydrated } from './journeys/_helpers/hydration'
 
 // Category 678 is known to return multiple shops in the test DB.
 const MULTI_SHOP_URL = '/de/search?category_id=678'
@@ -47,7 +48,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     const errors = collectCriticalErrors(page)
 
     await page.goto(MULTI_SHOP_URL)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Layout has two .leaflet-container (mobile + desktop branch) — pick visible one.
     // On desktop the mobile-branch map is md:hidden; on mobile the desktop-branch map is hidden md:flex.
@@ -72,10 +73,11 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
 
   test('AC1: Bei category_id=678 sind Leaflet-Marker im DOM vorhanden', async ({ page }) => {
     await page.goto(MULTI_SHOP_URL)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
-    // Wait for markers — they are added after map init
+    // Wait for markers — they are added after map init (F8950 T22: bis zu 10 s statt networkidle; kein Marker = Testdaten ohne Koordinaten)
     const markers = page.locator('.leaflet-marker-icon')
+    await expect(markers.first()).toBeAttached({ timeout: 10_000 }).catch(() => {})
     // At least one marker must be present if shops have coordinates
     const count = await markers.count()
     // If 0 markers: shops may have no coordinates — warn but don't fail hard
@@ -94,11 +96,11 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     const errors = collectCriticalErrors(page)
 
     await page.goto(MULTI_SHOP_URL)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Change filter: switch to a different category
     await page.goto('/de/search?category_id=2871&category_name=Animals')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Map still present after navigation — pick visible container (two in DOM: mobile + desktop branch)
     const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
@@ -117,7 +119,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
 
     // Category 5 = Commercial Cleaning — 0 products/shops with coordinates
     await page.goto('/de/search?category_id=5&category_name=Cleaning')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // No page crash
     const pageErrors = errors.filter(e =>
@@ -137,7 +139,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     const errors = collectCriticalErrors(page)
 
     await page.goto('/ar/search?category_id=678')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // RTL attribute
     const dir = await page.locator('html').getAttribute('dir')
@@ -169,7 +171,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     const errors = collectCriticalErrors(page)
 
     await page.goto('/he/search?category_id=678')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
@@ -189,7 +191,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
     // iPhone 13 viewport
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(MULTI_SHOP_URL)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Map must be present in the DOM and visible without interaction
     const mapContainer = page.locator('.leaflet-container').first()
@@ -213,7 +215,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
   test('AC6: Mobile-Viewport — Bottom-Sheet-Handle ist im DOM vorhanden', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(MULTI_SHOP_URL)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // The sheet region should exist (aria-label set in SearchContent)
     // The drag handle pill div is inside the sheet
@@ -227,7 +229,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
 
     // Text search with lat/lng — backend now returns shop_location for local shops
     await page.goto('/de/search?q=schesir&lat=34.9&lng=33.6')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Map must load without errors
     const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()
@@ -235,7 +237,8 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
 
     // Verify at least one marker exists (shop has coordinates in test DB)
     const markers = page.locator('.leaflet-marker-icon')
-    await page.waitForTimeout(1500) // allow Leaflet to place markers after data loads
+    // F8950 T22: statt waitForTimeout(1500) bis zu 10 s auf den ersten Marker warten (Leaflet platziert sie nach dem Daten-Laden)
+    await expect(markers.first()).toBeAttached({ timeout: 10_000 }).catch(() => {})
     const count = await markers.count()
 
     if (count === 0) {
@@ -259,7 +262,7 @@ test.describe('F4300 — Map Auto-Fit Bounds (Smoke)', () => {
 
     // No lat/lng → dist_km=null → items treated as online → mapShops empty → Larnaca fallback
     await page.goto('/de/search?q=schesir')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Map container must exist and have dimensions (even with 0 pins)
     const mapContainer = page.locator('.leaflet-container').filter({ visible: true }).first()

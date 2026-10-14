@@ -1,35 +1,20 @@
 import { test, expect } from '@playwright/test'
-import { waitForHydrated } from './journeys/_helpers/hydration'
+import { waitForHydrated, waitForPageHydrated } from './journeys/_helpers/hydration'
 
+// F8950 T17: dir/lang-Matrix und Startseiten-Smoke leben in language-smoke.spec.ts (E2E-01, E2E-03, /help- und /for-shops-RTL hier gestrichen).
 // Cookie-Domain aus E2E_COOKIE_DOMAIN (Env) oder Fallback 127.0.0.1
 const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
-
-// ─── E2E-01: Startseite ───────────────────────────────────────────────────────
-
-test.describe('E2E-01: Startseite', () => {
-  test('loads with 200 and shows search input', async ({ page }) => {
-    const response = await page.goto('/')
-    expect(response?.status()).toBe(200)
-    await expect(page.locator('input[type="search"]').first()).toBeVisible()
-  })
-
-  test('no JS errors on homepage', async ({ page }) => {
-    const errors: string[] = []
-    page.on('pageerror', (err) => errors.push(err.message))
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-    expect(errors).toHaveLength(0)
-  })
-})
+const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 // ─── E2E-02: Suche ───────────────────────────────────────────────────────────
 
 test.describe('E2E-02: Suche', () => {
-  test('search navigates to /search?q=...', async ({ page, context }) => {
-    // Suppress LanguagePickerOverlay to avoid networkidle never settling
+  test('search navigates to /search?q=...', { tag: '@smoke' }, async ({ page, context }) => {
+    // Suppress LanguagePickerOverlay (blockiert sonst Klicks)
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // F8950 T22: statt networkidle - Enter vor der Hydration hat keinen Handler
+    await waitForPageHydrated(page)
     const input = page.locator('input').first()
     await input.click()
     await input.fill('cat food')
@@ -45,75 +30,23 @@ test.describe('E2E-02: Suche', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/search?q=xyzxyz123notexist')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
+    await expect(page.locator('p:visible', { hasText: 'No results found.' }).first()).toBeVisible()
     expect(errors).toHaveLength(0)
   })
 
   test('search results page renders without crash', async ({ page }) => {
     await page.goto('/search?q=cat')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const status = await page.evaluate(() => document.readyState)
     expect(status).toBe('complete')
-  })
-})
-
-// ─── E2E-03: RTL-Layout ───────────────────────────────────────────────────────
-// Language is set via app_lang cookie (not URL param)
-
-test.describe('E2E-03: RTL-Layout', () => {
-  async function setLang(page: import('@playwright/test').Page, lang: string) {
-    await page.context().addCookies([{
-      name: 'app_lang', value: lang, domain: COOKIE_DOMAIN, path: '/',
-    }])
-  }
-
-  test('Arabic (ar) sets dir=rtl', async ({ page }) => {
-    await setLang(page, 'ar')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
-
-  test('Hebrew (he) sets dir=rtl', async ({ page }) => {
-    await setLang(page, 'he')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
-
-  test('English (en) sets dir=ltr', async ({ page }) => {
-    await setLang(page, 'en')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('ltr')
-  })
-
-  test('German (de) sets dir=ltr', async ({ page }) => {
-    await setLang(page, 'de')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('ltr')
-  })
-
-  test('Greek (el) sets dir=ltr', async ({ page }) => {
-    await setLang(page, 'el')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('ltr')
-  })
-
-  test('Russian (ru) sets dir=ltr', async ({ page }) => {
-    await setLang(page, 'ru')
-    await page.goto('/')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('ltr')
   })
 })
 
 // ─── E2E-04: Produkt-Detailseite ─────────────────────────────────────────────
 
 test.describe('E2E-04: Produkt-Detailseite', () => {
-  test('unknown slug returns 404 or renders without crash', async ({ page }) => {
+  test('unknown slug returns 404 or renders without crash', { tag: '@smoke' }, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
     const response = await page.goto('/products/this-product-does-not-exist-xyz')
@@ -141,7 +74,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Section must be visible (backend has related products for this slug)
     const section = page.getByRole('region', { name: /related products/i })
@@ -152,15 +85,15 @@ test.describe('E2E-04b: Related Products Carousel', () => {
   test('carousel heading is rendered', async ({ page, request }) => {
     await skipIfProductMissing(request)
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
     await expect(page.getByRole('heading', { name: /related products/i })).toBeVisible()
   })
 
   test('current product does not appear in carousel', async ({ page }) => {
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
 
     const section = page.getByRole('region', { name: /related products/i })
+    // Erst abwarten, bis das Karussell gerendert ist (sonst waere die Link-Liste unten trivial leer)
+    await expect(section).toBeVisible()
     // All links inside the carousel must NOT point back to the current product
     const carouselLinks = section.getByRole('link')
     const hrefs = await carouselLinks.evaluateAll((links) =>
@@ -174,7 +107,6 @@ test.describe('E2E-04b: Related Products Carousel', () => {
   test('carousel cards are clickable and link to products', async ({ page, request }) => {
     await skipIfProductMissing(request)
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
 
     const section = page.getByRole('region', { name: /related products/i })
     const firstCard = section.getByRole('listitem').first()
@@ -194,7 +126,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
       route.fulfill({ status: 500, body: 'Internal Server Error' })
     )
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Page must render (offers section visible), carousel absent
     await expect(page.getByRole('heading', { name: /all offers/i })).toBeVisible()
@@ -211,7 +143,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // dir=rtl must be set
     const dir = await page.locator('html').getAttribute('dir')
@@ -224,7 +156,8 @@ test.describe('E2E-04b: Related Products Carousel', () => {
 
     test('carousel does not cause horizontal page overflow', async ({ page }) => {
       await page.goto(`/products/${TEST_SLUG}`)
-      await page.waitForLoadState('networkidle')
+      // Karussell muss gerendert sein, bevor die Breite gemessen wird (sonst misst man die leere Seite)
+      await expect(page.getByRole('region', { name: /related products/i })).toBeVisible()
 
       // Outer document must not overflow — the scroll must be contained inside the carousel
       const docScrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
@@ -237,7 +170,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
 // ─── E2E-05: Shop-Seite ───────────────────────────────────────────────────────
 
 test.describe('E2E-05: Shop-Seite', () => {
-  test('unknown shop slug returns 404 or renders without crash', async ({ page }) => {
+  test('unknown shop slug returns 404 or renders without crash', { tag: '@smoke' }, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
     const response = await page.goto('/shops/nonexistent-shop-xyz')
@@ -253,7 +186,7 @@ test.describe('E2E-06: Responsive Mobile', () => {
 
   test('homepage has no horizontal overflow', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth)
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1) // 1px tolerance
@@ -271,7 +204,7 @@ test.describe('E2E-06: Responsive Mobile', () => {
 // ─── E2E-07: Auth Redirect ────────────────────────────────────────────────────
 
 test.describe('E2E-07: Auth & Shop-Admin Redirect', () => {
-  test('unauthenticated user on /shop-admin/dashboard redirects to /shop-admin/login', async ({ page }) => {
+  test('unauthenticated user on /shop-admin/dashboard redirects to /shop-admin/login', { tag: '@smoke' }, async ({ page }) => {
     // No shop_owner_token cookie → proxy redirects to login
     await page.goto('/shop-admin/dashboard')
     // After redirect (proxy or server-side), should be on login
@@ -288,7 +221,7 @@ test.describe('E2E-07: Auth & Shop-Admin Redirect', () => {
   test('shop-admin register page renders', async ({ page }) => {
     // /shop-admin/register redirects to /shop-admin/onboarding (Quick-Onboarding Wizard)
     await page.goto('/shop-admin/register')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('input, h1, h2, form, button').first()).toBeAttached()
     const url = page.url()
     expect(url).toMatch(/\/shop-admin\/(register|onboarding)/)
     // Onboarding wizard uses h2 and buttons (not h1/form/input) — check for any interactive content
@@ -309,7 +242,7 @@ test.describe('E2E-07b: Fehler-Handling', () => {
 // ─── E2E-09: Customer Auth Pages ─────────────────────────────────────────────
 
 test.describe('E2E-09: Customer Auth Pages', () => {
-  test('unauthenticated /account redirects to /auth/login', async ({ page }) => {
+  test('unauthenticated /account redirects to /auth/login', { tag: '@smoke' }, async ({ page }) => {
     // No customer_token cookie → should redirect
     await page.goto('/account')
     await expect(page).toHaveURL(/\/auth\/login/)
@@ -354,7 +287,7 @@ test.describe('E2E-09: Customer Auth Pages', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/auth/login')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     expect(errors).toHaveLength(0)
   })
 
@@ -367,10 +300,10 @@ test.describe('E2E-09: Customer Auth Pages', () => {
     })
     await page.goto('/auth/signup')
     // Kein networkidle: das Turnstile-Widget (B6220-003) hält eine blob:-Anfrage dauerhaft offen.
-    // Submit-Button aktiv = hydratisiert + Captcha-Token erhalten; danach kurz nachlaufen lassen.
+    // Submit-Button aktiv = hydratisiert + Captcha-Token erhalten (F8950 T22: das fruehere 1-s-Nachlaufen entfaellt;
+    // Hydration-Fehler treten vor diesem Zustand auf).
     await page.waitForLoadState('load')
     await expect(page.locator('form button[type="submit"]:not([disabled])').first()).toBeVisible({ timeout: 20_000 })
-    await page.waitForTimeout(1000)
     expect(errors).toHaveLength(0)
   })
 })
@@ -386,13 +319,15 @@ test.describe('E2E-10: Review Section', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
     expect(errors).toHaveLength(0)
   })
 
   test('product page shows review section or login prompt', async ({ page }) => {
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    // Review-Bereich muss gerendert sein, bevor der DOM gelesen wird
+    await expect(page.locator('section[aria-label]').filter({ hasText: /review|bewertung|отзыв/i }).first()).toBeVisible()
     // ReviewForm should be present (either login prompt or star input)
     const body = await page.content()
     const hasStars = await page.locator('[aria-label$="stars"]').count()
@@ -409,7 +344,7 @@ test.describe('E2E-10: Review Section', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const dir = await page.locator('html').getAttribute('dir')
     expect(dir).toBe('rtl')
     expect(errors).toHaveLength(0)
@@ -429,7 +364,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/help renders at least one <details> accordion item', async ({ page }) => {
     await page.goto('/help')
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('details').first()).toBeAttached()
     const count = await page.locator('details').count()
     expect(count).toBeGreaterThanOrEqual(1)
   })
@@ -439,7 +374,6 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
     // after ~2600ms delay and would cover the accordion, blocking Playwright's click)
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto('/help')
-    await page.waitForLoadState('networkidle')
     const firstDetails = page.locator('details').first()
     const summary = firstDetails.locator('summary')
     // Initially closed
@@ -455,17 +389,8 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/help')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     expect(errors).toHaveLength(0)
-  })
-
-  test('/help RTL: Arabic shows dir=rtl', async ({ page }) => {
-    await page.context().addCookies([{
-      name: 'app_lang', value: 'ar', domain: COOKIE_DOMAIN, path: '/',
-    }])
-    await page.goto('/help')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
   })
 
   test('/for-shops returns 200 and shows hero heading', async ({ page }) => {
@@ -486,7 +411,7 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/for-shops feature grid renders at least 4 cards', async ({ page }) => {
     await page.goto('/for-shops')
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
     // Feature cards are <div> elements inside the grid
     const headings = await page.getByRole('heading', { level: 3 }).count()
     expect(headings).toBeGreaterThanOrEqual(4)
@@ -498,22 +423,12 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/for-shops')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     expect(errors).toHaveLength(0)
-  })
-
-  test('/for-shops RTL: Hebrew shows dir=rtl', async ({ page }) => {
-    await page.context().addCookies([{
-      name: 'app_lang', value: 'he', domain: COOKIE_DOMAIN, path: '/',
-    }])
-    await page.goto('/for-shops')
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
   })
 
   test('footer contains links to /help and /for-shops', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
     // hrefs are now lang-prefixed (e.g. /en/help) — use contains-selector
     const helpLink = page.locator('footer a[href*="/help"]')
     const forShopsLink = page.locator('footer a[href*="/for-shops"]')
@@ -539,7 +454,6 @@ test.describe('E2E-11b: ReviewSection how-it-works hint', () => {
     // Suppress LanguagePickerOverlay
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
     // The inline hint is a <details> inside the review section
     const reviewSection = page.locator('section[aria-label]').filter({ hasText: /review|bewertung|отзыв/i })
     const hintDetails = reviewSection.locator('details').first()
@@ -554,7 +468,7 @@ test.describe('E2E-11b: ReviewSection how-it-works hint', () => {
     // Suppress LanguagePickerOverlay
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const reviewSection = page.locator('section[aria-label]').filter({ hasText: /review|bewertung|отзыв/i })
     const hintDetails = reviewSection.locator('details').first()
     const summary = hintDetails.locator('summary')
@@ -572,30 +486,35 @@ test.describe('E2E-08: Karten-Routing-Links', () => {
     request: import('@playwright/test').APIRequestContext,
     lang?: string,
   ) {
-    // Skip if no shops with geo-coordinates are in test-DB
-    const searchRes = await request.get('/api/v1/shops?limit=1&lat=34.9009&lng=33.623&max_dist_km=100')
-    const searchData = await searchRes.json().catch(() => ({ total: 0 }))
-    if ((searchData.total ?? 0) === 0) {
-      test.skip(true, 'No geo-located shops in test-DB — map markers not available')
-    }
+    // F8950 T22: der Aufruf ging ueber die baseURL (Frontend 3500, dort gibt es /api/v1/shops nicht) und lieferte nie
+    // Treffer -> alle drei Karten-Tests liefen als stiller Skip. Jetzt gegen das Backend. pundo_test ist eine Prod-Kopie
+    // mit geolokalisierten Shops; fehlen sie, ist das ein Setup-Fehler und kein Skip-Grund.
+    const searchRes = await request.get(`${BACKEND_URL}/api/v1/shops?limit=1&lat=34.9009&lng=33.623&max_dist_km=100`)
+    expect(searchRes.ok(), 'GET /api/v1/shops (Backend)').toBe(true)
+    const searchData = await searchRes.json()
+    // Die Antwort hat kein `total`-Feld (das hatte der alte Check gelesen -> immer 0), nur `items`.
+    expect((searchData.items ?? []).length, 'geolokalisierte Shops in pundo_test (Karten-Marker)').toBeGreaterThan(0)
 
-    await page.goto('/search?q=cat')
-    if (lang) {
-      await page.evaluate((l) => { document.cookie = `app_lang=${l}; path=/` }, lang)
-      await page.reload()
-    }
-    await page.getByRole('button', { name: /map|karte|خريطة/i }).click()
+    // F8950 T22: Sprache ueber den URL-Praefix (/ar/...). Der fruehere Cookie-Wechsel + reload blieb wirkungslos, weil
+    // /search auf /en/search umgeleitet wird und der Praefix die Sprache bestimmt (Popup blieb ltr).
+    await page.goto(lang ? `/${lang}/search?q=cat` : '/search?q=cat')
+    // F8950 T22: die Karte ist auf Mobile inzwischen immer sichtbar (kein "Map"-Umschalter mehr); der Klick bleibt
+    // fuer Layouts mit Umschalter erhalten.
+    const mapToggle = page.getByRole('button', { name: /^(map|karte|خريطة)$/i })
+    if (await mapToggle.count() > 0) await mapToggle.first().click()
     await page.waitForSelector('.leaflet-marker-icon', { timeout: 10000 })
-    // Give Leaflet time to finish attaching popup event handlers
-    await page.waitForTimeout(1500)
-    // Trigger via native DOM event — Leaflet needs a bubbling click to open its popup
-    await page.evaluate(() => {
-      const marker = document.querySelector('.leaflet-marker-icon') as HTMLElement | null
-      if (marker) {
-        marker.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
-      }
-    })
-    await page.waitForSelector('.leaflet-popup-content', { timeout: 8000 })
+    // F8950 T22: statt festem 1,5-s-Timeout (Leaflet haengt die Popup-Handler erst nach dem Marker-Rendern an):
+    // den Klick wiederholen, bis das Popup da ist. Trigger via native DOM event - Leaflet braucht einen
+    // bubbling click, um das Popup zu oeffnen.
+    await expect(async () => {
+      await page.evaluate(() => {
+        const marker = document.querySelector('.leaflet-marker-icon') as HTMLElement | null
+        if (marker) {
+          marker.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
+        }
+      })
+      await expect(page.locator('.leaflet-popup-content')).toBeAttached({ timeout: 1_000 })
+    }).toPass({ timeout: 15_000 })
   }
 
   test('map popup shows 3 routing links with correct URLs after clicking a pin', async ({ page, request }) => {

@@ -22,6 +22,22 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
 import { getAdminToken } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
+import type { Page } from '@playwright/test'
+
+// F8950 T22: statt networkidle / festem waitForTimeout nach dem Submit.
+/** Profilseite oeffnen: geladen, hydriert (Submit vor der Hydration waere ein nativer Form-Post) und URL-Feld da. */
+async function gotoProfile(page: Page, frontendUrl: string) {
+  await page.goto(`${frontendUrl}/shop-admin/profile`)
+  await waitForPageHydrated(page)
+  await expect(page.locator('input[type="url"]').first()).toBeVisible({ timeout: 15_000 })
+}
+
+/** Wartet, bis der Body-Text das Muster zeigt (statt waitForTimeout(1500)); gibt den Text zurueck. */
+async function bodyTextMatching(page: Page, re: RegExp, message: string, timeout = 10_000): Promise<string> {
+  await expect.poll(async () => re.test((await page.textContent('body')) ?? ''), { message, timeout }).toBe(true)
+  return (await page.textContent('body')) ?? ''
+}
 
 // ─── Port Safety ─────────────────────────────────────────────────────────────
 
@@ -140,16 +156,10 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       }
     })
 
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     // Fill in a URL in any URL field to trigger submission
     const urlInputs = page.locator('input[type="url"]')
-    const count = await urlInputs.count()
-    if (count === 0) {
-      // Profile page may need a loaded form — try waiting
-      await page.waitForSelector('form', { timeout: 10000 })
-    }
 
     // Fill the last url input (the "other" field) with an onlyfans URL
     const lastUrlInput = urlInputs.last()
@@ -158,10 +168,12 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     // Submit the form
     const saveBtn = page.locator('button[type="submit"]').first()
     await saveBtn.click()
-    await page.waitForTimeout(1500)
 
     // Expect an error message referencing adult content (in English or German)
-    const bodyText = await page.textContent('body')
+    const bodyText = await bodyTextMatching(
+      page, /adult|erwachsenen|not permitted|nicht erlaubt|not allowed|fix|korrigiere|link/i,
+      'AC1: Frontend must display an error message when backend returns 422 social_link_blocked',
+    )
     const hasAdultError =
       (bodyText?.toLowerCase().includes('adult') ?? false) ||
       (bodyText?.toLowerCase().includes('erwachsenen') ?? false) ||
@@ -233,15 +245,16 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       }
     })
 
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     const lastUrlInput = page.locator('input[type="url"]').last()
     await lastUrlInput.fill('https://tinyurl.com/abc123')
     await page.locator('button[type="submit"]').first().click()
-    await page.waitForTimeout(1500)
 
-    const bodyText = await page.textContent('body') ?? ''
+    const bodyText = await bodyTextMatching(
+      page, /short link|kurzlink|shortener|pornhub\.com|resolves to|verweist auf/i,
+      'AC3: Frontend must show via_shortener error message with resolved host',
+    )
     // Should show the via_shortener message: "The short link resolves to pornhub.com, which is not allowed."
     const hasShortenerMsg =
       bodyText.toLowerCase().includes('short link') ||
@@ -295,15 +308,16 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       }
     })
 
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     const lastUrlInput = page.locator('input[type="url"]').last()
     await lastUrlInput.fill('https://bit.ly/doesnotexist99')
     await page.locator('button[type="submit"]').first().click()
-    await page.waitForTimeout(1500)
 
-    const bodyText = await page.textContent('body') ?? ''
+    const bodyText = await bodyTextMatching(
+      page, /short link could not|kurzlink konnte nicht|could not be verified|nicht geprüft|direct url|direkte url/i,
+      'AC4: Frontend must show shortener-unresolvable message',
+    )
     // The shortener_unresolvable category should map to the translation key
     // `social_blocked_shortener_unresolvable` → "Short link could not be verified — please enter the direct URL."
     const hasUnresolvableMsg =
@@ -448,9 +462,10 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
     const submitBtn = page.locator('button[type="submit"]')
     await submitBtn.click()
-    await page.waitForTimeout(500)
 
-    const bodyText = await page.textContent('body') ?? ''
+    const bodyText = await bodyTextMatching(
+      page, /valid host|invalid host|gültigen|ungültig/i, 'AC6: Invalid host should show inline error',
+    )
     const hasValidationError =
       bodyText.toLowerCase().includes('valid host') ||
       bodyText.toLowerCase().includes('invalid host') ||
@@ -504,8 +519,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   // ─── AC7 — Fix-Plattformen geprüft, kein false-positive auf facebook.com ────
 
   test('AC7 — SocialLinksEditor renders all 6 fixed platforms', async ({ page }) => {
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     const bodyText = await page.textContent('body') ?? ''
     for (const platform of ['Facebook', 'Instagram', 'TikTok', 'YouTube', 'LinkedIn', 'X']) {
@@ -586,15 +600,16 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       }
     })
 
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     const lastUrlInput = page.locator('input[type="url"]').last()
     await lastUrlInput.fill('https://onlyfans.com/test')
     await page.locator('button[type="submit"]').first().click()
-    await page.waitForTimeout(1500)
 
-    const bodyText = await page.textContent('body') ?? ''
+    const bodyText = await bodyTextMatching(
+      page, /Erwachseneninhalte|nicht erlaubt|korrigiere|markierten/,
+      'AC8: German (de) locale must show German error messages',
+    )
     // German: "Erwachseneninhalte sind nicht erlaubt." or toast "Bitte korrigiere..."
     const hasGermanMsg =
       bodyText.includes('Erwachseneninhalte') ||
@@ -624,15 +639,13 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       }
     })
 
-    await page.goto(`${FRONTEND_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await gotoProfile(page, FRONTEND_URL)
 
     const lastUrlInput = page.locator('input[type="url"]').last()
     await lastUrlInput.fill('https://tinyurl.com/abc123')
     await page.locator('button[type="submit"]').first().click()
-    await page.waitForTimeout(1500)
 
-    const bodyText = await page.textContent('body') ?? ''
+    const bodyText = await bodyTextMatching(page, /pornhub\.com/, 'AC8: Resolved host name must appear in the via_shortener error message')
     // The resolved_host 'pornhub.com' should appear in the error message
     expect(bodyText, 'AC8: Resolved host name must appear in the via_shortener error message').toContain('pornhub.com')
   })

@@ -30,6 +30,7 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { adminLogin as adminApiLogin } from './_helpers'
 import { TestDataTracker, e2eEmail, e2eName, psql } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // B8950-012: Marker-Konvention + Admin-Shop-Delete (Owner-Delete allein ließ Shop + Auto-Assign-Listings liegen)
 const tracker = new TestDataTracker()
@@ -123,7 +124,7 @@ const adminLogin = () => adminApiLogin()
 import type { Page } from '@playwright/test'
 async function adminLoginViaForm(page: Page): Promise<boolean> {
   await page.goto(`${BASE_URL}/admin/login`)
-  await page.waitForLoadState('networkidle', { timeout: 15_000 })
+  await waitForPageHydrated(page, 15_000)  // F8950 T22: statt networkidle (Formular erst nach Hydration bedienbar)
   await page.locator('input[type="email"]').fill('e2e-admin@pundo-e2e.io')
   await page.locator('input[type="password"]').fill('E2eAdminPassword!99')
   await page.getByRole('button', { name: /sign in|login|anmelden/i }).click()
@@ -377,7 +378,7 @@ test.describe('IDM-1: /admin/item-domain-mappings List', () => {
 
     // Navigiere zu item-domain-mappings
     await page.goto(`${BASE_URL}/admin/item-domain-mappings`)
-    await page.waitForLoadState('networkidle', { timeout: 15_000 })
+    await waitForPageHydrated(page, 15_000)
 
     const pageTitle = await page.locator('h1').first().textContent()
     const hasMappingsTitle = pageTitle?.includes('Mapping') || pageTitle?.includes('Katalog') || pageTitle?.includes('Zuordnung')
@@ -446,7 +447,7 @@ test.describe('IDM-2: Create — neues Mapping anlegen', () => {
     }
 
     await page.goto(`${BASE_URL}/admin/item-domain-mappings/new`)
-    await page.waitForLoadState('networkidle', { timeout: 15_000 })
+    await waitForPageHydrated(page, 15_000)
 
     const url = page.url()
     if (!url.includes('item-domain-mappings/new') && !url.includes('item-domain-mappings')) {
@@ -481,8 +482,8 @@ test.describe('IDM-2: Create — neues Mapping anlegen', () => {
     const submitBtn = page.locator('button[type="submit"]')
     await submitBtn.click()
 
-    // Warte auf Navigation oder Fehler
-    await page.waitForLoadState('networkidle', { timeout: 10_000 })
+    // Warte auf Navigation oder Fehler (F8950 T22: statt networkidle auf den Verlassen von /new warten; bleibt die Seite, greift der Fehlerzweig)
+    await page.waitForURL(u => !u.pathname.endsWith('/new'), { timeout: 10_000 }).catch(() => {})
     const afterUrl = page.url()
 
     if (afterUrl.includes('item-domain-mappings') && !afterUrl.includes('/new')) {
@@ -520,7 +521,7 @@ test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
 
     // Verwende Mapping ID 29 (existiert garantiert aus Seed-Daten)
     await page.goto(`${BASE_URL}/admin/item-domain-mappings/29/edit`)
-    await page.waitForLoadState('networkidle', { timeout: 15_000 })
+    await waitForPageHydrated(page, 15_000)
 
     const url = page.url()
     if (!url.includes('29/edit')) {
@@ -540,7 +541,8 @@ test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
 
       // Submit
       await page.locator('button[type="submit"]').click()
-      await page.waitForLoadState('networkidle', { timeout: 10_000 })
+      // F8950 T22: statt networkidle auf das Verlassen von /edit warten
+      await page.waitForURL(u => !u.pathname.endsWith('/edit'), { timeout: 10_000 }).catch(() => {})
 
       const afterUrl = page.url()
       if (afterUrl.includes('item-domain-mappings') && !afterUrl.includes('/edit')) {
@@ -598,7 +600,7 @@ test.describe('IDM-4: Delete — Mapping löschen mit Confirm-Dialog', () => {
 
     // Lade Liste und finde den Delete-Button für unser Mapping
     await page.goto(`${BASE_URL}/admin/item-domain-mappings`)
-    await page.waitForLoadState('networkidle', { timeout: 15_000 })
+    await waitForPageHydrated(page, 15_000)
 
     // Suche Zeile mit dem Mapping-ID
     const rows = page.locator('table tbody tr')
@@ -640,7 +642,8 @@ test.describe('IDM-4: Delete — Mapping löschen mit Confirm-Dialog', () => {
       // Confirm-Button klicken
       const confirmBtn = page.locator('button', { hasText: /delete|löschen|confirm|bestätigen/i }).last()
       await confirmBtn.click()
-      await page.waitForLoadState('networkidle', { timeout: 10_000 })
+      // F8950 T22: statt networkidle - Bestaetigungs-Button verschwindet, sobald geloescht ist
+      await expect(confirmBtn).toBeHidden({ timeout: 10_000 }).catch(() => {})
       logStep('IDM-4d', 'Delete bestätigt', 'Mapping gelöscht, Liste aktualisiert', 'Dialog geschlossen', 'PASS')
     } else {
       logStep('IDM-4c', 'Confirm-Dialog erscheint', 'Dialog sichtbar', 'Dialog nicht sichtbar — möglicherweise window.confirm()', 'SKIP')
@@ -664,7 +667,7 @@ test.describe('IDM-5: Gaps-Report', () => {
     }
 
     await page.goto(`${BASE_URL}/admin/item-domain-mappings/gaps`)
-    await page.waitForLoadState('networkidle', { timeout: 15_000 })
+    await waitForPageHydrated(page, 15_000)
 
     const url = page.url()
     if (!url.includes('gaps')) {
@@ -773,8 +776,10 @@ test.describe('AC-5: Badge "Vorgeschlagen" für auto_seeded Listings', () => {
     await page.goto(`${BASE_URL}/shop-admin/offers`)
     // Use domcontentloaded — dev server HMR keeps connections open, 'load' never fires
     await page.waitForLoadState('domcontentloaded', { timeout: 15_000 })
-    // Give React time to hydrate
-    await page.waitForTimeout(2000)
+    // F8950 T22: statt waitForTimeout(2000) - hydriert, dann bis zu 8 s auf das gesuchte Badge warten (kein Badge = Negativzweig unten)
+    await waitForPageHydrated(page, 15_000)
+    await page.locator('[class*="amber"], span:has-text("Vorgeschlagen"), span:has-text("Suggested")').first()
+      .waitFor({ state: 'attached', timeout: 8_000 }).catch(() => {})
 
     const currentUrl = page.url()
     if (!currentUrl.includes('/shop-admin/offers') && !currentUrl.includes('/shop-admin/products')) {
@@ -926,8 +931,9 @@ test.describe('S6+S7: Customer-Sicht — Listings sichtbar', () => {
       : `${BASE_URL}/shops/${ctx.shopId}`
 
     await page.goto(shopUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 })
-    // Give React time to hydrate and load data
-    await page.waitForTimeout(3000)
+    // F8950 T22: statt waitForTimeout(3000) - hydriert, dann bis zu 10 s auf den ersten Produkt-Link warten
+    await waitForPageHydrated(page, 20_000)
+    await page.locator('a[href*="/products/"]').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {})
 
     const currentUrl = page.url()
     if (currentUrl.includes('/404') || currentUrl.includes('not-found')) {

@@ -8,7 +8,7 @@
  * (Trace: Klick bei +243 ms, Chunks laden danach noch).
  * React hängt beim Hydrieren `__reactProps$…` an die DOM-Knoten; darauf wird gepollt — kein fester Timeout.
  */
-import { expect, type Locator } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 export async function waitForHydrated(locator: Locator, timeout = 30_000): Promise<void> {
   await locator.first().waitFor({ state: 'visible', timeout })
@@ -42,4 +42,26 @@ export async function openItemPickerModal(openButton: Locator, timeout = 30_000)
     openButton.page().locator('[role="dialog"] input[inputmode="numeric"]').first(),
     'ItemPickerModal: Fokus im EAN-Feld (setTimeout 50 ms nach dem Öffnen)',
   ).toBeFocused({ timeout })
+}
+
+/**
+ * Ersatz fuer `waitForLoadState('networkidle')` (F8950 T22): Seite geladen UND React hat mindestens einen Knoten
+ * hydriert. Fuer Tests, die nach dem Laden auf Konsolen-/pageerror-Fehler pruefen (Hydration-Fehler treten
+ * waehrend des Hydrierens auf) oder synchron aus dem DOM lesen. Wartet nicht auf "keine Netzwerk-Aktivitaet" und
+ * haengt damit nicht an dauerhaft offenen Anfragen (Turnstile-Widget, Karten-Tiles, Polling).
+ * Inhalte, die erst nach dem Hydrieren per fetch nachgeladen werden (Suchergebnisse, Listen), muss der Test
+ * zusaetzlich ueber einen konkreten Locator abwarten.
+ */
+export async function waitForPageHydrated(page: Page, timeout = 30_000): Promise<void> {
+  await page.waitForLoadState('load')
+  await page.waitForFunction(
+    () => {
+      for (const el of document.body.querySelectorAll('*')) {
+        if (Object.keys(el).some((k) => k.startsWith('__reactProps$'))) return true
+      }
+      return false
+    },
+    undefined,
+    { timeout },
+  )
 }

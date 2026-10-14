@@ -18,6 +18,7 @@ import fs from 'fs'
 import path from 'path'
 import { shopOwnerOnboardWithRetry, shopOwnerLogin } from './_helpers'
 import { TestDataTracker, e2eEmail, e2eName, adminApi, psql } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
 const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
@@ -187,15 +188,17 @@ test('P1: Shop in Prüfung (pending) — Vorschläge in keinem öffentlichen Pfa
   logStep('P1', 'Sitemap enthält Shop nicht', true)
 
   // UI: Kunden-Shopseite zeigt Shop, aber keine Angebote
+  // F8950 T22: statt waitForTimeout(2500) - geladen (inkl. gestreamter Segmente), hydriert, H1 gerendert
   await page.goto(`${BASE_URL}/en/shops/${A.slug}`, { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(2500)
+  await waitForPageHydrated(page)
   await expect(page.locator('h1').first()).toContainText(A.name)
   expect(await page.locator('a[href*="/products/"]').count()).toBe(0)
   logStep('P1', 'UI /en/shops/<slug>: Shop sichtbar, keine Produkt-Links', true)
 
   // UI: Produktdetail zeigt den Shop nicht als Anbieter
   await page.goto(`${BASE_URL}/en/products/${BREAD}`, { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(2500)
+  await waitForPageHydrated(page)
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
   expect(await page.getByText(A.name, { exact: false }).count()).toBe(0)
   logStep('P1', 'UI Produktdetail: Shop nicht als Anbieter gelistet', true)
 })
@@ -389,7 +392,7 @@ test('P3: System-Admin schaltet frei — übernommener, bearbeiteter und unbearb
 
   // UI Kunden-Shopseite: Produkt-Links vorhanden, Hochzeitstorte fehlt
   await page.goto(`${BASE_URL}/en/shops/${A.slug}`, { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(3000)
+  await expect(page.locator('a[href*="/products/"]').first()).toBeAttached()
   expect(await page.locator('a[href*="/products/"]').count()).toBeGreaterThan(0)
   expect(await page.locator(`a[href*="${WEDDING}"]`).count()).toBe(0)
   logStep('P3', 'UI Kunden-Shopseite: Angebote sichtbar, gelöschter Vorschlag nicht', true)
@@ -421,7 +424,7 @@ test('P4: Owner abgelehnt — Angebote unsichtbar, Shop bleibt sichtbar (D3)', a
   const list = await pub<{ items: any[] }>('/shops', { q: B.name, lat: LAT, lng: LNG })
   expect(list.items.map(s => s.slug)).toContain(B.slug)
   await page.goto(`${BASE_URL}/en/shops/${B.slug}`, { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(2500)
+  await waitForPageHydrated(page)
   await expect(page.locator('h1').first()).toContainText(B.name)
   expect(await page.locator('a[href*="/products/"]').count()).toBe(0)
   logStep('P4', 'abgelehnt: Shop in Detail/Liste/UI sichtbar, ohne Angebote (D3)', true)
@@ -453,8 +456,7 @@ test('P5: Regression — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unve
 
   // UI: Shop-Seite Anna's Bakery zeigt Preis
   await page.goto(`${BASE_URL}/en/shops/anna-s-bakery`, { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(3000)
-  expect(await page.locator('body').innerText()).toMatch(/2[.,]50/)
+  await expect(page.locator('body')).toContainText(/2[.,]50/)
   logStep('P5', 'UI anna-s-bakery: Preis 2,50 sichtbar', true)
 
   // gescrapter Shop ohne Owner

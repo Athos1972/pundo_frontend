@@ -45,9 +45,21 @@ export default defineConfig({
     [process.env.CI ? 'dot' : 'list'],
     ['json', { outputFile: 'test-results/e2e-report.json' }],
   ],
-  // workers:2 + Retry-Helper in e2e/journeys/_helpers.ts; die strikten App-Limits (B6220-001) entschärft
-  // die Test-Instanz selbst: scripts/start_test_server.sh setzt RATE_LIMIT_TEST_MULTIPLIER (nur pundo_test, B8950-012).
-  workers: 2,
+  // workers:4 (F8950 T16). Geteilter State geprueft (docs/e2e-testing.md "Geteilter State"): Specs, die schreiben,
+  // laufen in workerShop/specShop; der globale e2e-test-shop wird nur gelesen. Der fruehere Rate-Limit-Grund fuer
+  // workers:2 ist entfallen (RATE_LIMIT_TEST_MULTIPLIER=40 in scripts/start_test_server.sh, Impersonation statt Login);
+  // Retry-Helper fuer 429 bleiben in e2e/journeys/_helpers.ts.
+  workers: 4,
+  // Abbruch nach N Fehlern (F8950 T15): ein kaputter Build soll nicht den vollen Lauf kosten.
+  maxFailures: process.env.E2E_MAX_FAILURES ? Number(process.env.E2E_MAX_FAILURES) : 15,
+  // Projekte (F8950 T15): `smoke` = Tests mit Tag @smoke (ca. 40, Gate), `full` = alle anderen. `full` haengt an
+  // `smoke`: schlaegt ein Smoke-Test fehl, laeuft `full` nicht. Jeder Test laeuft in genau einem Projekt.
+  //   npx playwright test --project=smoke            nur das Gate (auch fuer den Backend-Push, A5)
+  //   npx playwright test --project=full --no-deps   ohne vorheriges Gate
+  projects: [
+    { name: 'smoke', grep: /@smoke/ },
+    { name: 'full', grepInvert: /@smoke/, dependencies: ['smoke'] },
+  ],
   use: {
     baseURL: frontendUrl,
   },

@@ -1,5 +1,24 @@
 # TESTSET — pundo_frontend
 
+## Playwright-Suite — Stand 2026-10-15 (F8950 Stufe 3, T15–T23 ohne T19)
+
+Messung: `npx playwright test` mit warmem Standalone-Build, Workers 4, Backend 8500, `pundo_test`; Auswertung `node scripts/e2e-durations.mjs`.
+
+| Größe | Vor Stufe 3 (Ende Stufe 1, Workers 2) | Nach Stufe 3 (zwei Läufe) |
+|---|---|---|
+| Wanduhr (`stats.duration`) | 415,7 s (6,93 min) | 139,2 s und 139,3 s (2,32 min) |
+| Tests | 839 | 748 (39 `smoke`, 709 `full`) |
+| passed / failed / flaky | 767 / 0 / 0 | 742 / 0 / 0 |
+| skipped | 72 (u. a. 38× `variable-price` komplett, 9× `customer-and-review-lifecycle`: stille Skips durch veraltete Endpoints/Fixtures) | 6, alle mit Begründung (siehe unten); nachts zusätzlich 1 |
+| `--repeat-each=2 --retries=0` | — | 1457 Tests, 0 failed, 0 flaky, 233,4 s; `--project=smoke --repeat-each=2`: 78/78 |
+| `networkidle`- / `waitForTimeout`-Aufrufe im Repo | 235 / 75 | 52 / 12; in den 26 Ziel-Specs (10 langsamste laut Stufe-1-Report, 12 langsamste laut Neumessung, jeweils ohne `shop-type-api-matrix`) 0 |
+
+Verbleibende Skips (bedingt, Grund im Test): `price-history` Realdaten (kein Crawl im 90-Tage-Fenster der Prod-Kopie), 4× `admin-catalog-review` (Gateway-Test-Server 8600 nicht erreichbar), `shop-admin-import-image-url` AC-3/4 (braucht Mock-Bild-Server); `b5950-001` AK4 überspringt zwischen ca. 23:30 und 00:30 Ortszeit (zu nah an Mitternacht).
+
+`shop-type-api-matrix` (44 Tests) bleibt bis T19 (Backend-Test `test_shop_type_matrix.py`) bestehen.
+
+---
+
 > **Momentaufnahme — zuletzt fortgeschrieben am 2026-06-09.** Zahlen und Befunde unten spiegeln nicht zwingend den aktuellen Stand. Aktuelle Ergebnisse je Journey: `last-run`/`last-result` im Frontmatter von `e2e/journeys/<id>.md` bzw. Testreports im Vault.
 
 ## Letzter Testlauf
@@ -29,7 +48,7 @@ Journey-Ergebnis: kein mustRun (FAQ ist statischer Content, kein Journey-Scope)
 ### E2E-Journeys (mustRun)
 | Journey | Tests | Status |
 |---|---|---|
-| shop-owner-lifecycle | 7/9 (2 fixme) | PASS |
+| shop-owner-full-lifecycle | 17/17 (nimmt seit F8950 T18 die Schritte des früheren `shop-owner-lifecycle` auf) | PASS |
 | shop-owner-quick-onboarding | 9/9 | PASS |
 
 ### Journey-Katalog-Drift (Bestätigung durch BB ausstehend)

@@ -15,14 +15,14 @@ Du (Bernhard) bestätigst jeden Vorschlag mit `j` oder lehnst ihn mit `n` ab.
 cat e2e/journeys/CATALOG.md
 
 # Details einer einzelnen Journey
-cat e2e/journeys/shop-owner-lifecycle.md
+cat e2e/journeys/shop-owner-full-lifecycle.md
 ```
 
 ### Einen Journey-Testlauf starten (nach Implementation)
 
 ```bash
 # Einzelne Journey (wenn spec-file existiert)
-npx playwright test e2e/journeys/shop-owner-lifecycle.spec.ts
+npx playwright test e2e/journeys/shop-owner-full-lifecycle.spec.ts
 
 # Alle implementierten Journeys
 npx playwright test e2e/journeys/
@@ -78,7 +78,7 @@ Katalogeintrag anlegen? (j/n)
 
 Wenn du eine vorgeschlagene Journey genehmigen willst, ohne dass ein Agent gerade aktiv ist:
 
-1. Öffne die Journey-Datei, z.B. `e2e/journeys/shop-owner-lifecycle.md`
+1. Öffne die Journey-Datei, z.B. `e2e/journeys/shop-owner-full-lifecycle.md`
 2. Ändere `status: proposed` → `status: approved`
 3. Aktualisiere `status-changed-at` auf jetzt (ISO-8601 UTC)
 4. Setze `status-changed-by-spec: ad-hoc`
@@ -93,10 +93,10 @@ Beim nächsten `/coder`-Lauf wird er die `approved`-Journey automatisch implemen
 Falls ein Agent "JourneyCatalogError" meldet:
 
 ```
-JourneyCatalogError: Missing required field 'status' at line 12 (id: shop-owner-lifecycle)
+JourneyCatalogError: Missing required field 'status' at line 12 (id: shop-owner-full-lifecycle)
 ```
 
-1. Öffne die entsprechende Journey-Datei, z.B. `e2e/journeys/shop-owner-lifecycle.md`
+1. Öffne die entsprechende Journey-Datei, z.B. `e2e/journeys/shop-owner-full-lifecycle.md`
 2. Suche den Frontmatter-Block bei der genannten Zeile
 3. Füge das fehlende Pflichtfeld hinzu (siehe CATALOG_SCHEMA.md §2 für alle Pflichtfelder)
 4. Führe zur Verifikation aus: `npx vitest run e2e/journeys/_parser.spec.ts`
@@ -115,7 +115,7 @@ e2e/journeys/
 ├── _helpers.ts                        # Gemeinsame Helfer (z. B. shopOwnerLogin mit 429-Backoff)
 ├── _helpers/                          # Fixtures + Helfer: worker-shop.ts, test-data.ts, admin-shop-payload.ts, …
 ├── reports/                           # Laufberichte je Journey (<id>-YYYY-MM-DD.md)
-├── <id>.md                            # Journey-Datei (Frontmatter + Body), z. B. shop-owner-lifecycle.md
+├── <id>.md                            # Journey-Datei (Frontmatter + Body), z. B. shop-owner-full-lifecycle.md
 └── <id>.spec.ts                       # Journey-Tests (Playwright, erst wenn implemented)
 ```
 

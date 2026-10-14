@@ -75,13 +75,16 @@ describe('parseCatalog — Seed-Datei', () => {
   it('parseCatalogDirectory liefert alle Journey-Einträge', () => {
     const entries = loadAllJourneys()
     expect(entries).toHaveLength(JOURNEY_FILES.length)
-    expect(JOURNEY_FILES.length).toBeGreaterThanOrEqual(45)
+    // Untergrenze nur als Plausibilitaetsgrenze ("das Verzeichnis wird wirklich gelesen"). F8950 T18/T21: 46 -> 43
+    // Journeys (shop-owner-lifecycle, shop-admin-profile, shop-admin-profile-phone-logo entfernt); mit T19
+    // (shop-type-api-matrix) 42. Deshalb 40 statt 45.
+    expect(JOURNEY_FILES.length).toBeGreaterThanOrEqual(40)
   })
 
   it('erster Eintrag (nach Sortierung P1/id) hat korrekte id und status implemented', () => {
     const entries = loadAllJourneys()
 
-    // P1 entries: shop-admin-offers, shop-owner-full-lifecycle, shop-owner-lifecycle (implemented)
+    // P1 entries: shop-admin-offers, shop-owner-full-lifecycle (implemented; shop-owner-lifecycle ist per F8950 T18 darin aufgegangen)
     //             + shop-owner-onboarding, social-link-moderation (implemented, added 2026-04-25)
     //             + state-transition-ItemStatus, write-to-read-createItem (approved)
     //             + shop-owner-quick-onboarding (approved, added 2026-05-01 F5910)
@@ -97,11 +100,11 @@ describe('parseCatalog — Seed-Datei', () => {
     expect(p1Entries[0].status).toBe('implemented') // admin-crm-contact-lifecycle is first alphabetically
   })
 
-  it('shop-owner-lifecycle hat korrekte id und touches-modules', () => {
-    const markdown = loadJourneyFile('shop-owner-lifecycle')
+  it('shop-owner-full-lifecycle hat korrekte id und touches-modules', () => {
+    const markdown = loadJourneyFile('shop-owner-full-lifecycle')
     const entries = parseCatalog(markdown)
 
-    expect(entries[0].id).toBe('shop-owner-lifecycle')
+    expect(entries[0].id).toBe('shop-owner-full-lifecycle')
     expect(entries[0].status).toBe('implemented')
   })
 
@@ -126,7 +129,7 @@ describe('parseCatalog — Seed-Datei', () => {
   it('touchesRoles wird korrekt geparst', () => {
     const entries = loadAllJourneys()
 
-    const lifecycle = entries.find((e) => e.id === 'shop-owner-lifecycle')
+    const lifecycle = entries.find((e) => e.id === 'shop-owner-full-lifecycle')
     expect(lifecycle?.touchesRoles).toContain('shop-owner')
     expect(lifecycle?.touchesRoles).toContain('guest')
   })
@@ -142,7 +145,7 @@ describe('Roundtrip: parse → serialize → parse', () => {
     // still work on the per-file format.
     // Individual journey files have no file-header (they start directly with ---),
     // so we pass an empty string as header to serializeCatalog.
-    const markdown = loadJourneyFile('shop-owner-lifecycle')
+    const markdown = loadJourneyFile('shop-owner-full-lifecycle')
     const entries = parseCatalog(markdown)
 
     const reserialized = serializeCatalog(entries, '')
@@ -277,21 +280,26 @@ describe('findOverlap — Jaccard-Index', () => {
   const existingEntries = loadAllJourneys()
 
   it('findet Überlappung >= 50% und liefert matching entry', () => {
-    // shop-owner-lifecycle hat: src/app/(shop-admin)/**, src/app/(customer)/[lang]/shops/[slug]/**, src/lib/shop-admin-api.ts
-    // F6300: paths updated to include [lang] segment
-    // Proposed teilt 2 von 3 Modulen → union = {3 original + 1 extra} = 4, intersect = 2 → 2/4 = 0.5
+    // shop-owner-full-lifecycle hat 8 Module (u. a. (shop-admin), (system-admin), shops/[slug], search, products/[slug],
+    // components/shop, components/product, lib/shop-admin-api). F8950 T18: ersetzt shop-owner-lifecycle.
+    // Proposed teilt 5 von 8 Modulen + 1 extra → union = 9, intersect = 5 → 5/9 ≈ 0.56
     const proposed = {
       touchesModules: [
         'src/app/(shop-admin)/**',
+        'src/app/(system-admin)/**',
         'src/app/(customer)/[lang]/shops/[slug]/**',
+        'src/components/shop/**',
+        'src/lib/shop-admin-api.ts',
         'src/components/ui/**', // extra module not in existing
       ],
     }
 
     const matches = findOverlap(proposed, existingEntries)
     expect(matches.length).toBeGreaterThan(0)
-    expect(matches[0].entry.id).toBe('shop-owner-lifecycle')
-    expect(matches[0].overlap).toBeGreaterThanOrEqual(0.5)
+    // F8950 T18: mehrere Journeys teilen (shop-admin)/shops/[slug]; geprueft wird, dass full-lifecycle gefunden wird
+    const lifecycleMatch = matches.find((m) => m.entry.id === 'shop-owner-full-lifecycle')
+    expect(lifecycleMatch).toBeDefined()
+    expect(lifecycleMatch!.overlap).toBeGreaterThanOrEqual(0.5)
   })
 
   it('flaggt NICHT bei Überlappung < 50%', () => {
@@ -405,7 +413,6 @@ describe('parseCatalogDirectory', () => {
     expect(entries).toHaveLength(JOURNEY_FILES.length)
 
     const ids = entries.map((e) => e.id)
-    expect(ids).toContain('shop-owner-lifecycle')
     expect(ids).toContain('customer-discovery')
     expect(ids).toContain('shop-owner-full-lifecycle')
     expect(ids).toContain('customer-and-review-lifecycle')

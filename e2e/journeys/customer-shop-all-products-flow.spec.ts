@@ -16,6 +16,7 @@
 import { test, expect } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 const BASE_URL = 'http://localhost:3500'
 const SHOP_SLUG = 'manjo-pet-087d8709'
@@ -56,6 +57,9 @@ function logStep(step: string, expected: string, actual: string, status: 'PASS' 
 test.describe('customer-shop-all-products-flow (B5900-004)', () => {
 
   test('A — Shop-Detail-Seite lädt korrekt', async ({ page }) => {
+    // F8950 T22: Listener vor dem goto (vorher erst nach dem Laden angehaengt = fing Ladefehler nie)
+    const jsErrors: string[] = []
+    page.on('console', msg => { if (msg.type() === 'error') jsErrors.push(msg.text()) })
     const res = await page.goto(`${BASE_URL}/en/shops/${SHOP_SLUG}`)
     const status = res?.status() ?? 0
 
@@ -74,17 +78,15 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     logStep('A2 H1 Shop-Name', 'Nicht leer', h1Text ?? '', h1HasName ? 'PASS' : 'FAIL')
     expect(h1HasName).toBe(true)
 
-    // Keine JS-Konsolenfehler sammeln
-    const jsErrors: string[] = []
-    page.on('console', msg => { if (msg.type() === 'error') jsErrors.push(msg.text()) })
-    await page.waitForLoadState('networkidle')
+    // Keine JS-Konsolenfehler: statt networkidle auf Hydration warten
+    await waitForPageHydrated(page)
     const criticalErrors = jsErrors.filter(e => !e.includes('favicon') && !e.includes('ERR_ABORTED'))
     logStep('A3 Keine JS-Errors', '0 kritische Errors', String(criticalErrors.length), criticalErrors.length === 0 ? 'PASS' : 'FAIL', criticalErrors.join(' | ') || undefined)
   })
 
   test('B — Top-Products-Sektion + Alle-Link', async ({ page }) => {
     await page.goto(`${BASE_URL}/en/shops/${SHOP_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.locator('a[href^="/en/products/"]').first()).toBeAttached()
 
     // Mindestens 1 ProductCard in der Seite
     // Backend liefert top 12 Produkte via searchProducts({shop_id, limit:12})
@@ -114,7 +116,6 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
 
   test('B5 — Alle-Link übersetzt auf DE-Seite', async ({ page }) => {
     await page.goto(`${BASE_URL}/de/shops/${SHOP_SLUG}`)
-    await page.waitForLoadState('networkidle')
 
     const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]`)
     await expect(alleLink).toBeVisible()
@@ -138,7 +139,7 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     })
 
     await page.goto(`${BASE_URL}/en/shops/${SHOP_SLUG}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Klick auf "All →" Link
     const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]`)
@@ -150,9 +151,7 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     logStep('C1a Navigation', `/en/search?shop_id=${SHOP_ID}`, currentUrl, currentUrl.includes(`shop_id=${SHOP_ID}`) ? 'PASS' : 'FAIL')
     expect(currentUrl).toContain(`shop_id=${SHOP_ID}`)
 
-    // Warte auf API-Response (Produkte laden)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1500) // SearchContent braucht kurz für shop_id-Mode
+    // F8950 T22: statt networkidle + 1,5 s Timeout - die expect-Zeile unten wartet auf die Produktkarten
 
     // HAUPT-ASSERTION (war vor Fix immer leer):
     // Mindestens 1 Produkt-Link muss sichtbar sein.
@@ -178,8 +177,9 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     })
 
     await page.goto(`${BASE_URL}/en/search?shop_id=${SHOP_ID}`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1500)
+    // F8950 T22: erst abwarten, bis der shop_id-Modus seine Produkte geladen hat (dann waere ein searchAll-Call
+    // laengst gesendet); vorher: networkidle + 1,5 s
+    await expect(page.locator('a[href^="/en/products/"]:visible').first()).toBeVisible({ timeout: 10_000 })
 
     const noSearchAll = searchAllCalls.length === 0
     logStep('C2 searchAll nicht aufgerufen', '0 /search Calls', String(searchAllCalls.length), noSearchAll ? 'PASS' : 'FAIL', noSearchAll ? undefined : `searchAll-Calls: ${searchAllCalls.join(', ')}`)
@@ -196,8 +196,8 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
 
     // Kategorie 1 existiert (Hunde)
     await page.goto(`${BASE_URL}/en/search?category_id=1`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1500)
+    // F8950 T22: statt networkidle + 1,5 s auf den Request warten
+    await expect.poll(() => productCalls.find(u => u.includes('category_id=1')), { timeout: 10_000 }).toBeTruthy()
 
     const categoryCall = productCalls.find(u => u.includes('category_id=1'))
     logStep('D1 category_id-Modus', '/api/v1/products?category_id=1 aufgerufen', categoryCall ?? 'nicht gefunden', categoryCall ? 'PASS' : 'FAIL')
@@ -240,7 +240,8 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
       if (!detailRes.ok) { logStep(`E2 ${slug}`, 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP'); continue }
       const detail = await detailRes.json() as { product_count: number }
       await page.goto(`${BASE_URL}/en/shops/${slug}`)
-      await page.waitForLoadState('networkidle')
+      await waitForPageHydrated(page)
+      await expect(page.locator('a[href^="/en/products/"]').first()).toBeAttached()
       const cards = await page.locator('a[href^="/en/products/"]').evaluateAll(els => els.length)
       const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
       const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
@@ -261,8 +262,10 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     const page = await ctx.newPage()
     try {
       await page.goto(`${BASE_URL}/en/search?shop_id=${detail.id}`)
-      await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(1500)
+      // F8950 T22: statt networkidle + 1,5 s - warten, bis alle Karten des Shops gerendert sind
+      const uniqueProductHrefs = () => page.locator('a[href^="/en/products/"]')
+        .evaluateAll(els => new Set(els.map(e => e.getAttribute('href'))).size)
+      await expect.poll(uniqueProductHrefs, { timeout: 15_000 }).toBe(detail.product_count)
       const productHrefs = await page.locator('a[href^="/en/products/"]').evaluateAll(els => Array.from(new Set(els.map(e => e.getAttribute('href')))))
       const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
       const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)

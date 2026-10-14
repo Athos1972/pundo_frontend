@@ -12,7 +12,6 @@
 | ID | Title | Status | Priority | Last Result |
 |---|---|---|---|---|
 | [shop-owner-admin-approval-flow](shop-owner-admin-approval-flow.md) | Shop-Owner Admin-Approval via Browser-UI | implemented | P1 | PASS |
-| [shop-owner-lifecycle](shop-owner-lifecycle.md) | Shop-Owner Lifecycle | implemented | P1 | PASS |
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
@@ -29,8 +28,6 @@
 | [state-transition-ItemStatus](state-transition-ItemStatus.md) | Item-Status-Transitions + Suchsichtbarkeit | approved | P1 | — |
 | [write-to-read-createItem](write-to-read-createItem.md) | Write-to-Read: Item anlegen → Suche → Detailseite | approved | P1 | — |
 | [shop-detail-attribute-matrix](shop-detail-attribute-matrix.md) | Shop-Detail Attribut-Matrix (2 Datenvarianten) | approved | P2 | — |
-| [shop-admin-profile](shop-admin-profile.md) | Shop-Admin Profil — DEPRECATED | deprecated | P2 | — |
-| [shop-admin-profile-phone-logo](shop-admin-profile-phone-logo.md) | Shop-Admin Phone + Logo — DEPRECATED | deprecated | P2 | — |
 | [service-catalog-auto-assign](service-catalog-auto-assign.md) | Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7 | implemented | P1 | PASS |
 | [b5910-007-draft-offers-visibility](b5910-007-draft-offers-visibility.md) | Onboarding-Vorschläge nicht freigeschalteter Shops öffentlich unsichtbar (B5910-007) | implemented | P1 | PASS |
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
@@ -76,7 +73,6 @@
 | customer-and-review-lifecycle | Yes (read only) | `profile-after-login`, `login-flow` |
 | shop-owner-onboarding | No — writes + registers | — |
 | shop-owner-quick-onboarding | No — writes + registers | — |
-| shop-owner-lifecycle | No — shop-admin scope, V1 scope | — |
 | shop-owner-full-lifecycle | No — shop-admin scope, V1 scope | — |
 | admin-data-management | No — admin area | — |
 | import-page-ac-check | No — admin area | — |

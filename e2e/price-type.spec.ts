@@ -65,7 +65,9 @@ test.describe('price_type: Filter chip on search page', () => {
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()) })
     page.on('pageerror', err => errors.push(err.message))
     await page.goto('/search?with_price=1')
-    await page.waitForTimeout(1000)
+    // statt festem Timeout: Chip gerendert (Seite hydriert) und Seite geladen
+    await page.waitForLoadState('load')
+    await expect(page.getByRole('button', { name: 'With price only' })).toBeVisible()
     // React error #418 is a known hydration mismatch in Suspense+useSearchParams (pre-existing)
     const critical = errors.filter(e => !e.includes('favicon') && !e.includes('404') && !e.includes('#418') && !e.includes('Hydration'))
     expect(critical).toHaveLength(0)
@@ -83,7 +85,8 @@ const filterLabels: Record<string, string> = {
   he: 'עם מחיר בלבד',
 }
 
-for (const [lang, label] of Object.entries(filterLabels)) {
+// F8950 T20: nur en + ar; alle 6 Texte pruefen src/tests/price-type-labels.test.ts und lint:i18n.
+for (const [lang, label] of Object.entries(filterLabels).filter(([l]) => l === 'en' || l === 'ar')) {
   test(`filter_price_only label correct in ${lang}`, async ({ page }) => {
     await page.context().addCookies([{ name: 'app_lang', value: lang, domain: '127.0.0.1', path: '/' }])
     await page.goto('/search')
@@ -112,40 +115,19 @@ test.describe('price_type: RTL layout', () => {
 })
 
 // ─── E2E-P4: Product detail page has PriceFilterToggle ───────────────────────
+// F8950 T20: Vorher wurde ein Produkt aus der Suche gesucht (`a[href^="/products/"]`); die Links haben seit
+// dem i18n-Routing den Praefix /<lang>/, der Selektor traf nie, und beide Tests liefen als stiller Skip.
+// Jetzt: stabile Preistyp-Fixture (prepare_e2e_db.py, Slug siehe variable-price.spec.ts).
+const FIXTURE_PRODUCT = '/products/e2e-premium-cat-food-1kg'
 
 test.describe('price_type: PriceFilterToggle on product detail', () => {
-  test('PriceFilterToggle button renders on a product page (if product exists)', async ({ page }) => {
-    // First find a real product slug from the search results
-    await page.goto('/search')
-    await page.waitForTimeout(2000) // wait for client-side load
-    const firstProductLink = page.locator('a[href^="/products/"]').first()
-    const count = await firstProductLink.count()
-
-    if (count === 0) {
-      // No products in DB — skip
-      test.skip()
-      return
-    }
-
-    const href = await firstProductLink.getAttribute('href')
-    await page.goto(href!)
-    await expect(page.getByRole('button', { name: 'With price only' })).toBeVisible({ timeout: 5000 })
+  test('PriceFilterToggle button renders on a product page', async ({ page }) => {
+    await page.goto(FIXTURE_PRODUCT)
+    await expect(page.getByRole('button', { name: 'With price only' })).toBeVisible({ timeout: 8000 })
   })
 
   test('PriceFilterToggle ?with_price=1 on product page shows active chip', async ({ page }) => {
-    // Find a real product slug
-    await page.goto('/search')
-    await page.waitForTimeout(2000)
-    const firstProductLink = page.locator('a[href^="/products/"]').first()
-    const count = await firstProductLink.count()
-
-    if (count === 0) {
-      test.skip()
-      return
-    }
-
-    const href = await firstProductLink.getAttribute('href')
-    await page.goto(`${href}?with_price=1`)
+    await page.goto(`${FIXTURE_PRODUCT}?with_price=1`)
     const chip = page.getByRole('button', { name: 'With price only' })
     await expect(chip).toBeVisible()
     const cls = await chip.getAttribute('class')

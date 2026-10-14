@@ -440,6 +440,9 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
 
   test('Schritt 6 — ShopCard shop-A: Icons und Badges prüfen', async ({ page }) => {
     // shopASlug guaranteed by beforeAll
+    // F8950 T18: "kein JS-Fehler auf der Shop-Detailseite" aus shop-owner-lifecycle (Schritt 7) uebernommen
+    const pageErrors: string[] = []
+    page.on('pageerror', e => pageErrors.push(e.message))
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
     await page.waitForLoadState('load')
 
@@ -448,6 +451,7 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
     const nameCount = await page.getByText(shopName, { exact: false }).count()
     logStep(6, 'Shop-A Name auf Detailseite', `"${shopName}" sichtbar`, nameCount > 0 ? 'gefunden' : 'nicht gefunden', nameCount > 0 ? 'PASS' : 'FAIL')
     expect(nameCount, `Shop-A Name nicht sichtbar`).toBeGreaterThan(0)
+    expect(pageErrors, 'JS-Fehler auf Shop-A Detailseite').toHaveLength(0)
 
     // Prüfe: Parking-Icon (data-testid oder aria-label) — optional
     const parkingIcon = page.locator('[data-testid="parking-icon"], [aria-label*="parking"], [aria-label*="Parking"], [aria-label*="Parkplatz"]').first()
@@ -607,8 +611,8 @@ test.describe.serial('Shop-Owner Full Lifecycle + UI-Kombinations-Matrix', () =>
 
   test('Schritt 16 — Shop-A nach Deaktivierung: 404 oder "nicht verfügbar"', async ({ page }) => {
     // shopASlug guaranteed by beforeAll
-    // Kurze Wartezeit
-    await page.waitForTimeout(500)
+    // F8950 T22: die "kurze Wartezeit" (500 ms) entfaellt - der Admin-PATCH aus Schritt 15 ist abgeschlossen,
+    // die Seite wird danach frisch geladen.
 
     await page.goto(BASE_URL + `/shops/${ctx.shopASlug}`)
     await page.waitForLoadState('load')

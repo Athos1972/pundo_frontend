@@ -59,12 +59,17 @@ async function fetchHistory(request: APIRequestContext, slug: string): Promise<H
 
 /** The price-history card: parent of the localized h2 heading. */
 function section(page: Page, heading: string) {
-  return page.locator('h2', { hasText: heading }).locator('..')
+  // :visible - waehrend des Streamings liegt kurz eine versteckte Kopie (<div hidden id="S:0">) im DOM (F8950 T22)
+  return page.locator('h2:visible', { hasText: heading }).locator('..')
 }
 
 async function open(page: Page, lang: string, key: FixtureKey) {
   await page.goto(`/${lang}/products/${FIXTURES[key].slug}`)
-  await page.waitForLoadState('networkidle')
+  // F8950 T22: statt networkidle - der Preisverlauf kommt serverseitig mit der Produktantwort; die Produkt-
+  // Ueberschrift ist da, sobald die Seite (inkl. gestreamter Segmente) steht. Danach sind auch die Abwesenheits-
+  // Tests (AC-8/AC-9) aussagekraeftig.
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({ timeout: 15_000 })
+  await page.waitForLoadState('load')
 }
 
 function featureErrors(errors: string[]) {
@@ -99,7 +104,7 @@ test.describe('Preisverlauf — synthetische Fixtures', () => {
   })
 
   // ── AC-4: Stats block visible with ≥2 data points ──────────
-  test('AC-4: Stats block shows Lowest / Highest / Average with correct values', async ({ page }) => {
+  test('AC-4: Stats block shows Lowest / Highest / Average with correct values', { tag: '@smoke' }, async ({ page }) => {
     await open(page, 'en', 'falling')
     const card = section(page, 'Price history')
     await expect(card).toBeVisible()
@@ -195,7 +200,7 @@ test.describe('Preisverlauf — synthetische Fixtures', () => {
   // ── AC-9: No block with 0 entries (only crawl outside window) ──
   test('AC-9: Price history block not rendered when no crawl lies in the 90-day window', async ({ page }) => {
     await open(page, 'en', 'outside')
-    await expect(page.locator('h1')).toBeVisible() // page itself rendered
+    await expect(page.locator('h1:visible')).toBeVisible() // page itself rendered
     await expect(page.locator('h2').filter({ hasText: 'Price history' })).toHaveCount(0)
     await expect(page.getByText('Best price seen so far')).toHaveCount(0)
     await expect(page.getByText(/No price change observed yet/)).toHaveCount(0)
@@ -336,7 +341,7 @@ test.describe('Preisverlauf — Realdaten aus der Prod-Kopie (bedingt)', () => {
     expect(s.current).toBeLessThanOrEqual(s.highest)
 
     await page.goto(`/en/products/${realSlug}`)
-    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({ timeout: 15_000 })
     const card = section(page, 'Price history')
     await expect(card).toBeVisible()
     await expect(card.getByText('Lowest')).toBeVisible()

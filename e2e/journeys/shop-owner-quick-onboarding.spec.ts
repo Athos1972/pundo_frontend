@@ -20,6 +20,7 @@ import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { adminLogin, shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
 import { RUN_ID, TestDataTracker, adminApi } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -157,7 +158,6 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await injectDraft(page, 'dienstleister')
 
     await page.goto(BASE_URL + '/shop-admin/onboarding')
-    await page.waitForLoadState('networkidle')
 
     // Draft banner must be visible
     const banner = page.locator('div').filter({ hasText: /continue|weitermachen|fortsetzen/i }).first()
@@ -185,7 +185,6 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
   test('T3 — Draft discard: "Neu beginnen" → leerer Wizard', async ({ page }) => {
     await injectDraft(page, 'dienstleister')
     await page.goto(BASE_URL + '/shop-admin/onboarding')
-    await page.waitForLoadState('networkidle')
 
     // Banner visible
     const discardBtn = page.locator('button', { hasText: /start over|neu beginnen/i })
@@ -292,7 +291,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Step 3: Location — set address directly in the text field and pin via coordinates
     // The map is dynamically loaded; fill address field and force a pin via JS injection
-    await page.waitForLoadState('networkidle')
+    // F8950 T22: statt networkidle - der expect unten wartet auf das Adressfeld von Step 3
     const addressInput = page.locator('input[placeholder*="address" i], input[placeholder*="adresse" i]')
     await expect(addressInput.first(), 'T5: address input must exist in Step 3').toBeVisible({
       timeout: 10_000,
@@ -311,8 +310,9 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     // Click Next on Location step — may need coords set; if Next is still disabled,
     // use JS to click it anyway (component validates lat/lng existence)
     const locationNextBtn = page.locator('button', { hasText: /next|weiter/i }).last()
-    // Wait a moment for any address resolution
-    await page.waitForTimeout(500)
+    // F8950 T22: statt waitForTimeout(500) bis zu 2 s auf "Next aktiv" warten (Adress-/Pin-Aufloesung);
+    // bleibt der Button deaktiviert, greift der Fallback unten (Draft per localStorage).
+    await expect(locationNextBtn).toBeEnabled({ timeout: 2_000 }).catch(() => {})
     // If disabled (no pin set), try clicking anyway to see the error OR inject location via localStorage
     const isDisabled = await locationNextBtn.getAttribute('disabled')
     if (isDisabled !== null) {
@@ -389,7 +389,6 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const enPage = await context.newPage()
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: 'localhost', path: '/' }])
     await enPage.goto(BASE_URL + '/shop-admin/onboarding')
-    await enPage.waitForLoadState('networkidle')
 
     // Progress text "Step 1 of 6" (rendered as <p> in wizard)
     const progressEN = enPage.locator('p', { hasText: /step 1 of 6/i })
@@ -406,7 +405,6 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const dePage = await context.newPage()
     await context.addCookies([{ name: 'app_lang', value: 'de', domain: 'localhost', path: '/' }])
     await dePage.goto(BASE_URL + '/shop-admin/onboarding')
-    await dePage.waitForLoadState('networkidle')
 
     const progressDE = dePage.locator('p', { hasText: /schritt 1 von 6/i })
     await expect(progressDE.first(), 'T6: "Schritt 1 von 6" must be visible (DE)').toBeVisible({
@@ -425,14 +423,14 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await injectLegacyV1Draft(page)
 
     await page.goto(BASE_URL + '/shop-admin/onboarding')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // v1 key must be gone — no banner shown (wizard starts fresh at step 1)
-    const v1KeyGone = await page.evaluate(
-      (key: string) => window.localStorage.getItem(key) === null,
-      DRAFT_KEY_V1
-    )
-    expect(v1KeyGone, 'T7: v1 draft key must be deleted on page load').toBe(true)
+    // F8950 T22: der Wizard loescht den Key beim Hydrieren (Effect) - darauf pollen statt networkidle
+    await expect.poll(
+      () => page.evaluate((key: string) => window.localStorage.getItem(key) === null, DRAFT_KEY_V1),
+      { message: 'T7: v1 draft key must be deleted on page load' },
+    ).toBe(true)
 
     // No resume banner should appear (v1 draft was not migrated)
     const banner = page.locator('button', { hasText: /continue|fortsetzen/i })
@@ -577,7 +575,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Confirm dashboard or offers page loads without error
     await page.goto(BASE_URL + '/shop-admin/offers')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Page must not show a 500 error
     const errorHeading = page.locator('h1, h2').filter({ hasText: /500|error|fehler/i })
@@ -620,7 +618,8 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     }
 
     // Step 3: inject location via localStorage and reload
-    await page.waitForLoadState('networkidle')
+    // F8950 T22: statt networkidle - Step 3 (Standort) ist gerendert, bevor der Draft ueberschrieben wird
+    await expect(page.locator('h2', { hasText: /located|wo bist/i }).first()).toBeVisible({ timeout: 10_000 })
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000
     const draft = {
       version: 2, expiresAt,

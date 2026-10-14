@@ -84,7 +84,40 @@ npx playwright test e2e/journeys e2e/smoke.spec.ts e2e/smoke-shop-visibility.spe
 
 Das Global Setup startet das Test-Backend (Port 8500) selbst neu. **Das Frontend startet ausschließlich Playwright** (`webServer` → `node scripts/e2e-frontend.cjs start`, siehe unten) — das Global Setup startet/kill-t kein Frontend mehr, sondern prüft nur, dass der Server auf 3500 aktuellen Code ausliefert.
 
-`BACKEND_URL` und `E2E_FRONTEND_PORT` sind in `playwright.config.ts` auf 8500/3500 vorbelegt — kein Setzen nötig. **Rate-Limits:** Onboarding 5/min und Login 10/min gelten pro IP (kein Bypass seit B6220-001). Damit volle Parallel-Läufe nicht in 429 laufen, startet `scripts/start_test_server.sh` das Test-Backend mit `RATE_LIMIT_TEST_MULTIPLIER=40` (Zähler ×40, keine Ausnahme; seit F6225 zählen alle 4 Backend-Worker gemeinsam in Postgres `pundo_test.rate_limit_counters`, der Multiplikator wirkt daher exakt statt bis ×4 lockerer; wirkt nur bei DB `pundo_test` und nicht-produktivem `ENVIRONMENT`, sonst ignoriert mit Warn-Log — Details `pundo_main_backend/docs/testing.md`). Ein Backend, das nicht über dieses Skript/das Global-Setup gestartet wurde, ist strikt; Start-Log: `Rate limits relaxed x40`. Die Helfer (`shopOwnerOnboardWithRetry`, `shopOwnerLogin`) warten bei 429; UI-Logins ohne Retry vermeiden (Cookie-Injection, `adminLogin()` nutzt den Admin-Token aus dem Setup). **Es darf immer nur ein E2E-Lauf gleichzeitig laufen** (Lauf-Lock `<tmpdir>/pundo-e2e-run.lock`; ein zweiter Lauf bricht mit Meldung ab, ein toter Lock wird übernommen).
+`BACKEND_URL` und `E2E_FRONTEND_PORT` sind in `playwright.config.ts` auf 8500/3500 vorbelegt — kein Setzen nötig. **Rate-Limits:** Onboarding 5/min und Login 10/min gelten pro IP (kein Bypass seit B6220-001). Damit volle Parallel-Läufe nicht in 429 laufen, startet `scripts/start_test_server.sh` das Test-Backend mit `RATE_LIMIT_TEST_MULTIPLIER=40` (Zähler ×40, keine Ausnahme; seit F6225 zählen alle 4 Backend-Worker gemeinsam in Postgres `pundo_test.rate_limit_counters`, der Multiplikator wirkt daher exakt statt bis ×4 lockerer; wirkt nur bei DB `pundo_test` und nicht-produktivem `ENVIRONMENT`, sonst ignoriert mit Warn-Log — Details `pundo_main_backend/docs/testing.md`). Ein Backend, das nicht über dieses Skript/das Global-Setup gestartet wurde, ist strikt; Start-Log: `Rate limits relaxed x40`. Die Helfer (`shopOwnerOnboardWithRetry`, `shopOwnerLogin`) warten bei 429; UI-Logins ohne Retry vermeiden (Cookie-Injection, `adminLogin()` nutzt den Admin-Token aus dem Setup). **Es darf immer nur ein E2E-Lauf gleichzeitig laufen** (und kein voller Backend-pytest gleichzeitig: beide teilen `pundo_test`) (Lauf-Lock `<tmpdir>/pundo-e2e-run.lock`; ein zweiter Lauf bricht mit Meldung ab, ein toter Lock wird übernommen).
+
+### Projekte `smoke` und `full`, Workers (F8950 T15/T16)
+
+`playwright.config.ts` kennt zwei Projekte; **jeder Test läuft in genau einem**:
+
+| Projekt | Inhalt | Start |
+|---|---|---|
+| `smoke` | Tests mit Tag `@smoke` (ca. 39: `smoke.spec`, `smoke-shop-visibility`, `language-smoke` en + ar, je ein Test aus `main`, `admin`, `shop-admin-e2e`, `price-history`, `contact-form`) | `npx playwright test --project=smoke` (allein ca. 20 s inkl. Setup) |
+| `full` | alle übrigen, `dependencies: ['smoke']` | `npx playwright test` (beide) bzw. `--project=full --no-deps` |
+
+Schlägt ein Smoke-Test fehl, überspringt Playwright `full` („did not run“): ein kaputter Build kostet so Sekunden statt eines Volllaufs. Tag setzen: `test('…', { tag: '@smoke' }, …)` bzw. `test.describe('…', { tag: '@smoke' }, …)`; serielle Gruppen nur ganz in `smoke` oder ganz in `full`. `workers: 4`, `maxFailures: 15` (`E2E_MAX_FAILURES` überschreibt). `smoke-only.config.ts` (ohne Global Setup, für `smoketest.yml`) bleibt unverändert.
+
+**Flake-Prüfung (AK5):** `npx playwright test --repeat-each=2 --retries=0` muss ohne einen Fehler laufen. Beide Wiederholungen teilen die Run-ID; Specs, die Namen in derselben Kategorie anlegen, wählen deshalb eine zufällige Kategorie (Fuzzy-409 des Backends).
+
+### Geteilter State (Audit F8950 T16)
+
+Der globale Owner/Shop aus `e2e/.test-state.json` (`e2e-owner@pundo-e2e.io`, Prod-Kopie-Shop 7937 `happy-pets-nicosia`) wird **nur gelesen**. Wer schreibt, nutzt `workerShop`/`specShop`. Stand der Prüfung der 11 State-Leser:
+
+| Spec | Nutzung des globalen State | Schreibt in den globalen Shop? |
+|---|---|---|
+| `shop-discovery.spec` | Shopname/Owner-ID für Suche und Detailseite; Schreibtests in `workerShop` | nein |
+| `variable-price.spec` | früher `fixtures.product_slugs` (nie geschrieben, ganze Spec lief als Skip); jetzt Fixture-Vertrag per by-slug-API | nein |
+| `shop-admin-e2e.spec` | nur Login-Credentials für den UI-Login-Test; alles andere `workerShop` | nein |
+| `journeys/shop-admin-import-image-url.spec` | **früher** `storageState` des globalen Owners (Upload-Test hätte in Shop 7937 geschrieben); jetzt `specShop('IMPORT-IMAGE-URL')` | nein (umgestellt) |
+| `journeys/customer-discovery.spec` | Shopname/-slug für Suche und Detailseite | nein |
+| `journeys/import-page-ac-check.spec` | `storageState` des globalen Owners zum Lesen der Import-Seite | nein (nur GET der Seite) |
+| `journeys/customer-shop-promo-visibility.spec` | **früher** Slug des globalen Shops; jetzt zwei `specShop` mit synthetischen Daten | nein (umgestellt) |
+| `journeys/shop-admin-offers.spec` | `workerShop`; Cross-Shop-Gruppe `specShop` | nein |
+| `journeys/social-link-moderation.spec` | nur Admin-Token; Schreiben in `specShop('SOCIAL-LINK')` | nein |
+| `journeys/customer-and-review-lifecycle.spec` | **früher** Slug des globalen Shops als Review-Ziel; jetzt `specShop('CARL')` | nein (umgestellt) |
+| `journeys/_helpers.ts` | Admin-Token (ein Login pro Lauf) | nein |
+
+Nachweis nach den Läufen: `e2e_test_data.py report` zeigt keine Reste; `item_photos`, `shop_listings` und `offers` des Shops 7937 sind unverändert.
 
 ### Frontend-Start: Standalone mit Fingerabdruck-Cache (B8950-012)
 
@@ -210,6 +243,7 @@ Vollständiger Katalog: `e2e/TESTSET.md`
 | `BACKEND_REPO` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | global-setup (Python-Script-Pfad) |
 | `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | global-setup (Admin-Approve-Bearer) |
 | `E2E_RESET_DB` | — | Expliziter DB-Reset (nur wenn nötig) |
+| `E2E_MAX_FAILURES` | `15` | Abbruch des Laufs nach N Fehlern (`maxFailures`) |
 
 ---
 
@@ -251,3 +285,12 @@ curl "https://maps.googleapis.com/maps/api/geocode/json?address=Finikoudes+Beach
 
 ## Hydration-Falle bei `goto` + Klick (B8950-012)
 `page.goto(url, { waitUntil: 'domcontentloaded' })` wartet nur auf das Server-HTML. Ein sofortiger Klick auf einen SSR-Button, dessen React-Handler noch nicht hängt (Chunks laden; unter Last oder `next dev` mehrere Sekunden), geht verloren — Modal/Panel öffnet sich nie, der Folgeschritt läuft in den Test-Timeout. Für den ersten Klick nach `goto` auf eine Client-Seite `clickHydrated(locator)` aus `e2e/journeys/_helpers/hydration.ts` nutzen (pollt auf `__reactProps$…`, kein fester Timeout). Für Kategorie-Vorschläge `fillNameAndAwaitSuggestions()` (`_helpers/category-picker.ts`): wartet auf die `suggest`-Antwort, prüft den Status und nennt bei Fehlern Status/Dauer.
+
+## Kein `networkidle`, kein `waitForTimeout` (F8950 T22)
+
+`waitForLoadState('networkidle')` und feste Timeouts sind in den langsamsten Specs durch Bedingungen ersetzt (Web-first-Assertions, `waitForResponse`/`waitForRequest` auf den konkreten Call, `expect.poll`, `toPass`). Helfer in `e2e/journeys/_helpers/hydration.ts`:
+
+- `waitForPageHydrated(page)` — Seite geladen und React hat hydriert. Für „keine JS-Fehler“-Tests und synchrone DOM-Reads. Nach dem Hydrieren per fetch nachgeladene Inhalte (Suchergebnisse, Listen) zusätzlich über einen Locator abwarten.
+- `waitForHydrated(locator)` / `clickHydrated(locator)` — einzelne Elemente.
+
+Fallen, die dabei auftauchten: (1) Während des Streamings liegt kurz eine **versteckte Kopie** (`<div hidden id="S:0">`) im DOM, deshalb `getByRole(...)` oder `:visible` statt blanker Selektoren. (2) Such- und Shop-Seiten rendern Desktop- **und** Mobile-Liste; der erste Treffer kann `display:none` sein (`:visible`). (3) Karten- und Shop-Links tragen den Sprachpräfix (`/en/shops/<slug>`), `a[href^="/shops/"]` trifft nie. (4) Sprache per URL-Präfix wählen (`/ar/…`); Cookie-Wechsel plus `reload` ändert den Präfix nicht.

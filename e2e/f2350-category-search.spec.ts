@@ -14,6 +14,7 @@
  */
 import { test, expect, request as pwRequest, type APIRequestContext } from '@playwright/test'
 import { tCommon } from '../src/lib/i18n/common'
+import { waitForPageHydrated } from './journeys/_helpers/hydration'
 
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BACKEND_URL.includes(':8000')) throw new Error('Safety: F2350-Spec darf nicht gegen Port 8000 laufen')
@@ -82,7 +83,7 @@ test.describe('F2350 — Kategorie-Modus (Happy Path)', () => {
 
     // Navigate via category_id only (wie CategoryChips es tut; Name lädt die Seite selbst)
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // AC1a: Kategoriename als sichtbare Überschrift (h1 ist sr-only/SEO, sichtbar ist das h2 der Liste)
     const heading = page.locator('h2').filter({ hasText: cat.name }).filter({ visible: true })
@@ -104,7 +105,7 @@ test.describe('F2350 — Kategorie-Modus (Happy Path)', () => {
 
   test('AC8: Textsuche (?q=...) bleibt unverändert', async ({ page }) => {
     await page.goto('/en/search?q=leash')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // No CategoryEmptyState should appear
     await expect(page.getByText(tCommon('en').category_empty_intro)).toHaveCount(0)
@@ -118,7 +119,6 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
   test('AC2: Leere Kategorie zeigt NICHT den generischen no_results-Text', async ({ page }) => {
     const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
     await expect(page.getByText(tCommon('en').category_empty_intro).filter({ visible: true })).toBeVisible()
     // Text-Modus-Leerzustand ist ein <p>; die sr-only Live-Region (role=status) sagt "No results found." immer an
     await expect(page.locator('p', { hasText: 'No results found.' })).toHaveCount(0)
@@ -127,14 +127,12 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
   test('AC2: Leere Kategorie zeigt category_empty_intro Text', async ({ page }) => {
     const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
     await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible()
   })
 
   test('AC3: Leere Kategorie MIT verwandten Kategorien zeigt bis zu 6 Vorschlags-Links', async ({ page }) => {
     const cat = need(data.emptyRelated, 'leere Kategorie mit verwandten Kategorien')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
 
     // AC3a: intro text visible (wait up to 8s for async useEffect)
     await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible({ timeout: 8000 })
@@ -157,7 +155,6 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
   test('AC3+AC4: Klick auf Vorschlags-Link navigiert zur Kategoriesuche', async ({ page }) => {
     const cat = need(data.emptyRelated, 'leere Kategorie mit verwandten Kategorien')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('Here are some suggestions:').filter({ visible: true })).toBeVisible({ timeout: 8000 })
 
@@ -175,7 +172,6 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
   test('AC5: Leere Kategorie OHNE verwandte Kategorien zeigt Fallback-Link', async ({ page }) => {
     const cat = need(data.emptyAlone, 'leere Kategorie ohne verwandte Kategorien')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible()
     // Keine verwandten Kategorien → Fallback-Link "Browse all categories" (→ Startseite)
@@ -190,7 +186,7 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
     page.on('pageerror', err => errors.push(err.message))
 
     await page.goto('/en/search?category_id=99999999')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // No page crash
     expect(errors, `Seitenabsturz: ${errors.join(', ')}`).toHaveLength(0)
@@ -206,7 +202,6 @@ test.describe('F2350 — i18n & RTL (AC7)', () => {
   test('AC7: Deutsche Sprache zeigt übersetzte Texte', async ({ page }) => {
     const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
     await page.goto(searchUrl('de', cat.id))
-    await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('In dieser Kategorie sind noch keine Produkte verfügbar.').filter({ visible: true })).toBeVisible()
   })
@@ -215,7 +210,6 @@ test.describe('F2350 — i18n & RTL (AC7)', () => {
     test(`AC7: ${lang === 'ar' ? 'Arabische' : 'Hebräische'} Sprache (${lang}) — RTL-Layout (dir=rtl)`, async ({ page }) => {
       const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
       await page.goto(searchUrl(lang, cat.id))
-      await page.waitForLoadState('networkidle')
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
     })
   }
@@ -223,7 +217,6 @@ test.describe('F2350 — i18n & RTL (AC7)', () => {
   test('AC7: Englische Sprache (en) — LTR Layout', async ({ page }) => {
     const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
     await page.goto(searchUrl('en', cat.id))
-    await page.waitForLoadState('networkidle')
 
     const dir = await page.locator('html').getAttribute('dir')
     // EN is LTR — dir should be 'ltr' or null (default)
@@ -233,7 +226,6 @@ test.describe('F2350 — i18n & RTL (AC7)', () => {
   test('AC7: Arabische Sprache zeigt arabischen Text für empty state', async ({ page }) => {
     const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
     await page.goto(searchUrl('ar', cat.id))
-    await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('لا توجد منتجات في هذه الفئة حالياً.').filter({ visible: true })).toBeVisible()
   })
@@ -244,7 +236,6 @@ test.describe('F2350 — CategoryChips href', () => {
   // Suchseite über die API geladen (Unit-Test: src/tests/CategoryChips.test.tsx).
   test('AC4: CategoryChip-Links verlinken auf /{lang}/search?category_id=<id> (ohne category_name)', async ({ page }) => {
     await page.goto('/en')
-    await page.waitForLoadState('networkidle')
 
     const chipLinks = page.locator('a[href*="category_id"]')
     await expect(chipLinks.first()).toBeAttached()

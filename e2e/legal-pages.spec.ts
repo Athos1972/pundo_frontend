@@ -51,34 +51,7 @@ for (const lang of langs) {
   })
 }
 
-// E2E-03: RTL-Attribut korrekt gesetzt
-test('Arabisch setzt dir=rtl auf Legal-Seite', async ({ page }) => {
-  await page.context().addCookies([{ name: LANG_COOKIE, value: 'ar', domain: 'localhost', path: '/' }])
-  await page.goto(`${BASE}/legal/imprint`)
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('rtl')
-})
-
-test('Hebräisch setzt dir=rtl auf Legal-Seite', async ({ page }) => {
-  await page.context().addCookies([{ name: LANG_COOKIE, value: 'he', domain: 'localhost', path: '/' }])
-  await page.goto(`${BASE}/legal/imprint`)
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('rtl')
-})
-
-test('Englisch setzt dir=ltr auf Legal-Seite', async ({ page }) => {
-  await page.context().addCookies([{ name: LANG_COOKIE, value: 'en', domain: 'localhost', path: '/' }])
-  await page.goto(`${BASE}/legal/imprint`)
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('ltr')
-})
-
-test('Deutsch setzt dir=ltr auf Legal-Seite', async ({ page }) => {
-  await page.context().addCookies([{ name: LANG_COOKIE, value: 'de', domain: 'localhost', path: '/' }])
-  await page.goto(`${BASE}/legal/imprint`)
-  const dir = await page.locator('html').getAttribute('dir')
-  expect(dir).toBe('ltr')
-})
+// E2E-03 (dir=rtl/ltr auf Legal-Seiten) gestrichen, F8950 T17: language-smoke.spec.ts prüft /legal/terms in 6 Sprachen.
 
 // E2E-04: Echte Firmendaten vorhanden
 test('Imprint enthält echte Firmendaten', async ({ page }) => {

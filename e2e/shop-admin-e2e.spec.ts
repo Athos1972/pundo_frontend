@@ -45,11 +45,11 @@ test.beforeAll(({ workerShop }) => { W = workerShop })
 test.afterAll(async () => { await W?.cleanupSpecData() })
 
 // Helper: Wait for React hydration (production build)
-// networkidle alone is insufficient — React attaches event handlers asynchronously after JS loads.
-// We use a data-hydrated marker set by useEffect in Toast.tsx / LoginForm,
-// which only executes after React has completed hydration.
+// React haengt Event-Handler asynchron nach dem JS-Laden an. Marker `data-hydrated` wird per useEffect in
+// Toast.tsx / LoginForm gesetzt, laeuft also erst nach abgeschlossener Hydration (F8950 T22: ohne networkidle,
+// der Marker allein ist das Signal).
 async function waitHydrated(page: Page) {
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('load')
   await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 })
 }
 
@@ -59,7 +59,7 @@ test.describe('Login', () => {
   // Login-Test ohne gespeicherten State — frische Session (echter Passwort-Owner des globalen e2e-test-shop)
   test.use({ storageState: undefined })
 
-  test('login mit korrekten Daten leitet zu Dashboard weiter', async ({ page }) => {
+  test('login mit korrekten Daten leitet zu Dashboard weiter', { tag: '@smoke' }, async ({ page }) => {
     const state = loadStorageState()
     await page.goto('/shop-admin/login')
     await waitHydrated(page)  // Wait for React hydration before interacting
@@ -76,8 +76,8 @@ test.describe('Login', () => {
     await page.locator('input[name="email"]').fill(state.email)
     await page.locator('input[name="password"]').fill('WrongPassword!')
     await page.locator('button[type="submit"]').click()
-    // Bleibt auf Login-Seite oder zeigt Fehler
-    await page.waitForTimeout(2000)
+    // Bleibt auf Login-Seite und zeigt einen Fehler (F8950 T22: statt waitForTimeout(2000) auf den Fehlerhinweis warten)
+    await expect(page.getByRole('alert').filter({ hasText: /\S/ }).first()).toBeVisible({ timeout: 10_000 })
     const url = page.url()
     expect(url).toContain('/shop-admin/login')
   })
@@ -198,12 +198,10 @@ test.describe('Produkte CRUD', () => {
   test('Produkt-Routen leiten zu Angebote weiter', async ({ page }) => {
     // /shop-admin/products/new → /shop-admin/offers/new
     await page.goto('/shop-admin/products/new')
-    await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/shop-admin\/offers\/new/, { timeout: 8_000 })
 
     // /shop-admin/products → /shop-admin/offers
     await page.goto('/shop-admin/products')
-    await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/shop-admin\/offers/, { timeout: 8_000 })
   })
 })
@@ -217,15 +215,18 @@ async function selectItemViaModal(page: Page, searchQuery: string) {
   // Warten bis der Modal-Text-Such-Input sichtbar ist (placeholder "…")
   const textSearch = page.locator('input[placeholder="…"]')
   await textSearch.waitFor({ state: 'visible', timeout: 10_000 })
+  // Debounce (300ms) + API-Aufruf: auf die Such-Antwort warten (F8950 T22, statt waitForTimeout(1000))
+  const searchResponse = page.waitForResponse(
+    r => r.url().includes(`/api/shop-admin/items?q=${encodeURIComponent(searchQuery.trim())}`),
+  )
   await textSearch.fill(searchQuery)
-  // Debounce (300ms) + API-Aufruf abwarten
-  await page.waitForTimeout(1000)
+  await searchResponse
   // Ersten Treffer in der Ergebnisliste klicken
   const firstResult = page.locator('ul li button').first()
   await firstResult.waitFor({ state: 'visible', timeout: 10_000 })
   await firstResult.click()
-  // Modal schließt sich; OfferForm wechselt automatisch zu Schritt 2
-  await page.waitForTimeout(500)
+  // Modal schließt sich; OfferForm wechselt automatisch zu Schritt 2 (statt waitForTimeout(500))
+  await expect(page.getByRole('dialog')).toBeHidden()
 }
 
 test.describe('Angebote CRUD', () => {

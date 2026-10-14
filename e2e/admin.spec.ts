@@ -10,6 +10,7 @@
 
 import { test, expect, type Page } from '@playwright/test'
 import path from 'path'
+import { waitForPageHydrated, clickHydrated } from './journeys/_helpers/hydration'
 
 const ADMIN_EMAIL = 'e2e-admin@pundo-e2e.io'
 const ADMIN_PASSWORD = 'E2eAdminPassword!99'
@@ -42,11 +43,11 @@ test.describe('E2E-11: Admin Login Page', () => {
       if (!err.message.includes('Hydration failed')) errors.push(err.message)
     })
     await page.goto('/admin/login')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     expect(errors).toHaveLength(0)
   })
 
-  test('valid credentials log in and reach /admin/dashboard', async ({ page }) => {
+  test('valid credentials log in and reach /admin/dashboard', { tag: '@smoke' }, async ({ page }) => {
     await page.goto('/admin/login')
     await page.locator('input[type="email"]').fill(ADMIN_EMAIL)
     await page.locator('input[type="password"]').fill(ADMIN_PASSWORD)
@@ -56,19 +57,19 @@ test.describe('E2E-11: Admin Login Page', () => {
 
   test('invalid credentials show error message', async ({ page }) => {
     await page.goto('/admin/login')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     await page.locator('input[type="email"]').fill('invalid@example.com')
     await page.locator('input[type="password"]').fill('wrongpassword')
     await page.getByRole('button', { name: /sign in|login|anmelden/i }).click()
-    // Should stay on login page and show an error
-    await page.waitForTimeout(2000)
+    // Should stay on login page and show an error (F8950 T22: statt waitForTimeout(2000) auf p[role=alert] warten)
+    await expect(page.locator('p[role="alert"]')).toBeVisible({ timeout: 10_000 })
     expect(page.url()).toContain('/admin/login')
   })
 })
 
 // ── E2E-12: Admin Auth Guard (Unauthenticated) ────────────────────────────────
 
-test.describe('E2E-12: Admin Auth Guard', () => {
+test.describe('E2E-12: Admin Auth Guard', { tag: '@smoke' }, () => {
   const PROTECTED_PATHS = [
     '/admin/dashboard',
     '/admin/shops',
@@ -316,7 +317,6 @@ test.describe('E2E-20: Admin Shop Edit — Spoken Languages', () => {
   test('LanguageSelector renders all 6 language buttons on shop edit page', async ({ page }) => {
     // Navigate to any shop's edit page (shop 91 exists in test DB copied from prod)
     await gotoAdmin(page, '/admin/shops/91/edit')
-    await page.waitForLoadState('networkidle')
 
     // All 6 language buttons must be visible (exact: true avoids matching Next.js dev tools button)
     for (const lang of ['EN', 'DE', 'EL', 'RU', 'AR', 'HE']) {
@@ -326,18 +326,16 @@ test.describe('E2E-20: Admin Shop Edit — Spoken Languages', () => {
 
   test('language button toggles aria-pressed on click', async ({ page }) => {
     await gotoAdmin(page, '/admin/shops/91/edit')
-    await page.waitForLoadState('networkidle')
 
     const enBtn = page.getByRole('button', { name: 'EN', exact: true })
+    await expect(enBtn).toBeVisible()
     const before = await enBtn.getAttribute('aria-pressed')
-    await enBtn.click()
-    const after = await enBtn.getAttribute('aria-pressed')
-    expect(after).not.toBe(before)
+    await clickHydrated(enBtn)
+    await expect.poll(() => enBtn.getAttribute('aria-pressed')).not.toBe(before)
   })
 
   test('label "Spoken languages" is visible on shop edit page', async ({ page }) => {
     await gotoAdmin(page, '/admin/shops/91/edit')
-    await page.waitForLoadState('networkidle')
     await expect(page.getByText('Spoken languages')).toBeVisible()
   })
 })

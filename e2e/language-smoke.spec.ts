@@ -21,9 +21,14 @@ type Lang = typeof LANGUAGES[number]
 
 const RTL_LANGS = new Set<Lang>(['ar', 'he'])
 
+// F8950 T17: Einzige dir/lang-Matrix der Suite (6 Sprachen x diese Seiten). /legal/terms und /shops
+// ersetzen die gestrichenen dir-Tests aus main.spec, tooltip-e2e-check, whatsapp-button, smoke.spec,
+// legal-pages und shop-card-enrichment (html[dir] setzt nur das jeweilige Layout, nicht die Seite).
 const PAGES = [
   { name: 'Startseite',    path: '/' },
   { name: 'Suche',         path: '/search?q=test' },
+  { name: 'Legal',         path: '/legal/terms' },
+  { name: 'Shops',         path: '/shops' },
 ]
 
 // Slug eines bekannten Shop — aus price-type fixtures (stable slug)
@@ -45,6 +50,11 @@ async function setLangCookie(page: Page, lang: Lang) {
 // Sammelt JS-Fehler auf einer Seite (ignoriert bekannte harmlose Meldungen)
 function attachConsoleErrorCollector(page: Page): () => string[] {
   const errors: string[] = []
+  // Uncaught Exceptions (aus den gestrichenen main/tooltip/whatsapp-Tests uebernommen); Hydration-Warnungen sind erwartet
+  page.on('pageerror', err => {
+    if (err.message.includes('Hydration failed') || err.message.includes('#418')) return
+    errors.push(err.message)
+  })
   page.on('console', msg => {
     if (msg.type() === 'error') {
       const text = msg.text()
@@ -61,7 +71,8 @@ function attachConsoleErrorCollector(page: Page): () => string[] {
 for (const lang of LANGUAGES) {
   const dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr'
 
-  test.describe(`Sprache: ${lang} (${dir})`, () => {
+  // F8950 T15: en (LTR) und ar (RTL) bilden das Smoke-Gate; die uebrigen Sprachen laufen im Projekt full
+  test.describe(`Sprache: ${lang} (${dir})`, { tag: lang === 'en' || lang === 'ar' ? '@smoke' : [] }, () => {
     test.use({ locale: lang === 'ar' || lang === 'he' ? 'ar-AE' : 'de-DE' })
 
     for (const { name, path } of PAGES) {
@@ -72,7 +83,7 @@ for (const lang of LANGUAGES) {
         const response = await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 20_000 })
 
         // HTTP-Status ok
-        expect(response?.status(), `${name} HTTP-Status für ${lang}`).toBeLessThan(500)
+        expect(response?.status(), `${name} HTTP-Status für ${lang}`).toBe(200)
 
         // html[dir] korrekt
         const htmlDir = await page.locator('html').getAttribute('dir')
@@ -81,6 +92,12 @@ for (const lang of LANGUAGES) {
         // html[lang] gesetzt (kann von Next.js default abweichen, daher nur non-null prüfen)
         const htmlLang = await page.locator('html').getAttribute('lang')
         expect(htmlLang, `html[lang] für ${lang}`).toBeTruthy()
+
+        // Suchfeld auf der Startseite (aus main.spec E2E-01 "shows search input"); einmal in en reicht,
+        // die Komponente ist sprachunabhängig.
+        if (path === '/' && lang === 'en') {
+          await expect(page.locator('input[type="search"]').first()).toBeVisible()
+        }
 
         // Keine JS-Fehler
         const errors = getErrors()

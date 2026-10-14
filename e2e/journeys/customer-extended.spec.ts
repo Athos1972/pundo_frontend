@@ -18,6 +18,7 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { RUN_ID } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
 import { adminLogin as adminApiLogin } from './_helpers'
 import fs from 'fs'
 import path from 'path'
@@ -339,155 +340,97 @@ test.describe('T1 — Favoriten', () => {
 
 // ─── T2: Eigene Reviews im Profil ─────────────────────────────────────────────
 
-test.describe('T2 — Eigene Reviews im Profil', () => {
-  test('Review anlegen + im Account-Profil sichtbar', async ({ page }) => {
-    if (!ctx.favToken || !ctx.favCustomerId || !ctx.firstItemId) {
-      test.skip(true, 'Missing fav customer or item ID')
-      return
+test.describe.serial('T2 — Eigene Reviews im Profil', () => {
+  // F8950 T20: vorher POST /api/v1/reviews (404 -> stiller Skip) + Admin-Approve. Aktuelle API:
+  // POST /customer/reviews {entity_type, entity_id, stars, comment}; Reviews sind sofort sichtbar (keine Freigabe).
+  const reviewText = `E2E Test Review ${UUID}`
+  let reviewId: number | null = null
+
+  test.afterAll(async () => {
+    if (reviewId && ctx.favToken) {
+      await fetch(`${BACKEND_URL}/api/v1/customer/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: authHeader(ctx.favToken),
+        signal: AbortSignal.timeout(15_000),
+      }).catch(() => null)
     }
+  })
 
-    const adminToken = await adminApiLogin().catch(() => null)
+  test('Review anlegen und per API als eigene Review abrufbar', async () => {
+    expect(ctx.favToken, 'fav customer token (beforeAll)').not.toBeNull()
+    expect(ctx.firstItemId, 'public item id (beforeAll)').not.toBeNull()
 
-    // API: Create review
-    const reviewRes = await fetch(`${BACKEND_URL}/api/v1/reviews`, {
+    const reviewRes = await fetch(`${BACKEND_URL}/api/v1/customer/reviews`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader(ctx.favToken),
-      },
-      body: JSON.stringify({
-        item_id: ctx.firstItemId,
-        rating: 4,
-        text: `E2E Test Review ${UUID}`,
-      }),
+      headers: { 'Content-Type': 'application/json', ...authHeader(ctx.favToken!) },
+      body: JSON.stringify({ entity_type: 'product', entity_id: ctx.firstItemId, stars: 4, comment: reviewText }),
       signal: AbortSignal.timeout(15_000),
     })
-    if (!reviewRes.ok) {
-      const text = await reviewRes.text().catch(() => '')
-      ctx.findings.push(`T2 SKIP: POST /reviews failed ${reviewRes.status} — ${text}`)
-      test.skip(true, `POST /reviews: ${reviewRes.status}`)
-      return
-    }
-    const review = await reviewRes.json()
-    const reviewId = review.id as number
+    expect(reviewRes.status, `POST /customer/reviews: ${await reviewRes.clone().text()}`).toBe(201)
+    reviewId = (await reviewRes.json()).id as number
 
-    // Admin: approve review
-    if (adminToken && reviewId) {
-      await fetch(`${BACKEND_URL}/api/v1/admin/reviews/${reviewId}/approve`, {
-        method: 'POST',
-        headers: authHeader(adminToken),
-        signal: AbortSignal.timeout(15_000),
-      }).catch(() => null)
-    }
+    const mine = await fetch(
+      `${BACKEND_URL}/api/v1/customer/reviews/mine?entity_type=product&entity_id=${ctx.firstItemId}`,
+      { headers: authHeader(ctx.favToken!), signal: AbortSignal.timeout(15_000) },
+    )
+    expect(mine.status).toBe(200)
+    expect((await mine.json()).comment, 'eigene Review per API abrufbar').toBe(reviewText)
+  })
 
-    // Browser: navigate to /account reviews tab
+  // BEKANNTER PRODUKTFEHLER (F8950 T20, gemeldet in 03-implementation.md): src/app/(customer)/account/page.tsx
+  // ruft GET /customer/reviews/mine OHNE entity_type/entity_id auf; das Backend verlangt beide (422), der Fetch
+  // liefert [] und "My Reviews" zeigt immer "No reviews yet". Der Test ist als erwarteter Fehlschlag markiert
+  // (test.fail): er wird rot, sobald der Fehler behoben ist - dann test.fail() entfernen.
+  test('Eigene Review ist im Account-Tab "My Reviews" sichtbar', async ({ page }) => {
+    test.fail(true, 'Bekannter Produktfehler: /account ruft /customer/reviews/mine ohne entity_type/entity_id (422) -> Tab immer leer')
+    expect(reviewId, 'Review aus dem vorigen Test').not.toBeNull()
+
     await page.context().addCookies([
-      {
-        name: 'customer_token',
-        value: ctx.favToken,
-        domain: new URL(BASE_URL).hostname,
-        path: '/',
-      },
+      { name: 'customer_token', value: ctx.favToken!, domain: new URL(BASE_URL).hostname, path: '/' },
     ])
     await page.goto(`${BASE_URL}/account`, { waitUntil: 'domcontentloaded', timeout: 15_000 })
-
-    const reviewsTab = page.locator('a:has-text("Reviews"), button:has-text("Reviews"), [data-tab="reviews"]')
-    if (await reviewsTab.count() > 0) {
-      await reviewsTab.first().click({ timeout: 5_000 }).catch(() => null)
-    }
-
-    // Assert review text visible
-    const reviewText = page.locator(`text=E2E Test Review ${UUID}`)
-    if (await reviewText.count() > 0) {
-      await expect(reviewText.first()).toBeVisible()
-      ctx.findings.push('T2 PASS: Eigene Review im Account sichtbar')
-    } else {
-      ctx.findings.push('T2 WARN: Review-Text nicht im Account gefunden (evtl. anderer Tab oder UI)')
-    }
-
-    // Cleanup: delete review via admin
-    if (adminToken && reviewId) {
-      await fetch(`${BACKEND_URL}/api/v1/admin/reviews/${reviewId}`, {
-        method: 'DELETE',
-        headers: authHeader(adminToken),
-        signal: AbortSignal.timeout(15_000),
-      }).catch(() => null)
-    }
+    await waitForPageHydrated(page)
+    // AccountTabs (role=tab): erst der Reviews-Tab zeigt die eigenen Reviews
+    await page.getByRole('tab', { name: /review|bewertung/i }).first().click()
+    await expect(page.getByText(reviewText).first(), 'eigene Review im Account sichtbar').toBeVisible({ timeout: 5_000 })
   })
 })
 
 // ─── T3: Profil-Deaktivierung ─────────────────────────────────────────────────
 
 test.describe('T3 — Profil-Deaktivierung (Account-Deletion)', () => {
-  test('Deletion Request → OTP → DELETE → Login danach 401', async () => {
-    if (!ctx.delToken || !ctx.delCustomerId) {
-      test.skip(true, 'del customer not set up')
-      return
-    }
+  test('Deletion Request → falscher OTP wird abgelehnt, Account bleibt nutzbar', async () => {
+    // F8950 T20: Der OTP wird nur per E-Mail zugestellt und gehasht gespeichert; die Testinstanz hat kein SMTP und
+    // der frühere Admin-Endpoint /admin/otp/<email> existiert nicht (Test lief immer als Skip). Der positive Pfad
+    // (korrekter OTP -> Konto geloescht, Login danach 401) bleibt deshalb dem Backend-pytest
+    // (ingestor/tests/test_customer_auth*) ueberlassen; hier der E2E-testbare Teil: Anforderung + Ablehnung.
+    expect(ctx.delToken, 'del customer token (beforeAll)').not.toBeNull()
 
-    // Step 1: Request deletion
     const reqRes = await fetch(`${BACKEND_URL}/api/v1/customer/auth/account/request-deletion`, {
       method: 'POST',
-      headers: authHeader(ctx.delToken),
+      headers: authHeader(ctx.delToken!),
       signal: AbortSignal.timeout(15_000),
     })
-    if (!reqRes.ok) {
-      const text = await reqRes.text().catch(() => '')
-      ctx.findings.push(`T3 SKIP: POST /request-deletion failed ${reqRes.status} — ${text}`)
-      test.skip(true, `request-deletion: ${reqRes.status}`)
-      return
-    }
+    expect(reqRes.status, `request-deletion: ${await reqRes.clone().text()}`).toBe(200)
+    expect((await reqRes.json()).status).toBe('otp_sent')
 
-    // Step 2: Get OTP via admin endpoint
-    const adminToken = await adminApiLogin().catch(() => null)
-    let otp: string | null = null
-
-    if (adminToken) {
-      const otpRes = await fetch(
-        `${BACKEND_URL}/api/v1/admin/otp/${encodeURIComponent(DEL_EMAIL)}`,
-        {
-          headers: authHeader(adminToken),
-          signal: AbortSignal.timeout(15_000),
-        }
-      )
-      if (otpRes.ok) {
-        const otpData = await otpRes.json()
-        otp = otpData.otp ?? otpData.code ?? null
-      } else {
-        ctx.findings.push(`T3 WARN: GET /admin/otp/${DEL_EMAIL} returned ${otpRes.status} — trying without OTP`)
-      }
-    }
-
-    if (!otp) {
-      ctx.findings.push('T3 SKIP: Could not retrieve OTP — admin endpoint not available')
-      test.skip(true, 'OTP retrieval not available')
-      return
-    }
-
-    // Step 3: Delete account with OTP
     const delRes = await fetch(`${BACKEND_URL}/api/v1/customer/auth/account`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader(ctx.delToken),
-      },
-      body: JSON.stringify({ otp }),
+      headers: { 'Content-Type': 'application/json', ...authHeader(ctx.delToken!) },
+      body: JSON.stringify({ otp: '000000' }),
       signal: AbortSignal.timeout(15_000),
     })
-    expect([200, 204], `DELETE /account: ${delRes.status}`).toContain(delRes.status)
+    expect([400, 401, 422], `DELETE /account mit falschem OTP: ${delRes.status}`).toContain(delRes.status)
 
-    // Step 4: Login attempt must fail with 401
+    // Konto besteht weiter: Login funktioniert
     const loginRes = await fetch(`${BACKEND_URL}/api/v1/customer/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: DEL_EMAIL, password: PASSWORD }),
       signal: AbortSignal.timeout(15_000),
     })
-    expect(loginRes.status, 'Deleted account must not be able to login').toBe(401)
-
-    // Mark as deleted so afterAll skips the admin-delete
-    ctx.delCustomerId = null
-    ctx.findings.push('T3 PASS: Account-Deletion Flow komplett — Login danach 401')
+    expect(loginRes.status, 'Konto nach abgelehntem Loeschen weiter nutzbar').toBe(200)
+    ctx.findings.push('T3 PASS: falscher OTP abgelehnt, Konto bleibt (positiver OTP-Pfad: Backend-pytest)')
   })
 })
 

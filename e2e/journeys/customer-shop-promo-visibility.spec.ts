@@ -9,18 +9,22 @@
  *   P4: Aktions-Badge mit Datum + Strikethrough für Normalpreis
  *   P5: Alle 6 Sprachen — promo_badge + regular_price Keys vorhanden
  *
- * Voraussetzung: Backend BE-1–BE-4 (promo_price_tiers, neuer offers-Endpoint)
- *   muss deployed sein. Falls Backend noch nicht bereit → Tests werden übersprungen.
+ * F8950 T20: Vorher dienten der globale Owner-Shop aus .test-state.json (Prod-Kopie "happy-pets-nicosia") und
+ * Prod-Daten als Fixture; P2 und P4 liefen als Skip, weil dieser Shop keine aktive Aktion hat. Jetzt zwei eigene
+ * Spec-Shops mit synthetischen Daten (Zwei-Ebenen-Prinzip, Ebene 1: laeuft immer, kein Skip).
  *
- * | Fixture-Name | Was wird aufgebaut | Was wird geprüft |
- * |---|---|---|
- * | (Prod-Seed-Daten) | Shop mit aktivem Angebot aus pundo_test | P2/P3/P4/P5 |
- * | (Prod-Seed-Daten) | Shop ohne aktive Aktionen | P1 |
+ * | Fixture-Name       | Was wird aufgebaut                                         | Was wird geprüft |
+ * |--------------------|-------------------------------------------------------------|------------------|
+ * | specShop PROMO-NONE| Shop ohne Offers                                            | P1, P3           |
+ * | specShop PROMO-ON  | Shop mit Item, Listing und Offer mit aktivem Aktionszeitraum| P2, P3, P4, P5   |
  */
 
 import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { e2eName } from './_helpers/test-data'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
 const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
@@ -29,47 +33,18 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
 
-// ─── Fixtures & State ─────────────────────────────────────────────────────────
-
-interface TestState {
-  email: string
-  shop_name: string
-  shopSlug?: string | null
-}
-
-function loadTestState(): TestState | null {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
-  if (!fs.existsSync(stateFile)) return null
-  return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
-}
-
 // Step log for report
 interface StepEntry {
   step: number
   desc: string
   expected: string
   actual: string
-  status: 'PASS' | 'FAIL' | 'SKIP'
+  status: 'PASS' | 'FAIL'
 }
 
 const stepLog: StepEntry[] = []
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
+function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL') {
   stepLog.push({ step, desc, expected, actual, status })
-}
-
-// ─── Backend Readiness Check ──────────────────────────────────────────────────
-
-async function _backendHasPromoSupport(): Promise<boolean> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/health`)
-    if (!res.ok) return false
-    // Check if the new promo fields exist by querying a shop offers endpoint
-    // If backend doesn't support promo yet, fields won't exist
-    const healthData = await res.json() as Record<string, unknown>
-    return !!healthData
-  } catch {
-    return false
-  }
 }
 
 // ─── Report Helper ────────────────────────────────────────────────────────────
@@ -99,25 +74,55 @@ function writeReport(suiteName: string, verdict: 'SHIP' | 'FIX' | 'ESCALATE', no
   fs.writeFileSync(reportPath, lines.join('\n'), 'utf8')
 }
 
+const TODAY_ISO = new Date().toISOString().slice(0, 10)
+function daysFromToday(n: number): string {
+  return new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+}
+
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
 test.describe.serial('customer-shop-promo-visibility', () => {
-  let shopSlug: string | null = null
+  let noneShop: WorkerShop
+  let promoShop: WorkerShop
   const startedAt = new Date().toISOString()
 
   test.beforeAll(async () => {
-    const state = loadTestState()
-    shopSlug = state?.shopSlug ?? null
+    test.setTimeout(120_000)
+    noneShop = await specShop('PROMO-NONE')
+    promoShop = await specShop('PROMO-ON')
+
+    // Item + Listing + Offer mit aktivem Aktionszeitraum (heute ∈ [promo_valid_from, promo_valid_until])
+    const item = await promoShop.createItem('PROMO', 'promo-item', { listing: true })
+    expect(item.listingId, 'Listing des Promo-Items').toBeTruthy()
+    const offer = await promoShop.api<{ id: number }>('POST', '/offers', {
+      shop_listing_id: item.listingId,
+      price_type: 'fixed',
+      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 15.0, currency: 'EUR' }] }],
+      promo_price_type: 'fixed',
+      promo_price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 9.99, currency: 'EUR' }] }],
+      promo_valid_from: TODAY_ISO,
+      promo_valid_until: daysFromToday(30),
+      title: e2eName('PROMO', 'promo-offer'),
+    })
+    expect(offer.status, `Promo-Offer anlegen: ${JSON.stringify(offer.json)}`).toBe(201)
+
+    // Das Backend muss die Aktion oeffentlich ausliefern, bevor die SSR-Seite geladen wird
+    await expect.poll(async () => {
+      const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${promoShop.slug}/offers`, { headers: { 'Accept-Language': 'en' } })
+      return res.ok ? ((await res.json()) as unknown[]).length : 0
+    }, { message: 'Promo-Offer öffentlich sichtbar', timeout: 10_000 }).toBeGreaterThan(0)
   })
 
   test.afterAll(async () => {
+    await promoShop?.destroy()
+    await noneShop?.destroy()
+
     const allPass = stepLog.every(s => s.status !== 'FAIL')
     const verdict = stepLog.length === 0 ? 'ESCALATE' : allPass ? 'SHIP' : 'FIX'
     const notes = [
       `Started: ${startedAt}`,
       `Finished: ${new Date().toISOString()}`,
-      `Shop slug: ${shopSlug ?? '(none — backend dependency)'}`,
-      `Backend promo support: depends on BE-1–BE-4 deployment`,
+      `Shops: ${noneShop?.slug ?? '-'} (ohne Aktion), ${promoShop?.slug ?? '-'} (mit Aktion)`,
     ].join('\n')
     writeReport('Kunden-Sicht Shop-Aktionen', verdict, notes)
   })
@@ -125,50 +130,24 @@ test.describe.serial('customer-shop-promo-visibility', () => {
   // ─── P1: Kein Angebotsblock ohne aktive Aktion ────────────────────────────
 
   test('P1: keine "Current offers"-Sektion wenn Shop keine aktive Aktion hat', async ({ page }) => {
-    if (!shopSlug) {
-      logStep(1, 'P1 — Angebotsblock fehlt ohne Aktionen', 'Block nicht im DOM', 'SKIP — kein Shop-Slug', 'SKIP')
-      test.skip()
-      return
-    }
+    await page.goto(`${BASE_URL}/en/shops/${noneShop.slug}`)
+    await waitForPageHydrated(page)
+    // Seite ist gerendert (Shop-Ueberschrift), erst dann die Abwesenheit pruefen
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
 
-    await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('load')
-
-    // Check if shop has active promo offers — backend should return empty list
-    // The h2 for "Current offers" / shop_offers should NOT be present when list is empty
     const offersHeading = page.locator('h2').filter({ hasText: /current offers/i })
-    const count = await offersHeading.count()
-
-    if (count === 0) {
-      logStep(1, 'P1 — Angebotsblock fehlt ohne Aktionen', 'Block nicht im DOM', 'Block nicht im DOM', 'PASS')
-      expect(count).toBe(0)
-    } else {
-      // Might have offers from prod data — check if it's truly empty
-      logStep(1, 'P1 — Angebotsblock fehlt ohne Aktionen', 'Block nicht im DOM', 'Block vorhanden (Prod-Daten mit aktivem Angebot?)', 'SKIP')
-      test.skip()
-    }
+    await expect(offersHeading).toHaveCount(0)
+    logStep(1, 'P1 — Angebotsblock fehlt ohne Aktionen', 'Block nicht im DOM', 'Block nicht im DOM', 'PASS')
   })
 
   // ─── P2: Angebotsblock mit ShopOfferCard ─────────────────────────────────
 
   test('P2: ShopOfferCard zeigt Bild / Name / Preis bei aktiver Aktion', async ({ page }) => {
-    if (!shopSlug) {
-      logStep(2, 'P2 — ShopOfferCard mit Aktion', 'Card sichtbar', 'SKIP — kein Shop-Slug', 'SKIP')
-      test.skip()
-      return
-    }
+    await page.goto(`${BASE_URL}/en/shops/${promoShop.slug}`)
 
-    await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('load')
-
-    const offersHeading = page.locator('h2').filter({ hasText: /current offers/i })
-    const hasOffers = await offersHeading.count() > 0
-
-    if (!hasOffers) {
-      logStep(2, 'P2 — ShopOfferCard vorhanden', 'ShopOfferCard sichtbar', 'SKIP — kein aktives Angebot in pundo_test', 'SKIP')
-      test.skip()
-      return
-    }
+    // getByRole: waehrend des Streamings liegt kurz eine versteckte Kopie (<div hidden id="S:0">) im DOM
+    const offersHeading = page.getByRole('heading', { name: /current offers/i })
+    await expect(offersHeading, '"Current offers"-Block bei aktiver Aktion').toBeVisible({ timeout: 20_000 })
 
     // ShopOfferCard has specific classes — avoid skeleton loaders (.animate-pulse)
     const offerCard = page.locator('.rounded-xl.overflow-hidden.hover\\:border-accent').first()
@@ -176,8 +155,7 @@ test.describe.serial('customer-shop-promo-visibility', () => {
 
     // Price should be visible — look in entire offers section, not just first card
     const priceEl = page.locator('.rounded-xl.overflow-hidden').locator('text=/\\d+\\.\\d{2}/')
-    const priceCount = await priceEl.count()
-    expect(priceCount).toBeGreaterThan(0)
+    expect(await priceEl.count()).toBeGreaterThan(0)
 
     logStep(2, 'P2 — ShopOfferCard vorhanden', 'ShopOfferCard sichtbar', 'Card sichtbar mit Preis', 'PASS')
   })
@@ -185,14 +163,8 @@ test.describe.serial('customer-shop-promo-visibility', () => {
   // ─── P3: Preise ohne 4 Nachkommastellen ──────────────────────────────────
 
   test('P3: Preise zeigen höchstens 2 Nachkommastellen', async ({ page }) => {
-    if (!shopSlug) {
-      logStep(3, 'P3 — Preis-Format', 'Max 2 Dezimalstellen', 'SKIP — kein Shop-Slug', 'SKIP')
-      test.skip()
-      return
-    }
-
-    await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('load')
+    await page.goto(`${BASE_URL}/en/shops/${promoShop.slug}`)
+    await expect(page.getByRole('heading', { name: /current offers/i })).toBeVisible({ timeout: 20_000 })
 
     // Get all price text on the page
     const priceTexts = await page.locator('text=/\\d+\\.\\d{3,}/').count()
@@ -205,61 +177,26 @@ test.describe.serial('customer-shop-promo-visibility', () => {
   // ─── P4: Aktions-Badge + Strikethrough ───────────────────────────────────
 
   test('P4: Aktions-Badge mit Datum + Strikethrough für Normalpreis', async ({ page }) => {
-    if (!shopSlug) {
-      logStep(4, 'P4 — Aktions-Badge', 'Badge sichtbar', 'SKIP — kein Shop-Slug', 'SKIP')
-      test.skip()
-      return
-    }
-
-    await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=en`)
-    await page.waitForLoadState('load')
-
-    const offersHeading = page.locator('h2').filter({ hasText: /current offers/i })
-    const hasOffers = await offersHeading.count() > 0
-
-    if (!hasOffers) {
-      logStep(4, 'P4 — Aktions-Badge', 'Badge sichtbar', 'SKIP — kein aktives Angebot', 'SKIP')
-      test.skip()
-      return
-    }
+    await page.goto(`${BASE_URL}/en/shops/${promoShop.slug}`)
+    await expect(page.getByRole('heading', { name: /current offers/i })).toBeVisible({ timeout: 20_000 })
 
     // Badge: bg-red-50 class
-    const badge = page.locator('.bg-red-50').first()
-    const badgeCount = await badge.count()
-
-    if (badgeCount > 0) {
-      await expect(badge).toBeVisible()
-      // Strikethrough
-      const strikethrough = page.locator('s').first()
-      await expect(strikethrough).toBeVisible()
-      logStep(4, 'P4 — Aktions-Badge', 'Badge + Strikethrough sichtbar', 'Badge und <s> vorhanden', 'PASS')
-    } else {
-      logStep(4, 'P4 — Aktions-Badge', 'Badge sichtbar', 'SKIP — kein Aktions-Badge gefunden (kein aktives promo_valid_until)', 'SKIP')
-      test.skip()
-    }
+    await expect(page.locator('.bg-red-50').first(), 'Aktions-Badge').toBeVisible()
+    // Strikethrough fuer den Normalpreis
+    await expect(page.locator('s').first(), 'durchgestrichener Normalpreis').toBeVisible()
+    logStep(4, 'P4 — Aktions-Badge', 'Badge + Strikethrough sichtbar', 'Badge und <s> vorhanden', 'PASS')
   })
 
   // ─── P5: Alle 6 Sprachen — Translation-Keys ──────────────────────────────
 
   test('P5: promo_badge + regular_price Keys in allen 6 Sprachen non-empty', async ({ page }) => {
-    // This test is frontend-only (unit-level validation via the running app)
-    // We verify the translation keys exist by rendering a page in each language
-    // For a real E2E check, we need an active promo; for a smoke check we just load the page
-
-    if (!shopSlug) {
-      logStep(5, 'P5 — Translations alle 6 Sprachen', 'Kein undefined im DOM', 'SKIP — kein Shop-Slug', 'SKIP')
-      test.skip()
-      return
-    }
-
-    const langs = ['en', 'de', 'el', 'ru', 'ar', 'he']
+    // Seite mit aktiver Aktion in jeder Sprache rendern; ein fehlender Translation-Key zeigt sich als "undefined" im DOM.
+    // Sprache ueber den URL-Praefix (der fruehere ?lang=-Parameter gilt seit dem i18n-Routing nicht mehr).
     let allPass = true
+    for (const lang of ['en', 'de', 'el', 'ru', 'ar', 'he']) {
+      await page.goto(`${BASE_URL}/${lang}/shops/${promoShop.slug}`)
+      await expect(page.locator('.bg-red-50').first(), `Aktions-Badge (${lang})`).toBeVisible({ timeout: 20_000 })
 
-    for (const lang of langs) {
-      await page.goto(`${BASE_URL}/shops/${shopSlug}?lang=${lang}`)
-      await page.waitForLoadState('load')
-
-      // Check no "undefined" text appears in the DOM (would indicate missing translation key)
       const undefinedText = await page.locator('text=undefined').count()
       if (undefinedText > 0) {
         allPass = false

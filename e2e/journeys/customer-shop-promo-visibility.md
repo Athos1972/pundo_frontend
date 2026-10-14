@@ -28,6 +28,8 @@ last-result: N/A
 
 **Voraussetzung:** Backend-Deployment BE-1–BE-4 (promo_price_tiers, neuer offers-Endpoint) abgeschlossen.
 
+**Fixtures (F8950 T20):** zwei eigene Spec-Shops — `PROMO-NONE` (ohne Offers: P1) und `PROMO-ON` (Item, Listing und Offer mit aktivem Aktionszeitraum: P2–P5). Vorher diente der globale Owner-Shop der Prod-Kopie als Fixture; P2/P4 liefen mangels aktiver Aktion als Skip. Sprache per URL-Präfix (`/<lang>/shops/<slug>`), nicht per `?lang=`.
+
 ### P1: Kein Angebotsblock ohne aktive Aktion (AC-7)
 
 **Precondition:** Shop hat Offers, aber keine mit aktivem Aktionszeitraum (alle ohne `promo_valid_from`/`promo_valid_until` oder Zeitraum abgelaufen).

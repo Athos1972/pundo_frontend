@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import fs from 'fs'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
 
 /**
  * E2E smoke tests for the shop-admin import image_url feature.
@@ -14,19 +14,27 @@ import fs from 'fs'
  * Mark: "requires live backend"
  */
 
-// Dynamischer Storage-State aus e2e-Setup (Token bleibt valid für die aktuelle DB-Session)
-function getStorageState() {
-  const stateFile = 'e2e/.test-state.json'
-  if (fs.existsSync(stateFile)) {
-    const state = JSON.parse(fs.readFileSync(stateFile, 'utf-8'))
-    if (state.storageState) return state.storageState
-  }
-  return { cookies: [], origins: [] }
-}
+// F8950 T16: eigener Spec-Shop statt des globalen Owners aus .test-state.json (= echter Prod-Kopie-Shop 7937
+// "happy-pets-nicosia"). Der (derzeit uebersprungene) Async-Flow-Test laedt eine CSV in den Shop des Owners
+// hoch; das darf nie in einen Shop der Prod-Kopie schreiben. Die Owner-Session kommt per Impersonation.
+let importShop: WorkerShop
+
+test.beforeAll(async () => {
+  test.setTimeout(120_000)
+  importShop = await specShop('IMPORT-IMAGE-URL')
+})
+
+test.afterAll(async () => {
+  await importShop?.destroy()
+})
+
+test.beforeEach(async ({ context }) => {
+  await context.addCookies(importShop.storageState.cookies)
+})
+
+test.use({ storageState: { cookies: [], origins: [] } })
 
 test.describe('Import image_url — UI smoke tests', () => {
-  test.use({ storageState: getStorageState() })
-
   test('AC-1: FieldCatalog shows image_url row with Optional badge and example URL', async ({ page }) => {
     await page.goto('/shop-admin/import')
 
@@ -81,7 +89,6 @@ test.describe('Import image_url — UI smoke tests', () => {
 // ── Async-flow test (requires live backend + mock image server) ──────────────
 
 test.describe('Import image_url — Full async flow', () => {
-  test.use({ storageState: getStorageState() })
 
   test.skip('AC-3 + AC-4: Upload with image_url → pending banner → error banner after poll (requires live backend)', async ({ page }) => {
     /**

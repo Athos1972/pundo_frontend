@@ -17,6 +17,7 @@ import { accountTranslations } from '../src/lib/i18n/account'
 import { communityTranslations } from '../src/lib/i18n/community'
 import { guidesTranslations } from '../src/lib/i18n/guides'
 import { contactTranslations } from '../src/lib/i18n/contact'
+import { languageHintTranslations } from '../src/lib/i18n/language-hint'
 
 type AnyTranslationMap = Record<string, Record<string, unknown>>
 
@@ -30,6 +31,7 @@ const namespaces: { name: string; obj: AnyTranslationMap }[] = [
   { name: 'community', obj: communityTranslations as unknown as AnyTranslationMap },
   { name: 'guides', obj: guidesTranslations as unknown as AnyTranslationMap },
   { name: 'contact', obj: contactTranslations as unknown as AnyTranslationMap },
+  { name: 'language-hint', obj: languageHintTranslations as unknown as AnyTranslationMap },
   { name: 'shop-admin-auth', obj: shopAdminAuthTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-catalog', obj: shopAdminCatalogTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-offers', obj: shopAdminOffersTranslationsMap as unknown as AnyTranslationMap },

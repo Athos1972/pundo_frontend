@@ -33,15 +33,16 @@ export function setLangCookie(lang: Lang): void {
   document.cookie = `app_lang=${lang};path=/;max-age=31536000;SameSite=Lax;Secure`;
 }
 
-// Client: Browser-Sprache auf Lang mappen (für LanguagePickerOverlay)
-export function detectBrowserLang(): Lang {
-  if (typeof navigator === 'undefined') return DEFAULT_LANG
+// Client: erste unterstützte Sprache aus navigator.languages (für LanguageHint-Vorschlag).
+// null, wenn keine Browsersprache unterstützt wird — kein stiller Fallback auf DEFAULT_LANG.
+export function detectSupportedBrowserLang(): Lang | null {
+  if (typeof navigator === 'undefined') return null
   const candidates = (navigator.languages?.length ? navigator.languages : [navigator.language ?? '']) as string[]
   for (const raw of candidates) {
     const two = raw.toLowerCase().split('-')[0]
     if ((LANGS as readonly string[]).includes(two)) return two as Lang
   }
-  return DEFAULT_LANG
+  return null
 }
 
 // Server: Sprache aus Request ermitteln (für Server Components)

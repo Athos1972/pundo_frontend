@@ -28,6 +28,7 @@ export { tContact, type ContactTranslations } from './i18n/contact'
 export { tConsent, type ConsentTranslations } from './i18n/consent'
 export { tHome, type HomeTranslations } from './i18n/home'
 export { tSeo, type SeoTranslations } from './i18n/seo'
+export { tLanguageHint, type LanguageHintTranslations } from './i18n/language-hint'
 
 export const translations = {
   en: {

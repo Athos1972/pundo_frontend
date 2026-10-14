@@ -5,6 +5,7 @@ import { LANGS, LANG_NATIVE_NAMES, type Lang, setLangCookie } from '@/lib/lang'
 import { stripLang } from '@/lib/routing'
 import { useLang } from '@/lib/useLang'
 import { t } from '@/lib/translations'
+import { markLangHintDismissed } from '@/lib/lang-hint'
 
 const LANG_LABELS: Record<Lang, string> = {
   en: 'EN',
@@ -24,6 +25,7 @@ function LanguageSwitcherDesktop({ current, dark }: { current: Lang; dark?: bool
 
   function handleChange(lang: Lang) {
     setLangCookie(lang)
+    markLangHintDismissed() // bewusste Wahl → LanguageHint nicht mehr zeigen
     const bare = stripLang(pathname)
     router.push(`/${lang}${bare === '/' ? '' : bare}`)
   }
@@ -151,6 +153,7 @@ function LanguageSwitcherMobile({
 
   function handleSelect(lang: Lang) {
     setLangCookie(lang)
+    markLangHintDismissed() // bewusste Wahl → LanguageHint nicht mehr zeigen
     const bare = stripLang(pathname)
     router.push(`/${lang}${bare === '/' ? '' : bare}`)
     setOpen(false)

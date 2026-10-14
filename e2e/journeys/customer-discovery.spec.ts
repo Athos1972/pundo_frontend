@@ -137,8 +137,8 @@ test.describe.serial('Customer Discovery Flow', () => {
 
   // Step 2: Suchbegriff eingeben
   test('Schritt 2 — Suchbegriff eingeben navigiert zur Suchergebnis-Seite', async ({ page, context }) => {
-    // Suppress LanguagePickerOverlay (appears after 2600ms without app_lang cookie,
-    // blocks clicks and can prevent networkidle from completing)
+    // Fixe Sprache für den Lauf. (Das frühere LanguagePickerOverlay gibt es seit 2026-10-14 nicht mehr;
+    // der nicht-modale LanguageHint blockiert keine Klicks.)
     const cookieDomain = new URL(BASE_URL).hostname
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: cookieDomain, path: '/' }])
     await page.goto(BASE_URL + '/')

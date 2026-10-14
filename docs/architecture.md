@@ -209,10 +209,11 @@ Alle `fixed`- und `sticky`-Elemente folgen dieser Skala. Kein Element darf einen
 | Sticky/Static Nav | `z-20` | `Header` (sticky top), SearchContent-Sticky |
 | Relative Dropdowns | `z-30` | `LanguageSwitcher`-Dropdown, `UserMenu` |
 | Permanente Fixed-Nav | `z-40` | `BottomTabBar` nav |
+| Nicht-modale Hinweise | `z-[44]` | `LanguageHint` (über der Fixed-Nav, unter FABs/Consent-Banner) |
 | FABs | `z-[45]` | `SearchSimilarButton`, `SpottedGlobalButton` |
 | FAB-Popout | `z-[47]` | `FABOnboardingPopout` (absolute über FAB) |
 | Modale / Overlays | `z-50` | Alle portalierten Modale, `BottomTabBar`-Drawer |
-| Kritische Overlays | `z-[60]` | `LanguagePickerOverlay` |
+| Kritische Overlays | `z-[60]` | — (frei; `LanguagePickerOverlay` 2026-10-14 durch `LanguageHint` ersetzt) |
 
 **Invariante:** FABs (z-45) > Fixed-Nav (z-40). Portaled Modale (z-50) > FABs. Kritische Overlays (z-60) > alles andere.
 

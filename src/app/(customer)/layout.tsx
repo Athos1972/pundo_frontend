@@ -15,7 +15,6 @@ import { SpottedGlobalButton } from '@/components/spotted/SpottedGlobalButton'
 import { FavoritesProvider } from '@/components/favorites/FavoritesProvider'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import { HomesickAndBar } from '@/components/layout/HomesickAndBar'
-import { LanguagePickerOverlay } from '@/components/ui/LanguagePickerOverlay'
 import { ConsentProvider } from '@/components/consent/ConsentContext'
 import { CookieConsentBanner } from '@/components/consent/CookieConsentBanner'
 import { MetaPixel } from '@/components/consent/MetaPixel'
@@ -132,7 +131,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         <ConsentProvider initialConsent={initialConsent}>
           <DirSync fallbackLang={lang} />
-          <LanguagePickerOverlay serverLang={lang} />
           <TooltipProvider>
             <SessionProvider initialSession={session}>
               <FavoritesProvider>

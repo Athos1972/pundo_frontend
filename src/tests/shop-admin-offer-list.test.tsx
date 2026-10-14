@@ -234,3 +234,72 @@ describe('B5910-007 — Knopftext "Übernehmen"/"Keep"', () => {
     expect(tAdmin('en').offer_activate_tooltip).not.toMatch(/visible/i)
   })
 })
+
+// ─── B5900-017: Übersetzungen + Zeilen-Layout ────────────────────────────────
+
+const LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
+
+async function renderList(items: AdminOffer[], lang: string) {
+  const { OfferList } = await import('@/components/shop-admin/OfferList')
+  return render(<OfferList activeItems={items} expiredItems={[]} lang={lang} />)
+}
+
+describe('B5900-017 — OfferList übersetzt Preis, Datum, Toast', () => {
+  it.each(LANGS)('on_request wird in %s übersetzt', async (lang) => {
+    await renderList([{ ...BASE_OFFER, price_type: 'on_request' }], lang)
+    const text = screen.getByTestId('offer-row').textContent ?? ''
+    expect(text).toContain(tAdmin(lang).price_type_on_request)
+    expect(text).not.toContain('on request')
+  })
+
+  it('free wird in de übersetzt', async () => {
+    await renderList([{ ...BASE_OFFER, price_type: 'free' }], 'de')
+    const text = screen.getByTestId('offer-row').textContent ?? ''
+    expect(text).toContain('Kostenlos')
+    expect(text).not.toMatch(/\bfree\b/)
+  })
+
+  it('nur from -> "Gültig ab", nur until -> "Gültig bis"', async () => {
+    const a = await renderList([{ ...BASE_OFFER, promo_valid_from: '2026-10-14T00:00:00Z' }], 'de')
+    expect(screen.getByTestId('offer-row').textContent).toContain('Gültig ab 2026-10-14')
+    expect(screen.getByTestId('offer-row').textContent).not.toMatch(/from /)
+    a.unmount()
+    await renderList([{ ...BASE_OFFER, promo_valid_until: '2099-10-14T00:00:00Z' }], 'de')
+    expect(screen.getByTestId('offer-row').textContent).toContain('Gültig bis 2099-10-14')
+    expect(screen.getByTestId('offer-row').textContent).not.toMatch(/until /)
+  })
+
+  it('Archivieren zeigt übersetzten Toast', async () => {
+    mockFetch(true, {})
+    const { showToast } = await import('@/components/shop-admin/Toast')
+    await renderList([BASE_OFFER], 'de')
+    fireEvent.click(screen.getByRole('button', { name: tr.archive }))
+    fireEvent.click(screen.getAllByRole('button', { name: tr.archive })[0])
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith(tr.offer_archive_success, 'success'))
+    expect(tr.offer_archive_success).toBe('Angebot archiviert.')
+  })
+
+  it.each(LANGS)('Keys vorhanden in %s', (lang) => {
+    const t = tAdmin(lang)
+    expect(t.offer_archive_success).toBeTruthy()
+    expect(t.price_type_on_request).toBeTruthy()
+    expect(t.price_type_free).toBeTruthy()
+  })
+})
+
+describe('B5900-017 — Zeilen-Struktur', () => {
+  it('Aktionen liegen im Body, nicht direkt in der Zeile; kein rtl:flex-row-reverse', async () => {
+    await renderList([AUTO_SEEDED_OFFER, BASE_OFFER], 'el')
+    const rows = screen.getAllByTestId('offer-row')
+    expect(rows).toHaveLength(2)
+    const actions = screen.getAllByTestId('offer-row-actions')
+    expect(actions).toHaveLength(2)
+    expect(actions[0].parentElement).not.toBe(rows[0])
+    expect(rows[0].contains(actions[0])).toBe(true)
+    expect(actions[0]).toHaveTextContent(tAdmin('el').offer_activate)
+    expect(actions[0].className).toContain('flex-wrap')
+    expect(rows[0].className).toContain('px-4')
+    expect(rows[0].className).toContain('py-3')
+    expect(rows[0].className).not.toContain('rtl:flex-row-reverse')
+  })
+})

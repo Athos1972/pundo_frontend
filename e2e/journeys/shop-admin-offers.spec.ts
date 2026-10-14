@@ -1618,7 +1618,7 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
   // E7 — RTL-Layout in Offer-Liste (AC-20)
   // ──────────────────────────────────────────────────────────────────────────
 
-  test('E7 — RTL: Offer-Zeile hat rtl:flex-row-reverse Klasse (AC-20)', async ({ page }) => {
+  test('E7 — RTL: Offer-Zeile folgt dir=rtl ohne rtl:flex-row-reverse (AC-20, B5900-017)', async ({ page }) => {
     // Set Arabic language cookie before navigating
     await page.context().addCookies([
       { name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' },
@@ -1643,11 +1643,12 @@ test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
       return
     }
 
+    // B5900-017 (A2): dir=rtl am <html> spiegelt die Flex-Zeile bereits; rtl:flex-row-reverse würde doppelt spiegeln.
     const rowClass = await firstRow.getAttribute('class')
     expect(
       rowClass,
-      'E7: Offer-Zeile hat keine rtl:flex-row-reverse Klasse'
-    ).toContain('rtl:flex-row-reverse')
+      'E7: Offer-Zeile darf kein rtl:flex-row-reverse mehr haben (Doppelspiegelung)'
+    ).not.toContain('rtl:flex-row-reverse')
 
     // Cleanup: reset language cookie to English
     await page.context().addCookies([

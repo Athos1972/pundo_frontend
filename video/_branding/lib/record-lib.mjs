@@ -43,6 +43,8 @@ export async function startSession({ lang, outDir, viewport = { width: 390, heig
   await ctx.addCookies([
     { name: 'app_lang', value: lang, url: BASE },
     { name: 'app_cookie_consent', value: consent, url: BASE },
+    // F6310 language hint ("Language: English · Change") would sit at the bottom of every customer page
+    { name: 'lang_hint_dismissed', value: '1', url: BASE },
   ])
   await ctx.addInitScript(INIT)
   // No ctx.route() here: request interception buffers every (streamed) HTML response -> ~7 s per navigation.

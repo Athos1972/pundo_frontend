@@ -244,7 +244,7 @@ test('P2: Owner (vor Freigabe) — Knopf „Übernehmen/Keep" in 6 Sprachen, üb
 
   // Übernehmen (UI, en) — Brot
   await ownerPage(page, 'en')
-  const rowOf = (name: RegExp | string) => page.locator('div.flex.items-start.gap-3').filter({ hasText: name }).first()
+  const rowOf = (name: RegExp | string) => page.locator('[data-testid="offer-row"]').filter({ hasText: name }).first()
   const breadRow = rowOf('Fresh bread (daily)')
   const patch = page.waitForResponse(r => r.url().includes('/api/shop-admin/offers/') && r.request().method() === 'PATCH')
   await breadRow.locator('button', { hasText: /^Keep$/ }).click()
@@ -293,6 +293,61 @@ test('P2: Owner (vor Freigabe) — Knopf „Übernehmen/Keep" in 6 Sprachen, üb
   expect(v.searchCakeRu).not.toContain(A.slug)
   expect(v.productsTotal).toBe(0)
   logStep('P2', 'Übernommene/bearbeitete Vorschläge vor Freigabe weiter unsichtbar', true)
+})
+
+// ═════════════════════════════════════════════════════════════════════════════
+// P2b (B5900-017): Angebotsliste mobil — Aktionen unter dem Namen, nichts überlagert; AR: Bild rechts
+// ═════════════════════════════════════════════════════════════════════════════
+
+test('P2b: mobil 390 px — Aktionen überlagern den Namen nicht (EL, auch im Bestätigungszustand), AR Bild rechts', async ({ page }) => {
+  test.setTimeout(240_000)
+  setOwnerStatus(A.ownerId, 'approved')
+  try {
+    const loginRes = await page.request.post(`${BASE_URL}/api/shop-admin/login`, {
+      data: { email: A.email, password: PASSWORD }, headers: { 'Content-Type': 'application/json' },
+    })
+    expect(loginRes.ok()).toBe(true)
+    await page.setViewportSize({ width: 390, height: 844 })
+
+    async function checkRow(row: ReturnType<Page['locator']>, label: string) {
+      const name = await row.locator('p').first().boundingBox()
+      const actions = await row.locator('[data-testid="offer-row-actions"]').boundingBox()
+      const rowBox = await row.boundingBox()
+      const thumb = await row.locator('div.shrink-0').first().boundingBox()
+      const content = await row.locator('p').first().locator('xpath=../..').boundingBox() // Inhalts-Spalte (Name+Badges+Preis)
+      expect(name && actions && rowBox && thumb, `${label}: Boxen vorhanden`).toBeTruthy()
+      expect(actions!.y, `${label}: Aktionen unter dem Namen`).toBeGreaterThanOrEqual(name!.y + name!.height - 1)
+      expect(content!.width, `${label}: Inhalt hat volle Breite`).toBeGreaterThan((rowBox!.width - thumb!.width) * 0.5)
+      expect(actions!.x + actions!.width, `${label}: Aktionen im Zeilenrahmen`).toBeLessThanOrEqual(rowBox!.x + rowBox!.width + 1)
+    }
+
+    await ownerPage(page, 'el')
+    const keepRe = new RegExp(`^${KEEP_LABELS.el[0]}$`)
+    const n = await page.locator('[data-testid="offer-row"] button', { hasText: keepRe }).count()
+    expect(n, 'Vorschläge mit Keep-Knopf vorhanden').toBeGreaterThan(0)
+    const rows = page.locator('[data-testid="offer-row"]').filter({ has: page.locator('button', { hasText: keepRe }) })
+    for (let i = 0; i < n; i++) await checkRow(rows.nth(i), `EL Zeile ${i}`)
+    logStep('P2b', `EL 390 px: ${n} Vorschlags-Zeilen, Aktionen unter dem Namen`, true)
+
+    // Bestätigungszustand (Archivieren öffnen, nicht bestätigen)
+    const first = rows.first()
+    const buttons = first.locator('[data-testid="offer-row-actions"] button')
+    await buttons.nth((await buttons.count()) - 1).click() // letzter Knopf = Archivieren
+    await expect(first.getByRole('button', { name: /Ακύρωση/ })).toBeVisible()
+    await checkRow(first, 'EL Bestätigung')
+    logStep('P2b', 'EL 390 px: Bestätigungszustand ohne Überlagerung', true)
+
+    // AR: Thumbnail rechts vom Inhalt
+    await ownerPage(page, 'ar')
+    const arRow = page.locator('[data-testid="offer-row"]').first()
+    const thumb = await arRow.locator('div.shrink-0').first().boundingBox()
+    const nm = await arRow.locator('p').first().boundingBox()
+    expect(thumb!.x, 'AR: Bild rechts vom Namen').toBeGreaterThan(nm!.x)
+    await checkRow(arRow, 'AR Zeile')
+    logStep('P2b', 'AR 390 px: Thumbnail rechts, keine Überlagerung', true)
+  } finally {
+    setOwnerStatus(A.ownerId, 'pending')
+  }
 })
 
 // ═════════════════════════════════════════════════════════════════════════════

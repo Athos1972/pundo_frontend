@@ -35,13 +35,13 @@ function sourceBadge(source: ItemSource | undefined, tr: ReturnType<typeof tAdmi
   return <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${cls}`}>{label}</span>
 }
 
-function formatDateRange(from: string | null, until: string | null): string {
+function formatDateRange(from: string | null, until: string | null, tr: ReturnType<typeof tAdmin>): string {
   if (!from && !until) return '–'
   const f = from ? from.slice(0, 10) : ''
   const u = until ? until.slice(0, 10) : ''
   if (f && u) return `${f} – ${u}`
-  if (f) return `from ${f}`
-  return `until ${u}`
+  if (f) return `${tr.valid_from} ${f}`
+  return `${tr.valid_until} ${u}`
 }
 
 function isExpired(offer: AdminOffer): boolean {
@@ -116,8 +116,8 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
 
     // Standard price display
     let std = ''
-    if (offer.price_type === 'on_request') std = 'on request'
-    else if (offer.price_type === 'free') std = 'free'
+    if (offer.price_type === 'on_request') std = tr.price_type_on_request
+    else if (offer.price_type === 'free') std = tr.price_type_free
     else {
       const step = offer.price_tiers?.[0]?.steps?.[0]
       if (step?.price) std = `${fmtPrice(step.price)} ${step.currency}`
@@ -145,7 +145,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
             setActive((prev) => prev.filter((o) => o.id !== id))
             setExpired((prev) => [{ ...offer, archived: true }, ...prev])
           }
-          showToast('Archived', 'success')
+          showToast(tr.offer_archive_success, 'success')
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -239,7 +239,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
             const categoryName = offer.item?.category_name ?? null
 
             return (
-              <div key={offer.id} className="flex items-start gap-3 px-4 py-3 rtl:flex-row-reverse">
+              <div key={offer.id} data-testid="offer-row" className="flex items-start gap-3 px-4 py-3">
                 {/* Thumbnail */}
                 <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                   {coverPhoto ? (
@@ -257,9 +257,10 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
+                <div className="min-w-0 lg:flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-gray-800">{displayName}</p>
+                    <p className="text-sm font-medium text-gray-800 break-words">{displayName}</p>
                     {sourceBadge(offer.source, tr)}
                     {offer.source === 'auto_seeded' && (
                       <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
@@ -278,11 +279,11 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                     </p>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {formatDateRange(offer.promo_valid_from, offer.promo_valid_until)}
+                    {formatDateRange(offer.promo_valid_from, offer.promo_valid_until, tr)}
                     {getPriceDisplay(offer) && ` · ${getPriceDisplay(offer)}`}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div data-testid="offer-row-actions" className="flex flex-wrap items-center gap-x-3 gap-y-2 lg:shrink-0 lg:flex-nowrap">
                   {offer.source === 'auto_seeded' && (
                     <button
                       onClick={() => handleActivate(offer.id)}
@@ -348,6 +349,7 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                       </button>
                     )
                   )}
+                </div>
                 </div>
               </div>
             )

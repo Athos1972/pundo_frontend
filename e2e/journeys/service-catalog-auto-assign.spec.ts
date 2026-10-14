@@ -8,6 +8,8 @@
  *   S5: Shop-Admin: Preis eines Listings ändern
  *   S6: Customer-Sicht: Listings sichtbar
  *   S7: Customer-Sicht: geänderter Preis sichtbar
+ *   S3b (B5910-007): VOR der Freigabe sind die Vorschläge in keinem öffentlichen Pfad sichtbar
+ *       (Suche, /products?shop_id, Produktdetail, Shop-Detail); NACH der Freigabe sind sie es
  *
  * Admin-UI:
  *   IDM-1: /admin/item-domain-mappings List — Tabelle lädt
@@ -27,7 +29,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { adminLogin as adminApiLogin } from './_helpers'
-import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
+import { TestDataTracker, e2eEmail, e2eName, psql } from './_helpers/test-data'
 
 // B8950-012: Marker-Konvention + Admin-Shop-Delete (Owner-Delete allein ließ Shop + Auto-Assign-Listings liegen)
 const tracker = new TestDataTracker()
@@ -146,6 +148,8 @@ interface Ctx {
   adminCookie: string | null
   autoListingId: number | null
   createdMappingId: number | null
+  /** B5910-007: Ergebnis der öffentlichen Sichtprüfung VOR der Freigabe (in beforeAll erhoben) */
+  preApproval: { itemSlugs: string[]; itemName: string; leaks: string[] } | null
 }
 
 const ctx: Ctx = {
@@ -159,7 +163,37 @@ const ctx: Ctx = {
   adminCookie: null,
   autoListingId: null,
   createdMappingId: null,
+  preApproval: null,
 }
+
+// ── B5910-007: öffentliche Sichtbarkeit der Vorschläge (Suche, Produktliste, Produktdetail, Shop-Detail) ─────
+
+const SCA_LAT = 34.9177
+const SCA_LNG = 33.6273
+
+/** Liste der öffentlichen Pfade, über die Angebote des Shops sichtbar sind (leer = nichts sichtbar). */
+/* eslint-disable @typescript-eslint/no-explicit-any -- API-Antworten untypisiert */
+async function publicLeaks(shopId: number, itemSlugs: string[], itemName: string): Promise<string[]> {
+  const leaks: string[] = []
+  const get = async (p: string) =>
+    fetch(`${BACKEND_URL}/api/v1${p}`, { headers: { 'Accept-Language': 'en' }, signal: AbortSignal.timeout(30_000) }).then(r => r.json()) as Promise<any>
+
+  const prods = await get(`/products?shop_id=${shopId}&lat=${SCA_LAT}&lng=${SCA_LNG}`)
+  if ((prods.total ?? 0) > 0) leaks.push(`/products?shop_id (total=${prods.total})`)
+
+  const search = await get(`/search?q=${encodeURIComponent(itemName)}&lat=${SCA_LAT}&lng=${SCA_LNG}`)
+  if ((search.items ?? []).some((i: any) => i.best_offer && i.best_offer.shop_id === shopId)) leaks.push('/search best_offer')
+
+  for (const slug of itemSlugs) {
+    const d = await get(`/products/by-slug/${slug}?lat=${SCA_LAT}&lng=${SCA_LNG}`)
+    const mine = (d.offers ?? []).filter((o: any) => o.shop_id === shopId || o.shop_slug === ctx.shopSlug)
+    if (mine.length > 0) leaks.push(`/products/by-slug/${slug}`)
+  }
+  const shop = await get(`/shops/${shopId}`)
+  if ((shop.top_products ?? []).length > 0 || (shop.product_count ?? 0) > 0) leaks.push('/shops/{id} top_products/product_count')
+  return leaks
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
@@ -222,6 +256,17 @@ test.beforeAll(async () => {
   if (ctx.ownerId) tracker.owner(ctx.ownerId)
   if (!ctx.ownerId) {
     throw new Error(`beforeAll: ownerId not set. Response: ${JSON.stringify(ownerData)}`)
+  }
+
+  // 2b. B5910-007: VOR der Freigabe darf kein Vorschlag öffentlich sichtbar sein
+  if (ctx.shopId) {
+    const rows = psql(
+      `select i.slug||'|'||coalesce(i.names->>'en','') from shop_listings l join items i on i.id=l.item_id where l.shop_id=${ctx.shopId} and l.source='auto_seeded' order by i.slug`
+    ).split('\n').filter(Boolean)
+    const itemSlugs = rows.map(r => r.split('|')[0])
+    const itemName = rows[0]?.split('|')[1] ?? ''
+    ctx.shopSlug = (await apiGet(`${BACKEND_URL}/api/v1/shops/${ctx.shopId}`) as Record<string, unknown>).slug as string
+    ctx.preApproval = { itemSlugs, itemName, leaks: itemSlugs.length ? await publicLeaks(ctx.shopId, itemSlugs, itemName) : ['keine Vorschläge angelegt'] }
   }
 
   // 3. Admin approvet den Shop-Owner (triggert Auto-Assign-Worker)
@@ -781,6 +826,28 @@ test.describe('AC-5: Badge "Vorgeschlagen" für auto_seeded Listings', () => {
     logStep('AC-5e', 'Preis "Auf Anfrage" sichtbar', '"Auf Anfrage" oder "On Request" im HTML', onRequestText ? 'gefunden' : 'nicht gefunden', onRequestText ? 'PASS' : 'SKIP')
 
     await ctx2.close()
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════════════
+// S3b (B5910-007): Vorschläge vor der Freigabe nicht öffentlich, nach der Freigabe schon
+// ═════════════════════════════════════════════════════════════════════════════
+
+test.describe('S3b: Sichtbarkeit der Vorschläge vor/nach der Freigabe (B5910-007)', () => {
+  test('vor der Freigabe in keinem öffentlichen Pfad, nach der Freigabe sichtbar', async () => {
+    test.setTimeout(90_000)
+    expect(ctx.preApproval, 'beforeAll hat die Vorab-Prüfung nicht erhoben').not.toBeNull()
+    const pre = ctx.preApproval!
+    logStep('S3b-1', 'Vor Freigabe: Vorschläge nicht in Suche/Produktliste/Produktdetail/Shop-Detail',
+      'keine Leaks', pre.leaks.length ? pre.leaks.join(', ') : 'keine Leaks', pre.leaks.length === 0 ? 'PASS' : 'FAIL')
+    expect(pre.leaks, 'Leaks vor der Freigabe').toEqual([])
+
+    // Nach der Freigabe (beforeAll hat approved): Produktdetail der Vorschlags-Items listet den Shop
+    const afterLeaks = await publicLeaks(ctx.shopId!, pre.itemSlugs, pre.itemName)
+    const visible = afterLeaks.length > 0
+    logStep('S3b-2', 'Nach Freigabe: Vorschläge öffentlich sichtbar', 'mind. ein öffentlicher Pfad zeigt Angebote', afterLeaks.join(', ') || 'nichts sichtbar', visible ? 'PASS' : 'FAIL')
+    expect(visible, 'Vorschläge nach Freigabe sichtbar').toBe(true)
+    expect(afterLeaks.some(l => l.startsWith('/products/by-slug/'))).toBe(true)
   })
 })
 

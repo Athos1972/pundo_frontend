@@ -32,6 +32,7 @@
 | [shop-admin-profile](shop-admin-profile.md) | Shop-Admin Profil — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-profile-phone-logo](shop-admin-profile-phone-logo.md) | Shop-Admin Phone + Logo — DEPRECATED | deprecated | P2 | — |
 | [service-catalog-auto-assign](service-catalog-auto-assign.md) | Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7 | implemented | P1 | PASS |
+| [b5910-007-draft-offers-visibility](b5910-007-draft-offers-visibility.md) | Onboarding-Vorschläge nicht freigeschalteter Shops öffentlich unsichtbar (B5910-007) | implemented | P1 | PASS |
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
 | [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD (F6710) | implemented | P2 | — |
 | [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |

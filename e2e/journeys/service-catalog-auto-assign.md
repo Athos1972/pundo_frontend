@@ -29,6 +29,7 @@ last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
    - S5: Shop-Admin: Preis eines Listings ändern
    - S6: Customer-Sicht: Listings sichtbar
    - S7: Customer-Sicht: Preis sichtbar
+   - **S3b (B5910-007):** vor der Freigabe sind die Vorschläge in Suche, `/products?shop_id`, Produktdetail und Shop-Detail nicht sichtbar; nach der Freigabe schon
 
 > **Timing-Hinweis (ab onboarding-items-konsolidierung-20260531):**
 > Draft-Listings (`available=False`) entstehen jetzt **beim Submit** des Onboarding-Wizards,

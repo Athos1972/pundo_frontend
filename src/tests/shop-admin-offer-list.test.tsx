@@ -93,12 +93,12 @@ describe('Shop-Admin OfferList — Draft badge', () => {
   })
 })
 
-// ─── Tests: Aktivieren-Button ─────────────────────────────────────────────────
+// ─── Tests: Übernehmen-Button ─────────────────────────────────────────────────
 
-describe('Shop-Admin OfferList — Aktivieren-Button', () => {
+describe('Shop-Admin OfferList — Übernehmen-Button', () => {
   beforeEach(() => mockFetch(true, ACTIVATED_OFFER))
 
-  it('zeigt den Aktivieren-Button für auto_seeded Offers', async () => {
+  it('zeigt den Übernehmen-Button für auto_seeded Offers', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')
     render(
       <OfferList
@@ -110,7 +110,7 @@ describe('Shop-Admin OfferList — Aktivieren-Button', () => {
     expect(screen.getByRole('button', { name: tr.offer_activate })).toBeInTheDocument()
   })
 
-  it('zeigt keinen Aktivieren-Button für shop_manual Offers', async () => {
+  it('zeigt keinen Übernehmen-Button für shop_manual Offers', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')
     render(
       <OfferList
@@ -122,7 +122,7 @@ describe('Shop-Admin OfferList — Aktivieren-Button', () => {
     expect(screen.queryByRole('button', { name: tr.offer_activate })).not.toBeInTheDocument()
   })
 
-  it('Klick auf Aktivieren sendet PATCH mit archived:false', async () => {
+  it('Klick auf Übernehmen sendet PATCH mit archived:false', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')
     render(
       <OfferList
@@ -146,7 +146,7 @@ describe('Shop-Admin OfferList — Aktivieren-Button', () => {
     })
   })
 
-  it('entfernt Draft-Badge nach erfolgreichem Aktivieren', async () => {
+  it('entfernt Draft-Badge nach erfolgreichem Übernehmen', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')
     render(
       <OfferList
@@ -163,7 +163,7 @@ describe('Shop-Admin OfferList — Aktivieren-Button', () => {
     })
   })
 
-  it('Aktivieren-Button hat korrekten Tooltip', async () => {
+  it('Übernehmen-Button hat korrekten Tooltip', async () => {
     const { OfferList } = await import('@/components/shop-admin/OfferList')
     render(
       <OfferList
@@ -220,5 +220,17 @@ describe('resolveLocalizedName', () => {
   it('gibt null zurück für leeres Objekt', async () => {
     const { resolveLocalizedName } = await import('@/components/shop-admin/OfferItemHeader')
     expect(resolveLocalizedName({}, 'de')).toBeNull()
+  })
+})
+
+describe('B5910-007 — Knopftext "Übernehmen"/"Keep"', () => {
+  it('de/en Werte', () => {
+    expect(tAdmin('de').offer_activate).toBe('Übernehmen')
+    expect(tAdmin('en').offer_activate).toBe('Keep')
+  })
+
+  it('Tooltip verspricht keine öffentliche Sichtbarkeit', () => {
+    expect(tAdmin('de').offer_activate_tooltip).not.toMatch(/sichtbar/i)
+    expect(tAdmin('en').offer_activate_tooltip).not.toMatch(/visible/i)
   })
 })

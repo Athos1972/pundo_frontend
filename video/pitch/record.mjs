@@ -19,12 +19,13 @@ const T = tl.brand.timing
 const demo = tl.meta.demo
 
 // customer-side labels (src/lib/i18n/shop.ts)
-const C = { en: { hours: 'Opening hours' }, el: { hours: 'Ώρες λειτουργίας' } }[lang]
+const C = { en: { hours: 'Opening hours' }, el: { hours: 'Ώρες λειτουργίας' }, ru: { hours: 'Часы работы' } }[lang]
 if (!C) throw new Error(`no labels for lang ${lang}`)
 
 // ---- demo shop of this language + test-DB preparation ----
 const accounts = JSON.parse(fs.readFileSync(path.join(here, '../shop-signup/.recording-accounts.json'), 'utf8'))
-const account = accounts[lang]
+// RU has no demo shop of its own: the (approved) English demo shop is shown with the Russian UI
+const account = accounts[lang === 'ru' ? 'en' : lang]
 if (!account) throw new Error(`no demo account for ${lang}`)
 let shopSlug = lang === 'el' ? 'o-phournos-tes-annas' : 'anna-s-bakery'
 if (process.env.SKIP_PREPARE !== '1') {

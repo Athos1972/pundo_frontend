@@ -19,6 +19,8 @@ const coverPath = path.resolve(here, process.env.COVER_PHOTO || 'assets/cover.jp
 const L = {
   en: { retailer: 'Retailer', domain: /Bakery/i, domain2: /Grocery/i, next: 'Next', specialties: /./, address: 'Limassol Marina', name: "Anna's Bakery", cta: /Register free/i },
   el: { retailer: 'Έμπορος', domain: /Αρτοζαχαρ/i, domain2: /Τρόφιμα/, next: 'Επόμενο', specialties: /./, address: 'Μαρίνα Λεμεσού', name: 'Ο Φούρνος της Άννας', cta: /Δωρεάν εγγραφή/i },
+  // address in Latin script: the geocoder search reliably finds "Limassol Marina"
+  ru: { retailer: 'Торговец', domain: /Пекарня/i, domain2: /Продукты питания/i, next: 'Далее', specialties: /./, address: 'Limassol Marina', name: 'Пекарня Анны', cta: /Зарегистрироваться бесплатно/i },
 }[lang]
 const WHATSAPP = '+357 99 000 000', PHONE = '+357 25 000 000'   // obviously fictional
 const stamp = new Date().toISOString().replace(/\D/g, '').slice(0, 14)

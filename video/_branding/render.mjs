@@ -194,7 +194,7 @@ async function thumb() {
   const body = `<div style="position:absolute;inset:0;${bgCss.replace('1200px 800px', '900px 600px')}"></div>
     <div style="position:absolute;left:70px;top:56px">${logoSvg(250)}</div>
     <div class="h" style="position:absolute;left:70px;top:190px;width:700px;font-size:${title.length > 40 ? 76 : 90}px;line-height:1.05;text-wrap:balance;color:${C.text}">${esc(title)}</div>
-    <div class="h" style="position:absolute;left:70px;bottom:70px;background:${C.accent};color:#fff;font-size:44px;padding:14px 40px;border-radius:999px">${lang === 'el' ? 'Δωρεάν' : 'Free'} · ≤ 5 min</div>
+    <div class="h" style="position:absolute;left:70px;bottom:70px;background:${C.accent};color:#fff;font-size:44px;padding:14px 40px;border-radius:999px">${{ el: 'Δωρεάν', ru: 'Бесплатно' }[lang] || 'Free'} · ≤ 5 ${lang === 'ru' ? 'мин' : 'min'}</div>
     <div style="position:absolute;left:860px;top:70px;width:330px;height:716px;border-radius:52px;background:#1A1714;padding:14px;transform:rotate(5deg);box-shadow:0 30px 60px rgba(26,23,20,.35)">
       <img src="${phone}" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:40px;display:block"></div>`
   await page.setContent(html(body, `body{overflow:hidden}`, W, H)); await page.setViewportSize({ width: W, height: H })

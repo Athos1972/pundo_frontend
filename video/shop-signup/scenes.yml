@@ -8,14 +8,17 @@ meta:
   title:
     en: "Sign up your shop in 5 minutes or less"
     el: "Καταχώρισε το κατάστημά σου σε λιγότερο από 5 λεπτά"
+    ru: "Зарегистрируйте свой бизнес на pundo меньше чем за 5 минут"
   url:
     en: "pundo.cy/en/for-shops"
     el: "pundo.cy/el/for-shops"
+    ru: "pundo.cy/ru/for-shops"
   next_video:
     en: "Next video: Add your products, services & prices"
     el: "Στο επόμενο βίντεο: Πρόσθεσε προϊόντα, υπηρεσίες & τιμές"
+    ru: "Серия видео: товары, услуги и цены"
   demo_shop:
-    name: { en: "Anna's Bakery", el: "Ο Φούρνος της Άννας" }
+    name: { en: "Anna's Bakery", el: "Ο Φούρνος της Άννας", ru: "Пекарня Анны" }
     city: Limassol
     provider_type: haendler
   target_duration_s: 180
@@ -29,6 +32,7 @@ scenes:
     callout:
       en: "Free for your business"
       el: "Δωρεάν για την επιχείρησή σου"
+      ru: "Бесплатно для вашего бизнеса"
     narration:
       en: >-
         Hi, and welcome to pundo! pundo shows people in Cyprus where to find exactly
@@ -40,12 +44,17 @@ scenes:
         πού θα βρουν κοντά τους ακριβώς αυτό που ψάχνουν: προϊόντα, υπηρεσίες και τιμές.
         Σε αυτό το βίντεο σου δείχνουμε, βήμα βήμα, πώς να καταχωρίσεις την επιχείρησή σου.
         Χρειάζεται λιγότερο από πέντε λεπτά, και είναι εντελώς δωρεάν.
+      ru: >-
+        Здравствуйте и добро пожаловать в pundo! pundo показывает людям на Кипре, где рядом найти именно то,
+        что они ищут: товары, услуги и цены. В этом видео мы шаг за шагом покажем, как зарегистрировать ваш
+        бизнес. Это займёт меньше пяти минут и совершенно бесплатно.
 
   - id: entry
     shot: /{lang}/for-shops, scroll to hero CTA, tap "Register free"
     callout:
       en: "pundo.cy/en/for-shops"
       el: "pundo.cy/el/for-shops"
+      ru: "pundo.cy/ru/for-shops"
     narration:
       en: >-
         Open pundo on your phone or computer and go to the page for shops.
@@ -53,12 +62,16 @@ scenes:
       el: >-
         Άνοιξε το pundo στο κινητό ή στον υπολογιστή σου και πήγαινε στη σελίδα για καταστήματα.
         Πάτησε «Δωρεάν εγγραφή». Πάνω πάνω βλέπεις πάντα σε ποιο από τα έξι βήματα βρίσκεσαι.
+      ru: >-
+        Откройте pundo на телефоне или компьютере и перейдите на страницу для магазинов. Нажмите
+        «Зарегистрироваться бесплатно». Вверху всегда видно, на каком из шести шагов вы находитесь.
 
   - id: step1-type
     shot: onboarding step 1, select "Retailer"/"Έμπορος", Next
     callout:
       en: "Step 1 · Type of business"
       el: "Βήμα 1 · Είδος επιχείρησης"
+      ru: "Шаг 1 · Тип бизнеса"
     narration:
       en: >-
         First, choose what kind of business you run: are you a retailer, a service provider,
@@ -68,12 +81,16 @@ scenes:
         Πρώτα διαλέγεις τι είδους επιχείρηση έχεις: είσαι έμπορος, πάροχος υπηρεσιών,
         τεχνίτης ή έχεις εστιατόριο ή μπαρ; Η Άννα πουλάει ψωμί και αρτοσκευάσματα,
         οπότε διαλέγει «Έμπορος».
+      ru: >-
+        Сначала выберите, какой у вас бизнес: вы продаёте товары, оказываете услуги, работаете мастером или
+        у вас ресторан или бар? Анна продаёт хлеб и выпечку, поэтому она выбирает «Торговец».
 
   - id: step2-offer
     shot: onboarding step 2, tap one or two domains, then optional specialties, Next
     callout:
       en: "Step 2 · What you offer"
       el: "Βήμα 2 · Τι προσφέρεις"
+      ru: "Шаг 2 · Что вы предлагаете"
     narration:
       en: >-
         Next, select the areas you're active in. At least one is needed.
@@ -83,12 +100,16 @@ scenes:
         Στη συνέχεια επιλέγεις τους τομείς στους οποίους δραστηριοποιείσαι, τουλάχιστον έναν.
         Αν θέλεις, μπορείς να προσθέσεις και ειδικότητες. Είναι προαιρετικό,
         αλλά βοηθά τους πελάτες να σε βρουν πιο γρήγορα.
+      ru: >-
+        Затем выберите направления, в которых вы работаете. Нужно хотя бы одно. При желании можно добавить и
+        специализации. Это необязательно, но помогает клиентам быстрее вас найти.
 
   - id: step3-location
     shot: onboarding step 3, type address in Limassol, pin appears, tick customer-facing shop, Next
     callout:
       en: "Step 3 · Location"
       el: "Βήμα 3 · Τοποθεσία"
+      ru: "Шаг 3 · Местоположение"
     narration:
       en: >-
         Now it's about your location. Simply type in your address, or tap right on the map.
@@ -98,12 +119,17 @@ scenes:
         Τώρα σειρά έχει η τοποθεσία σου. Απλώς γράψε τη διεύθυνσή σου ή πάτησε κατευθείαν πάνω στον χάρτη.
         Αν έχεις κατάστημα που μπορούν να επισκεφθούν οι πελάτες, τσέκαρε το κουτάκι.
         Αν δουλεύεις χωρίς κατάστημα ή πηγαίνεις εσύ στους πελάτες, απλώς άφησέ το κενό.
+      ru: >-
+        Теперь укажите, где вы находитесь. Просто введите адрес или нажмите прямо на карту. Если у вас есть
+        магазин, куда могут прийти клиенты, поставьте галочку. Если вы работаете на выезде или без магазина,
+        просто оставьте её пустой.
 
   - id: step4-contact
     shot: onboarding step 4, fill WhatsApp + phone, other channels visible, Next
     callout:
       en: "Step 4 · Contact"
       el: "Βήμα 4 · Επικοινωνία"
+      ru: "Шаг 4 · Контакты"
     narration:
       en: >-
         How should customers reach you? WhatsApp, phone, email, Instagram, Facebook,
@@ -113,12 +139,16 @@ scenes:
         Πώς θέλεις να επικοινωνούν μαζί σου οι πελάτες; WhatsApp, τηλέφωνο, email, Instagram,
         Facebook, Telegram ή η ιστοσελίδα σου. Χρειάζεται τουλάχιστον ένα κανάλι.
         Στην Κύπρο, το WhatsApp είναι συνήθως η καλύτερη επιλογή.
+      ru: >-
+        Как клиенты могут с вами связаться? WhatsApp, телефон, электронная почта, Instagram, Facebook,
+        Telegram или ваш сайт. Нужен хотя бы один способ. На Кипре чаще всего лучше всего подходит WhatsApp.
 
   - id: step5-name-photo
     shot: onboarding step 5, type shop name, choose cover photo, preview, Next
     callout:
       en: "Step 5 · Name & photo"
       el: "Βήμα 5 · Όνομα & φωτογραφία"
+      ru: "Шаг 5 · Название и фото"
     narration:
       en: >-
         Enter your business name, just the way your customers know it.
@@ -128,12 +158,16 @@ scenes:
         Γράψε το όνομα της επιχείρησής σου, έτσι όπως το ξέρουν οι πελάτες σου.
         Μια ωραία φωτογραφία εξωφύλλου κάνει την καταχώρισή σου αμέσως πιο προσωπική.
         Η βιτρίνα ή ο πάγκος σου είναι ιδανικά. Μπορείς να αλλάξεις τη φωτογραφία όποτε θέλεις.
+      ru: >-
+        Введите название вашего бизнеса так, как его знают клиенты. Хорошее фото обложки сразу делает вашу
+        страницу живой. Отлично подойдут витрина или прилавок. Фото можно поменять в любой момент.
 
   - id: step6-credentials
     shot: onboarding step 6, highlight "Continue with Google", then fill email + masked password, tap "Complete registration"
     callout:
       en: "Step 6 · Login details"
       el: "Βήμα 6 · Στοιχεία σύνδεσης"
+      ru: "Шаг 6 · Данные для входа"
     narration:
       en: >-
         Almost done! Now decide how you'll log in later. The easiest way is your Google account:
@@ -143,12 +177,17 @@ scenes:
         Σχεδόν τελείωσες! Τώρα αποφασίζεις πώς θα συνδέεσαι στο εξής. Ο πιο εύκολος τρόπος
         είναι ο λογαριασμός σου στο Google: ένα πάτημα και τελείωσες. Ή γράψε το email σου
         και έναν ασφαλή κωδικό και πάτησε «Ολοκλήρωση εγγραφής».
+      ru: >-
+        Почти готово! Теперь решите, как вы будете входить в систему. Проще всего через аккаунт Google: одно
+        нажатие, и всё. Или введите адрес электронной почты и надёжный пароль и нажмите «Завершить
+        регистрацию».
 
   - id: confirm
     shot: /shop-admin/register/check-email
     callout:
       en: "Click the link in your email"
       el: "Πάτησε τον σύνδεσμο στο email σου"
+      ru: "Нажмите на ссылку в письме"
     narration:
       en: >-
         We'll now send you an email. Click the link inside to confirm your account.
@@ -158,12 +197,16 @@ scenes:
         Τώρα σου στέλνουμε ένα email. Πάτησε τον σύνδεσμο που περιέχει για να επιβεβαιώσεις
         τον λογαριασμό σου. Και κάτι ακόμα: αν σε διακόψουν στη μέση, το pundo θυμάται
         όσα έχεις ήδη συμπληρώσει, και μπορείς απλώς να συνεχίσεις από εκεί που σταμάτησες.
+      ru: >-
+        Теперь мы отправим вам письмо. Нажмите на ссылку в нём, чтобы подтвердить аккаунт. Кстати, если вас
+        прервут, pundo запомнит введённые данные, и вы сможете просто продолжить с того же места.
 
   - id: outlook
     shot: check-email page fades, "next video" card
     callout:
       en: "Next: products, services & prices"
       el: "Επόμενο: προϊόντα, υπηρεσίες & τιμές"
+      ru: "Далее: товары, услуги и цены"
     narration:
       en: >-
         Congratulations, your business is now signed up on pundo!
@@ -173,6 +216,9 @@ scenes:
         Συγχαρητήρια, η επιχείρησή σου είναι πλέον καταχωρισμένη στο pundo!
         Στο επόμενο βίντεο θα σου δείξουμε πώς να προσθέσεις τα προϊόντα και τις υπηρεσίες σου,
         να ορίσεις τις τιμές σου και πολλά άλλα. Τα λέμε εκεί!
+      ru: >-
+        Поздравляем, ваш бизнес зарегистрирован на pundo! Как добавить товары и услуги, указать цены и
+        многое другое, мы показываем в нашей серии видео. До встречи!
 
   - id: outro
     branding: outro          # reusable block, includes YouTube end-screen area

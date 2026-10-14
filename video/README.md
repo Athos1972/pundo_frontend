@@ -46,6 +46,8 @@ video/
 | `short-shop-profile` | Short S7 (9:16): Profil/Öffnungszeiten (braucht B5950-001); nutzt `../shop-profile/prepare_profile.py` | Test-Instanz 3500/8500 |
 | `pitch` | „Why pundo?“ (Pitch vor der Serie, nur Kundenseite, keine Anmeldung): russische Suche „хлеб“, Shop-Seite EN→EL→RU, Aktion, Öffnungszeiten, WhatsApp, Registrierungs-Einstieg; `prepare_pitch.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `short-pitch` | Short (9:16) zum Pitch: Suche, Sprachen, Kontakt, kostenlos; nutzt `../pitch/prepare_pitch.py` | Test-Instanz 3500/8500 |
+| `first-steps` | Teil 2 „Die ersten 10 Minuten“: Vorschläge übernehmen / Preis setzen / archivieren, Profil, eigene Produkte, Kundensicht; `prepare_first_steps.py` (Backend-venv) | Test-Instanz 3500/8500 |
+| `short-first-steps` | Short (9:16) zu Teil 2: Vorschläge, Übernehmen, Preis, Kundensicht; nutzt `../first-steps/prepare_first_steps.py` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

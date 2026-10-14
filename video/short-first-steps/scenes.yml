@@ -1,0 +1,74 @@
+# YouTube Short (9:16) of tutorial #10 "Your first 10 minutes on pundo" (video/first-steps).
+# Script: ../first-steps/01-skript.de.md, section "Short" (BB 2026-10-14). "Related video" in Studio = the tutorial.
+# Same demo data as the tutorial (prepare: ../first-steps/prepare_first_steps.py).
+
+meta:
+  slug: short-first-steps
+  format: vertical
+  title:                    # = hook card (intro)
+    en: "Approved? Do this first"
+    el: "Εγκρίθηκες; Κάνε πρώτα αυτό"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    keep:    { en: "Wedding cake (custom order)", el: "Γαμήλια τούρτα (ειδική παραγγελία)" }
+    price:   { en: "Fresh bread (daily)",         el: "Φρέσκο ψωμί (καθημερινά)" }
+    archive: { en: "Cakes & pastries",            el: "Τούρτες & κέικ" }
+    price_value: { en: "2.50", el: "2,50" }
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: suggestions
+    shot: 'Offers list with three suggestions'
+    callout:
+      en: "pundo already did some work"
+      el: "Το pundo έχει ήδη βοηθήσει"
+    narration:
+      en: >-
+        Your shop is approved, and pundo has already suggested offers. Go through them once.
+      el: >-
+        Το κατάστημά σου εγκρίθηκε και το pundo έχει ήδη προτείνει προσφορές. Πέρασέ τες μία φορά.
+
+  - id: keep
+    shot: 'wedding cake: Keep'
+    callout:
+      en: "Keep"
+      el: "Διατήρηση"
+    narration:
+      en: >-
+        Price depends on the order? Keep it.
+      el: >-
+        Η τιμή εξαρτάται από την παραγγελία; Κράτα την.
+
+  - id: price
+    shot: 'fresh bread: Edit -> fixed 2.50 -> Save'
+    callout:
+      en: "Set your price"
+      el: "Βάλε την τιμή σου"
+    narration:
+      en: >-
+        Fresh bread has a fixed price: open it, choose fixed price, enter 2 euros 50 and save.
+      el: >-
+        Το φρέσκο ψωμί έχει σταθερή τιμή: άνοιξέ το, διάλεξε σταθερή τιμή, γράψε 2,50 ευρώ και αποθήκευσε.
+
+  - id: customer
+    shot: 'customer shop page: fresh bread 2.50, wedding cake on request'
+    callout:
+      en: "What customers see"
+      el: "Τι βλέπουν οι πελάτες"
+    narration:
+      en: >-
+        Done. Customers now see real prices.
+      el: >-
+        Έτοιμο. Οι πελάτες βλέπουν τώρα πραγματικές τιμές.
+
+  - id: outro
+    branding: outro

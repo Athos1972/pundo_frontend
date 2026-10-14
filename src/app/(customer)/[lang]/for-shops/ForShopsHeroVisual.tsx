@@ -1,9 +1,17 @@
 /**
  * ForShopsHeroVisual — decorative dashboard mockup for the For-Shops hero.
- * Server Component, aria-hidden="true". All strings are decorative hardcodes.
- * No i18n needed — this element is invisible to assistive technology.
+ * Server Component, aria-hidden="true". Numbers and product names are decorative hardcodes;
+ * labels are still visible to sighted users and therefore come from forShopsContent[lang].hero_mock.
  */
-export function ForShopsHeroVisual({ className }: { className?: string }) {
+import type { ForShopsContent } from '@/lib/for-shops-content'
+
+export function ForShopsHeroVisual({
+  labels,
+  className,
+}: {
+  labels: ForShopsContent['hero_mock']
+  className?: string
+}) {
   return (
     <div
       aria-hidden="true"
@@ -31,7 +39,7 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
             {/* Live badge */}
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-success/10 text-success text-xs font-semibold rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-success" />
-              Live
+              {labels.live}
             </span>
           </div>
 
@@ -64,9 +72,9 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
-              { label: 'Views', value: '284', trend: '+12%' },
-              { label: 'Clicks', value: '47', trend: '+8%' },
-              { label: 'Growth', value: '↑', trend: '+5%' },
+              { label: labels.views, value: '284', trend: '+12%' },
+              { label: labels.clicks, value: '47', trend: '+8%' },
+              { label: labels.growth, value: '↑', trend: '+5%' },
             ].map((stat) => (
               <div key={stat.label} className="bg-surface-alt rounded-lg p-2">
                 <div className="text-xs text-text-muted">{stat.label}</div>
@@ -78,8 +86,8 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
 
           {/* Product rows */}
           {[
-            { name: 'Samsung 65" QLED', price: '€749', badge: 'In stock' },
-            { name: 'Sony WH-1000XM5', price: '€279', badge: 'Offer' },
+            { name: 'Samsung 65" QLED', price: '€749', badge: labels.in_stock },
+            { name: 'Sony WH-1000XM5', price: '€279', badge: labels.offer },
           ].map((item) => (
             <div key={item.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
               <div className="flex items-center gap-2">
@@ -96,7 +104,7 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
 
         {/* Floating badge — top right */}
         <div className="absolute top-12 -right-2 bg-accent text-surface text-xs font-semibold px-2.5 py-1 rounded-full shadow-lg whitespace-nowrap">
-          🔥 3 new searches today
+          🔥 3 {labels.new_searches_today}
         </div>
 
         {/* Floating card — bottom left */}
@@ -105,7 +113,7 @@ export function ForShopsHeroVisual({ className }: { className?: string }) {
             {/* star colour: decorative, using text-[#D4911A] — see §4 */}
             <span className="text-[#D4911A]">★★★★★</span>
             <span className="font-semibold text-text">4.8</span>
-            <span className="text-text-muted">· 21 reviews</span>
+            <span className="text-text-muted">· 21 {labels.reviews}</span>
           </div>
         </div>
       </div>

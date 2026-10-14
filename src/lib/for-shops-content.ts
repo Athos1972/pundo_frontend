@@ -11,6 +11,8 @@ export interface ForShopsTestimonial {
   color?: string      // optional avatar bg (CSS-var-name or Tailwind class); default: accent-light
 }
 
+export interface ForShopsStat { value: string; label: string }
+
 export interface ForShopsFaqItem { q: string; a: string }
 
 export interface ForShopsContent {
@@ -21,18 +23,30 @@ export interface ForShopsContent {
   hero_eyebrow: string                 // "For local businesses in Cyprus"
   cta_label: string
   cta_secondary_label: string          // "See how it works"
-  social_proof: string                 // "Joined by 340+ businesses across Cyprus"
+  social_proof: string                 // value statement, no numbers ("Free listing · No commission · …")
 
   business_type_chips: string[]        // 3 items incl. emoji prefix
 
+  // Labels of the decorative hero dashboard mock (ForShopsHeroVisual) — values stay hardcoded there
+  hero_mock: {
+    live: string
+    views: string
+    clicks: string
+    growth: string
+    in_stock: string
+    offer: string
+    new_searches_today: string         // rendered as "🔥 3 {new_searches_today}"
+    reviews: string                    // rendered as "· 21 {reviews}"
+  }
+
   stats: {
-    businesses: string                 // "340+" — [TODO: real number]
-    searches: string                   // "12k" — [TODO: real number]
-    cities: string                     // "30+" — [TODO: real number]
-    fee_note: string                   // full asterisk footnote sentence
+    items: ForShopsStat[]              // 4 value statements; only verifiable facts, no invented counts
+    fee_note: string                   // full asterisk footnote sentence (referenced by the '€0*' item)
   }
 
   pain_gain_title: string
+  pain_label: string                   // "Without pundo"
+  gain_label: string                   // "With pundo"
   pain_items: string[]                 // 5 — "Without pundo"
   gain_items: string[]                 // 5 — "With pundo"
 
@@ -49,9 +63,11 @@ export interface ForShopsContent {
   }
 
   steps_title: string
+  steps_sub: string                    // subline under steps_title
   steps: ForShopsStep[]               // 3 steps, each with time pill
 
   testimonials_title: string
+  testimonials_stars_aria: string      // aria-label of the 5-star rating
   testimonials: ForShopsTestimonial[] // 3 items
 
   faq_title: string
@@ -74,18 +90,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'For local businesses in Cyprus',
     cta_label: 'Register free — takes 5 min →',
     cta_secondary_label: '▶ See how it works',
-    social_proof: 'Joined by 340+ businesses across Cyprus',
+    social_proof: 'Free listing · No commission · Found in 6 languages',
 
     business_type_chips: ['🏪 Shops & retailers', '🔧 Tradespeople', '🛎️ Service providers'],
 
+    hero_mock: {
+      live: 'Live',
+      views: 'Views',
+      clicks: 'Clicks',
+      growth: 'Growth',
+      in_stock: 'In stock',
+      offer: 'Offer',
+      new_searches_today: 'new searches today',
+      reviews: 'reviews',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'Basic listing' },
+        { value: '6', label: 'Languages, auto-translated' },
+        { value: '0%', label: 'Commission on your sales' },
+        { value: '~5 min', label: 'To go live' },
+      ],
       fee_note: 'Your business listing is free forever. Services such as product/service listings, mass-upload and others will depend on your future plan.',
     },
 
     pain_gain_title: 'Invisible online vs. found on the map',
+    pain_label: 'Without pundo',
+    gain_label: 'With pundo',
     pain_items: [
       'Customers can\'t find you in search',
       'No way to show your current prices',
@@ -121,6 +153,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'Up and running in minutes',
+    steps_sub: 'From registration to live in under 10 minutes.',
     steps: [
       { num: '1', title: 'Register your business', body: 'Enter your business name, type of shop/service, address and email. No credit card needed.', time: '~3 min' },
       { num: '2', title: 'Confirm your offerings', body: 'pundo suggests products or services based on your business type. Review, adjust and confirm.', time: '~2 min' },
@@ -128,6 +161,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'They found more customers. So will you.',
+    testimonials_stars_aria: '5 out of 5 stars',
     testimonials: [
       {
         quote: 'Within a week of listing on pundo, customers started calling to check if a specific TV model was in stock. I didn\'t change anything — they just found me.',  // [TODO: real testimonial — BB]
@@ -167,7 +201,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'Your business is invisible online. Fix it today — for free.',
-    final_cta_body: 'Join 340+ Cyprus businesses already being found on pundo — shops, tradespeople and service providers.',
+    final_cta_body: 'Get found by customers searching nearby — shops, tradespeople and service providers. Free listing, no commission, in 6 languages.',
     final_cta_primary: 'Register my business free →',
     final_cta_secondary: 'Contact us first',
     final_cta_fineprint: 'Takes 5 minutes · No credit card · Free to start',
@@ -182,18 +216,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'Für lokale Unternehmen auf Zypern',
     cta_label: 'Kostenlos registrieren — dauert 5 Min →',
     cta_secondary_label: '▶ So funktioniert es',
-    social_proof: 'Bereits 340+ Unternehmen auf ganz Zypern dabei',
+    social_proof: 'Kostenloser Eintrag · Keine Provision · In 6 Sprachen auffindbar',
 
     business_type_chips: ['🏪 Shops & Händler', '🔧 Handwerker', '🛎️ Dienstleister'],
 
+    hero_mock: {
+      live: 'Live',
+      views: 'Aufrufe',
+      clicks: 'Klicks',
+      growth: 'Wachstum',
+      in_stock: 'Auf Lager',
+      offer: 'Angebot',
+      new_searches_today: 'neue Suchen heute',
+      reviews: 'Bewertungen',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'Grundeintrag' },
+        { value: '6', label: 'Sprachen, automatisch übersetzt' },
+        { value: '0 %', label: 'Provision auf deine Verkäufe' },
+        { value: '~5 Min.', label: 'Bis du live bist' },
+      ],
       fee_note: 'Dein Unternehmenseintrag ist für immer kostenlos. Erweiterte Dienste wie Produktlisten, Massenimport u.a. hängen von deinem zukünftigen Plan ab.',
     },
 
     pain_gain_title: 'Online unsichtbar vs. auf der Karte gefunden',
+    pain_label: 'Ohne pundo',
+    gain_label: 'Mit pundo',
     pain_items: [
       'Kunden finden dich nicht in der Suche',
       'Keine Möglichkeit, aktuelle Preise zu zeigen',
@@ -229,6 +279,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'In Minuten startklar',
+    steps_sub: 'Von der Registrierung bis live in unter 10 Minuten.',
     steps: [
       { num: '1', title: 'Unternehmen registrieren', body: 'Trage Unternehmensname, Art des Shops/Dienstes, Adresse und E-Mail ein. Keine Kreditkarte nötig.', time: '~3 Min' },
       { num: '2', title: 'Angebot bestätigen', body: 'pundo schlägt Produkte oder Dienstleistungen basierend auf deinem Unternehmenstyp vor. Prüfen, anpassen, bestätigen.', time: '~2 Min' },
@@ -236,6 +287,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'Sie fanden mehr Kunden. Du auch.',
+    testimonials_stars_aria: '5 von 5 Sternen',
     testimonials: [
       {
         quote: 'Innerhalb einer Woche nach der Registrierung auf pundo riefen Kunden an, um zu fragen, ob ein bestimmtes TV-Modell vorrätig ist. Ich hatte nichts geändert — sie haben mich einfach gefunden.',  // [TODO: real testimonial — BB]
@@ -275,7 +327,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'Dein Unternehmen ist online unsichtbar. Ändere das heute — kostenlos.',
-    final_cta_body: 'Schließ dich 340+ zyprischen Unternehmen an, die bereits auf pundo gefunden werden — Shops, Handwerker und Dienstleister.',
+    final_cta_body: 'Lass dich von Kunden in deiner Nähe finden — Shops, Handwerker und Dienstleister. Kostenloser Eintrag, keine Provision, in 6 Sprachen.',
     final_cta_primary: 'Unternehmen kostenlos registrieren →',
     final_cta_secondary: 'Erst Kontakt aufnehmen',
     final_cta_fineprint: 'Dauert 5 Minuten · Keine Kreditkarte · Kostenlos starten',
@@ -290,18 +342,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'Για τοπικές επιχειρήσεις στην Κύπρο',
     cta_label: 'Δωρεάν εγγραφή — διαρκεί 5 λεπτά →',
     cta_secondary_label: '▶ Δες πώς λειτουργεί',
-    social_proof: 'Ήδη 340+ επιχειρήσεις σε όλη την Κύπρο',
+    social_proof: 'Δωρεάν καταχώρηση · Χωρίς προμήθεια · Σε 6 γλώσσες',
 
     business_type_chips: ['🏪 Καταστήματα & έμποροι', '🔧 Τεχνίτες', '🛎️ Πάροχοι υπηρεσιών'],
 
+    hero_mock: {
+      live: 'Ενεργό',
+      views: 'Προβολές',
+      clicks: 'Κλικ',
+      growth: 'Ανάπτυξη',
+      in_stock: 'Διαθέσιμο',
+      offer: 'Προσφορά',
+      new_searches_today: 'νέες αναζητήσεις σήμερα',
+      reviews: 'κριτικές',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'Βασική καταχώρηση' },
+        { value: '6', label: 'Γλώσσες, με αυτόματη μετάφραση' },
+        { value: '0%', label: 'Προμήθεια στις πωλήσεις σου' },
+        { value: '~5 λεπτά', label: 'Μέχρι να είσαι online' },
+      ],
       fee_note: 'Η καταχώρηση της επιχείρησής σου είναι δωρεάν για πάντα. Πρόσθετες υπηρεσίες όπως λίστες προϊόντων/υπηρεσιών, μαζική εισαγωγή κ.ά. θα εξαρτώνται από το μελλοντικό σου πλάνο.',
     },
 
     pain_gain_title: 'Αόρατος online ή ορατός στον χάρτη',
+    pain_label: 'Χωρίς το pundo',
+    gain_label: 'Με το pundo',
     pain_items: [
       'Οι πελάτες δεν σε βρίσκουν στην αναζήτηση',
       'Δεν μπορείς να δείξεις τις τρέχουσες τιμές σου',
@@ -337,6 +405,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'Έτοιμος σε λίγα λεπτά',
+    steps_sub: 'Από την εγγραφή μέχρι να είσαι online σε λιγότερο από 10 λεπτά.',
     steps: [
       { num: '1', title: 'Εγγραφή επιχείρησης', body: 'Εισάγαγε το όνομα, τον τύπο καταστήματος/υπηρεσίας, τη διεύθυνση και το email σου. Δεν χρειάζεται κάρτα.', time: '~3 λεπτά' },
       { num: '2', title: 'Επιβεβαίωση προσφοράς', body: 'Το pundo προτείνει προϊόντα ή υπηρεσίες βάσει του τύπου επιχείρησής σου. Έλεγξε, προσάρμοσε και επιβεβαίωσε.', time: '~2 λεπτά' },
@@ -344,6 +413,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'Βρήκαν περισσότερους πελάτες. Το ίδιο θα κάνεις κι εσύ.',
+    testimonials_stars_aria: '5 στα 5 αστέρια',
     testimonials: [
       {
         quote: 'Μέσα σε μια εβδομάδα από την εγγραφή στο pundo, πελάτες άρχισαν να τηλεφωνούν για να ρωτήσουν αν κάποιο μοντέλο τηλεόρασης ήταν διαθέσιμο. Δεν άλλαξα τίποτα — με βρήκαν μόνοι τους.',  // [TODO: real testimonial — BB]
@@ -383,7 +453,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'Η επιχείρησή σου είναι αόρατη online. Φτιάξ\'το σήμερα — δωρεάν.',
-    final_cta_body: 'Γίνε μέλος των 340+ κυπριακών επιχειρήσεων που βρίσκονται ήδη στο pundo — καταστήματα, τεχνίτες και πάροχοι υπηρεσιών.',
+    final_cta_body: 'Άσε τους πελάτες της περιοχής σου να σε βρουν — καταστήματα, τεχνίτες και πάροχοι υπηρεσιών. Δωρεάν καταχώρηση, χωρίς προμήθεια, σε 6 γλώσσες.',
     final_cta_primary: 'Εγγραφή επιχείρησης δωρεάν →',
     final_cta_secondary: 'Επικοινώνησε μαζί μας πρώτα',
     final_cta_fineprint: 'Διαρκεί 5 λεπτά · Χωρίς κάρτα · Δωρεάν εκκίνηση',
@@ -399,18 +469,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'Для местного бизнеса на Кипре',
     cta_label: 'Зарегистрироваться бесплатно — 5 минут →',
     cta_secondary_label: '▶ Посмотреть как это работает',
-    social_proof: 'Уже 340+ предприятий по всему Кипру',
+    social_proof: 'Бесплатное размещение · Без комиссии · На 6 языках',
 
     business_type_chips: ['🏪 Магазины и ритейл', '🔧 Мастера и ремонтники', '🛎️ Поставщики услуг'],
 
+    hero_mock: {
+      live: 'Онлайн',
+      views: 'Просмотры',
+      clicks: 'Клики',
+      growth: 'Рост',
+      in_stock: 'В наличии',
+      offer: 'Акция',
+      new_searches_today: 'новых поиска сегодня',
+      reviews: 'отзыв',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'Базовое размещение' },
+        { value: '6', label: 'Языков, автоматический перевод' },
+        { value: '0%', label: 'Комиссия с ваших продаж' },
+        { value: '~5 мин', label: 'До публикации' },
+      ],
       fee_note: 'Размещение вашего бизнеса бесплатно навсегда. Расширенные услуги, такие как списки товаров/услуг, массовый импорт и другие, будут зависеть от вашего будущего тарифного плана.',
     },
 
     pain_gain_title: 'Невидим онлайн — или найден на карте',
+    pain_label: 'Без pundo',
+    gain_label: 'С pundo',
     pain_items: [
       'Клиенты не находят вас в поиске',
       'Нет способа показать актуальные цены',
@@ -446,6 +532,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'Готово за несколько минут',
+    steps_sub: 'От регистрации до публикации — меньше чем за 10 минут.',
     steps: [
       { num: '1', title: 'Зарегистрируйте бизнес', body: 'Введите название, тип магазина/услуги, адрес и email. Кредитная карта не нужна.', time: '~3 мин' },
       { num: '2', title: 'Подтвердите предложения', body: 'pundo предложит товары или услуги на основе типа вашего бизнеса. Проверьте, скорректируйте и подтвердите.', time: '~2 мин' },
@@ -453,6 +540,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'Они нашли больше клиентов. И вы найдёте.',
+    testimonials_stars_aria: '5 из 5 звёзд',
     testimonials: [
       {
         quote: 'Через неделю после регистрации на pundo клиенты начали звонить, чтобы узнать, есть ли в наличии конкретная модель телевизора. Я ничего не менял — они просто нашли меня.',  // [TODO: real testimonial — BB]
@@ -492,7 +580,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'Ваш бизнес невидим онлайн. Исправьте это сегодня — бесплатно.',
-    final_cta_body: 'Присоединитесь к 340+ кипрским предприятиям, которых уже находят на pundo — магазины, мастера и поставщики услуг.',
+    final_cta_body: 'Пусть вас находят клиенты поблизости — магазины, мастера и поставщики услуг. Бесплатное размещение, без комиссии, на 6 языках.',
     final_cta_primary: 'Зарегистрировать бизнес бесплатно →',
     final_cta_secondary: 'Сначала связаться с нами',
     final_cta_fineprint: 'Занимает 5 минут · Без кредитной карты · Бесплатный старт',
@@ -507,18 +595,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'للشركات المحلية في قبرص',
     cta_label: 'سجّل مجانًا — يستغرق 5 دقائق →',
     cta_secondary_label: '▶ شاهد كيف يعمل',
-    social_proof: 'انضمّ إليه 340+ شركة في جميع أنحاء قبرص',
+    social_proof: 'إدراج مجاني · بدون عمولة · بـ6 لغات',
 
     business_type_chips: ['🏪 المتاجر والبائعون', '🔧 الحرفيون', '🛎️ مزودو الخدمات'],
 
+    hero_mock: {
+      live: 'مباشر',
+      views: 'المشاهدات',
+      clicks: 'النقرات',
+      growth: 'النمو',
+      in_stock: 'متوفر',
+      offer: 'عرض',
+      new_searches_today: 'عمليات بحث جديدة اليوم',
+      reviews: 'تقييمًا',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'الإدراج الأساسي' },
+        { value: '6', label: 'لغات، مع ترجمة تلقائية' },
+        { value: '0%', label: 'عمولة على مبيعاتك' },
+        { value: '5 دقائق', label: 'حتى يظهر نشاطك تقريبًا' },
+      ],
       fee_note: 'إدراج عملك مجاني للأبد. الخدمات مثل قوائم المنتجات/الخدمات والاستيراد الجماعي وغيرها ستعتمد على خطتك المستقبلية.',
     },
 
     pain_gain_title: 'غير مرئي عبر الإنترنت مقابل اكتشافك على الخريطة',
+    pain_label: 'بدون pundo',
+    gain_label: 'مع pundo',
     pain_items: [
       'لا يجدك العملاء في البحث',
       'لا طريقة لعرض أسعارك الحالية',
@@ -554,6 +658,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'جاهز في دقائق',
+    steps_sub: 'من التسجيل حتى الظهور في أقل من 10 دقائق.',
     steps: [
       { num: '1', title: 'سجّل عملك', body: 'أدخل اسم عملك ونوع المتجر/الخدمة والعنوان والبريد الإلكتروني. لا حاجة لبطاقة ائتمان.', time: '~3 دقائق' },
       { num: '2', title: 'أكّد عروضك', body: 'يقترح pundo منتجات أو خدمات بناءً على نوع عملك. راجع وعدّل وأكّد.', time: '~دقيقتان' },
@@ -561,6 +666,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'وجدوا عملاء أكثر. وستجد أنت أيضًا.',
+    testimonials_stars_aria: '5 من 5 نجوم',
     testimonials: [
       {
         quote: 'في غضون أسبوع من الإدراج على pundo، بدأ العملاء بالاتصال للاستفسار عن توفر موديل تلفزيون معين. لم أغيّر شيئًا — وجدوني ببساطة.',  // [TODO: real testimonial — BB]
@@ -600,7 +706,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'عملك غير مرئي عبر الإنترنت. أصلح ذلك اليوم — مجانًا.',
-    final_cta_body: 'انضم إلى 340+ شركة قبرصية تُكتشف بالفعل على pundo — متاجر وحرفيون ومزودو خدمات.',
+    final_cta_body: 'دع العملاء القريبين يجدونك — متاجر وحرفيون ومزودو خدمات. إدراج مجاني، بدون عمولة، بـ6 لغات.',
     final_cta_primary: 'سجّل عملي مجانًا →',
     final_cta_secondary: 'تواصل معنا أولًا',
     final_cta_fineprint: 'يستغرق 5 دقائق · بلا بطاقة ائتمان · مجاني للبدء',
@@ -615,18 +721,34 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     hero_eyebrow: 'לעסקים מקומיים בקפריסין',
     cta_label: 'הירשם בחינם — לוקח 5 דקות →',
     cta_secondary_label: '▶ ראה איך זה עובד',
-    social_proof: '340+ עסקים ברחבי קפריסין כבר הצטרפו',
+    social_proof: 'רישום חינם · ללא עמלה · ב-6 שפות',
 
     business_type_chips: ['🏪 חנויות וקמעונאים', '🔧 בעלי מקצוע', '🛎️ ספקי שירות'],
 
+    hero_mock: {
+      live: 'פעיל',
+      views: 'צפיות',
+      clicks: 'קליקים',
+      growth: 'צמיחה',
+      in_stock: 'במלאי',
+      offer: 'מבצע',
+      new_searches_today: 'חיפושים חדשים היום',
+      reviews: 'ביקורות',
+    },
+
     stats: {
-      businesses: '340+',   // [TODO: real number]
-      searches: '12k',      // [TODO: real number]
-      cities: '30+',        // [TODO: real number]
+      items: [
+        { value: '€0*', label: 'רישום בסיסי' },
+        { value: '6', label: 'שפות, עם תרגום אוטומטי' },
+        { value: '0%', label: 'עמלה על המכירות שלך' },
+        { value: 'כ-5 דק׳', label: 'עד שהעסק שלך באוויר' },
+      ],
       fee_note: 'הרישום לעסק שלך חינמי לנצח. שירותים כמו רשימות מוצרים/שירותים, ייבוא מאסיבי ואחרים יהיו תלויים בתוכנית העתידית שלך.',
     },
 
     pain_gain_title: 'בלתי נראה באינטרנט מול נמצא במפה',
+    pain_label: 'בלי pundo',
+    gain_label: 'עם pundo',
     pain_items: [
       'לקוחות לא מוצאים אותך בחיפוש',
       'אין דרך להציג את המחירים הנוכחיים שלך',
@@ -662,6 +784,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     },
 
     steps_title: 'מוכן תוך דקות',
+    steps_sub: 'מהרישום ועד שהעסק באוויר — בפחות מ-10 דקות.',
     steps: [
       { num: '1', title: 'רשום את העסק שלך', body: 'הזן שם עסק, סוג חנות/שירות, כתובת ואימייל. לא צריך כרטיס אשראי.', time: '~3 דקות' },
       { num: '2', title: 'אשר את ההיצע שלך', body: 'pundo מציע מוצרים או שירותים על פי סוג העסק שלך. בדוק, התאם ואשר.', time: '~2 דקות' },
@@ -669,6 +792,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     testimonials_title: 'הם מצאו יותר לקוחות. גם אתה תמצא.',
+    testimonials_stars_aria: '5 מתוך 5 כוכבים',
     testimonials: [
       {
         quote: 'תוך שבוע מהרישום ב-pundo, לקוחות התחילו להתקשר לשאול אם דגם טלוויזיה מסוים זמין. לא שיניתי דבר — הם פשוט מצאו אותי.',  // [TODO: real testimonial — BB]
@@ -708,7 +832,7 @@ export const forShopsContent: Record<Lang, ForShopsContent> = {
     ],
 
     final_cta_title: 'העסק שלך בלתי נראה באינטרנט. תקן את זה היום — בחינם.',
-    final_cta_body: 'הצטרף ל-340+ עסקים קפריסאים שכבר נמצאים ב-pundo — חנויות, בעלי מקצוע וספקי שירות.',
+    final_cta_body: 'תן ללקוחות באזור שלך למצוא אותך — חנויות, בעלי מקצוע וספקי שירות. רישום חינם, ללא עמלה, ב-6 שפות.',
     final_cta_primary: 'רשום את העסק שלי בחינם →',
     final_cta_secondary: 'צור קשר קודם',
     final_cta_fineprint: 'לוקח 5 דקות · ללא כרטיס אשראי · חינמי להתחלה',

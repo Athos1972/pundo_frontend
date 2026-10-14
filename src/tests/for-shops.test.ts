@@ -36,18 +36,39 @@ describe('forShopsContent — all 6 languages have all new fields', () => {
       }
     })
 
-    it(`lang "${lang}" has stats with businesses, searches, cities, fee_note`, () => {
+    it(`lang "${lang}" has 4 stats items and fee_note`, () => {
       const c = forShopsContent[lang] ?? forShopsContent.en
       expect(c.stats).toBeDefined()
-      expect(c.stats.businesses.length).toBeGreaterThan(0)
-      expect(c.stats.searches.length).toBeGreaterThan(0)
-      expect(c.stats.cities.length).toBeGreaterThan(0)
+      expect(c.stats.items).toHaveLength(4)
+      for (const item of c.stats.items) {
+        expect(item.value.length).toBeGreaterThan(0)
+        expect(item.label.length).toBeGreaterThan(0)
+      }
       expect(c.stats.fee_note.length).toBeGreaterThan(0)
     })
 
-    it(`lang "${lang}" stats.cities = "30+"`, () => {
+    // Texts that used to be hardcoded English in page.tsx / ForShopsHeroVisual.tsx
+    it(`lang "${lang}" has localized section labels and hero mock labels`, () => {
       const c = forShopsContent[lang] ?? forShopsContent.en
-      expect(c.stats.cities).toBe('30+')
+      for (const v of [c.pain_label, c.gain_label, c.steps_sub, c.testimonials_stars_aria, ...Object.values(c.hero_mock)]) {
+        expect(v.length).toBeGreaterThan(0)
+      }
+      if (lang !== 'en') {
+        expect(c.pain_label).not.toBe(forShopsContent.en.pain_label)
+        expect(c.steps_sub).not.toBe(forShopsContent.en.steps_sub)
+        expect(c.hero_mock.views).not.toBe(forShopsContent.en.hero_mock.views)
+      }
+    })
+
+    // No invented business/search/city counts on the page (misleading advertising risk)
+    it(`lang "${lang}" stats and social_proof contain no placeholder counts`, () => {
+      const c = forShopsContent[lang] ?? forShopsContent.en
+      const text = [c.social_proof, ...c.stats.items.flatMap((i) => [i.value, i.label])].join(' ')
+      expect(text).not.toMatch(/340\+|12k|30\+/)
+      // …and nowhere else in the page content either (final CTA once said "Join 340+ …")
+      expect(JSON.stringify(c)).not.toMatch(/340\+|12k/)
+      // '€0*' must stay — it anchors the fee_note footnote
+      expect(c.stats.items[0].value).toBe('€0*')
     })
 
     it(`lang "${lang}" has pain_gain_title, 5 pain_items, 5 gain_items`, () => {

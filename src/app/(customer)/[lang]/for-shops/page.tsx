@@ -118,7 +118,7 @@ export default async function ForShopsPage({ params }: Props) {
 
             {/* Right: decorative visual — hidden on mobile */}
             <div className="flex-1 hidden md:block relative">
-              <ForShopsHeroVisual className="w-full max-w-sm mx-auto" />
+              <ForShopsHeroVisual labels={content.hero_mock} className="w-full max-w-sm mx-auto" />
             </div>
           </div>
         </div>
@@ -128,14 +128,15 @@ export default async function ForShopsPage({ params }: Props) {
       <section className="bg-text">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center mb-4">
-            {[
-              { value: content.stats.businesses, label: 'businesses' },
-              { value: content.stats.searches, label: 'searches/month' },
-              { value: content.stats.cities, label: 'cities' },
-              { value: '€0*', label: 'monthly fee' },
-            ].map(({ value, label }) => (
+            {content.stats.items.map(({ value, label }) => (
               <div key={label}>
-                <div className="text-3xl sm:text-4xl font-bold text-accent font-display">{value}</div>
+                {/* Purely numeric values ('€0*', '0%') need LTR, otherwise RTL bidi moves the '*' to the front */}
+                <div
+                  dir={/[֐-ࣿ]/.test(value) ? undefined : 'ltr'}
+                  className="text-3xl sm:text-4xl font-bold text-accent font-display"
+                >
+                  {value}
+                </div>
                 <div className="text-sm text-surface/60 mt-1">{label}</div>
               </div>
             ))}
@@ -155,7 +156,7 @@ export default async function ForShopsPage({ params }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 rtl:sm:flex-row-reverse">
             {/* Without pundo */}
             <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="font-semibold text-text-muted mb-4 text-sm uppercase tracking-wide">Without pundo</h3>
+              <h3 className="font-semibold text-text-muted mb-4 text-sm uppercase tracking-wide">{content.pain_label}</h3>
               <ul className="space-y-3">
                 {content.pain_items.map((item) => (
                   <li key={item} className="flex items-start gap-2 rtl:flex-row-reverse">
@@ -167,7 +168,7 @@ export default async function ForShopsPage({ params }: Props) {
             </div>
             {/* With pundo */}
             <div className="bg-surface border border-accent/30 rounded-2xl p-6">
-              <h3 className="font-semibold text-accent mb-4 text-sm uppercase tracking-wide">With pundo</h3>
+              <h3 className="font-semibold text-accent mb-4 text-sm uppercase tracking-wide">{content.gain_label}</h3>
               <ul className="space-y-3">
                 {content.gain_items.map((item) => (
                   <li key={item} className="flex items-start gap-2 rtl:flex-row-reverse">
@@ -295,7 +296,7 @@ export default async function ForShopsPage({ params }: Props) {
               {content.steps_title}
             </h2>
             <p className="text-center text-surface/55 mb-10 text-sm">
-              From registration to live in under 10 minutes.
+              {content.steps_sub}
             </p>
 
             {/* Steps */}
@@ -335,7 +336,7 @@ export default async function ForShopsPage({ params }: Props) {
             {content.testimonials.map((t) => (
               <div key={t.name} className="bg-surface border border-border rounded-2xl p-6 flex flex-col">
                 {/* Stars — decorative colour #D4911A, see §4 of architecture */}
-                <div className="text-[#D4911A] mb-3 text-lg" aria-label="5 stars" role="img">
+                <div className="text-[#D4911A] mb-3 text-lg" aria-label={content.testimonials_stars_aria} role="img">
                   ★★★★★
                 </div>
                 <p className="text-text-muted italic text-sm leading-relaxed mb-5 flex-1">

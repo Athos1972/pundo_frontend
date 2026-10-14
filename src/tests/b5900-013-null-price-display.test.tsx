@@ -19,7 +19,6 @@ vi.mock('next/link', () => ({
     <a href={href} className={className}>{children}</a>,
 }))
 vi.mock('@/lib/seo', () => ({ getSiteUrl: () => 'https://example.com' }))
-vi.mock('@/lib/seo/absolutize', () => ({ absolutizeImageUrl: (u: string | null) => u }))
 vi.mock('@/components/product/FavoriteButton', () => ({ FavoriteButton: () => null }))
 
 afterEach(cleanup)

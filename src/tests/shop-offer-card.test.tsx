@@ -26,14 +26,6 @@ vi.mock('next/link', () => ({
     <a href={href} className={className}>{children}</a>,
 }))
 
-vi.mock('@/lib/seo', () => ({
-  getSiteUrl: () => 'https://example.com',
-}))
-
-vi.mock('@/lib/seo/absolutize', () => ({
-  absolutizeImageUrl: (url: string | null, _base: string) => url,
-}))
-
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 const FUTURE_DATE = '2099-12-31T23:59:59Z'
@@ -128,6 +120,12 @@ describe('ShopOfferCard — standard price (no promo)', () => {
     const img = container.querySelector('img')
     expect(img).not.toBeNull()
     expect(img?.getAttribute('src')).toBe('https://cdn.example.com/product.jpg')
+  })
+
+  it('keeps a relative item_photo_url relative (no site-URL prefix, CSP img-src on other origins)', () => {
+    const offer = { ...BASE_OFFER, item_photo_url: '/product_images/abc_thumb.webp' }
+    const { container } = render(<ShopOfferCard offer={offer} lang="en" />)
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/product_images/abc_thumb.webp')
   })
 })
 

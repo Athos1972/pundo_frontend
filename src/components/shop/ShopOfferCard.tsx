@@ -4,8 +4,6 @@ import { t } from '@/lib/translations'
 import { localePath } from '@/lib/routing'
 import type { Lang } from '@/lib/lang'
 import { formatAmount, formatPriceOrLabel } from '@/lib/utils'
-import { absolutizeImageUrl } from '@/lib/seo/absolutize'
-import { getSiteUrl } from '@/lib/seo'
 import type { ShopOffer } from '@/types/api'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
 import { buildOfferPriceView, formatTierRow } from '@/lib/price-tiers'
@@ -17,8 +15,10 @@ interface ShopOfferCardProps {
 
 export function ShopOfferCard({ offer, lang }: ShopOfferCardProps) {
   const tr = t(lang)
-  const siteUrl = getSiteUrl()
-  const imgSrc = absolutizeImageUrl(offer.item_photo_url, siteUrl)
+  // Keep image URLs relative for <img>: an absolute site URL (https://pundo.cy/…) is blocked
+  // by the CSP img-src on any other origin (naidivse, test 3500). Absolute URLs are only
+  // needed for crawler metadata (OG/JSON-LD), not for rendered images.
+  const imgSrc = offer.item_photo_url ?? null
 
   // Format promo date for badge: DD.MM.
   const promoBadgeDate = offer.promo_valid_until

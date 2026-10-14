@@ -186,7 +186,7 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
               onChange={(e) => setSelectedState(e.target.value as CrmLifecycleState)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-600"
             >
-              <option value="">— select —</option>
+              <option value="">{tr.select_placeholder}</option>
               {allowedTransitions.map((s) => (
                 <option key={s} value={s}>{stateLabel(s)}</option>
               ))}
@@ -393,7 +393,7 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
 
       {isTerminal && (
         <p className="text-sm text-gray-500 italic">
-          This contact is in a terminal state ({stateLabel(currentState)}) — no further actions available.
+          {tr.crm_terminal_state.replace('{state}', stateLabel(currentState))}
         </p>
       )}
     </>

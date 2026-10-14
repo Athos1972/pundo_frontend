@@ -69,6 +69,7 @@ export default async function CategoryAttrDefsDetailPage({ params }: PageProps) 
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={defs.length}
         page={1}
         limit={defs.length || 1}

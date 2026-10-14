@@ -149,7 +149,7 @@ export function OutreachComposer({ contact, tr }: OutreachComposerProps) {
         </button>
         {previewLoaded && (
           <span className="text-xs text-green-600">
-            Preview loaded — {lang.toUpperCase()}
+            {tr.crm_composer_preview_loaded} — {lang.toUpperCase()}
           </span>
         )}
       </div>
@@ -205,6 +205,7 @@ export function OutreachComposer({ contact, tr }: OutreachComposerProps) {
       </div>
 
       {/* Debug: idempotency key (subtle, for admin awareness) */}
+      {/* @i18n-allow-literal — Debug-Anzeige */}
       <p className="text-xs text-gray-300 font-mono break-all">
         key: {idempotencyKeyDisplay}
       </p>

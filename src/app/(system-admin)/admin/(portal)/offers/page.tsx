@@ -84,7 +84,7 @@ export default async function OffersPage({ searchParams }: PageProps) {
         <input
           name="shop_listing_id"
           defaultValue={shopListingIdQ}
-          placeholder="Shop Listing ID"
+          placeholder={tr.shop_listing_id}
           type="number"
           min="1"
           className="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm
@@ -115,6 +115,7 @@ export default async function OffersPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

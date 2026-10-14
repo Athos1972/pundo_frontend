@@ -14,6 +14,7 @@ interface AttributeDefinitionEditorProps {
   typeLabel: string
   optionsLabel: string
   optionsHint: string
+  optionsPlaceholder: string
 }
 
 export function AttributeDefinitionEditor({
@@ -24,6 +25,7 @@ export function AttributeDefinitionEditor({
   typeLabel,
   optionsLabel,
   optionsHint,
+  optionsPlaceholder,
 }: AttributeDefinitionEditorProps) {
   const allowedValues = Array.isArray(value.allowed_values) ? (value.allowed_values as string[]) : []
   const [optionsInput, setOptionsInput] = useState(allowedValues.join(', '))
@@ -71,9 +73,13 @@ export function AttributeDefinitionEditor({
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         >
+          {/* @i18n-allow-literal — technische Attributtypen */}
           <option value="text">text</option>
+          {/* @i18n-allow-literal */}
           <option value="number">number</option>
+          {/* @i18n-allow-literal */}
           <option value="bool">bool</option>
+          {/* @i18n-allow-literal */}
           <option value="select">select</option>
         </select>
       </div>
@@ -85,7 +91,7 @@ export function AttributeDefinitionEditor({
             type="text"
             value={optionsInput}
             onChange={(e) => handleOptionsChange(e.target.value)}
-            placeholder="Option A, Option B, Option C"
+            placeholder={optionsPlaceholder}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
               focus:outline-none focus:ring-2 focus:ring-slate-600"
           />

@@ -56,6 +56,7 @@ export default async function ShopTypesPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

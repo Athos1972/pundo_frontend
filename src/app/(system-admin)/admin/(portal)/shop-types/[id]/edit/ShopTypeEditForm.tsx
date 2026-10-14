@@ -45,7 +45,7 @@ export function ShopTypeEditForm({ shopType, tr }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
       <FormField
-        label="Canonical"
+        label={tr.canonical}
         name="canonical"
         required
         value={canonical}

@@ -55,7 +55,8 @@ export default function NewCategoryAttrDefPage() {
           labelLabel={tr.label}
           typeLabel={tr.type}
           optionsLabel={tr.options}
-          optionsHint="Comma-separated values"
+          optionsHint={tr.attr_options_hint}
+          optionsPlaceholder={tr.attr_options_placeholder}
         />
         <div className="flex gap-3">
           <button type="submit" disabled={isPending}

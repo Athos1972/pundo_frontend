@@ -157,7 +157,7 @@ export function ProductAttributesTable({
                       type="text"
                       value={draft.attribute_key}
                       onChange={(e) => setDraft((d) => d ? { ...d, attribute_key: e.target.value } : d)}
-                      placeholder="key"
+                      placeholder={labels.key}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-xs font-mono
                         focus:outline-none focus:ring-1 focus:ring-slate-600"
                     />
@@ -167,7 +167,7 @@ export function ProductAttributesTable({
                       type="text"
                       value={draft.attribute_value}
                       onChange={(e) => setDraft((d) => d ? { ...d, attribute_value: e.target.value } : d)}
-                      placeholder="value"
+                      placeholder={labels.value}
                       className="w-full rounded border border-gray-300 px-2 py-1 text-xs
                         focus:outline-none focus:ring-1 focus:ring-slate-600"
                     />

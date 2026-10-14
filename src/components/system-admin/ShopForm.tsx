@@ -161,7 +161,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
 
       {!isEdit && (
         <FormField
-          label="Slug"
+          label={tr.slug}
           name="slug"
           required
           value={slug}
@@ -180,7 +180,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           disabled={isPending}
         />
         <FormField
-          label="City"
+          label={tr.city}
           name="city"
           value={city}
           onChange={(e) => setCity(e.target.value)}
@@ -271,9 +271,9 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
           onChange={(e) => setStatus(e.target.value)}
           disabled={isPending}
         >
-          <option value="active">active</option>
-          <option value="inactive">inactive</option>
-          <option value="pending">pending</option>
+          <option value="active">{tr.shop_status_active}</option>
+          <option value="inactive">{tr.shop_status_inactive}</option>
+          <option value="pending">{tr.pending}</option>
         </FormField>
 
         <FormField
@@ -292,7 +292,7 @@ export function ShopForm({ shop, shopTypes, tr }: ShopFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-gray-700">Options</span>
+        <span className="text-sm font-medium text-gray-700">{tr.shop_options}</span>
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: tr.is_online_only, checked: isOnlineOnly, onChange: setIsOnlineOnly },

@@ -84,11 +84,11 @@ export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Kind</th>
-              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Value</th>
-              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Consent</th>
-              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Reachable</th>
-              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Preferred</th>
+              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_kind}</th>
+              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_value}</th>
+              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_consent}</th>
+              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_reachable}</th>
+              <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_preferred}</th>
               {canWrite && (
                 <th className="px-3 py-2 text-start text-xs font-medium text-gray-500" />
               )}
@@ -155,8 +155,8 @@ export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
                   className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:outline-none
                     focus:ring-2 focus:ring-slate-600 bg-white disabled:opacity-50"
                 >
-                  <option value="email">email</option>
-                  <option value="phone">phone</option>
+                  <option value="email">{tr.crm_channel_kind_email}</option>
+                  <option value="phone">{tr.crm_channel_kind_phone}</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1 flex-1 min-w-40">

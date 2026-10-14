@@ -9,9 +9,8 @@ const LocationEditorMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[300px] rounded-lg bg-gray-100 animate-pulse flex items-center justify-center">
-        <span className="text-sm text-gray-400">Loading map…</span>
-      </div>
+      // Modul-Scope ohne lang → sprachneutraler Skeleton statt Ladetext
+      <div className="h-[300px] rounded-lg bg-gray-100 animate-pulse" aria-busy="true" />
     ),
   },
 )

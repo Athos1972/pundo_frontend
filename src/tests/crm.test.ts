@@ -13,7 +13,7 @@ vi.mock('@/components/system-admin/Toast', () => ({
 
 describe('CRM translations', () => {
   const en = tSysAdmin('en')
-  const de = tSysAdmin('de')
+  const el = tSysAdmin('el')
 
   const requiredCrmKeys = [
     'nav_crm', 'crm_title', 'crm_new',
@@ -44,17 +44,15 @@ describe('CRM translations', () => {
     }
   })
 
-  it('DE has all required CRM keys', () => {
+  it('EL has all required CRM keys', () => {
     for (const key of requiredCrmKeys) {
-      expect(de[key as keyof typeof de], `DE missing key: ${key}`).toBeTruthy()
+      expect(el[key as keyof typeof el], `EL missing key: ${key}`).toBeTruthy()
     }
   })
 
-  it('EN and DE have same keys', () => {
-    // Both should have the same set of string keys
-    const enKeys = Object.keys(en).filter((k) => typeof en[k as keyof typeof en] === 'string')
-    const deKeys = Object.keys(de).filter((k) => typeof de[k as keyof typeof de] === 'string')
-    expect(new Set(enKeys)).toEqual(new Set(deKeys))
+  it('EN and EL have same keys', () => {
+    // Both should have the same set of keys (parity check for the EN + EL admin UI)
+    expect(new Set(Object.keys(el))).toEqual(new Set(Object.keys(en)))
   })
 })
 

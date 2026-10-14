@@ -65,8 +65,8 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         >
-          <option value="">All statuses</option>
-          <option value="pre_signup">pre_signup</option>
+          <option value="">{tr.owners_all_statuses}</option>
+          <option value="pre_signup">{tr.owner_status_pre_signup}</option>
           <option value="pending">{tr.pending}</option>
           <option value="approved">{tr.approved}</option>
           <option value="rejected">{tr.rejected}</option>
@@ -90,6 +90,7 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

@@ -113,7 +113,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
       <FormField
-        label="External ID"
+        label={tr.external_id}
         name="external_id"
         required
         value={externalId}
@@ -150,11 +150,11 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
           required
           error={errors.taxonomy_type}
         >
-          <option value="">— select —</option>
-          <option value="google">Google</option>
-          <option value="unspsc">UNSPSC</option>
+          <option value="">{tr.select_placeholder}</option>
+          <option value="google">{tr.taxonomy_google}</option>
+          <option value="unspsc">{tr.taxonomy_unspsc}</option>
           {taxonomyType && !VALID_TAXONOMY_TYPES.includes(taxonomyType) && (
-            <option value={taxonomyType}>{taxonomyType} (legacy)</option>
+            <option value={taxonomyType}>{taxonomyType} {tr.legacy_suffix}</option>
           )}
         </FormField>
       </div>
@@ -246,7 +246,8 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
                 labelLabel={tr.label}
                 typeLabel={tr.type}
                 optionsLabel={tr.options}
-                optionsHint="Comma-separated values"
+                optionsHint={tr.attr_options_hint}
+                optionsPlaceholder={tr.attr_options_placeholder}
               />
               <div className="flex gap-2 mt-3">
                 <button

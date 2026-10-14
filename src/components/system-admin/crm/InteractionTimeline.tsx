@@ -56,7 +56,7 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
             )}
             {ia.kind === 'contact_updated' && Array.isArray(ia.payload?.fields) && (
               <p className="text-xs text-gray-600">
-                Geändert: {(ia.payload.fields as string[]).join(', ')}
+                {tr.crm_timeline_changed} {(ia.payload.fields as string[]).join(', ')}
               </p>
             )}
             {(ia.kind === 'channel_added' || ia.kind === 'channel_removed') && !!ia.payload?.channel_kind && (
@@ -80,7 +80,7 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
           <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2" />
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium text-indigo-700">email</span>
+              <span className="text-xs font-medium text-indigo-700">{tr.crm_channel_kind_email}</span>
               <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${deliveryBadgeColor(msg.delivery_status)}`}>
                 {msg.delivery_status}
               </span>
@@ -95,7 +95,7 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
               <p className="text-xs text-gray-700 font-medium">{msg.subject_rendered}</p>
             )}
             {msg.error_code && (
-              <p className="text-xs text-red-600">Error: {msg.error_code}</p>
+              <p className="text-xs text-red-600">{tr.crm_timeline_error} {msg.error_code}</p>
             )}
             <p className="text-xs text-gray-400">
               #{msg.id} · {msg.direction} · {msg.channel}

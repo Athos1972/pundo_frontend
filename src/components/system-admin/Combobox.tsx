@@ -17,6 +17,7 @@ interface ComboboxProps {
   disabled?: boolean
   name?: string
   id?: string
+  noResultsLabel?: string
 }
 
 /**
@@ -49,6 +50,7 @@ export function Combobox({
   disabled = false,
   name,
   id: idProp,
+  noResultsLabel = 'No results',
 }: ComboboxProps) {
   const generatedId = useId()
   const fieldId = idProp ?? generatedId
@@ -166,7 +168,7 @@ export function Combobox({
           {/* List */}
           <ul ref={listRef} className="max-h-56 overflow-y-auto py-1" role="listbox">
             {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-gray-400 italic">No results</li>
+              <li className="px-3 py-2 text-sm text-gray-400 italic">{noResultsLabel}</li>
             ) : (
               filtered.map((item, idx) => (
                 <li

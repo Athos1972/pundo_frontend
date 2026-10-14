@@ -48,6 +48,7 @@ interface EntityTableProps {
   deletedMessage: string
   errorMessage: string
   noItemsLabel: string
+  actionsLabel?: string
   // Server-side pagination
   total: number
   page: number
@@ -101,6 +102,7 @@ export function EntityTable({
   deletedMessage,
   errorMessage,
   noItemsLabel,
+  actionsLabel = 'Actions',
   total,
   page,
   limit,
@@ -174,7 +176,7 @@ export function EntityTable({
                 ))}
                 {hasActions && (
                   <th className="px-4 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wide w-32">
-                    Actions
+                    {actionsLabel}
                   </th>
                 )}
               </tr>

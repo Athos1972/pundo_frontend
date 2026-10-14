@@ -62,7 +62,7 @@ export function ShopOwnerEditForm({ owner, tr }: Props) {
             <span className="text-gray-700">{owner.email}</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs text-gray-400 uppercase font-semibold">Shop ID</span>
+            <span className="text-xs text-gray-400 uppercase font-semibold">{tr.shop_id}</span>
             <span className="text-gray-700">{owner.shop_id}</span>
           </div>
         </div>

@@ -104,31 +104,31 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
           <section className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_detail_org}</h2>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <dt className="text-gray-500">Name</dt>
+              <dt className="text-gray-500">{tr.name}</dt>
               <dd className="text-gray-800 font-medium">{contact.org.name}</dd>
               {contact.org.legal_name && (
                 <>
-                  <dt className="text-gray-500">Legal name</dt>
+                  <dt className="text-gray-500">{tr.crm_detail_legal_name}</dt>
                   <dd className="text-gray-800">{contact.org.legal_name}</dd>
                 </>
               )}
               {contact.org.city && (
                 <>
-                  <dt className="text-gray-500">City</dt>
+                  <dt className="text-gray-500">{tr.city}</dt>
                   <dd className="text-gray-800">{contact.org.city}</dd>
                 </>
               )}
               {contact.org.category && (
                 <>
-                  <dt className="text-gray-500">Category</dt>
+                  <dt className="text-gray-500">{tr.category}</dt>
                   <dd className="text-gray-800">{contact.org.category}</dd>
                 </>
               )}
-              <dt className="text-gray-500">Business status</dt>
+              <dt className="text-gray-500">{tr.crm_detail_business_status}</dt>
               <dd className="text-gray-800">{contact.org.business_status}</dd>
               {contact.shop_id && (
                 <>
-                  <dt className="text-gray-500">Shop ID</dt>
+                  <dt className="text-gray-500">{tr.shop_id}</dt>
                   <dd className="text-gray-800">{contact.shop_id}</dd>
                 </>
               )}
@@ -139,9 +139,9 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
           <section className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_detail_legal}</h2>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <dt className="text-gray-500">Legal tier</dt>
+              <dt className="text-gray-500">{tr.crm_detail_legal_tier}</dt>
               <dd className="text-gray-800">{contact.effective_legal_tier}</dd>
-              <dt className="text-gray-500">Legal basis</dt>
+              <dt className="text-gray-500">{tr.crm_detail_legal_basis}</dt>
               <dd className="text-gray-800">{contact.effective_legal_basis}</dd>
             </dl>
           </section>
@@ -150,13 +150,13 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
           <section className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_detail_flags}</h2>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <dt className="text-gray-500">Needs human</dt>
-              <dd className="text-gray-800">{contact.needs_human ? 'Yes' : 'No'}</dd>
-              <dt className="text-gray-500">Agent paused</dt>
-              <dd className="text-gray-800">{contact.agent_paused ? 'Yes' : 'No'}</dd>
-              <dt className="text-gray-500">Created</dt>
+              <dt className="text-gray-500">{tr.crm_detail_needs_human}</dt>
+              <dd className="text-gray-800">{contact.needs_human ? tr.yes : tr.no}</dd>
+              <dt className="text-gray-500">{tr.crm_detail_agent_paused}</dt>
+              <dd className="text-gray-800">{contact.agent_paused ? tr.yes : tr.no}</dd>
+              <dt className="text-gray-500">{tr.created_at}</dt>
               <dd className="text-gray-800 text-xs">{new Date(contact.created_at).toLocaleString()}</dd>
-              <dt className="text-gray-500">Updated</dt>
+              <dt className="text-gray-500">{tr.crm_col_updated}</dt>
               <dd className="text-gray-800 text-xs">{new Date(contact.updated_at).toLocaleString()}</dd>
             </dl>
           </section>
@@ -190,7 +190,7 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
         <div className="flex flex-col gap-5">
           {/* Outreach Composer */}
           <section className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-800 mb-4">Outreach</h2>
+            <h2 className="text-sm font-semibold text-gray-800 mb-4">{tr.crm_outreach_title}</h2>
             <OutreachComposer contact={contact} tr={tr} />
           </section>
 

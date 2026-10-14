@@ -223,9 +223,9 @@ describe('system-admin translations — IDM keys', () => {
     expect(tr.nav_item_domain_mappings).toBe('Service Catalog')
   })
 
-  it('nav_item_domain_mappings present in DE', () => {
-    const tr = tSysAdmin('de')
-    expect(tr.nav_item_domain_mappings).toBe('Dienst-Katalog')
+  it('nav_item_domain_mappings present in EL', () => {
+    const tr = tSysAdmin('el')
+    expect(tr.nav_item_domain_mappings).toBe('Κατάλογος υπηρεσιών')
   })
 
   it('idm_title present in EN', () => {
@@ -234,7 +234,7 @@ describe('system-admin translations — IDM keys', () => {
 
   it('idm_auto_assign present in both langs', () => {
     expect(tSysAdmin('en').idm_auto_assign).toBe('Auto-assign')
-    expect(tSysAdmin('de').idm_auto_assign).toBe('Auto-Zuweisung')
+    expect(tSysAdmin('el').idm_auto_assign).toBe('Αυτόματη ανάθεση')
   })
 
   it('idm_gaps_title present in EN', () => {

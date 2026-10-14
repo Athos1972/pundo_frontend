@@ -117,7 +117,7 @@ export function CardImageViewer({
                 type="button"
                 onClick={closeLightbox}
                 className="text-white hover:text-gray-300 text-xl leading-none"
-                aria-label="Close"
+                aria-label={tr.close}
               >
                 ✕
               </button>

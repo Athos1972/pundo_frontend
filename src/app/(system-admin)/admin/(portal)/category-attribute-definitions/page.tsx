@@ -25,7 +25,7 @@ export default async function CategoryAttributeDefsPage({ searchParams }: PagePr
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-semibold text-gray-900">{tr.nav_cat_attr_defs}</h1>
-      <p className="text-sm text-gray-500">Select a category to manage its attribute definitions.</p>
+      <p className="text-sm text-gray-500">{tr.attr_defs_select_category_hint}</p>
 
       <form method="GET" className="flex gap-2">
         <input
@@ -53,6 +53,7 @@ export default async function CategoryAttributeDefsPage({ searchParams }: PagePr
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

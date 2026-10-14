@@ -53,15 +53,15 @@ export function OfferForm({ offer, tr }: OfferFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-lg">
-      <FormField label="Shop Listing ID" name="shop_listing_id" type="number" value={shopListingId} onChange={(e) => setShopListingId(e.target.value)} disabled={isPending} />
+      <FormField label={tr.shop_listing_id} name="shop_listing_id" type="number" value={shopListingId} onChange={(e) => setShopListingId(e.target.value)} disabled={isPending} />
       <FormField label={tr.offer_title} name="title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} />
       <FormField label={tr.offer_desc} name="description" as="textarea" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
       <div className="grid grid-cols-2 gap-4">
         <FormField as="select" label={tr.price_type} name="price_type" value={priceType} onChange={(e) => setPriceType(e.target.value as PriceType)} disabled={isPending}>
-          <option value="fixed">fixed</option>
-          <option value="on_request">on_request</option>
-          <option value="free">free</option>
-          <option value="variable">variable</option>
+          <option value="fixed">{tr.price_type_fixed}</option>
+          <option value="on_request">{tr.price_type_on_request}</option>
+          <option value="free">{tr.price_type_free}</option>
+          <option value="variable">{tr.price_type_variable}</option>
         </FormField>
         <FormField label={tr.currency} name="currency" value={currency} onChange={(e) => setCurrency(e.target.value)} disabled={isPending} />
       </div>

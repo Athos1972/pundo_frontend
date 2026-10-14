@@ -10,6 +10,7 @@ interface CategoryTreeViewProps {
   editLabel: string
   expandAllLabel?: string
   collapseAllLabel?: string
+  emptyLabel?: string
 }
 
 interface TreeNode extends SysAdminCategory {
@@ -136,6 +137,7 @@ export function CategoryTreeView({
   editLabel,
   expandAllLabel = 'Expand all',
   collapseAllLabel = 'Collapse all',
+  emptyLabel = 'No categories.',
 }: CategoryTreeViewProps) {
   const roots = buildTree(categories)
   const allIds = getAllIds(roots)
@@ -157,7 +159,7 @@ export function CategoryTreeView({
   }
 
   if (roots.length === 0) {
-    return <p className="text-sm text-gray-500">No categories.</p>
+    return <p className="text-sm text-gray-500">{emptyLabel}</p>
   }
 
   return (

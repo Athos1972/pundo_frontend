@@ -9,12 +9,15 @@ describe('tSysAdmin', () => {
     expect(tr.nav_shops).toBe('Shops')
   })
 
-  it('returns DE translations for de', () => {
-    const tr = tSysAdmin('de')
-    expect(tr.login_title).toBe('System Admin')
-    expect(tr.sign_in).toBe('Anmelden')
-    expect(tr.nav_shops).toBe('Shops')
-    expect(tr.save).toBe('Speichern')
+  it('returns EL translations for el', () => {
+    const tr = tSysAdmin('el')
+    expect(tr.sign_in).toBe('Σύνδεση')
+    expect(tr.nav_shops).toBe('Καταστήματα')
+    expect(tr.save).toBe('Αποθήκευση')
+  })
+
+  it('falls back to EN for de (admin UI is EN + EL only)', () => {
+    expect(tSysAdmin('de').sign_in).toBe('Sign in')
   })
 
   it('falls back to EN for unknown language', () => {
@@ -29,11 +32,11 @@ describe('tSysAdmin', () => {
     expect(tr.days[6]).toBe('Sunday')
   })
 
-  it('has 7 day labels in DE', () => {
-    const tr = tSysAdmin('de')
+  it('has 7 day labels in EL', () => {
+    const tr = tSysAdmin('el')
     expect(tr.days).toHaveLength(7)
-    expect(tr.days[0]).toBe('Montag')
-    expect(tr.days[6]).toBe('Sonntag')
+    expect(tr.days[0]).toBe('Δευτέρα')
+    expect(tr.days[6]).toBe('Κυριακή')
   })
 
   it('has all required nav keys', () => {

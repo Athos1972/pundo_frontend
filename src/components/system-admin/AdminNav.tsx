@@ -16,11 +16,12 @@ interface NavLinksProps {
   items: NavItem[]
   pathname: string
   onNavigate: () => void
+  ariaLabel: string
 }
 
-function NavLinks({ items, pathname, onNavigate }: NavLinksProps) {
+function NavLinks({ items, pathname, onNavigate, ariaLabel }: NavLinksProps) {
   return (
-    <nav aria-label="System admin navigation">
+    <nav aria-label={ariaLabel}>
       <ul className="flex flex-col gap-0.5">
         {items.map((item) => {
           const active = pathname.startsWith(item.href)
@@ -85,11 +86,12 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-60 shrink-0 bg-white border-e border-gray-200 min-h-screen p-4 gap-4">
         <div className="flex flex-col gap-0.5 pb-2 border-b border-gray-100">
+          {/* @i18n-allow-literal — Produktname */}
           <span className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Pundo Admin</span>
           <span className="text-xs text-gray-500 truncate">{adminEmail}</span>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} />
+          <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} ariaLabel={tr.nav_aria} />
         </div>
         <div className="pt-2 border-t border-gray-100">
           <button
@@ -104,12 +106,13 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
 
       {/* Mobile header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+        {/* @i18n-allow-literal — Produktname */}
         <span className="font-semibold text-gray-800 text-sm">Pundo Admin</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
-          aria-label="Toggle navigation"
+          aria-label={tr.nav_toggle_aria}
           className="p-2 rounded-lg hover:bg-gray-100"
         >
           <span aria-hidden="true">{mobileOpen ? '✕' : '☰'}</span>
@@ -128,7 +131,7 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="text-xs text-gray-500 truncate">{adminEmail}</span>
-            <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} />
+            <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} ariaLabel={tr.nav_aria} />
           </div>
         </div>
       )}

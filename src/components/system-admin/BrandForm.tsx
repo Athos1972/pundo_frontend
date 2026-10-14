@@ -100,6 +100,7 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
           uploadLabel={tr.upload_logo}
           uploadingLabel={tr.uploading}
           errorMessage={tr.error_generic}
+          saveFirstLabel={tr.brand_save_first_upload}
         />
       </div>
 

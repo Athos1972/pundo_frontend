@@ -124,7 +124,7 @@ export function RuleList({ rules, total, page, limit, tr, q, category }: RuleLis
                   {rule.source === 'admin' ? tr.slr_source_admin : tr.slr_source_external}
                   {rule.source === 'external' && (
                     <span className="ms-1 text-xs text-gray-400" title={tr.slr_readonly_external}>
-                      (read-only)
+                      {tr.slr_read_only_badge}
                     </span>
                   )}
                 </td>

@@ -115,6 +115,7 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
             value={categoryId}
             onChange={setCategoryId}
             placeholder={tr.category}
+            noResultsLabel={tr.no_results}
             disabled={isPending}
           />
         </div>

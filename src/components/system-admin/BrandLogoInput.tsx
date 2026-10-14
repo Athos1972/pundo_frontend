@@ -15,6 +15,7 @@ interface BrandLogoInputProps {
   uploadLabel: string
   uploadingLabel: string
   errorMessage: string
+  saveFirstLabel: string
 }
 
 export function BrandLogoInput({
@@ -28,6 +29,7 @@ export function BrandLogoInput({
   uploadLabel,
   uploadingLabel,
   errorMessage,
+  saveFirstLabel,
 }: BrandLogoInputProps) {
   const [tab, setTab] = useState<'url' | 'upload'>('url')
   const [urlInput, setUrlInput] = useState(value ?? '')
@@ -105,7 +107,7 @@ export function BrandLogoInput({
       ) : (
         <div className="flex flex-col gap-2">
           {brandId == null && (
-            <p className="text-xs text-amber-600">Save the brand first to enable file upload.</p>
+            <p className="text-xs text-amber-600">{saveFirstLabel}</p>
           )}
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">{uploadLabel}</span>
@@ -132,7 +134,7 @@ export function BrandLogoInput({
           <div className="relative w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
             <Image
               src={previewUrl}
-              alt="Logo preview"
+              alt={logoPreviewLabel}
               fill
               className="object-contain p-1"
               unoptimized

@@ -71,9 +71,9 @@ export default async function ShopsPage({ searchParams }: PageProps) {
             focus:outline-none focus:ring-2 focus:ring-slate-600 bg-white"
         >
           <option value="">{tr.status_all}</option>
-          <option value="active">active</option>
-          <option value="inactive">inactive</option>
-          <option value="pending">pending</option>
+          <option value="active">{tr.shop_status_active}</option>
+          <option value="inactive">{tr.shop_status_inactive}</option>
+          <option value="pending">{tr.pending}</option>
         </select>
         <button
           type="submit"
@@ -100,6 +100,7 @@ export default async function ShopsPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

@@ -92,6 +92,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={data.total}
         page={page}
         limit={LIMIT}

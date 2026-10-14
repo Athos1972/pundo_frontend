@@ -245,6 +245,7 @@ describe('AttributeDefinitionEditor', () => {
         typeLabel="Type"
         optionsLabel="Options"
         optionsHint="Comma-separated"
+        optionsPlaceholder="Option A, Option B, Option C"
       />,
     )
     // Key and Label are labels (no htmlFor), verify by text
@@ -264,6 +265,7 @@ describe('AttributeDefinitionEditor', () => {
         typeLabel="Type"
         optionsLabel="Options"
         optionsHint="Comma-separated"
+        optionsPlaceholder="Option A, Option B, Option C"
       />,
     )
     expect(screen.queryByLabelText(/Options/)).toBeNull()
@@ -279,6 +281,7 @@ describe('AttributeDefinitionEditor', () => {
         typeLabel="Type"
         optionsLabel="Options"
         optionsHint="Comma-separated"
+        optionsPlaceholder="Option A, Option B, Option C"
       />,
     )
     // Options label text should appear
@@ -298,6 +301,7 @@ describe('AttributeDefinitionEditor', () => {
         typeLabel="Type"
         optionsLabel="Options"
         optionsHint="Comma-separated"
+        optionsPlaceholder="Option A, Option B, Option C"
       />,
     )
     const optInput = screen.getByPlaceholderText(/Option A/)
@@ -317,6 +321,7 @@ describe('AttributeDefinitionEditor', () => {
         typeLabel="Type"
         optionsLabel="Options"
         optionsHint="Comma-separated"
+        optionsPlaceholder="Option A, Option B, Option C"
       />,
     )
     expect(screen.getByText('XS')).toBeDefined()

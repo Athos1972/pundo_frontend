@@ -31,11 +31,11 @@ export function ChannelList({ channels, tr }: ChannelListProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Kind</th>
-            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Value</th>
-            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Consent</th>
-            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Reachable</th>
-            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">Preferred</th>
+            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_kind}</th>
+            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_value}</th>
+            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_consent}</th>
+            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_reachable}</th>
+            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{tr.crm_channel_preferred}</th>
           </tr>
         </thead>
         <tbody>

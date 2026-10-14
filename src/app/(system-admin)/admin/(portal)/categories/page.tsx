@@ -96,13 +96,13 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
             href={`/admin/categories?view=tree${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'tree' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            Tree
+            {tr.view_tree}
           </Link>
           <Link
             href={`/admin/categories?view=table${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'table' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            Table
+            {tr.view_table}
           </Link>
         </div>
       </div>
@@ -121,6 +121,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
             editLabel={tr.edit}
             expandAllLabel={tr.expand_all}
             collapseAllLabel={tr.collapse_all}
+            emptyLabel={tr.no_categories}
           />
         </>
       ) : (
@@ -142,6 +143,7 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
           deletedMessage={tr.deleted}
           errorMessage={tr.error_generic}
           noItemsLabel={tr.no_items}
+          actionsLabel={tr.actions}
           total={data.total}
           page={page}
           limit={LIMIT}

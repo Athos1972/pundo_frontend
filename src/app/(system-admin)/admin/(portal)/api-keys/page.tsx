@@ -33,7 +33,7 @@ export default async function ApiKeysPage({ searchParams }: PageProps) {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-semibold text-gray-900">{tr.nav_api_keys}</h1>
-      <p className="text-sm text-gray-500">API keys are created by shop owners. Admins can only revoke them.</p>
+      <p className="text-sm text-gray-500">{tr.api_keys_admin_hint}</p>
 
       <EntityTable
         columns={[
@@ -53,6 +53,7 @@ export default async function ApiKeysPage({ searchParams }: PageProps) {
         deletedMessage={tr.deleted}
         errorMessage={tr.error_generic}
         noItemsLabel={tr.no_items}
+        actionsLabel={tr.actions}
         total={total}
         page={page}
         limit={LIMIT}

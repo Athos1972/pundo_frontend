@@ -127,7 +127,7 @@ npx playwright test --ui
 0. erzeugt die **Run-ID** (`E2E_RUN_ID`, UTC `YYYYMMDDHHMMSS`), nimmt den Lauf-Lock und prüft das Frontend auf 3500 (`assertFrontendFresh`)
 1. startet das Test-Backend auf 8500 neu
 2. räumt Reste abgebrochener Läufe (Run-ID älter als `E2E_STALE_HOURS`, Default 6 h) per `scripts/e2e_test_data.py cleanup --stale-hours 6 --apply`
-3. seedet Fixtures über `pundo_main_backend/scripts/prepare_e2e_db.py` (DB-Reset nur mit `E2E_RESET_DB=true`) und die Test-Kategorien `e2e-tmp-<run>-*`
+3. seedet Fixtures über `pundo_main_backend/scripts/prepare_e2e_db.py` (DB-Reset nur mit `E2E_RESET_DB=true`), die Test-Kategorien `e2e-tmp-<run>-*` und bei jedem Lauf die synthetische Preisverlauf-Fixture (`--seed-price-history`, siehe „Zwei-Ebenen-Prinzip“)
 4. registriert/approved den **globalen** Test-Owner `e2e-owner@pundo-e2e.io` (Shop `e2e-test-shop`) — nur noch für Login/Logout und Read-only-Prüfungen
 5. loggt ihn ein, speichert alles inkl. `runId` und Admin-Token in `e2e/.test-state.json` (**gitignored**, enthält Test-JWTs)
 
@@ -155,6 +155,24 @@ python scripts/e2e_test_data.py cleanup --run-id <RUN> --apply
 python scripts/e2e_test_data.py cleanup --stale-hours 6 --apply
 python scripts/e2e_test_data.py cleanup --legacy --include-customers      # Einmal-Bereinigung Altlasten (erst Dry-Run prüfen!)
 ```
+
+## Datenabhängige Tests: Zwei-Ebenen-Prinzip
+
+`pundo_test` ist eine Prod-Kopie und driftet (Preise ändern sich, Crawls altern aus Zeitfenstern heraus). Tests, deren Prüfgegenstand von bestimmten Daten abhängt, werden deshalb in **zwei Ebenen** geschrieben — Referenz-Umsetzung: `e2e/price-history.spec.ts`.
+
+| Ebene | Daten | Verhalten |
+|---|---|---|
+| **1. Funktionale Regression** | **synthetische, permanente Fixture**, vom Global Setup bei **jedem** Lauf idempotent upserted | läuft **immer**, **kein Skip**; fehlt die Fixture, schlägt der Test mit Hinweis fehl |
+| **2. Realdaten-Check** | Kandidat wird zur Laufzeit per API auf 8500 in der Prod-Kopie gesucht (synthetische `e2e-*` ausgeschlossen) | Kernprüfungen gegen das echte Objekt, sonst `test.skip` mit konkreter Begründung (z. B. „keine produktiven Preisdaten im 90-Tage-Fenster in pundo_test“) |
+
+Regeln für Ebene-1-Fixtures:
+- **Ort:** `pundo_main_backend/scripts/prepare_e2e_db.py` (eigenes Flag, z. B. `--seed-price-history`), aufgerufen in `e2e/global-setup.ts`. Zeitabhängige Felder (`crawled_at` u. ä.) **relativ zu „jetzt“** schreiben, damit nichts aus Backend-Zeitfenstern läuft.
+- **Idempotent:** Upsert über stabile Slugs (`ON CONFLICT (slug)`), abhängige Zeilen (Offers) nur unterhalb der eigenen Listings ersetzen — keine Duplikate, nie Prod-Kopie-Daten anfassen, kein TRUNCATE/DROP.
+- **Marker + Schutz:** Slugs `e2e-<thema>-…` (ohne Run-ID → kein Stale-Cleanup); Shop-/Item-Slugs zusätzlich als permanent in `scripts/e2e_test_data.py` eintragen (sonst räumt `cleanup --legacy` sie weg).
+- **Unsichtbar halten:** Shop ohne Adresse/Location (nicht indexierbar → keine Shop-Sitemap, keine Karte/Nearby), Items ohne Kategorie (keine Kategorie-Zählungen), Listing-`created_at` alt (nie „newest“), Namen ohne gängige Suchbegriffe. Restwirkung: Produkt-Sitemap listet alle Items (wie bei den übrigen `e2e-*`-Fixtures).
+- **Erwartungswerte** stehen gespiegelt in der Spec; der `beforeAll` prüft den Fixture-Vertrag per API (Preise, Zeitfenster), damit Drift der Fixture sofort als Fehler auffällt.
+
+Preisverlauf-Fixture (`--seed-price-history`, Shop `e2e-price-history-shop`): `e2e-price-history-falling` (4 Punkte, aktuell = Tiefstwert), `-rising` (aktuell ≠ Tiefstwert), `-flat` (gleiche Preise, kein Trend-Badge), `-single` (genau 1 Punkt → Empty-State), `-outside-window` (einziger Crawl vor 120 Tagen → kein Block).
 
 ---
 

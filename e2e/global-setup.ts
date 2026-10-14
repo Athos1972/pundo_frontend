@@ -405,6 +405,23 @@ export default async function globalSetup() {
     console.warn('[E2E Setup] Test-Kategorien konnten nicht angelegt werden (nicht kritisch):', err)
   }
 
+  // ── 1c. Synthetischer Preisverlauf (F4900, Zwei-Ebenen-Prinzip) ───────────
+  // Permanente, markierte Fixture (Shop `e2e-price-history-shop`, Items `e2e-price-history-*`).
+  // crawled_at wird bei JEDEM Lauf relativ zu „jetzt“ neu geschrieben (Upsert, keine Duplikate),
+  // damit die Daten nie aus dem 90-Tage-Fenster des Backends laufen. Prod-Kopie bleibt unberührt.
+  // Fehlt die Fixture, schlägt e2e/price-history.spec.ts mit klarer Meldung fehl (kein Skip).
+  try {
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --seed-price-history`,
+      { cwd: BACKEND_REPO, encoding: 'utf8', timeout: 60_000, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONPATH: BACKEND_REPO } }
+    )
+    const ph = JSON.parse(out.trim().split('\n').at(-1)!).price_history as { shop_id: number; products: Record<string, unknown> }
+    console.log(`[E2E Setup] Preisverlauf-Fixture aktualisiert (Shop ${ph.shop_id}, ${Object.keys(ph.products).length} Items).`)
+  } catch (err) {
+    console.warn('[E2E Setup] Preisverlauf-Fixture konnte nicht geseedet werden — price-history.spec.ts wird fehlschlagen:',
+      err instanceof Error ? err.message.split('\n')[0] : err)
+  }
+
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
   // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)

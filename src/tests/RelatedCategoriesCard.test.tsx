@@ -1,5 +1,5 @@
 /**
- * Unit tests for RelatedCategoriesCard (F2360).
+ * Unit tests for RelatedCategoriesCard (F2370).
  *
  * Covers:
  *  - Renders null when categories array is empty

@@ -1,0 +1,71 @@
+# YouTube Short S2 (9:16), teaser for part 2 "Add your first product to pundo" (video/product-create-new).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Same demo data as part 2 (prepare: ../product-create-new/prepare.sh, photo ../product-create-new/assets/product-photo.jpg).
+
+meta:
+  slug: short-product-create-new
+  format: vertical
+  title:
+    en: "Your first product online in 2 minutes"
+    el: "Το πρώτο σου προϊόν online σε 2 λεπτά"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  thumbnail_scene: none
+  target_duration_s: 40
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: new-product
+    shot: 'offer picker (search typed in prep): + Create new, name, Product, category suggestion, Save'
+    callout:
+      en: "New product"
+      el: "Νέο προϊόν"
+    narration:
+      en: >-
+        Selling something you make yourself? Create a new product: type the name, choose Product,
+        and pundo suggests the category.
+      el: >-
+        Πουλάς κάτι που φτιάχνεις εσύ; Δημιούργησε νέο προϊόν: γράψε το όνομα, διάλεξε Προϊόν,
+        και το pundo προτείνει την κατηγορία.
+
+  - id: photo
+    shot: 'step 2: add own photo, cover badge'
+    callout:
+      en: "Your own photo"
+      el: "Η δική σου φωτογραφία"
+    narration:
+      en: >-
+        Add your own photo, up to eight. The first one is the cover.
+      el: >-
+        Πρόσθεσε τη δική σου φωτογραφία, έως οκτώ. Η πρώτη είναι το εξώφυλλο.
+
+  - id: price
+    shot: 'fixed price, unit piece, 4.50, Save'
+    callout:
+      en: "Your price"
+      el: "Η τιμή σου"
+    narration:
+      en: >-
+        Choose a fixed price per piece, type in your price and tap Save.
+      el: >-
+        Διάλεξε σταθερή τιμή ανά τεμάχιο, γράψε την τιμή σου και πάτησε Αποθήκευση.
+
+  - id: done
+    shot: 'customer shop page: bread card with photo and price'
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        Done! Your product is live on your shop page, with photo and price.
+      el: >-
+        Έτοιμο! Το προϊόν σου εμφανίζεται στη σελίδα του καταστήματός σου, με φωτογραφία και τιμή.
+
+  - id: outro
+    branding: outro

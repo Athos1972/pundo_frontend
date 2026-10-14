@@ -1,0 +1,81 @@
+# YouTube Short S1 (9:16), teaser for part 1 "Sign up your shop on pundo in 5 minutes or less" (video/shop-signup).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Every run registers a NEW throwaway account in pundo_test (video-short-<lang>-<stamp>@pundo-e2e.io); its login goes
+# to short-shop-signup/.recording-accounts.json (gitignored) so the demo logins of the other videos stay untouched.
+
+meta:
+  slug: short-shop-signup
+  format: vertical
+  title:
+    en: "Your shop on pundo: free, in 5 minutes"
+    el: "Το κατάστημά σου στο pundo: δωρεάν, σε 5 λεπτά"
+  url:
+    en: "pundo.cy/for-shops"
+    el: "pundo.cy/for-shops"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  thumbnail_scene: none
+  target_duration_s: 40
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: step1-type
+    shot: 'onboarding step 1 (opened in prep): tap Retailer'
+    callout:
+      en: "Your business type"
+      el: "Ο τύπος της επιχείρησής σου"
+    narration:
+      en: >-
+        Get your shop found on pundo, for free. First choose your business type.
+      el: >-
+        Κάνε το κατάστημά σου να το βρίσκουν στο pundo, δωρεάν. Πρώτα διάλεξε τον τύπο της επιχείρησής σου.
+
+  - id: step2-offer
+    shot: 'step 2: tap Bakery + Grocery, Next'
+    callout:
+      en: "What you offer"
+      el: "Τι προσφέρεις"
+    narration:
+      en: >-
+        Then what you offer. Anna runs a bakery.
+      el: >-
+        Μετά τι προσφέρεις. Η Άννα έχει φούρνο.
+
+  - id: step3-location
+    shot: 'step 3: type address, tap suggestion, Next'
+    callout:
+      en: "Your location"
+      el: "Η τοποθεσία σου"
+    narration:
+      en: >-
+        Where are you? Type your address and pick it on the map.
+      el: >-
+        Πού βρίσκεσαι; Γράψε τη διεύθυνσή σου και διάλεξέ τη στον χάρτη.
+
+  - id: step4-contact
+    shot: 'step 4: WhatsApp + phone, Next'
+    callout:
+      en: "How customers reach you"
+      el: "Πώς σε βρίσκουν οι πελάτες"
+    narration:
+      en: >-
+        And how customers reach you, for example on WhatsApp.
+      el: >-
+        Και πώς σε βρίσκουν οι πελάτες, για παράδειγμα στο WhatsApp.
+
+  - id: confirm
+    shot: 'check-email page (name, photo and login filled untimed in the prep)'
+    callout:
+      en: "Done in 5 minutes"
+      el: "Έτοιμο σε 5 λεπτά"
+    narration:
+      en: >-
+        Add a name, a photo and your login. Done in under five minutes!
+      el: >-
+        Πρόσθεσε όνομα, φωτογραφία και στοιχεία σύνδεσης. Έτοιμο σε λιγότερο από πέντε λεπτά!
+
+  - id: outro
+    branding: outro

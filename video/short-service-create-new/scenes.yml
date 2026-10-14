@@ -1,0 +1,74 @@
+# YouTube Short S4 (9:16), teaser for part 4 "Add your services to pundo" (video/service-create-new).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Same demo data as part 4 (prepare: ../service-create-new/prepare_service.py, photo ../service-create-new/assets/workshop-photo.jpg).
+
+meta:
+  slug: short-service-create-new
+  format: vertical
+  title:
+    en: "Services belong on pundo too"
+    el: "Και οι υπηρεσίες σου ανήκουν στο pundo"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    search: { en: "Baking workshop", el: "Εργαστήρι ψωμιού με προζύμι" }
+    name: { en: "Sourdough baking workshop (2 h)", el: "Εργαστήρι ψωμιού με προζύμι (2 ώρες)" }
+    category: { en: "Cooking & Baking Classes", el: "Μαθήματα Μαγειρικής & Ζαχαροπλαστικής" }
+    price: { en: "35", el: "35" }
+  thumbnail_scene: none
+  target_duration_s: 40
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: new-service
+    shot: 'create form (opened in prep): name, type Service, category suggestion, Save'
+    callout:
+      en: "New service"
+      el: "Νέα υπηρεσία"
+    narration:
+      en: >-
+        Offering a class or a repair service? Create it as a service, and pundo suggests the right category.
+      el: >-
+        Προσφέρεις μάθημα ή επισκευές; Δημιούργησέ το ως υπηρεσία και το pundo προτείνει τη σωστή κατηγορία.
+
+  - id: photo
+    shot: 'step 2: add own photo, cover badge'
+    callout:
+      en: "Your photo"
+      el: "Η φωτογραφία σου"
+    narration:
+      en: >-
+        Add a photo of your work, so customers see what to expect.
+      el: >-
+        Πρόσθεσε μια φωτογραφία από τη δουλειά σου, για να ξέρουν οι πελάτες τι να περιμένουν.
+
+  - id: price
+    shot: 'price type field highlighted, Fixed, unit Session, 35, Save'
+    callout:
+      en: "Price per session"
+      el: "Τιμή ανά συνεδρία"
+    narration:
+      en: >-
+        Fixed price, on request or variable: choose what fits. Anna's baking class costs 35 euros per session. Save.
+      el: >-
+        Σταθερή τιμή, κατόπιν αιτήματος ή μεταβλητή: διάλεξε ό,τι ταιριάζει. Το μάθημα της Άννας κοστίζει 35 ευρώ τη συνεδρία. Αποθήκευση.
+
+  - id: done
+    shot: 'customer shop page: workshop card'
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        And your service is live on your shop page, right away.
+      el: >-
+        Και η υπηρεσία σου εμφανίζεται αμέσως στη σελίδα του καταστήματός σου.
+
+  - id: outro
+    branding: outro

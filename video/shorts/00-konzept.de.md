@@ -38,3 +38,19 @@ Jede Tutorial-Szene ist bereits eine eigenständige Aufnahme (`video/<slug>/.cac
 ## Entscheidungen (BB, 2026-10-14)
 - **Neu aufnehmen** (eigene kurze Aufnahme + eigener Text je Short), nicht aus den Tutorials schneiden.
 - **Pilot S6 „Preise“ EN + EL** zuerst; danach Format-Freigabe, dann die übrigen sechs.
+
+## Umsetzung (2026-10-14)
+Je Short ein Ordner `video/short-<tutorial-slug>/` mit `scenes.yml` (`meta.format: vertical`) und `record.mjs` (abgeleitet aus dem Tutorial-Recorder; Navigation/Formular-Öffnen ungetaktet im `prep` der ersten Szene; Vorbereitungs-Skripte des Tutorials werden wiederverwendet). Bauen: `video/build.sh short-<slug> [en|el] [--rerecord|--no-record]`.
+
+| # | Ordner | Szenen | Vorbereitung |
+|---|---|---|---|
+| S1 | `short-shop-signup` | Typ → Angebot → Standort → Kontakt → „Check your inbox“ (Schritt 5+6 ungetaktet) | legt je Lauf einen **Wegwerf-Account** an (`video-short-<lang>-<stamp>@pundo-e2e.io`, Login in `short-shop-signup/.recording-accounts.json`, gitignored) |
+| S2 | `short-product-create-new` | neues Produkt → Foto → Preis → Shop-Seite | `../product-create-new/prepare.sh` (räumt **alle** Angebote des Demo-Shops ab!) |
+| S3 | `short-product-from-catalog` | Barcode + Auswahl → Katalogfoto → Preis → Shop-Seite | `../product-from-catalog/prepare_catalog.py` |
+| S4 | `short-service-create-new` | neue Dienstleistung → Foto → Preis pro Sitzung → Shop-Seite | `../service-create-new/prepare_service.py` |
+| S5 | `short-service-from-catalog` | Katalog-Treffer → „Auf Anfrage“ → Shop-Seite + Kontakt | `../service-from-catalog/prepare_catalog_service.py` |
+| S6 | `short-pricing` | Staffel → Produktseite → Aktion → Aktionskarte | `../pricing/prepare_pricing.py` |
+| S7 | `short-shop-profile` | Öffnungszeiten mit Pause → Sprachen + Zahlung → Shop-Seite | `../shop-profile/prepare_profile.py` |
+
+**Reihenfolge beim Neuaufnehmen:** S2 räumt die Angebote des Demo-Shops ab → danach S3/S4/S5/S6 erneut aufnehmen, falls sie dieselbe Shop-Seite zeigen sollen.
+**Layout-Regel (render.mjs):** Callouts im Hochformat ≤ 18 Zeichen 70 px, ≤ 26 Zeichen 60 px, sonst 52 px — damit sie nicht hinter das Handy laufen.

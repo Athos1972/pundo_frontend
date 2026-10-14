@@ -1,0 +1,61 @@
+# YouTube Short S5 (9:16), teaser for part 5 "Add a service that's already on pundo" (video/service-from-catalog).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Same demo data as part 5 (prepare: ../service-from-catalog/prepare_catalog_service.py).
+
+meta:
+  slug: short-service-from-catalog
+  format: vertical
+  title:
+    en: "Price on request? Customers contact you directly"
+    el: "Τιμή κατόπιν αιτήματος; Οι πελάτες σε βρίσκουν απευθείας"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    search: { en: "Catering / events", el: "Catering / εκδηλώσεις" }
+    name: { en: "Catering / events", el: "Catering / εκδηλώσεις" }
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: pick
+    shot: 'offer picker (opened in prep): type the full name, result with photo, tap it'
+    callout:
+      en: "Already on pundo"
+      el: "Υπάρχει ήδη στο pundo"
+    narration:
+      en: >-
+        Catering is already on pundo, with a photo. Search for it and tap it once.
+      el: >-
+        Το catering υπάρχει ήδη στο pundo, με φωτογραφία. Ψάξ' το και πάτησέ το μία φορά.
+
+  - id: price
+    shot: 'price type "On request", Save'
+    callout:
+      en: "Price: on request"
+      el: "Τιμή: κατόπιν αιτήματος"
+    narration:
+      en: >-
+        The price depends on the event? Choose "On request" and save.
+      el: >-
+        Η τιμή εξαρτάται από την εκδήλωση; Διάλεξε «Κατόπιν αιτήματος» και αποθήκευσε.
+
+  - id: done
+    shot: 'customer shop page: catering card "Price on request", then WhatsApp / phone'
+    callout:
+      en: "Customers contact you"
+      el: "Οι πελάτες σε βρίσκουν"
+    narration:
+      en: >-
+        Customers see "On request" and contact you directly, by WhatsApp or phone.
+      el: >-
+        Οι πελάτες βλέπουν «Κατόπιν αιτήματος» και επικοινωνούν απευθείας μαζί σου, με WhatsApp ή τηλέφωνο.
+
+  - id: outro
+    branding: outro

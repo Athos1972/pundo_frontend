@@ -62,7 +62,10 @@ async function layers() {
     const co = sc.callout || ''
     const [label, title] = co.includes(' · ') ? co.split(' · ') : [null, co]
     const isUrl = /^[\w.-]+\.\w+\//.test(co)
-    const fs_ = (title.length > 30 ? 72 : title.length > 20 ? 80 : LY.callout_font_px) * (isUrl ? 0.8 : 1)
+    // 16:9: long titles get a slightly smaller size; 9:16 (Shorts): long titles must stay on <= 2 short lines above the phone
+    const fs_ = LY.vertical
+      ? (title.length > 26 ? 52 : title.length > 18 ? 60 : LY.callout_font_px)
+      : (title.length > 30 ? 72 : title.length > 20 ? 80 : LY.callout_font_px) * (isUrl ? 0.8 : 1)
     const body = `${shadow}
       <div style="position:absolute;left:${LY.right_x}px;top:${LY.callout_y || 230}px;width:${LY.right_w}px;${LY.vertical ? 'text-align:center;' : rtl ? 'text-align:right;' : ''}">
         ${label ? `<div class="h" style="display:inline-block;background:${C.accent};color:#fff;font-size:38px;padding:10px 28px;border-radius:999px;margin-bottom:34px">${esc(label)}</div>` : '<div style="width:96px;height:10px;border-radius:5px;background:' + C.accent + ';margin:' + (LY.vertical ? '0 auto 28px' : '0 0 40px') + '"></div>'}

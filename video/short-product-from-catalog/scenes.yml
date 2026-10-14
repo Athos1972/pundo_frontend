@@ -1,0 +1,72 @@
+# YouTube Short S3 (9:16), teaser for part 3 "Add a product that's already on pundo" (video/product-from-catalog).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Same demo data as part 3 (prepare: ../product-from-catalog/prepare_catalog.py, fictional carob syrup, EAN 2001234567893).
+
+meta:
+  slug: short-product-from-catalog
+  format: vertical
+  title:
+    en: "Already on pundo? Take it over in one tap"
+    el: "Υπάρχει ήδη στο pundo; Πάρ' το με ένα πάτημα"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    ean: "2001234567893"
+    price: { en: "6.90", el: "6,90" }
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: barcode
+    shot: 'offer picker (opened in prep): type EAN, match card with photo, tap Select'
+    callout:
+      en: "Find it by barcode"
+      el: "Βρες το με barcode"
+    narration:
+      en: >-
+        Selling branded products? Type the barcode. The product is already on pundo. One tap and it's yours.
+      el: >-
+        Πουλάς επώνυμα προϊόντα; Πληκτρολόγησε το barcode. Το προϊόν υπάρχει ήδη στο pundo. Ένα πάτημα και είναι δικό σου.
+
+  - id: catalog-photo
+    shot: 'step 2 with the catalog photo ("From Pundo")'
+    callout:
+      en: "Photo included"
+      el: "Με φωτογραφία"
+    narration:
+      en: >-
+        Photo and description are already there.
+      el: >-
+        Φωτογραφία και περιγραφή υπάρχουν ήδη.
+
+  - id: price
+    shot: 'fixed price, unit piece, 6.90, Save'
+    callout:
+      en: "Your own price"
+      el: "Η δική σου τιμή"
+    narration:
+      en: >-
+        Now choose a fixed price per piece, type in your own price and tap Save.
+      el: >-
+        Τώρα διάλεξε σταθερή τιμή ανά τεμάχιο, γράψε τη δική σου τιμή και πάτησε Αποθήκευση.
+
+  - id: done
+    shot: 'customer shop page: syrup card'
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        And your product is live on your shop page, right away.
+      el: >-
+        Και εμφανίζεται αμέσως στη σελίδα του καταστήματός σου.
+
+  - id: outro
+    branding: outro

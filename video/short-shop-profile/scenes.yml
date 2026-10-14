@@ -1,0 +1,64 @@
+# YouTube Short S7 (9:16), teaser for part 7 "Keep your shop profile up to date" (video/shop-profile).
+# Concept + decisions: video/shorts/00-konzept.de.md (own recording; format approved with pilot S6, BB 2026-10-14).
+# Same demo data as part 7 (prepare: ../shop-profile/prepare_profile.py); needs bug fix B5950-001.
+
+meta:
+  slug: short-shop-profile
+  format: vertical
+  title:
+    en: "Open now? Your profile answers it"
+    el: "Ανοιχτά τώρα; Το προφίλ σου απαντά"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    hours: { open: "07:00", close: "14:00", second_open: "16:30", second_close: "19:00", sat_close: "14:00" }
+    languages: [EN, EL, RU]
+    payments: [cash, card, revolut]
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hours
+    shot: 'Opening Hours (opened in prep): Monday 07:00-14:00 + second slot 16:30-19:00, Tue-Fri the same, Sunday closed, Save hours'
+    callout:
+      en: "Opening hours"
+      el: "Ώρες λειτουργίας"
+    narration:
+      en: >-
+        Customers want to know right away: are you open? Add your opening hours. For a lunch break,
+        just add a second time slot. Save.
+      el: >-
+        Οι πελάτες θέλουν να ξέρουν αμέσως: είσαι ανοιχτά; Πρόσθεσε τις ώρες λειτουργίας. Για μεσημεριανό
+        διάλειμμα, πρόσθεσε ένα δεύτερο χρονικό διάστημα. Αποθήκευση.
+
+  - id: languages-payment
+    shot: 'Shop Profile (opened in prep): languages EN, EL, RU; payment Cash, Visa / Mastercard, Revolut; Save'
+    callout:
+      en: "Languages & payment"
+      el: "Γλώσσες & πληρωμή"
+    narration:
+      en: >-
+        Then show which languages you speak and how customers can pay. Save.
+      el: >-
+        Μετά δείξε ποιες γλώσσες μιλάς και πώς μπορούν να πληρώσουν οι πελάτες. Αποθήκευση.
+
+  - id: customer-view
+    shot: 'customer shop page: languages, payment methods, opening hours with lunch break'
+    callout:
+      en: "Live on your shop page"
+      el: "Στη σελίδα του καταστήματός σου"
+    narration:
+      en: >-
+        And it's all on your shop page, at a glance.
+      el: >-
+        Και όλα είναι στη σελίδα του καταστήματός σου, με μια ματιά.
+
+  - id: outro
+    branding: outro

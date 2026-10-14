@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev:test": "BACKEND_URL=http://localhost:8500 next dev -H 0.0.0.0 -p 3500",
+    "dev:test:poll": "NEXT_DEV_POLL_INTERVAL_MS=1000 npm run dev:test",
     "build": "next build",
     "build:prod": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "next start",

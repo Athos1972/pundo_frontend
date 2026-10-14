@@ -57,6 +57,13 @@ const config: NextConfig = {
     ],
   },
   allowedDevOrigins: [...new Set([...getLanIPs(), ...manualOrigins, ...LOCAL_BRAND_DOMAINS, ...LOOPBACK_ORIGINS])],
+  // Opt-in Polling für den Dev-Watcher (nur `npm run dev:test:poll`, genutzt vom Claude-Preview
+  // via .claude/launch.json): Dateiänderungen aus der Claude-Code-Bash-Sandbox erzeugen keine
+  // FSEvents, die Turbopack sieht → ohne Polling bleibt der Dev-Server auf altem Stand.
+  // Normales `npm run dev:test` bleibt ohne Polling (Next-Doku: Polling nur als letzter Ausweg).
+  ...(process.env.NEXT_DEV_POLL_INTERVAL_MS
+    ? { watchOptions: { pollIntervalMs: Number(process.env.NEXT_DEV_POLL_INTERVAL_MS) } }
+    : {}),
   async headers() {
     return [
       {

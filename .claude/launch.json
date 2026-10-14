@@ -4,7 +4,7 @@
     {
       "name": "pundo_frontend_test",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:test"],
+      "runtimeArgs": ["run", "dev:test:poll"],
       "port": 3500
     }
   ]

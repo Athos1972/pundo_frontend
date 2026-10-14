@@ -40,7 +40,7 @@ im Handoff-Block des Test-Reports): lies JEDE offene Bug-Datei bevor du Code än
 Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
             00 Überblick/__ Bugs & Hotfixes/B<id> <Titel>.md
 ```
-(Ältere Bug-Dateien unter `20 Features/FG*/Bugs/` sind Altbestand — dort keine neuen anlegen.)
+(Die frühere Ablage `20 Features/FG*/Bugs/` gibt es seit 2026-10-14 nicht mehr — alle Bugs liegen zentral.)
 
 Für jeden Bug:
 - Setze `status: IN ARBEIT` in der Bug-Datei (Resolution-Log-Zeile ergänzen).

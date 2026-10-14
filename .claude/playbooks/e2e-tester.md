@@ -433,8 +433,8 @@ Für jeden FAIL (neu oder weiter offen):
 ```
 Vault-Pfad: /Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/
             00 Überblick/__ Bugs & Hotfixes/B<id> <Titel>.md
-Template:   20 Features/FG8 Admin & Operations/Bugs/Bug-Template.md
-(Alte Bug-Dateien unter 20 Features/FG*/Bugs/ sind Altbestand — dort keine neuen anlegen.)
+Template:   00 Überblick/_templates/Bug-Template.md
+(Die frühere Ablage `20 Features/FG*/Bugs/` gibt es seit 2026-10-14 nicht mehr — alle Bugs liegen zentral.)
 ```
 
 Pflichtfelder: `id`, `type`, `category`, `status`, `repo: frontend`, `owner`,

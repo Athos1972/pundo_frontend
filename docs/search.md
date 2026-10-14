@@ -24,7 +24,7 @@ Alle Suchparameter werden als URL Query-Params gespeichert — Links sind damit 
 | `q` | string | Freitextsuche (Produktname, Shopname, Kategorie) |
 | `lat` / `lng` | float | Geokoordinaten für Distanzberechnung |
 | `category_id` | integer | Filter auf Kategorie (inkl. aller Unterkategorien) |
-| `shop_id` | integer | Filter auf einen bestimmten Shop |
+| `shop_id` | integer | Nur Produkte mit öffentlichem, nicht archiviertem Angebot dieses Shops; `best_offer` ist dann ausschließlich das Angebot dieses Shops (fixed vor anderen, dann günstigster Preis) (B5900-016) |
 | `with_price` | `1` | Nur Angebote mit Fixpreis (`price_type=fixed`) |
 | `show_online` | `1` | Online-Händler einblenden |
 | `limit` / `offset` | integer | Pagination |

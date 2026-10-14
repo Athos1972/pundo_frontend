@@ -204,6 +204,77 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     expect(categoryCall, 'searchProducts mit category_id wurde nicht aufgerufen — Guard-Fix hat Regression').toBeTruthy()
   })
 
+  // ─── E — B5900-016: best_offer im shop_id-Modus nur vom eigenen Shop ───────────
+
+  const GEO = 'lat=34.6841&lng=33.0379'
+  type ListItem = { name?: string; best_offer?: { shop_id: number; shop_slug?: string } | null }
+
+  for (const slug of ['manjo-pet-087d8709', 'anna-s-bakery', 'o-phournos-tes-annas']) {
+    test(`E1 — API-Invariante shop_id-Modus (${slug}): nur eigene Angebote, total == product_count`, async () => {
+      const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
+      if (!detailRes.ok) {
+        logStep(`E1 ${slug}`, 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP', 'Fixture fehlt in pundo_test')
+        test.skip(true, `Shop ${slug} nicht vorhanden`)
+        return
+      }
+      const detail = await detailRes.json() as { id: number; product_count?: number }
+      for (const geo of ['', `&${GEO}`]) {
+        const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${detail.id}&limit=100${geo}`)
+        const data = await res.json() as { total: number; items: ListItem[] }
+        const foreign = data.items.filter(i => !i.best_offer || i.best_offer.shop_id !== detail.id)
+        const label = `E1 ${slug}${geo ? ' +geo' : ''}`
+        logStep(`${label} nur eigene Angebote`, '0 fremde/fehlende best_offer', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.map(i => i.name).join(', ') || undefined)
+        expect(foreign, `Fremd-/Kein-Angebot im shop_id-Modus: ${foreign.map(i => i.name).join(', ')}`).toHaveLength(0)
+        if (data.total <= 100 && typeof detail.product_count === 'number') {
+          const same = detail.product_count === data.total
+          logStep(`${label} product_count == total`, String(detail.product_count), String(data.total), same ? 'PASS' : 'FAIL')
+          expect(data.total).toBe(detail.product_count)
+        }
+      }
+    })
+  }
+
+  test('E2 — Shop-Seite: jede Karte verlinkt nur auf den eigenen Shop; Raster == product_count (Demo-Shops)', async ({ page }) => {
+    for (const slug of ['anna-s-bakery', 'o-phournos-tes-annas']) {
+      const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
+      if (!detailRes.ok) { logStep(`E2 ${slug}`, 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP'); continue }
+      const detail = await detailRes.json() as { product_count: number }
+      await page.goto(`${BASE_URL}/en/shops/${slug}`)
+      await page.waitForLoadState('networkidle')
+      const cards = await page.locator('a[href^="/en/products/"]').evaluateAll(els => els.length)
+      const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
+      const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
+      logStep(`E2 ${slug} nur eigene Shop-Links`, '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
+      expect(foreign, `Fremde Shop-Links im Raster: ${foreign.join(', ')}`).toHaveLength(0)
+      const ok = cards >= detail.product_count
+      logStep(`E2 ${slug} Kartenanzahl`, `>= ${detail.product_count}`, String(cards), ok ? 'PASS' : 'FAIL')
+      expect(cards).toBeGreaterThanOrEqual(detail.product_count)
+    }
+  })
+
+  test('E3 — /search?shop_id= mit Geolocation Limassol: nur eigene Shop-Links, Anzahl == product_count', async ({ browser }) => {
+    const slug = 'anna-s-bakery'
+    const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
+    if (!detailRes.ok) { logStep('E3', 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP'); test.skip(true, 'anna-s-bakery fehlt'); return }
+    const detail = await detailRes.json() as { id: number; product_count: number }
+    const ctx = await browser.newContext({ geolocation: { latitude: 34.6841, longitude: 33.0379 }, permissions: ['geolocation'] })
+    const page = await ctx.newPage()
+    try {
+      await page.goto(`${BASE_URL}/en/search?shop_id=${detail.id}`)
+      await page.waitForLoadState('networkidle')
+      await page.waitForTimeout(1500)
+      const productHrefs = await page.locator('a[href^="/en/products/"]').evaluateAll(els => Array.from(new Set(els.map(e => e.getAttribute('href')))))
+      const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
+      const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
+      logStep('E3 Anzahl Karten', String(detail.product_count), String(productHrefs.length), productHrefs.length === detail.product_count ? 'PASS' : 'FAIL')
+      logStep('E3 nur eigene Shop-Links', '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
+      expect(productHrefs.length).toBe(detail.product_count)
+      expect(foreign).toHaveLength(0)
+    } finally {
+      await ctx.close()
+    }
+  })
+
 })
 
 // ─── Report schreiben ────────────────────────────────────────────────────────

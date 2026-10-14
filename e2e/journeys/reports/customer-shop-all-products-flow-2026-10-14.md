@@ -1,6 +1,6 @@
 # Journey Report: customer-shop-all-products-flow
 **Datum:** 2026-10-14
-**Verdict:** PASS (13/13 Steps)
+**Verdict:** PASS (29/29 Steps)
 **Bug:** B5900-004 — shop_id-Modus in SearchContent
 
 ## Fixtures
@@ -26,6 +26,22 @@
 | C1c API shop_id-Request | /api/v1/products?shop_id=75 | http://localhost:3500/api/v1/products?shop_id=75&lat=34.9009&lng=33.623&limit=20&offset=0 | **PASS** |
 | C2 searchAll nicht aufgerufen | 0 /search Calls | 0 | **PASS** |
 | D1 category_id-Modus | /api/v1/products?category_id=1 aufgerufen | http://localhost:3500/api/v1/products?category_id=1&lat=34.9009&lng=33.623&limit=20&offset=0 | **PASS** |
+| E1 manjo-pet-087d8709 nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 manjo-pet-087d8709 +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 anna-s-bakery nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 anna-s-bakery product_count == total | 3 | 3 | **PASS** |
+| E1 anna-s-bakery +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 anna-s-bakery +geo product_count == total | 3 | 3 | **PASS** |
+| E1 o-phournos-tes-annas nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 o-phournos-tes-annas product_count == total | 3 | 3 | **PASS** |
+| E1 o-phournos-tes-annas +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
+| E1 o-phournos-tes-annas +geo product_count == total | 3 | 3 | **PASS** |
+| E2 anna-s-bakery nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
+| E2 anna-s-bakery Kartenanzahl | >= 3 | 4 | **PASS** |
+| E2 o-phournos-tes-annas nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
+| E2 o-phournos-tes-annas Kartenanzahl | >= 3 | 4 | **PASS** |
+| E3 Anzahl Karten | 3 | 3 | **PASS** |
+| E3 nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
 
 ## Findings
 — Keine Findings. B5900-004 erfolgreich regressionsfrei.

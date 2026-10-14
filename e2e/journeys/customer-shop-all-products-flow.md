@@ -15,9 +15,10 @@ touches-roles:
   - guest
 touches-states:
   - Shop.products:present
+  - Offer.multi-shop:present
 status-changed-at: 2026-06-04T21:55:00Z
 status-changed-by-spec: ad-hoc
-last-run: 2026-06-05T12:47:00Z
+last-run: 2026-10-14T00:00:00Z
 last-result: PASS
 last-run-sha: 35f75a280df9d0d7bc9fd41cd9761f0ef8957471
 ---
@@ -87,3 +88,5 @@ Bei fehlendem Shop oder 0 Produkten: `test.skip('Fixture-Defekt: ...')` + Bug-Ei
 **Ja** — dieser Flow ist für echte Nutzer sichtbar und war defekt.
 Wenn die Test-Instanz läuft: Manifest-Eintrag `shop-all-products-link` prüfen lassen.
 Kriterium: „Würde ein Nutzer das innerhalb von 24h bemerken?" → **Ja**, da direkter CTA.
+
+**Schritt E (B5900-016, 2026-10-14):** `best_offer` im `shop_id`-Modus stammt immer vom eigenen Shop (API mit und ohne Geo, Limassol), `total == product_count`, Shop-Seite und `/search?shop_id=` verlinken nur auf den eigenen Shop. Fixtures: `manjo-pet-087d8709`, Demo-Shops `anna-s-bakery`, `o-phournos-tes-annas` (SKIP, falls nicht vorhanden). 11/11 PASS.

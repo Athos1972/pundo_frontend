@@ -1,0 +1,131 @@
+# Tutorial #10 "Your first 10 minutes on pundo" (EN + EL), placed right after part 1 in the series.
+# Approved German script: 01-skript.de.md (BB 2026-10-14). Needs B5910-007 (button "Keep") and B5900-016
+# (shop page shows only this shop's offers). Demo: Anna's Bakery right after approval with three suggestions
+# (prepare_first_steps.py): keep the wedding cake, price the fresh bread (2.50), archive cakes & pastries.
+
+meta:
+  slug: first-steps
+  title:
+    en: "Your first 10 minutes on pundo"
+    el: "Τα πρώτα 10 λεπτά σου στο pundo"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Next: add your first product"
+    el: "Επόμενο: πρόσθεσε το πρώτο σου προϊόν"
+  demo:
+    keep:    { en: "Wedding cake (custom order)", el: "Γαμήλια τούρτα (ειδική παραγγελία)" }
+    price:   { en: "Fresh bread (daily)",         el: "Φρέσκο ψωμί (καθημερινά)" }
+    archive: { en: "Cakes & pastries",            el: "Τούρτες & κέικ" }
+    price_value: { en: "2.50", el: "2,50" }
+  thumbnail_scene: suggestions
+  target_duration_s: 100
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'shop admin dashboard right after approval'
+    callout:
+      en: "Approved. What now?"
+      el: "Εγκρίθηκε. Και τώρα;"
+    narration:
+      en: >-
+        Your shop has just been approved. With these steps it looks complete in ten minutes.
+      el: >-
+        Το κατάστημά σου μόλις εγκρίθηκε. Με αυτά τα βήματα δείχνει ολοκληρωμένο σε δέκα λεπτά.
+
+  - id: suggestions
+    shot: 'Offers list: three suggestions with badges Suggested + Draft'
+    callout:
+      en: "pundo already did some work"
+      el: "Το pundo έχει ήδη βοηθήσει"
+    narration:
+      en: >-
+        Based on your business type, pundo has already suggested some offers. Customers can already see them, with price on request.
+        Go through them once: keep, set a price, or archive.
+      el: >-
+        Με βάση τον τύπο της επιχείρησής σου, το pundo έχει ήδη προτείνει μερικές προσφορές. Οι πελάτες τις βλέπουν ήδη, με τιμή κατόπιν αιτήματος.
+        Πέρασέ τες μία φορά: κράτα, βάλε τιμή ή αρχειοθέτησε.
+
+  - id: keep
+    shot: 'wedding cake row: tap Keep, toast'
+    callout:
+      en: "Keep"
+      el: "Διατήρηση"
+    narration:
+      en: >-
+        For wedding cakes, the price depends on the order. So simply keep it, with price on request.
+      el: >-
+        Στις γαμήλιες τούρτες η τιμή εξαρτάται από την παραγγελία. Απλώς κράτα την, με τιμή κατόπιν αιτήματος.
+
+  - id: price
+    shot: 'fresh bread row: Edit -> fixed price 2.50 per piece -> Save'
+    callout:
+      en: "Set your price"
+      el: "Βάλε την τιμή σου"
+    narration:
+      en: >-
+        Fresh bread has a fixed price. Open it, choose fixed price, enter 2 euros 50 per piece and save.
+      el: >-
+        Το φρέσκο ψωμί έχει σταθερή τιμή. Άνοιξέ το, διάλεξε σταθερή τιμή, γράψε 2,50 ευρώ το τεμάχιο και αποθήκευσε.
+
+  - id: archive
+    shot: 'cakes & pastries row: Archive -> confirm'
+    callout:
+      en: "Not yours? Archive it"
+      el: "Δεν το έχεις; Αρχειοθέτησέ το"
+    narration:
+      en: >-
+        And what you don't offer, you archive. It disappears from your shop page.
+      el: >-
+        Και ό,τι δεν προσφέρεις, το αρχειοθετείς. Εξαφανίζεται από τη σελίδα του καταστήματός σου.
+
+  - id: profile
+    shot: 'dashboard tiles: Profile + Opening hours highlighted, profile page glance'
+    callout:
+      en: "Photo, description, hours"
+      el: "Φωτογραφία, περιγραφή, ώρες"
+    narration:
+      en: >-
+        Then add a photo, two sentences about you and your opening hours. Our video on your shop profile shows how.
+      el: >-
+        Μετά πρόσθεσε μια φωτογραφία, δύο προτάσεις για σένα και τις ώρες λειτουργίας. Το βίντεο για το προφίλ του καταστήματος σου δείχνει πώς.
+
+  - id: own-products
+    shot: 'Offers list: "+ New" highlighted (not tapped)'
+    callout:
+      en: "Your own products"
+      el: "Τα δικά σου προϊόντα"
+    narration:
+      en: >-
+        Anything pundo doesn't know yet, you add yourself, with your own photo and price. Our next video shows how.
+      el: >-
+        Ό,τι δεν γνωρίζει ακόμα το pundo, το προσθέτεις μόνος σου, με δική σου φωτογραφία και τιμή. Το επόμενο βίντεο δείχνει πώς.
+
+  - id: customer
+    shot: 'customer shop page: fresh bread 2.50, wedding cake on request, no cakes & pastries'
+    callout:
+      en: "What customers see"
+      el: "Τι βλέπουν οι πελάτες"
+    narration:
+      en: >-
+        Done. This is what customers see now: real prices, clear offers, and they can contact you directly.
+      el: >-
+        Έτοιμο. Αυτό βλέπουν τώρα οι πελάτες: πραγματικές τιμές, ξεκάθαρες προσφορές, και μπορούν να επικοινωνήσουν απευθείας μαζί σου.
+
+  - id: wrap-up
+    shot: 'shop page stays'
+    callout:
+      en: "All parts in one playlist"
+      el: "Όλα τα μέρη σε μία playlist"
+    narration:
+      en: >-
+        You'll find all step-by-step videos in our playlist.
+      el: >-
+        Όλα τα βίντεο βήμα βήμα θα τα βρεις στην playlist μας.
+
+  - id: outro
+    branding: outro

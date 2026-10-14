@@ -6,6 +6,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const requirePageMetadata = require("./eslint-rules/require-page-metadata.js");
 const noInlineStyle = require("./eslint-rules/no-inline-style.js");
+const noHardcodedJsxText = require("./eslint-rules/no-hardcoded-jsx-text.js");
 
 // ─── Shop-Admin Clean Boundary ────────────────────────────────────────────────
 // shop-admin code must not import from customer-facing modules.
@@ -85,6 +86,27 @@ const cspInlineStyleRule = {
   },
 };
 
+// ─── i18n Guardrail — no-hardcoded-jsx-text ──────────────────────────────────
+// Warn on visible text hardcoded in JSX (text children, aria-label/alt/title/
+// placeholder). `npm run lint:i18n` only checks key parity of src/lib/i18n/* and
+// cannot see these. Every UI string must serve all 6 languages.
+// Exceptions (brand names in decorative mocks, language endonyms): add
+// // @i18n-allow-literal on the line above (or {/* @i18n-allow-literal */} in JSX children).
+const i18nHardcodedTextRule = {
+  files: ["src/app/**/*.tsx", "src/components/**/*.tsx"],
+  ignores: ["src/**/*.test.tsx", "src/tests/**"],
+  plugins: {
+    "local-i18n": {
+      rules: {
+        "no-hardcoded-jsx-text": noHardcodedJsxText,
+      },
+    },
+  },
+  rules: {
+    "local-i18n/no-hardcoded-jsx-text": "warn",
+  },
+};
+
 // ─── Unused vars: ignore _-prefixed identifiers (standard TS convention) ──────
 // Preserve rule defaults: vars/args/ignoreRestSiblings are kept at defaults;
 // only add _-ignore patterns so prefixed identifiers stop being flagged.
@@ -118,6 +140,7 @@ const eslintConfig = defineConfig([
   shopAdminBoundaryRule,
   seoMetadataRule,
   cspInlineStyleRule,
+  i18nHardcodedTextRule,
   unusedVarsRule,
   testFilesRule,
   // Override default ignores of eslint-config-next.

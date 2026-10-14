@@ -1,5 +1,7 @@
 # TESTSET — pundo_frontend
 
+> **Momentaufnahme — zuletzt fortgeschrieben am 2026-06-09.** Zahlen und Befunde unten spiegeln nicht zwingend den aktuellen Stand. Aktuelle Ergebnisse je Journey: `last-run`/`last-result` im Frontmatter von `e2e/journeys/<id>.md` bzw. Testreports im Vault.
+
 ## Letzter Testlauf
 Datum: 2026-06-09 (for-shops FAQ 6→13 Items + FAQPage JSON-LD)
 Ergebnis: 2112/2112 bestanden (+20 gegenüber Vorrun, davon 2 Fixes B8950-010)

@@ -2,12 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "pundo_frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
-    },
-    {
       "name": "pundo_frontend_test",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:test"],

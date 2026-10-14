@@ -37,7 +37,13 @@ video/
 | `service-from-catalog` | Teil 5: Katalog-Dienstleistung „Catering / events“ übernehmen, Preis „Auf Anfrage“; `prepare_catalog_service.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `pricing` | Teil 6 (Serienende): Brot-Angebot bearbeiten, Staffel „ab 6 Stück“, Aktionspreis mit Zeitraum, Kundensicht (braucht F5200 „Staffelpreise Kundensicht“); `prepare_pricing.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `shop-profile` | Teil 7: Öffnungszeiten mit Mittagspause (braucht B5950-001), Beschreibung, Sprachen, Zahlungsarten, Liefer-Umkreis, Social Links kurz, Kundenansicht; `prepare_profile.py` (Backend-venv) | Test-Instanz 3500/8500 |
+| `short-shop-signup` | Short S1 (9:16): Shop anmelden; legt je Lauf einen Wegwerf-Account an (Details: `shorts/00-konzept.de.md`) | Test-Instanz 3500/8500 |
+| `short-product-create-new` | Short S2 (9:16): Produkt neu; nutzt `../product-create-new/prepare.sh` | Test-Instanz 3500/8500 |
+| `short-product-from-catalog` | Short S3 (9:16): Produkt aus Katalog; nutzt `../product-from-catalog/prepare_catalog.py` | Test-Instanz 3500/8500 |
+| `short-service-create-new` | Short S4 (9:16): Dienstleistung neu; nutzt `../service-create-new/prepare_service.py` | Test-Instanz 3500/8500 |
+| `short-service-from-catalog` | Short S5 (9:16): Dienstleistung aus Katalog; nutzt `../service-from-catalog/prepare_catalog_service.py` | Test-Instanz 3500/8500 |
 | `short-pricing` | Short S6 (9:16, `meta.format: vertical`): Staffel, Kundensicht, Aktion; nutzt `../pricing/prepare_pricing.py`. Konzept aller Shorts: `shorts/00-konzept.de.md` | Test-Instanz 3500/8500 |
+| `short-shop-profile` | Short S7 (9:16): Profil/Öffnungszeiten (braucht B5950-001); nutzt `../shop-profile/prepare_profile.py` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

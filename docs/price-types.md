@@ -77,10 +77,13 @@ Nur wenn `price_type === 'on_request'` UND mindestens ein Kontaktweg vorhanden:
 | `filter_price_only` | With price only | Nur mit Preis |
 | `contact_shop` | Contact shop | Shop kontaktieren |
 
-Alle 6 Sprachen: EN, DE, EL, RU, AR, HE → `src/lib/translations.ts`
+Alle 6 Sprachen: EN, DE, EL, RU, AR, HE → `src/lib/i18n/common.ts` (`contact_shop`: `src/lib/i18n/shop.ts`), über das Barrel `src/lib/translations.ts` erreichbar
 
 ## Scope: Was ist OUT OF SCOPE
 
-- **Staffelpreise / Tier Pricing** — zukünftiger Scope
-- **Separates Service-Modell** (`/services/…` Route) — zukünftiger Scope  
-- **Shop-Admin OfferForm** mit `price_type`-Auswahl — noch nicht implementiert (`// TODO: price_type support für Shop-Admin`)
+- **Separates Service-Modell** (`/services/…` Route) — zukünftiger Scope
+
+## Inzwischen umgesetzt (früher Out of Scope)
+
+- **Staffelpreise / Tier Pricing** — F5200: View-Model `src/lib/price-tiers.ts`, Anzeige `src/components/product/PriceTierSummary.tsx`
+- **Shop-Admin OfferForm** mit `price_type`-Auswahl — `src/components/shop-admin/OfferForm.tsx`

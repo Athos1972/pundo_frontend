@@ -18,9 +18,9 @@
  *   - [Global] Internal links pointing to 3xx redirects
  *
  * Usage:
- *   pnpm tsx scripts/seo-audit.ts
- *   SEO_AUDIT_BASE_URL=http://localhost:3500 pnpm tsx scripts/seo-audit.ts
- *   SEO_AUDIT_BASE_URL=https://naidivse.cy pnpm tsx scripts/seo-audit.ts
+ *   npm run seo:audit
+ *   SEO_AUDIT_BASE_URL=http://localhost:3500 npm run seo:audit
+ *   SEO_AUDIT_BASE_URL=https://naidivse.cy npm run seo:audit
  *
  * Output: seo-audit-<date>.json + seo-audit-<date>.md in project root.
  *

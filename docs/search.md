@@ -8,10 +8,10 @@ Pundo ist ein **Price- und Produktlocator**: Nutzer finden Produkte und Dienstle
 
 | Route | Datei | Beschreibung |
 |---|---|---|
-| `/` | `src/app/page.tsx` | Startseite: Hero-Suchfeld + "Shops in deiner Nähe" |
-| `/search?q=...` | `src/app/(customer)/search/page.tsx` | Suchergebnisseite |
-| `/products/[slug]` | `src/app/(customer)/products/[slug]/page.tsx` | Produktdetailseite mit allen Angeboten |
-| `/shops/[slug]` | `src/app/(customer)/shops/[slug]/page.tsx` | Shop-Detailseite mit Top-Produkten |
+| `/{lang}` | `src/app/(customer)/[lang]/page.tsx` | Startseite: Hero-Suchfeld + "Shops in deiner Nähe" |
+| `/{lang}/search?q=...` | `src/app/(customer)/[lang]/search/page.tsx` | Suchergebnisseite |
+| `/{lang}/products/[slug]` | `src/app/(customer)/[lang]/products/[slug]/page.tsx` | Produktdetailseite mit allen Angeboten |
+| `/{lang}/shops/[slug]` | `src/app/(customer)/[lang]/shops/[slug]/page.tsx` | Shop-Detailseite mit Top-Produkten |
 
 ---
 

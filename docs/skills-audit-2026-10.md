@@ -1,5 +1,7 @@
 # Skills- & Subagent-Audit für die Claude-5-Familie
 
+> **Historische Momentaufnahme (Stand 2026-10-03).** Wird nicht fortgeschrieben; Befunde und Empfehlungen können inzwischen umgesetzt oder überholt sein.
+
 Stand: 2026-10-03 · Read-only-Audit, nichts geändert außer dieser Datei.
 Zielmodelle: Opus 5.5 (`claude-opus-5-5`, $4/$20 pro MTok), Sonnet 5.5 (`claude-sonnet-5-5`, $2/$10), Fable 5.1 (`claude-fable-5-1`, $10/$50), Haiku 4.5 (`claude-haiku-4-5`, $1/$5). Preise laut aktueller Claude-API-Referenz (Cache-Stand 2026-09-25).
 

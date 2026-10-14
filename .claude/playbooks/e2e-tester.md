@@ -13,11 +13,10 @@ Rolle in diesem Repo: Gesamtverantwortung für die Testabdeckung — Diff seit l
 **State-Dateien (in Git):** `.claude/playbooks/state/e2e-tester.last_run` (letzter Lauf: SHA, Verdict, open_failures — gelesen von `scripts/verdict-gate.mjs`), `.claude/playbooks/state/e2e-tester.journey_backlog` (geparkte Journey-Vorschläge).
 
 **Grundregeln:**
-**Grundregeln:**
 - Secrets kommen aus der Umgebung, statt hardcodet in Code oder Tests zu stehen.
 - Produktivdaten nur lesen, nicht verändern — es sind Echtdaten.
 - **Test-Umgebung:** Alle Tests laufen auf Port **3500** (Frontend) + **8500** (Backend-Test-DB `pundo_test`). Am Studio gibt es keine Prod-DB (siehe AGENTS.md, Studio-Hinweis F6995).
-- **Voraussetzung für E2E/Smoke-Tests:** Frontend (3500) und Backend (8500) laufen beide. Es gibt keine "nur-Frontend"-Tests. Ist das Backend down, starte es (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) statt Tests ohne Backend durchzuführen; bleibt es down → betroffene Kriterien BLOCKED.
+- **Voraussetzung für E2E/Smoke-Tests:** Frontend (3500) und Backend (8500) laufen beide. Es gibt keine "nur-Frontend"-Tests. Mit `playwright.config.ts` startet Playwright beides selbst (Global Setup → Backend, `webServer` → Frontend; siehe `docs/e2e-testing.md`). Für Configs ohne Backend-Start (z. B. `e2e/smoke-only.config.ts`): Ist das Backend down, starte es (`cd pundo_main_backend && ./scripts/start_test_server.sh &`) statt Tests ohne Backend durchzuführen; bleibt es down → betroffene Kriterien BLOCKED.
 - **Restart-Regel:** Test-Instanzen (3500 / 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) startet nur der User manuell oder auf ausdrückliche Aufforderung neu, weil dort Echtdaten und laufende Nutzer hängen.
 - Akzeptanzkriterien sind messbar (Selektor, URL, Text, CSS-Eigenschaft).
 - Commit-Policy, Rückfragen, Verdict-Definitionen: siehe Agent und Conventions § Spec-Workflow.
@@ -184,11 +183,9 @@ ESLint:     PASS / X Errors / Y Warnings
 | Komponenten (React-Rendering-Logik) | **70%** | 80% |
 | API-Client (`src/lib/api.ts`) | **70%** | 80% |
 
-### Vitest einrichten (falls noch nicht vorhanden)
+### Vitest-Konfiguration
 
-```bash
-npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom @vitest/coverage-v8
-```
+Vitest ist eingerichtet — `vitest.config.ts` (jsdom, Setup `src/tests/setup.ts`, `include`-Muster) und `@vitest/coverage-v8` sind vorhanden. Nicht neu anlegen.
 
 ### Coverage messen
 
@@ -206,7 +203,7 @@ npx vitest run src/tests/<name>.test.tsx --coverage
 Coverage-Snapshot (Phase 2):
   src/lib/utils.ts:         XX%  [PASS/GAP]
   src/lib/api.ts:           XX%  [PASS/GAP]
-  src/lib/translations.ts:  XX%  [PASS/GAP]
+  src/lib/i18n/*.ts:        XX%  [PASS/GAP]
   src/components/product/*: XX%  [PASS/GAP]
   ...
 ```
@@ -283,6 +280,10 @@ Konfiguration: bestehende `playwright.config.ts` (Port 3500/8500, verwirft Port 
 
 ### Vorbedingungs-Check (BLOCKIEREND — vor jedem E2E/Smoke-Lauf)
 
+**Standard-Config (`playwright.config.ts`):** Kein manueller Start nötig. Das Global Setup startet das Test-Backend (8500) neu; das Frontend (3500) startet ausschließlich Playwright über `webServer` → `node scripts/e2e-frontend.cjs start` (Standalone-Build mit Fingerabdruck-Cache; `E2E_FRONTEND_MODE=dev` → `npm run dev:test`). Ein bereits laufender Server auf 3500 wird nur genutzt, wenn er aktuellen Code ausliefert — sonst bricht das Setup mit Anleitung ab. **Kein** `npm run dev:test &` „auf Verdacht“ starten und kein `kill -9` auf 3500, solange ein anderer Lauf aktiv sein könnte (Lauf-Lock). Details: `docs/e2e-testing.md` („Frontend-Start“).
+
+**Configs ohne webServer/Backend-Start** (z. B. `e2e/smoke-only.config.ts`): beide Dienste müssen bereits laufen:
+
 ```bash
 # Test-Frontend läuft? (Port 3500)
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3500/ || echo "BLOCKED: Test-Frontend nicht erreichbar"
@@ -291,14 +292,10 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3500/ || echo "BLOCKED: 
 curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit=1" || echo "BLOCKED: Test-Backend nicht erreichbar"
 ```
 
-> Beide Dienste geben 200 zurück, bevor irgendein Playwright-Test startet.
-> Es gibt keine "nur-Frontend"-Tests — der Smoke-Test prüft auch datengetriebene Seiten.
->
 > Wenn ein Dienst down ist:
 > - **Backend down:** `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && ./scripts/start_test_server.sh &`
 >   Warten bis Uvicorn "Application startup complete" meldet, dann health-Check wiederholen.
-> - **Frontend down:** `lsof -ti:3500 | xargs kill -9 2>/dev/null; npm run dev:test &`
->   Warten bis "Ready in Xms" erscheint.
+> - **Frontend down:** `node scripts/e2e-frontend.cjs start` (oder `npm run dev:test`); `e2e/frontend-freshness.ts` prüft, dass der Server aktuellen Code ausliefert.
 >
 > Teste erst, wenn beide Dienste laufen — mit einem down-Dienst enden Tests mit ERR_ABORTED und maskieren echte Fehler.
 
@@ -331,7 +328,8 @@ Führt alle `implemented`-Journeys aus der `mustRun`-Liste (aus Phase 0.5) aus. 
 ```bash
 # Für jeden Eintrag in mustRun:
 for journey_id in "${MUST_RUN[@]}"; do
-  spec_file=$(grep -A1 "id: $journey_id" e2e/journeys/CATALOG.md | grep spec-file | awk '{print $2}')
+  # Frontmatter liegt in e2e/journeys/<id>.md (CATALOG.md ist nur Index ohne spec-file)
+  spec_file=$(grep -m1 "^spec-file:" "e2e/journeys/$journey_id.md" | awk '{print $2}')
   if [ -f "$spec_file" ]; then
     npx playwright test "$spec_file"
   else
@@ -357,7 +355,7 @@ Wenn `mustRun` leer ist: `"Phase 3.5: Keine mustRun-Journeys — übersprungen"`
 
 ### Schritt 3: last-run-Updates (OHNE User-Rückfrage)
 
-Phase 3.5 schreibt für jeden gelaufenen Journey-Eintrag in CATALOG.md **ohne User-Bestätigung**:
+Phase 3.5 schreibt für jeden gelaufenen Journey-Eintrag ins Frontmatter von `e2e/journeys/<id>.md` (und die Spalte „Last Result“ in `CATALOG.md`) **ohne User-Bestätigung**:
 
 ```yaml
 last-run: 2026-04-23T15:30:00Z     # jetzt, ISO-8601 UTC

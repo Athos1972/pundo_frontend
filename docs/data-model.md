@@ -13,7 +13,7 @@ Das Frontend konsumiert Backend-Daten via REST-API. Alle TypeScript-Interfaces i
 Ein Shop ist ein lokales Geschäft oder ein Online-Händler, der Produkte anbietet.
 
 ```typescript
-// src/types/api.ts
+// src/types/api.ts — Auszug (Kernfelder; maßgeblich ist die Typdatei)
 interface ShopListItem {
   id: number
   slug: string             // URL-freundlicher Identifier, z.B. "pet-bazaar-b37f6b84"
@@ -22,6 +22,7 @@ interface ShopListItem {
   location: { lat: number; lng: number } | null  // PostGIS → fehlt bei Online-Shops
   dist_km: number | null   // nur bei Geo-Suche befüllt
   phone: string | null
+  whatsapp_number: string | null; whatsapp_url: string | null
   website: string | null
   // Keys "0".."6" (0 = Montag) -> { open, close, second_open?, second_close? } | null (B5950-001: optionales zweites Fenster/Mittagspause);
   // Legacy-Crawler-Format mon..sun wird als Fallback gelesen (src/lib/shop-opening-hours.ts::getInternalHoursRows)
@@ -29,12 +30,16 @@ interface ShopListItem {
   status: string           // 'active' | 'inactive'
   product_count: number
   last_scraped: string | null
+  // + optionale Enriched-/Self-Service-Felder: city, postal_code, review_stats, shop_type,
+  //   spoken_languages, is_open_now, payment_methods, … (siehe src/types/api.ts)
 }
 
 // Detailseite erweitert um:
 interface ShopDetailResponse extends ShopListItem {
   top_products: TopProduct[]
-  spoken_languages?: string[]  // z.B. ["DE", "EN", "RU"]
+  opening_hours_raw?: OpeningHoursRaw | null
+  description?: string | null
+  images?: Array<{ url: string }> | null
 }
 ```
 
@@ -51,10 +56,11 @@ Ein Produkt existiert unabhängig von Shops — es ist die abstrakte Beschreibun
 interface ProductListItem {
   id: number
   slug: string
-  name: string | null       // im Accept-Language der Anfrage
+  name: string              // vom Backend aufgelöst (lang → en → first), kein Frontend-Fallback
   brand: string | null
   category_id: number | null
   thumbnail_url: string | null
+  images: ProductImages | null
   best_offer: BestOffer | null  // günstigstes aktuelles Angebot
 }
 
@@ -87,8 +93,8 @@ interface BestOffer {
   shop_id: number; shop_slug: string | null; shop_name: string
   dist_km: number | null
   is_available: boolean
-  crawled_at: string        // ISO 8601
-  url: string | null        // Produkt-URL beim Shop
+  crawled_at: string | null // ISO 8601
+  url: string | null        // Produkt-URL beim Shop — immer via sanitizeExternalUrl()
   shop_location: { lat: number; lng: number } | null
   shop_type?: 'local' | 'online_only'
   delivery_available?: boolean
@@ -126,35 +132,18 @@ Die App nutzt Google Product Taxonomy (für Konsumgüter) und UNSPSC (für Servi
 
 Die Admin-Typen sind **strikt getrennt** von den öffentlichen API-Typen. Grund: Clean Boundary (spätere Auslagerung in separates Repo).
 
-```typescript
-// src/types/shop-admin.ts
-interface AdminShop {
-  id: number
-  name: string
-  description: string | null
-  logo_url: string | null
-  address: string | null
-  location: { lat: number; lng: number } | null
-  spoken_languages: string[]   // immer befüllt (leer = [])
-}
+Maßgeblich ist `src/types/shop-admin.ts` — hier nur das Modell im Überblick:
 
-interface AdminProduct {
-  id: number; name: string; category_id: number
-  price: string; currency: string; unit: string; available: boolean
-}
+| Typ | Zweck |
+|---|---|
+| `AdminShop` | Shop-Profil, das der Owner bearbeitet (inkl. `spoken_languages`, `social_links`, Self-Service-Attribute) |
+| `AdminItem` | Produkt/Dienstleistung (`item_type: 'product' \| 'service'`), mehrsprachig: `names` / `descriptions` als `Record<lang, string>` |
+| `AdminShopListing` | Verknüpfung Item ↔ Shop (Verfügbarkeit, SKU, Shop-URL) |
+| `AdminOffer` | Preis am Listing: `price_type` + `price_tiers` (Staffeln, F5200), optionaler Aktionspreis (`promo_*`) |
+| `OpeningHours` | Öffnungszeiten je Tag (`day` 0 = Montag), optionales zweites Fenster (`second_open` / `second_close`) |
+| `Onboarding*`, `CatalogCase*`, `AdminReview`, `ApiKey`, `Import*` | Onboarding, Katalog-Review, Bewertungen, API-Keys, Import |
 
-interface AdminOffer {
-  id: number; title: string; description: string
-  price: string; valid_from: string; valid_until: string
-  product_id?: number; archived: boolean
-}
-
-interface OpeningHours {
-  day: 0|1|2|3|4|5|6  // 0=Montag, 6=Sonntag
-  open: string; close: string; closed: boolean
-  second_open?: string; second_close?: string  // für Mittagspausen
-}
-```
+`AdminProduct`, `AdminProductImage` und `AdminProductList` sind `@deprecated` (ersetzt durch `AdminShopListing` + `AdminOffer`).
 
 ---
 

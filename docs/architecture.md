@@ -9,10 +9,10 @@ Das Frontend ist die User-facing Next.js-App; das Backend (`pundo_main_backend`)
 
 | Bereich | Technologie |
 |---|---|
-| Framework | Next.js 16.2 (App Router, RSC-first) |
+| Framework | Next.js 16 (App Router, RSC-first; Version siehe `package.json`) |
 | UI | React 19, Tailwind CSS v4 |
 | Karten | Leaflet 1.9 + react-leaflet 5 |
-| Sprache | TypeScript 5 (strict) |
+| Sprache | TypeScript 6 (strict) |
 | Tests | Vitest + Testing Library (Unit), Playwright (E2E) |
 
 ## Designprinzipien
@@ -28,23 +28,33 @@ Das Frontend ist die User-facing Next.js-App; das Backend (`pundo_main_backend`)
 ```
 src/app/
 ├── (customer)/          # Öffentliche Customer-Routen (lang-prefix via [lang]/)
-│   ├── [lang]/          # Lokalisierte Seiten: search, products, shops, guides, help, …
+│   ├── [lang]/          # Lokalisierte Seiten: search, products, shops, guides, blog, help, …
 │   ├── account/         # Bypass-Pfad (kein lang-Prefix): favorites, mcp
-│   ├── auth/            # Bypass-Pfad: login, signup, callback, password-reset
-│   ├── blog/            # Bypass-Pfad
-│   ├── guides/          # Bypass-Pfad (legacy redirects)
-│   └── …
+│   └── auth/            # Bypass-Pfad: login, signup, callback, password-reset, verify-email
 ├── (shop-admin)/        # Shop-Owner-Portal — Clean Boundary!
 │   └── shop-admin/      # login, register, onboarding, (portal)/…
 ├── (system-admin)/      # System-Admin-Portal
 │   └── admin/           # login, (portal)/…
 ├── (oauth)/             # OAuth 2.0 Authorization Server (F6600)
 │   └── oauth/authorize/
-├── sitemap.xml/         # Sitemap Route Handler → GET /sitemap.xml (custom, with XSLT PI)
-└── api/                 # Next.js API Routes (nominatim-Proxy, og-image, …)
+├── crm/opt-out/         # CRM-Opt-out (Bypass-Pfad)
+├── sitemap.xml/         # Sitemap-Index Route Handler → GET /sitemap.xml (custom, with XSLT PI)
+├── sitemap-*.xml/       # Teil-Sitemaps (static, products, shops, shop-cities, guides, blog)
+└── api/                 # Next.js Route Handler: admin, contact, crm, customer, nominatim, revalidate-sitemap, shop-admin
 ```
 
-**i18n-Routing:** Customer-Pages unter `[lang]/` brauchen immer `localePath(lang, '/pfad')`. Bypass-Pfade (`/account`, `/auth`, `/api`, `/shop-admin`, `/admin`) haben keinen lang-Prefix.
+**i18n-Routing:** Customer-Pages unter `[lang]/` brauchen immer `localePath(lang, '/pfad')`. Bypass-Pfade (u. a. `/account`, `/auth`, `/api`, `/shop-admin`, `/admin`, `/oauth`, `/crm`) haben keinen lang-Prefix — maßgeblich ist `I18N_BYPASS_PREFIXES` in `src/proxy.ts`.
+
+## Proxy (`src/proxy.ts`)
+
+Next 16 nennt die Middleware „Proxy“. `src/proxy.ts` erledigt pro Request:
+
+- **i18n-Redirects:** Pfade ohne Sprach-Prefix → `307` auf `/{lang}/…` (Sprache aus Cookie `app_lang` bzw. `Accept-Language`, `Vary: Accept-Language, Cookie`); falsche Schreibweise (`/EN/…`) → `308` auf Kleinschreibung. Setzt `x-lang` und synchronisiert das Cookie.
+- **Brand-Erkennung:** `getBrandConfig(host)` → Request-Header `x-brand-slug`.
+- **Auth-Gate:** `/shop-admin/**` ohne `shop_owner_token` → `/shop-admin/login?next=…`; `/admin/**` ohne `admin_token` → `/admin/login` (öffentliche Ausnahmen: `PUBLIC_SHOP_ADMIN_PATHS`, `PUBLIC_ADMIN_PATHS`).
+- **CSP mit Nonce + Security-Header:** pro Request neuer Nonce (`x-nonce`), brand-spezifische CSP; `Cache-Control` für öffentliche SEO-Seiten.
+
+Der `matcher` am Dateiende schließt u. a. `/_next`, `/api` und Prefetch-Requests aus.
 
 ## Modulstruktur
 
@@ -60,7 +70,7 @@ src/
 │   ├── layout/          # Header, Footer, BottomTabBar
 │   ├── activity-feed/   # ActivityFeed, LiveFeed
 │   ├── recently-viewed/ # RecentlyViewed-Drawer
-│   ├── spotted/         # SpottedGlobalButton, SpottedModal
+│   ├── spotted/         # SpottedGlobalButton, CameraView, AuthModal
 │   ├── guides/          # Guide-Komponenten
 │   └── ui/              # Generische Bausteine (shared, importierbar von allen)
 ├── lib/
@@ -69,13 +79,14 @@ src/
 │   ├── shop-admin-api.ts        # Shop-Admin API-Client (Clean Boundary)
 │   ├── shop-admin-categories.ts # Kategorie-Picker-Client (Browser-Fetch via /api/shop-admin, B5900-011)
 │   ├── lang.ts                  # Spracherkennung, isRTL, Cookie-Utils
-│   ├── translations.ts          # Customer-UI-Strings (6 Sprachen, kein i18n-Framework)
+│   ├── translations.ts          # Barrel über src/lib/i18n/*.ts (6 Sprachen, kein i18n-Framework)
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
 │   ├── system-admin-translations.ts
 │   ├── price-tiers.ts           # F5200: Staffelpreis-View-Model (Hauptpreis/Suffix/Zeilen) + JSON-LD priceSpecification
 │   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
-│   ├── seo/                     # metadata-defaults, og-defaults, structured-data
-│   ├── i18n/                    # common.ts, guides.ts (tCommon, tGuides)
+│   ├── seo/                     # metadata-defaults, og-defaults, static-page-metadata, …
+│   ├── structured-data.ts       # JSON-LD-Builder (Product, Shop, BreadcrumbList, …)
+│   ├── i18n/                    # UI-Strings je Namespace (common, search, shop, shop-admin-*, …)
 │   └── price-history.ts         # aggregatePriceHistory(), computePriceStats()
 └── types/
     ├── api.ts                   # TypeScript-Interfaces für Backend-Responses
@@ -187,7 +198,7 @@ Steuert die `redirect_uri`, die das Backend beim Aufbau der Google-OAuth-Authori
 
 ## Brand-Config-System
 
-Jede Brand (`pundo`, `naidivse`) hat eine Config in `src/config/brands/<brand>.ts` mit Theme, Assets, Features-Flags (`catsfirst`, `homesickTeaser`, `activityFeed`, `mcp`, …). Die aktive Brand wird per Host-Header aus dem Backend ermittelt; `src/config/brands/index.ts` ist der Barrel.
+Jede Brand (`pundo`, `naidivse`) hat eine Config in `src/config/brands/<brand>.ts` mit Theme, Assets, Features-Flags (`catsfirst`, `homesickTeaser`, `activityFeed`, `mcp`, …). Die aktive Brand wird im Frontend per `getBrandConfig(host)` aus `src/config/brands/` ermittelt (Host-Header, in `src/proxy.ts` als `x-brand-slug` weitergereicht; Server Components nutzen `getBrandFromHeaders()`); `src/config/brands/index.ts` ist der Barrel.
 
 ## z-index-Skala (verbindlich)
 
@@ -201,7 +212,7 @@ Alle `fixed`- und `sticky`-Elemente folgen dieser Skala. Kein Element darf einen
 | FABs | `z-[45]` | `SearchSimilarButton`, `SpottedGlobalButton` |
 | FAB-Popout | `z-[47]` | `FABOnboardingPopout` (absolute über FAB) |
 | Modale / Overlays | `z-50` | Alle portalierten Modale, `BottomTabBar`-Drawer |
-| Kritische Overlays | `z-[60]` | `LanguagePickerOverlay`, `SplashScreen` |
+| Kritische Overlays | `z-[60]` | `LanguagePickerOverlay` |
 
 **Invariante:** FABs (z-45) > Fixed-Nav (z-40). Portaled Modale (z-50) > FABs. Kritische Overlays (z-60) > alles andere.
 

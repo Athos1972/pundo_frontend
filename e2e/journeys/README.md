@@ -55,10 +55,10 @@ Ich schlage folgende neue Journey vor:
 Katalogeintrag anlegen? (j/n)
 ```
 
-- `j` → Agent schreibt Eintrag in CATALOG.md
+- `j` → Agent legt `e2e/journeys/<id>.md` an und ergänzt die Index-Zeile in CATALOG.md
 - `n` → Agent schreibt Eintrag mit `status: skipped` und `skip-reason`
 
-**Wichtig:** Du musst nie selbst in CATALOG.md schreiben. Die Agents tun das nach deiner Bestätigung.
+**Wichtig:** Du musst nie selbst in CATALOG.md oder die Journey-Dateien schreiben. Die Agents tun das nach deiner Bestätigung.
 
 ---
 
@@ -112,14 +112,10 @@ e2e/journeys/
 ├── README.md                          (diese Datei)
 ├── _parser.ts                         # TypeScript-Parser (Vitest, kein Playwright)
 ├── _parser.spec.ts                    # Parser-Tests (Vitest)
-├── shop-owner-lifecycle.md            # Journey-Datei (Frontmatter + Body)
-├── customer-discovery.md
-├── shop-owner-full-lifecycle.md
-├── customer-and-review-lifecycle.md
-├── admin-data-management.md
-├── fixtures/
-│   ├── shop-owner.json                # Testdaten für Shop-Owner-Lifecycle
-│   └── products.json                  # Produktdaten für Customer-Discovery
+├── _helpers.ts                        # Gemeinsame Helfer (z. B. shopOwnerLogin mit 429-Backoff)
+├── _helpers/                          # Fixtures + Helfer: worker-shop.ts, test-data.ts, admin-shop-payload.ts, …
+├── reports/                           # Laufberichte je Journey (<id>-YYYY-MM-DD.md)
+├── <id>.md                            # Journey-Datei (Frontmatter + Body), z. B. shop-owner-lifecycle.md
 └── <id>.spec.ts                       # Journey-Tests (Playwright, erst wenn implemented)
 ```
 
@@ -128,11 +124,15 @@ e2e/journeys/
 - Jede Journey hat eine eigene `<id>.md`-Datei mit YAML-Frontmatter + Markdown-Body.
 - `parseCatalogDirectory()` liest alle `<id>.md`-Dateien automatisch ein.
 
-## Fixture-Konventionen
+## Fixtures & Testdaten
 
-Journey-Fixtures (Test-Daten) werden in `e2e/journeys/fixtures/` abgelegt.
+Es gibt kein `fixtures/`-Verzeichnis mit JSON-Daten. Testdaten werden zur Laufzeit angelegt — über die Helfer in `e2e/journeys/_helpers/`:
 
-Fixture-Format: JSON-Array, kompatibel mit Backend-Fixture-Loader.
+- `worker-shop.ts` — worker-scoped Playwright-Fixture `workerShop` (eigener Shop pro Worker via Admin-Create + Impersonation)
+- `test-data.ts` — Marker-Konvention `E2E-<RUN>-<SPEC>` + Aufräum-Helfer
+- `admin-shop-payload.ts`, `dev-token.ts`, `hydration.ts`, `category-picker.ts` — typisierte Payloads und UI-/DB-Helfer
+
+Details zur Testdaten-Strategie: [`docs/e2e-testing.md`](../../docs/e2e-testing.md).
 
 ---
 
@@ -143,7 +143,7 @@ Es gibt zwei Zeitmarker:
 | Marker | Pfad | Scope | Schreiber |
 |--------|------|-------|-----------|
 | Gesamt-`.last_run` | `.claude/playbooks/state/e2e-tester.last_run` | Gesamt-Repo (git-SHA + Timestamp) | e2e-tester Phase 4 |
-| Journey-`last-run` | `CATALOG.md` pro Eintrag | Journey-spezifisch (ISO-8601) | e2e-tester Phase 4 (ohne Rückfrage) |
+| Journey-`last-run` | Frontmatter von `e2e/journeys/<id>.md` | Journey-spezifisch (ISO-8601) | e2e-tester Phase 4 (ohne Rückfrage) |
 
 Das ist kein Fehler — beide Marker haben unterschiedliche Scopes und existieren bewusst nebeneinander.
 
@@ -269,4 +269,3 @@ siehe den `// INTENTIONAL SKIP`-Kommentar.
 - **Kein `version`-Feld.** Änderungen an Schritten werden per Git-History nachvollzogen.
 - **Kein Text-Editor-Diff.** Nur `j/n` je Vorschlag (Text-Edit-Option kommt ggf. in Phase 2).
 - **Architect-Heuristiken eingeschränkt.** Phase 1 hat Architect nur Drift-Check + Validierung; eigene Heuristiken kommen in Phase 2.
-- **Keine Fixture-Bibliothek.** Wird beim ersten `approved`-Journey-Lauf vom Coder mit angelegt.

@@ -41,7 +41,7 @@ Gesprochene Sprachen
 - Container: `flex-wrap` → RTL-kompatibel für AR/HE-Interface
 - Kein leerer Abschnitt bei `spoken_languages = []` oder `undefined`
 
-**Komponente:** `src/components/ui/LanguageChips.tsx` (Server Component)
+**Komponente:** `src/components/ui/LanguageChips.tsx` (Client Component, `'use client'`)
 
 ---
 

@@ -1,6 +1,4 @@
-# Journey: Reaktive Sprachnavigation
-
-```yaml
+---
 id: reactive-language-switch
 title: "Reaktive Sprachnavigation: Labels ohne Reload (E2E-08)"
 status: implemented
@@ -26,7 +24,9 @@ touches-roles:
 last-run: 2026-06-05T12:47:00Z
 last-result: PASS
 last-run-sha: 35f75a280df9d0d7bc9fd41cd9761f0ef8957471
-```
+---
+
+### Journey: Reaktive Sprachnavigation
 
 ## Motivation
 

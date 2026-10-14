@@ -53,8 +53,8 @@ Lese mindestens:
 - Die direkt betroffenen Komponenten/Seiten
 - `src/lib/api.ts` falls API-Calls geändert werden
 - `src/types/api.ts` falls neue Datenstrukturen nötig
-- `src/lib/translations.ts` falls UI-Strings hinzukommen
-- `.env.local` / `.env.example` falls neue Konfiguration benötigt wird
+- `src/lib/i18n/<namespace>.ts` falls UI-Strings hinzukommen (`src/lib/translations.ts` ist nur Barrel; Parität: `npm run lint:i18n`)
+- `.env.local` / `.env.local.example` falls neue Konfiguration benötigt wird
 
 ---
 
@@ -98,14 +98,17 @@ Lese mindestens:
 
 ### Schritt-für-Schritt
 
-1. **Lies** `e2e/journeys/CATALOG.md`.
+1. **Lies** `e2e/journeys/CATALOG.md` (Index) — das Frontmatter jeder Journey liegt in `e2e/journeys/<id>.md`, nicht im Index.
 
-2. **Filtere** Einträge mit `status: approved` und `proposed-in-spec == <aktueller-spec-slug>`.
+2. **Filtere** Journey-Dateien mit `status: approved` und `proposed-in-spec == <aktueller-spec-slug>`:
+   ```bash
+   grep -l "^status: approved" e2e/journeys/*.md | xargs grep -l "^proposed-in-spec: <aktueller-spec-slug>"
+   ```
 
 3. **Für jeden Treffer:**
    - (a) Lege/aktualisiere `e2e/journeys/<id>.spec.ts` nach dem im Body der Journey festgehaltenen Runbook.
    - (b) Schreibe Test-Schritte deterministisch: Port **3500** (Frontend) + **8500** (Backend), Fixture-Setup im `beforeAll`.
-   - (c) Flippe im Frontmatter von `CATALOG.md`:
+   - (c) Flippe im Frontmatter von `e2e/journeys/<id>.md` (und Status-Spalte der Index-Zeile in `CATALOG.md`):
      ```
      status: implemented
      spec-file: e2e/journeys/<id>.spec.ts
@@ -147,33 +150,7 @@ Wenn beim Entwickeln einer Journey-Spec ein Test-Schritt nicht grün wird:
 
 ### Test-Setup (Vitest)
 
-Falls Vitest noch nicht eingerichtet:
-```bash
-npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom
-```
-
-`vitest.config.ts`:
-```typescript
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/tests/setup.ts'],
-  },
-  resolve: {
-    alias: { '@': '/src' },
-  },
-})
-```
-
-`src/tests/setup.ts`:
-```typescript
-import '@testing-library/jest-dom'
-```
+Vitest ist eingerichtet — Konfiguration in `vitest.config.ts` (jsdom, `globals`, Setup `src/tests/setup.ts`, Alias `@` → `src`, `include`-Muster für `src/tests/**`). Neue Tests unter `src/tests/` ablegen; Lauf: `npx vitest run [pfad]`.
 
 ### Pflicht: Transformationsfunktionen mit realistischen Backend-Daten testen
 

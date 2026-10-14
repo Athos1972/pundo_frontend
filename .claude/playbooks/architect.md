@@ -32,7 +32,8 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 |---|---|---|
 | Feature-Specs (01–04-*.md) | **Vault** (Pfade: siehe Agent / Conventions) | designer/architect/coder/e2e-tester schreiben hierhin |
 | Feature-Docs (FGn/_index.md, Feature.md) | **Vault** | Architektur-Entscheidungen, Trade-offs, Geschichte, Cross-Repo-Kontext |
-| Bug-Dateien, Journey-Catalog | **Vault** | e2e-tester führt Register |
+| Bug-Dateien | **Vault** | e2e-tester führt Register |
+| Journey-Catalog | **Repo** `e2e/journeys/` (`CATALOG.md` = Index, Frontmatter in `<id>.md`) | Pflege nach `e2e/journeys/CATALOG_SCHEMA.md` |
 | Ports, Test-Befehle, Env-Vars | **`/docs` im Repo** | Muss im selben PR wie Codeänderungen aktualisiert werden |
 | API-Referenz (Endpoints, Felder) | **`/docs` im Repo** | Nah am Code, von CI/Agenten lesbar |
 | Komponenten-Struktur, Route-Übersicht | **`/docs` im Repo** | `architecture.md` — wird mit dem Code gepflegt |
@@ -59,12 +60,13 @@ Orientierung:
 
 ### API-Proxy (next.config.ts)
 ```
-Browser → /api/v1/:path*  →  http://localhost:8500/api/v1/:path*
-Browser → /brand_logos/:path*  →  http://localhost:8500/brand_logos/:path*
+Browser → /api/v1/:path*  →  ${BACKEND_URL}/api/v1/:path*
+Browser → /brand_logos/:path*  →  ${BACKEND_URL}/brand_logos/:path*   (analog shop_logos, product_images, review_photos, avatars)
 ```
 
-- **BACKEND_URL** in `.env.local` konfigurierbar (Studio-Default: `http://localhost:8500`)
-- Kein CORS-Problem, da alles durch Next.js proxied wird
+- Der Rewrite gilt nur für **Client-Requests aus dem Browser**. Server Components und Route Handler rufen `BACKEND_URL` direkt auf (z. B. `src/lib/api.ts`).
+- **BACKEND_URL** in `.env.local` setzen (Studio: `http://localhost:8500`; `npm run dev:test` setzt es). Achtung: Fallback in `next.config.ts` ist `http://localhost:8000`.
+- Kein CORS-Problem, da Browser-Requests durch Next.js proxied werden
 - Alle Backend-API-Typen in `src/types/api.ts` spiegeln
 
 ### Backend-Repo
@@ -93,7 +95,7 @@ Marker-Format und Ablauf: siehe Agent (Abschnitt „Cross-repo needs“) und Con
 Browser
   ↓ HTTP GET /de/search?q=Katzenfutter
   Next.js Server
-  ↓ fetch('/api/v1/products?q=Katzenfutter')  [server-side]
+  ↓ fetch(`${BACKEND_URL}/api/v1/search?q=Katzenfutter`)  [server-side, direkt — kein Rewrite]
   Backend (pundo_main_backend, :8500 Studio / :8000 Hetzner)
   ↓ JSON Response
   React Server Component → HTML streamen
@@ -160,7 +162,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 - Test: AR und HE Sprachen müssen `dir="rtl"` auslösen; EN/DE/EL/RU nicht
 
 ### Übersetzungen
-- `src/lib/translations.ts` — statische UI-Strings, kein externes i18n-Framework
+- `src/lib/i18n/<namespace>.ts` — statische UI-Strings, kein externes i18n-Framework (`src/lib/translations.ts` ist nur Barrel; Parität: `npm run lint:i18n`)
 - Dynamische Inhalte (Kategorienamen, Produkttitel) kommen übersetzt vom Backend
 
 ---
@@ -197,7 +199,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 3. Props-Interface direkt in der Datei oder in `src/types/api.ts`
 
 ### Neue Sprache
-1. Sprachcode in `src/lib/lang.ts` (inkl. `RTL_LANGS`, falls RTL) und `src/lib/translations.ts` ergänzen
+1. Sprachcode in `src/lib/lang.ts` (inkl. `RTL_LANGS`, falls RTL) und in allen Namespace-Dateien unter `src/lib/i18n/` ergänzen (`npm run lint:i18n`)
 2. Backend-Team informieren (neue Übersetzungs-Batch nötig)
 
 ### Backend-Endpunkt nutzen (neuer)
@@ -213,7 +215,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 
 ### Schritt-für-Schritt
 
-1. **Lies** `e2e/journeys/CATALOG.md`. Filtere Einträge, deren `touches-modules` sich mit den in §1 dieses Architektur-Specs genannten Modulen schneiden.
+1. **Lies** `e2e/journeys/CATALOG.md` (Index) und die Frontmatter der Journey-Dateien `e2e/journeys/<id>.md`. Filtere Einträge, deren `touches-modules` sich mit den in §1 dieses Architektur-Specs genannten Modulen schneiden.
 
 2. **Validiere** jeden vom Designer als `proposed` markierten Journey-Eintrag zu diesem Spec:
    - Stimmt jeder `touches-modules`-Glob mit der realen Modulstruktur überein? (`ls`-Check auf den ersten nicht-Wildcard-Teil des Globs)
@@ -230,7 +232,7 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
    - (a) Validierte Designer-Vorschläge (korrekt / mit Korrekturbedarf)
    - (b) Drift-Fixes (falls vorhanden)
 
-6. CATALOG.md nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und unter „Entscheidungen für Bernhard“ bündeln.
+6. CATALOG.md und `<id>.md` nicht selbst ändern. Die Deltas als `proposed` im Abschnitt „Journey-Deltas“ festhalten und unter „Entscheidungen für Bernhard“ bündeln.
 
 ### Was der Architect nicht darf
 

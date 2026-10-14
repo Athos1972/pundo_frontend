@@ -6,9 +6,9 @@
  * Measures LCP, CLS, TBT (INP proxy), FCP, Speed Index per route.
  *
  * Usage:
- *   pnpm seo:perf
- *   pnpm seo:perf --base-url http://localhost:3500
- *   pnpm seo:perf --out perf-report-custom.json
+ *   npm run seo:perf
+ *   npm run seo:perf -- --base-url http://localhost:3500
+ *   npm run seo:perf -- --out perf-report-custom.json
  *
  * Output:
  *   perf-report-<YYYY-MM-DD>.json   — machine-readable per-route metrics

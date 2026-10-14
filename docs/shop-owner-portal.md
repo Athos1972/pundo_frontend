@@ -26,7 +26,7 @@ Das Portal lebt unter `/shop-admin/*` im Frontend und nutzt eigene Backend-Endpu
 
 | Schritt | Route | Backend-Endpunkt |
 |---|---|---|
-| Registrierung | `/shop-admin/register` | `POST /api/v1/shop-owner/register` |
+| Registrierung (Onboarding-Wizard) | `/shop-admin/onboarding` (`/shop-admin/register` leitet dorthin um) | `POST /api/v1/shop-owner/onboarding` (via `/api/shop-admin/onboarding`) |
 | E-Mail bestätigen | `/shop-admin/verify-email` | `POST /api/v1/shop-owner/verify-email` |
 | Warten auf Freischaltung | `/shop-admin/pending-approval` | — |
 | Login | `/shop-admin/login` | `POST /api/v1/shop-owner/login` |
@@ -46,21 +46,29 @@ Das Frontend liest diesen Cookie **nicht per JavaScript** — Next.js Route Hand
 ```
 src/app/(shop-admin)/shop-admin/
 ├── login/                  ← öffentlich, kein Auth-Guard
-├── register/               ← öffentlich
+├── register/               ← öffentlich (Redirect → onboarding; check-email/)
+├── onboarding/             ← öffentlich: Registrierungs-Wizard
+├── auth/callback/          ← öffentlich: Google-OAuth-Callback
 ├── verify-email/           ← öffentlich
 ├── pending-approval/       ← öffentlich
 └── (portal)/               ← Auth-Guard: JWT-Cookie erforderlich
-    ├── layout.tsx          ← Prüft Cookie, rendert AdminShell
-    ├── dashboard/          ← Willkommensseite
+    ├── layout.tsx          ← Prüft Cookie + Owner-Status, rendert AdminShell
+    ├── dashboard/          ← Startseite mit Kacheln
     ├── profile/            ← Shop-Profil + gesprochene Sprachen
     ├── hours/              ← Öffnungszeiten-Editor
-    ├── products/           ← Produkt-Liste + Neu/Bearbeiten
-    ├── offers/             ← Angebots-Liste + Neu/Bearbeiten
+    ├── offers/             ← Produkte/Dienstleistungen + Preise (Item+Offer-Modell), Neu/Bearbeiten
+    ├── products/           ← Legacy-Routen (nicht mehr in der Navigation)
+    ├── catalog-review/     ← Katalog-Review-Fälle ([caseId])
     ├── import/             ← Excel/CSV-Upload + Google Sheets
-    └── api-keys/           ← API-Key-Verwaltung
+    ├── api-keys/           ← API-Key-Verwaltung
+    ├── reviews/            ← Kundenbewertungen ([id]/audit-log)
+    ├── settings/           ← Einstellungen
+    └── help/               ← Hilfe
 ```
 
-Die `(portal)/layout.tsx` ist das **Auth-Guard** — sie prüft das Cookie und leitet unauthentifizierte Requests zu `/shop-admin/login` weiter.
+Die Navigation ist in `src/components/shop-admin/AdminNav.tsx` (`navItems`) definiert — bei neuen Seiten dort abgleichen.
+
+Zusätzlich fängt `src/proxy.ts` Requests ohne `shop_owner_token` ab (Ausnahmen: `PUBLIC_SHOP_ADMIN_PATHS`). Die `(portal)/layout.tsx` ist das **Auth-Guard** — sie prüft das Cookie bzw. den Owner-Status und leitet weiter (`pre_signup` → onboarding, `pending` → pending-approval, sonst → `/shop-admin/login`).
 
 ---
 

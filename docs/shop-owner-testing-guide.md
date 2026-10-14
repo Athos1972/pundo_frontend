@@ -21,7 +21,7 @@ Diese Anleitung beschreibt, wie das Shop-Owner-Portal vollständig manuell getes
 ### 1.1 Registrierung (neues Konto anlegen)
 
 **Schritte:**
-1. Testumgebungs-URL aufrufen, z. B. `http://localhost:3000/shop-admin/register`
+1. Testumgebungs-URL aufrufen, z. B. `http://localhost:3500/shop-admin/register` (leitet auf den Onboarding-Wizard `/shop-admin/onboarding` weiter)
 2. Formular ausfüllen:
    - Shop-Name: `Testshop Olivenöl`
    - E-Mail: eine gültige Test-E-Mail-Adresse
@@ -100,7 +100,7 @@ Nach der Freischaltung erhält der Shop-Betreiber eine Benachrichtigung. In der 
 |---|---|
 | Seitenüberschrift | „Dashboard" oder „Willkommen" sichtbar |
 | Shop-Name | Eigener Shop-Name wird angezeigt |
-| Schnellzugriff-Kacheln | 6 Kacheln sichtbar: Profil, Öffnungszeiten, Produkte, Angebote, Import, API-Keys |
+| Schnellzugriff-Kacheln | 5 Kacheln sichtbar: Profil, Öffnungszeiten, Angebote, Import, API-Keys (Quelle: `src/app/(shop-admin)/shop-admin/(portal)/dashboard/page.tsx`) |
 | Klick auf eine Kachel | Navigiert zur entsprechenden Unterseite |
 | Keine Fehler | Keine roten Fehlermeldungen, kein weißer Ladebildschirm |
 

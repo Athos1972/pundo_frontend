@@ -75,7 +75,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 |---|---|---|---|
 | `pundo_main_backend` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | 8500 / 8000 | REST-API, DB, Ingestor |
 | `pundo_llm_gateway` | `/Users/bb_studio_2025/dev/github/pundo_llm_gateway` | 8600 / 8100 | LLM-Task-Dispatcher (Queue-Manager, kein SDK) |
-| `pundo_llm_workers` | `/Users/bb_studio_2025/dev/github/pundo_llm_workers` | — (pollt Gateway) | LLM-Worker-Prozesse (Anthropic/OpenAI SDK hier) |
+| `pundo_llm_workers` | `/Users/bb_studio_2025/dev/github/pundo_llm_workers` | — (pollt Gateway) | LLM-Worker-Prozesse (Provider-Calls nur hier) |
 | `pundo_mcp_server` | `/Users/bb_studio_2025/dev/github/pundo_mcp_server` | — | MCP-Server für Claude-Integration |
 
 **Backend** (`pundo_main_backend`):
@@ -89,7 +89,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Test-Server: `./scripts/start_test_server.sh` (Port **8600**, DB `pundo_llm_gateway_test`). **Niemals** Port 8100 für Tests verwenden.
 
 **LLM-Worker** (`pundo_llm_workers`):
-- Provider-SDKs (`anthropic`, `openai`) leben **nur** hier.
+- Provider-Calls leben **nur** hier: aktiv sind `ollama` (lokal am Mac Studio) und `openrouter` (über das `openai`-SDK); die `anthropic`-/`openai`-Adapter sind noch im Code, aber nicht konfiguriert.
 - Neuer Job-Typ = Jinja2-Template `prompts/<job_type>.j2` + Eintrag in `security.yml::untrusted_fields`.
 - Worker-Restart (Test): `./restart_test_worker.sh`. Prod: `./restart_prod_worker.sh` — **nur manuell**.
 <!-- END:backend-repo -->
@@ -117,7 +117,7 @@ router.push(localePath(lang as Lang, `/products/${slug}`))
 
 **Konsequenz bei Fehler:** Next.js prefetcht alle sichtbaren Links als RSC-Payload (`?_rsc=`). Fehlender `/{lang}/`-Präfix → HTTP 404 → Konsolen-Fehler im Smoketest.
 
-**Vollständige Bypass-Liste:** `/_next /api /admin /shop-admin /auth /account /favicon /og /brands /brand_logos` + Dateien mit Extension.
+**Vollständige Bypass-Liste:** maßgeblich ist `I18N_BYPASS_PREFIXES` in `src/proxy.ts` (derzeit u. a. `/_next /api /admin /shop-admin /auth /account /oauth /crm /favicon /og /brands /brand_logos /product_images /review_photos /shop_logos /avatars /manifest.webmanifest /robots.txt /sitemap.xml /llms.txt`) + Dateien mit Extension (außer mit gültigem Sprach-Prefix).
 
 **Detaildoku:** `/Users/bb_studio_2025/Vaults/obsidian/Documents/Pundo-Plattform/10 Wissen/i18n-routing-model.md`
 <!-- END:i18n-routing -->
@@ -136,8 +136,8 @@ router.push(localePath(lang as Lang, `/products/${slug}`))
 
 **Regeln:**
 - Sprachkonstanten: Frontend `src/lib/lang.ts`, Backend `core/languages.py`
-- UI-Strings: `src/lib/translations.ts` (kein i18n-Framework, statisch in TypeScript)
-- Jede neue UI-Komponente mit sichtbarem Text **muss** alle 6 Sprachen in `translations.ts` bedienen
+- UI-Strings: Namespace-Dateien `src/lib/i18n/*.ts` (`src/lib/translations.ts` ist nur Barrel; kein i18n-Framework, statisch in TypeScript)
+- Jede neue UI-Komponente mit sichtbarem Text **muss** alle 6 Sprachen bedienen — Paritätsprüfung: `npm run lint:i18n`
 - RTL-Layout: Tailwind `rtl:`-Modifier verwenden, niemals RTL raten
 - API-Calls senden automatisch `Accept-Language`-Header (siehe `src/lib/api.ts`)
 - Cookie `app_lang` speichert die Sprachauswahl (1 Jahr)
@@ -148,19 +148,21 @@ router.push(localePath(lang as Lang, `/products/${slug}`))
 ## Projektkontext (pundo_frontend)
 
 - **Zweck:** Price- und Produktlocator-App — findet Produkte und Dienstleistungen in der Nähe
-- **Stack:** Next.js 16.2.2, React 19, TypeScript, Tailwind CSS 4
+- **Stack:** Next.js 16 (genaue Version siehe `package.json`), React 19, TypeScript, Tailwind CSS 4
 - Backend-Playbooks: `/Users/bb_studio_2025/dev/github/pundo_main_backend/.claude/playbooks/`
 - **Config:** `.env.local` für BACKEND_URL, ALLOWED_DEV_ORIGINS
 - **Repository-Struktur:**
   - `src/app/` — Next.js App Router: Seiten, Layouts, Loading, Error
   - `src/components/` — Wiederverwendbare React-Komponenten (map/, product/, search/, shop/, ui/)
-  - `src/lib/` — API-Client (`api.ts`), Sprachlogik (`lang.ts`, `translations.ts`), Utilities
-  - `src/types/` — TypeScript-Typen (`api.ts`)
-- **Tests:** Vitest für Unit-Tests, Playwright für E2E empfohlen
+  - `src/lib/` — API-Clients (`api.ts`, `customer-api.ts`, `shop-admin-api.ts`, …), Sprachlogik (`lang.ts`, `i18n/`), Utilities
+  - `src/proxy.ts` — Next-Proxy (i18n-Redirects, Brand, Auth-Gate, CSP)
+  - `src/types/` — TypeScript-Typen (`api.ts`, `shop-admin.ts`, …)
+  - Details: `docs/architecture.md`
+- **Tests:** Vitest für Unit-Tests (`npx vitest run`, `vitest.config.ts`), Playwright für E2E (`npx playwright test`, Journeys unter `e2e/journeys/`)
 - **Shop-Admin Clean Boundary (Architektur-Prinzip):**
   `src/app/shop-admin/`, `src/components/shop-admin/` und `src/lib/shop-admin-api.ts` dürfen **keine Imports** aus customer-facing Code haben (außer generischen UI-Primitives aus `src/components/ui/`). Shop-Admin-Types gehören in `src/types/shop-admin.ts`, nicht in `src/types/api.ts`. Admin-Translations in eigenem Namespace-Objekt. Dieses Prinzip sichert, dass die spätere Auslagerung in ein separates Repo in 2–3 Tagen machbar bleibt statt 2–3 Wochen zu kosten.
 - **SEO-Guardrails (F6400):**
-  Neue Customer-Pages brauchen `generateMetadata` oder `export const metadata` (ESLint-Warn). Checkliste: `docs/seo.md`. Breadcrumb-Komponente: `src/components/ui/Breadcrumb.tsx`. Metadata-Helpers: `src/lib/seo/metadata-defaults.ts`. Audit: `pnpm seo:audit`.
+  Neue Customer-Pages brauchen `generateMetadata` oder `export const metadata` (ESLint-Warn). Checkliste: `docs/seo.md`. Breadcrumb-Komponente: `src/components/ui/Breadcrumb.tsx`. Metadata-Helpers: `src/lib/seo/metadata-defaults.ts`. Audit: `npm run seo:audit`.
 - **Inline-Styles (`style={{…}}`):** Nur verwenden wenn Tailwind nicht ausreicht (dynamische Werte, Leaflet-Maps). Kein allgemeines CSS-Escape-Hatch — ESLint-Rule `local-csp/no-inline-style` warnt automatisch. Opt-out: `// @csp-allow-inline-style` direkt über die `style={{`-Zeile (z.B. für Leaflet-`MapContainer`, berechnete Breiten, Blur-Platzhalter).
 
 ---

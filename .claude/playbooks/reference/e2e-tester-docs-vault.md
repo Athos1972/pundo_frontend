@@ -10,7 +10,8 @@ Prüft ob öffentlich beschreibende Dokumente (`llms.txt`, `README.md`, `AGENTS.
 
 | Inhalt | Wo | Wer pflegt |
 |---|---|---|
-| Feature-Specs (01–04-*.md), Feature-Docs, Bug-Dateien, Journey-Catalog | **Vault** `/Pundo-Plattform/` | designer / architect / coder / e2e-tester |
+| Feature-Specs (01–04-*.md), Feature-Docs, Bug-Dateien | **Vault** `/Pundo-Plattform/` | designer / architect / coder / e2e-tester |
+| Journey-Catalog | **Repo** `e2e/journeys/` (`CATALOG.md` = Index, Frontmatter in `<id>.md`) | designer / architect / coder / e2e-tester (Regeln: `CATALOG_SCHEMA.md`) |
 | Architektur-Entscheidungen, Trade-offs, Geschichte, Cross-Repo-Kontext | **Vault** | architect |
 | Ports, Test-Befehle, Env-Vars, Komponentenstruktur | **`docs/` im Repo** | coder im selben PR; e2e-tester wenn er Drift entdeckt |
 | E2E-Setup (`docs/e2e-testing.md`) | **`docs/` im Repo** | e2e-tester bei Änderungen an Ports/Setup |

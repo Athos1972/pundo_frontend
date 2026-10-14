@@ -17,12 +17,13 @@
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
 | [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | PASS |
+| [admin-shop-create-delete](admin-shop-create-delete.md) | Admin Shop Create + Delete (UI Golden Path) | implemented | P2 | PASS |
 | [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check | implemented | P2 | PASS |
 | [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow | implemented | P2 | PASS |
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
 | [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS |
-| [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P2 | PASS |
+| [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P1 | PASS |
 | [shop-admin-offer-product](shop-admin-offer-product.md) | Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix) — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-product-offer-ui](shop-admin-product-offer-ui.md) | Shop-Admin Produkt + Angebot anlegen (UI Golden Path) — DEPRECATED | deprecated | P2 | — |
 | [state-transition-ItemStatus](state-transition-ItemStatus.md) | Item-Status-Transitions + Suchsichtbarkeit | approved | P1 | — |

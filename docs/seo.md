@@ -80,9 +80,9 @@ The ESLint rule `local-seo/require-page-metadata` (warn) will catch missing meta
 npm run dev:test
 
 # In a second terminal:
-pnpm seo:audit
+npm run seo:audit
 # or with custom URL:
-SEO_AUDIT_BASE_URL=http://localhost:3500 pnpm seo:audit
+SEO_AUDIT_BASE_URL=http://localhost:3500 npm run seo:audit
 ```
 
 Output: `seo-audit-<date>.json` + `seo-audit-<date>.md` in the project root.
@@ -202,9 +202,9 @@ const og = buildCompleteOpenGraph({
 
 ## Redirect Rules (AC-33/AC-34)
 
-**Current state (verified 2026-05-16):**
+**Current state (verified 2026-10-14):**
 - `next.config.ts` has **no `redirects()` block** — only `rewrites()` for API proxy
-- **No `src/middleware.ts`** exists — no middleware-level redirects
+- `src/proxy.ts` (Next 16 "proxy", formerly middleware) issues the i18n redirects: path without lang prefix → **307** to `/{lang}/…` (lang from `app_lang` cookie / `Accept-Language`, `Vary: Accept-Language, Cookie`); wrong-case prefix (`/EN/…`) → **308** to lowercase. Paths in `I18N_BYPASS_PREFIXES` are not redirected. It also redirects unauthenticated `/shop-admin/**` and `/admin/**` requests to the respective login page.
 - Trailing-slash redirects: Next.js default behaviour (308 redirect)
 - External redirects: potentially from Caddy reverse proxy (not in this repo)
 
@@ -225,7 +225,7 @@ Every page in `sitemap.xml` must have at least one internal link pointing to it.
 **Checklist for new pages:**
 1. Add the page to `Footer.tsx` or to a relevant list/index page
 2. Or add a contextual cross-link (e.g. "Related guides" in guide detail)
-3. Run `pnpm seo:audit` — the "Orphan pages" section will confirm
+3. Run `npm run seo:audit` — the "Orphan pages" section will confirm
 
 **Accepted orphans:** `[]` (none — per BB/16.5., everything should have an inbound link)
 
@@ -233,9 +233,9 @@ Every page in `sitemap.xml` must have at least one internal link pointing to it.
 
 ## Sitemap Consistency (AC-30)
 
-`src/app/sitemap.ts` uses `isIndexable(url)` from `src/lib/seo/metadata-defaults.ts` to filter every URL before including it. This guarantees that no noindex route can appear in the sitemap.
+`src/app/sitemap.xml/route.ts` returns a sitemap **index** pointing at the sub-sitemaps `src/app/sitemap-{static,blog,guides,shops,shop-cities,products}.xml/route.ts`. Each sub-sitemap builds its URLs explicitly from indexable sources (static route list, blog/guide slugs, backend sitemap slugs via `getSitemap()` in `src/lib/seo.ts`) — there is no generic URL filter in the route handlers. Keep noindex routes out of these lists.
 
-**isIndexable non-indexable patterns:**
+`isIndexable(url)` in `src/lib/seo/metadata-defaults.ts` defines the non-indexable patterns; `src/tests/sitemap-noindex.test.ts` checks them statically:
 - `/auth/*`, `/account/*`, `/shop-admin/*`, `/admin/*`, `/api/*`
 - `/__playwright/*`, `/_next/*`
 - Any URL with query params: `?q=`, `?shop_id=`, `?category_id=`, `?filter=`
@@ -249,10 +249,10 @@ Every page in `sitemap.xml` must have at least one internal link pointing to it.
 npm run dev:test
 
 # In a second terminal — SEO audit (title/desc/OG/H1/orphans/redirects/sitemap):
-pnpm seo:audit
+npm run seo:audit
 
 # Performance baseline (Lighthouse, requires Chrome):
-pnpm seo:perf
+npm run seo:perf
 ```
 
 Outputs in project root:

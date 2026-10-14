@@ -9,10 +9,10 @@ Gebaut mit **Next.js 16 App Router**, **React 19**, **Tailwind CSS v4** und **Le
 
 | Bereich | Technologie |
 |---|---|
-| Framework | Next.js 16.2 (App Router, RSC-first) |
+| Framework | Next.js 16.3 (App Router, RSC-first) |
 | UI | React 19, Tailwind CSS v4 |
 | Karten | Leaflet 1.9 + react-leaflet 5 |
-| Sprache | TypeScript 5 (strict) |
+| Sprache | TypeScript 6 (strict) |
 | Fonts | Space Grotesk (Display), DM Sans (Body) |
 | Deployment | Docker / Standalone-Build |
 
@@ -72,9 +72,12 @@ npm run dev:test     # Dev-Server (Port 3500, Backend 8500, DB pundo_test) — e
 npm run build        # Produktions-Build
 npm run start        # Produktions-Server starten
 npm run lint         # ESLint
-npm run test         # Unit-Tests (Vitest)
-npm run test:e2e     # E2E-Tests (Playwright)
+npm run lint:i18n    # Paritätsprüfung der UI-Strings (6 Sprachen)
+npx vitest run       # Unit-Tests (Vitest)
+npx playwright test  # E2E-Tests (Playwright)
 ```
+
+Vollständige Script-Liste: `package.json` → `scripts`.
 
 ---
 
@@ -83,12 +86,12 @@ npm run test:e2e     # E2E-Tests (Playwright)
 ### Unit-Tests (Vitest)
 
 ```bash
-npm run test          # Einmalig
-npm run test -- --watch   # Watch-Mode
-npm run test -- --coverage  # Mit Coverage-Report
+npx vitest run              # Einmalig
+npx vitest                  # Watch-Mode
+npx vitest run --coverage   # Mit Coverage-Report
 ```
 
-876 Tests in 41 Dateien unter `src/tests/` — kein Backend nötig, kein Browser.
+Tests unter `src/tests/` (Konfiguration: `vitest.config.ts`) — kein Backend nötig, kein Browser.
 
 ### E2E-Tests (Playwright)
 
@@ -99,7 +102,7 @@ Kurzversion:
 **Port-Konvention (PFLICHT — niemals mischen):**
 | Umgebung | Backend | Frontend |
 |---|---|---|
-| Produktion / Dev | 8000 | 3000 |
+| Produktion (Hetzner) | 8000 | 3000 |
 | E2E-Tests | **8500** | **3500** |
 
 Das Test-Backend wird **automatisch** gestartet — kein manueller Start nötig.  
@@ -107,7 +110,7 @@ Port 8000 wird explizit abgelehnt (Schutz vor versehentlichem Zugriff auf Produk
 
 ```bash
 # E2E-Tests — Backend startet automatisch auf Port 8500
-npm run test:e2e
+npx playwright test
 
 # Oder mit explizitem Backend-Port:
 BACKEND_URL=http://localhost:8500 npx playwright test
@@ -126,14 +129,14 @@ BACKEND_URL=http://localhost:8500 npx playwright test
 | `ALLOWED_DEV_ORIGINS` | Server (dev only) | Nein | Komma-getrennte zusätzliche Dev-Origins |
 | `COOKIE_DOMAIN` | Server | **Pflicht auf Prod** | Domain für auth-Cookie-Löschung bei Logout. Spiegelt Backend `AUTH_COOKIE_DOMAIN`. Prod (beide Brands): `pundo.cy`. Lokal: leer lassen. |
 
-¹ Default: `BACKEND_URL=http://localhost:8500`, `NEXT_PUBLIC_API_URL=/api/v1`
+¹ Default: `NEXT_PUBLIC_API_URL=/api/v1`. `BACKEND_URL`-Fallback ist uneinheitlich (Customer-API-Clients: `http://localhost:8500`; Rewrites in `next.config.ts` sowie Shop-/System-Admin-API: `http://localhost:8000`) — daher immer explizit setzen (`npm run dev:test` tut das).
 
 ### E2E-Tests
 
 | Variable | Default | Beschreibung |
 |---|---|---|
-| `BACKEND_URL` | **Pflicht** | Test-Backend-URL — muss auf Port 8500 zeigen (8000 = Produktion, wird abgelehnt) |
-| `FRONTEND_URL` | `http://localhost:3500` | Frontend-URL für Playwright `baseURL` |
+| `BACKEND_URL` | `http://localhost:8500` | Test-Backend-URL — Port 8000 (Produktion) wird abgelehnt (`playwright.config.ts`) |
+| `FRONTEND_URL` | `http://127.0.0.1:3500` | Frontend-URL für Playwright `baseURL` |
 | `E2E_FRONTEND_PORT` | `3500` | Port für den E2E-Frontend-Server |
 | `BACKEND_REPO` | `/Users/bb_studio_2025/dev/github/pundo_main_backend` | Pfad zum Backend-Repo |
 | `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | Bearer-Token für Admin-Approve-API |
@@ -144,43 +147,16 @@ BACKEND_URL=http://localhost:8500 npx playwright test
 
 ```
 src/
-├── app/                        # Next.js App Router
-│   ├── layout.tsx              # Root-Layout (Fonts, Metadata, dir=rtl/ltr)
-│   ├── page.tsx                # Startseite (Hero, Suche, Nearby Shops)
-│   ├── (customer)/             # Route Group: Customer-Facing
-│   │   ├── search/             # Suchergebnisse mit Karte
-│   │   ├── products/[slug]/    # Produktdetailseite
-│   │   └── shops/[slug]/       # Shopdetailseite
-│   └── (shop-admin)/           # Route Group: Shop-Admin Portal
-│       └── shop-admin/
-│           ├── login/          # Öffentlich (kein Auth-Guard)
-│           ├── register/       # Öffentlich
-│           └── (portal)/       # Auth-Guard-Gruppe (JWT-Cookie erforderlich)
-│               ├── dashboard/
-│               ├── profile/
-│               ├── hours/
-│               ├── products/
-│               ├── offers/
-│               └── api-keys/
-├── components/
-│   ├── map/                    # Leaflet-Karte (Client-only, dynamic import)
-│   ├── product/                # ProductCard, OfferList, PriceHistory
-│   ├── search/                 # SearchBar, FilterChips, CategoryChips
-│   ├── shop/                   # ShopCard, NearbyShops
-│   ├── shop-admin/             # AdminNav, HoursEditor, ProductList, ...
-│   └── ui/                     # BackButton, LanguageSwitcher, PriceFilterToggle
-├── lib/
-│   ├── api.ts                  # API-Client (Server Components)
-│   ├── shop-admin-api.ts       # API-Client (Shop-Admin, isoliert)
-│   ├── lang.ts                 # Spracherkennung & Cookie
-│   ├── translations.ts         # i18n-Strings (6 Sprachen, Kunden-Seite)
-│   ├── shop-admin-translations.ts  # i18n-Strings (6 Sprachen, Shop-Admin)
-│   └── utils.ts                # Hilfsfunktionen (formatPriceOrLabel, ...)
-├── types/
-│   ├── api.ts                  # TypeScript-Interfaces für API-Responses (inkl. PriceType)
-│   └── shop-admin.ts           # TypeScript-Interfaces für Shop-Admin
-└── tests/                      # Vitest Unit-Tests
+├── proxy.ts        # Next-Proxy: i18n-Redirects, Brand, Auth-Gate, CSP (siehe docs/architecture.md)
+├── app/            # App Router — Route-Groups (customer)/[lang], (shop-admin), (system-admin), (oauth), api/
+├── components/     # map/, product/, search/, shop/, shop-admin/, system-admin/, layout/, ui/, …
+├── config/brands/  # Multi-Brand-Config (getBrandConfig)
+├── lib/            # API-Clients, i18n/ (UI-Strings), routing, seo/, Utilities
+├── types/          # api.ts (Customer), shop-admin.ts (Shop-Admin, Clean Boundary)
+└── tests/          # Vitest Unit-Tests
 ```
+
+Detaillierte Route- und Modulstruktur: [`docs/architecture.md`](./docs/architecture.md).
 
 **Fachliche Docs:** [`docs/search.md`](./docs/search.md) · [`docs/data-model.md`](./docs/data-model.md) · [`docs/shop-owner-portal.md`](./docs/shop-owner-portal.md) · [`docs/shop-languages.md`](./docs/shop-languages.md)
 

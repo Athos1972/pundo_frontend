@@ -126,15 +126,15 @@ Trenner zwischen Frontmatter und Body: Zeile mit exakt `---` auf Spaltenanfang.
 
 ## 5. Heuristiken für neue Journey-Vorschläge
 
-Der e2e-tester (Phase 0.5) und designer/architect können diese Heuristiken anwenden:
+Der e2e-tester (Phase 0.5) und designer/architect können diese Heuristiken anwenden (gleichlautend mit `.claude/playbooks/reference/e2e-tester-journey-scan.md` — bei Änderungen beide Stellen pflegen):
 
 | # | Muster / Trigger | Vorschlags-Typ | Default `touches-modules` |
 |---|---|---|---|
-| H1 | Neue `src/app/<segment>/page.tsx` (außerhalb `api/`, `shop-admin/`, `admin/`) | `public-route-visibility-<segment>` | `src/app/<segment>/**`, `src/lib/api.ts` |
-| H2 | Neue Datei in `src/app/shop-admin/**` oder `src/app/admin/**` mit `page.tsx` | `role-boundary-<segment>` | `src/app/<segment>/**`, `src/lib/shop-admin-api.ts` |
+| H1 | Neue `src/app/(customer)/[lang]/<segment>/page.tsx` | `public-route-visibility-<segment>` | `src/app/(customer)/[lang]/<segment>/**`, `src/lib/api.ts` |
+| H2 | Neue `page.tsx` in `src/app/(shop-admin)/shop-admin/**` oder `src/app/(system-admin)/admin/**` | `role-boundary-<segment>` | `src/app/(shop-admin)/shop-admin/<segment>/**` bzw. `src/app/(system-admin)/admin/<segment>/**`, `src/lib/shop-admin-api.ts` |
 | H3 | Neues Status-Enum in `src/types/**/*.ts` (Regex: `status:\s*'[^']+'(\s*\|\s*'[^']+'){1,}`) | `state-transition-<Type>-<field>` | Alle `src/app/**/*` + `src/lib/**/*` die den Typ importieren |
-| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` — **Pflicht-ACs: siehe §5a** | `src/lib/shop-admin-api.ts`, `src/app/shop-admin/**`, `src/app/shops/[id]/**` |
-| H5 | Neue API-Typ-Änderung via Backend-Schema sichtbar (`.env` / `src/types/api.ts`) | `cross-role-<feature>` | `src/types/api.ts` |
+| H4 | Neue Funktion in `src/lib/shop-admin-api.ts` mit Prefix `create\|update\|delete\|set\|toggle` | `write-to-read-<funcname>` — **Pflicht-ACs: siehe §5a** | `src/lib/shop-admin-api.ts`, `src/app/(shop-admin)/shop-admin/**`, `src/app/(customer)/[lang]/shops/[slug]/**` |
+| H5 | Neue API-Typ-Änderung via `src/types/api.ts` sichtbar (neues Feld/Enum) | `cross-role-<feature>` | `src/types/api.ts` |
 
 **Nicht-Trigger:** Tests, Storybook, `node_modules`, `.md`-Änderungen, reine Tailwind-Klassen-Änderungen ohne Logik.
 

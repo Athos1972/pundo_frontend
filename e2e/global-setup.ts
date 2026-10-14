@@ -511,6 +511,20 @@ export default async function globalSetup() {
         ) as Record<string, unknown>
         testShopSlug = shopRes?.slug as string ?? null
         console.log(`[E2E Setup] Geo-Koordinaten gesetzt für Shop ${shopId} (slug=${testShopSlug}).`)
+        // Ohne DB-Reset existiert der Shop des Test-Owners bereits (Prod-Sync) und heißt nicht
+        // zwingend wie creds.shop_name ("E2E Test Shop"). Specs, die den Namen auf der Shop-Seite
+        // oder in der Suche erwarten, brauchen den tatsächlich angezeigten (en) Namen.
+        if (testShopSlug) {
+          const pub = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${testShopSlug}`, {
+            headers: { 'Accept-Language': 'en' },
+            signal: AbortSignal.timeout(30_000),
+          })
+          const pubName = pub.ok ? ((await pub.json()) as { name?: string }).name : undefined
+          if (pubName && pubName !== creds.shop_name) {
+            console.log(`[E2E Setup] Test-Shop heißt "${pubName}" (statt "${creds.shop_name}") — State übernimmt den echten Namen.`)
+            creds = { ...creds, shop_name: pubName }
+          }
+        }
       }
     }
   } catch (err) {

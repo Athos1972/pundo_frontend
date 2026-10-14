@@ -8,12 +8,21 @@ import { localePath } from '@/lib/routing'
 
 // Seed-visual paths are centrally defined here.
 // All 6 files verified present in public/seed-visuals/ (2026-06-04).
+//
+// Tiles use pre-sized 480×480 variants (`<slug>-480.webp`) and are rendered `unoptimized`
+// (same as OfferItemHeader). Reason (B8950-013): Next 16.3.x's image optimizer fetches local
+// /public files through `send` with the *client* socket; if the browser aborts the first
+// /_next/image request for a key (navigation, closed tab), that key stays pending until the
+// server restarts — every later homepage visit then hangs on these tiles. Fixed upstream
+// (Next canary: mocked response no longer references the socket); drop `unoptimized` after
+// the upgrade. Regenerate variants from the 1024px card:
+//   sharp('<slug>.webp').resize(480, 480, { fit: 'cover' }).webp({ quality: 80 })
 // V1: links via ?q=<term> (free-text). V1.1 delta: use ?category_id=<id> when
 // a backend counts endpoint is available (see architecture §2.3).
 const CATEGORIES = [
   {
     labelKey: 'cat_fashion' as const,
-    image: '/seed-visuals/mode-boutique-interior.webp',
+    image: '/seed-visuals/mode-boutique-interior-480.webp',
     searchTerm: 'Fashion',
     icon: (
       // Heart / fashion icon
@@ -24,7 +33,7 @@ const CATEGORIES = [
   },
   {
     labelKey: 'cat_tradespeople' as const,
-    image: '/seed-visuals/elektroinstallation.webp',
+    image: '/seed-visuals/elektroinstallation-480.webp',
     searchTerm: 'Electrician',
     icon: (
       // Wrench icon
@@ -35,7 +44,7 @@ const CATEGORIES = [
   },
   {
     labelKey: 'cat_health' as const,
-    image: '/seed-visuals/health-store-regal.webp',
+    image: '/seed-visuals/health-store-regal-480.webp',
     searchTerm: 'Health',
     icon: (
       // Pulse / health icon
@@ -46,7 +55,7 @@ const CATEGORIES = [
   },
   {
     labelKey: 'cat_food' as const,
-    image: '/seed-visuals/frischewaren.webp',
+    image: '/seed-visuals/frischewaren-480.webp',
     searchTerm: 'Groceries',
     icon: (
       // Coffee / food icon
@@ -61,7 +70,7 @@ const CATEGORIES = [
   },
   {
     labelKey: 'cat_home' as const,
-    image: '/seed-visuals/einbauschraenke.webp',
+    image: '/seed-visuals/einbauschraenke-480.webp',
     searchTerm: 'Furniture',
     icon: (
       // Home icon
@@ -73,7 +82,7 @@ const CATEGORIES = [
   },
   {
     labelKey: 'cat_services' as const,
-    image: '/seed-visuals/dienstleistungen-schreibtisch.webp',
+    image: '/seed-visuals/dienstleistungen-schreibtisch-480.webp',
     searchTerm: 'Services',
     icon: (
       // Sun / services icon
@@ -130,6 +139,7 @@ export function HomepageCategoryGrid({ lang }: Props) {
                   alt={label}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+                  unoptimized
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
 

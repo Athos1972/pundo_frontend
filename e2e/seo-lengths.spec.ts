@@ -102,7 +102,10 @@ test.describe('SEO lengths + OG completeness (F6400)', () => {
     await page.goto('/shops')
     await page.waitForLoadState('domcontentloaded')
 
-    const firstShopLink = page.locator('a[href*="/shops/"]').first()
+    // Erster Link ist seit B5900-007 (54ab2c5) die Städte-Übersicht /{lang}/shops/cities —
+    // nur echte Shop-Detail-Links nehmen. Die Shop-Karten rendern clientseitig: darauf warten.
+    const firstShopLink = page.locator('a[href*="/shops/"]:not([href$="/shops/cities"]):not([href*="/shops/city/"])').first()
+    await firstShopLink.waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {})
     const count = await firstShopLink.count()
     if (count === 0) {
       test.skip(true, 'No shops available in test database')
@@ -136,7 +139,9 @@ test.describe('SEO lengths + OG completeness (F6400)', () => {
     await page.goto('/search?q=test')
     await page.waitForLoadState('domcontentloaded')
 
+    // Suchergebnisse rendern clientseitig (SearchContent) — sonst zählt der Test 0 Links und skippt still
     const firstProductLink = page.locator('a[href*="/products/"]').first()
+    await firstProductLink.waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {})
     const count = await firstProductLink.count()
     if (count === 0) {
       test.skip(true, 'No products available in test database')

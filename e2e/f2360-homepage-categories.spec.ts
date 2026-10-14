@@ -34,13 +34,16 @@ test.describe('F2360 — Kuratierte Homepage-Kategorien', () => {
     await expect(catLinks).toHaveCount(4)
   })
 
-  test('AC7: Chip-Link enthält category_id + category_name', async ({ page }) => {
+  // Seit 39e4ef0 (2026-06-05) trägt der Chip-Link nur noch category_id; den Namen lädt die
+  // Suchseite selbst über die API (SearchContent → getCategories({ ids })). Unit-Test:
+  // src/tests/CategoryChips.test.tsx "includes only category_id in link href (no category_name)".
+  test('AC7: Chip-Link enthält category_id (ohne category_name)', async ({ page }) => {
     await page.goto('/en')
     await page.waitForLoadState('networkidle')
     const firstLink = page.locator('a[href*="category_id="]').first()
     const href = await firstLink.getAttribute('href')
-    expect(href).toMatch(/category_id=\d+/)
-    expect(href).toMatch(/category_name=/)
+    expect(href).toMatch(/^\/en\/search\?category_id=\d+$/)
+    expect(href).not.toContain('category_name=')
   })
 
   test('AC1: Steuerfile-IDs werden geladen (nicht only_with_products Fallback)', async ({ page }) => {

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { waitForHydrated } from './journeys/_helpers/hydration'
 
 // Cookie-Domain aus E2E_COOKIE_DOMAIN (Env) oder Fallback 127.0.0.1
 const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
@@ -324,6 +325,10 @@ test.describe('E2E-09: Customer Auth Pages', () => {
   test('signup page renders required fields', async ({ page }) => {
     const response = await page.goto('/auth/signup')
     expect(response?.status()).toBe(200)
+    // Während der Hydration steht das Formular kurz doppelt im DOM (Next 16.3) → erst nach
+    // Hydration prüfen, dann muss genau eine Instanz übrig sein.
+    await waitForHydrated(page.locator('input[type="email"]'))
+    await expect(page.locator('input[type="email"]')).toHaveCount(1)
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
   })
@@ -361,7 +366,11 @@ test.describe('E2E-09: Customer Auth Pages', () => {
       if (!err.message.includes('Hydration failed') && !err.message.includes('#418')) errors.push(err.message)
     })
     await page.goto('/auth/signup')
-    await page.waitForLoadState('networkidle')
+    // Kein networkidle: das Turnstile-Widget (B6220-003) hält eine blob:-Anfrage dauerhaft offen.
+    // Submit-Button aktiv = hydratisiert + Captcha-Token erhalten; danach kurz nachlaufen lassen.
+    await page.waitForLoadState('load')
+    await expect(page.locator('form button[type="submit"]:not([disabled])').first()).toBeVisible({ timeout: 20_000 })
+    await page.waitForTimeout(1000)
     expect(errors).toHaveLength(0)
   })
 })

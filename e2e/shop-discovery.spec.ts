@@ -209,19 +209,31 @@ test.describe('Shop-Detailseite', () => {
     expect(errors).toHaveLength(0)
   })
 
+  // Testdaten-Drift: e2e-owner (ID 1) zeigt nach prod→test-Syncs nicht zwingend auf einen Shop
+  // namens "E2E Test Shop" in Larnaca (Stand 2026-10-14: Shop 7937 happy-pets-nicosia). Erwarteter
+  // Name und Adressteil kommen deshalb aus der Backend-API für genau diesen Slug.
+  async function fetchShopDetail(slug: string): Promise<{ name: string | null; address_raw: string | null; city: string | null }> {
+    const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${encodeURIComponent(slug)}`, { headers: { 'Accept-Language': 'en' } })
+    expect(res.ok, `GET /shops/by-slug/${slug} -> ${res.status}`).toBe(true)
+    return res.json()
+  }
+
   test('Shop-Detailseite zeigt Shop-Name', async ({ page }) => {
     if (!shopSlug) return
-    const state = loadStorageState()
-    await page.goto(`/shops/${shopSlug}`)
-    await expect(page.getByText(state.shop_name, { exact: false }).first()).toBeVisible({ timeout: 10_000 })
+    const shop = await fetchShopDetail(shopSlug)
+    expect(shop.name, 'Shop ohne Namen in der API').toBeTruthy()
+    await page.goto(`/en/shops/${shopSlug}`)
+    await expect(page.getByRole('heading', { level: 1, name: shop.name! })).toBeVisible({ timeout: 10_000 })
   })
 
   test('Shop-Detailseite zeigt Adresse', async ({ page }) => {
     if (!shopSlug) return
-    const _state = loadStorageState()
-    await page.goto(`/shops/${shopSlug}`)
-    // Adresse oder Teil davon soll sichtbar sein (z.B. "Larnaca") — use .first() to avoid strict-mode violation
-    await expect(page.getByText(/larnaca/i).first()).toBeVisible({ timeout: 10_000 })
+    const shop = await fetchShopDetail(shopSlug)
+    // Adresse (erster Teil) oder Stadt — je nachdem, was der Shop in der API hat
+    const addressPart = shop.address_raw?.split(',')[0]?.trim() || shop.city
+    expect(addressPart, `Shop ${shopSlug} hat weder address_raw noch city in der API`).toBeTruthy()
+    await page.goto(`/en/shops/${shopSlug}`)
+    await expect(page.getByText(addressPart!, { exact: false }).filter({ visible: true }).first()).toBeVisible({ timeout: 10_000 })
   })
 
   test('Shop-Detailseite enthält Karten-Element', async ({ page }) => {

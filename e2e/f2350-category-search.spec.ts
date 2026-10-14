@@ -1,33 +1,97 @@
 /**
  * E2E Tests für F2350 — Kategoriesuche Leerzustand & verwandte Kategorien
  * Läuft gegen Frontend Port 3500, Backend Port 8500
+ *
+ * Testdaten: pundo_test wird regelmäßig aus Prod gesynct, Kategorie-IDs und Produktzahlen driften
+ * (z. B. war 2871 früher "Animals & Pet Supplies", Kategorie 5 hatte früher 0 Produkte). Die
+ * benötigten Kategorien werden deshalb in beforeAll über die Backend-API (8500) ermittelt:
+ *   - withProducts:  Kategorie mit Produkten
+ *   - emptyRelated:  0 Produkte, related-with-products nicht leer
+ *   - emptyAlone:    0 Produkte, related-with-products leer
+ *
+ * Layout: die Suchseite rendert die Ergebnisliste zweimal (Mobile-Bottom-Sheet `md:hidden` +
+ * Desktop-Panel `hidden md:flex`). Text-Locator daher immer mit `.filter({ visible: true })`.
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, request as pwRequest, type APIRequestContext } from '@playwright/test'
+import { tCommon } from '../src/lib/i18n/common'
 
-// Category 2871 = Animals & Pet Supplies (has 451 products)
-// Category 5 = Commercial Cleaning (has 0 products)
-// Category 99999 = non-existent
+const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
+if (BACKEND_URL.includes(':8000')) throw new Error('Safety: F2350-Spec darf nicht gegen Port 8000 laufen')
+
+type Cat = { id: number; name: string | null; child_count: number }
+type Picked = { id: number; name: string }
+
+const data: { withProducts?: Picked; emptyRelated?: Picked & { related: string[] }; emptyAlone?: Picked } = {}
+
+async function getJson<T>(api: APIRequestContext, path: string): Promise<T> {
+  const res = await api.get(`${BACKEND_URL}/api/v1${path}`, { headers: { 'Accept-Language': 'en' } })
+  if (!res.ok()) throw new Error(`GET ${path} -> ${res.status()}`)
+  return res.json() as Promise<T>
+}
+
+async function productTotal(api: APIRequestContext, id: number): Promise<number> {
+  return (await getJson<{ total: number }>(api, `/products?category_id=${id}&limit=1`)).total
+}
+
+test.beforeAll(async () => {
+  const api = await pwRequest.newContext()
+  try {
+    const withProducts = await getJson<{ items: Cat[] }>(api, '/categories?only_with_products=true&limit=50')
+    for (const c of withProducts.items) {
+      if (c.name && (await productTotal(api, c.id)) > 0) { data.withProducts = { id: c.id, name: c.name }; break }
+    }
+
+    const top = [
+      ...(await getJson<{ items: Cat[] }>(api, '/categories?limit=100')).items,
+      ...(await getJson<{ items: Cat[] }>(api, '/categories?limit=100&taxonomy_type=google')).items,
+    ]
+    const candidates = [...top]
+    for (const c of top) {
+      if (c.child_count > 0) candidates.push(...(await getJson<{ items: Cat[] }>(api, `/categories?parent_id=${c.id}&limit=100`)).items)
+    }
+    for (const c of candidates) {
+      if (data.emptyRelated && data.emptyAlone) break
+      if (!c.name || (await productTotal(api, c.id)) > 0) continue
+      const related = (await getJson<{ items: Cat[] }>(api, `/categories/${c.id}/related-with-products?limit=6`)).items
+      if (related.length > 0 && !data.emptyRelated) {
+        data.emptyRelated = { id: c.id, name: c.name, related: related.map(r => r.name ?? '').filter(Boolean) }
+      } else if (related.length === 0 && !data.emptyAlone) {
+        data.emptyAlone = { id: c.id, name: c.name }
+      }
+    }
+  } finally {
+    await api.dispose()
+  }
+  console.log('[f2350] Testkategorien:', JSON.stringify({
+    withProducts: data.withProducts, emptyRelated: data.emptyRelated?.id, emptyAlone: data.emptyAlone?.id,
+  }))
+})
+
+function need<T>(value: T | undefined, what: string): T {
+  if (!value) throw new Error(`[f2350] pundo_test enthält keine ${what} — Testdaten prüfen (sync_prod_to_test.sh)`)
+  return value
+}
+
+const searchUrl = (lang: string, id: number) => `/${lang}/search?category_id=${id}`
 
 test.describe('F2350 — Kategorie-Modus (Happy Path)', () => {
   test('AC1: Kategorie mit Produkten zeigt Produkte und Kategorienamen als Überschrift', async ({ page }) => {
+    const cat = need(data.withProducts, 'Kategorie mit Produkten')
     const errors: string[] = []
     page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()) })
 
-    // Navigate via category_id + category_name (wie CategoryChips es tut)
-    await page.goto('/en/search?category_id=2871&category_name=Animals+%26+Pet+Supplies')
+    // Navigate via category_id only (wie CategoryChips es tut; Name lädt die Seite selbst)
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
 
-    // AC1a: Kategoriename als Überschrift (visible h1, not sr-only)
-    const heading = page.locator('h1:not(.sr-only)')
+    // AC1a: Kategoriename als sichtbare Überschrift (h1 ist sr-only/SEO, sichtbar ist das h2 der Liste)
+    const heading = page.locator('h2').filter({ hasText: cat.name }).filter({ visible: true })
     await expect(heading).toBeVisible()
-    const headingText = await heading.textContent()
-    expect(headingText).toContain('Animals')
 
     // AC1b: Produkte werden angezeigt
-    const productLinks = page.locator('a[href*="/products/"]')
+    const productLinks = page.locator('a[href*="/products/"]').filter({ visible: true })
     await expect(productLinks.first()).toBeVisible()
-    const count = await productLinks.count()
-    expect(count).toBeGreaterThan(0)
+    expect(await productLinks.count()).toBeGreaterThan(0)
 
     // AC8: Kein Crash / JS-Fehler (toleriere hydration warnings)
     const criticalErrors = errors.filter(e =>
@@ -43,115 +107,89 @@ test.describe('F2350 — Kategorie-Modus (Happy Path)', () => {
     await page.waitForLoadState('networkidle')
 
     // No CategoryEmptyState should appear
-    const emptyIntro = page.getByText('Currently no products in this category')
-    await expect(emptyIntro).not.toBeVisible()
+    await expect(page.getByText(tCommon('en').category_empty_intro)).toHaveCount(0)
 
-    // No h1 heading with category name
-    const h1 = page.locator('h1')
-    const h1count = await h1.count()
-    // Either no h1 or it doesn't contain a category name in this text-search mode
-    if (h1count > 0) {
-      const h1Text = await h1.textContent() ?? ''
-      expect(h1Text).not.toContain('Animals')
-    }
+    // Kein sichtbarer Kategorie-Titel im Textmodus (h1 ist sr-only = "Search")
+    await expect(page.locator('h1:not(.sr-only)')).toHaveCount(0)
   })
 })
 
 test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
   test('AC2: Leere Kategorie zeigt NICHT den generischen no_results-Text', async ({ page }) => {
-    await page.goto('/en/search?category_id=5&category_name=Commercial+Cleaning')
+    const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
-
-    // Should NOT show "No results found."
-    const genericNoResults = page.getByText('No results found.')
-    await expect(genericNoResults).not.toBeVisible()
+    await expect(page.getByText(tCommon('en').category_empty_intro).filter({ visible: true })).toBeVisible()
+    // Text-Modus-Leerzustand ist ein <p>; die sr-only Live-Region (role=status) sagt "No results found." immer an
+    await expect(page.locator('p', { hasText: 'No results found.' })).toHaveCount(0)
   })
 
   test('AC2: Leere Kategorie zeigt category_empty_intro Text', async ({ page }) => {
-    await page.goto('/en/search?category_id=5&category_name=Commercial+Cleaning')
+    const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
-
-    // Should show "Currently no products in this category."
-    const emptyIntro = page.getByText('Currently no products in this category.')
-    await expect(emptyIntro).toBeVisible()
+    await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible()
   })
 
   test('AC3: Leere Kategorie MIT verwandten Kategorien zeigt bis zu 6 Vorschlags-Links', async ({ page }) => {
-    // Category 2922 = Pet Apparel Hangers (0 direct products, 6 related categories with products)
-    // Backend GET /categories/2922/related-with-products → 6 items
-    await page.goto('/en/search?category_id=2922&category_name=Pet+Apparel+Hangers')
+    const cat = need(data.emptyRelated, 'leere Kategorie mit verwandten Kategorien')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
 
     // AC3a: intro text visible (wait up to 8s for async useEffect)
-    const emptyIntro = page.getByText('Currently no products in this category.')
-    await expect(emptyIntro).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible({ timeout: 8000 })
 
     // AC3b: suggestions label visible — wait for async getRelatedCategories useEffect
-    const suggestionsLabel = page.getByText('Here are some suggestions:')
-    await expect(suggestionsLabel).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Here are some suggestions:').filter({ visible: true })).toBeVisible({ timeout: 8000 })
 
-    // AC3c: at least 1 suggestion link present (up to 6)
-    // Filter out the current category navigation links (category_name param links in header)
-    const suggestionLinks = page.locator('[data-testid="category-empty-state"] a[href*="category_id"]')
-    const fallbackSuggestionLinks = page.locator('a[href*="category_id"]').filter({ hasText: /Fish|Dog|Cat|Pet Bed|Pet Bell|Biometric/ })
-
-    // Use either testid selector or text-based fallback
-    const hasTestId = await suggestionLinks.count() > 0
-    const linksLocator = hasTestId ? suggestionLinks : fallbackSuggestionLinks
-    const linkCount = await linksLocator.count()
-
-    expect(linkCount, `Keine Vorschlags-Links gefunden`).toBeGreaterThan(0)
-    expect(linkCount, `Mehr als 6 Links (max AC-spec)`).toBeLessThanOrEqual(6)
+    // AC3c: 1..6 Vorschlags-Links im sichtbaren Empty-State, Namen aus der API
+    const state = page.getByTestId('category-empty-state').filter({ visible: true })
+    const links = state.locator('a[href*="category_id="]')
+    const linkCount = await links.count()
+    expect(linkCount, 'Keine Vorschlags-Links gefunden').toBeGreaterThan(0)
+    expect(linkCount, 'Mehr als 6 Links (max AC-spec)').toBeLessThanOrEqual(6)
+    await expect(links.first()).toContainText(cat.related[0])
 
     // AC3d: Fallback "Browse all categories" should NOT be shown when suggestions exist
-    const browseAllLink = page.getByText('Browse all categories')
-    await expect(browseAllLink).not.toBeVisible()
+    await expect(page.getByText('Browse all categories').filter({ visible: true })).toHaveCount(0)
   })
 
   test('AC3+AC4: Klick auf Vorschlags-Link navigiert zur Kategoriesuche', async ({ page }) => {
-    // Category 2922 = Pet Apparel Hangers (0 products), related: Fish Supplies (2904, 147 products)
-    await page.goto('/en/search?category_id=2922&category_name=Pet+Apparel+Hangers')
+    const cat = need(data.emptyRelated, 'leere Kategorie mit verwandten Kategorien')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
 
-    // Wait for async suggestions to appear
-    const suggestionsLabel = page.getByText('Here are some suggestions:')
-    await expect(suggestionsLabel).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Here are some suggestions:').filter({ visible: true })).toBeVisible({ timeout: 8000 })
 
-    // Find first suggestion link (one of the related category names)
-    const suggestionLinks = page.locator('a[href*="category_id"]').filter({ hasText: /Fish|Dog|Cat|Pet Bed|Pet Bell|Biometric/ })
-    await expect(suggestionLinks.first()).toBeVisible({ timeout: 5000 })
+    const firstSuggestion = page.getByTestId('category-empty-state').filter({ visible: true })
+      .locator('a[href*="category_id="]').first()
+    await expect(firstSuggestion).toBeVisible({ timeout: 5000 })
+    const href = await firstSuggestion.getAttribute('href')
+    expect(href).toMatch(/^\/en\/search\?category_id=\d+$/)
 
-    // Click first suggestion
-    await suggestionLinks.first().click()
-    await page.waitForLoadState('networkidle')
-
-    // AC4: Should navigate to a category search page
-    const currentUrl = page.url()
-    expect(currentUrl, `URL enthält keine category_id nach Klick`).toContain('category_id=')
+    await firstSuggestion.click()
+    // AC4: Navigation zur Kategoriesuche der vorgeschlagenen Kategorie
+    await expect(page).toHaveURL(new RegExp(`${href!.replace('?', '\\?')}$`))
   })
 
   test('AC5: Leere Kategorie OHNE verwandte Kategorien zeigt Fallback-Link', async ({ page }) => {
-    // Category 5 = Commercial Cleaning (0 products, related-with-products → empty)
-    await page.goto('/en/search?category_id=5&category_name=Commercial+Cleaning')
+    const cat = need(data.emptyAlone, 'leere Kategorie ohne verwandte Kategorien')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
 
-    const emptyIntro = page.getByText('Currently no products in this category.')
-    await expect(emptyIntro).toBeVisible()
-
-    // When no related categories: fallback browse all link appears
-    const browseAllLink = page.getByText('Browse all categories')
-    const hasRelatedSuggestions = page.getByText('Here are some suggestions:')
-
-    const fallbackVisible = await browseAllLink.isVisible().catch(() => false)
-    const suggestionsVisible = await hasRelatedSuggestions.isVisible().catch(() => false)
-    expect(fallbackVisible || suggestionsVisible, 'Weder Fallback-Link noch Vorschläge sichtbar').toBe(true)
+    await expect(page.getByText('Currently no products in this category.').filter({ visible: true })).toBeVisible()
+    // Keine verwandten Kategorien → Fallback-Link "Browse all categories" (→ Startseite)
+    const browseAll = page.getByRole('link', { name: 'Browse all categories' }).filter({ visible: true })
+    await expect(browseAll).toBeVisible()
+    await expect(browseAll).toHaveAttribute('href', '/en')
+    await expect(page.getByText('Here are some suggestions:')).toHaveCount(0)
   })
 
   test('AC6: Ungültige category_id crasht nicht', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', err => errors.push(err.message))
 
-    await page.goto('/en/search?category_id=99999')
+    await page.goto('/en/search?category_id=99999999')
     await page.waitForLoadState('networkidle')
 
     // No page crash
@@ -166,31 +204,25 @@ test.describe('F2350 — Kategorie Leerzustand (Empty State)', () => {
 
 test.describe('F2350 — i18n & RTL (AC7)', () => {
   test('AC7: Deutsche Sprache zeigt übersetzte Texte', async ({ page }) => {
-    await page.goto('/de/search?category_id=5&category_name=Reinigung')
+    const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+    await page.goto(searchUrl('de', cat.id))
     await page.waitForLoadState('networkidle')
 
-    const deIntro = page.getByText('In dieser Kategorie sind noch keine Produkte verfügbar.')
-    await expect(deIntro).toBeVisible()
+    await expect(page.getByText('In dieser Kategorie sind noch keine Produkte verfügbar.').filter({ visible: true })).toBeVisible()
   })
 
-  test('AC7: Arabische Sprache (ar) — RTL-Layout (dir=rtl)', async ({ page }) => {
-    await page.goto('/ar/search?category_id=5&category_name=تنظيف')
-    await page.waitForLoadState('networkidle')
-
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
-
-  test('AC7: Hebräische Sprache (he) — RTL-Layout (dir=rtl)', async ({ page }) => {
-    await page.goto('/he/search?category_id=5&category_name=ניקוי')
-    await page.waitForLoadState('networkidle')
-
-    const dir = await page.locator('html').getAttribute('dir')
-    expect(dir).toBe('rtl')
-  })
+  for (const lang of ['ar', 'he'] as const) {
+    test(`AC7: ${lang === 'ar' ? 'Arabische' : 'Hebräische'} Sprache (${lang}) — RTL-Layout (dir=rtl)`, async ({ page }) => {
+      const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+      await page.goto(searchUrl(lang, cat.id))
+      await page.waitForLoadState('networkidle')
+      await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+    })
+  }
 
   test('AC7: Englische Sprache (en) — LTR Layout', async ({ page }) => {
-    await page.goto('/en/search?category_id=5&category_name=Cleaning')
+    const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+    await page.goto(searchUrl('en', cat.id))
     await page.waitForLoadState('networkidle')
 
     const dir = await page.locator('html').getAttribute('dir')
@@ -199,28 +231,25 @@ test.describe('F2350 — i18n & RTL (AC7)', () => {
   })
 
   test('AC7: Arabische Sprache zeigt arabischen Text für empty state', async ({ page }) => {
-    await page.goto('/ar/search?category_id=5')
+    const cat = need(data.emptyAlone ?? data.emptyRelated, 'leere Kategorie')
+    await page.goto(searchUrl('ar', cat.id))
     await page.waitForLoadState('networkidle')
 
-    const arIntro = page.getByText('لا توجد منتجات في هذه الفئة حالياً.')
-    await expect(arIntro).toBeVisible()
+    await expect(page.getByText('لا توجد منتجات في هذه الفئة حالياً.').filter({ visible: true })).toBeVisible()
   })
 })
 
 test.describe('F2350 — CategoryChips href', () => {
-  test('AC4: CategoryChip-Links enthalten &category_name= Parameter', async ({ page }) => {
+  // Seit 39e4ef0 (2026-06-05) enthält der Chip-Link nur category_id; der Name wird auf der
+  // Suchseite über die API geladen (Unit-Test: src/tests/CategoryChips.test.tsx).
+  test('AC4: CategoryChip-Links verlinken auf /{lang}/search?category_id=<id> (ohne category_name)', async ({ page }) => {
     await page.goto('/en')
     await page.waitForLoadState('networkidle')
 
-    // Look for CategoryChips
     const chipLinks = page.locator('a[href*="category_id"]')
-    const count = await chipLinks.count()
-
-    if (count > 0) {
-      const firstHref = await chipLinks.first().getAttribute('href')
-      expect(firstHref).toContain('category_id=')
-      expect(firstHref, `Chip-href fehlt category_name: ${firstHref}`).toContain('category_name=')
-    }
-    // If no chips visible (empty DB), test is skipped — not a failure
+    await expect(chipLinks.first()).toBeAttached()
+    const firstHref = await chipLinks.first().getAttribute('href')
+    expect(firstHref).toMatch(/^\/en\/search\?category_id=\d+$/)
+    expect(firstHref, `Chip-href mit veraltetem category_name: ${firstHref}`).not.toContain('category_name=')
   })
 })

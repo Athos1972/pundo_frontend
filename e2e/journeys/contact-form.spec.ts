@@ -31,7 +31,8 @@ async function fillForm(page: import('@playwright/test').Page) {
 async function waitForToken(page: import('@playwright/test').Page) {
   // dev server may briefly render a second (disabled) tree while hydrating: wait for an enabled one
   await expect(page.locator('form button[type="submit"]:not([disabled])').first()).toBeVisible({ timeout: 30_000 })
-  await page.waitForLoadState('networkidle')
+  // Kein waitForLoadState('networkidle'): das Turnstile-Widget hält eine blob:-Anfrage
+  // (challenges.cloudflare.com) dauerhaft offen, networkidle tritt dann nie ein.
 }
 
 async function openAndFill(page: import('@playwright/test').Page, url: string) {

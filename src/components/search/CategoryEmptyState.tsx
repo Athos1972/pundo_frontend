@@ -17,7 +17,7 @@ export function CategoryEmptyState({ relatedCategories, lang }: CategoryEmptySta
   const visibleCategories = relatedCategories.slice(0, 6)
 
   return (
-    <div className="py-8 space-y-4 px-2">
+    <div data-testid="category-empty-state" className="py-8 space-y-4 px-2">
       <p className="text-center text-text-muted rtl:text-right">{tr.category_empty_intro}</p>
 
       {hasRelated ? (

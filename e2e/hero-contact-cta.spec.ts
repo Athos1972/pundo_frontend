@@ -37,9 +37,11 @@ test.describe('hero-contact-cta-20260522 — AC-Tests', () => {
   test('AC-7b: 0-Treffer-Block erscheint bei echter Suche ohne Ergebnis', async ({ page }) => {
     await page.goto(BASE + '/de/search?q=xyzqwerty123notfound')
     await page.waitForLoadState('networkidle')
-    await expect(page.getByText('Produkt oder Shop fehlt?')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText('Jetzt melden')).toBeVisible()
-    const ctaLink = page.locator('a[href="/de/contact"]').filter({ hasText: 'Jetzt melden' })
+    // Die Suchseite rendert die Ergebnisliste zweimal (Mobile-Sheet md:hidden + Desktop-Panel):
+    // nur die sichtbare Instanz prüfen.
+    await expect(page.getByText('Produkt oder Shop fehlt?').filter({ visible: true })).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Jetzt melden').filter({ visible: true })).toBeVisible()
+    const ctaLink = page.locator('a[href="/de/contact"]').filter({ hasText: 'Jetzt melden' }).filter({ visible: true })
     await expect(ctaLink).toBeVisible()
   })
 

@@ -196,7 +196,7 @@ export function SpottedGlobalButton({ lang, brandSlug }: Props) {
               <path d="M20 6 9 17l-5-5" />
             </svg>
             <span className="text-sm font-medium flex-1">{tr.spotted_success}</span>
-            <button onClick={dismiss} className="opacity-80 hover:opacity-100" aria-label="Dismiss">
+            <button onClick={dismiss} className="opacity-80 hover:opacity-100" aria-label={tr.dismiss}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
@@ -214,7 +214,7 @@ export function SpottedGlobalButton({ lang, brandSlug }: Props) {
               <path d="M12 8v4m0 4h.01" />
             </svg>
             <span className="text-sm font-medium flex-1">{errorMsg}</span>
-            <button onClick={dismiss} className="opacity-80 hover:opacity-100" aria-label="Dismiss">
+            <button onClick={dismiss} className="opacity-80 hover:opacity-100" aria-label={tr.dismiss}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>

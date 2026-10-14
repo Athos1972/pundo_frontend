@@ -72,12 +72,12 @@ export default async function AuditLogPage({ params }: Props) {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-start">
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">Zeit</th>
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">Aktion</th>
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">Typ</th>
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">IP</th>
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">Grund</th>
-                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">Modell</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_time}</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_action}</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_type}</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_ip}</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_reason}</th>
+                <th className="py-2 pe-4 text-gray-500 font-medium text-xs">{tr.reviews_audit_col_model}</th>
               </tr>
             </thead>
             <tbody>

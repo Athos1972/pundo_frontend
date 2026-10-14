@@ -33,6 +33,7 @@ const authTranslations = {
     turnstile_failed: 'Security check failed. Please reload the page.',
     turnstile_required: 'Please complete the security check.',
     invalid_logo_url: 'Please enter a valid https:// URL.',
+    auth_or: 'or',
   },
   de: {
     auth_login: 'Anmelden',
@@ -67,6 +68,7 @@ const authTranslations = {
     turnstile_failed: 'Sicherheitsprüfung fehlgeschlagen. Bitte Seite neu laden.',
     turnstile_required: 'Bitte die Sicherheitsprüfung abschließen.',
     invalid_logo_url: 'Bitte eine gültige https://-URL eingeben.',
+    auth_or: 'oder',
   },
   ru: {
     auth_login: 'Войти',
@@ -101,6 +103,7 @@ const authTranslations = {
     turnstile_failed: 'Проверка безопасности не пройдена. Пожалуйста, перезагрузите страницу.',
     turnstile_required: 'Пожалуйста, пройдите проверку безопасности.',
     invalid_logo_url: 'Пожалуйста, введите корректный URL, начинающийся с https://.',
+    auth_or: 'или',
   },
   el: {
     auth_login: 'Σύνδεση',
@@ -135,6 +138,7 @@ const authTranslations = {
     turnstile_failed: 'Ο έλεγχος ασφαλείας απέτυχε. Παρακαλώ φορτώστε ξανά τη σελίδα.',
     turnstile_required: 'Παρακαλώ ολοκληρώστε τον έλεγχο ασφαλείας.',
     invalid_logo_url: 'Παρακαλώ εισάγετε έγκυρο URL που ξεκινά με https://.',
+    auth_or: 'ή',
   },
   ar: {
     auth_login: 'تسجيل الدخول',
@@ -169,6 +173,7 @@ const authTranslations = {
     turnstile_failed: 'فشل التحقق الأمني. يرجى إعادة تحميل الصفحة.',
     turnstile_required: 'يرجى إكمال التحقق الأمني.',
     invalid_logo_url: 'يرجى إدخال عنوان URL صحيح يبدأ بـ https://.',
+    auth_or: 'أو',
   },
   he: {
     auth_login: 'כניסה',
@@ -203,6 +208,7 @@ const authTranslations = {
     turnstile_failed: 'בדיקת האבטחה נכשלה. אנא טען מחדש את הדף.',
     turnstile_required: 'אנא השלם את בדיקת האבטחה.',
     invalid_logo_url: 'אנא הזן כתובת URL תקינה המתחילה ב-https://.',
+    auth_or: 'או',
   },
 } as const
 

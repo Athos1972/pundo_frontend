@@ -243,7 +243,7 @@ export default async function ShopPage({ params }: Props) {
       />
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <BackButton />
-        <Breadcrumb items={[
+        <Breadcrumb lang={lang} items={[
           { label: tr.home, href: localePath(lang, '/') },
           { label: tr.nav_shops, href: localePath(lang, '/shops') },
           ...(cityHint
@@ -416,7 +416,7 @@ export default async function ShopPage({ params }: Props) {
             ) : null}
             {specialDays.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-xs font-semibold text-text-muted mb-1">Sonderöffnungszeiten</p>
+                <p className="text-xs font-semibold text-text-muted mb-1">{tr.shop_special_hours}</p>
                 <ul className="space-y-1">
                   {specialDays.map((day, i) => (
                     <li key={i} className="text-xs text-text-muted flex justify-between">

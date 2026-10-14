@@ -75,6 +75,7 @@ export function LanguageVotePanel({ aggregates, isAuthenticated, onVote, onDelet
                 <span className="text-sm text-text-muted w-20 shrink-0">{label}</span>
                 <div className="flex items-center gap-2">
                   <VoteSlider
+                    ariaLabel={tr.vote_rating_aria}
                     value={myValue}
                     disabled={submitting === attr}
                     size="sm"

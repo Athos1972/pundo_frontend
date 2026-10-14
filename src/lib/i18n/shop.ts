@@ -68,6 +68,8 @@ const shopTranslations = {
     tier_prices_label: 'Quantity prices',
     tier_show_all: (n: number) => `All prices (${n})`,
     tier_more_prices: '+ more prices',
+    shop_special_hours: 'Special opening hours',
+    offer_website: 'Website',
   },
   de: {
     all_offers: 'Alle Angebote',
@@ -137,6 +139,8 @@ const shopTranslations = {
     tier_prices_label: 'Mengenpreise',
     tier_show_all: (n: number) => `Alle Preise (${n})`,
     tier_more_prices: '+ weitere Preise',
+    shop_special_hours: 'Sonderöffnungszeiten',
+    offer_website: 'Website',
   },
   ru: {
     all_offers: 'Все предложения',
@@ -206,6 +210,8 @@ const shopTranslations = {
     tier_prices_label: 'Цены по количеству',
     tier_show_all: (n: number) => `Все цены (${n})`,
     tier_more_prices: '+ другие цены',
+    shop_special_hours: 'Особый график работы',
+    offer_website: 'Сайт',
   },
   el: {
     all_offers: 'Όλες οι προσφορές',
@@ -275,6 +281,8 @@ const shopTranslations = {
     tier_prices_label: 'Τιμές ανά ποσότητα',
     tier_show_all: (n: number) => `Όλες οι τιμές (${n})`,
     tier_more_prices: '+ περισσότερες τιμές',
+    shop_special_hours: 'Ειδικό ωράριο λειτουργίας',
+    offer_website: 'Ιστοσελίδα',
   },
   ar: {
     all_offers: 'جميع العروض',
@@ -344,6 +352,8 @@ const shopTranslations = {
     tier_prices_label: 'أسعار حسب الكمية',
     tier_show_all: (n: number) => `كل الأسعار (${n})`,
     tier_more_prices: '+ أسعار أخرى',
+    shop_special_hours: 'ساعات عمل استثنائية',
+    offer_website: 'الموقع الإلكتروني',
   },
   he: {
     all_offers: 'כל ההצעות',
@@ -413,6 +423,8 @@ const shopTranslations = {
     tier_prices_label: 'מחירים לפי כמות',
     tier_show_all: (n: number) => `כל המחירים (${n})`,
     tier_more_prices: '+ מחירים נוספים',
+    shop_special_hours: 'שעות פתיחה מיוחדות',
+    offer_website: 'אתר אינטרנט',
   },
 } as const
 

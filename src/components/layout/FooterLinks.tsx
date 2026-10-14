@@ -15,7 +15,7 @@ export function FooterLinks({ fallbackLang, hasForShops }: { fallbackLang: Lang;
   const { openSettings } = useConsent()
 
   return (
-    <nav aria-label="legal" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted">
+    <nav aria-label={tr.nav_legal_aria} className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm text-text-muted">
       <Link href={localePath(lang, '/blog')} className="hover:text-text transition-colors">
         {tr.footer_blog}
       </Link>

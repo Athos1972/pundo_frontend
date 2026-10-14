@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSiteUrl } from '@/lib/seo'
 import { safeJson } from '@/lib/structured-data'
 import { isIndexable } from '@/lib/seo/metadata-defaults'
+import { tCommon } from '@/lib/translations'
 
 export interface BreadcrumbItem {
   label: string
@@ -10,6 +11,7 @@ export interface BreadcrumbItem {
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[]
+  lang: string
 }
 
 /**
@@ -21,13 +23,13 @@ interface BreadcrumbProps {
  * Visual breadcrumb nav is unaffected and keeps relative hrefs.
  *
  * Usage:
- *   <Breadcrumb items={[
+ *   <Breadcrumb lang={lang} items={[
  *     { label: 'Home', href: '/' },
  *     { label: 'Products', href: '/products' },
  *     { label: 'Widget 3000' }, // no href = current page
  *   ]} />
  */
-export function Breadcrumb({ items }: BreadcrumbProps) {
+export function Breadcrumb({ items, lang }: BreadcrumbProps) {
   if (items.length === 0) return null
 
   const siteUrl = getSiteUrl()
@@ -60,7 +62,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJson(jsonLd) }}
       />
-      <nav aria-label="breadcrumb" className="mb-2">
+      <nav aria-label={tCommon(lang).nav_breadcrumb_aria} className="mb-2">
         <ol className="flex flex-wrap items-center gap-1 text-xs text-text-muted">
           {items.map((item, index) => {
             const isLast = index === items.length - 1

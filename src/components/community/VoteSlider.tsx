@@ -5,14 +5,15 @@ interface Props {
   onChange: (v: number) => void
   disabled?: boolean
   size?: 'sm' | 'md'
+  ariaLabel: string
 }
 
 // Star rating input: 1–5 filled stars, tap to set, tap same to deselect to null
-export function VoteSlider({ value, onChange, disabled, size = 'md' }: Props) {
+export function VoteSlider({ value, onChange, disabled, size = 'md', ariaLabel }: Props) {
   const starSize = size === 'sm' ? 'text-lg' : 'text-2xl'
 
   return (
-    <div className="flex gap-1" role="group" aria-label="Rating 1–5">
+    <div className="flex gap-1" role="group" aria-label={ariaLabel}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}

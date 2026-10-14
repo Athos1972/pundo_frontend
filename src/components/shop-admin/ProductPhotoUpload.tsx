@@ -262,7 +262,7 @@ export function ProductPhotoUpload({
 
       {/* Pending (create-mode) previews */}
       {pendingFiles.length > 0 && (
-        <ul className="flex flex-col gap-2" aria-label="pending photos">
+        <ul className="flex flex-col gap-2" aria-label={tr.photos_pending_aria}>
           {pendingFiles.map((pf, idx) => (
             <li
               key={pf.localId}
@@ -279,7 +279,7 @@ export function ProductPhotoUpload({
                 {/* Pending indicator */}
                 <div className="absolute inset-0 bg-blue-500/10 flex items-end justify-center pb-0.5">
                   <span className="text-[9px] text-blue-700 font-medium bg-white/80 px-1 rounded">
-                    pending
+                    {tr.photos_pending_badge}
                   </span>
                 </div>
               </div>

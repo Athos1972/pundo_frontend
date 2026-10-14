@@ -17,11 +17,12 @@ interface NavLinksProps {
   items: NavItem[]
   pathname: string
   onNavigate: () => void
+  ariaLabel: string
 }
 
-function NavLinks({ items, pathname, onNavigate }: NavLinksProps) {
+function NavLinks({ items, pathname, onNavigate, ariaLabel }: NavLinksProps) {
   return (
-    <nav aria-label="Shop admin navigation">
+    <nav aria-label={ariaLabel}>
       <ul className="flex flex-col gap-1">
         {items.map((item) => {
           const active = pathname.startsWith(item.href)
@@ -84,10 +85,11 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-e border-gray-200 min-h-screen p-4 gap-6">
         <div className="flex flex-col gap-1">
+          {/* @i18n-allow-literal — Produktname */}
           <span className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Pundo Shop</span>
           <span className="text-sm font-semibold text-gray-800 truncate">{ownerName}</span>
         </div>
-        <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} />
+        <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} ariaLabel={tr.nav_aria} />
         <div className="mt-auto">
           <button
             type="button"
@@ -101,12 +103,13 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
 
       {/* Mobile header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+        {/* @i18n-allow-literal — Produktname */}
         <span className="font-semibold text-gray-800 text-sm">Pundo Shop</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
-          aria-label="Toggle navigation"
+          aria-label={tr.nav_toggle_aria}
           className="p-2 rounded-lg hover:bg-gray-100"
         >
           <span aria-hidden="true">{mobileOpen ? '✕' : '☰'}</span>
@@ -125,7 +128,7 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="font-semibold text-gray-800">{ownerName}</span>
-            <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} />
+            <NavLinks items={navItems} pathname={pathname} onNavigate={closeMobile} ariaLabel={tr.nav_aria} />
           </div>
         </div>
       )}

@@ -248,6 +248,7 @@ export function ItemPickerModal({ isOpen, onClose, onSelect, lang }: ItemPickerM
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                        {/* @i18n-allow-literal — EAN ist ein internationales Kürzel */}
                         {item.ean && <p className="text-xs text-gray-400">EAN: {item.ean}</p>}
                       </div>
                     </button>

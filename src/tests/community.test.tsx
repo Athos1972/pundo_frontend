@@ -14,12 +14,12 @@ const tr_ar = t('ar')
 
 describe('VoteSlider', () => {
   it('renders 5 star buttons', () => {
-    render(<VoteSlider value={null} onChange={() => {}} />)
+    render(<VoteSlider ariaLabel="Rating 1–5" value={null} onChange={() => {}} />)
     expect(screen.getAllByRole('button')).toHaveLength(5)
   })
 
   it('marks stars up to value as filled (amber)', () => {
-    render(<VoteSlider value={3} onChange={() => {}} />)
+    render(<VoteSlider ariaLabel="Rating 1–5" value={3} onChange={() => {}} />)
     const buttons = screen.getAllByRole('button')
     expect(buttons[0]).toHaveClass('text-amber-400')
     expect(buttons[2]).toHaveClass('text-amber-400')
@@ -28,20 +28,20 @@ describe('VoteSlider', () => {
 
   it('calls onChange with clicked star value', () => {
     const onChange = vi.fn()
-    render(<VoteSlider value={null} onChange={onChange} />)
+    render(<VoteSlider ariaLabel="Rating 1–5" value={null} onChange={onChange} />)
     fireEvent.click(screen.getByLabelText('3 stars'))
     expect(onChange).toHaveBeenCalledWith(3)
   })
 
   it('calls onChange with 0 when clicking the same star (deselect)', () => {
     const onChange = vi.fn()
-    render(<VoteSlider value={3} onChange={onChange} />)
+    render(<VoteSlider ariaLabel="Rating 1–5" value={3} onChange={onChange} />)
     fireEvent.click(screen.getByLabelText('3 stars'))
     expect(onChange).toHaveBeenCalledWith(0)
   })
 
   it('is disabled when disabled=true', () => {
-    render(<VoteSlider value={null} onChange={() => {}} disabled />)
+    render(<VoteSlider ariaLabel="Rating 1–5" value={null} onChange={() => {}} disabled />)
     screen.getAllByRole('button').forEach((btn) => {
       expect(btn).toBeDisabled()
     })

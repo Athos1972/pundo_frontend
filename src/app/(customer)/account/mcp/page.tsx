@@ -61,6 +61,7 @@ export default async function McpPage() {
                 mcp_connection_disconnected: tr.mcp_connection_disconnected,
                 mcp_connection_scope_badge: tr.mcp_connection_scope_badge,
                 mcp_error_load: tr.mcp_error_load,
+                mcp_tabs_aria: tr.mcp_tabs_aria,
               } satisfies McpClientTr}
             />
           )}

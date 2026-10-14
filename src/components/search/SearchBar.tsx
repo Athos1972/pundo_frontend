@@ -148,7 +148,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
         <button
           type="submit"
           className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-accent rounded-lg flex items-center justify-center hover:bg-accent-dark transition-colors"
-          aria-label="Search"
+          aria-label={t(lang).search}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-white">
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>

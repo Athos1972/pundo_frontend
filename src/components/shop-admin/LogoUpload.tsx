@@ -77,7 +77,7 @@ export function LogoUpload({ currentLogoUrl, lang, onLogoUploaded }: LogoUploadP
           {preview ? (
             <Image
               src={preview}
-              alt="Shop logo"
+              alt={tr.logo_alt}
               fill
               className="object-contain"
               unoptimized={preview.startsWith('blob:')}
@@ -109,7 +109,7 @@ export function LogoUpload({ currentLogoUrl, lang, onLogoUploaded }: LogoUploadP
           >
             {isUploading ? '...' : tr.logo_upload_button}
           </button>
-          <p className="text-xs text-gray-400">JPEG, PNG, WebP &mdash; max 5 MB</p>
+          <p className="text-xs text-gray-400">{tr.logo_upload_hint}</p>
         </div>
 
         <input

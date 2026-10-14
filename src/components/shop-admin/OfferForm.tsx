@@ -231,6 +231,7 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">{selectedItem.name}</p>
+                {/* @i18n-allow-literal — EAN ist ein internationales Kürzel */}
                 {selectedItem.ean && <p className="text-xs text-gray-400">EAN: {selectedItem.ean}</p>}
               </div>
               <button

@@ -1,4 +1,5 @@
 import { getLangServer } from '@/lib/lang'
+import { tAdmin } from '@/lib/shop-admin-translations'
 import { OnboardingWizard } from '@/components/shop-admin/onboarding/OnboardingWizard'
 import { Suspense } from 'react'
 
@@ -6,11 +7,12 @@ export const metadata = { title: 'Jetzt registrieren | Pundo' }
 
 export default async function OnboardingPage() {
   const lang = await getLangServer()
+  const tr = tAdmin(lang)
   return (
     <div className="min-h-screen bg-bg flex flex-col items-center px-4 py-8">
       {/* Focused onboarding header — logo only, no customer nav */}
       <div className="w-full max-w-md mb-6 flex items-center justify-between">
-        <a href={`/${lang}`} aria-label="pundo — back to home">
+        <a href={`/${lang}`} aria-label={tr.onboarding_logo_home_aria}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brands/pundo/logo.svg" alt="pundo" className="h-10 w-auto" />
         </a>
@@ -18,7 +20,7 @@ export default async function OnboardingPage() {
           href={`/${lang}/for-shops`}
           className="text-sm text-text-muted hover:text-text transition-colors"
         >
-          ← Back
+          {tr.onboarding_back_link}
         </a>
       </div>
 

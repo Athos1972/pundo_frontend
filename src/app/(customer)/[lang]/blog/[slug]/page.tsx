@@ -9,7 +9,7 @@ import { truncateTitle, truncateDescription, getSiteUrl } from '@/lib/seo/metada
 import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getBlogPost, getBlogSlugs } from '@/lib/blog'
 import { localePath, buildHreflang } from '@/lib/routing'
-import { mdxComponents } from '@/components/guides/mdx-components'
+import { buildMdxComponents } from '@/components/guides/mdx-components'
 import { safeJson } from '@/lib/structured-data'
 import { BackButton } from '@/components/ui/BackButton'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -107,7 +107,7 @@ export default async function BlogPostPage({ params }: Props) {
         }}
       />
 
-      <Breadcrumb items={[
+      <Breadcrumb lang={lang} items={[
         { label: tr.home, href: localePath(lang, '/') },
         { label: tr.blog_index_title, href: localePath(lang, '/blog') },
         { label: meta.title },
@@ -137,7 +137,7 @@ export default async function BlogPostPage({ params }: Props) {
       <article className="guide-content max-w-none">
         <MDXRemote
           source={content}
-          components={mdxComponents}
+          components={buildMdxComponents(lang)}
           options={{ blockJS: true, blockDangerousJS: true }}
         />
       </article>

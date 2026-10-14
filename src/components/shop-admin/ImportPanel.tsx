@@ -189,7 +189,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
                 <p className="text-amber-700 mt-1">{tr.upload_errors.replace('{n}', String(uploadResult.errors.length))}</p>
                 <ul className="mt-2 text-xs text-amber-600 space-y-0.5 max-h-32 overflow-y-auto">
                   {uploadResult.errors.map((err) => (
-                    <li key={err.row}>Row {err.row}: {err.message}</li>
+                    <li key={err.row}>{tr.upload_error_row.replace('{n}', String(err.row))}: {err.message}</li>
                   ))}
                 </ul>
               </>

@@ -103,7 +103,7 @@ export default async function ShopCityPage({ params }: Props) {
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <BackButton />
-      <Breadcrumb items={breadcrumbJsonLdItems} />
+      <Breadcrumb lang={lang} items={breadcrumbJsonLdItems} />
       <h1 className="text-2xl font-bold">{tr.shops_city_h1(city)}</h1>
 
       {shops.length === 0 ? (

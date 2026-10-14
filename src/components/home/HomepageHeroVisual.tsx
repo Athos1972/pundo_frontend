@@ -125,18 +125,22 @@ export function HomepageHeroVisual({ className }: Props) {
           {/* City dots */}
           {/* Nicosia (capital — centre-north) */}
           <circle cx="248" cy="108" r="5" fill="var(--color-accent)" />
+          {/* @i18n-allow-literal — dekorative Karten-Mock, Städtenamen */}
           <text x="256" y="106" fontSize="9" fill="var(--color-text-muted)" fontFamily="sans-serif">Nicosia</text>
 
           {/* Limassol (south coast) */}
           <circle cx="240" cy="168" r="5" fill="var(--color-accent)" />
+          {/* @i18n-allow-literal — dekorative Karten-Mock, Städtenamen */}
           <text x="248" y="166" fontSize="9" fill="var(--color-text-muted)" fontFamily="sans-serif">Limassol</text>
 
           {/* Paphos (south-west) */}
           <circle cx="115" cy="158" r="4" fill="var(--color-accent)" />
+          {/* @i18n-allow-literal — dekorative Karten-Mock, Städtenamen */}
           <text x="88" y="152" fontSize="9" fill="var(--color-text-muted)" fontFamily="sans-serif">Paphos</text>
 
           {/* Larnaca (south-east) */}
           <circle cx="330" cy="165" r="4" fill="var(--color-accent)" />
+          {/* @i18n-allow-literal — dekorative Karten-Mock, Städtenamen */}
           <text x="338" y="163" fontSize="9" fill="var(--color-text-muted)" fontFamily="sans-serif">Larnaca</text>
         </svg>
 

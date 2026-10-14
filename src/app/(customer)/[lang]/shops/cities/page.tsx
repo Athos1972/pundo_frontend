@@ -70,7 +70,7 @@ export default async function ShopCitiesPage({ params }: Props) {
   return (
     <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <BackButton />
-      <Breadcrumb items={[
+      <Breadcrumb lang={lang} items={[
         { label: tr.home, href: localePath(lang, '/') },
         { label: tr.nav_shops, href: localePath(lang, '/shops') },
         { label: tr.shops_cities_h1 },

@@ -35,7 +35,7 @@ export function CameraView({ tr, onCapture, onClose }: Props) {
         <button
           onClick={onClose}
           className="absolute top-4 start-4 text-white p-2"
-          aria-label="Close"
+          aria-label={tr.close}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18M6 6l12 12" />
@@ -68,12 +68,12 @@ export function CameraView({ tr, onCapture, onClose }: Props) {
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       {/* Controls top bar */}
       <div className="flex items-center justify-between px-4 pt-safe pt-4 pb-2">
-        <button onClick={onClose} className="text-white p-2" aria-label="Close">
+        <button onClick={onClose} className="text-white p-2" aria-label={tr.close}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
-        <button onClick={flip} className="text-white p-2" aria-label="Flip camera">
+        <button onClick={flip} className="text-white p-2" aria-label={tr.camera_flip}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M1 4v6h6M23 20v-6h-6" />
             <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15" />

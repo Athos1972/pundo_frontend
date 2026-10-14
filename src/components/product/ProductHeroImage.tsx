@@ -6,9 +6,10 @@ interface Props {
   src: string       // detail-Variante (1024 px) — für den Hero-Container
   origSrc?: string  // orig — für den Fullscreen-Dialog (unveränderte Originalgröße)
   alt: string
+  closeLabel: string
 }
 
-export function ProductHeroImage({ src, origSrc, alt }: Props) {
+export function ProductHeroImage({ src, origSrc, alt, closeLabel }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -56,7 +57,7 @@ export function ProductHeroImage({ src, origSrc, alt }: Props) {
         >
           <button
             onClick={() => setIsOpen(false)}
-            aria-label="Close"
+            aria-label={closeLabel}
             className="absolute top-4 right-4 text-white text-2xl leading-none w-10 h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors"
           >
             ✕

@@ -4,18 +4,19 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 describe('Breadcrumb', () => {
   it('renders nothing when items array is empty', () => {
-    const { container } = render(<Breadcrumb items={[]} />)
+    const { container } = render(<Breadcrumb lang="en" items={[]} />)
     expect(container.firstChild).toBeNull()
   })
 
   it('renders a nav with aria-label breadcrumb', () => {
-    render(<Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Products' }]} />)
-    expect(screen.getByRole('navigation', { name: 'breadcrumb' })).toBeInTheDocument()
+    render(<Breadcrumb lang="en" items={[{ label: 'Home', href: '/' }, { label: 'Products' }]} />)
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toBeInTheDocument()
   })
 
   it('renders links for items with href', () => {
     render(
       <Breadcrumb
+        lang="en"
         items={[
           { label: 'Home', href: '/' },
           { label: 'Shops', href: '/shops' },
@@ -33,6 +34,7 @@ describe('Breadcrumb', () => {
   it('renders the last item without a link (current page)', () => {
     render(
       <Breadcrumb
+        lang="en"
         items={[
           { label: 'Home', href: '/' },
           { label: 'Acme Store' },
@@ -47,6 +49,7 @@ describe('Breadcrumb', () => {
   it('marks the last item with aria-current="page"', () => {
     render(
       <Breadcrumb
+        lang="en"
         items={[
           { label: 'Home', href: '/' },
           { label: 'Product Name' },
@@ -61,6 +64,7 @@ describe('Breadcrumb', () => {
     vi.stubEnv('SITE_URL', 'https://test.example')
     const { container } = render(
       <Breadcrumb
+        lang="en"
         items={[
           { label: 'Home', href: '/' },
           { label: 'Shops', href: '/shops' },
@@ -85,6 +89,7 @@ describe('Breadcrumb', () => {
   it('renders separator characters between items', () => {
     const { container } = render(
       <Breadcrumb
+        lang="en"
         items={[
           { label: 'Home', href: '/' },
           { label: 'Products', href: '/products' },
@@ -98,7 +103,7 @@ describe('Breadcrumb', () => {
   })
 
   it('renders a single item without links or separators', () => {
-    render(<Breadcrumb items={[{ label: 'Home' }]} />)
+    render(<Breadcrumb lang="en" items={[{ label: 'Home' }]} />)
     expect(screen.queryByRole('link')).toBeNull()
     expect(screen.getByText('Home')).toBeInTheDocument()
   })

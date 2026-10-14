@@ -180,7 +180,7 @@ export function SignupForm({ lang }: Props) {
 
       <div className="relative flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-text-muted">or</span>
+        <span className="text-xs text-text-muted">{tr.auth_or}</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 

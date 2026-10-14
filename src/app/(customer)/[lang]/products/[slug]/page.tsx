@@ -156,7 +156,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       />
       <div className="max-w-2xl mx-auto px-4 py-6">
         <BackButton />
-        <Breadcrumb items={[
+        <Breadcrumb lang={lang} items={[
           { label: tr.home, href: localePath(lang, '/') },
           ...(product.category?.name ? [{ label: product.category.name, href: localePath(lang, `/search?category_id=${product.category.id}`) }] : []),
           { label: name },
@@ -164,7 +164,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         {/* Hero */}
         <div className="flex gap-4 mb-6">
           {firstImgUrl && (
-            <ProductHeroImage src={firstImgUrl} origSrc={origImgUrl} alt={name} />
+            <ProductHeroImage src={firstImgUrl} origSrc={origImgUrl} alt={name} closeLabel={tr.close} />
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">

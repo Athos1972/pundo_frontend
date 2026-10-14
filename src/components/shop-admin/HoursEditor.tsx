@@ -139,7 +139,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                       type="button"
                       onClick={() => updateDay(slot.day, { second_open: undefined, second_close: undefined })}
                       className="text-xs text-gray-400 hover:text-red-500"
-                      aria-label="Remove second slot"
+                      aria-label={tr.hours_remove_second_slot}
                     >
                       ✕
                     </button>

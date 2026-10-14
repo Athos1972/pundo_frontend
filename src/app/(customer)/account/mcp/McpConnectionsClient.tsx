@@ -23,6 +23,7 @@ export interface McpClientTr {
   mcp_connection_disconnected: string
   mcp_connection_scope_badge: string
   mcp_error_load: string
+  mcp_tabs_aria: string
 }
 
 interface Props {
@@ -249,7 +250,7 @@ export function McpConnectionsClient({ initialConnections, lang, tr }: Props) {
         {/* Tab navigation */}
         <nav
           role="tablist"
-          aria-label="MCP client tabs"
+          aria-label={tr.mcp_tabs_aria}
           className="flex gap-1 mb-3 bg-bg p-1 rounded-xl border border-border overflow-x-auto"
         >
           {tabs.map((tab) => (

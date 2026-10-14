@@ -85,7 +85,7 @@ export function SearchSimilarModal({ lang, isOpen, onClose }: Props) {
           <button
             onClick={onClose}
             className="text-text-muted hover:text-text p-1 rounded-lg"
-            aria-label="Schließen"
+            aria-label={tr.close}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M18 6L6 18M6 6l12 12" />

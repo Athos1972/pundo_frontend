@@ -79,6 +79,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'Suggested',
     nav_help: 'Help',
     help_title: 'Help & FAQ',
+    upload_error_row: 'Row {n}',
+    photos_pending_aria: 'pending photos',
+    photos_pending_badge: 'pending',
   },
   de: {
     products_title: 'Produkte & Dienstleistungen',
@@ -157,6 +160,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'Vorgeschlagen',
     nav_help: 'Hilfe',
     help_title: 'Hilfe & FAQ',
+    upload_error_row: 'Zeile {n}',
+    photos_pending_aria: 'Ausstehende Fotos',
+    photos_pending_badge: 'ausstehend',
   },
   el: {
     products_title: 'Προϊόντα & Υπηρεσίες',
@@ -235,6 +241,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'Προτεινόμενο',
     nav_help: 'Βοήθεια',
     help_title: 'Βοήθεια & FAQ',
+    upload_error_row: 'Γραμμή {n}',
+    photos_pending_aria: 'Φωτογραφίες σε αναμονή',
+    photos_pending_badge: 'σε αναμονή',
   },
   ru: {
     products_title: 'Товары и услуги',
@@ -313,6 +322,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'Предложено',
     nav_help: 'Помощь',
     help_title: 'Помощь и FAQ',
+    upload_error_row: 'Строка {n}',
+    photos_pending_aria: 'Ожидающие фото',
+    photos_pending_badge: 'ожидает',
   },
   ar: {
     products_title: 'المنتجات والخدمات',
@@ -391,6 +403,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'مقترح',
     nav_help: 'مساعدة',
     help_title: 'المساعدة والأسئلة الشائعة',
+    upload_error_row: 'الصف {n}',
+    photos_pending_aria: 'صور قيد الانتظار',
+    photos_pending_badge: 'قيد الانتظار',
   },
   he: {
     products_title: 'מוצרים ושירותים',
@@ -469,6 +484,9 @@ const shopAdminCatalogTranslations = {
     source_auto_seeded: 'מוצע',
     nav_help: 'עזרה',
     help_title: 'עזרה ושאלות נפוצות',
+    upload_error_row: 'שורה {n}',
+    photos_pending_aria: 'תמונות ממתינות',
+    photos_pending_badge: 'ממתין',
   },
 } as const
 

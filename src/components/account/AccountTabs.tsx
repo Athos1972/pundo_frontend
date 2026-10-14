@@ -59,7 +59,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
       {/* Tab list */}
       <nav
         role="tablist"
-        aria-label="Account sections"
+        aria-label={tr.account_tabs_aria}
         className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible md:min-w-[160px] md:shrink-0 pb-1 md:pb-0"
       >
         {tabs.map((tab) => (

@@ -4,25 +4,25 @@ import { ProductHeroImage } from '@/components/product/ProductHeroImage'
 
 describe('ProductHeroImage', () => {
   it('renders the image with correct src and alt', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     const img = screen.getAllByRole('img')[0]
     expect(img).toHaveAttribute('src', '/product_images/test.jpg')
     expect(img).toHaveAttribute('alt', 'Test Product')
   })
 
   it('does not show lightbox initially', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('opens lightbox on click', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('closes lightbox when clicking backdrop', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('dialog'))
@@ -30,21 +30,21 @@ describe('ProductHeroImage', () => {
   })
 
   it('closes lightbox when clicking X button', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('closes lightbox on Escape key', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('lightbox falls back to src when origSrc is not provided', () => {
-    render(<ProductHeroImage src="/product_images/test_detail.webp" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test_detail.webp" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     const images = screen.getAllByRole('img')
     expect(images.length).toBe(2)
@@ -57,6 +57,7 @@ describe('ProductHeroImage', () => {
         src="/product_images/test_detail.webp"
         origSrc="/product_images/test_orig.jpg"
         alt="Test Product"
+        closeLabel="Close"
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
@@ -69,7 +70,7 @@ describe('ProductHeroImage', () => {
   })
 
   it('clicking the lightbox image does not close the dialog', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     const images = screen.getAllByRole('img')
     fireEvent.click(images[1])
@@ -77,14 +78,14 @@ describe('ProductHeroImage', () => {
   })
 
   it('opens lightbox on Enter key', () => {
-    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/test.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.keyDown(screen.getByRole('button', { name: 'Test Product' }), { key: 'Enter' })
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   // BUG REGRESSION: onError used to call style.display='none' (DOM mutation outside React).
   it('shows SVG placeholder after image load error (no DOM mutation)', () => {
-    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" closeLabel="Close" />)
     const img = screen.getByRole('img', { hidden: true })
     fireEvent.error(img)
     expect(screen.queryByRole('img', { hidden: true })).not.toBeInTheDocument()
@@ -93,7 +94,7 @@ describe('ProductHeroImage', () => {
   })
 
   it('does not open lightbox when image has failed', () => {
-    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" />)
+    render(<ProductHeroImage src="/product_images/broken.jpg" alt="Test Product" closeLabel="Close" />)
     fireEvent.error(screen.getByRole('img', { hidden: true }))
     fireEvent.click(screen.getByRole('button', { name: 'Test Product' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

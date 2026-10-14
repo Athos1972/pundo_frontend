@@ -73,6 +73,9 @@ const accountTranslations = {
     oauth_consent_deny: 'Deny',
     oauth_consent_loading: 'Loading…',
     oauth_consent_error: 'Something went wrong. Please try again.',
+    account_tabs_aria: 'Account sections',
+    mcp_tabs_aria: 'MCP clients',
+    trust_points: (n: number) => `${n} pts`,
   },
   de: {
     account_tab_profile: 'Profil',
@@ -147,6 +150,9 @@ const accountTranslations = {
     oauth_consent_deny: 'Ablehnen',
     oauth_consent_loading: 'Lädt…',
     oauth_consent_error: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
+    account_tabs_aria: 'Kontobereiche',
+    mcp_tabs_aria: 'MCP-Clients',
+    trust_points: (n: number) => `${n} Pkt.`,
   },
   ru: {
     account_tab_profile: 'Профиль',
@@ -221,6 +227,9 @@ const accountTranslations = {
     oauth_consent_deny: 'Отклонить',
     oauth_consent_loading: 'Загрузка…',
     oauth_consent_error: 'Что-то пошло не так. Пожалуйста, попробуйте снова.',
+    account_tabs_aria: 'Разделы аккаунта',
+    mcp_tabs_aria: 'MCP-клиенты',
+    trust_points: (n: number) => `${n} очк.`,
   },
   el: {
     account_tab_profile: 'Προφίλ',
@@ -295,6 +304,9 @@ const accountTranslations = {
     oauth_consent_deny: 'Άρνηση',
     oauth_consent_loading: 'Φόρτωση…',
     oauth_consent_error: 'Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά.',
+    account_tabs_aria: 'Ενότητες λογαριασμού',
+    mcp_tabs_aria: 'Πελάτες MCP',
+    trust_points: (n: number) => `${n} πόντοι`,
   },
   ar: {
     account_tab_profile: 'الملف الشخصي',
@@ -369,6 +381,9 @@ const accountTranslations = {
     oauth_consent_deny: 'رفض',
     oauth_consent_loading: 'جارٍ التحميل…',
     oauth_consent_error: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
+    account_tabs_aria: 'أقسام الحساب',
+    mcp_tabs_aria: 'عملاء MCP',
+    trust_points: (n: number) => `${n} نقطة`,
   },
   he: {
     account_tab_profile: 'פרופיל',
@@ -443,6 +458,9 @@ const accountTranslations = {
     oauth_consent_deny: 'דחה',
     oauth_consent_loading: 'טוען…',
     oauth_consent_error: 'משהו השתבש. אנא נסה שוב.',
+    account_tabs_aria: 'אזורי החשבון',
+    mcp_tabs_aria: 'לקוחות MCP',
+    trust_points: (n: number) => `${n} נק׳`,
   },
 } as const
 

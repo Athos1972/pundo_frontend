@@ -9,7 +9,7 @@ import { buildCompleteOpenGraph } from '@/lib/seo/og-defaults'
 import { getGuide, getGuides, getGuideSlugs } from '@/lib/guides'
 import { getImageMeta, hasImageMeta } from '@/lib/guide-images'
 import { localePath, buildHreflang } from '@/lib/routing'
-import { mdxComponents } from '@/components/guides/mdx-components'
+import { buildMdxComponents } from '@/components/guides/mdx-components'
 import { GuideHeroImage } from '@/components/guides/GuideHeroImage'
 import { GuideCard } from '@/components/guides/GuideCard'
 import { BackButton } from '@/components/ui/BackButton'
@@ -129,7 +129,7 @@ export default async function GuideDetailPage({ params }: Props) {
       {/* breadcrumb intentionally omitted from Article schema — standalone
           <Breadcrumb> component below emits a correct, separate BreadcrumbList
           schema with absolute URLs (AC-2 fix, analog Blog page). */}
-      <Breadcrumb items={[
+      <Breadcrumb lang={lang} items={[
         { label: tr.home, href: localePath(lang, '/') },
         { label: tr.nav_guides, href: localePath(lang, '/guides') },
         { label: meta.title },
@@ -149,7 +149,7 @@ export default async function GuideDetailPage({ params }: Props) {
       <article className="guide-content max-w-none">
         <MDXRemote
           source={content}
-          components={mdxComponents}
+          components={buildMdxComponents(lang)}
           // SECURITY NOTE (audited 2026-04-28, 36 files):
           // blockJS stays false because guides use JSX expression props like
           // <CostTable rows={[...]} /> — enabling blockJS strips those props and

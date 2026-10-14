@@ -90,7 +90,7 @@ export function ApiKeyList({ initialKeys, lang }: ApiKeyListProps) {
             onClick={() => setNewKey(null)}
             className="self-start text-xs text-amber-600 hover:underline"
           >
-            {tr.cancel} (dismiss)
+            {tr.api_key_dismiss}
           </button>
         </div>
       )}

@@ -2,13 +2,16 @@
 // Rendered inside the Profile page (Server Component) with data already fetched.
 
 import type { WebsiteStatusResponse } from '@/lib/shop-admin-api'
+import { tAdmin } from '@/lib/shop-admin-translations'
 
 interface WebsiteStatusBannerProps {
   status: WebsiteStatusResponse | null
+  lang: string
 }
 
-export function WebsiteStatusBanner({ status }: WebsiteStatusBannerProps) {
+export function WebsiteStatusBanner({ status, lang }: WebsiteStatusBannerProps) {
   if (!status || status.consecutive_failures < 2) return null
+  const tr = tAdmin(lang)
 
   return (
     <div className="rounded-lg px-4 py-3 text-sm bg-amber-50 border border-amber-200 flex gap-3 items-start">
@@ -29,13 +32,12 @@ export function WebsiteStatusBanner({ status }: WebsiteStatusBannerProps) {
 
       <div className="flex flex-col gap-0.5">
         <p className="font-medium text-amber-800">
-          Website nicht erreichbar
+          {tr.website_status_title}
         </p>
         <p className="text-amber-700">
-          Deine Website{' '}
+          {tr.website_status_prefix}{' '}
           <span className="font-mono break-all">{status.url}</span>{' '}
-          ist nicht erreichbar ({status.consecutive_failures} mal in Folge). Bitte
-          prüfe die URL in deinen Shop-Einstellungen.
+          {tr.website_status_suffix.replace('{n}', String(status.consecutive_failures))}
         </p>
       </div>
     </div>

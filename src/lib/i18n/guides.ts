@@ -27,6 +27,9 @@ const guidesTranslations = {
     blog_back: '← Back to Blog',
     blog_read_more: 'Read more',
     blog_published: 'Published',
+    guides_cost_item: 'Item',
+    guides_cost_cost: 'Cost',
+    guides_cost_note: 'Note',
   },
   de: {
     page_title_guides: 'Expat-Guides',
@@ -55,6 +58,9 @@ const guidesTranslations = {
     blog_back: '← Zurück zum Blog',
     blog_read_more: 'Weiterlesen',
     blog_published: 'Veröffentlicht',
+    guides_cost_item: 'Position',
+    guides_cost_cost: 'Kosten',
+    guides_cost_note: 'Hinweis',
   },
   ru: {
     page_title_guides: 'Руководства для экспатов',
@@ -83,6 +89,9 @@ const guidesTranslations = {
     blog_back: '← Назад в блог',
     blog_read_more: 'Читать далее',
     blog_published: 'Опубликовано',
+    guides_cost_item: 'Статья расходов',
+    guides_cost_cost: 'Стоимость',
+    guides_cost_note: 'Примечание',
   },
   el: {
     page_title_guides: 'Οδηγοί Expat',
@@ -111,6 +120,9 @@ const guidesTranslations = {
     blog_back: '← Πίσω στο Blog',
     blog_read_more: 'Διαβάστε περισσότερα',
     blog_published: 'Δημοσιεύθηκε',
+    guides_cost_item: 'Στοιχείο',
+    guides_cost_cost: 'Κόστος',
+    guides_cost_note: 'Σημείωση',
   },
   ar: {
     page_title_guides: 'أدلة المغتربين',
@@ -139,6 +151,9 @@ const guidesTranslations = {
     blog_back: '← العودة إلى المدونة',
     blog_read_more: 'اقرأ المزيد',
     blog_published: 'نشر في',
+    guides_cost_item: 'البند',
+    guides_cost_cost: 'التكلفة',
+    guides_cost_note: 'ملاحظة',
   },
   he: {
     page_title_guides: 'מדריכים לעולים',
@@ -167,6 +182,9 @@ const guidesTranslations = {
     blog_back: '← חזרה לבלוג',
     blog_read_more: 'קרא עוד',
     blog_published: 'פורסם',
+    guides_cost_item: 'פריט',
+    guides_cost_cost: 'עלות',
+    guides_cost_note: 'הערה',
   },
 } as const
 

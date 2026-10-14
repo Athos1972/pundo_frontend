@@ -32,6 +32,7 @@ export function FieldCatalog({ lang }: FieldCatalogProps) {
           <tbody className="divide-y divide-gray-100">
             <tr>
               <td className="py-1.5 pe-3">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono">name</code>
               </td>
               <td className="py-1.5 pe-3">
@@ -39,31 +40,37 @@ export function FieldCatalog({ lang }: FieldCatalogProps) {
               </td>
               <td className="py-1.5 pe-3 text-gray-600">{tr.field_name_desc}</td>
               <td className="py-1.5">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono text-gray-700">Royal Canin Adult Cat 5kg</code>
               </td>
             </tr>
             <tr>
               <td className="py-1.5 pe-3">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono">category</code>
               </td>
               <td className="py-1.5 pe-3 text-gray-500">{tr.field_catalog_required_no}</td>
               <td className="py-1.5 pe-3 text-gray-600">{tr.field_category_desc}</td>
               <td className="py-1.5">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono text-gray-700">Cat Food</code>
               </td>
             </tr>
             <tr>
               <td className="py-1.5 pe-3">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono">available</code>
               </td>
               <td className="py-1.5 pe-3 text-gray-500">{tr.field_catalog_required_no}</td>
               <td className="py-1.5 pe-3 text-gray-600">{tr.field_available_desc}</td>
               <td className="py-1.5">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono text-gray-700">true</code>
               </td>
             </tr>
             <tr>
               <td className="py-1.5 pe-3">
+                {/* @i18n-allow-literal — CSV-Spaltenname/Beispielwert, bleibt wörtlich */}
                 <code dir="ltr" className="inline-block bg-gray-100 rounded px-1 font-mono">image_url</code>
               </td>
               <td className="py-1.5 pe-3 text-gray-500">{tr.field_catalog_required_no}</td>

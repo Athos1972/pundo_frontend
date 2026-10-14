@@ -78,6 +78,7 @@ export function ResponsiveLabelPanel({
                   {isAuthenticated && (
                     <>
                       <VoteSlider
+                        ariaLabel={tr.vote_rating_aria}
                         value={myValue}
                         disabled={submitting === attr}
                         size="sm"

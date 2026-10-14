@@ -110,6 +110,7 @@ const communityTranslations = {
       if (args._v === 2) return `Just discovered: ${s}`
       return c ? `A fellow expat discovered ${s} in ${c}` : `A fellow expat discovered ${s}`
     },
+    vote_rating_aria: 'Rating 1–5',
   },
   de: {
     community_section_title: 'Community',
@@ -221,6 +222,7 @@ const communityTranslations = {
       if (args._v === 2) return `Gerade entdeckt: ${s}`
       return c ? `Ein Expat hat ${s} in ${c} entdeckt` : `Ein Expat hat ${s} entdeckt`
     },
+    vote_rating_aria: 'Bewertung 1–5',
   },
   ru: {
     community_section_title: 'Сообщество',
@@ -332,6 +334,7 @@ const communityTranslations = {
       if (args._v === 2) return `Только что нашли: ${s}`
       return c ? `Кто-то из наших открыл ${s} в ${c}` : `Кто-то из наших открыл ${s}`
     },
+    vote_rating_aria: 'Оценка 1–5',
   },
   el: {
     community_section_title: 'Κοινότητα',
@@ -443,6 +446,7 @@ const communityTranslations = {
       if (args._v === 2) return `Μόλις βρέθηκε: ${s}`
       return c ? `Ένας expat ανακάλυψε ${s} στη ${c}` : `Ένας expat ανακάλυψε ${s}`
     },
+    vote_rating_aria: 'Βαθμολογία 1–5',
   },
   ar: {
     community_section_title: 'مجتمع',
@@ -554,6 +558,7 @@ const communityTranslations = {
       if (args._v === 2) return c ? `${s} — وجهة جديدة في ${c}` : `${s} — وجهة جديدة`
       return c ? `أحد المغتربين اكتشف ${s} في ${c}` : `أحد المغتربين اكتشف ${s}`
     },
+    vote_rating_aria: 'التقييم 1–5',
   },
   he: {
     community_section_title: 'קהילה',
@@ -665,6 +670,7 @@ const communityTranslations = {
       if (args._v === 2) return c ? `${s} — יעד חדש ב${c}` : `${s} — יעד חדש`
       return c ? `גולה כמוך גילה את ${s} ב${c}` : `גולה כמוך גילה את ${s}`
     },
+    vote_rating_aria: 'דירוג 1–5',
   },
 } as const
 

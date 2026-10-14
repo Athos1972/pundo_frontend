@@ -109,7 +109,7 @@ export function OfferList({ offers, lang, productName }: { offers: OfferDetail[]
                       rel="noopener noreferrer"
                       className="text-xs px-2.5 py-1 rounded-full bg-surface-alt border border-border text-text-muted hover:border-accent hover:text-accent transition-colors"
                     >
-                      Website
+                      {tr.offer_website}
                     </a>
                   )}
                 </div>

@@ -36,7 +36,7 @@ export function BottomTabBar({ lang, recentlyViewed, hidden = false }: BottomTab
       {/* Bar — mobile only */}
       <nav
         className={`md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border flex items-stretch${hidden ? ' hidden' : ''}`}
-        aria-label="Bottom navigation"
+        aria-label={tr.nav_bottom_aria}
       >
         {/* Recently Viewed tab */}
         <button
@@ -84,7 +84,7 @@ export function BottomTabBar({ lang, recentlyViewed, hidden = false }: BottomTab
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
-                aria-label="Close"
+                aria-label={tr.close}
                 className="text-text-muted hover:text-text p-1"
               >
                 <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

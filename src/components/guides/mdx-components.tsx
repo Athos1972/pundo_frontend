@@ -44,22 +44,24 @@ type CostTableRow = {
   note?: string
 }
 
-export function CostTable({ rows }: { rows: CostTableRow[] }) {
+type CostTableLabels = { item: string; cost: string; note: string }
+
+export function CostTable({ rows, labels }: { rows: CostTableRow[]; labels: CostTableLabels }) {
   return (
     <div className="my-4 overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-left text-gray-500">
-            <th className="pb-2 pr-4 font-medium">Position</th>
-            <th className="pb-2 pr-4 font-medium">Kosten</th>
-            <th className="pb-2 font-medium">Hinweis</th>
+          <tr className="border-b border-gray-200 text-start text-gray-500">
+            <th className="pb-2 pe-4 font-medium">{labels.item}</th>
+            <th className="pb-2 pe-4 font-medium">{labels.cost}</th>
+            <th className="pb-2 font-medium">{labels.note}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i} className="border-b border-gray-100">
-              <td className="py-2 pr-4 text-gray-800">{row.item}</td>
-              <td className="py-2 pr-4 font-medium text-gray-900">
+              <td className="py-2 pe-4 text-gray-800">{row.item}</td>
+              <td className="py-2 pe-4 font-medium text-gray-900">
                 {row.cost}
                 {row.currency ? ` ${row.currency}` : ''}
               </td>
@@ -89,7 +91,7 @@ export function ComparisonTable({
     <div className="my-4 overflow-x-auto rounded-xl border border-gray-100">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
+          <tr className="border-b border-gray-200 bg-gray-50 text-start text-gray-500">
             <th className="px-4 py-2 font-medium">{headers[0]}</th>
             <th className="px-4 py-2 font-medium">{headers[1]}</th>
             <th className="px-4 py-2 font-medium">{headers[2]}</th>
@@ -110,6 +112,7 @@ export function ComparisonTable({
 }
 
 import { GuideImage } from './GuideImage'
+import { tGuides } from '@/lib/translations'
 
 // Remap MDX h1 → h2 to prevent double-H1 on Guide pages.
 // The page template already renders a <h1> from meta.title. Any # heading in
@@ -119,4 +122,13 @@ function MdxH2({ children }: { children?: React.ReactNode }) {
   return <h2 className="text-xl font-bold mt-6 mb-3">{children}</h2>
 }
 
-export const mdxComponents = { InfoBox, StepList, CostTable, ComparisonTable, GuideImage, h1: MdxH2 }
+// MDX-Komponenten pro Sprache: CostTable bekommt ihre Spaltenköpfe aus dem i18n-Layer,
+// weil MDX-Inhalte (<CostTable rows={…} />) keine Labels mitliefern.
+export function buildMdxComponents(lang: string) {
+  const tr = tGuides(lang)
+  const labels: CostTableLabels = { item: tr.guides_cost_item, cost: tr.guides_cost_cost, note: tr.guides_cost_note }
+  function LocalizedCostTable({ rows }: { rows: CostTableRow[] }) {
+    return <CostTable rows={rows} labels={labels} />
+  }
+  return { InfoBox, StepList, CostTable: LocalizedCostTable, ComparisonTable, GuideImage, h1: MdxH2 }
+}

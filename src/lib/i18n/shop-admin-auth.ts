@@ -94,6 +94,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'No offers will be pre-filled — you add them yourself later.',
     onboarding_other_offer_label: 'What do you offer? (optional)',
     onboarding_other_offer_placeholder: 'e.g. farrier, tutoring, bike repair',
+    onboarding_logo_home_aria: 'pundo — back to home',
+    onboarding_back_link: '← Back',
+    onboarding_photo_preview_alt: 'Photo preview',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -187,6 +190,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'Es werden keine Angebote vorbefüllt — du legst sie später selbst an.',
     onboarding_other_offer_label: 'Was bietest du an? (optional)',
     onboarding_other_offer_placeholder: 'z. B. Hufschmied, Nachhilfe, Fahrradreparatur',
+    onboarding_logo_home_aria: 'pundo — zur Startseite',
+    onboarding_back_link: '← Zurück',
+    onboarding_photo_preview_alt: 'Fotovorschau',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -280,6 +286,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'Δεν θα συμπληρωθούν προσφορές αυτόματα — τις προσθέτεις αργότερα μόνος σου.',
     onboarding_other_offer_label: 'Τι προσφέρεις; (προαιρετικό)',
     onboarding_other_offer_placeholder: 'π.χ. πεταλωτής, φροντιστήριο, επισκευή ποδηλάτων',
+    onboarding_logo_home_aria: 'pundo — επιστροφή στην αρχική',
+    onboarding_back_link: '← Πίσω',
+    onboarding_photo_preview_alt: 'Προεπισκόπηση φωτογραφίας',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -373,6 +382,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'Предложения не будут заполнены автоматически — ты добавишь их сам позже.',
     onboarding_other_offer_label: 'Что ты предлагаешь? (необязательно)',
     onboarding_other_offer_placeholder: 'например: коваль, репетитор, ремонт велосипедов',
+    onboarding_logo_home_aria: 'pundo — на главную',
+    onboarding_back_link: '← Назад',
+    onboarding_photo_preview_alt: 'Предпросмотр фото',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -466,6 +478,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'لن يتم ملء العروض مسبقاً — ستضيفها بنفسك لاحقاً.',
     onboarding_other_offer_label: 'ماذا تقدّم؟ (اختياري)',
     onboarding_other_offer_placeholder: 'مثال: حدّاد خيول، دروس خصوصية، إصلاح دراجات',
+    onboarding_logo_home_aria: 'pundo — العودة إلى الصفحة الرئيسية',
+    onboarding_back_link: '→ رجوع',
+    onboarding_photo_preview_alt: 'معاينة الصورة',
   },
   he: {
     register_title: 'רישום החנות',
@@ -559,6 +574,9 @@ const shopAdminAuthTranslations = {
     onboarding_domain_other_hint: 'לא יתמלאו הצעות מראש — תוסיף אותן בעצמך מאוחר יותר.',
     onboarding_other_offer_label: 'מה אתה מציע? (לא חובה)',
     onboarding_other_offer_placeholder: 'לדוגמה: מנעלן סוסים, שיעורים פרטיים, תיקון אופניים',
+    onboarding_logo_home_aria: 'pundo — חזרה לדף הבית',
+    onboarding_back_link: '→ חזרה',
+    onboarding_photo_preview_alt: 'תצוגה מקדימה של התמונה',
   },
 } as const
 

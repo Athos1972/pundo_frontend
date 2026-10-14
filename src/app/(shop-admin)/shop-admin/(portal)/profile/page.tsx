@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   return (
     <div className="flex flex-col gap-6 max-w-xl">
       <h1 className="text-2xl font-bold text-gray-900">{tr.profile_title}</h1>
-      <WebsiteStatusBanner status={websiteStatus} />
+      <WebsiteStatusBanner status={websiteStatus} lang={lang} />
       <ProfileForm shop={shop} lang={lang} />
     </div>
   )

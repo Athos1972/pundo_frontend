@@ -131,7 +131,7 @@ export function StepPhoto({ tr, initialFile, initialShopName, onNext, onBack }: 
         onKeyDown={e => e.key === 'Enter' && fileRef.current?.click()}
       >
         {preview ? (
-          <Image src={preview} alt="preview" fill className="object-cover" unoptimized />
+          <Image src={preview} alt={tr.onboarding_photo_preview_alt} fill className="object-cover" unoptimized />
         ) : (
           <div className="flex flex-col items-center gap-2 text-gray-400">
             <span className="text-4xl">📷</span>

@@ -53,7 +53,7 @@ export function TrustProfileSection({ profile, tr }: Props) {
               {tr.trust_level_label(level)}
             </span>
             <span className={profile.trust_level >= level ? 'text-accent' : 'text-text-light'}>
-              {threshold} pts
+              {tr.trust_points(threshold)}
               {profile.trust_level >= level && ' ✓'}
             </span>
           </div>

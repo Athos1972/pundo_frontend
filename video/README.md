@@ -97,9 +97,9 @@ Loop mit 2-s-Crossfade am bestpassenden Loop-Punkt, Fade-in/-out, Sidechain-Duck
 Content-ID meldet auf dem aktuellen Track einen Anspruch (ohne Auswirkung auf die Sichtbarkeit), siehe `music/CREDITS.md`.
 
 ## Bekannte Eigenheiten
-- Die Kartenkacheln der Wizard-Karte (Carto "voyager") liefern aktuell ein "API KEY REQUIRED"-Wasserzeichen; die Aufnahme tauscht sie per Routing gegen OSM-Kacheln.
 - Haendler-Domains haben im Katalog keine Spezialitaeten -> der optionale Spezialitaeten-Screen taucht im Video nicht auf.
-- Im Aufnahme-Browser rendert der Dev-Server die Kunden-Shopseite in ~5,5 s (curl/normales Chromium: ~0,1 s; Ursache offen,
-  nur Dev/Aufnahme). Muster dagegen: `sess.pause()` vor der Navigation, `sess.resume()` wenn die Seite fertig ist -> das Video
-  haelt das letzte Bild und schneidet dann (siehe `product-create-new/record.mjs`, Szene `done`).
+- Kein `ctx.route()`/`page.route()` in Aufnahmen: Playwright-Request-Interception puffert jede gestreamte HTML-Antwort
+  -> ~7 s pro Navigation (frueher als "Dev-Server rendert langsam" fehlgedeutet; der alte Carto-Kachel-Workaround ist entfernt,
+  alle Karten laden OSM direkt). Fuer Seitenwechsel trotzdem `sess.pause()` vor der Navigation und `sess.resume()` danach
+  (das Video haelt das letzte Bild und schneidet dann).
 - Native `<select>`-Popups erscheinen nicht im Screencast; Aufnahmen zeigen den Tipp-Ripple und setzen den Wert direkt.

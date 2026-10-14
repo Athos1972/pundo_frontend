@@ -105,7 +105,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                   value={slot.open ?? ''}
                   onChange={(e) => updateDay(slot.day, { open: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
-                  aria-label={`${tr.days[idx]} open from`}
+                  aria-label={tr.hours_open_from_aria.replace('{day}', tr.days[idx])}
                 />
                 <span className="text-gray-400">{tr.open_until}</span>
                 <input
@@ -113,7 +113,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                   value={slot.close ?? ''}
                   onChange={(e) => updateDay(slot.day, { close: e.target.value || undefined })}
                   className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
-                  aria-label={`${tr.days[idx]} close at`}
+                  aria-label={tr.hours_close_at_aria.replace('{day}', tr.days[idx])}
                 />
 
                 {/* Second slot */}
@@ -125,7 +125,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                       value={slot.second_open ?? ''}
                       onChange={(e) => updateDay(slot.day, { second_open: e.target.value })}
                       className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
-                      aria-label={`${tr.days[idx]} second open from`}
+                      aria-label={tr.hours_second_open_from_aria.replace('{day}', tr.days[idx])}
                     />
                     <span className="text-gray-400">{tr.open_until}</span>
                     <input
@@ -133,7 +133,7 @@ export function HoursEditor({ initialHours, lang }: HoursEditorProps) {
                       value={slot.second_close ?? ''}
                       onChange={(e) => updateDay(slot.day, { second_close: e.target.value })}
                       className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-accent focus:outline-none"
-                      aria-label={`${tr.days[idx]} second close at`}
+                      aria-label={tr.hours_second_close_at_aria.replace('{day}', tr.days[idx])}
                     />
                     <button
                       type="button"

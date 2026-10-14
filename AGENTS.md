@@ -137,7 +137,7 @@ router.push(localePath(lang as Lang, `/products/${slug}`))
 **Regeln:**
 - Sprachkonstanten: Frontend `src/lib/lang.ts`, Backend `core/languages.py`
 - UI-Strings: Namespace-Dateien `src/lib/i18n/*.ts` (`src/lib/translations.ts` ist nur Barrel; kein i18n-Framework, statisch in TypeScript)
-- Jede neue UI-Komponente mit sichtbarem Text **muss** alle 6 Sprachen bedienen — Paritätsprüfung: `npm run lint:i18n`
+- Jede neue UI-Komponente mit sichtbarem Text **muss** alle 6 Sprachen bedienen (Customer + Shop-Admin) — Paritätsprüfung: `npm run lint:i18n`. **Ausnahme System-Admin (`/admin`): nur `en` + `el`** (`src/lib/system-admin-translations.ts`). Maßgeblich: Vault `Pundo-Plattform/00 Überblick/Conventions.md`, Abschnitt „UI-Sprachen je Oberfläche“
 - Kein hartkodierter UI-Text im JSX (Text-Children, `aria-label`, `alt`, `title`, `placeholder`) — ESLint-Rule `local-i18n/no-hardcoded-jsx-text` (warn) fängt das ab; `lint:i18n` sieht solche Literale nicht. Opt-out nur für Markennamen/dekorative Ausnahmen mit `// @i18n-allow-literal` (bzw. `{/* @i18n-allow-literal */}`) direkt darüber. Strings in Objekt-Arrays, die später gerendert werden, erkennt die Rule nicht — dort selbst aufpassen.
 - RTL-Layout: Tailwind `rtl:`-Modifier verwenden, niemals RTL raten
 - API-Calls senden automatisch `Accept-Language`-Header (siehe `src/lib/api.ts`)

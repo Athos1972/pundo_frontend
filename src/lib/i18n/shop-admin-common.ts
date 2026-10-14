@@ -138,6 +138,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'Website unreachable',
     website_status_prefix: 'Your website',
     website_status_suffix: 'is unreachable ({n} times in a row). Please check the URL in your shop settings.',
+    hours_open_from_aria: '{day} open from',
+    hours_close_at_aria: '{day} close at',
+    hours_second_open_from_aria: '{day} second open from',
+    hours_second_close_at_aria: '{day} second close at',
   },
   de: {
     nav_dashboard: 'Dashboard',
@@ -275,6 +279,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'Website nicht erreichbar',
     website_status_prefix: 'Deine Website',
     website_status_suffix: 'ist nicht erreichbar ({n} mal in Folge). Bitte prüfe die URL in deinen Shop-Einstellungen.',
+    hours_open_from_aria: '{day} geöffnet ab',
+    hours_close_at_aria: '{day} schließt um',
+    hours_second_open_from_aria: '{day} zweites Zeitfenster ab',
+    hours_second_close_at_aria: '{day} zweites Zeitfenster bis',
   },
   el: {
     nav_dashboard: 'Πίνακας',
@@ -412,6 +420,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'Ο ιστότοπος δεν είναι προσβάσιμος',
     website_status_prefix: 'Ο ιστότοπός σας',
     website_status_suffix: 'δεν είναι προσβάσιμος ({n} φορές στη σειρά). Ελέγξτε τη διεύθυνση URL στις ρυθμίσεις του καταστήματός σας.',
+    hours_open_from_aria: '{day} ανοιχτό από',
+    hours_close_at_aria: '{day} κλείνει στις',
+    hours_second_open_from_aria: '{day} δεύτερο διάστημα από',
+    hours_second_close_at_aria: '{day} δεύτερο διάστημα έως',
   },
   ru: {
     nav_dashboard: 'Панель',
@@ -549,6 +561,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'Сайт недоступен',
     website_status_prefix: 'Ваш сайт',
     website_status_suffix: 'недоступен ({n} раз подряд). Пожалуйста, проверьте URL в настройках магазина.',
+    hours_open_from_aria: '{day} открыто с',
+    hours_close_at_aria: '{day} закрывается в',
+    hours_second_open_from_aria: '{day} второй интервал с',
+    hours_second_close_at_aria: '{day} второй интервал до',
   },
   ar: {
     nav_dashboard: 'لوحة التحكم',
@@ -686,6 +702,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'الموقع الإلكتروني غير متاح',
     website_status_prefix: 'موقعك الإلكتروني',
     website_status_suffix: 'غير متاح ({n} مرات متتالية). يرجى التحقق من الرابط في إعدادات متجرك.',
+    hours_open_from_aria: '{day} يفتح من',
+    hours_close_at_aria: '{day} يغلق عند',
+    hours_second_open_from_aria: '{day} الفترة الثانية من',
+    hours_second_close_at_aria: '{day} الفترة الثانية حتى',
   },
   he: {
     nav_dashboard: 'לוח בקרה',
@@ -823,6 +843,10 @@ const shopAdminCommonTranslations = {
     website_status_title: 'האתר אינו זמין',
     website_status_prefix: 'האתר שלך',
     website_status_suffix: 'אינו זמין ({n} פעמים ברציפות). אנא בדקו את הכתובת בהגדרות החנות.',
+    hours_open_from_aria: '{day} פתוח מ־',
+    hours_close_at_aria: '{day} נסגר ב־',
+    hours_second_open_from_aria: '{day} חלון שני מ־',
+    hours_second_close_at_aria: '{day} חלון שני עד',
   },
 } as const
 

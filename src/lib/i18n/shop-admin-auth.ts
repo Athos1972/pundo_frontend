@@ -97,6 +97,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — back to home',
     onboarding_back_link: '← Back',
     onboarding_photo_preview_alt: 'Photo preview',
+    onboarding_page_title: 'Register now | Pundo',
   },
   de: {
     register_title: 'Shop registrieren',
@@ -193,6 +194,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — zur Startseite',
     onboarding_back_link: '← Zurück',
     onboarding_photo_preview_alt: 'Fotovorschau',
+    onboarding_page_title: 'Jetzt registrieren | Pundo',
   },
   el: {
     register_title: 'Καταχώρηση καταστήματος',
@@ -289,6 +291,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — επιστροφή στην αρχική',
     onboarding_back_link: '← Πίσω',
     onboarding_photo_preview_alt: 'Προεπισκόπηση φωτογραφίας',
+    onboarding_page_title: 'Εγγραφείτε τώρα | Pundo',
   },
   ru: {
     register_title: 'Регистрация магазина',
@@ -385,6 +388,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — на главную',
     onboarding_back_link: '← Назад',
     onboarding_photo_preview_alt: 'Предпросмотр фото',
+    onboarding_page_title: 'Зарегистрируйтесь сейчас | Pundo',
   },
   ar: {
     register_title: 'تسجيل المتجر',
@@ -481,6 +485,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — العودة إلى الصفحة الرئيسية',
     onboarding_back_link: '→ رجوع',
     onboarding_photo_preview_alt: 'معاينة الصورة',
+    onboarding_page_title: 'سجّل الآن | Pundo',
   },
   he: {
     register_title: 'רישום החנות',
@@ -577,6 +582,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — חזרה לדף הבית',
     onboarding_back_link: '→ חזרה',
     onboarding_photo_preview_alt: 'תצוגה מקדימה של התמונה',
+    onboarding_page_title: 'הירשמו עכשיו | Pundo',
   },
 } as const
 

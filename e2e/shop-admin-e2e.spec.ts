@@ -181,7 +181,7 @@ test.describe('Öffnungszeiten', () => {
     const firstCheckbox = page.locator('input[type="checkbox"]').first()
     const isClosed = await firstCheckbox.isChecked()
     if (isClosed) await firstCheckbox.click()
-    // Ersten Tag auf 09:00–18:00 setzen (aria-label immer auf Englisch "open from" / "close at")
+    // Ersten Tag auf 09:00–18:00 setzen (aria-label im EN-Locale "open from" / "close at", i18n-Key hours_*_aria)
     await page.locator('input[type="time"][aria-label*="open from"]').first().fill('09:00')
     await page.locator('input[type="time"][aria-label*="close at"]').first().fill('18:00')
     // Save button — use role to be specific

@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { OnboardingWizard } from '@/components/shop-admin/onboarding/OnboardingWizard'
 import { Suspense } from 'react'
 
-export const metadata = { title: 'Jetzt registrieren | Pundo' }
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: tAdmin(await getLangServer()).onboarding_page_title }
+}
 
 export default async function OnboardingPage() {
   const lang = await getLangServer()

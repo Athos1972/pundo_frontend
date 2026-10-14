@@ -36,6 +36,19 @@ interface Props {
   preserveOrder?: boolean
 }
 
+/**
+ * Highlights the accent phrase *inside* the hero title instead of appending it
+ * (appending duplicated it, e.g. "… wirklich hat. wirklich hat."). The accent is
+ * matched without trailing punctuation; if a language's title doesn't contain it,
+ * the title is shown unhighlighted.
+ */
+export function splitHeadlineAccent(title: string, accent?: string) {
+  const core = (accent ?? '').trim().replace(/[.!?。]+$/u, '')
+  const idx = core ? title.indexOf(core) : -1
+  if (idx < 0) return { lead: title, accent: '', tail: '' }
+  return { lead: title.slice(0, idx), accent: core, tail: title.slice(idx + core.length) }
+}
+
 export function Hero({ brand, categories, lang, preserveOrder = false }: Props) {
   const tr = t(lang)
 
@@ -46,6 +59,7 @@ export function Hero({ brand, categories, lang, preserveOrder = false }: Props) 
   const taglineKey = `hero_tagline_${slug}` as keyof typeof tr
   const heroTitle = (tr[titleKey] as string) || brand.meta.heroTitle
   const heroTagline = (tr[taglineKey] as string) || brand.meta.heroTagline
+  const headline = splitHeadlineAccent(heroTitle, tr.homepage_headline_accent)
 
   return (
     <section className="bg-surface border-b border-border">
@@ -66,10 +80,9 @@ export function Hero({ brand, categories, lang, preserveOrder = false }: Props) 
 
             <div>
               <h1 className="font-display text-2xl md:text-4xl font-extrabold text-text leading-tight">
-                {heroTitle}{' '}
-                {tr.homepage_headline_accent && (
-                  <span className="text-accent">{tr.homepage_headline_accent}</span>
-                )}
+                {headline.lead}
+                {headline.accent && <span className="text-accent">{headline.accent}</span>}
+                {headline.tail}
               </h1>
               {heroTagline && (
                 <p className="mt-1 text-text-muted font-medium text-base">{heroTagline}</p>

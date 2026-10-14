@@ -53,8 +53,8 @@ test.describe('hero-contact-cta-20260522 — AC-Tests', () => {
 
   test('AC-4: Contact-Page zeigt Name+Email Felder für anonyme Nutzer', async ({ page }) => {
     await page.goto(BASE + '/de/contact')
-    await expect(page.getByText('Name')).toBeVisible()
-    await expect(page.getByText('E-Mail')).toBeVisible()
+    await expect(page.getByText('Name').filter({ visible: true })).toBeVisible()
+    await expect(page.getByText('E-Mail').filter({ visible: true })).toBeVisible()
   })
 
   test('AC-8 RTL: Inline-CTA auf arabischer Startseite', async ({ page }) => {

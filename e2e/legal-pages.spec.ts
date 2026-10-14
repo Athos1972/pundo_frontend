@@ -27,8 +27,9 @@ for (const { path, enTitle } of legalRoutes) {
     const body = await page.getByRole('main').textContent()
     expect(body).not.toContain('⚠️ PLACEHOLDER')
 
-    // Titel sichtbar
-    await expect(page.locator('h1')).toContainText(enTitle)
+    // Titel sichtbar — per Rolle, damit die kurzzeitig im versteckten
+    // Streaming-Segment (<div hidden id="S:0">) liegende Kopie nicht mitzählt
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(enTitle)
 
     // Keine JS-Fehler
     expect(errors, `JS-Fehler auf ${path}: ${errors.join(', ')}`).toHaveLength(0)

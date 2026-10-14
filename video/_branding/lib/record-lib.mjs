@@ -45,16 +45,8 @@ export async function startSession({ lang, outDir, viewport = { width: 390, heig
     { name: 'app_cookie_consent', value: consent, url: BASE },
   ])
   await ctx.addInitScript(INIT)
-  // The app's Carto "voyager" raster tiles currently answer with an "API KEY REQUIRED" watermark tile
-  // -> serve plain OpenStreetMap tiles for the recording so the map looks right.
-  await ctx.route(/basemaps\.cartocdn\.com\/.*\/(\d+)\/(\d+)\/(\d+)(@2x)?\.png/, async (route) => {
-    const m = route.request().url().match(/\/(\d+)\/(\d+)\/(\d+)(@2x)?\.png/)
-    try {
-      const resp = await route.fetch({ url: `https://tile.openstreetmap.org/${m[1]}/${m[2]}/${m[3]}.png`,
-        headers: { 'user-agent': 'pundo-video-pipeline/1.0 (local screen recording)' } })
-      await route.fulfill({ response: resp })
-    } catch { await route.continue() }
-  })
+  // No ctx.route() here: request interception buffers every (streamed) HTML response -> ~7 s per navigation.
+  // (The old Carto-tile workaround is obsolete: ShopMap loads OpenStreetMap tiles directly.)
   const page = await ctx.newPage()
   const cdp = await ctx.newCDPSession(page)
   const frames = []

@@ -44,6 +44,8 @@ video/
 | `short-service-from-catalog` | Short S5 (9:16): Dienstleistung aus Katalog; nutzt `../service-from-catalog/prepare_catalog_service.py` | Test-Instanz 3500/8500 |
 | `short-pricing` | Short S6 (9:16, `meta.format: vertical`): Staffel, Kundensicht, Aktion; nutzt `../pricing/prepare_pricing.py`. Konzept aller Shorts: `shorts/00-konzept.de.md` | Test-Instanz 3500/8500 |
 | `short-shop-profile` | Short S7 (9:16): Profil/Öffnungszeiten (braucht B5950-001); nutzt `../shop-profile/prepare_profile.py` | Test-Instanz 3500/8500 |
+| `pitch` | „Why pundo?“ (Pitch vor der Serie, nur Kundenseite, keine Anmeldung): russische Suche „хлеб“, Shop-Seite EN→EL→RU, Aktion, Öffnungszeiten, WhatsApp, Registrierungs-Einstieg; `prepare_pitch.py` (Backend-venv) | Test-Instanz 3500/8500 |
+| `short-pitch` | Short (9:16) zum Pitch: Suche, Sprachen, Kontakt, kostenlos; nutzt `../pitch/prepare_pitch.py` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

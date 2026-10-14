@@ -1,0 +1,72 @@
+# YouTube Short (9:16) of the pitch "Why pundo?" (video/pitch). Script: ../pitch/01-skript.de.md, section "Short"
+# (BB 2026-10-14: approved). Scenes 0, 2, 4, 5 of the pitch, shortened; "related video" in Studio = the pitch.
+# meta.format: vertical -> brand.yml formats.vertical (1080x1920, hook card intro, short outro, no thumbnail).
+# Same demo data as the pitch (prepare: ../pitch/prepare_pitch.py). Only verifiable claims (table in the script).
+
+meta:
+  slug: short-pitch
+  format: vertical
+  title:                    # = hook card (intro)
+    en: "Customers nearby are searching. Are you there?"
+    el: "Οι πελάτες κοντά σου ψάχνουν. Είσαι εκεί;"
+  url:
+    en: "pundo.cy/for-shops"
+    el: "pundo.cy/for-shops"
+  next_video:
+    en: "Why pundo? ↓"
+    el: "Γιατί pundo; ↓"
+  demo:
+    search: "хлеб"
+  thumbnail_scene: none
+  target_duration_s: 35
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'pundo in Russian: search "хлеб" -> map + result "Свежий хлеб" highlighted'
+    callout:
+      en: "Searched in Russian"
+      el: "Αναζήτηση στα ρωσικά"
+    narration:
+      en: >-
+        A customer searches for bread, in Russian. And finds Anna's bakery nearby.
+      el: >-
+        Ένας πελάτης ψάχνει ψωμί, στα ρωσικά. Και βρίσκει τον φούρνο της Άννας κοντά του.
+
+  - id: languages
+    shot: 'shop page English -> Greek -> Russian, "Fresh bread" highlighted'
+    callout:
+      en: "6 languages, automatically"
+      el: "6 γλώσσες, αυτόματα"
+    narration:
+      en: >-
+        Add your products once. pundo shows them in six languages.
+      el: >-
+        Πρόσθεσε τα προϊόντα σου μία φορά. Το pundo τα δείχνει σε έξι γλώσσες.
+
+  - id: contact
+    shot: 'shop page: WhatsApp / phone highlighted (not tapped)'
+    callout:
+      en: "Direct contact, no commission"
+      el: "Απευθείας επαφή, χωρίς προμήθεια"
+    narration:
+      en: >-
+        Customers contact you directly, by WhatsApp or phone. No commission.
+      el: >-
+        Οι πελάτες σού γράφουν απευθείας, με WhatsApp ή τηλέφωνο. Χωρίς προμήθεια.
+
+  - id: free
+    shot: 'first sign-up step (business type)'
+    callout:
+      en: "Free · 5 minutes"
+      el: "Δωρεάν · 5 λεπτά"
+    narration:
+      en: >-
+        Your listing is free and done in five minutes.
+      el: >-
+        Η καταχώριση είναι δωρεάν και γίνεται σε πέντε λεπτά.
+
+  - id: outro
+    branding: outro

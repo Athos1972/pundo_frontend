@@ -90,7 +90,12 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
   const [mapBbox, _setMapBbox] = useState<string | undefined>(undefined)
 
+  // Sequence number of the latest load() call: a slower, older response (e.g. the search with the
+  // Larnaca fallback before the geolocation arrived) must not overwrite the newer result.
+  const loadSeq = useRef(0)
+
   const load = useCallback(async (reset: boolean, currentOffset: number) => {
+    const seq = ++loadSeq.current
     // T4: In category or shop mode q is not required; otherwise require at least 2 chars
     if (!categoryId && !shopId && (!q || q.length < 2)) {
       setItems([])
@@ -117,6 +122,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           },
           lang
         )
+        if (seq !== loadSeq.current) return
         // T3: Map ProductListItem → SearchProductItem for the existing render pipeline
         setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
         setTotal(res.total)
@@ -135,6 +141,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           },
           lang
         )
+        if (seq !== loadSeq.current) return
         setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
         setTotal(res.total)
         setOffset(newOffset + res.items.length)
@@ -151,6 +158,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           },
           lang
         )
+        if (seq !== loadSeq.current) return
         setItems(prev => reset ? res.items : [...prev, ...res.items])
         setTotal(res.total)
         setOffset(newOffset + res.items.length)
@@ -158,7 +166,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     } catch {
       // keep existing
     } finally {
-      setLoading(false)
+      if (seq === loadSeq.current) setLoading(false)
     }
   }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang, hasExplicitMaxDist, maxDistKm])
 

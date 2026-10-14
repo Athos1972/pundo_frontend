@@ -1,0 +1,111 @@
+# Pitch video "Why pundo?" (EN + EL), the WHY before the tutorial series. Approved German draft: 01-skript.de.md
+# (BB 2026-10-14: approved, hook with a Russian search). Only verifiable claims (see the table in the script).
+# Customer side of pundo on the phone; demo shop of the video language (prepare_pitch.py: fresh bread 2.50,
+# sourdough promo 3.90, opening hours, languages). The hook is always the Russian search "хлеб".
+# The last scene shows the first sign-up step (NOT the for-shops page: it currently shows placeholder numbers).
+
+meta:
+  slug: pitch
+  title:
+    en: "Why pundo? Get found by customers nearby"
+    el: "Γιατί pundo; Να σε βρίσκουν οι πελάτες κοντά σου"
+  url:
+    en: "pundo.cy/for-shops"
+    el: "pundo.cy/for-shops"
+  next_video:
+    en: "Next: sign up in 5 minutes"
+    el: "Επόμενο: εγγραφή σε 5 λεπτά"
+  demo:
+    search: "хлеб"
+  thumbnail_scene: languages
+  target_duration_s: 70
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'pundo in Russian: search "хлеб" -> map + result "Свежий хлеб" at Anna''s Bakery'
+    callout:
+      en: "Customers search. Are you there?"
+      el: "Οι πελάτες ψάχνουν. Είσαι εκεί;"
+    narration:
+      en: >-
+        Someone in Limassol is searching right now for exactly what you offer. Will they find you?
+      el: >-
+        Κάποιος στη Λεμεσό ψάχνει αυτή τη στιγμή ακριβώς αυτό που προσφέρεις. Θα σε βρει;
+
+  - id: problem
+    shot: 'result card + map pin of Anna''s Bakery highlighted'
+    callout:
+      en: "Get found nearby"
+      el: "Να σε βρίσκουν κοντά σου"
+    narration:
+      en: >-
+        People from all over the world live and holiday in Cyprus. Many search in their own language,
+        and go where they understand what's on offer and what it costs.
+      el: >-
+        Στην Κύπρο ζουν και κάνουν διακοπές άνθρωποι από όλο τον κόσμο. Πολλοί ψάχνουν στη δική τους γλώσσα
+        και πηγαίνουν εκεί όπου καταλαβαίνουν τι υπάρχει και πόσο κοστίζει.
+
+  - id: languages
+    shot: 'Anna''s shop page in English -> Greek -> Russian, product names change'
+    callout:
+      en: "In 6 languages, automatically"
+      el: "Σε 6 γλώσσες, αυτόματα"
+    narration:
+      en: >-
+        With pundo, you add your products and services once. pundo shows them in six languages:
+        Greek, English, Russian, German, Arabic and Hebrew.
+      el: >-
+        Με το pundo προσθέτεις τα προϊόντα και τις υπηρεσίες σου μία φορά. Το pundo τα δείχνει σε έξι γλώσσες:
+        ελληνικά, αγγλικά, ρωσικά, γερμανικά, αραβικά και εβραϊκά.
+
+  - id: prices
+    shot: 'shop page: promo card (3.90 instead of 4.50), opening hours with lunch break'
+    callout:
+      en: "Prices, offers, opening hours"
+      el: "Τιμές, προσφορές, ώρες"
+    narration:
+      en: >-
+        Customers instantly see your prices, your offers and whether you're open right now.
+        You don't need your own website for that.
+      el: >-
+        Οι πελάτες βλέπουν αμέσως τις τιμές σου, τις προσφορές σου και αν είσαι ανοιχτά αυτή τη στιγμή.
+        Δεν χρειάζεσαι δική σου ιστοσελίδα γι' αυτό.
+
+  - id: contact
+    shot: 'shop page: WhatsApp / phone highlighted (not tapped)'
+    callout:
+      en: "Customers contact you directly"
+      el: "Οι πελάτες σε βρίσκουν απευθείας"
+    narration:
+      en: >-
+        Interested customers contact you directly, by WhatsApp or phone. pundo takes no commission.
+      el: >-
+        Όποιος ενδιαφέρεται επικοινωνεί απευθείας μαζί σου, με WhatsApp ή τηλέφωνο. Το pundo δεν παίρνει προμήθεια.
+
+  - id: free
+    shot: 'first sign-up step (business type)'
+    callout:
+      en: "Free · 5 minutes"
+      el: "Δωρεάν · 5 λεπτά"
+    narration:
+      en: >-
+        Your listing is free and done in five minutes. We show you how, step by step, in our series.
+      el: >-
+        Η καταχώριση είναι δωρεάν και γίνεται σε πέντε λεπτά. Σου δείχνουμε πώς, βήμα βήμα, στη σειρά μας.
+
+  - id: wrap-up
+    shot: 'sign-up step stays'
+    callout:
+      en: "pundo.cy/for-shops"
+      el: "pundo.cy/for-shops"
+    narration:
+      en: >-
+        pundo: so customers nearby can find you.
+      el: >-
+        pundo: για να σε βρίσκουν οι πελάτες κοντά σου.
+
+  - id: outro
+    branding: outro

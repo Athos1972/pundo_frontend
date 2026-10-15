@@ -14,6 +14,10 @@
  * danach werden `static/` und `public/` SAUBER kopiert (rm -rf + cp -R, kein static/static).
  * `E2E_FRONTEND_MODE=dev` startet stattdessen `npm run dev:test`.
  *
+ * `E2E_COVERAGE=1` (Coverage-Modus, docs/e2e-testing.md "Coverage"): eigener Build in `.next-cov` (Source-Maps,
+ * unminifiziert; next.config.ts reagiert auf E2E_COVERAGE_BUILD=1), eigener Stamp, und der Server startet mit
+ * NODE_V8_COVERAGE=<E2E_COVERAGE_DIR>/server-raw. Der normale `.next`-Build bleibt unberuehrt.
+ *
  * `check` / assertFrontendFresh(): laeuft bereits ein Server auf dem Port (reuseExistingServer),
  * wird er klassifiziert (next dev | standalone | unbekannt) und ein Standalone-Server gegen den
  * Stamp geprueft. Veraltet/unbekannt -> Fehler mit Anleitung. Das globale Setup killt/startet
@@ -25,6 +29,13 @@ const path = require('node:path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
 const STAMP_REL = '.next/standalone/.e2e-build-stamp.json'
+const COVERAGE_DIST = '.next-cov'
+/** Coverage-Modus (E2E_COVERAGE=1): anderer Build-Ordner, damit der normale Fingerabdruck-Cache erhalten bleibt. */
+const coverageMode = () => process.env.E2E_COVERAGE === '1'
+const distRel = () => (coverageMode() ? COVERAGE_DIST : '.next')
+const stampRel = () => `${distRel()}/standalone/.e2e-build-stamp.json`
+/** Rohdaten-Ordner des Servers (NODE_V8_COVERAGE); `E2E_COVERAGE_DIR` ist der Ausgabeordner des Laufs. */
+const coverageServerRawDir = () => path.resolve(REPO_ROOT, process.env.E2E_COVERAGE_DIR ?? 'coverage-e2e', 'server-raw')
 const FINGERPRINT_INPUTS = [
   'src', 'public', 'content', 'next.config.ts', 'package.json', 'package-lock.json',
   'tsconfig.json', '.env.local',
@@ -40,7 +51,11 @@ function newestMtimeMs(target) {
   let newest = Math.floor(st.mtimeMs)
   for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
     if (entry.name === 'node_modules' || entry.name === '.DS_Store') continue
-    newest = Math.max(newest, newestMtimeMs(path.join(target, entry.name)))
+    const child = path.join(target, entry.name)
+    // Coverage-Modus: Vitest-Tests gehoeren nicht ins App-Bundle; ihre Aenderungen (parallele Sessions) sollen den
+    // Coverage-Build nicht wiederholt verwerfen. Der normale Fingerabdruck bleibt unveraendert.
+    if (coverageMode() && child.endsWith(`${path.sep}src${path.sep}tests`)) continue
+    newest = Math.max(newest, newestMtimeMs(child))
   }
   return newest
 }
@@ -68,7 +83,7 @@ function fingerprintsEqual(a, b) {
 }
 
 function readStamp(repoRoot = REPO_ROOT) {
-  try { return JSON.parse(fs.readFileSync(path.join(repoRoot, STAMP_REL), 'utf8')) } catch { return null }
+  try { return JSON.parse(fs.readFileSync(path.join(repoRoot, stampRel()), 'utf8')) } catch { return null }
 }
 
 // ── Prozess-Klassifikation ───────────────────────────────────────────────────
@@ -171,31 +186,46 @@ function run(cmd, args, opts = {}) {
   execFileSync(cmd, args, { stdio: 'inherit', cwd: REPO_ROOT, ...opts })
 }
 
+/** Coverage-Build: das Standalone-Tracing liefert die `.map`-Dateien der Server-Chunks nicht mit; Node braucht sie neben den Chunks. */
+function copyServerSourceMaps(from, to) {
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name)
+    const dst = path.join(to, entry.name)
+    if (entry.isDirectory()) copyServerSourceMaps(src, dst)
+    else if (entry.name.endsWith('.map') && fs.existsSync(path.dirname(dst))) fs.copyFileSync(src, dst)
+  }
+}
+
 /** @param {{ repoRoot?: string, backendUrl?: string, log?: (msg: string) => void }} [opts] */
 function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console.log } = {}) {
   const backend = backendUrl ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
   const fp = computeFingerprint({ repoRoot, backendUrl: backend })
   const stamp = readStamp(repoRoot)
-  const server = path.join(repoRoot, '.next/standalone/server.js')
+  const dist = distRel()
+  const server = path.join(repoRoot, dist, 'standalone/server.js')
   if (stamp && fingerprintsEqual(stamp.fingerprint, fp) && fs.existsSync(server)
-    && fs.existsSync(path.join(repoRoot, '.next/standalone/.next/static'))) {
+    && fs.existsSync(path.join(repoRoot, dist, 'standalone', dist, 'static'))) {
     log('[E2E Frontend] Standalone-Build aktuell (Fingerabdruck gleich) - kein Rebuild.')
     return false
   }
   log('[E2E Frontend] Standalone-Build fehlt oder veraltet - baue neu (ca. 3 min)...')
-  fs.rmSync(path.join(repoRoot, '.next/standalone'), { recursive: true, force: true })
+  fs.rmSync(path.join(repoRoot, dist, 'standalone'), { recursive: true, force: true })
   // B6220-003 (E7): the backend is the only Turnstile verifier and the widget needs a sitekey
   // in a production build. Default to Cloudflare's always-passes TEST sitekey (inlined at build
   // time; the E2E backend runs without a secret and bypasses verification on pundo_test).
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || '1x00000000000000000000AA'
   run('npx', ['next', 'build'], {
-    env: { ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey },
+    env: {
+      ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
+      ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
+    },
   })
-  const sa = path.join(repoRoot, '.next/standalone')
-  fs.rmSync(path.join(sa, '.next/static'), { recursive: true, force: true })
+  const sa = path.join(repoRoot, dist, 'standalone')
+  fs.rmSync(path.join(sa, dist, 'static'), { recursive: true, force: true })
   fs.rmSync(path.join(sa, 'public'), { recursive: true, force: true })
-  fs.cpSync(path.join(repoRoot, '.next/static'), path.join(sa, '.next/static'), { recursive: true })
+  fs.cpSync(path.join(repoRoot, dist, 'static'), path.join(sa, dist, 'static'), { recursive: true })
   fs.cpSync(path.join(repoRoot, 'public'), path.join(sa, 'public'), { recursive: true })
+  if (coverageMode()) copyServerSourceMaps(path.join(repoRoot, dist, 'server'), path.join(sa, dist, 'server'))
   // Stamp = Fingerabdruck VOR dem Build: wird ein Input waehrend des Builds editiert, baut der naechste Lauf neu.
   fs.writeFileSync(path.join(sa, '.e2e-build-stamp.json'),
     JSON.stringify({ fingerprint: fp, builtAtMs: Date.now() }, null, 2))
@@ -212,8 +242,16 @@ function start() {
     child = spawn('npm', ['run', 'dev:test'], { cwd: REPO_ROOT, stdio: 'inherit' })
   } else {
     ensureStandaloneBuild({ backendUrl: backend })
-    child = spawn('node', [path.join(REPO_ROOT, '.next/standalone/server.js')], {
-      cwd: REPO_ROOT, stdio: 'inherit', env: { ...process.env, PORT: port, BACKEND_URL: backend },
+    const env = { ...process.env, PORT: port, BACKEND_URL: backend }
+    if (coverageMode()) {
+      // Frische V8-Rohdaten je Lauf; Node schreibt sie beim (SIGTERM-)Exit des Servers.
+      const raw = coverageServerRawDir()
+      fs.rmSync(raw, { recursive: true, force: true })
+      fs.mkdirSync(raw, { recursive: true })
+      env.NODE_V8_COVERAGE = raw
+    }
+    child = spawn('node', [path.join(REPO_ROOT, distRel(), 'standalone/server.js')], {
+      cwd: REPO_ROOT, stdio: 'inherit', env,
     })
   }
   for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(sig, () => child.kill(sig))
@@ -221,7 +259,7 @@ function start() {
 }
 
 module.exports = {
-  REPO_ROOT, STAMP_REL, FINGERPRINT_INPUTS, newestMtimeMs, computeFingerprint, fingerprintsEqual,
+  REPO_ROOT, STAMP_REL, COVERAGE_DIST, coverageMode, distRel, stampRel, coverageServerRawDir, FINGERPRINT_INPUTS, newestMtimeMs, computeFingerprint, fingerprintsEqual,
   readStamp, classifyCommand, classifyChain, listenerChain, assertFrontendFresh, ensureStandaloneBuild,
 }
 

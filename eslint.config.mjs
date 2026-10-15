@@ -154,6 +154,9 @@ const eslintConfig = defineConfig([
     ".claude/worktrees/**",
     // Generated coverage reports
     "coverage/**",
+    // E2E-Coverage (docs/e2e-testing.md "Coverage"): eigener Build und Berichte, generiert
+    ".next-cov/**",
+    "coverage-e2e/**",
   ]),
 ]);
 

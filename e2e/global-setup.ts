@@ -134,6 +134,10 @@ export default async function globalSetup() {
   // Auch im Reuse-Modus (A1, F8950): so raeumt der Reporter weiter auf und `--list` bleibt geschuetzt.
   acquireLock(RUN_ID)
   console.log(`\n[E2E Setup] Run-ID: ${RUN_ID}`)
+  // Coverage-Modus: Client-Rohdaten des vorigen Laufs verwerfen (Server-Rohdaten loescht e2e-frontend.cjs beim Start).
+  if (process.env.E2E_COVERAGE === '1') {
+    fs.rmSync(path.resolve(process.cwd(), process.env.E2E_COVERAGE_DIR ?? 'coverage-e2e', 'client-raw'), { recursive: true, force: true })
+  }
 
   // ── E2E_REUSE_STATE: Schnellpfad für lokale Entwicklung ───────────────────
   // Wenn E2E_REUSE_STATE=1 gesetzt ist UND ein frisches .test-state.json existiert

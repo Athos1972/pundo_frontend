@@ -6,6 +6,8 @@
 #   scripts/test-gate.sh smoke     Playwright-Projekt smoke (ca. 1 min); wird auch vom Backend-Push-Gate gerufen (A5)
 #   scripts/test-gate.sh push      Pre-Push-Gate: fast + Playwright voll (smoke, dann full; ca. 2 min) + npm audit + gitleaks (falls installiert)
 #   scripts/test-gate.sh nightly   wie push, aber Playwright mit --repeat-each=2 --retries=0 (AK5)
+#   scripts/test-gate.sh e2e-coverage   Playwright voll im Coverage-Modus + Vitest-Coverage + Bericht (docs/e2e-testing.md "Coverage";
+#                                  kein Gate, nur Messung; Bericht unter <Lauf-Log-Verzeichnis>/coverage/summary.md)
 #
 # push/nightly/smoke nehmen den gemeinsamen Lauf-Lock (scripts/gate-lib.sh, gilt fuer beide Repos), pruefen vorher
 # PostgreSQL (fail-closed) und warten nicht ewig. Der Playwright-Global-Setup startet das Test-Backend 8500 selbst
@@ -123,8 +125,20 @@ case "$LANE" in
     step_security || true
     finish "$GATE_FAILED"
     ;;
+  e2e-coverage)
+    # Messlauf, kein Gate: liefert Zahlen, schreibt kein push-Nachweis (eigene Lane-Datei) und prueft keine Zusicherung.
+    # Rohdaten (mehrere 100 MB) werden nach dem Bericht geloescht; der Bericht bleibt im Lauf-Log-Verzeichnis.
+    gate_init frontend e2e-coverage
+    gate_lock_acquire
+    playwright_preflight
+    export E2E_COVERAGE_DIR="${E2E_COVERAGE_DIR:-$GATE_RUN_DIR/coverage}"
+    export E2E_COVERAGE_KEEP_RAW="${E2E_COVERAGE_KEEP_RAW:-0}"
+    gate_step e2e-coverage 3000 node scripts/e2e-coverage.mjs || finish 1
+    gate_say "Bericht: $E2E_COVERAGE_DIR/summary.md"
+    finish 0
+    ;;
   *)
-    echo "usage: $0 fast|commit|smoke|push|nightly" >&2
+    echo "usage: $0 fast|commit|smoke|push|nightly|e2e-coverage" >&2
     exit 2
     ;;
 esac

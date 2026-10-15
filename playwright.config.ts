@@ -23,7 +23,13 @@ const backendUrl = BACKEND_URL
 const frontendUrl = BASE_URL
 const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
 
+// Coverage-Modus (optional, docs/e2e-testing.md "Coverage"): E2E_COVERAGE=1 misst src/** (Browser: V8-Coverage ueber
+// e2e/coverage/, Server: NODE_V8_COVERAGE am Coverage-Build .next-cov). Ohne die Variable aendert sich nichts.
+const coverage = process.env.E2E_COVERAGE === '1'
+
 export default defineConfig({
+  // Coverage: `@playwright/test` -> e2e/coverage/pw-test.ts (tsconfig-paths), damit alle Specs ohne Aenderung messen.
+  ...(coverage ? { tsconfig: './tsconfig.e2e-cov.json' } : {}),
   testDir: './e2e',
   // Exclude files with `_` prefix — those are Vitest unit tests (e.g. _parser.spec.ts),
   // not Playwright browser tests. Journey spec files (without `_`) are included via testDir.
@@ -60,7 +66,10 @@ export default defineConfig({
     // E2E_FRONTEND_MODE=dev startet stattdessen `npm run dev:test`. Siehe scripts/e2e-frontend.cjs.
     command: 'node scripts/e2e-frontend.cjs start',
     url: frontendUrl,
-    reuseExistingServer: true,
+    // Coverage: ein bereits laufender (nicht instrumentierter) Server darf nicht wiederverwendet werden; SIGTERM mit
+    // Wartezeit, damit Node die V8-Rohdaten (NODE_V8_COVERAGE) beim Beenden schreibt.
+    reuseExistingServer: !coverage,
+    ...(coverage ? { gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 20_000 } } : {}),
     timeout: 600_000,
     env: {
       BACKEND_URL: backendUrl,

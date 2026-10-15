@@ -85,6 +85,7 @@ Ein Skript für alle Läufe: `scripts/test-gate.sh <lane>` (gemeinsame Helfer `s
 | smoke | `scripts/test-gate.sh smoke` | Playwright-Projekt `smoke` (das Backend-Push-Gate ruft das, A5) | 45 s |
 | push | `scripts/test-gate.sh push` (Pre-Push-Hook) | fast + Playwright voll (smoke, dann full) + `npm audit --omit=dev --audit-level=high` (wie die CI) + gitleaks, falls installiert | 161 s |
 | nightly | `scripts/test-gate.sh nightly` (von `pundo_main_backend/scripts/nightly.sh` gerufen) | fast + Playwright `--repeat-each=2 --retries=0` + audit + gitleaks | siehe Nightly |
+| e2e-coverage | `scripts/test-gate.sh e2e-coverage` (auch von der Nightly gerufen) | Messlauf, kein Gate: Playwright voll im Coverage-Modus + Vitest-Coverage + Bericht, siehe [Coverage](#coverage-der-e2e-tests-optional) | ca. 3 min |
 
 **Vitest** läuft in `fast` (`npx vitest run`, ca. 12 bis 27 s je nach Last). Tests liegen in `src/tests/` (Komponenten, Utilities), Architektur-Guards über viele Dateien in `tests/unit/guards/` (z. B. Client-IP-Helper in allen Routen, Shop-Admin-Boundary), Journey-Parser in `e2e/journeys/_parser.spec.ts`. Kein Test liest den Quelltext einer einzelnen Komponente per Regex; dafür gibt es Render-Tests (Testing Library).
 
@@ -107,7 +108,7 @@ git config --unset core.hooksPath        # deaktivieren
 - Agents rufen `git push` mit hohem Tool-Timeout (mind. 600000 ms) auf.
 - **gitleaks** ist lokal optional (`brew install gitleaks`); ohne Installation meldet das Gate `skip gitleaks` und die CI scannt weiterhin. Das ist eine bekannte Lücke gegenüber der CI.
 
-**Nightly.** `pundo_main_backend/scripts/nightly.sh` (launchd-Vorlage und Installationsanleitung: `pundo_main_backend/ops/launchd/`) läuft beide Repos nacheinander: Backend ruff, Semgrep, pytest in vier Varianten (Template-DB / Prod-Kopie x fest / zufällig), dann dieses Repo mit `scripts/test-gate.sh nightly`. Logs: `~/Library/Logs/pundo-nightly/<Datum>/`, bei Rot eine macOS-Benachrichtigung.
+**Nightly.** `pundo_main_backend/scripts/nightly.sh` (launchd-Vorlage und Installationsanleitung: `pundo_main_backend/ops/launchd/`) läuft beide Repos nacheinander: Backend ruff, Semgrep, pytest in vier Varianten (Template-DB / Prod-Kopie x fest / zufällig), dann dieses Repo mit `scripts/test-gate.sh nightly` und zuletzt mit `scripts/test-gate.sh e2e-coverage` (jede Nacht, ca. 3 bis 4 min; Bericht `~/Library/Logs/pundo-nightly/<Datum>/frontend-e2e-coverage/summary.md`, die Kennzahl steht zusätzlich in `summary.txt`; `NIGHTLY_E2E_COVERAGE=0` schaltet den Schritt ab). Logs: `~/Library/Logs/pundo-nightly/<Datum>/`, bei Rot eine macOS-Benachrichtigung.
 
 ## E2E-Tests ausführen
 
@@ -193,6 +194,34 @@ npx playwright test --ui
 ```
 
 ---
+
+## Coverage der E2E-Tests (optional)
+
+Misst, welche Zeilen und Funktionen von `src/**` die Playwright-Tests ausführen, getrennt nach Browser und Server, und kombiniert das mit der Vitest-Abdeckung. Reine Messung ohne Schwellenwert. Der normale Lauf ändert sich nicht: ohne `E2E_COVERAGE=1` greift keine der Änderungen, `build:prod` bleibt unverändert.
+
+```bash
+npm run test:e2e:coverage                      # = node scripts/e2e-coverage.mjs: Playwright voll + Vitest + Bericht (ca. 3 min)
+npm run test:e2e:coverage -- e2e/smoke.spec.ts --project=smoke   # Argumente gehen an `playwright test`
+npm run test:e2e:coverage:report               # nur den Bericht aus vorhandenen Rohdaten neu bauen
+scripts/test-gate.sh e2e-coverage              # wie oben, mit Lock/Preflight; Bericht im Log-Verzeichnis des Gates
+E2E_COVERAGE=1 npx playwright test             # nur Rohdaten sammeln (kein Bericht)
+```
+
+Ergebnis in `coverage-e2e/` (gitignored, anderes Verzeichnis: `E2E_COVERAGE_DIR`): `summary.md` (Tabellen je Bereich), `summary.json` (auch je Datei), `client/index.html` und `server/index.html` (V8-Bericht je Seite bis in den Quelltext), `vitest/coverage-final.json`.
+
+**Wie gemessen wird.**
+- **Eigener Build.** Mit `E2E_COVERAGE=1` baut `scripts/e2e-frontend.cjs` nach `.next-cov/` (`next.config.ts` reagiert auf `E2E_COVERAGE_BUILD=1`): Source-Maps für Browser und Server, nicht minifiziert, Typprüfung aus (macht `tsc` im Gate). Der normale `.next`-Build samt Fingerabdruck-Cache bleibt unberührt; `.next-cov` hat einen eigenen Stamp (Rebuild ca. 15 bis 60 s). `tsconfig.next-cov.json` ist nur dafür da, dass `next build` `tsconfig.json` (Fingerabdruck-Input) nicht umschreibt.
+- **Browser.** `playwright.config.ts` setzt im Coverage-Modus `tsconfig: tsconfig.e2e-cov.json`; dort wird `@playwright/test` auf `e2e/coverage/pw-test.ts` abgebildet. Dieses `test` überschreibt die Worker-Fixture `browser`, sodass jede Seite jedes Contexts (auch `adminPage`, `browser.newContext()`) eine V8-Precise-Coverage über ein CDP-Session bekommt (`e2e/coverage/client-collector.ts`). Kein Spec wurde angepasst. Gesichert wird vor jeder Navigation und beim Schließen des Contexts, Rohdaten: `client-raw/*.json.gz`. Nur Chromium.
+- **Server.** Der Standalone-Server startet mit `NODE_V8_COVERAGE=<Ausgabeordner>/server-raw`; Node schreibt beim Beenden (Playwright sendet SIGTERM und wartet bis zu 20 s, `gracefulShutdown`). Deckt Server Components, Route-Handler und `proxy.ts` ab.
+- **Auswertung.** `monocart-coverage-reports` (MIT, devDependency) führt die V8-Daten über die Source-Maps auf `src/` zurück. Gerechnet wird auf Zeilenebene: Nenner sind die Statement-Zeilen, die Vitest kennt (`--coverage.include=src/**/*.{ts,tsx}`, nicht geladene Dateien zählen mit 0 %); eine Zeile ist durch E2E abgedeckt, wenn V8 dort Ausführung meldet. Kombiniert = E2E oder Vitest. Vitest erscheint mit seinen eigenen Zahlen, E2E und Kombination sind Zeilen-Näherungen (Statement-genau ist nur Vitest). Funktionen zählen unter ihrer Startzeile.
+- **Browser vs. Server.** Client Components laufen auch beim SSR auf dem Server; Server-Code läuft nie im Browser. "E2E gesamt" ist die Vereinigung.
+
+**Grenzen und Betrieb.**
+- Der Lauf braucht Port 3500 frei (ein bereits laufender, nicht instrumentierter Server würde sonst wiederverwendet; `reuseExistingServer` ist im Coverage-Modus aus) und teilt sich Lock, `pundo_test` und 8500 mit den Gates. Das Skript bricht ab, wenn Playwright, pytest oder ein Server auf 3500 läuft.
+- Vitest läuft innerhalb des Skripts (`E2E_COVERAGE_VITEST=run|reuse|skip`). Ohne Vitest fehlen die Spalten Vitest und Kombiniert, der Nenner sind dann die Codezeilen des Bundles.
+- `E2E_COVERAGE_KEEP_RAW=0` löscht die Rohdaten nach dem Bericht (die Gate-Lane tut das; Rohdaten sind für den vollen Lauf ca. 10 MB komprimiert plus Server-Dump).
+- Der Coverage-Fingerabdruck ignoriert `src/tests/` (Tests sind nicht im Bundle); der normale Fingerabdruck nicht.
+- Messung läuft mit `workers: 4` wie sonst, kostet etwa 30 % Laufzeit.
 
 ## Was der Global Setup macht
 
@@ -291,6 +320,10 @@ Vollständiger Katalog und Messwerte: `e2e/TESTSET.md`
 | `E2E_ADMIN_SECRET` | `pundo-admin-dev-secret` | global-setup (Admin-Approve-Bearer) |
 | `E2E_RESET_DB` | — | Expliziter DB-Reset (nur wenn nötig) |
 | `E2E_MAX_FAILURES` | `15` | Abbruch des Laufs nach N Fehlern (`maxFailures`) |
+| `E2E_COVERAGE` | — | `1` → Coverage-Modus (eigener Build `.next-cov`, Messung Browser + Server), siehe Abschnitt Coverage |
+| `E2E_COVERAGE_DIR` | `coverage-e2e` | Ausgabe- und Rohdatenordner des Coverage-Modus |
+| `E2E_COVERAGE_VITEST` | `run` | `run` / `reuse` / `skip` für die Vitest-Coverage im Bericht |
+| `E2E_COVERAGE_KEEP_RAW` | `1` | `0` → Rohdaten nach dem Bericht löschen |
 
 ---
 

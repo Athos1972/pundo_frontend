@@ -109,4 +109,16 @@ const config: NextConfig = {
   },
 }
 
+// E2E-Coverage-Build (nur scripts/e2e-frontend.cjs bei E2E_COVERAGE=1, siehe docs/e2e-testing.md "Coverage"):
+// eigenes distDir (der normale .next-Build bleibt unberuehrt), Source-Maps fuer Browser UND Server, unminifiziert
+// (genauere Block-Abdeckung). Ohne die Variable aendert sich an der Konfiguration nichts; `build:prod` setzt sie nie.
+if (process.env.E2E_COVERAGE_BUILD === '1') {
+  config.distDir = '.next-cov'
+  config.productionBrowserSourceMaps = true
+  config.experimental = { ...config.experimental, serverSourceMaps: true, serverMinification: false, turbopackMinify: false }
+  // Typpruefung macht `tsc --noEmit` im Gate; der Coverage-Build soll nicht an fremden Typfehlern scheitern.
+  // Eigene tsconfig: `next build` schreibt dort `.next-cov/types` in `include`, statt tsconfig.json (Fingerabdruck-Input) zu aendern.
+  config.typescript = { ...config.typescript, ignoreBuildErrors: true, tsconfigPath: 'tsconfig.next-cov.json' }
+}
+
 export default withBundleAnalyzer(config)

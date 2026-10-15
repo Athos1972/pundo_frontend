@@ -1,18 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { t } from '@/lib/translations'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
-import type { Review } from '@/types/api'
+import { localePath } from '@/lib/routing'
+import type { Lang } from '@/lib/lang'
+import type { MyReview } from '@/types/api'
 
 interface Props {
-  reviews: Review[]
+  reviews: MyReview[]
   lang: string
 }
 
 export function ReviewsTab({ reviews: initialReviews, lang }: Props) {
   const tr = t(lang)
-  const [reviews, setReviews] = useState<Review[]>(initialReviews)
+  const [reviews, setReviews] = useState<MyReview[]>(initialReviews)
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
   const [error, setError] = useState('')
@@ -45,6 +48,17 @@ export function ReviewsTab({ reviews: initialReviews, lang }: Props) {
 
       {reviews.map((review) => (
         <div key={review.id} className="relative">
+          {review.entity && (
+            <Link
+              href={localePath(
+                lang as Lang,
+                `/${review.entity.type === 'shop' ? 'shops' : 'products'}/${review.entity.slug}`,
+              )}
+              className="mb-1 block text-sm font-medium text-accent hover:underline"
+            >
+              {review.entity.name}
+            </Link>
+          )}
           <ReviewCard review={review} tr={tr} lang={lang} />
 
           <div className="mt-2 flex justify-end">

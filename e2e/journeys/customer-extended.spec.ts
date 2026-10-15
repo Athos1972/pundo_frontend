@@ -375,14 +375,20 @@ test.describe.serial('T2 — Eigene Reviews im Profil', () => {
     )
     expect(mine.status).toBe(200)
     expect((await mine.json()).comment, 'eigene Review per API abrufbar').toBe(reviewText)
+
+    const all = await fetch(`${BACKEND_URL}/api/v1/customer/reviews/mine/all`, {
+      headers: authHeader(ctx.favToken!),
+      signal: AbortSignal.timeout(15_000),
+    })
+    expect(all.status).toBe(200)
+    const body = (await all.json()) as { items: { id: number; entity: { type: string; id: number; slug: string } | null }[] }
+    const own = body.items.find((r) => r.id === reviewId)
+    expect(own?.entity, 'Review enthaelt Produkt-Infos').toMatchObject({ type: 'product', id: ctx.firstItemId })
   })
 
-  // BEKANNTER PRODUKTFEHLER (F8950 T20, gemeldet in 03-implementation.md): src/app/(customer)/account/page.tsx
-  // ruft GET /customer/reviews/mine OHNE entity_type/entity_id auf; das Backend verlangt beide (422), der Fetch
-  // liefert [] und "My Reviews" zeigt immer "No reviews yet". Der Test ist als erwarteter Fehlschlag markiert
-  // (test.fail): er wird rot, sobald der Fehler behoben ist - dann test.fail() entfernen.
+  // B3700-002: /account lud die Reviews frueher von GET /customer/reviews/mine ohne entity_type/entity_id (422),
+  // der Tab zeigte immer "No reviews yet". Jetzt GET /customer/reviews/mine/all (inkl. Produkt-/Shop-Infos).
   test('Eigene Review ist im Account-Tab "My Reviews" sichtbar', async ({ page }) => {
-    test.fail(true, 'Bekannter Produktfehler: /account ruft /customer/reviews/mine ohne entity_type/entity_id (422) -> Tab immer leer')
     expect(reviewId, 'Review aus dem vorigen Test').not.toBeNull()
 
     await page.context().addCookies([
@@ -393,6 +399,11 @@ test.describe.serial('T2 — Eigene Reviews im Profil', () => {
     // AccountTabs (role=tab): erst der Reviews-Tab zeigt die eigenen Reviews
     await page.getByRole('tab', { name: /review|bewertung/i }).first().click()
     await expect(page.getByText(reviewText).first(), 'eigene Review im Account sichtbar').toBeVisible({ timeout: 5_000 })
+    // Die bewertete Entity ist mit Sprachpraefix verlinkt (localePath)
+    await expect(
+      page.locator('#tabpanel-reviews a[href*="/products/"]').first(),
+      'Link auf das bewertete Produkt',
+    ).toHaveAttribute('href', /^\/[a-z]{2}\/products\/.+/)
   })
 })
 

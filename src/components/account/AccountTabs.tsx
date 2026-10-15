@@ -10,7 +10,7 @@ import { ReviewsTab } from './ReviewsTab'
 import { DangerTab } from './DangerTab'
 import { FavoritesTab } from './FavoritesTab'
 import type { AuthUser, LinkedAccountsResponse } from '@/types/customer'
-import type { Review, TrustProfileResponse } from '@/types/api'
+import type { MyReview, TrustProfileResponse } from '@/types/api'
 import { TrustProfileSection } from './TrustProfileSection'
 
 type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'trust' | 'danger'
@@ -18,7 +18,7 @@ type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'trust' | 'danger'
 interface Props {
   initialUser: AuthUser
   linkedAccounts: LinkedAccountsResponse | null
-  reviews: Review[]
+  reviews: MyReview[]
   trustProfile: TrustProfileResponse | null
   lang: string
   showMcpTab: boolean

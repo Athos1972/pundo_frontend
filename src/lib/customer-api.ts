@@ -5,7 +5,7 @@
 
 import { cookies } from 'next/headers'
 import type { AuthUser, CustomerSession } from '@/types/customer'
-import type { Review, ReviewStats, SpottedListResponse } from '@/types/api'
+import type { MyReview, MyReviewsPage, Review, ReviewStats, SpottedListResponse } from '@/types/api'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 const BASE = `${BACKEND}/api/v1`
@@ -91,6 +91,26 @@ export async function getMyReview(
     )
   } catch {
     return null
+  }
+}
+
+/** Max page size of GET /customer/reviews/mine/all. */
+const MY_REVIEWS_LIMIT = 100
+
+/**
+ * All reviews of the logged-in customer (newest first) incl. the reviewed product/shop,
+ * for the account tab "My reviews". Never throws: any error gives an empty list.
+ * (`getMyReview` above is the single review of ONE entity, a different endpoint.)
+ */
+export async function getMyReviews(lang: string): Promise<MyReview[]> {
+  try {
+    const page = await apiFetchCustomer<MyReviewsPage>(
+      `/customer/reviews/mine/all?limit=${MY_REVIEWS_LIMIT}&offset=0`,
+      lang,
+    )
+    return page.items
+  } catch {
+    return []
   }
 }
 

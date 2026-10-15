@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
-import { getCustomerSession } from '@/lib/customer-api'
+import { getCustomerSession, getMyReviews } from '@/lib/customer-api'
 import { getTrustProfile } from '@/lib/community-api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { BackButton } from '@/components/ui/BackButton'
 import { AccountTabs } from '@/components/account/AccountTabs'
 import type { Metadata } from 'next'
-import type { Review } from '@/types/api'
 import type { LinkedAccountsResponse } from '@/types/customer'
 
 export const metadata: Metadata = {
@@ -26,7 +25,7 @@ export default async function AccountFavoritesPage() {
   const user = session.user
 
   const [reviews, linkedAccounts, trustProfile, brand] = await Promise.all([
-    fetchMyReviews(lang),
+    getMyReviews(lang),
     fetchLinkedAccounts(lang),
     getTrustProfile(lang),
     getBrandFromHeaders(),
@@ -58,27 +57,6 @@ export default async function AccountFavoritesPage() {
       </div>
     </main>
   )
-}
-
-async function fetchMyReviews(lang: string): Promise<Review[]> {
-  const { cookies } = await import('next/headers')
-  const store = await cookies()
-  const token = store.get('customer_token')?.value
-  const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
-
-  try {
-    const res = await fetch(`${BACKEND}/api/v1/customer/reviews/mine`, {
-      headers: {
-        'Accept-Language': lang,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      cache: 'no-store',
-    })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
-    return []
-  }
 }
 
 async function fetchLinkedAccounts(lang: string): Promise<LinkedAccountsResponse | null> {

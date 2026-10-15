@@ -206,6 +206,26 @@ export interface Review {
   updated_at: string
 }
 
+/** Product or shop a review belongs to (name resolved by the backend via Accept-Language). */
+export interface ReviewEntity {
+  type: 'product' | 'shop'
+  id: number
+  slug: string
+  name: string
+}
+
+/** Item of GET /customer/reviews/mine/all. `entity` is null when the product/shop was deleted. */
+export interface MyReview extends Review {
+  entity?: ReviewEntity | null
+}
+
+export interface MyReviewsPage {
+  items: MyReview[]
+  total: number
+  limit: number
+  offset: number
+}
+
 export interface ReviewStats {
   average_stars: number
   total_count: number

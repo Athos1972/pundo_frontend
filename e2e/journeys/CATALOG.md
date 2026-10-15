@@ -33,7 +33,6 @@
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
 | [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD (F6710) | implemented | P2 | — |
 | [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |
-| [shop-type-api-matrix](shop-type-api-matrix.md) | API-Matrix alle 44 Shop-Unterarten (F6710) | implemented | P2 | — |
 | [customer-extended](customer-extended.md) | Customer Favorites + Profil-Deaktivierung + MCP-Tab (F6710) | implemented | P2 | — |
 | [category-discovery](category-discovery.md) | Category Discovery Flow (F2350) | approved | P2 | — |
 | [reactive-language-switch](reactive-language-switch.md) | Reaktive Sprachnavigation: Labels ohne Reload (E2E-08) | implemented | P1 | PASS |
@@ -80,7 +79,6 @@
 | shop-admin-offers | No — shop-admin area | — |
 | shop-admin-product-crud | No — shop-admin area | — |
 | customer-shop-promo-visibility | Conditional — promo only shows when active data exists | later (V1.1) |
-| shop-type-api-matrix | No — writes + registers | — |
 | customer-extended | No — writes + account-deletion | — |
 | social-link-moderation | No — admin area | — |
 | state-transition-ItemStatus | Conditional — read-side only | later (V1.1) |

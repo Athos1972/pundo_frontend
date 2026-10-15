@@ -441,6 +441,24 @@ export default async function globalSetup() {
       err instanceof Error ? err.message.split('\n')[0] : err)
   }
 
+  // ── 1d. Globales Kontakt-Tageslimit zuruecksetzen (F8950 Folgepunkt 2) ─────
+  // Die Test-Instanz skaliert jedes Limit mit RATE_LIMIT_TEST_MULTIPLIER (40): 100/Tag global wird 4000/Tag.
+  // contact-form C4 sendet pro Lauf ca. 120 Requests bis zum 429 und verbraucht davon 120 vom globalen Zaehler;
+  // nach ca. 33 Laeufen am Tag lieferte der @smoke-Test C1 sonst 429. Geloescht wird NUR dieser eine Zaehler
+  // (pundo_test.rate_limit_counters, Key-Praefix LIMITER/contact:global/); das Skript verweigert alles ausser DB
+  // pundo_test und prod-artige Umgebungen. Prod-Limits bleiben unberuehrt (limiter.py unveraendert).
+  try {
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --reset-contact-limit`,
+      { cwd: BACKEND_REPO, encoding: 'utf8', timeout: 30_000, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONPATH: BACKEND_REPO } }
+    )
+    const n = JSON.parse(out.trim().split('\n').at(-1)!).contact_limit_reset as number
+    console.log(`[E2E Setup] Globaler Kontakt-Zaehler zurueckgesetzt (${n} Eintrag/Eintraege).`)
+  } catch (err) {
+    console.warn('[E2E Setup] Kontakt-Zaehler konnte nicht zurueckgesetzt werden (contact-form kann 429 liefern):',
+      err instanceof Error ? err.message.split('\n')[0] : err)
+  }
+
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
   // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)

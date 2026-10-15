@@ -77,7 +77,7 @@ describe('parseCatalog — Seed-Datei', () => {
     expect(entries).toHaveLength(JOURNEY_FILES.length)
     // Untergrenze nur als Plausibilitaetsgrenze ("das Verzeichnis wird wirklich gelesen"). F8950 T18/T21: 46 -> 43
     // Journeys (shop-owner-lifecycle, shop-admin-profile, shop-admin-profile-phone-logo entfernt); mit T19
-    // (shop-type-api-matrix) 42. Deshalb 40 statt 45.
+    // (shop-type-api-matrix, jetzt Backend-pytest) 42. Deshalb 40 statt 45.
     expect(JOURNEY_FILES.length).toBeGreaterThanOrEqual(40)
   })
 

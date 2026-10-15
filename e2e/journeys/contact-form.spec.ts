@@ -59,9 +59,10 @@ test.describe('contact-form journey (B6220-003)', () => {
       expect(typeof sent.turnstile_token).toBe('string')
       expect(sent.turnstile_token.length).toBeGreaterThan(0)
       // 200 = SMTP konfiguriert, 503 = Captcha + Rate-Limit ok, aber kein SMTP (Studio)
-      // 429 hier = globales Tageslimit des Endpoints (100/Tag x Test-Multiplikator 40 = 4000) ausgeschoepft: C4 verbraucht
-      // pro Lauf ca. 120 davon (~33 Laeufe/Tag). Abhilfe: Zaehler 'LIMITER/contact:global//api/v1/contact/4000/1/day'
-      // in pundo_test.rate_limit_counters laeuft nach 24 h ab (F8950 T15).
+      // 429 hier = globales Tageslimit des Endpoints (100/Tag x Test-Multiplikator 40 = 4000) ausgeschoepft. C4 verbraucht
+      // pro Lauf ca. 120 davon; das Global Setup setzt den Zaehler (nur dieser Key, nur pundo_test) bei jedem Lauf
+      // zurueck (prepare_e2e_db.py --reset-contact-limit, Folgepunkt 2). 429 hier = Setup-Schritt fehlgeschlagen oder
+      // Lauf ohne Global Setup.
       expect([200, 503], `HTTP ${res.status()} vom Kontakt-Endpoint (429 = globales Tageslimit, siehe Kommentar)`).toContain(res.status())
     })
   }

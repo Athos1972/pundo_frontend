@@ -38,6 +38,7 @@ Playwright-Safety-Check in `playwright.config.ts` verwirft Port 8000 explizit.
 | Geo-Nearby findet Shop | `GET /api/v1/shops/nearby?lat=...&lng=...` |
 | Produkte via API abrufbar | `GET /api/v1/shops/{id}/products` |
 | Öffnungszeiten via API | `GET /api/v1/shops/{id}/hours` |
+| Onboarding → Login → Item → Shop je Shop-Unterart (44) | Seit F8950 T19 Backend-pytest: `pundo_main_backend/ingestor/tests/test_shop_type_matrix.py` |
 
 ---
 
@@ -161,6 +162,7 @@ npx playwright test --ui
 1. startet das Test-Backend auf 8500 neu
 2. räumt Reste abgebrochener Läufe (Run-ID älter als `E2E_STALE_HOURS`, Default 6 h) per `scripts/e2e_test_data.py cleanup --stale-hours 6 --apply`
 3. seedet Fixtures über `pundo_main_backend/scripts/prepare_e2e_db.py` (DB-Reset nur mit `E2E_RESET_DB=true`), die Test-Kategorien `e2e-tmp-<run>-*` und bei jedem Lauf die synthetische Preisverlauf-Fixture (`--seed-price-history`, siehe „Zwei-Ebenen-Prinzip“)
+3b. setzt bei jedem Lauf den **globalen Kontakt-Tageszähler** zurück (`prepare_e2e_db.py --reset-contact-limit`: nur Key `LIMITER/contact:global/…` in `pundo_test.rate_limit_counters`; `contact-form` C4 verbraucht pro Lauf ca. 120 der 4000 Test-Tageskontingente, sonst 429 im `@smoke`-Test nach ca. 33 Läufen; Prod-Limits unberührt)
 4. registriert/approved den **globalen** Test-Owner `e2e-owner@pundo-e2e.io` (Shop `e2e-test-shop`) — nur noch für Login/Logout und Read-only-Prüfungen
 5. loggt ihn ein, speichert alles inkl. `runId` und Admin-Token in `e2e/.test-state.json` (**gitignored**, enthält Test-JWTs)
 

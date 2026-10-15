@@ -15,7 +15,7 @@ Messung: `npx playwright test` mit warmem Standalone-Build, Workers 4, Backend 8
 
 Verbleibende Skips (bedingt, Grund im Test): `price-history` Realdaten (kein Crawl im 90-Tage-Fenster der Prod-Kopie), 4× `admin-catalog-review` (Gateway-Test-Server 8600 nicht erreichbar), `shop-admin-import-image-url` AC-3/4 (braucht Mock-Bild-Server); `b5950-001` AK4 überspringt zwischen ca. 23:30 und 00:30 Ortszeit (zu nah an Mitternacht).
 
-`shop-type-api-matrix` (44 Tests) bleibt bis T19 (Backend-Test `test_shop_type_matrix.py`) bestehen.
+`shop-type-api-matrix` (44 Tests, reiner API-Vertrag ohne Browser) ist seit T19 ein parametrisierter Backend-Test (`pundo_main_backend/ingestor/tests/test_shop_type_matrix.py`, 44 + 3 Drift-Tests, ca. 4 s); Spec und Journey-Datei sind gelöscht.
 
 ---
 

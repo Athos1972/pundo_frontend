@@ -22,6 +22,15 @@ import { test, expect } from '@playwright/test'
 
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
+// Erwartete price_note je Fixture (Backend: UnifiedOffer.description, prepare_e2e_db.py seed_price_type_fixtures()).
+// `fixed` hat bewusst keine Notiz.
+const NOTES: Record<string, string | null> = {
+  on_request: 'Bitte anrufen',
+  free:       'Erstberatung gratis',
+  variable:   'ab 3.50 € / kg',
+  fixed:      null,
+}
+
 // Stable slugs — must match prepare_e2e_db.py SLUGS dict
 const SLUGS = {
   on_request: 'e2e-vet-consultation-larnaca',
@@ -34,13 +43,21 @@ const SLUGS = {
 // (`fixtures.product_slugs` in .test-state.json), den das Global Setup nie schreibt, und productExists()
 // rief einen nicht existierenden Endpoint (/products/{slug} -> 422) auf: alle Tests liefen als "skipped".
 // Jetzt: beforeAll prueft per by-slug-API, dass die vier Fixture-Produkte existieren, und schlaegt sonst
-// mit Hinweis fehl (prepare_e2e_db.py seed_price_type_fixtures()).
+// mit Hinweis fehl (prepare_e2e_db.py seed_price_type_fixtures()). Der Vertrag umfasst auch price_note
+// (Folgepunkt 3): ein Fixture-Stand von vor der Notiz faellt hier mit klarer Meldung auf, nicht erst in den UI-Tests.
 test.beforeAll(async () => {
   for (const [type, slug] of Object.entries(SLUGS)) {
     const res = await fetch(`${BACKEND_URL}/api/v1/products/by-slug/${slug}`).catch(() => null)
     if (!res || !res.ok) {
       throw new Error(
         `Fixture "${type}" (${slug}) fehlt im Backend (Status ${res?.status ?? 'kein Response'}). ` +
+        'Abhilfe: pundo_main_backend/scripts/prepare_e2e_db.py --skip-reset --skip-prod-copy',
+      )
+    }
+    const notes = ((await res.json()).offers as { price_note: string | null }[]).map((o) => o.price_note)
+    if (NOTES[type] !== null && !notes.includes(NOTES[type])) {
+      throw new Error(
+        `Fixture "${type}" (${slug}) hat keine price_note "${NOTES[type]}" (API: ${JSON.stringify(notes)}). ` +
         'Abhilfe: pundo_main_backend/scripts/prepare_e2e_db.py --skip-reset --skip-prod-copy',
       )
     }
@@ -86,11 +103,12 @@ test.describe('variable-price: ProductCard labels in search results', () => {
 // ─── VP-2: Produktdetailseite — OfferList Rendering ──────────────────────────
 
 test.describe('variable-price: ProductDetail OfferList rendering', () => {
-  test('on_request detail: price=null label visible', async ({ page }) => {
+  test('on_request detail: price=null label + price_note visible', async ({ page }) => {
     await page.goto(`/products/${SLUGS.on_request}`)
 
     // Price label
     await expect(page.getByText('Price on request').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(NOTES.on_request!).first()).toBeVisible()
   })
 
   test('on_request detail: CTA contact button visible', async ({ page }) => {
@@ -104,19 +122,16 @@ test.describe('variable-price: ProductDetail OfferList rendering', () => {
     await expect(cta).toBeVisible({ timeout: 8000 })
   })
 
-  // F8950 T20: Die Fixtures setzen kein price_note mehr (Preisstufen statt Freitext); die frueheren Checks auf
-  // "Bitte anrufen", "Erstberatung gratis" und "ab 3.50 EUR / kg" konnten nie gruen werden (die Spec lief wegen
-  // des Skip-Fehlers nie). Die Note-Darstellung pruefen die Render-Tests in src/tests/price-type.test.tsx
-  // ("shows price_note when provided", "fixed: passes through price_note").
-
-  test('free detail: "Free" label visible', async ({ page }) => {
+  test('free detail: "Free" label + price_note visible', async ({ page }) => {
     await page.goto(`/products/${SLUGS.free}`)
     await expect(page.getByText('Free', { exact: true }).first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(NOTES.free!).first()).toBeVisible()
   })
 
-  test('variable detail: "Variable price" label visible', async ({ page }) => {
+  test('variable detail: "Variable price" label + price_note visible', async ({ page }) => {
     await page.goto(`/products/${SLUGS.variable}`)
     await expect(page.getByText('Variable price').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(NOTES.variable!).first()).toBeVisible()
   })
 
   test('fixed detail: numeric price visible, no CTA button', async ({ page }) => {
@@ -204,6 +219,13 @@ test.describe('variable-price: RTL layout', () => {
     await expect(page.getByText('السعر عند الطلب').first()).toBeVisible({ timeout: 8000 })
   })
 
+  test('AR variable product: price_note in EN (not translated)', async ({ page }) => {
+    await page.context().addCookies([{ name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' }])
+    await page.goto(`/products/${SLUGS.variable}`)
+    // price_note ist vom Shop eingegebener Freitext und wird nicht uebersetzt
+    await expect(page.getByText(NOTES.variable!).first()).toBeVisible({ timeout: 8000 })
+  })
+
   test('HE product detail dir=rtl, free label korrekt', async ({ page }) => {
     await page.context().addCookies([{ name: 'app_lang', value: 'he', domain: '127.0.0.1', path: '/' }])
     await page.goto(`/products/${SLUGS.free}`)
@@ -227,9 +249,10 @@ test.describe('variable-price: Mobile', () => {
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 5)
   })
 
-  test('variable label visible on mobile', async ({ page }) => {
+  test('variable label + price_note visible on mobile', async ({ page }) => {
     await page.goto(`/products/${SLUGS.variable}`)
     await expect(page.getByText('Variable price').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(NOTES.variable!).first()).toBeVisible({ timeout: 8000 })
   })
 })
 

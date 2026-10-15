@@ -447,6 +447,62 @@ test.describe('Shop-Treffer in der Suche', () => {
   })
 })
 
+// ─── Pin-Tap mobil (B2250-002) ────────────────────────────────────────────────
+
+test.describe('Pin-Tap auf der Karte (mobil, B2250-002)', () => {
+  // Die Pins liegen mobil hinter dem Bottom-Sheet: ein echter Mausklick trifft das Sheet. Der Tap wird deshalb
+  // als DOM-Click auf den Pin ausgeloest (dispatchEvent), wie ein Tap, der den Marker erreicht.
+  // Regression: handlePinClick suchte die Karte in einer Ref-Map, die von der unsichtbaren Desktop-Kopie der Liste
+  // ueberschrieben wurde -> scrollIntoView auf display:none, das Sheet blieb stehen.
+  test('Tap auf einen Pin bringt die Karte des Shops ins sichtbare Sheet (Produkt- und Shop-Pins)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/en/search?q=cat')
+    await waitForPageHydrated(page)
+
+    const sheet = page.locator('.sheet-scroll-area').filter({ visible: true })
+    const pins = page.locator('.leaflet-marker-icon')
+    await expect(sheet.locator('[data-testid="search-local-result"]').first(), 'SETUP BROKEN: keine Produkt-Treffer zu "cat"').toBeVisible({ timeout: 15_000 })
+    await expect.poll(() => pins.count(), { message: 'Pins auf der Karte', timeout: 15_000 }).toBeGreaterThan(1)
+    const scrollable = await sheet.evaluate(el => el.scrollHeight - el.clientHeight)
+    expect(scrollable, 'SETUP BROKEN: Liste ist nicht laenger als das Sheet, nichts zu scrollen').toBeGreaterThan(300)
+
+    let productPins = 0
+    let scrolledPins = 0
+    const pinCount = Math.min(await pins.count(), 8)
+    for (let i = 0; i < pinCount; i++) {
+      // Ans Ende der Liste (die Liste waechst beim Scrollen nach, deshalb im Poll nachfassen) und zur Ruhe kommen lassen.
+      await expect.poll(() => sheet.evaluate(el => { el.scrollTop = el.scrollHeight; return el.scrollTop }), { timeout: 5_000 }).toBeGreaterThan(1_000)
+      await page.waitForTimeout(400)
+      const before = await sheet.evaluate(el => el.scrollTop)
+
+      await pins.nth(i).dispatchEvent('click')
+
+      // Der Tap hebt die Karte des Shops hervor (ring-accent); daraus die Shop-ID lesen (im Sheet, nicht in der Desktop-Kopie).
+      // (Die Karte kann ausserhalb des Sichtfensters liegen: auf Vorhandensein warten, nicht auf Sichtbarkeit.)
+      await expect(sheet.locator('.ring-accent').first(), `Pin ${i}: keine Karte hervorgehoben`).toBeAttached({ timeout: 5_000 })
+      const shopId = await sheet.evaluate(el => el.querySelector('.ring-accent')?.closest('[data-shop-id]')?.getAttribute('data-shop-id') ?? null)
+      expect(shopId, `Pin ${i}: Tap hat keine Karte hervorgehoben`).not.toBeNull()
+      if (await sheet.locator(`[data-testid="search-local-result"][data-shop-id="${shopId}"]`).count()) productPins++
+
+      // Die (erste) Karte dieses Shops liegt nach dem Scrollen komplett im Sichtfenster des Sheets.
+      await expect.poll(() => sheet.evaluate((el, id) => {
+        const card = el.querySelector<HTMLElement>(`[data-shop-id="${id}"]`)
+        if (!card) return 'no-card'
+        const c = card.getBoundingClientRect()
+        const w = el.getBoundingClientRect()
+        return c.top >= w.top - 1 && c.bottom <= w.bottom + 1 ? 'in-view' : `out-of-view top=${Math.round(c.top)} bottom=${Math.round(c.bottom)} window=${Math.round(w.top)}-${Math.round(w.bottom)}`
+      }, shopId), { message: `Pin ${i} (Shop ${shopId}): Karte im sichtbaren Sheet`, timeout: 3_000 }).toBe('in-view')
+      if ((await sheet.evaluate(el => el.scrollTop)) !== before) scrolledPins++
+      // Hervorhebung klingt nach 1,2 s ab; naechster Pin startet sauber.
+      await expect(sheet.locator('.ring-accent')).toHaveCount(0, { timeout: 5_000 })
+    }
+
+    // Beide Pin-Arten sind abgedeckt, und das Sheet hat tatsaechlich gescrollt (nicht nur zufaellig schon dort gestanden).
+    expect(productPins, 'mindestens ein Pin muss zu einer Produktkarte gehoeren').toBeGreaterThan(0)
+    expect(scrolledPins, 'mindestens ein Tap muss das Sheet gescrollt haben').toBeGreaterThan(0)
+  })
+})
+
 // ─── Shop-Detailseite ─────────────────────────────────────────────────────────
 
 test.describe('Shop-Detailseite', () => {

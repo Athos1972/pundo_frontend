@@ -18,6 +18,8 @@ last-result: PASS
 last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
 ---
 
+> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (AC-5, S3b, S5, S6+S7). Die Admin-UI Item-Domain-Mappings (IDM-1 bis IDM-5) liegen in `service-catalog-admin-mappings.spec.ts` (eigener Report `service-catalog-admin-mappings-<datum>.md`).
+
 # Journey: service-catalog-auto-assign
 
 ## Was getestet wird

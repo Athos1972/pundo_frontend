@@ -4,9 +4,8 @@
  */
 
 import { test, expect } from './_helpers/worker-shop'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-001] Safety: NEVER use production ports!')
@@ -57,13 +56,12 @@ test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', 
   const priceTypeSelect = page.locator('select').first()
   await expect(priceTypeSelect).toBeVisible({ timeout: 5_000 })
   await priceTypeSelect.selectOption('fixed')
-  await page.waitForTimeout(300)
 
   // "Add pricing unit" Button klicken
   const addTierBtn = page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first()
   await expect(addTierBtn).toBeVisible({ timeout: 5_000 })
   await addTierBtn.click()
-  await page.waitForTimeout(400)
+  await expect.poll(() => page.locator('select').count(), { message: 'Preiseinheit-Select erscheint' }).toBeGreaterThanOrEqual(2)
 
   // Unit-Dropdown prüfen
   const allSelects = page.locator('select')

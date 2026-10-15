@@ -9,9 +9,8 @@
 
 import fs from 'fs'
 import path from 'path'
+import { BACKEND_URL } from '../env'
 
-const BACKEND_URL =
-  process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 // Backend rate limit: 10 logins per minute (sliding window, per IP).
 // With workers:3 and 10+ specs each doing 1-2 logins in beforeAll, bursts are common.
@@ -142,4 +141,43 @@ export function adminLogin(
     'admin_token',
     `adminLogin(${email})`
   )
+}
+
+/**
+ * Cookie-Header fuer Admin-API-Aufrufe (`admin_token`). Ohne Argument wird der Admin-Token des globalen
+ * Setups benutzt (`e2e/.test-state.json`, ein Login pro Lauf). F8950 T30: einzige Definition (vorher 7 Kopien).
+ */
+export function adminHeaders(token?: string | null): Record<string, string> {
+  const t = token ?? cachedStateAdminToken()
+  if (!t) throw new Error('adminHeaders: kein Admin-Token (weder uebergeben noch in e2e/.test-state.json)')
+  return { Cookie: `admin_token=${t}` }
+}
+
+export interface ApiFetchResult {
+  ok: boolean
+  status: number
+  /** Geparster JSON-Body; `{}` bei 204 oder leerem/ungueltigem Body. */
+  data: unknown
+}
+
+/**
+ * fetch gegen das Test-Backend. `urlPath` ist ein Pfad (`/api/v1/...`) oder eine absolute URL. Body (falls
+ * gesetzt) wird als JSON gesendet. F8950 T30: einzige Definition (vorher 9 Kopien).
+ */
+export async function apiFetch(
+  method: string,
+  urlPath: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<ApiFetchResult> {
+  const url = urlPath.startsWith('http') ? urlPath : `${BACKEND_URL}${urlPath}`
+  const res = await fetch(url, {
+    method,
+    headers: body !== undefined ? { 'Content-Type': 'application/json', ...headers } : headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(30_000),
+  })
+  let data: unknown = {}
+  try { if (res.status !== 204) data = await res.json() } catch { /* leerer Body */ }
+  return { ok: res.ok, status: res.status, data }
 }

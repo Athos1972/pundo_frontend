@@ -16,7 +16,7 @@
  *   - Admin-token missing → explicit skip with SETUP REQUIRED notice
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -24,6 +24,7 @@ import { specShop, type WorkerShop } from './_helpers/worker-shop'
 import { getAdminToken } from './_helpers/test-data'
 import { waitForPageHydrated } from './_helpers/hydration'
 import type { Page } from '@playwright/test'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
 // F8950 T22: statt networkidle / festem waitForTimeout nach dem Submit.
 /** Profilseite oeffnen: geladen, hydriert (Submit vor der Hydration waere ein nativer Form-Post) und URL-Feld da. */
@@ -41,8 +42,6 @@ async function bodyTextMatching(page: Page, re: RegExp, message: string, timeout
 
 // ─── Port Safety ─────────────────────────────────────────────────────────────
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? process.env.TEST_BACKEND_URL ?? 'http://localhost:8500'
 
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[social-link-moderation] Safety: NEVER run against production ports 3000/8000!')
@@ -115,13 +114,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     }
 
     // ── 3. Admin-Token prüfen ─────────────────────────────────────────────────
-    if (!ctx.adminToken) {
-      console.warn(
-        `\n⚠️  [social-link-moderation] SETUP REQUIRED: Kein admin_token in .test-state.json.\n` +
-        `   System-Admin-Tests (AC6) werden übersprungen.\n` +
-        `   Fix: global-setup neu ausführen — npx playwright test\n`
-      )
-    }
+    if (!ctx.adminToken) throw new Error('SETUP BROKEN: kein admin_token in .test-state.json (global-setup neu ausfuehren)')
   })
 
   test.afterAll(async () => {
@@ -358,128 +351,8 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
   // ─── AC6 — System-Admin CRUD ────────────────────────────────────────────────
 
-  test('AC6 — Social-link-rules page renders correctly in browser', async ({ page }) => {
-    if (!ctx.adminToken) {
-      test.skip(true, 'AC6: No admin credentials — set ADMIN_EMAIL and ADMIN_PASSWORD env vars')
-      return
-    }
-    await page.context().addCookies([
-      { name: 'admin_token', value: ctx.adminToken, url: FRONTEND_URL },
-    ])
-    await page.goto(`${FRONTEND_URL}/admin/social-link-rules`)
-    await page.waitForLoadState('domcontentloaded')
-
-    // Title visible (even with empty list due to missing backend endpoint)
-    const h1 = page.locator('h1')
-    expect(await h1.count()).toBeGreaterThan(0)
-
-    // Table or empty state visible
-    const table = page.locator('table, [class*="table"], [class*="no_items"]')
-    const emptyState = page.locator('text=empty, text=keine, text=no items, td')
-    const _hasContent = (await table.count()) > 0 || (await emptyState.count()) > 0
-
-    // At minimum the page renders without error
-    const pageUrl = page.url()
-    expect(pageUrl).not.toContain('error')
-    expect(pageUrl).not.toContain('404')
-
-    // Add button present
-    const addLink = page.locator('a[href*="social-link-rules/new"]')
-    expect(await addLink.count(), 'AC6: "Add rule" link must exist').toBeGreaterThan(0)
-  })
-
-  test('AC6 — AdminNav has Social-Link-Rules link', async ({ page }) => {
-    if (!ctx.adminToken) {
-      test.skip(true, 'AC6-nav: No admin credentials')
-      return
-    }
-    await page.context().addCookies([
-      { name: 'admin_token', value: ctx.adminToken, url: FRONTEND_URL },
-    ])
-    // /admin has no page.tsx — navigate to the dashboard which has the full nav
-    await page.goto(`${FRONTEND_URL}/admin/dashboard`)
-    await page.waitForLoadState('domcontentloaded')
-
-    const navLink = page.locator('nav a[href*="social-link-rules"], a[href*="social-link-rules"]').first()
-    expect(await navLink.count(), 'AC6: NavLink to /admin/social-link-rules must exist').toBeGreaterThan(0)
-  })
-
-  test('AC6 — New rule form at /admin/social-link-rules/new renders all fields', async ({ page }) => {
-    if (!ctx.adminToken) {
-      test.skip(true, 'AC6-form: No admin credentials')
-      return
-    }
-    await page.context().addCookies([
-      { name: 'admin_token', value: ctx.adminToken, url: FRONTEND_URL },
-    ])
-    await page.goto(`${FRONTEND_URL}/admin/social-link-rules/new`)
-    await page.waitForLoadState('domcontentloaded')
-
-    // Host input
-    const hostInput = page.locator('input[name="host"]')
-    expect(await hostInput.isVisible(), 'AC6: host input must be visible').toBe(true)
-
-    // Category select
-    const categorySelect = page.locator('select[name="category"]')
-    expect(await categorySelect.isVisible(), 'AC6: category select must be visible').toBe(true)
-
-    // Note textarea
-    const noteTextarea = page.locator('textarea[name="note"]')
-    expect(await noteTextarea.isVisible(), 'AC6: note textarea must be visible').toBe(true)
-
-    // Submit button
-    const submitBtn = page.locator('button[type="submit"]')
-    expect(await submitBtn.isVisible(), 'AC6: Submit button must be visible').toBe(true)
-  })
-
-  test('AC6 — Host validation: invalid host shows error inline', async ({ page }) => {
-    if (!ctx.adminToken) {
-      test.skip(true, 'AC6-validation: No admin credentials')
-      return
-    }
-    await page.context().addCookies([
-      { name: 'admin_token', value: ctx.adminToken, url: FRONTEND_URL },
-    ])
-    // Mock the POST to return 422 invalid host
-    await page.route('**/api/admin/social-link-rules', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({ detail: 'Invalid host format' }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
-
-    await page.goto(`${FRONTEND_URL}/admin/social-link-rules/new`)
-    await page.waitForLoadState('domcontentloaded')
-
-    // Enter invalid host (with scheme — should fail client-side validation)
-    const hostInput = page.locator('input[name="host"]')
-    await hostInput.fill('https://invalid.com/path')
-
-    const submitBtn = page.locator('button[type="submit"]')
-    await submitBtn.click()
-
-    const bodyText = await bodyTextMatching(
-      page, /valid host|invalid host|gültigen|ungültig/i, 'AC6: Invalid host should show inline error',
-    )
-    const hasValidationError =
-      bodyText.toLowerCase().includes('valid host') ||
-      bodyText.toLowerCase().includes('invalid host') ||
-      bodyText.toLowerCase().includes('gültigen') ||
-      bodyText.toLowerCase().includes('ungültig')
-
-    expect(hasValidationError, 'AC6: Invalid host should show inline error').toBe(true)
-  })
-
   test('AC6 — CRUD: create rule → verify in list → blocks shop-save → delete', async () => {
-    if (!ctx.adminToken) {
-      test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
-      return
-    }
+    if (!ctx.adminToken) throw new Error('SETUP BROKEN: adminToken fehlt (global-setup neu ausfuehren)')
     const testHost = `e2e-block-${UUID}.com`
     const createRes = await fetch(`${BACKEND_URL}/api/v1/admin/social-link-rules`, {
       method: 'POST',
@@ -667,10 +540,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   // ─── AC10 — Kein rückwirkendes Delete ──────────────────────────────────────
 
   test('AC10 — Existing link persists after blocklist expansion', async () => {
-    if (!ctx.adminToken) {
-      test.skip(true, '⚠️ SETUP REQUIRED: adminToken fehlt in .test-state.json — global-setup neu ausführen')
-      return
-    }
+    if (!ctx.adminToken) throw new Error('SETUP BROKEN: adminToken fehlt (global-setup neu ausfuehren)')
     const testHost = `e2e-existing-${UUID}.com`
 
     // Step 1: Save link (testHost not yet blocked) → must succeed

@@ -1,5 +1,13 @@
 /**
- * Shop-Admin Offers — Comprehensive E2E Test Suite (v2: two-step OfferForm)
+ * Shop-Admin Offers — Anlegen und Bearbeiten (Gruppen A, B und Regression; v2: two-step OfferForm)
+ *
+ * F8950 T32: Teil 1 von 4 des frueheren `shop-admin-offers.spec.ts` (1700 Zeilen, ein Worker). Die Teile laufen jetzt
+ * parallel in eigenen Workern, jeweils mit eigenem Worker-Shop:
+ *   shop-admin-offers.spec.ts                  A (Create), B (Edit), REGRESSION   <- diese Datei
+ *   shop-admin-offers-archive.spec.ts          C (Archive/Delete), D (Kunden-Sicht)
+ *   shop-admin-offers-cross-shop.spec.ts       XS, AR, SP, DT (Isolation, Staffelpreise, Datum)
+ *   shop-admin-offers-item-details.spec.ts     E (Item-Details, Filter, Dashboard)
+ * Gemeinsame Helfer: _helpers/offers-api.ts.
  *
  * OfferForm flow (new):
  *   Step 1 — Select item via ItemPickerModal (creates ShopListing)
@@ -9,48 +17,32 @@
  *   POST /api/v1/shop-owner/offers → { shop_listing_id, price_type, price_tiers, valid_from, valid_until, ... }
  *   NO: price (float), product_id — these fields no longer exist
  *
+ * F8950 T31: keine echten Prod-Items mehr (vorher avicentra 21476/21477). Die Spec legt Marker-Items im Worker-Shop an:
+ * ein Item fuer die API-Offers (mit Listing) und ein Item, das die UI im Item-Picker per Namen sucht.
+ *
  * Ports: Frontend 3500, Backend 8500, DB: pundo_test — NEVER 3000/8000
  */
 
-// B8950-012: Block 1 + Group E laufen im WORKER-Shop (Impersonation, kein Passwort-Login, kein geteilter
-// e2e-test-shop); der Cross-Shop-Block legt Shop B per Admin-API an (specShop) und löscht ihn per Admin-Delete.
-// Jede Gruppe räumt in afterAll ihre Offers/Listings weg (workerShop.cleanupSpecData). Echte Prod-Items
-// (avicentra …) werden nur im Worker-Shop gelistet; gelöscht wird dabei nur das Listing, nie das Item.
-import { test, expect, specShop, type WorkerShop } from './_helpers/worker-shop'
-import type { Page } from '@playwright/test'
-import { getAdminToken as adminApiLogin, e2eName } from './_helpers/test-data'
-import { openItemPickerModal, waitForPageHydrated } from './_helpers/hydration'
-
-// ─── Port safety ──────────────────────────────────────────────────────────────
-
-const FRONTEND_URL = process.env.FRONTEND_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? process.env.TEST_BACKEND_URL ?? 'http://localhost:8500'
-
-if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
-  throw new Error('[shop-admin-offers] Safety: NEVER run against production ports 3000/8000!')
-}
+import { test, expect, type WorkerShop, type CreatedItem } from './_helpers/worker-shop'
+import {
+  apiGet, apiPatch, apiCreateOffer, waitHydrated, selectItemViaModal, setPriceType, addPriceTierStep,
+} from './_helpers/offers-api'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
 // ─── Worker-Shop (B8950-012) ─────────────────────────────────────────────────
 
 let W: WorkerShop
-const ITEM_BUDGIE = 21476 // avicentra-avicentra-classic-menu-budgie-1kg (echtes Prod-Item, nur Listing im Worker-Shop)
-const ITEM_CANARY = 21477 // avicentra-avicentra-classic-menu-canary-1kg
-
-test.beforeAll(({ workerShop }) => { W = workerShop })
+let uiItem: CreatedItem
 
 // ─── Shared context ───────────────────────────────────────────────────────────
 
 interface OfferCtx {
-  /** shop_listing_id created in beforeAll for offer tests */
+  /** shop_listing_id created in beforeAll for the API offer tests */
   defaultShopListingId: number | null
   /** All offer IDs created during tests, for cleanup */
   createdOfferIds: number[]
-  /** Offer ID used for B1 edit title test (created by A1) */
+  /** Offer ID created by A1 */
   editOfferId: number | null
-  /** Offer ID used for C1/C2 archive/delete tests */
-  archiveOfferId: number | null
-  /** shop slug for customer-facing tests */
-  shopSlug: string | null
   /** Findings to document in report */
   findings: string[]
 }
@@ -59,193 +51,30 @@ const ctx: OfferCtx = {
   defaultShopListingId: null,
   createdOfferIds: [],
   editOfferId: null,
-  archiveOfferId: null,
-  shopSlug: null,
   findings: [],
-}
-
-// ─── API helpers ──────────────────────────────────────────────────────────────
-
-async function apiGet(urlPath: string, token: string) {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  return { status: res.status, data: res.status !== 204 ? await res.json() : {} }
-}
-
-async function apiPost(urlPath: string, body: unknown, token: string) {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(body),
-  })
-  return { status: res.status, data: res.status !== 204 ? await res.json() : {} }
-}
-
-async function apiPatch(urlPath: string, body: unknown, token: string) {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(body),
-  })
-  return { status: res.status, data: res.status !== 204 ? await res.json() : {} }
-}
-
-async function apiDelete(urlPath: string, token: string) {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  return { status: res.status }
 }
 
 async function getOwnerToken(): Promise<string> {
   return W.ownerToken
 }
 
-/** Create a ShopListing for the given item. Returns shop_listing_id, or null on failure (e.g. 422 if item_id not in catalog). */
-async function getOrCreateShopListing(token: string, itemId = 21476): Promise<number | null> {
-  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/shop-listings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ item_id: itemId }),
-  })
-  if (res.ok) {
-    const data = await res.json() as { id: number }
-    return data.id
-  }
-  if (res.status === 409) {
-    // Already exists — extract from body or list
-    const body = await res.json() as { id?: number; shop_listing_id?: number; detail?: { shop_listing_id?: number } }
-    return body.id ?? body.shop_listing_id ?? body.detail?.shop_listing_id ?? null
-  }
-  return null
-}
-
-/** Create a minimal offer via API with new schema. */
-async function apiCreateOffer(
-  token: string,
-  shopListingId: number,
-  overrides: Record<string, unknown> = {}
-): Promise<{ status: number; data: { id: number } }> {
-  return apiPost('/api/v1/shop-owner/offers', {
-    shop_listing_id: shopListingId,
-    price_type: 'on_request',
-    price_tiers: [],
-    valid_from: '2026-06-01',
-    valid_until: '2026-08-31',
-    ...overrides,
-  }, token) as Promise<{ status: number; data: { id: number } }>
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function waitHydrated(page: Page) {
-  await page.waitForLoadState('load')
-  await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 }).catch(() => {})
-}
-
-/**
- * UI helper: complete Step 1 of the OfferForm.
- * Clicks the border-dashed "Select item" button, types a search query,
- * waits for results and clicks the first one.
- */
-async function selectItemViaModal(page: Page, searchQuery: string) {
-  // Click the dashed "Select item" button in Step 1
-  await openItemPickerModal(page.locator('button.border-dashed, button[class*="border-dashed"]'))
-
-  // Wait for modal to appear
-  await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 })
-
-  // Type in the text search field (second input in the modal, after EAN)
-  const textInputs = page.getByRole('dialog').locator('input[type="text"]')
-  // Second input is the name search (first is EAN)
-  const searchInput = textInputs.nth(1)
-  // F8950 T22: statt waitForTimeout(500) auf die debounced Such-Antwort (300 ms Debounce) warten
-  const searchResponse = page.waitForResponse(
-    r => r.url().includes(`/api/shop-admin/items?q=${encodeURIComponent(searchQuery.trim())}`),
-  )
-  await searchInput.fill(searchQuery)
-  await searchResponse
-
-  // Click the first result button in the list
-  const resultButtons = page.getByRole('dialog').locator('ul li button')
-  await expect(resultButtons.first()).toBeVisible({ timeout: 8_000 })
-  await resultButtons.first().click()
-
-  // After click: ShopListing is created, step advances to 2
-  await page.waitForLoadState('load')
-}
-
-/** Select price type in Step 2. */
-async function setPriceType(page: Page, priceType: string) {
-  await page.locator('select').first().selectOption(priceType)
-}
-
-/** Add one fixed-price tier with given price.
- *
- * emptyTier() already includes 1 step — clicking "Add step" would create a
- * second step whose price stays empty and causes frontend validation to fail.
- * We only: add the tier, select unit 'piece', fill the first step's price.
- */
-async function addPriceTierStep(page: Page, price: string) {
-  // 1. Click "Add pricing unit" → tier with 1 step is created
-  const addTierBtn = page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i })
-  await expect(addTierBtn.first()).toBeVisible({ timeout: 5_000 })
-  await addTierBtn.first().click()
-
-  // 2. Select unit 'piece' from the tier's unit <select> (second select: first is price_type)
-  // F8950 T22: statt waitForTimeout(300) warten, bis der Tier gerendert ist (zweites <select> erscheint)
-  const selects = page.locator('select')
-  await expect.poll(() => selects.count(), { message: 'Preiseinheit-Select erscheint' }).toBeGreaterThanOrEqual(2)
-  // The unit select is the last select in the form (after price_type select)
-  await selects.last().selectOption('per_piece')
-
-  // 3. Fill the price input of the (only) step — inputMode="decimal"
-  const priceInputs = page.locator('input[inputmode="decimal"]')
-  await expect(priceInputs.first()).toBeVisible({ timeout: 5_000 })
-  await priceInputs.first().fill(price)
-}
-
 // ─── Setup / Teardown ─────────────────────────────────────────────────────────
 
-test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
+test.describe.serial('Shop-Admin Offers — Create + Edit (v2)', () => {
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ workerShop }) => {
     test.setTimeout(120_000)
+    W = workerShop
     const health = await fetch(`${BACKEND_URL}/api/v1/categories`)
     if (!health.ok) throw new Error(`Backend health check failed: ${health.status}`)
 
-    ctx.shopSlug = W.slug
-    const token = await getOwnerToken()
+    // Item + Listing fuer die API-Offers (A2-A4, B1-B4)
+    const defaultItem = await W.createItem('OFFERS', 'api-default', { listing: true })
+    ctx.defaultShopListingId = defaultItem.listingId ?? null
+    if (!ctx.defaultShopListingId) throw new Error('SETUP BROKEN: kein ShopListing fuer das Default-Item')
 
-    // Create a ShopListing for the default item (used by most tests).
-    const defaultItemId = ITEM_BUDGIE
-    ctx.defaultShopListingId = await getOrCreateShopListing(token, defaultItemId)
-    console.log(`[offers-spec] defaultShopListingId=${ctx.defaultShopListingId} (item_id=${defaultItemId})`)
-
-    if (!ctx.defaultShopListingId) {
-      console.warn(`[offers-spec] Could not create ShopListing for item_id=${defaultItemId} — most tests will fail`)
-      return
-    }
-
-    // Pre-create the offer for C1/C2 archive/delete tests.
-    // IMPORTANT: use a SEPARATE item/listing from defaultShopListingId. A1/A3 both POST to
-    // the default listing and the backend auto-archives the previous active offer for that
-    // listing. If we used the same listing here, the archive target would be silently archived
-    // by A1 before C1 gets to test it.
-    const archiveItemId = ITEM_CANARY
-    const archiveListingId = await getOrCreateShopListing(token, archiveItemId)
-    if (archiveListingId) {
-      const archiveSetup = await apiCreateOffer(token, archiveListingId, {
-        title: 'C-Setup Archive Target',
-      })
-      if (archiveSetup.status === 201) {
-        ctx.archiveOfferId = archiveSetup.data.id
-        ctx.createdOfferIds.push(ctx.archiveOfferId)
-        console.log(`[offers-spec] Pre-created archive target offer ID=${ctx.archiveOfferId} (listing=${archiveListingId})`)
-      }
-    }
+    // Item fuer die UI-Flows (A1, A5, A6, REGRESSION): der Picker findet es ueber den eindeutigen Marker-Namen
+    uiItem = await W.createItem('OFFERS', 'ui-picker')
   })
 
   test.afterAll(async () => {
@@ -266,7 +95,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     await waitHydrated(page)
 
     // Step 1: Select item via modal (search by item name)
-    await selectItemViaModal(page, 'budgie')
+    await selectItemViaModal(page, uiItem.name)
 
     // Now on Step 2
     await expect(page.locator('form')).toBeVisible({ timeout: 10_000 })
@@ -310,7 +139,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('A2 — No description, on_request price + dates, no title → 201 + visible', async ({ page: _page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     // Create via API using the default listing (title-optional case)
     const token = await getOwnerToken()
@@ -330,14 +159,14 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('A3 — on_request price_type → no price_tiers required, 201 OK', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     test.setTimeout(60_000)
     await page.goto(FRONTEND_URL + '/shop-admin/offers/new')
     await waitHydrated(page)
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'budgie')
+    await selectItemViaModal(page, uiItem.name)
 
     // Step 2: Use on_request (price_tiers not required — that's what we're testing)
     await setPriceType(page, 'on_request')
@@ -360,7 +189,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('A4 — Minimal: only shop_listing_id + on_request + dates (no title) → 201', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     const token = await getOwnerToken()
     const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId, {})
@@ -404,14 +233,14 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('A6 — Fixed price type with no tiers → validation error (tier required)', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     test.setTimeout(60_000)
     await page.goto(FRONTEND_URL + '/shop-admin/offers/new')
     await waitHydrated(page)
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'budgie')
+    await selectItemViaModal(page, uiItem.name)
 
     // Step 2: Choose fixed but add no tiers — validation should reject this
     await setPriceType(page, 'fixed')
@@ -432,7 +261,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   test('B1 — Edit title → "B1 Updated Title" visible in list after save', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     // Create a fresh offer to edit (ctx.editOfferId from A1 may have been superseded)
     const token = await getOwnerToken()
@@ -464,7 +293,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('B2 — Change price_type from on_request to free → updated in API', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     // Create an on_request offer, then edit it to free
     const token = await getOwnerToken()
@@ -492,7 +321,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('B3 — Add a fixed price tier to existing on_request offer → price_type=fixed', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     const token = await getOwnerToken()
     const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId, {
@@ -523,7 +352,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   test('B4 — PATCH price_type to on_request via API → price_tiers cleared', async () => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
+    if (!ctx.defaultShopListingId) { throw new Error('SETUP BROKEN: defaultShopListingId fehlt') }
 
     const token = await getOwnerToken()
     const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId, {
@@ -545,290 +374,6 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
   })
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // GROUP C — Archive + Delete
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  test('C1 — Archive active offer → offer moves to archived tab', async ({ page }) => {
-    if (!ctx.archiveOfferId) { test.skip(true, 'archiveOfferId not set (beforeAll failed)'); return }
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    // OfferList shows item name, not offer title. Item 21477 = "AVICENTRA CLASSIC MENU CANARY 1KG" (en).
-    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG')).toBeVisible()
-
-    // Find the specific offer row by item name AND archive button
-    const offerRow = page.locator('div').filter({
-      has: page.locator('p', { hasText: 'AVICENTRA CLASSIC MENU CANARY 1KG' }),
-    }).filter({
-      has: page.getByRole('button', { name: /archive|archivieren/i }),
-    }).last()
-
-    await offerRow.getByRole('button', { name: /archive|archivieren/i }).click()
-
-    // Confirmation step — wait for Cancel to appear inside this row
-    await offerRow.getByRole('button', { name: /cancel|abbrechen/i }).waitFor({ state: 'visible' })
-    await offerRow.getByRole('button', { name: /archive|archivieren/i }).click()
-
-    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG')).not.toBeVisible({ timeout: 10_000 })
-
-    // Verify via API
-    const token = await getOwnerToken()
-    const { data } = await apiGet('/api/v1/shop-owner/offers?archived=true', token)
-    const items = (data as { items: Array<{ id: number; archived: boolean }> }).items
-    const archived = items.find(o => o.id === ctx.archiveOfferId)
-    expect(archived?.archived, 'C1: offer not archived in API').toBe(true)
-  })
-
-  test('C2 — Delete archived offer → offer gone from API', async ({ page }) => {
-    if (!ctx.archiveOfferId) { test.skip(true, 'archiveOfferId not set'); return }
-
-    const token = await getOwnerToken()
-    // Ensure archived
-    await apiPatch(`/api/v1/shop-owner/offers/${ctx.archiveOfferId}`, { archived: true }, token)
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-    await page.getByRole('button', { name: /expired|abgelaufen/i }).click()
-    // F8950 T22: statt waitForTimeout(500) - Tab-Wechsel gerendert, sobald der archivierte Artikel in der Liste steht
-    await expect(page.getByText('AVICENTRA CLASSIC MENU CANARY 1KG').first()).toBeVisible()
-
-    // Use double-filter to find the specific row (innermost div with item name AND delete button)
-    // OfferList shows item name "AVICENTRA CLASSIC MENU CANARY 1KG" (item 21477), not the offer title
-    const archiveTargetRow = page.locator('div').filter({
-      has: page.locator('p', { hasText: 'AVICENTRA CLASSIC MENU CANARY 1KG' }),
-    }).filter({
-      has: page.getByRole('button', { name: /delete|löschen/i }),
-    }).last()
-
-    const hasDeleteInUI = await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).count() > 0
-
-    if (hasDeleteInUI) {
-      // F8950 T22: statt waitForTimeout(500) auf die DELETE-Antwort warten
-      const deleted = page.waitForResponse(r => r.request().method() === 'DELETE' && r.url().includes('/offers/'))
-      await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).click()
-      const cancelBtn = archiveTargetRow.getByRole('button', { name: /cancel|abbrechen/i })
-      if (await cancelBtn.count() > 0) {
-        await cancelBtn.waitFor({ state: 'visible' })
-        await archiveTargetRow.getByRole('button', { name: /delete|löschen/i }).click()
-      }
-      await deleted
-    } else {
-      ctx.findings.push('C2: No delete button in UI for archived offers — delete only possible via API')
-      const delRes = await apiDelete(`/api/v1/shop-owner/offers/${ctx.archiveOfferId}`, token)
-      expect([200, 204]).toContain(delRes.status)
-    }
-
-    // Verify gone from API
-    const { data } = await apiGet('/api/v1/shop-owner/offers?archived=true', token)
-    const items = (data as { items: Array<{ id: number }> }).items
-    expect(items.find(o => o.id === ctx.archiveOfferId), 'C2: deleted offer still in API').toBeUndefined()
-
-    ctx.createdOfferIds = ctx.createdOfferIds.filter(id => id !== ctx.archiveOfferId)
-    ctx.archiveOfferId = null
-  })
-
-  test('C3 — Delete active (non-archived) offer → 409 from backend', async ({ page: _page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
-
-    const token = await getOwnerToken()
-    const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId, {
-      title: 'C3 Active Cannot Delete',
-    })
-    expect(status, 'C3 setup failed').toBe(201)
-    const offerId = (data as { id: number }).id
-    ctx.createdOfferIds.push(offerId)
-
-    const delRes = await apiDelete(`/api/v1/shop-owner/offers/${offerId}`, token)
-
-    if (delRes.status === 409) {
-      console.log('C3: Backend correctly returned 409 for deleting active non-expired offer')
-    } else {
-      ctx.findings.push(
-        `C3: Expected 409 when deleting active offer, got ${delRes.status}. ` +
-        'Backend should enforce archive-before-delete.'
-      )
-    }
-    expect(delRes.status, 'C3: Expected 409').toBe(409)
-  })
-
-  // B5200-001: every price change archives the offer and creates a new one. A PATCH with the
-  // stale (archived) ID used to create a second active offer → IntegrityError → HTTP 500.
-  const B5200_TIERS = (price: string) => [
-    { unit: 'per_piece', steps: [{ min_quantity: 1, max_quantity: null, price, currency: 'EUR' }] },
-  ]
-
-  /** Create offer A, change its price via API → returns { oldId: A (archived), newId: B (active) }. */
-  async function createAndSupersede(token: string, title: string) {
-    const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId!, {
-      title,
-      price_type: 'fixed',
-      price_tiers: B5200_TIERS('4.50'),
-    })
-    expect(status, `${title} setup: create offer failed`).toBe(201)
-    const oldId = (data as { id: number }).id
-    ctx.createdOfferIds.push(oldId)
-    const first = await apiPatch(`/api/v1/shop-owner/offers/${oldId}`, { price_tiers: B5200_TIERS('5.00') }, token)
-    expect(first.status, `${title} setup: first price change failed`).toBe(200)
-    const newId = (first.data as { id: number }).id
-    ctx.createdOfferIds.push(newId)
-    expect(newId, `${title} setup: price change must create a new offer`).not.toBe(oldId)
-    return { oldId, newId }
-  }
-
-  test('C4 — PATCH on archived offer (stale ID) → 409 offer_archived + active_offer_id (B5200-001)', async () => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
-
-    const token = await getOwnerToken()
-    const { oldId, newId } = await createAndSupersede(token, 'C4 Stale Offer')
-
-    for (const body of [
-      { price_tiers: B5200_TIERS('6.00') }, // price change on archived offer (was 500)
-      { archived: false },                  // restore next to the active offer (was 500)
-      { title: 'C4 rewritten history' },    // metadata edit on price history (was silently 200)
-    ]) {
-      const res = await apiPatch(`/api/v1/shop-owner/offers/${oldId}`, body, token)
-      expect(res.status, `C4: ${JSON.stringify(body)} → expected 409`).toBe(409)
-      const detail = (res.data as { detail: { code: string; active_offer_id: number | null } }).detail
-      expect(detail.code).toBe('offer_archived')
-      expect(detail.active_offer_id).toBe(newId)
-    }
-
-    // Exactly one active offer for the listing, and it is B with the price from the first change
-    const { data } = await apiGet('/api/v1/shop-owner/offers?archived=false&limit=500', token)
-    const active = (data as { items: Array<{ id: number; shop_listing_id: number; price_tiers: Array<{ steps: Array<{ price: string }> }> }> })
-      .items.filter(o => o.shop_listing_id === ctx.defaultShopListingId)
-    expect(active.map(o => o.id), 'C4: exactly one active offer (B)').toEqual([newId])
-    expect(Number(active[0].price_tiers[0].steps[0].price)).toBe(5)
-
-    // Archived A stays untouched
-    const old = await apiGet(`/api/v1/shop-owner/offers/${oldId}`, token)
-    expect((old.data as { title: string; archived: boolean }).title).toBe('C4 Stale Offer')
-    expect((old.data as { archived: boolean }).archived).toBe(true)
-  })
-
-  test('C5 — Save edit form of archived offer → redirect to current offer + hint (B5200-001)', async ({ page }) => {
-    if (!ctx.defaultShopListingId) { test.skip(true, 'defaultShopListingId not available'); return }
-
-    const token = await getOwnerToken()
-    const { oldId, newId } = await createAndSupersede(token, 'C5 Stale Tab')
-
-    // Simulates the stale tab: edit page of the meanwhile archived offer A
-    await page.goto(FRONTEND_URL + `/shop-admin/offers/${oldId}/edit`)
-    await waitHydrated(page)
-
-    const patchResponse = page.waitForResponse(
-      r => r.url().includes(`/api/shop-admin/offers/${oldId}`) && r.request().method() === 'PATCH',
-    )
-    await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
-    expect((await patchResponse).status(), 'C5: PATCH on archived offer must be 409, not 500').toBe(409)
-
-    await expect(page).toHaveURL(new RegExp(`/shop-admin/offers/${newId}/edit$`), { timeout: 15_000 })
-    await expect(
-      page.getByText(/changed in the meantime|inzwischen geändert/i).first(),
-      'C5: hint offer_archived_conflict visible',
-    ).toBeVisible({ timeout: 10_000 })
-  })
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // GROUP D — Customer-Facing Visibility
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  test('D1 — Active offer visible on customer shop detail page /shops/[slug]', async ({ page }) => {
-    if (!ctx.shopSlug || !ctx.defaultShopListingId) {
-      test.skip(true, 'shopSlug or defaultShopListingId not available')
-      return
-    }
-
-    const token = await getOwnerToken()
-    // Marker-Titel (B8950-012): eindeutig pro Lauf; der Worker-Shop gehört dieser Spec allein
-    const d1Title = e2eName('OFFERS', 'D1 Customer Visible Offer')
-
-    // The customer-facing /shops/by-slug/{slug}/offers API only returns offers with an
-    // ACTIVE promo period (promo_valid_from <= today <= promo_valid_until) AND promo price set.
-    // We must provide promo_price_type + promo_price_tiers + promo_valid_from/until.
-    // The backend uses offer.title as item_name in the response when no item name is available.
-    const d1Res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: ctx.defaultShopListingId,
-      price_type: 'fixed',
-      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 15.00, currency: 'EUR' }] }],
-      promo_price_type: 'fixed',
-      promo_price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 9.99, currency: 'EUR' }] }],
-      promo_valid_from: TODAY_ISO,
-      promo_valid_until: daysFromToday(30),
-      title: d1Title,
-    }, token)
-    const { status, data } = d1Res as { status: number; data: { id: number } }
-    expect(status, 'D1 setup: create offer failed').toBe(201)
-    const offerId = (data as { id: number }).id
-    ctx.createdOfferIds.push(offerId)
-
-    // Wait until the public backend endpoint confirms the offer is visible.
-    // In parallel test runs the Next.js SSR page is served by the same backend — if we
-    // navigate before the offer is confirmed visible the page may render a cached empty list.
-    let offerVisible = false
-    for (let i = 0; i < 10; i++) {
-      const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${ctx.shopSlug}/offers`, {
-        headers: { 'Accept-Language': 'en' },
-      })
-      if (res.ok) {
-        const items = await res.json() as Array<{ id: number }>
-        if (items.some(o => o.id === offerId)) { offerVisible = true; break }
-      }
-      await new Promise(r => setTimeout(r, 200))
-    }
-    expect(offerVisible, 'D1: offer not visible in public backend API after 2s').toBe(true)
-
-    await page.goto(FRONTEND_URL + `/en/shops/${ctx.shopSlug}`)
-    // load: networkidle never settles on customer pages after RSC prefetch fix (2026-05-21)
-    await page.waitForLoadState('load')
-
-    const url = page.url()
-    expect(url).not.toContain('404')
-    expect(url).not.toContain('not-found')
-
-    // Wait explicitly for the offer title to appear (streamed RSC content)
-    // Genau EINE Karte (B8950-012: strenger als zuvor — zwei Karten wären ein Doppel-Render-Produktdefekt)
-    await expect(page.getByText(d1Title)).toHaveCount(1, { timeout: 10_000 })
-    await expect(page.getByText(d1Title)).toBeVisible()
-
-    const bodyText = await page.locator('body').innerText()
-    expect(
-      bodyText.includes(d1Title),
-      'D1: offer title not visible on customer shop page'
-    ).toBe(true)
-  })
-
-  test('D2 — Archived offer NOT visible on customer shop detail page', async ({ page }) => {
-    if (!ctx.shopSlug || !ctx.defaultShopListingId) {
-      test.skip(true, 'shopSlug or defaultShopListingId not available')
-      return
-    }
-
-    const token = await getOwnerToken()
-    // Use currently-valid dates so the offer WOULD appear on customer page if not archived
-    const { status, data } = await apiCreateOffer(token, ctx.defaultShopListingId, {
-      title: 'D2 Archived Should Be Hidden',
-      valid_from: '2025-01-01',
-      valid_until: '2026-12-31',
-    })
-    expect(status, 'D2 setup failed').toBe(201)
-    const offerId = (data as { id: number }).id
-    ctx.createdOfferIds.push(offerId)
-
-    // Archive it — public endpoint must not show it
-    await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
-
-    await page.goto(FRONTEND_URL + `/en/shops/${ctx.shopSlug}`)
-    // F8950 T22: statt networkidle - hydriert und Shop-Ueberschrift gerendert, dann den Text lesen
-    await waitForPageHydrated(page)
-    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
-
-    const bodyText = await page.locator('body').innerText()
-    expect(bodyText.includes('D2 Archived Should Be Hidden'), 'D2: Archived offer visible on customer page').toBe(false)
-  })
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // REGRESSION — OfferForm sends shop_listing_id (not product_id or price)
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -846,7 +391,7 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     })
 
     // Step 1: Select item
-    await selectItemViaModal(page, 'budgie')
+    await selectItemViaModal(page, uiItem.name)
 
     // Step 2: Fill minimal data (no promo dates — they live inside a collapsed accordion)
     await setPriceType(page, 'on_request')
@@ -883,812 +428,5 @@ test.describe.serial('Shop-Admin Offers — Full Matrix (v2)', () => {
     const items = (data as { items: Array<{ id: number; title: string }> }).items
     const created = items.find(o => o.title === 'REGRESSION Test Offer')
     if (created) ctx.createdOfferIds.push(created.id)
-  })
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MIGRATED FROM LEGACY: shop-admin-offer-product.spec.ts
-//
-// These scenarios were in a fixme block (shop_owner_products-based API).
-// Migrated to new ShopListing/UnifiedOffer API (shop_listing_id + price_tiers).
-//
-// Covers: Cross-Shop-Isolation, Preis-Edgecases, archivierte Angebote,
-//         Staffelpreise, Datum-Edgecases.
-//
-// Two-Shop setup: uses buildAdminShopPayload for Shop-B creation.
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { buildAdminShopPayload as _buildAdminShopPayload } from './_helpers/admin-shop-payload'
-
-// ─── Two-shop context ─────────────────────────────────────────────────────────
-
-interface TwoShopCtx {
-  /** Shop A — the "main" e2e shop owner from .test-state.json */
-  shopAToken: string | null
-  shopAListingId: number | null
-  shopASlug: string | null
-  /** Shop B — a second shop created via admin API for isolation tests */
-  shopBId: number | null
-  shopBSlug: string | null
-  shopBOwnerId: number | null
-  shopBOwnerToken: string | null
-  shopBListingId: number | null
-  adminToken: string | null
-  createdOfferIds: number[]
-}
-
-const twoShopCtx: TwoShopCtx = {
-  shopAToken: null,
-  shopAListingId: null,
-  shopASlug: null,
-  shopBId: null,
-  shopBSlug: null,
-  shopBOwnerId: null,
-  shopBOwnerToken: null,
-  shopBListingId: null,
-  adminToken: null,
-  createdOfferIds: [],
-}
-
-async function getAdminToken(): Promise<string> {
-  return adminApiLogin()
-}
-
-let shopB: WorkerShop | null = null
-
-// ─── Today helpers ────────────────────────────────────────────────────────────
-
-const TODAY_ISO = new Date().toISOString().slice(0, 10)
-
-function daysFromToday(n: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
-}
-
-// ─── Suite: Cross-Shop Isolation ──────────────────────────────────────────────
-
-test.describe.serial('MIGRATED — Cross-Shop Isolation + Preis-Edgecases + Staffelpreise', () => {
-
-  test.beforeAll(async () => {
-    test.setTimeout(120_000)
-    // ── Admin login ────────────────────────────────────────────────────────────
-    twoShopCtx.adminToken = await getAdminToken()
-
-    // ── Shop A: Worker-Shop (Impersonation) ───────────────────────────────────
-    twoShopCtx.shopAToken = await getOwnerToken()
-    twoShopCtx.shopASlug = W.slug
-    // ShopListing for Shop A — echtes Item 21476 (nur das Listing gehört dem Test)
-    twoShopCtx.shopAListingId = await getOrCreateShopListing(twoShopCtx.shopAToken, ITEM_BUDGIE)
-    if (!twoShopCtx.shopAListingId) {
-      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop A (item_id=${ITEM_BUDGIE})`)
-    }
-
-    // ── Shop B: eigener Spec-Shop per Admin-API (kein Register/Login → kein Rate-Limit) ──
-    shopB = await specShop('OFFERS-XS')
-    twoShopCtx.shopBId = shopB.id
-    twoShopCtx.shopBSlug = shopB.slug
-    twoShopCtx.shopBOwnerToken = shopB.ownerToken
-
-    // ShopListing for Shop B — dasselbe echte Item
-    twoShopCtx.shopBListingId = await getOrCreateShopListing(twoShopCtx.shopBOwnerToken, ITEM_BUDGIE)
-    if (!twoShopCtx.shopBListingId) {
-      throw new Error(`SETUP BROKEN: Could not create ShopListing for Shop B (item_id=${ITEM_BUDGIE})`)
-    }
-  })
-
-  test.afterAll(async () => {
-    // Shop B: Admin-Shop-Delete kaskadiert Owner/Listing/Offers (das echte Item bleibt)
-    await shopB?.destroy()
-    // Shop A (Worker-Shop): Offers + Listings der Gruppe entfernen
-    await W.cleanupSpecData()
-  })
-
-  // ── Cross-Shop Isolation ───────────────────────────────────────────────────
-
-  test('XS1 — POST offer with ShopListing from OTHER shop → 403 or 422 (isolation enforced)', async () => {
-    // Shop A owner tries to use Shop B's shop_listing_id — must be rejected
-    const shopAToken = twoShopCtx.shopAToken!
-    const shopBListingId = twoShopCtx.shopBListingId!
-
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: shopBListingId,
-      price_type: 'on_request',
-      price_tiers: [],
-      valid_from: TODAY_ISO,
-      valid_until: daysFromToday(30),
-      title: 'XS1 Cross-shop injection attempt',
-    }, shopAToken)
-
-    // Backend must reject this — either 403 (forbidden) or 422 (validation)
-    expect([403, 422], `XS1: cross-shop shop_listing_id must be rejected (got ${res.status})`).toContain(res.status)
-    console.log(`[XS1] Backend rejected cross-shop attempt with: ${res.status}`)
-  })
-
-  test('XS2 — Shop B offer NOT visible on Shop A customer page', async ({ page }) => {
-    if (!twoShopCtx.shopASlug || !twoShopCtx.shopBListingId || !twoShopCtx.shopBOwnerToken) {
-      throw new Error('PREREQUISITE BROKEN: shopASlug or shopB context missing')
-    }
-
-    // Create an active offer for Shop B
-    const offerRes = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: twoShopCtx.shopBListingId,
-      price_type: 'on_request',
-      price_tiers: [],
-      valid_from: '2025-01-01',
-      valid_until: '2026-12-31',
-      title: 'XS2 Shop-B Offer Must Not Appear on Shop-A Page',
-    }, twoShopCtx.shopBOwnerToken)
-    expect(offerRes.status, 'XS2 setup: create Shop-B offer').toBe(201)
-
-    // Navigate to Shop A page — must NOT show Shop B's offer
-    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('load')
-
-    const body = await page.locator('body').innerText()
-    expect(
-      body.includes('XS2 Shop-B Offer Must Not Appear on Shop-A Page'),
-      'XS2: Shop-B offer must NOT appear on Shop-A customer page'
-    ).toBe(false)
-  })
-
-  // ── Archivierte Angebote ───────────────────────────────────────────────────
-
-  test('AR1 — Archived offer is NOT visible on customer shop page', async ({ page }) => {
-    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
-      throw new Error('PREREQUISITE BROKEN: shopA context missing')
-    }
-
-    const token = twoShopCtx.shopAToken
-
-    // Create an active offer
-    const offerRes = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: twoShopCtx.shopAListingId,
-      price_type: 'free',
-      price_tiers: [],
-      valid_from: '2025-01-01',
-      valid_until: '2026-12-31',
-      title: 'AR1 Archived Must Be Hidden From Customer',
-    }, token)
-    expect(offerRes.status, 'AR1 setup: create offer').toBe(201)
-    const offerId = (offerRes.data as { id: number }).id
-    twoShopCtx.createdOfferIds.push(offerId)
-
-    // Archive it
-    await apiPatch(`/api/v1/shop-owner/offers/${offerId}`, { archived: true }, token)
-
-    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('load')
-
-    const body = await page.locator('body').innerText()
-    expect(
-      body.includes('AR1 Archived Must Be Hidden From Customer'),
-      'AR1: archived offer must NOT be visible on customer shop page'
-    ).toBe(false)
-  })
-
-  // ── Staffelpreise (price_tiers) ────────────────────────────────────────────
-
-  test('SP1 — Offer with fixed price tier (per_piece, 1 step) → 201', async () => {
-    const token = twoShopCtx.shopAToken!
-    const listingId = twoShopCtx.shopAListingId!
-
-    // PriceTierCreate schema: { unit, steps: [{ min_quantity, price, currency }] }
-    // NOT: { unit, min_qty, price } — that is the legacy flat format
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: listingId,
-      price_type: 'fixed',
-      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 49.99, currency: 'EUR' }] }],
-      valid_from: TODAY_ISO,
-      valid_until: daysFromToday(30),
-      title: 'SP1 Single Price Tier',
-    }, token)
-    expect(res.status, 'SP1: offer with 1 price tier must return 201').toBe(201)
-    const offer = res.data as { id: number; price_tiers?: unknown[] }
-    twoShopCtx.createdOfferIds.push(offer.id)
-    if ((offer.price_tiers ?? []).length > 0) {
-      expect(offer.price_tiers!.length, 'SP1: 1 price tier must be stored').toBe(1)
-    }
-  })
-
-  test('SP2 — Offer with multiple price tier steps → 201', async () => {
-    const token = twoShopCtx.shopAToken!
-    const listingId = twoShopCtx.shopAListingId!
-
-    // SP2: one tier with 3 steps (graduated pricing via steps array)
-    // PriceTierCreate schema: { unit, steps: [{ min_quantity, price, currency }] }
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: listingId,
-      price_type: 'fixed',
-      price_tiers: [
-        {
-          unit: 'per_m2',
-          steps: [
-            { min_quantity: 1, price: 15.00, currency: 'EUR' },
-            { min_quantity: 11, price: 12.00, currency: 'EUR' },
-            { min_quantity: 51, price: 10.00, currency: 'EUR' },
-          ],
-        },
-      ],
-      valid_from: TODAY_ISO,
-      valid_until: daysFromToday(30),
-      title: 'SP2 Three Tier Steps (per_m2)',
-    }, token)
-    expect(res.status, 'SP2: offer with 3 price tier steps must return 201').toBe(201)
-    const offer = res.data as { id: number; price_tiers?: Array<{ steps?: unknown[] }> }
-    twoShopCtx.createdOfferIds.push(offer.id)
-    // The response wraps steps inside the tier — check the tier exists
-    if ((offer.price_tiers ?? []).length > 0) {
-      const tier = offer.price_tiers![0]
-      const stepCount = (tier.steps ?? []).length
-      if (stepCount > 0) {
-        expect(stepCount, 'SP2: all 3 tier steps must be stored').toBe(3)
-      }
-    }
-  })
-
-  test('SP3 — Offer with on_request price_type: no price_tiers required → 201', async () => {
-    const token = twoShopCtx.shopAToken!
-    const listingId = twoShopCtx.shopAListingId!
-
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: listingId,
-      price_type: 'on_request',
-      price_tiers: [],
-      title: 'SP3 On Request No Tiers',
-    }, token)
-    expect(res.status, 'SP3: on_request offer without dates must return 201').toBe(201)
-    const offer = res.data as { id: number }
-    twoShopCtx.createdOfferIds.push(offer.id)
-  })
-
-  test('SP4 — Offer price_tiers visible on customer shop page', async ({ page }) => {
-    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
-      throw new Error('PREREQUISITE BROKEN: shopA context missing')
-    }
-
-    const token = twoShopCtx.shopAToken
-    const listingId = twoShopCtx.shopAListingId
-
-    // Create an offer with both standard price_tiers AND promo pricing — only offers with
-    // an active promo period (promo_valid_from..promo_valid_until) are returned by the
-    // customer-facing /shops/by-slug/{slug}/offers endpoint.
-    // The backend uses the offer title as item_name in the customer API response.
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: listingId,
-      price_type: 'fixed',
-      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 29.99, currency: 'EUR' }] }],
-      promo_price_type: 'fixed',
-      promo_price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 19.99, currency: 'EUR' }] }],
-      promo_valid_from: TODAY_ISO,
-      promo_valid_until: daysFromToday(30),
-      title: 'SP4 Customer Visible Price Tier Offer',
-    }, token)
-    expect(res.status, 'SP4 setup: create offer with price tier').toBe(201)
-    const offerId = (res.data as { id: number }).id
-    twoShopCtx.createdOfferIds.push(offerId)
-
-    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('load')
-
-    const url = page.url()
-    expect(url, 'SP4: shop page must not 404').not.toContain('not-found')
-    expect(url, 'SP4: shop page must not 404').not.toContain('404')
-
-    // The backend returns offer.title as item_name in the customer API response.
-    // toContainText() retries until the streamed RSC content settles.
-    await expect(page.locator('body')).toContainText('SP4 Customer Visible Price Tier Offer', { timeout: 8000 })
-  })
-
-  // ── Datum-Edgecases ────────────────────────────────────────────────────────
-
-  test('DT1 — Offer without valid_from and valid_until (timeless) → 201', async () => {
-    const token = twoShopCtx.shopAToken!
-    const listingId = twoShopCtx.shopAListingId!
-
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: listingId,
-      price_type: 'on_request',
-      price_tiers: [],
-      title: 'DT1 Timeless Offer',
-      // NO valid_from, NO valid_until
-    }, token)
-    expect(res.status, 'DT1: offer without dates must return 201 (both optional)').toBe(201)
-    const offer = res.data as { id: number; promo_valid_from: unknown; promo_valid_until: unknown }
-    twoShopCtx.createdOfferIds.push(offer.id)
-    expect(offer.promo_valid_from, 'DT1: promo_valid_from must be null in response').toBeNull()
-    expect(offer.promo_valid_until, 'DT1: promo_valid_until must be null in response').toBeNull()
-  })
-
-  test('DT2 — Expired offer (valid_until in past) NOT shown on customer shop page', async ({ page }) => {
-    if (!twoShopCtx.shopASlug || !twoShopCtx.shopAToken || !twoShopCtx.shopAListingId) {
-      throw new Error('PREREQUISITE BROKEN: shopA context missing')
-    }
-
-    const token = twoShopCtx.shopAToken
-
-    const res = await apiPost('/api/v1/shop-owner/offers', {
-      shop_listing_id: twoShopCtx.shopAListingId,
-      price_type: 'free',
-      price_tiers: [],
-      valid_from: '2026-01-01',
-      valid_until: '2026-03-31',  // expired (past date)
-      title: 'DT2 Expired Offer Must Not Show',
-    }, token)
-    expect(res.status, 'DT2 setup: create expired offer').toBe(201)
-    const offerId = (res.data as { id: number }).id
-    twoShopCtx.createdOfferIds.push(offerId)
-
-    await page.goto(FRONTEND_URL + `/en/shops/${twoShopCtx.shopASlug}`)
-    await page.waitForLoadState('load')
-
-    const body = await page.locator('body').innerText()
-    expect(
-      body.includes('DT2 Expired Offer Must Not Show'),
-      'DT2: expired offer must NOT appear on customer shop page'
-    ).toBe(false)
-  })
-})
-
-// =============================================================================
-// GROUP E — Item-Details, Filter & Dashboard-Aufräumen
-//
-// Spec: 2026-05-19-offer-list-item-details
-// ACs:  AC-1 (Dashboard), AC-2–4 (Item-Name), AC-5–6 (Kategorie-Chip),
-//       AC-9–10 (Thumbnail), AC-11–15 (Textsuche), AC-18–19 (Edit H1+Header),
-//       AC-20 (RTL), AC-24 (nav_products entfernt)
-//
-// Backend-Status-Hinweis:
-//   Tests E2a/E3a/E4a/E6a erwarten item-Embed in GET /offers — falls das Backend
-//   den Embed noch nicht liefert, skipped der Test (SKIP, kein FAIL).
-//   E1, E5, E6b (Fallback), E7 laufen rein frontend-seitig sofort.
-// =============================================================================
-
-test.describe.serial('Group E — Item-Details, Filter & Dashboard', () => {
-
-  // Shared token für API-Calls in Gruppe E
-  let eOwnerToken: string | null = null
-  let eOfferId: number | null = null
-  const eCreatedOfferIds: number[] = []
-  const eCreatedListingIds: number[] = []
-  const eCreatedItemIds: number[] = []
-
-  /**
-   * Holt eine verfügbare category_id aus dem Backend. F8950 T16/AK5: zufällig aus den ersten 50 statt immer die erste -
-   * der Fuzzy-409 des Backends vergleicht Item-Namen innerhalb einer Kategorie; zwei parallele Läufe (--repeat-each,
-   * mehrere Worker) mit demselben Namensmuster in derselben Kategorie liefen sonst in 409 und skippten Group E.
-   */
-  async function getFirstCategoryId(): Promise<number | null> {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/categories?limit=50`)
-      if (!res.ok) return null
-      const data = await res.json() as { items?: Array<{ id: number }> }
-      const items = data.items ?? []
-      return items.length ? items[Math.floor(Math.random() * items.length)].id : null
-    } catch { return null }
-  }
-
-  /** Erstellt ein minimales Item via shop-owner API. Bei 409 fuzzy-match: vorhandenes Item wiederverwenden. */
-  async function createTestItem(token: string, categoryId: number): Promise<number | null> {
-    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/items`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        item_type: 'product',
-        name_de: e2eName('OFFERS', 'GroupE-Testartikel'),
-        category_id: categoryId,
-      }),
-    })
-    if (res.status === 201) {
-      const data = await res.json() as { id: number }
-      return data.id
-    }
-    // Kein Wiederverwenden fremder Items bei 409 (B8950-012): der Marker-Name ist eindeutig.
-    console.warn(`[Group E] createTestItem failed: ${res.status}`)
-    return null
-  }
-
-  test.beforeAll(async () => {
-    test.setTimeout(60_000)
-    // Verify backend reachable
-    const health = await fetch(`${BACKEND_URL}/api/v1/categories`)
-    if (!health.ok) throw new Error(`[Group E] Backend health check failed: ${health.status}`)
-
-    eOwnerToken = W.ownerToken
-
-    if (eOwnerToken) {
-      // 1. Finde eine gültige category_id dynamisch (statt hardcoded item_id=1)
-      const categoryId = await getFirstCategoryId()
-      if (!categoryId) {
-        console.warn('[Group E] Keine Kategorie gefunden — Offer-abhängige Tests werden übersprungen')
-      } else {
-        // 2. Erstelle ein Item
-        const itemId = await createTestItem(eOwnerToken, categoryId)
-        if (itemId) {
-          eCreatedItemIds.push(itemId)
-          W.tracker.item(itemId)
-          // 3. Erstelle ein ShopListing für dieses Item
-          const listingId = await getOrCreateShopListing(eOwnerToken, itemId)
-          if (listingId) {
-            eCreatedListingIds.push(listingId)
-            // 4. Erstelle ein Offer
-            const r = await apiCreateOffer(eOwnerToken, listingId, {})
-            if (r.status === 201) {
-              eOfferId = r.data.id
-              eCreatedOfferIds.push(eOfferId)
-              console.log(`[Group E] Setup: item=${itemId}, listing=${listingId}, offer=${eOfferId}`)
-            }
-          }
-        }
-      }
-    }
-  })
-
-  test.afterAll(async () => {
-    await W.cleanupSpecData()
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E1 — Dashboard: keine Produkte-Kachel (AC-1)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E1 — Dashboard zeigt keine Produkte-Kachel (AC-1)', async ({ page }) => {
-    await page.goto(FRONTEND_URL + '/shop-admin/dashboard')
-    await waitHydrated(page)
-
-    const bodyText = await page.locator('body').innerText()
-
-    // Die Produkte-Kachel muss fehlen
-    // Wir suchen nach "Products" / "Produkte" als isoliertes Nav-Label
-    // (Ein Link /shop-admin/products darf nicht existieren)
-    const productLinks = await page.locator('a[href="/shop-admin/products"]').count()
-    expect(productLinks, 'E1: /shop-admin/products Link darf nicht im Dashboard sein').toBe(0)
-
-    // Die übrigen Quick-Links müssen noch da sein (im Dashboard-Grid, nicht in der Nav)
-    const main = page.locator('main')
-    await expect(main.locator('a[href="/shop-admin/offers"]')).toBeVisible()
-    await expect(main.locator('a[href="/shop-admin/profile"]')).toBeVisible()
-    await expect(main.locator('a[href="/shop-admin/hours"]')).toBeVisible()
-
-    console.log('[E1] Dashboard body excerpt (first 300 chars):', bodyText.slice(0, 300))
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E5 — Textsuche in OfferList (AC-11–15) — läuft sofort (client-seitig)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E5a — Suchfeld ist sichtbar und hat Placeholder (AC-11)', async ({ page }) => {
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    const searchInput = page.locator('[data-testid="offer-search"]')
-    await expect(searchInput).toBeVisible({ timeout: 8_000 })
-
-    const placeholder = await searchInput.getAttribute('placeholder')
-    expect(placeholder, 'E5a: Suchfeld hat keinen Placeholder').toBeTruthy()
-    expect(placeholder!.length, 'E5a: Placeholder ist leer').toBeGreaterThan(0)
-  })
-
-  test('E5b — Suche filtert sichtbare Items (AC-12)', async ({ page }) => {
-    if (!eOwnerToken) { test.skip(true, 'Login nicht möglich'); return }
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    const searchInput = page.locator('[data-testid="offer-search"]')
-    await expect(searchInput).toBeVisible({ timeout: 8_000 })
-
-    // Count items before search
-    const allRows = page.locator('div.bg-white.rounded-xl.border > div')
-    const totalBefore = await allRows.count()
-
-    if (totalBefore === 0) {
-      test.skip(true, 'Keine Angebote im aktiven Tab — Suche nicht testbar')
-      return
-    }
-
-    // pressSequentially triggers React onChange per keystroke (more reliable than fill() for
-    // controlled inputs under React 19 with CDP-based event dispatch)
-    await searchInput.pressSequentially('zzz-no-match-xyzxyzxyz', { delay: 20 })
-    await expect(searchInput).toHaveValue('zzz-no-match-xyzxyzxyz', { timeout: 3_000 })
-
-    // Language-independent check: the offer list container must disappear and the no-results
-    // paragraph (text-gray-400) must appear. Avoids regex that only covered EN/DE (B8950-002).
-    await expect(
-      page.locator('div.bg-white.rounded-xl.border'),
-      'E5b: Offer-Tabelle noch sichtbar — Filter hat nicht angeschlagen'
-    ).toHaveCount(0, { timeout: 8_000 })
-    await expect(
-      page.locator('p.text-gray-400.text-sm.text-center'),
-      'E5b: No-results-Paragraph fehlt'
-    ).toBeVisible({ timeout: 3_000 })
-  })
-
-  test('E5c — Suchfeld leeren zeigt alle Items wieder (AC-13)', async ({ page }) => {
-    if (!eOwnerToken) { test.skip(true, 'Login nicht möglich'); return }
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    const searchInput = page.locator('[data-testid="offer-search"]')
-    await expect(searchInput).toBeVisible({ timeout: 8_000 })
-
-    // Fill search with no-match term
-    await searchInput.fill('zzz-no-match')
-    // F8950 T22: statt waitForTimeout(300) - Filter ist State-getrieben, die Leer-Meldung erscheint
-    await expect(page.locator('p.text-gray-400')).toBeVisible()
-
-    // Clear search
-    await searchInput.fill('')
-
-    // After clearing: no-results message should NOT be visible (unless list is truly empty)
-    const noResultsFiltered = page.locator('p', { hasText: /no offers match the filter|keine angebote entsprechen dem filter/i })
-    await expect(noResultsFiltered).toHaveCount(0)
-    const hasFilterMsg = await noResultsFiltered.count() > 0
-    expect(hasFilterMsg, 'E5c: "no results filtered" Meldung noch sichtbar nach Leeren des Suchfelds').toBe(false)
-  })
-
-  test('E5d — Kein Crash bei leerem Suchfeld-Ergebnis: Meldung zeigen (AC-15)', async ({ page }) => {
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    const searchInput = page.locator('[data-testid="offer-search"]')
-    await expect(searchInput).toBeVisible({ timeout: 8_000 })
-
-    // Force a no-match
-    await searchInput.fill('zzz-absolutely-no-match-xyzxyz')
-    await expect(page.locator('p.text-gray-400')).toBeVisible()
-
-    // Page must not crash (no error boundary, no blank page)
-    await expect(page.locator('body')).toBeVisible()
-
-    // Either rows are gone or "no results" message (either tr.no_results or tr.offer_no_results_filtered)
-    const rowContainer = page.locator('div.bg-white.rounded-xl.border.divide-y')
-    const containerExists = await rowContainer.count() > 0
-
-    if (!containerExists) {
-      // No container means no rows — check for empty-state message
-      const emptyMsg = page.locator('p.text-gray-400')
-      await expect(emptyMsg).toBeVisible({ timeout: 3_000 })
-    }
-    // In any case: no JS error thrown (page still functional)
-    const title = await page.title()
-    expect(title.length, 'E5d: Page hat keinen Titel mehr — möglicher Crash').toBeGreaterThan(0)
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E4b — Thumbnail Fallback-SVG (AC-10) — läuft ohne Backend-Embed
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E4b — Fallback-SVG sichtbar wenn kein Foto vorhanden (AC-10)', async ({ page }) => {
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    // Page must render without crash regardless of offer count
-    await expect(page.locator('body')).toBeVisible()
-
-    // The thumbnail placeholder is a div.shrink-0.w-12.h-12 containing an SVG with aria-hidden
-    // It appears when offer.item?.photos[0] is null/undefined
-    const placeholders = page.locator('div.shrink-0.w-12.h-12 svg[aria-hidden="true"]')
-    const count = await placeholders.count()
-
-    // We can't guarantee ALL offers have no photo — just ensure the component renders without crash
-    // Either: at least one placeholder exists OR at least one <img> thumbnail exists
-    const thumbnails = page.locator('div.shrink-0.w-12.h-12 img')
-    const imgCount = await thumbnails.count()
-
-    console.log(`[E4b] SVG placeholders: ${count}, img thumbnails: ${imgCount}`)
-
-    if (count + imgCount === 0) {
-      // No offer rows in the active tab — the component renders the empty state correctly
-      // Verify the empty-state message is shown instead (no crash, no blank page)
-      const emptyMsg = page.locator('p.text-gray-400.text-sm.py-8')
-      await expect(emptyMsg).toBeVisible()
-      test.skip(true, 'E4b: Keine Angebote im aktiven Tab — Thumbnail-Struktur nicht prüfbar, aber kein Crash')
-      return
-    }
-
-    expect(
-      count + imgCount,
-      'E4b: Thumbnail-Slots gefunden, aber keiner ist sichtbar'
-    ).toBeGreaterThan(0)
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E2a — Item-Namen in OfferList (AC-2) — benötigt item-Embed
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E2a — Offer-Liste zeigt Item-Name aus item.names (AC-2)', async ({ page }) => {
-    if (!eOwnerToken) { test.skip(true, 'Login nicht möglich'); return }
-
-    // Check whether backend delivers item-embed
-    const token = eOwnerToken
-    const { data } = await apiGet('/api/v1/shop-owner/offers', token)
-    const offers = (data as { items: Array<{ id: number; item?: { names?: Record<string, string> } }> }).items
-    const hasItemEmbed = offers.some(o => o.item?.names && Object.keys(o.item.names).length > 0)
-
-    if (!hasItemEmbed) {
-      test.skip(true, 'Backend liefert noch kein item-Embed — AC-2 nach Backend-Deployment testen')
-      return
-    }
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    // At least one offer row must exist
-    const offerRows = page.locator('div.bg-white.rounded-xl.border.divide-y > div')
-    const rowCount = await offerRows.count()
-    expect(rowCount, 'E2a: Keine Offer-Zeilen gefunden').toBeGreaterThan(0)
-
-    // The item name is rendered as a <p class="...font-medium..."> inside each row
-    const nameCell = offerRows.first().locator('p.font-medium, p[class*="font-medium"]')
-    await expect(nameCell).toBeVisible({ timeout: 5_000 })
-    const nameText = await nameCell.textContent()
-    expect(nameText, 'E2a: Item-Name ist leer').toBeTruthy()
-    // Must NOT be "Offer #<id>" pattern when item-embed is present
-    expect(nameText, 'E2a: Item-Name zeigt immer noch Offer #id Fallback obwohl item vorhanden').not.toMatch(/^Offer #\d+$/)
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E3a — Kategorie-Chip (AC-5–6)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E3a — Kategorie-Chip sichtbar wenn category_name vorhanden (AC-5)', async ({ page }) => {
-    if (!eOwnerToken) { test.skip(true, 'Login nicht möglich'); return }
-
-    const token = eOwnerToken
-    const { data } = await apiGet('/api/v1/shop-owner/offers', token)
-    const offers = (data as { items: Array<{ item?: { category_name?: string | null } }> }).items
-    const hasCategoryName = offers.some(o => o.item?.category_name)
-
-    if (!hasCategoryName) {
-      test.skip(true, 'Backend liefert kein category_name im item-Embed — AC-5 nach Deployment testen')
-      return
-    }
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    // Category chip: span with bg-blue-50 text-blue-600 classes
-    const categoryChips = page.locator('span.bg-blue-50.text-blue-600, span[class*="bg-blue-50"][class*="text-blue-600"]')
-    const chipCount = await categoryChips.count()
-    expect(chipCount, 'E3a: Kein Kategorie-Chip sichtbar obwohl category_name im Backend').toBeGreaterThan(0)
-
-    const chipText = await categoryChips.first().textContent()
-    expect(chipText?.trim().length, 'E3a: Kategorie-Chip ist leer').toBeGreaterThan(0)
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E6 — Edit-Page H1 und Item-Header-Block (AC-18–19)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E6a — Edit-Page H1 enthält Item-Name (AC-18) — bei item-Embed', async ({ page }) => {
-    if (!eOfferId || !eOwnerToken) { test.skip(true, 'eOfferId nicht verfügbar'); return }
-
-    // Check backend delivers item-embed for this offer
-    const { data } = await apiGet(`/api/v1/shop-owner/offers/${eOfferId}`, eOwnerToken)
-    const offerData = data as { id: number; item?: { names?: Record<string, string> } }
-    const hasItemEmbed = offerData.item?.names && Object.keys(offerData.item.names).length > 0
-
-    if (!hasItemEmbed) {
-      test.skip(true, 'Backend liefert noch kein item-Embed für einzelnen Offer — AC-18 nach Deployment testen')
-      return
-    }
-
-    await page.goto(FRONTEND_URL + `/shop-admin/offers/${eOfferId}/edit`)
-    await waitHydrated(page)
-
-    const h1 = page.locator('h1')
-    await expect(h1).toBeVisible({ timeout: 8_000 })
-    const h1Text = await h1.textContent()
-    expect(h1Text, 'E6a: H1 ist leer').toBeTruthy()
-    // H1 must NOT be just "Bearbeiten — #<id>" when item has names
-    expect(h1Text, 'E6a: H1 zeigt noch Fallback "#id" obwohl item-Embed vorhanden').not.toMatch(/—\s*#\d+$/)
-  })
-
-  test('E6b — Edit-Page H1 zeigt Fallback #id wenn kein item-Embed (AC-18 Fallback)', async ({ page }) => {
-    if (!eOfferId) { test.skip(true, 'eOfferId nicht verfügbar'); return }
-
-    await page.goto(FRONTEND_URL + `/shop-admin/offers/${eOfferId}/edit`)
-    await waitHydrated(page)
-
-    // Page must not crash in any case
-    await expect(page.locator('body')).toBeVisible()
-    const h1 = page.locator('h1')
-    await expect(h1).toBeVisible({ timeout: 8_000 })
-
-    const h1Text = await h1.textContent()
-    expect(h1Text, 'E6b: H1 fehlt komplett auf Edit-Page').toBeTruthy()
-    // H1 should contain either item name or fallback pattern — both are valid
-    const hasContent = h1Text!.trim().length > 0
-    expect(hasContent, 'E6b: H1 ist leer / unsichtbar').toBe(true)
-    console.log(`[E6b] H1 text: "${h1Text}"`)
-  })
-
-  test('E6c — Edit-Page zeigt Item-Header-Block wenn item vorhanden (AC-19)', async ({ page }) => {
-    if (!eOfferId || !eOwnerToken) { test.skip(true, 'eOfferId nicht verfügbar'); return }
-
-    // Check backend
-    const { data } = await apiGet(`/api/v1/shop-owner/offers/${eOfferId}`, eOwnerToken)
-    const offerData = data as { item?: unknown }
-    if (!offerData.item) {
-      test.skip(true, 'Backend liefert noch kein item-Embed — AC-19 nach Deployment testen')
-      return
-    }
-
-    await page.goto(FRONTEND_URL + `/shop-admin/offers/${eOfferId}/edit`)
-    await waitHydrated(page)
-
-    // OfferItemHeader renders a div with bg-gray-50 rounded-xl border border-gray-200 p-4
-    const itemHeader = page.locator('div.bg-gray-50.rounded-xl.border.border-gray-200.p-4')
-    await expect(itemHeader).toBeVisible({ timeout: 8_000 })
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E7 — RTL-Layout in Offer-Liste (AC-20)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E7 — RTL: Offer-Zeile folgt dir=rtl ohne rtl:flex-row-reverse (AC-20, B5900-017)', async ({ page }) => {
-    // Set Arabic language cookie before navigating
-    await page.context().addCookies([
-      { name: 'app_lang', value: 'ar', domain: '127.0.0.1', path: '/' },
-    ])
-
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    // HTML element should have dir=rtl when lang=ar
-    const htmlDir = await page.locator('html').getAttribute('dir')
-    expect(htmlDir, 'E7: <html> hat kein dir=rtl bei lang=ar').toBe('rtl')
-
-    // Offer row div must have rtl:flex-row-reverse in its class list
-    // (Tailwind includes this literally in className string)
-    const firstRow = page.locator('div.bg-white.rounded-xl.border.divide-y > div').first()
-    const rowCount = await page.locator('div.bg-white.rounded-xl.border.divide-y > div').count()
-
-    if (rowCount === 0) {
-      // No offers — just verify the page doesn't crash in RTL mode
-      await expect(page.locator('body')).toBeVisible()
-      console.log('[E7] Keine Offer-Zeilen zum prüfen (RTL-Modus läuft aber ohne Crash)')
-      return
-    }
-
-    // B5900-017 (A2): dir=rtl am <html> spiegelt die Flex-Zeile bereits; rtl:flex-row-reverse würde doppelt spiegeln.
-    const rowClass = await firstRow.getAttribute('class')
-    expect(
-      rowClass,
-      'E7: Offer-Zeile darf kein rtl:flex-row-reverse mehr haben (Doppelspiegelung)'
-    ).not.toContain('rtl:flex-row-reverse')
-
-    // Cleanup: reset language cookie to English
-    await page.context().addCookies([
-      { name: 'app_lang', value: 'en', domain: '127.0.0.1', path: '/' },
-    ])
-  })
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // E-NAV — nav_products nicht mehr in Translations (AC-24)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  test('E-NAV — nav_products-Link existiert nicht im Shop-Admin (AC-24)', async ({ page }) => {
-    await page.goto(FRONTEND_URL + '/shop-admin')
-    await waitHydrated(page)
-
-    // No link to /shop-admin/products anywhere on the page
-    const productNavLinks = await page.locator('a[href*="/shop-admin/products"]').count()
-    expect(
-      productNavLinks,
-      'E-NAV: Es gibt noch einen Link zu /shop-admin/products im Dashboard'
-    ).toBe(0)
-
-    // Navigate to sidebar/nav if it exists
-    await page.goto(FRONTEND_URL + '/shop-admin/offers')
-    await waitHydrated(page)
-
-    const productNavLinksOnOffers = await page.locator('a[href*="/shop-admin/products"]').count()
-    expect(
-      productNavLinksOnOffers,
-      'E-NAV: Es gibt noch einen Link zu /shop-admin/products auf der Offers-Seite'
-    ).toBe(0)
   })
 })

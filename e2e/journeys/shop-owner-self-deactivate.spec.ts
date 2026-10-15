@@ -18,8 +18,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
 import { TestDataTracker, adminApi, e2eEmail, e2eName } from './_helpers/test-data'
+import { BASE_URL as BASE } from '../env'
 
-const BASE = 'http://localhost:3500'
 const OWNER_EMAIL = e2eEmail('SELF-DEACT', 'pundo.com')
 const OWNER_PASSWORD = 'E2eSelfDeact!99'
 const tracker = new TestDataTracker()

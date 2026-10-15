@@ -35,9 +35,10 @@ war der "Alle →"-Link auf der Shop-Detailseite hardcodiert auf Deutsch.
 Produktliste korrekt funktioniert — und dass er bei jeder künftigen Änderung an
 `SearchContent` oder `shops/[slug]/page.tsx` sofort auffällt.
 
-**Vorbedingung:** Shop `manjo-pet-087d8709` (shop_id = 75) existiert in `pundo_test`
-und hat mindestens 1 Produkt mit Angebot. Wird via `sync_prod_to_test.sh` sichergestellt;
-bei fehlendem Produkt: Fixture-Defekt melden, Test nicht laufen lassen.
+**Vorbedingung (F8950 T31, Zwei-Ebenen-Prinzip):** Ebene 1 seedet die Spec selbst: Spec-Shop A mit 3 Produkten
+(Festpreis-Angebot), Spec-Shop B listet Produkt 1 zu einem niedrigeren Preis. Alles, was unten mit
+`manjo-pet-087d8709` / `shop_id=75` steht, gilt jetzt für Spec-Shop A (Slug/ID zur Laufzeit). Ebene 2 (Schritt E) prüft
+dieselben Invarianten zusätzlich gegen reale Prod-Kopie-Shops und überspringt mit Grund, wenn ein Shop fehlt.
 
 ----
 
@@ -75,8 +76,9 @@ bei fehlendem Produkt: Fixture-Defekt melden, Test nicht laufen lassen.
 
 | Fixture | Zweck | Quelle |
 |---|---|---|
-| Shop `manjo-pet-087d8709` | Realer Shop mit Produkten | `pundo_test` via sync_prod_to_test.sh |
-| Mindestens 1 Produkt mit Angebot für shop_id=75 | Nachweis dass "Alle"-Suche nicht leer ist | `pundo_test` |
+| Spec-Shop A / B | 3 Produkte, Multi-Shop-Angebot | zur Laufzeit per API (specShop) |
+| Shop `manjo-pet-087d8709` (Ebene 2) | Realer Shop mit Produkten | `pundo_test` via sync_prod_to_test.sh |
+| Mindestens 1 Produkt mit Angebot für Spec-Shop A | Nachweis dass "Alle"-Suche nicht leer ist | Spec-Seed |
 
 Keine eigenen E2E-Fixtures nötig — nutzt bestehende `pundo_test`-Daten.
 Bei fehlendem Shop oder 0 Produkten: `test.skip('Fixture-Defekt: ...')` + Bug-Eintrag.

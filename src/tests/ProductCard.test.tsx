@@ -1,11 +1,5 @@
-/**
- * Targeted coverage tests for gaps identified in Phase 2:
- * - ProductCard: resolveImgSrc branches (lines 12, 16-20, 39)
- * - HoursEditor: save handler + second slot (lines 24-37, 71-115)
- * - shop-admin-translations: DE upload_success/upload_errors (lines 186-187)
- */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('next/link', () => ({
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) =>
@@ -37,8 +31,7 @@ vi.mock('@/lib/utils', async (importOriginal) => {
   }
 })
 
-// ─── ProductCard: resolveImgSrc branches ─────────────────────────────────────
-
+// F8950 T33: aus coverage-gaps.test.tsx. Bild-Quelle: images.card vor thumbnail_url, localhost-Origin wird entfernt.
 describe('ProductCard image resolution', () => {
   const base = {
     id: 1, slug: 'cat-food', name: 'Cat Food', brand: null,
@@ -204,129 +197,5 @@ describe('ProductCard hover props', () => {
     // No shopId → onEnter must NOT be called (edge case A2)
     fireEvent.mouseEnter(container.firstChild as HTMLElement)
     expect(onEnter).not.toHaveBeenCalled()
-  })
-})
-
-// ─── HoursEditor: save and second slot ───────────────────────────────────────
-
-describe('HoursEditor save and second slot', () => {
-  const makeHours = () => Array.from({ length: 7 }, (_, i) => ({
-    day: i as 0 | 1 | 2 | 3 | 4 | 5 | 6,
-    open: '09:00',
-    close: '18:00',
-    closed: false,
-  }))
-
-  let fetchSpy: ReturnType<typeof vi.spyOn>
-
-  beforeEach(() => {
-    fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 200 })
-    )
-  })
-
-  afterEach(() => { fetchSpy.mockRestore() })
-
-  it('calls PUT /api/shop-admin/shop/hours on save', async () => {
-    const { HoursEditor } = await import('@/components/shop-admin/HoursEditor')
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    render(<HoursEditor initialHours={makeHours()} lang="en" />)
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: tAdmin('en').hours_save }))
-    })
-    expect(fetchSpy).toHaveBeenCalledWith(
-      '/api/shop-admin/shop/hours',
-      expect.objectContaining({ method: 'PUT' })
-    )
-  })
-
-  it('shows error toast when save fails', async () => {
-    fetchSpy.mockResolvedValueOnce(new Response(null, { status: 500 }))
-    const { HoursEditor } = await import('@/components/shop-admin/HoursEditor')
-    const { ToastProvider } = await import('@/components/shop-admin/Toast')
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    render(<><ToastProvider /><HoursEditor initialHours={makeHours()} lang="en" /></>)
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: tAdmin('en').hours_save }))
-    })
-    expect(document.body.textContent).toContain(tAdmin('en').error_generic)
-  })
-
-  it('adds second slot when + Second slot clicked', async () => {
-    const { HoursEditor } = await import('@/components/shop-admin/HoursEditor')
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    render(<HoursEditor initialHours={makeHours()} lang="en" />)
-    // Click the first "+ Second slot" button (for Monday)
-    const addButtons = screen.getAllByRole('button', { name: new RegExp(tAdmin('en').second_slot, 'i') })
-    fireEvent.click(addButtons[0])
-    // Now there should be a "second open from" input
-    expect(screen.getAllByLabelText(/second open from/i).length).toBeGreaterThan(0)
-  })
-
-  it('removes second slot when ✕ button clicked', async () => {
-    const { HoursEditor } = await import('@/components/shop-admin/HoursEditor')
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    render(<HoursEditor initialHours={makeHours()} lang="en" />)
-    // Add second slot first
-    const addButtons = screen.getAllByRole('button', { name: new RegExp(tAdmin('en').second_slot, 'i') })
-    fireEvent.click(addButtons[0])
-    // Remove it
-    const removeBtn = screen.getByRole('button', { name: 'Remove second slot' })
-    fireEvent.click(removeBtn)
-    // Second slot inputs gone
-    expect(screen.queryAllByLabelText(/second open from/i)).toHaveLength(0)
-  })
-
-  it('updates open time when time input changes', async () => {
-    const { HoursEditor } = await import('@/components/shop-admin/HoursEditor')
-    render(<HoursEditor initialHours={makeHours()} lang="en" />)
-    const openInputs = screen.getAllByLabelText(/open from$/i)
-    fireEvent.change(openInputs[0], { target: { value: '08:00' } })
-    expect((openInputs[0] as HTMLInputElement).value).toBe('08:00')
-  })
-})
-
-// ─── shop-admin-translations: all languages ──────────────────────────────────
-
-describe('shop-admin-translations — all languages', () => {
-  const langs = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
-
-  for (const lang of langs) {
-    it(`${lang}: upload_success/upload_errors interpolate n`, async () => {
-      const { tAdmin } = await import('@/lib/shop-admin-translations')
-      const tr = tAdmin(lang)
-      expect(tr.upload_success.replace('{n}', '7')).toContain('7')
-      expect(tr.upload_errors.replace('{n}', '3')).toContain('3')
-    })
-
-    it(`${lang}: days array has 7 entries`, async () => {
-      const { tAdmin } = await import('@/lib/shop-admin-translations')
-      expect(tAdmin(lang).days).toHaveLength(7)
-    })
-
-    it(`${lang}: login_btn is non-empty string`, async () => {
-      const { tAdmin } = await import('@/lib/shop-admin-translations')
-      expect(tAdmin(lang).login_btn.length).toBeGreaterThan(0)
-    })
-  }
-
-  it('AR: login_btn is in Arabic script', async () => {
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('ar').login_btn).toBe('تسجيل الدخول')
-  })
-
-  it('HE: login_btn is in Hebrew script', async () => {
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('he').login_btn).toBe('כניסה')
-  })
-
-  it('EL: days[0] is Monday in Greek', async () => {
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('el').days[0]).toBe('Δευτέρα')
-  })
-
-  it('RU: days[0] is Monday in Russian', async () => {
-    const { tAdmin } = await import('@/lib/shop-admin-translations')
-    expect(tAdmin('ru').days[0]).toBe('Понедельник')
   })
 })

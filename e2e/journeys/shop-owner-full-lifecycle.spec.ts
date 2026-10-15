@@ -21,16 +21,15 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
 import { TestDataTracker, RUN_ID } from './_helpers/test-data'
-import { shopOwnerLogin, adminLogin as adminApiLogin } from './_helpers'
+import { shopOwnerLogin, adminLogin, adminHeaders, apiFetch } from './_helpers'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { createStepLog } from '../fixtures'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
 
-const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
 // B8950-012: Run-ID im Präfix → verankerter Selektor ^e2e-<run>- für Skript/Reporter
 const PREFIX = `e2e-${RUN_ID}-lifecycle-${UUID}`
@@ -99,60 +98,7 @@ const ctx: Ctx = {
 
 // ─── API-Helpers ──────────────────────────────────────────────────────────────
 
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-  headers: Record<string, string> = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const url = urlPath.startsWith('http') ? urlPath : `${BACKEND_URL}${urlPath}`
-  const res = await fetch(url, {
-    method,
-    headers: body
-      ? { 'Content-Type': 'application/json', ...headers }
-      : headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  let data: unknown = {}
-  try {
-    if (res.status !== 204) data = await res.json()
-  } catch { /* empty body */ }
-  return { ok: res.ok, status: res.status, data }
-}
-
-async function adminLogin(): Promise<string> {
-  const { execSync } = await import('child_process')
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
-  const adminEmail = 'e2e-admin@pundo-e2e.io'
-  const adminPassword = 'E2eAdminPassword!99'
-
-  let testDbUrl = process.env.DATABASE_URL_TEST
-  if (!testDbUrl) {
-    try {
-      const envFile = fs.readFileSync(path.join(BACKEND_REPO, '.env'), 'utf8')
-      const match = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)
-      if (match) testDbUrl = match[1].trim()
-    } catch { /* ignore */ }
-  }
-  if (testDbUrl) {
-    try {
-      execSync(
-        `${pyBin} scripts/seed_admin.py --email ${adminEmail} --password ${adminPassword}`,
-        { cwd: BACKEND_REPO, stdio: 'pipe', env: { ...process.env, DATABASE_URL: testDbUrl } }
-      )
-    } catch { /* admin may already exist */ }
-  }
-
-  return adminApiLogin(adminEmail, adminPassword)
-}
-
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
-  ctx.stepLog.push({ step, desc, expected, actual, status })
-}
-
-function adminHeaders(): Record<string, string> {
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
+const { logStep } = createStepLog(ctx.stepLog)
 
 // ─── Cleanup helper ───────────────────────────────────────────────────────────
 

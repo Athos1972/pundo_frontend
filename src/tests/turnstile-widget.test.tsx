@@ -1,8 +1,6 @@
 // B6220-003 — TurnstileWidget is a generic ui primitive: caller-provided text, resetKey, no customer imports.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render } from '@testing-library/react'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 vi.mock('next/script', () => ({ default: () => null }))
 
@@ -30,10 +28,5 @@ describe('TurnstileWidget', () => {
     rerender(<TurnstileWidget onToken={() => {}} loadingText="x" resetKey={1} />)
     expect(reset).toHaveBeenCalledTimes(1)
   })
-
-  it('has no customer-side imports (clean boundary)', () => {
-    const src = readFileSync(join(process.cwd(), 'src/components/ui/TurnstileWidget.tsx'), 'utf8')
-    expect(src).not.toMatch(/@\/lib\/translations/)
-    expect(src).not.toMatch(/@\/lib\/lang/)
-  })
+  // Clean Boundary (keine Customer-Imports): tests/unit/guards/shop-admin-boundary.test.ts
 })

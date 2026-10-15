@@ -51,11 +51,10 @@ import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? process.env.TEST_BACKEND_URL ?? 'http://localhost:8500'
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
 const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'

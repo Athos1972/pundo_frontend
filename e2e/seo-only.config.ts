@@ -3,6 +3,7 @@
  * Voraussetzung: Frontend läuft bereits auf Port 3500.
  */
 import { defineConfig } from '@playwright/test'
+import { BASE_URL } from './env'
 
 export default defineConfig({
   testDir: '.',
@@ -10,7 +11,7 @@ export default defineConfig({
   workers: 1,
   timeout: 30000,
   use: {
-    baseURL: 'http://127.0.0.1:3500',
+    baseURL: BASE_URL,
     actionTimeout: 15000,
   },
 })

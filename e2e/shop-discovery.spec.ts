@@ -20,8 +20,9 @@ import { test as shopTest } from './journeys/_helpers/worker-shop'
 import { marker } from './journeys/_helpers/test-data'
 import fs from 'fs'
 import path from 'path'
+import { BACKEND_URL } from './env'
+import { openItemPickerModal, waitForPageHydrated } from './journeys/_helpers/hydration'
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 function loadStorageState() {
   const stateFile = path.join(__dirname, '.test-state.json')
@@ -120,16 +121,29 @@ test.describe('Shop-Listing', () => {
   test('Test-Shop erscheint in der Shops-Übersicht', async ({ page }) => {
     const state = loadStorageState()
     await page.goto('/shops')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     // The /shops page shows nearby shops — requires geo-coordinates (geocoding service).
     // If no shop cards are visible, the test shop has no coordinates yet → skip gracefully.
     const shopCards = page.locator('[data-testid="shop-card"], .shop-card, article').first()
     const hasCards = await shopCards.isVisible().catch(() => false)
     if (!hasCards) return
     // Der Test-Shop-Name soll irgendwo auf der Seite erscheinen
-    await expect(page.getByText(state.shop_name, { exact: false })).toBeVisible({ timeout: 10_000 })
+    await expectNameVisible(page, state.shop_name)
   })
 })
+
+/**
+ * Der Name steht mindestens einmal SICHTBAR auf der Seite. Neben dem Ergebnis zeigt der Aktivitaets-Ticker
+ * "New: <Shop> in …" denselben Namen mehrfach (teils versteckt) - `getByText(...).toBeVisible()` waere ein
+ * Strict-Mode-Fehler bzw. wuerde ein verstecktes erstes Element treffen.
+ */
+async function expectNameVisible(page: import('@playwright/test').Page, name: string) {
+  await expect.poll(
+    () => page.getByText(name, { exact: false }).evaluateAll(
+      els => els.some(e => (e as HTMLElement).offsetParent !== null || e.getClientRects().length > 0)),
+    { message: `"${name}" sichtbar`, timeout: 10_000 },
+  ).toBe(true)
+}
 
 // ─── Suche ────────────────────────────────────────────────────────────────────
 
@@ -146,12 +160,15 @@ test.describe('Shop-Suche', () => {
 
     // Auf Suchergebnis-Seite warten
     await page.waitForURL(/\/(search|shops)/, { timeout: 10_000 })
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
-    // If shop name not found in results (products indexed by shop name may not exist), skip
-    const found = await page.getByText(state.shop_name, { exact: false }).count()
-    if (found === 0) return
-    await expect(page.getByText(state.shop_name, { exact: false })).toBeVisible()
+    // Befund F8950 Stufe 4: die Suchseite zeigt Shops nicht nach Namen; der Name steht nur in versteckten Ticker-Texten
+    // ("New: <Shop> in …"). Frueher endete der Test hier mit `return` (gruen ohne Pruefung). Jetzt ein sichtbarer Skip mit
+    // Grund; die Shop-Suche nach Namen deckt der naechste Test per API ab.
+    const visible = await page.getByText(state.shop_name, { exact: false }).evaluateAll(
+      els => els.filter(e => (e as HTMLElement).offsetParent !== null).length)
+    test.skip(visible === 0, 'Suchseite zeigt Shops nicht nach Namen (nur versteckte Ticker-Texte) - Abdeckung: API-Suche (naechster Test)')
+    await expectNameVisible(page, state.shop_name)
   })
 
   test('API-Suche nach Shop-Name findet den Test-Shop', async () => {
@@ -261,26 +278,27 @@ shopTest.describe('Shop-Produkt via Admin anlegen', () => {
   const TEST_OFFER_TITLE = `${marker('SHOP-DISCOVERY')} Geo-Test Olivenöl Angebot`
 
   shopTest('Produkt anlegen und via API abrufen', async ({ page, workerShop }) => {
+    const pickerItem = await workerShop.createItem('SHOP-DISCOVERY', 'olive-oil')
 
     // Angebot mit neuem Item anlegen — neuer Unified Flow (Produkte → Angebote)
     await page.goto('/shop-admin/offers/new')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     await page.waitForSelector('body[data-hydrated="true"]', { timeout: 15_000 })
 
     // Step 1: "Select item" Button klicken (gestrichelte Umrandung — border-dashed)
-    await page.locator('button.border-dashed').click()
+    await openItemPickerModal(page.locator('button.border-dashed')) // hydrierter Klick + Fokus-Effekt abwarten
 
     // Im Modal: Text-Suche (placeholder "…") → erstes Ergebnis auswählen
     const textSearch = page.locator('input[placeholder="…"]')
     await textSearch.waitFor({ state: 'visible', timeout: 10_000 })
-    await textSearch.fill('avicentra')
-    // Debounce (300ms) + API abwarten
-    await page.waitForTimeout(1000)
+    // F8950 T31/T22: eigenes Marker-Item statt Prod-Suchbegriff; auf die debounced Such-Antwort warten
+    const searchResponse = page.waitForResponse(r => r.url().includes('/api/shop-admin/items?q='))
+    await textSearch.fill(pickerItem.name)
+    await searchResponse
     const firstResult = page.locator('ul li button').first()
     await firstResult.waitFor({ state: 'visible', timeout: 10_000 })
     await firstResult.click()
-    // Modal schließt sich, Step 2 erscheint automatisch
-    await page.waitForTimeout(500)
+    // Modal schließt sich, Step 2 erscheint automatisch (das select unten wartet darauf)
 
     // Step 2: Preis-Typ auf "on_request" setzen
     await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
@@ -291,16 +309,13 @@ shopTest.describe('Shop-Produkt via Admin anlegen', () => {
     await page.getByRole('button', { name: /^save$|^speichern$/i }).click()
     await expect(page).toHaveURL(/\/shop-admin\/offers$/, { timeout: 15_000 })
 
-    // Kurze Pause für DB-Commit
-    await page.waitForTimeout(500)
-
     // Via Owner-API prüfen: das Angebot gehört dem Worker-Shop. (Der öffentliche Endpoint
     // /shops/by-slug/{slug}/offers liefert nur Angebote mit aktiver AKTION — dieses on_request-Angebot hat keine;
     // der alte Check lief deshalb ins Leere, B8950-012.)
-    const res = await workerShop.api<{ items: Array<{ title?: string | null }> }>('GET', '/offers?limit=100')
-    expect(res.status, res.text).toBe(200)
-    const found = res.json.items.some((o) => (o.title ?? '').includes('Olivenöl'))
-    expect(found, 'Angebot nicht in der Owner-API gefunden').toBe(true)
+    await expect.poll(async () => {
+      const res = await workerShop.api<{ items: Array<{ title?: string | null }> }>('GET', '/offers?limit=100')
+      return res.status === 200 && res.json.items.some((o) => (o.title ?? '').includes('Olivenöl'))
+    }, { message: 'Angebot nicht in der Owner-API gefunden', timeout: 10_000 }).toBe(true)
   })
 })
 

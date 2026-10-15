@@ -14,13 +14,13 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { getVerificationToken } from './_helpers/dev-token'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin, apiFetch } from './_helpers'
 import { TestDataTracker, RUN_ID } from './_helpers/test-data'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[shop-owner-onboarding] Safety: NEVER run against prod ports 3000/8000!')
@@ -48,25 +48,8 @@ const ctx = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-  headers: Record<string, string> = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const url = urlPath.startsWith('http') ? urlPath : `${BACKEND_URL}${urlPath}`
-  const res = await fetch(url, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  let data: unknown = {}
-  try { if (res.status !== 204) data = await res.json() } catch { /* empty */ }
-  return { ok: res.ok, status: res.status, data }
-}
-
 // Delegates to shared helper which retries on 429 rate limit.
-const getAdminToken = () => adminApiLogin()
+const getAdminToken = () => adminLogin()
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +88,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
 
     // 4. Navigate to check-email page — it must render (no 404)
     await page.goto(BASE_URL + '/shop-admin/register/check-email')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     expect(page.url(), '/register/check-email must not 404').not.toContain('not-found')
 
     // Resolve owner ID for cleanup
@@ -122,7 +105,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
 
   test('T2 — /register/check-email Seite: Titel "Check your inbox" sichtbar', async ({ page }) => {
     await page.goto(BASE_URL + '/shop-admin/register/check-email')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const url = page.url()
     expect(url, 'check-email page must not redirect to 404').not.toContain('not-found')
@@ -151,7 +134,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
     if (!ctx.verificationToken) throw new Error('PREREQUISITE BROKEN: verificationToken not set — T3 failed')
 
     await page.goto(BASE_URL + `/shop-admin/verify-email?token=${ctx.verificationToken}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const url = page.url()
     expect(url, 'verify-email page must not 404').not.toContain('not-found')
@@ -174,7 +157,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
     // may not trigger Playwright navigation tracking reliably for Next.js Link components).
     // The auth guard redirects to login — that confirms the route exists and is protected.
     await page.goto(BASE_URL + '/shop-admin/pending-approval')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const finalUrl = page.url()
     // Either lands on pending-approval (if somehow authenticated) or login page with next= redirect
@@ -226,7 +209,7 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
 
   test('T6 — Owner-Login nach Approval → /shop-admin/dashboard erreichbar', async ({ page }) => {
     await page.goto(BASE_URL + '/shop-admin/login')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     await page.fill('input[name="email"]', ctx.email)
     await page.fill('input[name="password"]', ctx.password)

@@ -14,21 +14,20 @@
  * Logo-Upload-Endpoint POST /api/v1/admin/brands/{id}/logo ist live (B8950-007 GELÖST 2026-05-21).
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin, adminHeaders, apiFetch } from './_helpers'
 import { RUN_ID, TestDataTracker } from './_helpers/test-data'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { createStepLog } from '../fixtures'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
 
-const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
 // B8950-012: Run-ID im Präfix (verankerter Selektor ^e2e-<run>-); der angelegte Pending-Owner wird per Admin-Shop-Delete entfernt
 const PREFIX = `e2e-${RUN_ID}-adm-${UUID}`
@@ -72,58 +71,7 @@ const ctx = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-  headers: Record<string, string> = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const url = urlPath.startsWith('http') ? urlPath : `${BACKEND_URL}${urlPath}`
-  const res = await fetch(url, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  let data: unknown = {}
-  try {
-    if (res.status !== 204) data = await res.json()
-  } catch { /* empty body */ }
-  return { ok: res.ok, status: res.status, data }
-}
-
-async function adminLogin(): Promise<string> {
-  const { execSync } = await import('child_process')
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
-  const adminEmail = 'e2e-admin@pundo-e2e.io'
-  const adminPassword = 'E2eAdminPassword!99'
-
-  let testDbUrl = process.env.DATABASE_URL_TEST
-  if (!testDbUrl) {
-    try {
-      const envFile = fs.readFileSync(path.join(BACKEND_REPO, '.env'), 'utf8')
-      const match = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)
-      if (match) testDbUrl = match[1].trim()
-    } catch { /* ignore */ }
-  }
-  if (testDbUrl) {
-    try {
-      execSync(
-        `${pyBin} scripts/seed_admin.py --email ${adminEmail} --password ${adminPassword}`,
-        { cwd: BACKEND_REPO, stdio: 'pipe', env: { ...process.env, DATABASE_URL: testDbUrl } }
-      )
-    } catch { /* admin may already exist */ }
-  }
-
-  return adminApiLogin(adminEmail, adminPassword)
-}
-
-function adminHeaders() {
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
-
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
-  ctx.stepLog.push({ step, desc, expected, actual, status })
-}
+const { logStep } = createStepLog(ctx.stepLog)
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
@@ -398,7 +346,7 @@ test.describe.serial('Admin Data Management Sweep', () => {
     expect(data.parent_id, `Category child hat falschen parent_id`).toBe(ctx.categoryParentId)
   })
 
-  test('Schritt 5 — Admin: Category-Tree im Browser (Expand/Collapse)', async ({ page }) => {
+  test('Schritt 5 — Admin: Category-Tree im Browser (Expand/Collapse)', async ({ adminPage: page }) => {
     if (!ctx.categoryParentId) {
       logStep(5, 'Category-Tree im Browser', 'Tree-Element sichtbar', 'categoryParentId fehlt', 'SKIP')
       test.skip(true, 'Reason: categoryParentId nicht verfügbar')
@@ -406,13 +354,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
     }
 
     // Inject admin cookie so we land on the page (not redirect to login)
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     await page.goto(BASE_URL + '/admin/categories')
     // Use 'load' not 'networkidle' — Next.js App Router / RSC keeps background requests running
     await page.waitForLoadState('load')
@@ -488,7 +429,7 @@ test.describe.serial('Admin Data Management Sweep', () => {
     logStep(8, 'Guide RTL (lang=ar)', 'html[dir=rtl]', 'rtl', 'PASS')
   })
 
-  test('Schritt 9 — Brands in Brand-Übersicht sichtbar', async ({ page }) => {
+  test('Schritt 9 — Brands in Brand-Übersicht sichtbar', async ({ adminPage: page }) => {
     if (!ctx.brandWithoutLogoId) {
       logStep(9, 'Brands in Übersicht', 'Brand sichtbar', 'brandWithoutLogoId fehlt', 'SKIP')
       test.skip(true, 'Reason: Brand-Fixture nicht angelegt')
@@ -496,13 +437,6 @@ test.describe.serial('Admin Data Management Sweep', () => {
     }
 
     // Inject admin cookie so we land on the page (not redirect to login)
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     await page.goto(BASE_URL + '/admin/brands')
     // Use 'load' not 'networkidle' — Next.js App Router / RSC keeps background requests running
     await page.waitForLoadState('load')

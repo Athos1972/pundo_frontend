@@ -1,21 +1,36 @@
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
-import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
+import { TestDataTracker, e2eEmail, e2eName, populatedCategoryId } from './_helpers/test-data'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { BACKEND_URL, BASE_URL as FRONTEND_URL } from '../env'
 
-// Produktseite mit bekannten lokalen product_images — ändere slug wenn Testdaten anders
-const PRODUCT_WITH_IMAGES = 'ferplast-ferplast-sport-g8-200-black-leash'
-
-const BACKEND_URL =
-  process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
-const FRONTEND_URL =
-  process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
+// F8950 T31: kein fester Prod-Kopie-Slug mehr. Die Produktseite wird per API geseedet (Spec-Shop, Marker-Item mit
+// hochgeladenem Foto, Listing, Angebot, echte Kategorie mit Nachbarn fuer das Carousel).
 
 if (BACKEND_URL.includes(':8000') || FRONTEND_URL.includes(':3000')) {
   throw new Error('[visual-smoke] Safety: NEVER run against prod ports 3000/8000!')
 }
 
 test.describe('Visual Smoke-Test', () => {
+  let productShop: WorkerShop
+  let productWithImages = ''
+
+  test.beforeAll(async () => {
+    productShop = await specShop('VISUAL-SMOKE-PRODUCT')
+    const item = await productShop.createItem('VISUAL-SMOKE', 'photo', { listing: true, categoryId: populatedCategoryId() })
+    await productShop.uploadPhoto(item.id)
+    const offer = await productShop.api('POST', '/offers', {
+      shop_listing_id: item.listingId, price_type: 'fixed',
+      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 4.5, currency: 'EUR' }] }],
+    })
+    expect(offer.status, offer.text).toBe(201)
+    productWithImages = item.slug
+  })
+
+  test.afterAll(async () => {
+    await productShop?.destroy()
+  })
 
   test('Produktseite: Bilder laden, Carousel zeigt mehrere Items', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 })
@@ -30,7 +45,7 @@ test.describe('Visual Smoke-Test', () => {
       }
     })
 
-    await page.goto(`/products/${PRODUCT_WITH_IMAGES}`)
+    await page.goto(`/products/${productWithImages}`)
     await page.waitForLoadState('load')
     // 'networkidle' ist ungeeignet — Plausible-Analytics hält Verbindungen offen
 

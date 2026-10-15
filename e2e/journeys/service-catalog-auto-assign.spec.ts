@@ -11,12 +11,7 @@
  *   S3b (B5910-007): VOR der Freigabe sind die Vorschläge in keinem öffentlichen Pfad sichtbar
  *       (Suche, /products?shop_id, Produktdetail, Shop-Detail); NACH der Freigabe sind sie es
  *
- * Admin-UI:
- *   IDM-1: /admin/item-domain-mappings List — Tabelle lädt
- *   IDM-2: Create — neues Mapping anlegen
- *   IDM-3: Edit — Mapping bearbeiten
- *   IDM-4: Delete — Mapping löschen mit Confirm-Dialog
- *   IDM-5: Gaps-Report — /admin/item-domain-mappings/gaps lädt
+ * Admin-UI (IDM-1 bis IDM-5): seit F8950 T32 in `service-catalog-admin-mappings.spec.ts`.
  *
  * Fixtures:
  *   - Neuer Shop-Owner (UUID) mit Domäne elektriker + Specialty solaranlagen
@@ -24,19 +19,18 @@
  *   - Cleanup: Owner + Shop löschen nach Test
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect, createStepLog } from '../fixtures'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin } from './_helpers'
 import { TestDataTracker, e2eEmail, e2eName, psql } from './_helpers/test-data'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { BASE_URL, BACKEND_URL } from '../env'
 
 // B8950-012: Marker-Konvention + Admin-Shop-Delete (Owner-Delete allein ließ Shop + Auto-Assign-Listings liegen)
 const tracker = new TestDataTracker()
 
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
@@ -55,9 +49,7 @@ interface StepEntry {
 const stepLog: StepEntry[] = []
 const findings: string[] = []
 
-function logStep(step: number | string, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
-  stepLog.push({ step, desc, expected, actual, status })
-}
+const { logStep } = createStepLog(stepLog)
 
 // ── API Helpers ───────────────────────────────────────────────────────────────
 
@@ -103,39 +95,6 @@ async function apiGet(url: string, headers: Record<string, string> = {}): Promis
   return res.json()
 }
 
-async function apiDelete(url: string, headers: Record<string, string> = {}): Promise<void> {
-  const res = await fetch(url, {
-    method: 'DELETE',
-    headers,
-    signal: AbortSignal.timeout(30_000),
-  })
-  if (!res.ok && res.status !== 204) {
-    const txt = await res.text()
-    throw new Error(`DELETE ${url} → ${res.status}: ${txt}`)
-  }
-}
-
-// Admin login — returns cookie string (used for API calls)
-// Delegates to shared helper which retries on 429 rate limit.
-const adminLogin = () => adminApiLogin()
-
-// Admin login via browser form — sets cookie in the Playwright page context
-// This is the correct approach for browser tests (page.request.post does NOT set page cookies)
-import type { Page } from '@playwright/test'
-async function adminLoginViaForm(page: Page): Promise<boolean> {
-  await page.goto(`${BASE_URL}/admin/login`)
-  await waitForPageHydrated(page, 15_000)  // F8950 T22: statt networkidle (Formular erst nach Hydration bedienbar)
-  await page.locator('input[type="email"]').fill('e2e-admin@pundo-e2e.io')
-  await page.locator('input[type="password"]').fill('E2eAdminPassword!99')
-  await page.getByRole('button', { name: /sign in|login|anmelden/i }).click()
-  try {
-    await page.waitForURL(/\/admin\/dashboard/, { timeout: 10_000 })
-    return true
-  } catch {
-    return false
-  }
-}
-
 // ── Test Context ──────────────────────────────────────────────────────────────
 
 interface Ctx {
@@ -148,7 +107,6 @@ interface Ctx {
   shopName: string
   adminCookie: string | null
   autoListingId: number | null
-  createdMappingId: number | null
   /** B5910-007: Ergebnis der öffentlichen Sichtprüfung VOR der Freigabe (in beforeAll erhoben) */
   preApproval: { itemSlugs: string[]; itemName: string; leaks: string[] } | null
 }
@@ -163,7 +121,6 @@ const ctx: Ctx = {
   shopName: '',
   adminCookie: null,
   autoListingId: null,
-  createdMappingId: null,
   preApproval: null,
 }
 
@@ -297,16 +254,6 @@ test.afterAll(async () => {
   // Cleanup (B8950-012): Shop + Owner + Auto-Assign-Listings per Admin-Shop-Delete
   await tracker.cleanup()
 
-  // Cleanup: eventuell erstelltes IDM-Mapping löschen
-  if (ctx.createdMappingId && ctx.adminCookie) {
-    try {
-      await apiDelete(
-        `${BACKEND_URL}/api/v1/admin/item-domain-mappings/${ctx.createdMappingId}`,
-        { Cookie: `admin_token=${ctx.adminCookie}` }
-      )
-    } catch { /* Non-critical */ }
-  }
-
   // Report schreiben
   writeReport()
 })
@@ -353,362 +300,6 @@ function writeReport() {
   const reportPath = path.join(reportDir, `service-catalog-auto-assign-${now}.md`)
   fs.writeFileSync(reportPath, lines.join('\n'))
 }
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ADMIN UI: Item-Domain-Mappings CRUD
-// ═════════════════════════════════════════════════════════════════════════════
-
-test.describe('IDM-1: /admin/item-domain-mappings List', () => {
-  test('Mapping-Tabelle lädt und zeigt Einträge', async ({ browser }) => {
-    test.setTimeout(60_000) // Admin-Navigation kann etwas dauern
-
-    // Skip if admin cookie not available (beforeAll adminLogin failed)
-    if (!ctx.adminCookie) {
-      logStep('IDM-1a', 'Admin Cookie verfügbar', 'ctx.adminCookie gesetzt', 'null — beforeAll fehlgeschlagen', 'SKIP')
-      test.skip(true, 'Admin user not available in test-DB — run prepare_e2e_db.py with admin seed')
-      return
-    }
-
-    // Inject cookie directly — avoids slow form login and unreliable networkidle on /admin/login
-    const cookieDomain = new URL(BASE_URL).hostname
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    await ctx2.addCookies([{ name: 'admin_token', value: ctx.adminCookie, domain: cookieDomain, path: '/' }])
-    const page = await ctx2.newPage()
-    logStep('IDM-1a', 'Admin Cookie injiziert', 'admin_token gesetzt', `domain=${cookieDomain}`, 'PASS')
-
-    // Navigiere zu item-domain-mappings
-    await page.goto(`${BASE_URL}/admin/item-domain-mappings`)
-    await waitForPageHydrated(page, 15_000)
-
-    const pageTitle = await page.locator('h1').first().textContent()
-    const hasMappingsTitle = pageTitle?.includes('Mapping') || pageTitle?.includes('Katalog') || pageTitle?.includes('Zuordnung')
-
-    if (hasMappingsTitle) {
-      logStep('IDM-1b', 'Seite /admin/item-domain-mappings lädt', 'H1 enthält "Mapping" oder "Katalog"', `H1: "${pageTitle}"`, 'PASS')
-    } else {
-      // Could be redirect to login
-      const currentUrl = page.url()
-      if (currentUrl.includes('/admin/login') || currentUrl.includes('/login')) {
-        logStep('IDM-1b', 'Seite /admin/item-domain-mappings lädt', 'IDM-Seite', `Redirect zu Login: ${currentUrl}`, 'FAIL')
-        findings.push('IDM-1b: Admin-Seite redirectet zu Login — Cookie nicht gesetzt')
-      } else {
-        logStep('IDM-1b', 'Seite /admin/item-domain-mappings lädt', 'H1 enthält "Mapping"', `H1: "${pageTitle}" URL: ${page.url()}`, 'FAIL')
-        findings.push(`IDM-1b: H1 enthält kein erwartetes Keyword. H1="${pageTitle}"`)
-      }
-    }
-
-    // Tabelle mit Einträgen prüfen
-    const tableRows = page.locator('table tbody tr')
-    const rowCount = await tableRows.count()
-
-    if (rowCount > 0) {
-      logStep('IDM-1c', 'Mapping-Tabelle hat Einträge', '≥1 Zeile in Tabelle', `${rowCount} Zeilen`, 'PASS')
-    } else {
-      // Leerer Zustand oder Fehler?
-      const emptyText = await page.locator('td[colspan]').textContent().catch(() => null)
-      logStep('IDM-1c', 'Mapping-Tabelle hat Einträge', '≥1 Zeile in Tabelle', `0 Zeilen (empty: "${emptyText}")`, 'FAIL')
-      findings.push(`IDM-1c: Tabelle leer. Backend hat 103 Mappings — möglicherweise API-Response-Format-Problem (domain_id vs onboarding_domain_id)`)
-    }
-
-    // Domain/Specialty-Spalten prüfen (potentielles Bug: zeigen immer "—" wegen Feldname-Mismatch)
-    // Only attempt cell inspection if table has data rows — otherwise textContent() waits for
-    // a non-existent element up to actionTimeout and causes the test to exceed its budget.
-    const domainText = rowCount > 0
-      ? await tableRows.first().locator('td').nth(2).textContent({ timeout: 5_000 }).catch(() => null)
-      : null
-
-    if (domainText && domainText.trim() !== '—' && domainText.trim() !== '') {
-      logStep('IDM-1d', 'Domain-Spalte zeigt Wert', 'Domain-Slug sichtbar (kein "—")', `"${domainText?.trim()}"`, 'PASS')
-    } else {
-      logStep('IDM-1d', 'Domain-Spalte zeigt Wert', 'Domain-Slug sichtbar', `"${domainText?.trim() ?? 'null'}" — zeigt "—"`, 'FAIL')
-      findings.push(
-        'IDM-1d: FINDING — Domain-Spalte zeigt immer "—". ' +
-        'Ursache: Backend liefert domain_id (int) aber Frontend-Typ erwartet onboarding_domain_id + onboarding_domain_slug. ' +
-        'MappingList.tsx zeigt m.onboarding_domain_slug ?? "—", aber Backend liefert dieses Feld nicht. ' +
-        'Fix: Backend muss onboarding_domain_slug in Response ergänzen ODER Frontend-Mapping muss domain_id→slug auflösen.'
-      )
-    }
-
-    await ctx2.close()
-  })
-})
-
-test.describe('IDM-2: Create — neues Mapping anlegen', () => {
-  test('Mapping-Formular Create-Flow', async ({ browser }) => {
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
-
-    const loggedIn = await adminLoginViaForm(page)
-    logStep('IDM-2a', 'Admin Login via Formular', '/admin/dashboard', loggedIn ? 'OK' : 'FAIL', loggedIn ? 'PASS' : 'FAIL')
-    if (!loggedIn) {
-      findings.push('IDM-2a: Login fehlgeschlagen — Create-Test übersprungen')
-      await ctx2.close()
-      return
-    }
-
-    await page.goto(`${BASE_URL}/admin/item-domain-mappings/new`)
-    await waitForPageHydrated(page, 15_000)
-
-    const url = page.url()
-    if (!url.includes('item-domain-mappings/new') && !url.includes('item-domain-mappings')) {
-      logStep('IDM-2b', '/admin/item-domain-mappings/new erreichbar', 'URL enthält "item-domain-mappings"', url, 'FAIL')
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-2b', '/admin/item-domain-mappings/new erreichbar', 'Formular sichtbar', url, 'PASS')
-
-    // Formular ausfüllen — Item-ID muss existieren (nehme Item 18 = elektriker allgemein)
-    const itemIdInput = page.locator('input[name="item_id"]')
-    const hasItemInput = await itemIdInput.count() > 0
-    if (!hasItemInput) {
-      logStep('IDM-2c', 'Formularfeld item_id vorhanden', 'input[name=item_id] sichtbar', 'nicht gefunden', 'FAIL')
-      findings.push('IDM-2c: item_id-Input nicht gefunden — Formular evtl. nicht gerendert')
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-2c', 'Formularfeld item_id vorhanden', 'input[name=item_id] sichtbar', 'vorhanden', 'PASS')
-
-    await itemIdInput.fill('18') // item_id=18 existiert (elektriker domain)
-
-    // Domain ID setzen
-    const domainInput = page.locator('input[name="onboarding_domain_id"]')
-    if (await domainInput.count() > 0) await domainInput.fill('3') // elektriker
-
-    // auto_assign auf true
-    const autoSelect = page.locator('select[name="auto_assign"]')
-    if (await autoSelect.count() > 0) await autoSelect.selectOption('true')
-
-    // Submit
-    const submitBtn = page.locator('button[type="submit"]')
-    await submitBtn.click()
-
-    // Warte auf Navigation oder Fehler (F8950 T22: statt networkidle auf den Verlassen von /new warten; bleibt die Seite, greift der Fehlerzweig)
-    await page.waitForURL(u => !u.pathname.endsWith('/new'), { timeout: 10_000 }).catch(() => {})
-    const afterUrl = page.url()
-
-    if (afterUrl.includes('item-domain-mappings') && !afterUrl.includes('/new')) {
-      logStep('IDM-2d', 'Create-Submit navigiert zurück zur Liste', 'URL = /admin/item-domain-mappings', afterUrl, 'PASS')
-      // Hole die erstellte Mapping-ID via API für Cleanup
-      try {
-        const recentMappings = await apiGet(
-          `${BACKEND_URL}/api/v1/admin/item-domain-mappings?limit=5`,
-          { Cookie: `admin_token=${ctx.adminCookie!}` }
-        ) as { items: Array<{ id: number; item_id: number }> }
-        const newMapping = recentMappings.items.find(m => m.item_id === 18)
-        if (newMapping) ctx.createdMappingId = newMapping.id
-      } catch { /* non-critical */ }
-    } else {
-      logStep('IDM-2d', 'Create-Submit navigiert zurück zur Liste', '/admin/item-domain-mappings', afterUrl, 'FAIL')
-      const errorText = await page.locator('.text-red-500, [class*="error"]').first().textContent().catch(() => null)
-      findings.push(`IDM-2d: Create-Submit navigierte nicht zurück. URL="${afterUrl}" Fehler="${errorText}"`)
-    }
-
-    await ctx2.close()
-  })
-})
-
-test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
-  test('Mapping Edit-Flow', async ({ browser }) => {
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
-
-    const loggedIn = await adminLoginViaForm(page)
-    if (!loggedIn) {
-      logStep('IDM-3', 'Edit-Flow', 'Login OK', 'Login fehlgeschlagen', 'SKIP')
-      await ctx2.close()
-      return
-    }
-
-    // Verwende Mapping ID 29 (existiert garantiert aus Seed-Daten)
-    await page.goto(`${BASE_URL}/admin/item-domain-mappings/29/edit`)
-    await waitForPageHydrated(page, 15_000)
-
-    const url = page.url()
-    if (!url.includes('29/edit')) {
-      logStep('IDM-3a', '/admin/item-domain-mappings/29/edit erreichbar', 'URL enthält 29/edit', url, 'FAIL')
-      findings.push(`IDM-3a: Edit-Seite nicht erreichbar. URL="${url}"`)
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-3a', '/admin/item-domain-mappings/29/edit erreichbar', 'URL enthält 29/edit', url, 'PASS')
-
-    // Priority ändern
-    const priorityInput = page.locator('input[name="priority"]')
-    if (await priorityInput.count() > 0) {
-      const currentValue = await priorityInput.inputValue()
-      await priorityInput.fill('99')
-      logStep('IDM-3b', 'Priority-Feld bearbeitbar', 'Wert änderbar', `${currentValue} → 99`, 'PASS')
-
-      // Submit
-      await page.locator('button[type="submit"]').click()
-      // F8950 T22: statt networkidle auf das Verlassen von /edit warten
-      await page.waitForURL(u => !u.pathname.endsWith('/edit'), { timeout: 10_000 }).catch(() => {})
-
-      const afterUrl = page.url()
-      if (afterUrl.includes('item-domain-mappings') && !afterUrl.includes('/edit')) {
-        logStep('IDM-3c', 'Edit-Submit navigiert zurück', '/admin/item-domain-mappings', afterUrl, 'PASS')
-
-        // Wert wieder zurücksetzen
-        try {
-          await apiPatch(
-            `${BACKEND_URL}/api/v1/admin/item-domain-mappings/29`,
-            { priority: 1 },
-            { Cookie: `admin_token=${ctx.adminCookie!}` }
-          )
-        } catch { /* non-critical */ }
-      } else {
-        logStep('IDM-3c', 'Edit-Submit navigiert zurück', '/admin/item-domain-mappings', afterUrl, 'FAIL')
-        findings.push(`IDM-3c: Edit-Submit navigierte nicht zurück. URL="${afterUrl}"`)
-      }
-    } else {
-      logStep('IDM-3b', 'Priority-Feld bearbeitbar', 'input[name=priority] sichtbar', 'nicht gefunden', 'FAIL')
-      findings.push('IDM-3b: priority-Input nicht gefunden auf Edit-Seite')
-    }
-
-    await ctx2.close()
-  })
-})
-
-test.describe('IDM-4: Delete — Mapping löschen mit Confirm-Dialog', () => {
-  test('Delete-Confirm-Dialog erscheint und funktioniert', async ({ browser }) => {
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
-
-    const loggedIn = await adminLoginViaForm(page)
-    if (!loggedIn) {
-      logStep('IDM-4', 'Delete-Flow', 'Login OK', 'Login fehlgeschlagen', 'SKIP')
-      await ctx2.close()
-      return
-    }
-
-    // Erstelle ein Wegwerf-Mapping via API zum Testen des Deletes
-    let testMappingId: number | null = null
-    try {
-      const newMapping = await apiPost(
-        `${BACKEND_URL}/api/v1/admin/item-domain-mappings`,
-        { item_id: 18, onboarding_domain_id: 3, auto_assign: false, priority: 99 },
-        { Cookie: `admin_token=${ctx.adminCookie!}` }
-      ) as { id: number }
-      testMappingId = newMapping.id
-    } catch (err) {
-      logStep('IDM-4a', 'Test-Mapping erstellt', 'Mapping angelegt', `Fehler: ${err}`, 'FAIL')
-      findings.push(`IDM-4a: Wegwerf-Mapping konnte nicht angelegt werden: ${err}`)
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-4a', 'Wegwerf-Mapping erstellt', 'Mapping angelegt', `id=${testMappingId}`, 'PASS')
-
-    // Lade Liste und finde den Delete-Button für unser Mapping
-    await page.goto(`${BASE_URL}/admin/item-domain-mappings`)
-    await waitForPageHydrated(page, 15_000)
-
-    // Suche Zeile mit dem Mapping-ID
-    const rows = page.locator('table tbody tr')
-    const rowCount = await rows.count()
-    let targetRow = null
-
-    for (let i = 0; i < rowCount; i++) {
-      const rowText = await rows.nth(i).textContent()
-      if (rowText?.includes(String(testMappingId))) {
-        targetRow = rows.nth(i)
-        break
-      }
-    }
-
-    if (!targetRow) {
-      logStep('IDM-4b', 'Mapping in Liste gefunden', `id=${testMappingId} in Tabelle sichtbar`, 'nicht gefunden', 'FAIL')
-      findings.push(`IDM-4b: Frisch erstelltes Mapping id=${testMappingId} nicht in Tabelle gefunden`)
-      // Cleanup
-      try { await apiDelete(`${BACKEND_URL}/api/v1/admin/item-domain-mappings/${testMappingId}`, { Cookie: `admin_token=${ctx.adminCookie!}` }) } catch { /* ok */ }
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-4b', 'Mapping in Liste gefunden', `id=${testMappingId} in Tabelle`, 'gefunden', 'PASS')
-
-    // Delete-Button klicken
-    const deleteBtn = targetRow.locator('button', { hasText: /delete|löschen/i })
-    await deleteBtn.click()
-
-    // Confirm-Dialog muss erscheinen
-    const confirmDialog = page.locator('.fixed.inset-0, [role="dialog"], dialog')
-    await expect(confirmDialog).toBeVisible({ timeout: 3000 }).catch(async () => {
-      // Evtl. kein Modal-Overlay sondern inline
-    })
-
-    const dialogVisible = await confirmDialog.isVisible().catch(() => false)
-    if (dialogVisible) {
-      logStep('IDM-4c', 'Confirm-Dialog erscheint', 'Dialog sichtbar nach Delete-Click', 'Dialog sichtbar', 'PASS')
-
-      // Confirm-Button klicken
-      const confirmBtn = page.locator('button', { hasText: /delete|löschen|confirm|bestätigen/i }).last()
-      await confirmBtn.click()
-      // F8950 T22: statt networkidle - Bestaetigungs-Button verschwindet, sobald geloescht ist
-      await expect(confirmBtn).toBeHidden({ timeout: 10_000 }).catch(() => {})
-      logStep('IDM-4d', 'Delete bestätigt', 'Mapping gelöscht, Liste aktualisiert', 'Dialog geschlossen', 'PASS')
-    } else {
-      logStep('IDM-4c', 'Confirm-Dialog erscheint', 'Dialog sichtbar', 'Dialog nicht sichtbar — möglicherweise window.confirm()', 'SKIP')
-      findings.push('IDM-4c: Confirm-Dialog nicht als DOM-Modal erkannt — evtl. native window.confirm() wird verwendet')
-    }
-
-    await ctx2.close()
-  })
-})
-
-test.describe('IDM-5: Gaps-Report', () => {
-  test('/admin/item-domain-mappings/gaps lädt und zeigt Report', async ({ browser }) => {
-    const ctx2 = await browser.newContext({ baseURL: BASE_URL })
-    const page = await ctx2.newPage()
-
-    const loggedIn = await adminLoginViaForm(page)
-    if (!loggedIn) {
-      logStep('IDM-5', 'Gaps-Report', 'Login OK', 'Login fehlgeschlagen', 'SKIP')
-      await ctx2.close()
-      return
-    }
-
-    await page.goto(`${BASE_URL}/admin/item-domain-mappings/gaps`)
-    await waitForPageHydrated(page, 15_000)
-
-    const url = page.url()
-    if (!url.includes('gaps')) {
-      logStep('IDM-5a', 'Gaps-Report erreichbar', 'URL enthält "gaps"', url, 'FAIL')
-      findings.push(`IDM-5a: Gaps-Seite nicht erreichbar. URL="${url}"`)
-      await ctx2.close()
-      return
-    }
-    logStep('IDM-5a', 'Gaps-Report erreichbar', 'URL enthält "gaps"', url, 'PASS')
-
-    const h1Text = await page.locator('h1').first().textContent()
-    logStep('IDM-5b', 'Gaps-Report H1 vorhanden', 'H1 sichtbar', `"${h1Text}"`, h1Text ? 'PASS' : 'FAIL')
-
-    // Backend liefert bekannte Gaps (apotheke, baeckerei etc.) — Seite soll sie zeigen
-    // ABER: API-Mismatch bekannt: getMappingGaps() erwartet MappingGapEntry[] aber Backend liefert
-    // { uncovered_domains: [], uncovered_specialties: [] }
-    // Das führt zu: gaps.filter(...) schlägt fehl (Objekt hat kein .filter) → Error oder leer
-    const errorVisible = await page.locator('[class*="error"], .text-red, [role="alert"]').count() > 0
-    const tableVisible = await page.locator('table').count() > 0
-    const greenBanner = await page.locator('.bg-green-50, [class*="green"]').count() > 0
-
-    if (errorVisible) {
-      logStep('IDM-5c', 'Gaps-Report zeigt Daten', 'Tabelle mit Gaps ODER grüner "keine Gaps"-Banner', 'Fehler-Anzeige sichtbar', 'FAIL')
-      findings.push('IDM-5c: Gaps-Seite zeigt Fehler. Bekannte Ursache: getMappingGaps() erwartet MappingGapEntry[] aber Backend liefert {uncovered_domains:[], uncovered_specialties:[]}. gaps.filter() schlägt auf Objekt fehl.')
-    } else if (tableVisible) {
-      const rowCount = await page.locator('table tbody tr').count()
-      logStep('IDM-5c', 'Gaps-Report zeigt Daten', 'Tabelle mit Gap-Einträgen', `${rowCount} Zeilen`, rowCount > 0 ? 'PASS' : 'FAIL')
-      if (rowCount === 0) {
-        findings.push('IDM-5c: Gaps-Tabelle leer obwohl Backend 20 uncovered_domains meldet. Ursache: API-Format-Mismatch — getMappingGaps() liest Array, Backend liefert Objekt')
-      }
-    } else if (greenBanner) {
-      logStep('IDM-5c', 'Gaps-Report zeigt Daten', 'Tabelle mit Gaps oder grüner Banner', '"Keine Gaps"-Banner sichtbar (aber Backend hat bekannte Gaps)', 'FAIL')
-      findings.push('IDM-5c: FINDING — Gaps-Seite zeigt "keine Lücken" obwohl Backend 20 uncovered_domains hat. Ursache: getMappingGaps() bekommt Objekt statt Array → .filter() gibt undefined → noAutoAssignGaps ist leer. Fix: getMappingGaps() muss Objekt normalisieren: [...d.uncovered_domains, ...d.uncovered_specialties]')
-    } else {
-      logStep('IDM-5c', 'Gaps-Report zeigt Daten', 'Tabelle oder Banner', 'Kein erkennbarer Content', 'FAIL')
-      findings.push('IDM-5c: Gaps-Seite zeigt weder Tabelle noch Banner — unerwarteter Zustand')
-    }
-
-    await ctx2.close()
-  })
-})
 
 // ═════════════════════════════════════════════════════════════════════════════
 // AC-5: Badge "Vorgeschlagen" im Shop-Admin

@@ -14,11 +14,10 @@ import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { adminLogin } from '../_helpers'
+import { BACKEND_URL } from '../../env'
 import { generateRunId } from '../../run-lock'
 
-export const BACKEND_URL =
-  process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
-if (BACKEND_URL.includes(':8000')) throw new Error('[e2e test-data] Safety: NEVER use production port 8000!')
+export { BACKEND_URL }
 
 export const STATE_FILE = path.join(__dirname, '..', '..', '.test-state.json')
 
@@ -91,6 +90,18 @@ export function testDbUrl(): string {
 /** SQL gegen pundo_test (psql -At). Nur fuer gezielte Fixture-Eingriffe an EIGENEN Testzeilen. */
 export function psql(sql: string): string {
   return execFileSync('psql', [testDbUrl(), '-Atc', sql], { encoding: 'utf8' }).trim()
+}
+
+/**
+ * Zufaellige echte Kategorie mit mindestens `min` Items (Prod-Kopie). Fuer Seed-Items, die "verwandte Produkte"
+ * brauchen: die Related-Abfrage liefert Items derselben Kategorie, ein leeres Fixture-Item haette keine Nachbarn.
+ */
+export function populatedCategoryId(min = 5): number {
+  const id = Number(psql(
+    `select category_id from items where category_id is not null group by category_id having count(*) >= ${Math.floor(min)} order by random() limit 1`,
+  ))
+  if (!id) throw new Error(`[e2e] keine Kategorie mit >= ${min} Items in pundo_test`)
+  return id
 }
 
 // ── Admin API ────────────────────────────────────────────────────────────────

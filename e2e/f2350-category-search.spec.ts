@@ -15,8 +15,8 @@
 import { test, expect, request as pwRequest, type APIRequestContext } from '@playwright/test'
 import { tCommon } from '../src/lib/i18n/common'
 import { waitForPageHydrated } from './journeys/_helpers/hydration'
+import { BACKEND_URL } from './env'
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BACKEND_URL.includes(':8000')) throw new Error('Safety: F2350-Spec darf nicht gegen Port 8000 laufen')
 
 type Cat = { id: number; name: string | null; child_count: number }

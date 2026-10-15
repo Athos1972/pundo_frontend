@@ -23,65 +23,12 @@
  * Ports: Frontend 3500 · Backend 8500 · DB: pundo_test — NIEMALS 3000/8000
  */
 
-import { execSync } from 'child_process'
-import fs from 'fs'
-import path from 'path'
 import { test, expect } from '@playwright/test'
-import { adminLogin as _adminLogin } from './journeys/_helpers'
+import { adminLogin } from './journeys/_helpers'
 import { TestDataTracker, e2eEmail, e2eName } from './journeys/_helpers/test-data'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from './env'
 
-// Pfad zum Backend-Repo (gleiche Konvention wie global-setup.ts)
-const BACKEND_REPO =
-  process.env.BACKEND_REPO ??
-  '/Users/bb_studio_2025/dev/github/pundo_main_backend'
-
-/** Liest DATABASE_URL aus dem Backend-.env (nicht in Playwright-Umgebung gesetzt). */
-function readBackendDbUrl(): string {
-  try {
-    const envContent = fs.readFileSync(path.join(BACKEND_REPO, '.env'), 'utf8')
-    return (
-      envContent.match(/^DATABASE_URL_TEST=(.+)$/m)?.[1]?.trim() ??
-      envContent.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() ??
-      ''
-    )
-  } catch {
-    return process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL ?? ''
-  }
-}
-
-/**
- * Stellt sicher, dass der E2E-Admin-User existiert (idempotent), dann Login.
- * `_helpers.ts adminLogin()` loggt nur ein — erstellt den User nicht.
- */
-async function adminLogin(): Promise<string> {
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python3`
-  const adminEmail    = 'e2e-admin@pundo-e2e.io'
-  const adminPassword = 'E2eAdminPassword!99'
-  const dbUrl = readBackendDbUrl()
-  try {
-    execSync(
-      `${pyBin} scripts/seed_admin.py --email ${adminEmail} --password "${adminPassword}"`,
-      {
-        cwd: BACKEND_REPO,
-        stdio: 'pipe',
-        env: { ...process.env, DATABASE_URL: dbUrl },
-      }
-    )
-  } catch (err) {
-    const msg = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200)
-    console.warn(`[Smoke] seed_admin.py Warnung: ${msg}`)
-  }
-  return _adminLogin(adminEmail, adminPassword)
-}
-
-// ─── Port-Sicherheit ─────────────────────────────────────────────────────────
-
-const FRONTEND_URL = process.env.FRONTEND_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL  = process.env.BACKEND_URL  ?? process.env.TEST_BACKEND_URL ?? 'http://localhost:8500'
-
-if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
-  throw new Error('[smoke-shop-visibility] Safety: NIEMALS gegen Produktiv-Ports 3000/8000 testen!')
-}
+// Port-Sicherheit (3000/8000 abgelehnt): e2e/env.ts
 
 // ─── 4 Angebotsgruppen ───────────────────────────────────────────────────────
 

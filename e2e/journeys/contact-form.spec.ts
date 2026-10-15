@@ -9,9 +9,8 @@
  */
 import { test, expect } from '@playwright/test'
 import { t } from '../../src/lib/translations'
+import { BASE_URL, BACKEND_URL } from '../env'
 
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }

@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-overlap-20260530', () => {
   test.use({ viewport: { width: 390, height: 844 } }) // iPhone 14
 
   test('AC1+AC2: Submit-Button vollständig sichtbar, Verlauf-Leiste ausgeblendet wenn Overlay offen', async ({ page }) => {
-    await page.goto('http://localhost:3500/de')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/de')
+    await waitForPageHydrated(page)
 
     // Verlauf-Leiste (BottomTabBar nav) muss initial sichtbar sein
     const nav = page.locator('[data-testid="bottom-tab-bar"]')
@@ -37,8 +38,8 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
   })
 
   test('AC2 Reverse: Verlauf-Leiste kehrt zurück nach Modal-Schließen', async ({ page }) => {
-    await page.goto('http://localhost:3500/de')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/de')
+    await waitForPageHydrated(page)
 
     const nav = page.locator('[data-testid="bottom-tab-bar"]')
     const fab = page.locator('button[title="AI-Suche"]')
@@ -52,8 +53,8 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
   })
 
   test('AC3: FAB ist vollständig sichtbar und nicht von Verlauf-Leiste überdeckt', async ({ page }) => {
-    await page.goto('http://localhost:3500/de')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/de')
+    await waitForPageHydrated(page)
 
     const fab = page.locator('button[title="AI-Suche"]')
     await expect(fab).toBeVisible()
@@ -72,8 +73,8 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
 
   test('AC5: Desktop-Viewport — kein Regress (BottomTabBar md:hidden)', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
-    await page.goto('http://localhost:3500/de')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/de')
+    await waitForPageHydrated(page)
 
     // BottomTabBar ist auf Desktop nicht sichtbar
     const nav = page.locator('[data-testid="bottom-tab-bar"]')

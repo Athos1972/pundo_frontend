@@ -1,56 +1,84 @@
 /**
  * Journey: customer-shop-all-products-flow
- * Regression guard for B5900-004.
+ * Regression guard for B5900-004 und B5900-016.
+ *
+ * F8950 T31 (Zwei-Ebenen-Prinzip, docs/e2e-testing.md):
+ *  - Ebene 1 (laeuft immer, kein Skip): Die Spec legt zwei eigene Shops per API an. Shop A hat 3 Produkte mit
+ *    Angebot, Shop B listet eines davon zu einem niedrigeren Preis (Multi-Shop-Angebot) - so ist "best_offer im
+ *    shop_id-Modus nur vom eigenen Shop" (B5900-016) eine echte Pruefung.
+ *  - Ebene 2 (Realdaten-Check E1 bis E3): dieselben Invarianten gegen echte Prod-Kopie-Shops (grosser Shop mit
+ *    1596 Produkten, Demo-Shops). Fehlt ein Shop in pundo_test (frische Kopie), wird der Test mit konkretem Grund
+ *    uebersprungen.
  *
  * Fixtures:
  * ┌─────────────────────────┬────────────────────────────────────────────┐
  * │ Fixture                 │ Zweck                                      │
  * ├─────────────────────────┼────────────────────────────────────────────┤
- * │ manjo-pet-087d8709      │ Realer Shop mit 1596 Produkten (pundo_test)│
- * │ shop_id=75              │ Numerische ID für API-Query                │
+ * │ Spec-Shop A (specShop)  │ 3 Produkte mit Festpreis-Angebot (5.00)    │
+ * │ Spec-Shop B (specShop)  │ Listing + Angebot (1.00) auf Produkt 1 von A│
+ * │ manjo-pet-087d8709 u.a. │ Ebene 2: reale Prod-Kopie-Shops (read-only)│
  * └─────────────────────────┴────────────────────────────────────────────┘
  *
  * Port-Konvention: Frontend 3500, Backend 8500 (pundo_test).
  */
 
-import { test, expect } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
+import { test, expect, createStepLog } from '../fixtures'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { populatedCategoryId } from './_helpers/test-data'
+import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { BASE_URL, BACKEND_URL } from '../env'
 
-const BASE_URL = 'http://localhost:3500'
-const SHOP_SLUG = 'manjo-pet-087d8709'
-const SHOP_ID = 75
-const BACKEND_URL = 'http://localhost:8500'
+// Ebene 2: reale Shops der Prod-Kopie (read-only)
+const REAL_SHOPS = ['manjo-pet-087d8709', 'anna-s-bakery', 'o-phournos-tes-annas']
 
-// ─── Fixture pre-check ────────────────────────────────────────────────────────
+// Ebene 1: eigene Shops, im beforeAll angelegt
+let shopA: WorkerShop
+let shopB: WorkerShop
+let SHOP_SLUG = ''
+let SHOP_ID = 0
+let CATEGORY_ID = 0
+
+// ─── Seed (Ebene 1) ───────────────────────────────────────────────────────────
+
+const fixedTier = (price: number) => [{ unit: 'per_piece', steps: [{ min_quantity: 1, price, currency: 'EUR' }] }]
 
 test.beforeAll(async () => {
-  const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${SHOP_ID}&limit=1`)
-  if (!res.ok) {
-    test.skip() // Backend nicht erreichbar — kein FAIL
-    return
+  test.setTimeout(120_000)
+  shopA = await specShop('ALLPROD-A')
+  shopB = await specShop('ALLPROD-B')
+  SHOP_SLUG = shopA.slug
+  SHOP_ID = shopA.id
+  CATEGORY_ID = populatedCategoryId()
+
+  const items = []
+  for (const label of ['alpha', 'bravo', 'charlie']) {
+    const item = await shopA.createItem('ALLPROD', label, { listing: true, categoryId: CATEGORY_ID })
+    const offer = await shopA.api('POST', '/offers', { shop_listing_id: item.listingId, price_type: 'fixed', price_tiers: fixedTier(5) })
+    expect(offer.status, offer.text).toBe(201)
+    items.push(item)
   }
-  const data = await res.json() as { total?: number }
-  if (!data.total || data.total < 1) {
-    test.skip() // Fixture-Defekt: Shop hat keine Produkte — sync_prod_to_test.sh ausführen
-  }
+  // Shop B listet Produkt 1 von A zu 1.00 -> ohne shop_id-Filter waere B das beste Angebot
+  const listing = await shopB.api<{ id?: number }>('POST', '/shop-listings', { item_id: items[0].id })
+  expect(listing.status, listing.text).toBe(201)
+  const offerB = await shopB.api('POST', '/offers', { shop_listing_id: listing.json.id, price_type: 'fixed', price_tiers: fixedTier(1) })
+  expect(offerB.status, offerB.text).toBe(201)
+
+  await expect.poll(async () => {
+    const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${SHOP_ID}&limit=10`)
+    return res.ok ? ((await res.json()) as { total: number }).total : 0
+  }, { message: 'Seed-Produkte von Shop A oeffentlich sichtbar', timeout: 15_000 }).toBe(3)
+})
+
+test.afterAll(async () => {
+  await shopA?.destroy()
+  await shopB?.destroy()
 })
 
 // ─── Report state ────────────────────────────────────────────────────────────
 
-interface StepResult {
-  step: string
-  expected: string
-  actual: string
-  status: 'PASS' | 'FAIL' | 'SKIP'
-  note?: string
-}
-const steps: StepResult[] = []
-
-function logStep(step: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP', note?: string) {
-  steps.push({ step, expected, actual, status, note })
-}
+const { entries: steps, logStep } = createStepLog()
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -64,9 +92,9 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     const status = res?.status() ?? 0
 
     if (status === 200) {
-      logStep('A1 HTTP-Status', '200', String(status), 'PASS')
+      logStep('A1 HTTP-Status', '', '200', String(status), 'PASS')
     } else {
-      logStep('A1 HTTP-Status', '200', String(status), 'FAIL', 'Shop-Seite nicht erreichbar')
+      logStep('A1 HTTP-Status', '', '200', String(status), 'FAIL', 'Shop-Seite nicht erreichbar')
     }
     expect(status).toBe(200)
 
@@ -75,13 +103,13 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     await expect(h1).toBeVisible()
     const h1Text = await h1.textContent()
     const h1HasName = (h1Text ?? '').length > 0
-    logStep('A2 H1 Shop-Name', 'Nicht leer', h1Text ?? '', h1HasName ? 'PASS' : 'FAIL')
+    logStep('A2 H1 Shop-Name', '', 'Nicht leer', h1Text ?? '', h1HasName ? 'PASS' : 'FAIL')
     expect(h1HasName).toBe(true)
 
     // Keine JS-Konsolenfehler: statt networkidle auf Hydration warten
     await waitForPageHydrated(page)
     const criticalErrors = jsErrors.filter(e => !e.includes('favicon') && !e.includes('ERR_ABORTED'))
-    logStep('A3 Keine JS-Errors', '0 kritische Errors', String(criticalErrors.length), criticalErrors.length === 0 ? 'PASS' : 'FAIL', criticalErrors.join(' | ') || undefined)
+    logStep('A3 Keine JS-Errors', '', '0 kritische Errors', String(criticalErrors.length), criticalErrors.length === 0 ? 'PASS' : 'FAIL', criticalErrors.join(' | ') || undefined)
   })
 
   test('B — Top-Products-Sektion + Alle-Link', async ({ page }) => {
@@ -92,37 +120,37 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     // Backend liefert top 12 Produkte via searchProducts({shop_id, limit:12})
     const productLinks = page.locator('a[href^="/en/products/"]')
     const productCount = await productLinks.count()
-    logStep('B1 Top-Products sichtbar', '≥1 Produkt-Link', String(productCount), productCount >= 1 ? 'PASS' : 'FAIL')
+    logStep('B1 Top-Products sichtbar', '', '≥1 Produkt-Link', String(productCount), productCount >= 1 ? 'PASS' : 'FAIL')
     expect(productCount).toBeGreaterThanOrEqual(1)
 
     // "Alle"-Link existiert mit korrektem href
-    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]`)
+    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]:visible`)
     await expect(alleLink).toBeVisible()
     const alleHref = await alleLink.getAttribute('href')
-    logStep('B2 Alle-Link href', `/en/search?shop_id=${SHOP_ID}`, alleHref ?? '', alleHref?.includes(`shop_id=${SHOP_ID}`) ? 'PASS' : 'FAIL')
+    logStep('B2 Alle-Link href', '', `/en/search?shop_id=${SHOP_ID}`, alleHref ?? '', alleHref?.includes(`shop_id=${SHOP_ID}`) ? 'PASS' : 'FAIL')
     expect(alleHref).toContain(`shop_id=${SHOP_ID}`)
 
     // B5900-004: Link-Text darf NICHT hartcodiert Deutsch "Alle" sein wenn Sprache EN
     const alleText = (await alleLink.textContent())?.trim() ?? ''
     const isNotHardcodedDe = alleText !== 'Alle →' && alleText !== 'Alle'
-    logStep('B3 Link-Text I18n (EN)', 'Text ≠ "Alle"', alleText, isNotHardcodedDe ? 'PASS' : 'FAIL', isNotHardcodedDe ? undefined : 'Hartcodierter DE-Text in EN-Seite')
+    logStep('B3 Link-Text I18n (EN)', '', 'Text ≠ "Alle"', alleText, isNotHardcodedDe ? 'PASS' : 'FAIL', isNotHardcodedDe ? undefined : 'Hartcodierter DE-Text in EN-Seite')
     expect(isNotHardcodedDe, `"Alle →" ist hartcodiert Deutsch — I18n-Fix fehlt. Aktuell: "${alleText}"`).toBe(true)
 
     // EN-Seite: Text sollte "All" enthalten
     const isEnText = alleText.toLowerCase().startsWith('all')
-    logStep('B4 Link-Text EN = "All →"', '"All →"', alleText, isEnText ? 'PASS' : 'FAIL')
+    logStep('B4 Link-Text EN = "All →"', '', '"All →"', alleText, isEnText ? 'PASS' : 'FAIL')
     expect(isEnText, `Erwartet "All →", erhalten "${alleText}"`).toBe(true)
   })
 
   test('B5 — Alle-Link übersetzt auf DE-Seite', async ({ page }) => {
     await page.goto(`${BASE_URL}/de/shops/${SHOP_SLUG}`)
 
-    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]`)
+    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]:visible`)
     await expect(alleLink).toBeVisible()
     const alleText = (await alleLink.textContent())?.trim() ?? ''
     // Auf DE-Seite ist "Alle →" die korrekte Übersetzung
     const isDeText = alleText.startsWith('Alle')
-    logStep('B5 Link-Text DE = "Alle →"', '"Alle →"', alleText, isDeText ? 'PASS' : 'FAIL')
+    logStep('B5 Link-Text DE = "Alle →"', '', '"Alle →"', alleText, isDeText ? 'PASS' : 'FAIL')
     expect(isDeText, `Erwartet "Alle →" auf DE, erhalten "${alleText}"`).toBe(true)
   })
 
@@ -142,13 +170,13 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     await waitForPageHydrated(page)
 
     // Klick auf "All →" Link
-    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]`)
+    const alleLink = page.locator(`a[href*="search?shop_id=${SHOP_ID}"]:visible`)
     await alleLink.click()
 
     // URL muss auf /search?shop_id=75 zeigen
     await page.waitForURL(`**search?shop_id=${SHOP_ID}**`)
     const currentUrl = page.url()
-    logStep('C1a Navigation', `/en/search?shop_id=${SHOP_ID}`, currentUrl, currentUrl.includes(`shop_id=${SHOP_ID}`) ? 'PASS' : 'FAIL')
+    logStep('C1a Navigation', '', `/en/search?shop_id=${SHOP_ID}`, currentUrl, currentUrl.includes(`shop_id=${SHOP_ID}`) ? 'PASS' : 'FAIL')
     expect(currentUrl).toContain(`shop_id=${SHOP_ID}`)
 
     // F8950 T22: statt networkidle + 1,5 s Timeout - die expect-Zeile unten wartet auf die Produktkarten
@@ -160,12 +188,12 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     const productLinks = page.locator('a[href^="/en/products/"]:visible')
     await expect(productLinks.first()).toBeVisible({ timeout: 10000 })
     const count = await productLinks.count()
-    logStep('C1b Produkte sichtbar', '≥1 Produkt-Link', String(count), count >= 1 ? 'PASS' : 'FAIL', count === 0 ? 'B5900-004 REGRESSION: SearchContent ignoriert shop_id' : undefined)
-    expect(count, 'REGRESSION B5900-004: Keine Produkte bei ?shop_id=75').toBeGreaterThanOrEqual(1)
+    logStep('C1b Produkte sichtbar', '', '≥1 Produkt-Link', String(count), count >= 1 ? 'PASS' : 'FAIL', count === 0 ? 'B5900-004 REGRESSION: SearchContent ignoriert shop_id' : undefined)
+    expect(count, `REGRESSION B5900-004: Keine Produkte bei ?shop_id=${SHOP_ID}`).toBeGreaterThanOrEqual(1)
 
     // API-Calls: /api/v1/products?shop_id=75 muss aufgerufen worden sein
     const shopIdCall = apiCalls.find(u => u.includes('products') && u.includes(`shop_id=${SHOP_ID}`))
-    logStep('C1c API shop_id-Request', `/api/v1/products?shop_id=${SHOP_ID}`, shopIdCall ?? 'nicht gefunden', shopIdCall ? 'PASS' : 'FAIL')
+    logStep('C1c API shop_id-Request', '', `/api/v1/products?shop_id=${SHOP_ID}`, shopIdCall ?? 'nicht gefunden', shopIdCall ? 'PASS' : 'FAIL')
     expect(shopIdCall, 'searchProducts mit shop_id wurde nicht aufgerufen').toBeTruthy()
   })
 
@@ -182,7 +210,7 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
     await expect(page.locator('a[href^="/en/products/"]:visible').first()).toBeVisible({ timeout: 10_000 })
 
     const noSearchAll = searchAllCalls.length === 0
-    logStep('C2 searchAll nicht aufgerufen', '0 /search Calls', String(searchAllCalls.length), noSearchAll ? 'PASS' : 'FAIL', noSearchAll ? undefined : `searchAll-Calls: ${searchAllCalls.join(', ')}`)
+    logStep('C2 searchAll nicht aufgerufen', '', '0 /search Calls', String(searchAllCalls.length), noSearchAll ? 'PASS' : 'FAIL', noSearchAll ? undefined : `searchAll-Calls: ${searchAllCalls.join(', ')}`)
     expect(searchAllCalls).toHaveLength(0)
   })
 
@@ -194,89 +222,107 @@ test.describe('customer-shop-all-products-flow (B5900-004)', () => {
       if (url.includes('/api/v1/products') && url.includes('category_id')) productCalls.push(url)
     })
 
-    // Kategorie 1 existiert (Hunde)
-    await page.goto(`${BASE_URL}/en/search?category_id=1`)
+    await page.goto(`${BASE_URL}/en/search?category_id=${CATEGORY_ID}`)
     // F8950 T22: statt networkidle + 1,5 s auf den Request warten
-    await expect.poll(() => productCalls.find(u => u.includes('category_id=1')), { timeout: 10_000 }).toBeTruthy()
+    await expect.poll(() => productCalls.find(u => u.includes(`category_id=${CATEGORY_ID}`)), { timeout: 10_000 }).toBeTruthy()
 
-    const categoryCall = productCalls.find(u => u.includes('category_id=1'))
-    logStep('D1 category_id-Modus', '/api/v1/products?category_id=1 aufgerufen', categoryCall ?? 'nicht gefunden', categoryCall ? 'PASS' : 'FAIL')
+    const categoryCall = productCalls.find(u => u.includes(`category_id=${CATEGORY_ID}`))
+    logStep('D1 category_id-Modus', '', `/api/v1/products?category_id=${CATEGORY_ID} aufgerufen`, categoryCall ?? 'nicht gefunden', categoryCall ? 'PASS' : 'FAIL')
     expect(categoryCall, 'searchProducts mit category_id wurde nicht aufgerufen — Guard-Fix hat Regression').toBeTruthy()
   })
 
   // ─── E — B5900-016: best_offer im shop_id-Modus nur vom eigenen Shop ───────────
+  // Ebene 1 = Spec-Shop A (immer), Ebene 2 = reale Prod-Kopie-Shops (Skip mit Grund, wenn nicht vorhanden).
 
   const GEO = 'lat=34.6841&lng=33.0379'
   type ListItem = { name?: string; best_offer?: { shop_id: number; shop_slug?: string } | null }
+  type ShopDetail = { id: number; product_count?: number }
 
-  for (const slug of ['manjo-pet-087d8709', 'anna-s-bakery', 'o-phournos-tes-annas']) {
-    test(`E1 — API-Invariante shop_id-Modus (${slug}): nur eigene Angebote, total == product_count`, async () => {
-      const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
-      if (!detailRes.ok) {
-        logStep(`E1 ${slug}`, 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP', 'Fixture fehlt in pundo_test')
-        test.skip(true, `Shop ${slug} nicht vorhanden`)
-        return
-      }
-      const detail = await detailRes.json() as { id: number; product_count?: number }
+  /** Slug des Ziels: 'seed' = Spec-Shop A (Ebene 1), sonst echter Shop. */
+  const targetSlug = (t: string) => (t === 'seed' ? SHOP_SLUG : t)
+  const levelOf = (t: string) => (t === 'seed' ? 'Ebene 1: Spec-Shop A' : `Ebene 2: ${t}`)
+
+  /**
+   * Shop-Links im Produktraster. Breadcrumb (`nav`) und Bereiche wie "Shops in der Naehe" (`section`) gehoeren nicht
+   * zum Raster; Spec-Shops haben (anders als die Demo-Shops) einen Standort und damit beides.
+   */
+  const gridShopLinks = (page: import('@playwright/test').Page) =>
+    page.locator('main a[href^="/en/shops/"]').evaluateAll(els =>
+      els.filter(e => !e.closest('nav') && !e.closest('section')).map(e => e.getAttribute('href') ?? ''))
+
+  /** Shop-Detail; bei einem realen Shop, der in dieser Prod-Kopie fehlt, wird der Test mit Grund uebersprungen. */
+  async function detailOrSkip(t: string): Promise<ShopDetail> {
+    const res = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${targetSlug(t)}`)
+    if (!res.ok) {
+      logStep(`E ${t}`, '', 'Shop vorhanden', `HTTP ${res.status}`, 'SKIP', 'Prod-Kopie ohne diesen Shop')
+      test.skip(t !== 'seed', `Realdaten-Check: Shop ${t} fehlt in pundo_test (Prod-Kopie ohne diesen Shop)`)
+      throw new Error(`Spec-Shop ${t} nicht abrufbar: HTTP ${res.status}`)
+    }
+    return await res.json() as ShopDetail
+  }
+
+  for (const t of ['seed', ...REAL_SHOPS]) {
+    test(`E1 — API-Invariante shop_id-Modus (${levelOf(t)}): nur eigene Angebote, total == product_count`, async () => {
+      const detail = await detailOrSkip(t)
       for (const geo of ['', `&${GEO}`]) {
         const res = await fetch(`${BACKEND_URL}/api/v1/products?shop_id=${detail.id}&limit=100${geo}`)
         const data = await res.json() as { total: number; items: ListItem[] }
+        if (t === 'seed') expect(data.total, 'Spec-Shop A hat genau 3 Produkte').toBe(3)
         const foreign = data.items.filter(i => !i.best_offer || i.best_offer.shop_id !== detail.id)
-        const label = `E1 ${slug}${geo ? ' +geo' : ''}`
-        logStep(`${label} nur eigene Angebote`, '0 fremde/fehlende best_offer', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.map(i => i.name).join(', ') || undefined)
+        const label = `E1 ${t}${geo ? ' +geo' : ''}`
+        logStep(`${label} nur eigene Angebote`, '', '0 fremde/fehlende best_offer', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.map(i => i.name).join(', ') || undefined)
         expect(foreign, `Fremd-/Kein-Angebot im shop_id-Modus: ${foreign.map(i => i.name).join(', ')}`).toHaveLength(0)
         if (data.total <= 100 && typeof detail.product_count === 'number') {
           const same = detail.product_count === data.total
-          logStep(`${label} product_count == total`, String(detail.product_count), String(data.total), same ? 'PASS' : 'FAIL')
+          logStep(`${label} product_count == total`, '', String(detail.product_count), String(data.total), same ? 'PASS' : 'FAIL')
           expect(data.total).toBe(detail.product_count)
         }
       }
     })
   }
 
-  test('E2 — Shop-Seite: jede Karte verlinkt nur auf den eigenen Shop; Raster == product_count (Demo-Shops)', async ({ page }) => {
-    for (const slug of ['anna-s-bakery', 'o-phournos-tes-annas']) {
-      const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
-      if (!detailRes.ok) { logStep(`E2 ${slug}`, 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP'); continue }
-      const detail = await detailRes.json() as { product_count: number }
+  for (const t of ['seed', 'anna-s-bakery', 'o-phournos-tes-annas']) {
+    test(`E2 — Shop-Seite (${levelOf(t)}): jede Karte verlinkt nur auf den eigenen Shop; Raster == product_count`, async ({ page }) => {
+      const detail = await detailOrSkip(t) as { product_count: number }
+      const slug = targetSlug(t)
       await page.goto(`${BASE_URL}/en/shops/${slug}`)
       await waitForPageHydrated(page)
       await expect(page.locator('a[href^="/en/products/"]').first()).toBeAttached()
       const cards = await page.locator('a[href^="/en/products/"]').evaluateAll(els => els.length)
-      const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
+      const shopLinks = await gridShopLinks(page)
       const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
-      logStep(`E2 ${slug} nur eigene Shop-Links`, '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
+      logStep(`E2 ${t} nur eigene Shop-Links`, '', '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
       expect(foreign, `Fremde Shop-Links im Raster: ${foreign.join(', ')}`).toHaveLength(0)
       const ok = cards >= detail.product_count
-      logStep(`E2 ${slug} Kartenanzahl`, `>= ${detail.product_count}`, String(cards), ok ? 'PASS' : 'FAIL')
+      logStep(`E2 ${t} Kartenanzahl`, '', `>= ${detail.product_count}`, String(cards), ok ? 'PASS' : 'FAIL')
       expect(cards).toBeGreaterThanOrEqual(detail.product_count)
-    }
-  })
+    })
+  }
 
-  test('E3 — /search?shop_id= mit Geolocation Limassol: nur eigene Shop-Links, Anzahl == product_count', async ({ browser }) => {
-    const slug = 'anna-s-bakery'
-    const detailRes = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
-    if (!detailRes.ok) { logStep('E3', 'Shop vorhanden', `HTTP ${detailRes.status}`, 'SKIP'); test.skip(true, 'anna-s-bakery fehlt'); return }
-    const detail = await detailRes.json() as { id: number; product_count: number }
-    const ctx = await browser.newContext({ geolocation: { latitude: 34.6841, longitude: 33.0379 }, permissions: ['geolocation'] })
-    const page = await ctx.newPage()
-    try {
-      await page.goto(`${BASE_URL}/en/search?shop_id=${detail.id}`)
-      // F8950 T22: statt networkidle + 1,5 s - warten, bis alle Karten des Shops gerendert sind
-      const uniqueProductHrefs = () => page.locator('a[href^="/en/products/"]')
-        .evaluateAll(els => new Set(els.map(e => e.getAttribute('href'))).size)
-      await expect.poll(uniqueProductHrefs, { timeout: 15_000 }).toBe(detail.product_count)
-      const productHrefs = await page.locator('a[href^="/en/products/"]').evaluateAll(els => Array.from(new Set(els.map(e => e.getAttribute('href')))))
-      const shopLinks = await page.locator('main a[href^="/en/shops/"]').evaluateAll(els => els.map(e => e.getAttribute('href') ?? ''))
-      const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
-      logStep('E3 Anzahl Karten', String(detail.product_count), String(productHrefs.length), productHrefs.length === detail.product_count ? 'PASS' : 'FAIL')
-      logStep('E3 nur eigene Shop-Links', '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
-      expect(productHrefs.length).toBe(detail.product_count)
-      expect(foreign).toHaveLength(0)
-    } finally {
-      await ctx.close()
-    }
-  })
+  for (const t of ['seed', 'anna-s-bakery']) {
+    test(`E3 — /search?shop_id= mit Geolocation Limassol (${levelOf(t)}): nur eigene Shop-Links, Anzahl == product_count`, async ({ browser }) => {
+      const detail = await detailOrSkip(t) as { id: number; product_count: number }
+      const slug = targetSlug(t)
+      const ctx = await browser.newContext({ geolocation: { latitude: 34.6841, longitude: 33.0379 }, permissions: ['geolocation'] })
+      const page = await ctx.newPage()
+      try {
+        await page.goto(`${BASE_URL}/en/search?shop_id=${detail.id}`)
+        // F8950 T22: statt networkidle + 1,5 s - warten, bis alle Karten des Shops gerendert sind
+        const uniqueProductHrefs = () => page.locator('a[href^="/en/products/"]')
+          .evaluateAll(els => new Set(els.map(e => e.getAttribute('href'))).size)
+        await expect.poll(uniqueProductHrefs, { timeout: 15_000 }).toBe(detail.product_count)
+        const productHrefs = await page.locator('a[href^="/en/products/"]').evaluateAll(els => Array.from(new Set(els.map(e => e.getAttribute('href')))))
+        const shopLinks = await gridShopLinks(page)
+        const foreign = shopLinks.filter(h => h.replace(/\/$/, '') !== `/en/shops/${slug}`)
+        logStep(`E3 ${t} Anzahl Karten`, '', String(detail.product_count), String(productHrefs.length), productHrefs.length === detail.product_count ? 'PASS' : 'FAIL')
+        logStep(`E3 ${t} nur eigene Shop-Links`, '', '0 fremde', String(foreign.length), foreign.length === 0 ? 'PASS' : 'FAIL', foreign.join(', ') || undefined)
+        expect(productHrefs.length).toBe(detail.product_count)
+        expect(foreign).toHaveLength(0)
+      } finally {
+        await ctx.close()
+      }
+    })
+  }
 
 })
 
@@ -303,9 +349,10 @@ test.afterAll(async () => {
 ## Fixtures
 | Fixture | Wert |
 |---|---|
-| Shop-Slug | manjo-pet-087d8709 |
+| Shop-Slug (Ebene 1, Spec-Shop A) | ${SHOP_SLUG} |
 | Shop-ID | ${SHOP_ID} |
-| Produkte im Backend | 1596 (pundo_test) |
+| Produkte im Spec-Shop A | 3 (Multi-Shop: Shop B listet Produkt 1 zu 1.00) |
+| Ebene 2 (Realdaten) | ${REAL_SHOPS.join(', ')} |
 
 ## Schritt-Protokoll
 | Schritt | Erwartet | Tatsächlich | Status |
@@ -316,7 +363,7 @@ ${rows}
 ${fail === 0 ? '— Keine Findings. B5900-004 erfolgreich regressionsfrei.' : steps.filter(s => s.status === 'FAIL').map(s => `- **${s.step}:** ${s.note ?? s.actual}`).join('\n')}
 
 ## Cleanup
-Kein Cleanup nötig — Journey nutzt nur bestehende pundo_test-Daten (read-only).
+Spec-Shops A und B werden im afterAll per Admin-Delete entfernt (kaskadiert Listings, Offers, exklusive Items). Ebene 2 liest nur.
 `
 
   if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true })

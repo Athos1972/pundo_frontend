@@ -1,5 +1,24 @@
 # TESTSET — pundo_frontend
 
+## Playwright-Suite — Stand 2026-10-15 (F8950 Stufe 4 Frontend, T30–T33)
+
+Messung: `npx playwright test`, warmer Standalone-Build, Workers 4, Backend 8500, `pundo_test`, kein pytest parallel.
+
+| Größe | Ende Stufe 3 | Stufe 4 |
+|---|---|---|
+| Wanduhr (`stats.duration`), zwei Läufe | 132,6 s / 133,0 s | 113,1 s / 114,9 s (1,9 min) |
+| Tests | 705 | 710 (+5: Ebene-1-Tests `b5910-007` P5a und `customer-shop-all-products-flow` E1 bis E3; die Dateisplits ändern die Testzahl nicht) |
+| passed / failed / flaky | 699 / 0 / 0 | 703 / 0 / 0 |
+| `--repeat-each=2 --retries=0` | — | 1381 Tests, 1367 passed, 14 skipped, 0 failed, 0 flaky, 187,6 s; `--project=smoke --repeat-each=2`: 78/78 |
+| `networkidle`- / `waitForTimeout`-Aufrufe im Code | 52 / 12 | 0 / 0 |
+| lokale Kopien `logStep`/`apiFetch`/`adminLogin`/`adminHeaders` | 12 / 9 / 9 / 7 | 0 (nur `fixtures.ts`, `_helpers.ts`; `global-setup` heißt `seedAndLoginAdmin`) |
+| URL-Literale `localhost/127.0.0.1:3500/8500` in `e2e/` | 102 | 2 (nur `env.ts`) |
+| Specs über 600 Zeilen | 6 | 2 (begründete Ausnahmen: `shop-owner-full-lifecycle`, `shop-detail-attribute-matrix`) |
+
+Skips (7, alle mit Grund im Test): `price-history` Realdaten, 4× `admin-catalog-review` (Gateway 8600), `shop-admin-import-image-url` AC-3/4, `shop-discovery` „Textsuche nach Shop-Name“ (Suchseite zeigt Shops nicht nach Namen; vorher stilles `return`).
+
+---
+
 ## Playwright-Suite — Stand 2026-10-15 (F8950 Stufe 3, T15–T23 ohne T19)
 
 Messung: `npx playwright test` mit warmem Standalone-Build, Workers 4, Backend 8500, `pundo_test`; Auswertung `node scripts/e2e-durations.mjs`.

@@ -234,7 +234,7 @@ Vollständiger Katalog: `e2e/TESTSET.md`
 
 | Variable | Default | Scope |
 |----------|---------|-------|
-| `BACKEND_URL` | `http://localhost:8500` | global-setup + spec-Dateien |
+| `BACKEND_URL` | `http://localhost:8500` | `e2e/env.ts` (global-setup, Configs, Specs) |
 | `FRONTEND_URL` | `http://localhost:3500` | playwright.config + global-setup Browser |
 | `E2E_FRONTEND_PORT` | `3500` | Port des Frontends (webServer / Freshness-Check) |
 | `E2E_FRONTEND_MODE` | — | `dev` → webServer startet `npm run dev:test` statt Standalone-Build |
@@ -288,9 +288,32 @@ curl "https://maps.googleapis.com/maps/api/geocode/json?address=Finikoudes+Beach
 ## Hydration-Falle bei `goto` + Klick (B8950-012)
 `page.goto(url, { waitUntil: 'domcontentloaded' })` wartet nur auf das Server-HTML. Ein sofortiger Klick auf einen SSR-Button, dessen React-Handler noch nicht hängt (Chunks laden; unter Last oder `next dev` mehrere Sekunden), geht verloren — Modal/Panel öffnet sich nie, der Folgeschritt läuft in den Test-Timeout. Für den ersten Klick nach `goto` auf eine Client-Seite `clickHydrated(locator)` aus `e2e/journeys/_helpers/hydration.ts` nutzen (pollt auf `__reactProps$…`, kein fester Timeout). Für Kategorie-Vorschläge `fillNameAndAwaitSuggestions()` (`_helpers/category-picker.ts`): wartet auf die `suggest`-Antwort, prüft den Status und nennt bei Fehlern Status/Dauer.
 
+## Zentrale Fixtures und Helfer (F8950 T30)
+
+| Datei | Inhalt |
+|---|---|
+| `e2e/env.ts` | **einzige Quelle** für `BASE_URL` (Frontend, immer `127.0.0.1:3500`, Cookie-Domain des storageState) und `BACKEND_URL` (`localhost:8500`). Lehnt 3000/8000 ab. Specs importieren sie (`import { BASE_URL, BACKEND_URL } from '../env'`, bei Bedarf `BASE_URL as FRONTEND_URL`); neue URL-Literale mit `localhost:3500`/`127.0.0.1:8500` gibt es nicht mehr. Cookies setzen mit `domain: new URL(BASE_URL).hostname`. |
+| `e2e/fixtures.ts` | `test`/`expect` mit Fixtures `adminPage` (Page mit Admin-storageState `e2e/.auth/admin.json`, kein UI-Login), `adminApi`, `ownerApi`; dazu `createStepLog()`, `ADMIN_STATE`, Re-Exports. `journeys/_helpers/worker-shop.ts` baut darauf auf (`workerShop` + `adminPage` zusammen nutzbar). |
+| `e2e/journeys/_helpers.ts` | `adminLogin()` (nutzt den Admin-Token des Setups), `adminHeaders(token?)`, `apiFetch(method, path, body?, headers?)`, `shopOwnerLogin`, `shopOwnerOnboardWithRetry`. Keine lokalen Kopien in Specs (`grep -rE "(function|const) (logStep|apiFetch|adminLogin|adminHeaders)\b" e2e` trifft nur diese Dateien). |
+| `journeys/_helpers/test-data.ts` | Marker, `adminApi`/`ownerApi`, `TestDataTracker`, `psql`, `populatedCategoryId()` (echte Kategorie mit Nachbarn für „verwandte Produkte“). |
+| `journeys/_helpers/offers-api.ts` | Owner-API- und UI-Helfer der Shop-Admin-Offers-Specs. |
+| `journeys/_helpers/png.ts` | gültige PNGs für Foto-Uploads (`workerShop.uploadPhoto(itemId)`). |
+
+Schrittprotokoll für Journey-Reports: `const { logStep } = createStepLog(ctx.stepLog)` (Signatur `logStep(step, desc, expected, actual, 'PASS'|'FAIL'|'SKIP')`, Kurzform `logStep(step, desc, ok)`).
+
+Admin-Seiten testen: `test('…', async ({ adminPage: page }) => { … })` statt Formular-Login oder Cookie-Injektion. Der Formular-Login bleibt nur dort, wo er Prüfgegenstand ist (`admin.spec` E2E-11, `shop-owner-admin-approval-flow` AC-1).
+
+### Keine festen Prod-Kopie-Slugs (T31)
+
+Kernprüfungen hängen nicht an festen Slugs/IDs der Prod-Kopie. Die Spec seedet per API: `specShop('NAME')` oder `workerShop.createItem(spec, label, { listing: true, categoryId })`, Angebot per `shop.api('POST', '/offers', …)`, Foto per `shop.uploadPhoto(item.id)`; Aufräumen per `shop.destroy()` / `cleanupSpecData()`. Realdaten-Checks (Ebene 2 des Zwei-Ebenen-Prinzips) sind eigene Tests mit `test.skip(!vorhanden, '<konkreter Grund>')`. Beispiele: `main.spec` (`seedProduct`), `customer-shop-all-products-flow` (zwei Spec-Shops, Ebene 2 = reale Shops), `b5910-007` P5a/P5b.
+
+### Dateigröße (T32)
+
+Specs bleiben unter ca. 600 Zeilen, damit die 4 Worker sie parallel abarbeiten. Geteilt: `shop-admin-offers*` (4 Dateien), `service-catalog-*` (2), `shop-owner-quick-onboarding*` (2), `social-link-moderation*` (2). Begründete Ausnahmen: `shop-owner-full-lifecycle` (eine nummerierte Geschichte, die Reihenfolge der Schritte ist Prüfgegenstand) und `shop-detail-attribute-matrix` (serielle Tabula-rasa-/Roundtrip-Tests auf einem gemeinsamen Spec-Shop; ein Split würde den Shop-Aufbau verdoppeln).
+
 ## Kein `networkidle`, kein `waitForTimeout` (F8950 T22)
 
-`waitForLoadState('networkidle')` und feste Timeouts sind in den langsamsten Specs durch Bedingungen ersetzt (Web-first-Assertions, `waitForResponse`/`waitForRequest` auf den konkreten Call, `expect.poll`, `toPass`). Helfer in `e2e/journeys/_helpers/hydration.ts`:
+`waitForLoadState('networkidle')` und feste Timeouts sind in der gesamten Suite durch Bedingungen ersetzt (Stufe 4: 0 Aufrufe im Code) (Web-first-Assertions, `waitForResponse`/`waitForRequest` auf den konkreten Call, `expect.poll`, `toPass`). Helfer in `e2e/journeys/_helpers/hydration.ts`:
 
 - `waitForPageHydrated(page)` — Seite geladen und React hat hydriert. Für „keine JS-Fehler“-Tests und synchrone DOM-Reads. Nach dem Hydrieren per fetch nachgeladene Inhalte (Suchergebnisse, Listen) zusätzlich über einen Locator abwarten.
 - `waitForHydrated(locator)` / `clickHydrated(locator)` — einzelne Elemente.

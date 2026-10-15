@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
-import { resolve } from 'path'
 import { tConsent, consentTranslations } from '@/lib/i18n/consent'
 import {
   parseConsentCookie,
@@ -100,14 +98,4 @@ describe('consentTranslations — consent_banner_text (cookie-banner-text-i18n-2
   })
 })
 
-describe('ConsentContext — writeConsentCookie Secure flag (source regression)', () => {
-  const src = readFileSync(
-    resolve(__dirname, '../../src/components/consent/ConsentContext.tsx'),
-    'utf8',
-  )
-
-  it('writeConsentCookie includes secure attribute (Observatory regression 2026-06-05)', () => {
-    // The document.cookie string in writeConsentCookie must contain "secure"
-    expect(src.toLowerCase()).toMatch(/document\.cookie\s*=[\s\S]*?secure/)
-  })
-})
+// Secure-Flag des Consent-Cookies (Observatory-Regression): ConsentContext.test.tsx

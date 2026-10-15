@@ -1,10 +1,26 @@
 import { test, expect } from '@playwright/test'
 import { waitForHydrated, waitForPageHydrated } from './journeys/_helpers/hydration'
+import { BACKEND_URL } from './env'
+import { specShop, type WorkerShop } from './journeys/_helpers/worker-shop'
+import { populatedCategoryId } from './journeys/_helpers/test-data'
 
 // F8950 T17: dir/lang-Matrix und Startseiten-Smoke leben in language-smoke.spec.ts (E2E-01, E2E-03, /help- und /for-shops-RTL hier gestrichen).
 // Cookie-Domain aus E2E_COOKIE_DOMAIN (Env) oder Fallback 127.0.0.1
 const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
+
+// F8950 T31: kein fester Prod-Kopie-Slug mehr. Die Produktseiten-Tests seeden per API ein Marker-Item mit Listing und
+// Festpreis-Angebot in einem eigenen Spec-Shop; die Kategorie ist eine echte mit >= 5 Items, damit "verwandte Produkte"
+// (Items derselben Kategorie) existieren.
+async function seedProduct(label: string): Promise<{ shop: WorkerShop; slug: string }> {
+  const shop = await specShop(`MAIN-${label}`)
+  const item = await shop.createItem('MAIN', label.toLowerCase(), { listing: true, categoryId: populatedCategoryId() })
+  const offer = await shop.api('POST', '/offers', {
+    shop_listing_id: item.listingId, price_type: 'fixed',
+    price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 4.5, currency: 'EUR' }] }],
+  })
+  expect(offer.status, offer.text).toBe(201)
+  return { shop, slug: item.slug }
+}
 
 // ─── E2E-02: Suche ───────────────────────────────────────────────────────────
 
@@ -59,18 +75,20 @@ test.describe('E2E-04: Produkt-Detailseite', () => {
 // ─── E2E-04b: Related Products Carousel ──────────────────────────────────────
 
 test.describe('E2E-04b: Related Products Carousel', () => {
-  const TEST_SLUG = 'avicentra-avicentra-classic-menu-budgie-1kg'
+  let TEST_SLUG = ''
+  let seed: WorkerShop
 
-  // Helper: skip test if product not in test-DB (after DB reset product data may be absent)
-  async function skipIfProductMissing(request: import('@playwright/test').APIRequestContext) {
-    const res = await request.get(`/api/v1/products/by-slug/${TEST_SLUG}`)
-    if (res.status() === 404) {
-      test.skip(true, `Product '${TEST_SLUG}' not in test-DB — run prepare_e2e_db.py with product sync`)
-    }
-  }
+  test.beforeAll(async () => {
+    const seeded = await seedProduct('RELATED')
+    seed = seeded.shop
+    TEST_SLUG = seeded.slug
+  })
 
-  test('carousel section visible when related products exist', async ({ page, request }) => {
-    await skipIfProductMissing(request)
+  test.afterAll(async () => {
+    await seed?.destroy()
+  })
+
+  test('carousel section visible when related products exist', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto(`/products/${TEST_SLUG}`)
@@ -82,8 +100,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     expect(errors).toHaveLength(0)
   })
 
-  test('carousel heading is rendered', async ({ page, request }) => {
-    await skipIfProductMissing(request)
+  test('carousel heading is rendered', async ({ page }) => {
     await page.goto(`/products/${TEST_SLUG}`)
     await expect(page.getByRole('heading', { name: /related products/i })).toBeVisible()
   })
@@ -104,8 +121,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     }
   })
 
-  test('carousel cards are clickable and link to products', async ({ page, request }) => {
-    await skipIfProductMissing(request)
+  test('carousel cards are clickable and link to products', async ({ page }) => {
     await page.goto(`/products/${TEST_SLUG}`)
 
     const section = page.getByRole('region', { name: /related products/i })
@@ -116,8 +132,7 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     expect(href).toMatch(/\/products\//)
   })
 
-  test('page loads without crash when /related returns 500 (graceful fallback)', async ({ page, request }) => {
-    await skipIfProductMissing(request)
+  test('page loads without crash when /related returns 500 (graceful fallback)', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
 
@@ -311,7 +326,18 @@ test.describe('E2E-09: Customer Auth Pages', () => {
 // ─── E2E-10: Review Section on Product/Shop Pages ────────────────────────────
 
 test.describe('E2E-10: Review Section', () => {
-  const TEST_PRODUCT_SLUG = 'acana-acana-wild-prairie-cat-18kg'
+  let TEST_PRODUCT_SLUG = ''
+  let seed: WorkerShop
+
+  test.beforeAll(async () => {
+    const seeded = await seedProduct('REVIEW')
+    seed = seeded.shop
+    TEST_PRODUCT_SLUG = seeded.slug
+  })
+
+  test.afterAll(async () => {
+    await seed?.destroy()
+  })
 
   test('product page renders without crash', async ({ page }) => {
     const errors: string[] = []
@@ -444,13 +470,20 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 })
 
 test.describe('E2E-11b: ReviewSection how-it-works hint', () => {
-  const TEST_PRODUCT_SLUG = 'acana-acana-wild-prairie-cat-18kg'
+  let TEST_PRODUCT_SLUG = ''
+  let seed: WorkerShop
 
-  test('review section contains how-it-works <details> hint', async ({ page, request, context }) => {
-    const res = await request.get(`/api/v1/products/by-slug/${TEST_PRODUCT_SLUG}`)
-    if (res.status() === 404) {
-      test.skip(true, `Product '${TEST_PRODUCT_SLUG}' not in test-DB — run prepare_e2e_db.py with product sync`)
-    }
+  test.beforeAll(async () => {
+    const seeded = await seedProduct('HINT')
+    seed = seeded.shop
+    TEST_PRODUCT_SLUG = seeded.slug
+  })
+
+  test.afterAll(async () => {
+    await seed?.destroy()
+  })
+
+  test('review section contains how-it-works <details> hint', async ({ page, context }) => {
     // Suppress LanguagePickerOverlay
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)
@@ -460,11 +493,7 @@ test.describe('E2E-11b: ReviewSection how-it-works hint', () => {
     await expect(hintDetails).toBeVisible()
   })
 
-  test('review section hint opens and shows body text', async ({ page, request, context }) => {
-    const res = await request.get(`/api/v1/products/by-slug/${TEST_PRODUCT_SLUG}`)
-    if (res.status() === 404) {
-      test.skip(true, `Product '${TEST_PRODUCT_SLUG}' not in test-DB — run prepare_e2e_db.py with product sync`)
-    }
+  test('review section hint opens and shows body text', async ({ page, context }) => {
     // Suppress LanguagePickerOverlay
     await context.addCookies([{ name: 'app_lang', value: 'en', domain: COOKIE_DOMAIN, path: '/' }])
     await page.goto(`/products/${TEST_PRODUCT_SLUG}`)

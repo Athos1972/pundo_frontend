@@ -9,9 +9,8 @@
  */
 import { test, expect, type WorkerShop } from './_helpers/worker-shop'
 import { marker, rand4, psql } from './_helpers/test-data'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-013] Safety: NEVER use production ports!')
 }

@@ -5,6 +5,7 @@
  * Tests AC-1 through AC-9 from 01-design.md
  */
 import { test, expect } from '@playwright/test'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 const CONSENT_COOKIE = 'app_cookie_consent'
 
@@ -25,7 +26,7 @@ test.describe('Cookie Consent Banner — F7500', () => {
 
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Banner muss sichtbar sein
     await expect(page.locator('[role="dialog"]')).toBeVisible()
@@ -49,7 +50,7 @@ test.describe('Cookie Consent Banner — F7500', () => {
 
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Banner sichtbar
     await expect(page.locator('[role="dialog"]')).toBeVisible()
@@ -82,7 +83,7 @@ test.describe('Cookie Consent Banner — F7500', () => {
 
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     await expect(page.locator('[role="dialog"]')).toBeVisible()
 
@@ -100,27 +101,26 @@ test.describe('Cookie Consent Banner — F7500', () => {
     expect(parsed.marketing).toBe(true)
 
     // Meta Pixel Script muss im DOM sein oder Requests gesendet haben
-    // Warte kurz auf Script-Load
-    await page.waitForTimeout(1500)
-    const pixelInDom = await page.evaluate(() => {
-      return !!document.getElementById('meta-pixel-init') || typeof window.fbq === 'function'
-    })
-    // Entweder Script-Element im DOM oder fbevents.js Request
-    const hasPixel = pixelInDom || pixelRequests.length > 0
-    expect(hasPixel, 'Meta Pixel nicht geladen nach Opt-in').toBe(true)
+    // Script-Load abwarten: entweder Script-Element/fbq im DOM oder fbevents.js Request
+    await expect.poll(async () => {
+      const pixelInDom = await page.evaluate(() => {
+        return !!document.getElementById('meta-pixel-init') || typeof window.fbq === 'function'
+      })
+      return pixelInDom || pixelRequests.length > 0
+    }, { message: 'Meta Pixel nicht geladen nach Opt-in', timeout: 10_000 }).toBe(true)
   })
 
   test('AC-4: Gespeicherte Entscheidung — kein Banner beim zweiten Besuch', async ({ page }) => {
     // Erst ablehnen
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     await page.getByRole('button', { name: /nur notwendige|necessary only/i }).click()
     await expect(page.locator('[role="dialog"]')).not.toBeVisible()
 
     // Neue Seite aufrufen
     await page.goto('/de/about')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Kein Banner
     await expect(page.locator('[role="dialog"]')).not.toBeVisible()
@@ -129,7 +129,7 @@ test.describe('Cookie Consent Banner — F7500', () => {
   test('AC-8 RTL: Banner auf Arabisch korrekt RTL', async ({ page }) => {
     await clearConsentCookie(page)
     await page.goto('/ar')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // html dir=rtl
     const dir = await page.locator('html').getAttribute('dir')
@@ -147,7 +147,7 @@ test.describe('Cookie Consent Banner — F7500', () => {
     // Zuerst ablehnen (Banner wegklicken)
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     await page.getByRole('button', { name: /nur notwendige|necessary only/i }).click()
     await expect(page.locator('[role="dialog"]')).not.toBeVisible()
 
@@ -162,9 +162,9 @@ test.describe('Cookie Consent Banner — F7500', () => {
     // Pundo hat metaPixelId, aber wir können testen dass nach Ablehnen kein Script da ist
     await clearConsentCookie(page)
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     await page.getByRole('button', { name: /nur notwendige|necessary only/i }).click()
-    await page.waitForTimeout(500)
+    await expect(page.locator('[role="dialog"]')).not.toBeVisible()
 
     const pixelScript = await page.evaluate(() => document.getElementById('meta-pixel-init'))
     expect(pixelScript).toBeNull()

@@ -21,19 +21,17 @@ import path from 'path'
 import { chromium } from '@playwright/test'
 import { assertFrontendFresh } from '../scripts/e2e-frontend.cjs'
 import { acquireLock, generateRunId } from './run-lock'
+import { BACKEND_URL, BASE_URL } from './env'
 
-// Port 8000/8001 ist der Produktiv-Port — niemals für E2E.
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8500'
-if (backendUrl.includes(':8000') || backendUrl.includes(':8001')) {
+// URLs: einzige Quelle e2e/env.ts (lehnt Port 8000 / 3000 ab). 8001 (zweiter Prod-Port) zusaetzlich hier.
+if (BACKEND_URL.includes(':8001')) {
   throw new Error(
-    '\n[E2E Setup] BACKEND_URL zeigt auf Port 8000/8001 — das ist der PRODUKTIV-Port!\n' +
+    '\n[E2E Setup] BACKEND_URL zeigt auf Port 8001 — das ist ein PRODUKTIV-Port!\n' +
     '  E2E-Tests laufen immer gegen Port 8500.\n'
   )
 }
 
-const BACKEND_URL = backendUrl
-const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
-const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
+const FRONTEND_URL = BASE_URL
 const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const _ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
@@ -89,7 +87,7 @@ async function apiPatch(path: string, body?: unknown, headers: Record<string, st
   return res.json()
 }
 
-async function adminLogin(): Promise<string> {
+async function seedAndLoginAdmin(): Promise<string> {
   const BACKEND_REPO_PATH = process.env.BACKEND_REPO
     ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
   const pyBin = `${BACKEND_REPO_PATH}/.venv/bin/python`
@@ -508,7 +506,7 @@ export default async function globalSetup() {
         if (msg.includes('403') || msg.includes('pending')) {
           console.log('[E2E Setup] Account pending — approving via admin API…')
           try {
-            const tok = await adminLogin()
+            const tok = await seedAndLoginAdmin()
             await apiPatch('/api/v1/admin/shop-owners/1', { status: 'approved' }, { Cookie: `admin_token=${tok}` })
           } catch {/* ignore if already approved */}
           continue
@@ -528,7 +526,7 @@ export default async function globalSetup() {
   // ── 3. Approven ────────────────────────────────────────────────────────────
   console.log(`[E2E Setup] Approve Owner ${ownerId}...`)
   try {
-    const adminToken = await adminLogin()
+    const adminToken = await seedAndLoginAdmin()
     await apiPatch(
       `/api/v1/admin/shop-owners/${ownerId}`,
       { status: 'approved' },
@@ -546,7 +544,7 @@ export default async function globalSetup() {
   let testShopId: number | null = null
   let testShopSlug: string | null = null
   try {
-    const adminToken = await adminLogin()
+    const adminToken = await seedAndLoginAdmin()
     // Get shop_id from owner record (shop_owners.shop_id is a direct FK)
     const ownerRes = await fetch(`${BACKEND_URL}/api/v1/admin/shop-owners/${ownerId}`, {
       headers: { Cookie: `admin_token=${adminToken}` },
@@ -607,7 +605,7 @@ export default async function globalSetup() {
 
   // Dashboard laden um sicherzustellen, dass der Cookie gesetzt ist und die Auth funktioniert
   await page.goto('/shop-admin/dashboard')
-  await page.waitForLoadState('networkidle', { timeout: 15_000 })
+  await page.waitForLoadState('load', { timeout: 15_000 })
   const dashUrl = page.url()
   console.log(`[E2E Setup] Dashboard URL: ${dashUrl}`)
   if (!dashUrl.includes('/shop-admin/dashboard')) {
@@ -621,7 +619,7 @@ export default async function globalSetup() {
   // ── 5. Admin-Token für System-Admin-Tests holen ───────────────────────────
   let adminToken: string | null = null
   try {
-    adminToken = await adminLogin()
+    adminToken = await seedAndLoginAdmin()
     writeAdminStorageState(adminToken)
   } catch (err) {
     // Kein Skip mehr (T2): fehlt der storageState, scheitert admin.spec.ts laut.

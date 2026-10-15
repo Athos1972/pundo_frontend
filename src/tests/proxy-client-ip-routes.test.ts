@@ -1,8 +1,6 @@
 // B6220-002 — Route handlers forward exactly one validated client IP to the backend.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -95,19 +93,4 @@ describe.each(cases)('$name', (c) => {
   })
 })
 
-describe('static guard', () => {
-  function walk(dir: string): string[] {
-    return readdirSync(dir).flatMap((n) => {
-      const p = join(dir, n)
-      return statSync(p).isDirectory() ? walk(p) : n === 'route.ts' ? [p] : []
-    })
-  }
-  it('every src/app/api route.ts using BACKEND_URL imports the client-ip helper', () => {
-    const root = join(process.cwd(), 'src/app/api')
-    const offenders = walk(root).filter((f) => {
-      const s = readFileSync(f, 'utf8')
-      return s.includes('BACKEND_URL') && !s.includes('@/lib/proxy/client-ip')
-    })
-    expect(offenders).toEqual([])
-  })
-})
+// Statischer Guard (jede api-Route mit BACKEND_URL nutzt den Helper): tests/unit/guards/api-routes-client-ip.test.ts

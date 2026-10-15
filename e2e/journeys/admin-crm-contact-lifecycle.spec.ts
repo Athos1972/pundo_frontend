@@ -20,14 +20,13 @@
  * Cleanup: Kontakt via Suppress (HARD_OPTOUT) — kein DELETE-Endpoint im CRM.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import { randomUUID } from 'crypto'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin, adminHeaders, apiFetch } from './_helpers'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { BASE_URL, BACKEND_URL } from '../env'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
@@ -48,31 +47,15 @@ const ctx = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function adminHeaders(): Record<string, string> {
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
-
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(15_000),
-  })
-  let data: unknown = null
-  try { data = await res.json() } catch { /* no body */ }
-  return { ok: res.ok, status: res.status, data }
-}
+/** Admin-API-Aufruf mit Cookie `admin_token` (geteilter `apiFetch`/`adminHeaders` aus `_helpers`). */
+const adminFetch = (method: string, urlPath: string, body?: unknown) =>
+  apiFetch(method, urlPath, body, adminHeaders(ctx.adminToken))
 
 /** F8950 T22: pollt den Kontakt im Backend, bis `pred` gilt (ersetzt networkidle + waitForTimeout nach UI-Mutationen). */
 async function contactWhen<T>(pred: (c: T) => boolean, message: string): Promise<T> {
   let last: T | undefined
   await expect.poll(async () => {
-    const r = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const r = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     if (!r.ok) return false
     last = r.data as T
     return pred(last)
@@ -81,17 +64,8 @@ async function contactWhen<T>(pred: (c: T) => boolean, message: string): Promise
 }
 
 async function getContactVersion(id: number): Promise<number> {
-  const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${id}`)
+  const res = await adminFetch('GET', `/api/v1/admin/crm/contacts/${id}`)
   return (res.data as { version: number }).version
-}
-
-async function setCookie(page: import('@playwright/test').Page) {
-  await page.context().addCookies([{
-    name: 'admin_token',
-    value: ctx.adminToken!,
-    domain: new URL(BASE_URL).hostname,
-    path: '/',
-  }])
 }
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
@@ -101,19 +75,18 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
   test.beforeAll(async () => {
     test.setTimeout(60_000)
     // Login first — all subsequent apiFetch calls require ctx.adminToken
-    ctx.adminToken = await adminApiLogin()
+    ctx.adminToken = await adminLogin()
     // Health-check (authenticated)
-    const health = await apiFetch('GET', '/api/v1/admin/crm/contacts?limit=1')
+    const health = await adminFetch('GET', '/api/v1/admin/crm/contacts?limit=1')
     if (!health.ok) throw new Error(`Backend CRM health check failed: ${health.status}`)
   })
 
   // ── AC1a/AC1b: Kontakt anlegen via UI mit Source-Dropdown ─────────────────
 
-  test('AC1a+AC1b: Kontakt anlegen via UI — Source-Dropdown "manual" + Default-Check', async ({ page }) => {
+  test('AC1a+AC1b: Kontakt anlegen via UI — Source-Dropdown "manual" + Default-Check', async ({ adminPage: page }) => {
     test.setTimeout(90_000)
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
 
     await page.goto(`${BASE_URL}/admin/crm/contacts/new`)
     await waitForPageHydrated(page)
@@ -148,7 +121,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await expect(badge).toBeVisible({ timeout: 10_000 })
 
     // API-Verifikation: Source ist "manual"
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const res = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     expect(res.ok, 'GET contact should return 200').toBe(true)
     const contact = res.data as {
       sources: Array<{ source: string }>
@@ -163,12 +136,11 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
 
   // ── AC2a: Edit — Stadt ändern ─────────────────────────────────────────────
 
-  test('AC2a: Edit — Stadt ändern via ContactEditForm', async ({ page }) => {
+  test('AC2a: Edit — Stadt ändern via ContactEditForm', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set from AC1').not.toBeNull()
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
     await waitForPageHydrated(page)
 
@@ -198,24 +170,23 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
 
   // ── AC2b: Channel hinzufügen ──────────────────────────────────────────────
 
-  test('AC2b: Channel hinzufügen via ChannelEditor', async ({ page }) => {
+  test('AC2b: Channel hinzufügen via ChannelEditor', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set').not.toBeNull()
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
     await waitForPageHydrated(page)
 
     // Ensure contact has only 1 channel (email) before this test runs
     // (Previous test-run leftovers could have added channels already)
-    const preCheck = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const preCheck = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     expect(preCheck.ok).toBe(true)
     const preCh = (preCheck.data as { channels: Array<{ id: number; kind: string }> }).channels
     // If phone already exists (leftover), remove all phone channels via API
     for (const ch of preCh.filter((c) => c.kind === 'phone_call')) {
       const ver = await getContactVersion(ctx.contactId!)
-      await apiFetch('DELETE', `/api/v1/admin/crm/contacts/${ctx.contactId}/channels/${ch.id}`)
+      await adminFetch('DELETE', `/api/v1/admin/crm/contacts/${ctx.contactId}/channels/${ch.id}`)
         .catch(() => {/* ignore if only 1 channel remains */})
       ctx.contactVersion = ver
     }
@@ -264,17 +235,16 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
 
   // ── AC2d: Channel entfernen ───────────────────────────────────────────────
 
-  test('AC2d: Channel entfernen — email-Kanal weg, phone bleibt', async ({ page }) => {
+  test('AC2d: Channel entfernen — email-Kanal weg, phone bleibt', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set').not.toBeNull()
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
     await waitForPageHydrated(page)
 
     // Verify 2+ channels exist before trying to remove
-    const preCheck = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const preCheck = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     const preCh = (preCheck.data as { channels: Array<{ kind: string }> }).channels
     expect(preCh.length, 'Need 2+ channels for remove test').toBeGreaterThanOrEqual(2)
     expect(preCh.find((c) => c.kind === 'email'), 'Email channel must exist').toBeDefined()
@@ -303,12 +273,11 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
 
   // ── Confirm Business ──────────────────────────────────────────────────────
 
-  test('Stufe0: Confirm Business → business_status=confirmed', async ({ page }) => {
+  test('Stufe0: Confirm Business → business_status=confirmed', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set').not.toBeNull()
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
     await waitForPageHydrated(page)
 
@@ -336,12 +305,11 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
 
   // ── Suppress → HARD_OPTOUT ────────────────────────────────────────────────
 
-  test('Stufe0: Suppress → HARD_OPTOUT → Terminal-State, keine Action-Buttons', async ({ page }) => {
+  test('Stufe0: Suppress → HARD_OPTOUT → Terminal-State, keine Action-Buttons', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set').not.toBeNull()
 
     await page.goto(`${BASE_URL}/admin`)
-    await setCookie(page)
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
     await waitForPageHydrated(page)
 
@@ -382,7 +350,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
   test.afterAll(async () => {
     if (ctx.contactId) {
       const version = await getContactVersion(ctx.contactId).catch(() => ctx.contactVersion)
-      await apiFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/suppress`, {
+      await adminFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/suppress`, {
         reason: 'hard_optout',
         version,
       }).catch(() => { /* ignore — already suppressed */ })

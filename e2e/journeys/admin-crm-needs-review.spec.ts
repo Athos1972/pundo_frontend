@@ -15,13 +15,13 @@
  * Cleanup: Suppress (HARD_OPTOUT) — kein DELETE-Endpoint im CRM.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import { randomUUID } from 'crypto'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin, adminHeaders, apiFetch } from './_helpers'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
@@ -40,25 +40,9 @@ const ctx = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function adminHeaders(): Record<string, string> {
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
-
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(15_000),
-  })
-  let data: unknown = null
-  try { data = await res.json() } catch { /* no body */ }
-  return { ok: res.ok, status: res.status, data }
-}
+/** Admin-API-Aufruf mit Cookie `admin_token` (geteilter `apiFetch`/`adminHeaders` aus `_helpers`). */
+const adminFetch = (method: string, urlPath: string, body?: unknown) =>
+  apiFetch(method, urlPath, body, adminHeaders(ctx.adminToken))
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
@@ -67,10 +51,10 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
   test.beforeAll(async () => {
     test.setTimeout(60_000)
 
-    ctx.adminToken = await adminApiLogin()
+    ctx.adminToken = await adminLogin()
 
     // Kontakt anlegen: SOURCED → NEEDS_REVIEW (2 API-Calls, kein Telegram/OCR nötig)
-    const ingestRes = await apiFetch('POST', '/api/v1/admin/crm/contacts/ingest', {
+    const ingestRes = await adminFetch('POST', '/api/v1/admin/crm/contacts/ingest', {
       org: { name: ORG_NAME, city: 'Paphos' },
       contact: { display_name: `NR Test ${UUID}` },
       channels: [{ kind: 'phone', value: PHONE }],
@@ -88,7 +72,7 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
     }
 
     // Transition: SOURCED → NEEDS_REVIEW
-    const transRes = await apiFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/lifecycle`, {
+    const transRes = await adminFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/lifecycle`, {
       to_state: 'NEEDS_REVIEW',
       version: ctx.contactVersion,
     })
@@ -103,19 +87,12 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
 
   // ── AK7 + AK12: CardImageViewer nicht sichtbar, "Karte bestätigen" fehlt ──
 
-  test('AK7+AK12: card_image_front_url=null → kein CardImageViewer, kein "Karte bestätigen"-Button', async ({ page }) => {
+  test('AK7+AK12: card_image_front_url=null → kein CardImageViewer, kein "Karte bestätigen"-Button', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set from beforeAll').not.toBeNull()
 
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // NEEDS_REVIEW-Badge sichtbar
     const nrBadge = page.locator('span, div', { hasText: /Needs review|Prüfung erforderlich|NEEDS_REVIEW/i }).first()
@@ -140,19 +117,12 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
 
   // ── AK4: NEEDS_REVIEW → SOURCED via Lifecycle-Dialog ─────────────────────
 
-  test('AK4: NEEDS_REVIEW → SOURCED via "Set state"-Dialog', async ({ page }) => {
+  test('AK4: NEEDS_REVIEW → SOURCED via "Set state"-Dialog', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
     expect(ctx.contactId, 'contactId must be set from beforeAll').not.toBeNull()
 
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactId}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // "Set state" / "Status setzen" Button klicken
     const setStateBtn = page.locator('button', { hasText: /Set state|Status setzen/i }).first()
@@ -174,18 +144,17 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
     await saveBtn.click()
 
     // Warte auf Seiten-Refresh
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1_000)
+    await waitForPageHydrated(page)
 
     // NEEDS_REVIEW-Badge weg, SOURCED-Badge sichtbar
     const nrBadge = page.locator('span, div', { hasText: /Needs review|Prüfung erforderlich/i })
-    await expect(nrBadge).not.toBeVisible({ timeout: 5_000 })
+    await expect(nrBadge).toHaveCount(0, { timeout: 10_000 }) // wartet auf den Seiten-Refresh (statt networkidle + 1 s)
 
     const sourcedBadge = page.locator('span, div', { hasText: /Sourced|Erfasst/i }).first()
     await expect(sourcedBadge).toBeVisible({ timeout: 5_000 })
 
     // API-Verifikation: lifecycle_state = SOURCED
-    const res = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const res = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     expect(res.ok).toBe(true)
     const contact = res.data as { lifecycle_state: string; version: number }
     expect(contact.lifecycle_state).toBe('SOURCED')
@@ -198,12 +167,12 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
     if (!ctx.contactId) return
 
     // Aktuelle Version holen (kann von Test-Fehlern abweichen)
-    const getRes = await apiFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
+    const getRes = await adminFetch('GET', `/api/v1/admin/crm/contacts/${ctx.contactId}`)
     const currentVersion = getRes.ok
       ? (getRes.data as { version: number }).version
       : ctx.contactVersion
 
-    await apiFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/suppress`, {
+    await adminFetch('POST', `/api/v1/admin/crm/contacts/${ctx.contactId}/suppress`, {
       reason: 'hard_optout',
       version: currentVersion,
     }).catch(() => { /* ignore — may already be in terminal state */ })

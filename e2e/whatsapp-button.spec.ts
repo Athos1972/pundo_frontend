@@ -10,6 +10,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { waitForPageHydrated } from './journeys/_helpers/hydration'
+import { BACKEND_URL } from './env'
 
 // F8950 T17: gestrichen sind die dir-Matrix (RTL-Block) und "Startseite lädt fehlerfrei" (Desktop + Mobile);
 // Ersatz: language-smoke.spec.ts (Startseite, 6 Sprachen, dir + JS-Fehler).
@@ -36,7 +37,7 @@ test.describe('WhatsApp-Button: Frontend-Grundstruktur', () => {
 test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
   test.beforeAll(async () => {
     // Prüfe ob Backend läuft — wenn nicht, alle Tests überspringen
-    const backendOk = await fetch('http://localhost:8500/api/v1/health')
+    const backendOk = await fetch(`${BACKEND_URL}/api/v1/health`)
       .then(() => true)
       .catch(() => false)
     if (!backendOk) {
@@ -46,7 +47,7 @@ test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
 
   test('Shop-Detailseite: WhatsApp-Button hat wa.me-Link wenn whatsapp-Feld gesetzt', async ({ page }) => {
     // Backend prüfen
-    const backendOk = await fetch('http://localhost:8500/api/v1/health')
+    const backendOk = await fetch(`${BACKEND_URL}/api/v1/health`)
       .then(() => true)
       .catch(() => false)
     if (!backendOk) {
@@ -55,7 +56,7 @@ test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
     }
 
     // Ersten Shop mit whatsapp-Feld finden (bevorzugt ohne phone, damit tel:-Assertion klar ist)
-    const shopsRes = await fetch('http://localhost:8500/api/v1/shops?limit=50')
+    const shopsRes = await fetch(`${BACKEND_URL}/api/v1/shops?limit=50`)
     if (!shopsRes.ok) { test.skip(); return }
     const shops = await shopsRes.json()
     type ShopItem = { whatsapp_url: string | null; phone: string | null; slug: string }
@@ -89,12 +90,12 @@ test.describe('WhatsApp-Button: Link-Format (Backend-abhängig)', () => {
   })
 
   test('Shop ohne whatsapp aber mit phone: nur tel:-Link sichtbar', async ({ page }) => {
-    const backendOk = await fetch('http://localhost:8500/api/v1/health')
+    const backendOk = await fetch(`${BACKEND_URL}/api/v1/health`)
       .then(() => true)
       .catch(() => false)
     if (!backendOk) { test.skip(); return }
 
-    const shopsRes = await fetch('http://localhost:8500/api/v1/shops?limit=50')
+    const shopsRes = await fetch(`${BACKEND_URL}/api/v1/shops?limit=50`)
     if (!shopsRes.ok) { test.skip(); return }
     const shops = await shopsRes.json()
     const shopWithPhone = shops.items?.find(

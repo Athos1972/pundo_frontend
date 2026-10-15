@@ -27,6 +27,8 @@ last-result: PASS
 last-run-sha: 312ae62
 ---
 
+> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (Gruppen A, B, Regression). Die übrigen Gruppen liegen in `shop-admin-offers-archive.spec.ts` (C, D), `shop-admin-offers-cross-shop.spec.ts` (XS, AR, SP, DT) und `shop-admin-offers-item-details.spec.ts` (E); Helfer in `_helpers/offers-api.ts`. Testdaten sind Marker-Items im Worker-Shop (keine Prod-Items mehr).
+
 ### Journey: Shop-Admin Angebote CRUD
 
 **Ziel:** Shop-Owner legt Angebote an (6 Kombinationen), bearbeitet und archiviert sie. Kunde sieht aktive Angebote auf der Shop-Seite.

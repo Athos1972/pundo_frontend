@@ -19,9 +19,10 @@ import path from 'path'
 import { shopOwnerOnboardWithRetry, shopOwnerLogin } from './_helpers'
 import { TestDataTracker, e2eEmail, e2eName, adminApi, psql } from './_helpers/test-data'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { specShop } from './_helpers/worker-shop'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { createStepLog } from '../fixtures'
 
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
@@ -34,10 +35,7 @@ const CAKE = 'baeckerei-konditorei-torten-kuchen'
 const WEDDING = 'baeckerei-konditorei-hochzeitstorte'
 
 const tracker = new TestDataTracker()
-const stepLog: Array<{ step: string; desc: string; status: 'PASS' | 'FAIL' }> = []
-function logStep(step: string, desc: string, ok: boolean) {
-  stepLog.push({ step, desc, status: ok ? 'PASS' : 'FAIL' })
-}
+const { entries: stepLog, logStep } = createStepLog()
 
 // ── API-Helper (öffentlich, ohne Auth) ───────────────────────────────────────
 
@@ -431,12 +429,51 @@ test('P4: Owner abgelehnt — Angebote unsichtbar, Shop bleibt sichtbar (D3)', a
 })
 
 // ═════════════════════════════════════════════════════════════════════════════
-// P5: Regression — freigeschaltete Demo-Shops und gescrapte Shops unverändert
+// P5: Regression — Shops ohne Freigabe-Gate bleiben mit Preisen sichtbar (Zwei-Ebenen-Prinzip, F8950 T31)
+//   Ebene 1 (P5a, laeuft immer): eigener Spec-Shop (Admin-angelegt, ohne Onboarding-Owner-Status) mit Festpreis-Angebot
+//   Ebene 2 (P5b, Realdaten): freigeschaltete Demo-Shops und gescrapter Shop ohne Owner aus der Prod-Kopie
 // ═════════════════════════════════════════════════════════════════════════════
 
-test('P5: Regression — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unverändert', async ({ page }) => {
+test('P5a: Regression — Shop ohne Onboarding-Gate zeigt sein Angebot mit Preis (Spec-Shop)', async ({ page }) => {
   test.setTimeout(120_000)
-  for (const slug of ['anna-s-bakery', 'o-phournos-tes-annas']) {
+  const shop = await specShop('B5910-P5')
+  try {
+    const item = await shop.createItem('B5910-P5', 'bread', { listing: true })
+    const offer = await shop.api('POST', '/offers', {
+      shop_listing_id: item.listingId, price_type: 'fixed',
+      price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 2.5, currency: 'EUR' }] }],
+    })
+    expect(offer.status, offer.text).toBe(201)
+
+    const detail = await pub<any>(`/shops/by-slug/${shop.slug}`)
+    // Owner-API speichert 2.5 (Seed-Daten der Demo-Shops: '2.50') -> numerisch vergleichen
+    const prices = (detail.top_products ?? []).map((p: any) => Number(p.price))
+    expect(prices, `${shop.slug} Top-Produkte`).toContain(2.5)
+    const det = await pub<{ offers: any[] }>(`/products/by-slug/${item.slug}`, { lat: LAT, lng: LNG })
+    const o = det.offers.find(x => x.shop_slug === shop.slug)
+    expect(o?.price_type, 'Produktdetail').toBe('fixed')
+    expect(Number(o?.price)).toBe(2.5)
+    const list = await pub<{ items: any[] }>('/products', { shop_id: shop.id, limit: 10 })
+    expect(list.items.some(i => i.best_offer?.shop_slug === shop.slug && i.best_offer.is_available), 'best_offer verfügbar').toBe(true)
+    logStep('P5', 'Spec-Shop: Shop-Detail + Produktdetail + Liste mit Preis 2.50', true)
+
+    await page.goto(`${BASE_URL}/en/shops/${shop.slug}`, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('body')).toContainText(/2[.,]50/)
+    logStep('P5', 'UI Spec-Shop: Preis 2,50 sichtbar', true)
+  } finally {
+    await shop.destroy()
+  }
+})
+
+test('P5b: Realdaten — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unverändert', async ({ page }) => {
+  test.setTimeout(120_000)
+  const demoSlugs = ['anna-s-bakery', 'o-phournos-tes-annas']
+  const scrapedSlug = 'markos-pet-shop-26a6fc5d'
+  for (const slug of [...demoSlugs, scrapedSlug]) {
+    const r = await fetch(`${BACKEND_URL}/api/v1/shops/by-slug/${slug}`)
+    test.skip(!r.ok, `Realdaten-Check: Shop ${slug} fehlt in pundo_test (Prod-Kopie ohne diesen Shop) — Ebene 1 deckt P5a ab`)
+  }
+  for (const slug of demoSlugs) {
     const shop = await pub<any>(`/shops/by-slug/${slug}`)
     const prices = (shop.top_products ?? []).map((p: any) => p.price)
     expect(prices.length, `${slug} Top-Produkte`).toBeGreaterThan(0)
@@ -450,7 +487,7 @@ test('P5: Regression — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unve
   // Suche „хлеб“: Treffer mit Preis (best_offer fixed) der Demo-Shops, nicht on_request/unavailable
   const s = await pub<{ items: any[] }>('/search', { q: 'хлеб', lat: LAT, lng: LNG }, 'ru')
   const bo = s.items.map(i => i.best_offer).filter(Boolean)
-  expect(bo.some(b => ['anna-s-bakery', 'o-phournos-tes-annas', A.slug].includes(b.shop_slug) && b.is_available)).toBe(true)
+  expect(bo.some(b => [...demoSlugs, A.slug].includes(b.shop_slug) && b.is_available)).toBe(true)
   expect(bo.every(b => b.shop_slug !== B.slug)).toBe(true)
   logStep('P5', 'Suche „хлеб“: verfügbare Treffer, abgelehnter Shop B nicht dabei', true)
 
@@ -460,10 +497,10 @@ test('P5: Regression — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unve
   logStep('P5', 'UI anna-s-bakery: Preis 2,50 sichtbar', true)
 
   // gescrapter Shop ohne Owner
-  const scraped = await pub<any>('/shops/by-slug/markos-pet-shop-26a6fc5d')
+  const scraped = await pub<any>(`/shops/by-slug/${scrapedSlug}`)
   expect((scraped.top_products ?? []).length).toBeGreaterThan(0)
   const bread = await bestOfferShops('bread', 'en')
-  expect(bread).toContain('markos-pet-shop-26a6fc5d')
+  expect(bread).toContain(scrapedSlug)
   logStep('P5', 'gescrapter Shop ohne Owner: Top-Produkte + Suchtreffer unverändert', true)
   void wasPending403
 })

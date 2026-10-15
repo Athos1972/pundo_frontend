@@ -30,6 +30,8 @@ last-run: 2026-06-05T18:28:00Z
 last-result: PASS
 ---
 
+> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (Wizard-UI T1-T8, T10, T11). T9 (Post-Approval-Item-Integrität) und T12 liegen in `shop-owner-quick-onboarding-approval.spec.ts`.
+
 # Journey: shop-owner-quick-onboarding
 
 **Status:** implemented (T1–T8 PASS, T9 test.fixme — T9-Test-Bugs ausstehend)

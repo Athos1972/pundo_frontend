@@ -6,9 +6,7 @@
  *   npx playwright test <spec> --config=e2e/no-setup.config.ts
  */
 import { defineConfig } from '@playwright/test'
-
-const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
-const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
+import { BASE_URL as frontendUrl } from './env'
 
 export default defineConfig({
   testDir: '.',

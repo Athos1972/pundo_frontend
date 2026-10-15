@@ -7,6 +7,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { RUN_ID } from './journeys/_helpers/test-data'
+import { BACKEND_URL as BACKEND } from './env'
 
 test.describe('Visual Smoke-Test', { tag: '@smoke' }, () => {
 
@@ -92,7 +93,6 @@ test.describe('Visual Smoke-Test', { tag: '@smoke' }, () => {
 // Ports: Frontend 3500 · Backend 8500 · DB: pundo_test
 // Cleanup: Kunde mit Marker e2e-<run>-… → vom Teardown e2e/cleanup-run.ts (--run-id) gelöscht
 
-const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 // 10×10-Pixel PNG (PIL-generiert, img.load()-sicher) — für Avatar-Upload-Test
 const MINIMAL_PNG_B64 =

@@ -27,8 +27,8 @@ import { test, expect, type APIRequestContext, type Page } from '@playwright/tes
 // Only a type import (@/types/api) lives inside; it is erased at compile time,
 // so this resolves cleanly under Playwright without the @/ alias.
 import { aggregatePriceHistory, computePriceStats, type PriceStats } from '../src/lib/price-history'
+import { BACKEND_URL } from './env'
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BACKEND_URL.includes(':8000')) throw new Error('[price-history] Safety: NEVER use production port 8000!')
 
 const HISTORY_WINDOW_MS = 90 * 24 * 60 * 60 * 1000 // Backend: last 90 days

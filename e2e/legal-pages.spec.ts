@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { BASE_URL as BASE } from './env'
 
 // Standalone-Test ohne global-setup — prüft Legal-Pages in allen Sprachen
 // Kein Auth, kein Admin — rein öffentliche Seiten
 
 const LANG_COOKIE = 'app_lang'
-const BASE = 'http://localhost:3500'
 
 const legalRoutes = [
   { path: '/legal/imprint', enTitle: 'Imprint' },
@@ -40,7 +40,7 @@ for (const { path, enTitle } of legalRoutes) {
 const langs = ['en', 'de', 'ru', 'el', 'ar', 'he']
 for (const lang of langs) {
   test(`/legal/imprint kein Placeholder in ${lang}`, async ({ page }) => {
-    await page.context().addCookies([{ name: LANG_COOKIE, value: lang, domain: 'localhost', path: '/' }])
+    await page.context().addCookies([{ name: LANG_COOKIE, value: lang, domain: new URL(BASE).hostname, path: '/' }])
     await page.goto(`${BASE}/legal/imprint`)
 
     const body = await page.getByRole('main').textContent()

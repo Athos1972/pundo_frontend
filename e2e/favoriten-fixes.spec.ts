@@ -4,27 +4,28 @@
  */
 
 import { waitForPageHydrated, clickHydrated } from './journeys/_helpers/hydration'
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
+import { BASE_URL, BACKEND_URL } from './env'
 
-const BASE_URL = process.env.TEST_BASE_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? 'http://localhost:8500'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
 
-// Known product slug from pundo_test
-const PRODUCT_SLUG = 'schesir-schesir-cat-baby-kitten-salmon-chicken-mousse-pouch-12x70gr'
+// F8950 T31: kein fester Prod-Kopie-Slug mehr. Das Produkt wird im beforeAll per API in einem eigenen Spec-Shop
+// angelegt (Marker-Item + Listing + Angebot) und im afterAll samt Shop geloescht.
+let PRODUCT_SLUG = ''
 
 // Customer credentials — register fresh per run
 import { randomUUID } from 'crypto'
 import { RUN_ID } from './journeys/_helpers/test-data'
+import { specShop, type WorkerShop } from './journeys/_helpers/worker-shop'
 const UUID = randomUUID().slice(0, 8)
 // B8950-012: Marker-Konvention e2e-<run>-… (verankerter Selektor für das Cleanup-Skript)
 const CUSTOMER_EMAIL = `e2e-${RUN_ID}-favtest-${UUID}@pundo.com`
 const CUSTOMER_PASSWORD = 'FavTestPw!99'
 
-async function apiFetch(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>) {
+async function customerApi(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>) {
   const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', ...extraHeaders },
@@ -41,6 +42,7 @@ async function apiFetch(method: string, path: string, body?: unknown, extraHeade
 }
 
 // Shared state
+let shop: WorkerShop | undefined
 const ctx = {
   customerId: null as number | null,
   customerToken: null as string | null,  // raw JWT value from cookie
@@ -50,8 +52,18 @@ const ctx = {
 // ─── Setup: Register + verify customer ─────────────────────────────────────
 
 test.beforeAll(async () => {
+  // Seed: Produkt mit Listing und Festpreis-Angebot im eigenen Spec-Shop
+  shop = await specShop('FAVORITEN')
+  const item = await shop.createItem('FAVORITEN', 'heart', { listing: true })
+  const offer = await shop.api('POST', '/offers', {
+    shop_listing_id: item.listingId, price_type: 'fixed',
+    price_tiers: [{ unit: 'per_piece', steps: [{ min_quantity: 1, price: 4.5, currency: 'EUR' }] }],
+  })
+  expect(offer.status, offer.text).toBe(201)
+  PRODUCT_SLUG = item.slug
+
   // Register — @pundo.com emails are auto-verified (no OTP needed)
-  const regRes = await apiFetch('POST', '/customer/auth/signup', {
+  const regRes = await customerApi('POST', '/customer/auth/signup', {
     email: CUSTOMER_EMAIL,
     password: CUSTOMER_PASSWORD,
     display_name: `FavTest-${UUID}`,
@@ -59,21 +71,21 @@ test.beforeAll(async () => {
   ctx.customerId = regRes.data?.id ?? null
 
   // Login — returns customer_token as Set-Cookie
-  const loginRes = await apiFetch('POST', '/customer/auth/login', {
+  const loginRes = await customerApi('POST', '/customer/auth/login', {
     email: CUSTOMER_EMAIL,
     password: CUSTOMER_PASSWORD,
   })
   ctx.customerToken = loginRes.cookieToken
 
-  // Get first available item ID
-  const itemsRes = await apiFetch('GET', '/products?limit=1')
-  ctx.firstItemId = itemsRes.data?.items?.[0]?.id ?? itemsRes.data?.[0]?.id ?? null
+  // Item-ID fuer die Favoriten-API-Tests: das Seed-Item
+  ctx.firstItemId = item.id
 })
 
 test.afterAll(async () => {
+  await shop?.destroy()
   // Best-effort cleanup
   if (ctx.customerToken && ctx.customerId) {
-    await apiFetch('DELETE', '/customer/auth/account', undefined, {
+    await customerApi('DELETE', '/customer/auth/account', undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     }).catch(() => {})
   }
@@ -86,7 +98,7 @@ async function withCustomerAuth(page: import('@playwright/test').Page) {
   await page.context().addCookies([{
     name: 'customer_token',
     value: ctx.customerToken,
-    domain: 'localhost',
+    domain: new URL(BASE_URL).hostname,
     path: '/',
     httpOnly: true,
     secure: false,
@@ -154,11 +166,11 @@ test.describe('Fix b: Korrekter Produktlink aus Favoriten-Liste', () => {
       return
     }
     // Add a favorite via API
-    await apiFetch('POST', `/customer/favorites/${ctx.firstItemId}`, undefined, {
+    await customerApi('POST', `/customer/favorites/${ctx.firstItemId}`, undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     })
     // Fetch favorites list
-    const listRes = await apiFetch('GET', '/customer/favorites', undefined, {
+    const listRes = await customerApi('GET', '/customer/favorites', undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     })
     expect(listRes.status).toBe(200)
@@ -172,7 +184,7 @@ test.describe('Fix b: Korrekter Produktlink aus Favoriten-Liste', () => {
       expect(typeof item.product_slug).toBe('string')
     }
     // Cleanup
-    await apiFetch('DELETE', `/customer/favorites/${ctx.firstItemId}`, undefined, {
+    await customerApi('DELETE', `/customer/favorites/${ctx.firstItemId}`, undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     })
   })
@@ -183,7 +195,7 @@ test.describe('Fix b: Korrekter Produktlink aus Favoriten-Liste', () => {
       return
     }
     // Add favorite
-    await apiFetch('POST', `/customer/favorites/${ctx.firstItemId}`, undefined, {
+    await customerApi('POST', `/customer/favorites/${ctx.firstItemId}`, undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     })
     await withCustomerAuth(page)
@@ -204,7 +216,7 @@ test.describe('Fix b: Korrekter Produktlink aus Favoriten-Liste', () => {
       expect(href).toMatch(/\/products\/[a-z0-9][a-z0-9\-]+$/)
     }
     // Cleanup
-    await apiFetch('DELETE', `/customer/favorites/${ctx.firstItemId}`, undefined, {
+    await customerApi('DELETE', `/customer/favorites/${ctx.firstItemId}`, undefined, {
       Cookie: `customer_token=${ctx.customerToken}`,
     })
   })

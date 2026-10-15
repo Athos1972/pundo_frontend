@@ -17,9 +17,10 @@
 import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
+import { BASE_URL } from '../env'
+import { createStepLog } from '../fixtures'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
 if (BASE_URL.includes(':3000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Port 3000 laufen!')
 }
@@ -37,9 +38,7 @@ interface StepEntry {
 const stepLog: StepEntry[] = []
 let startedAt = ''
 
-function logStep(step: number, desc: string, expected: string, actual: string, pass: boolean) {
-  stepLog.push({ step, desc, expected, actual, status: pass ? 'PASS' : 'FAIL' })
-}
+const { logStep } = createStepLog(stepLog)
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 

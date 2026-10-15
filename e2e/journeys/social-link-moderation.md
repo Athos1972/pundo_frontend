@@ -26,6 +26,8 @@ last-result: PASS
 last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
 ---
 
+> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (AC1-AC10 mit Spec-Shop). Die vier Admin-UI-Tests von AC6 (Regel-Seite, Nav-Link, Formular, Host-Validierung) liegen in `social-link-moderation-admin.spec.ts` (Fixture `adminPage`).
+
 # Journey: social-link-moderation
 
 **Status:** implemented

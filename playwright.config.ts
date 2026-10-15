@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test'
+import { BACKEND_URL, BASE_URL } from './e2e/env'
 
 // Port-Konvention (PFLICHT — niemals mischen):
 //   Produktion:  Backend 8000, Frontend 3000
@@ -17,19 +18,10 @@ import { defineConfig } from '@playwright/test'
 // Oder mit explizitem Port:
 //   BACKEND_URL=http://localhost:8500 npx playwright test
 
-const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:8500'
-
-// Sicherheitsnetz: Port 8000 ist der Produktiv-Port — niemals für E2E.
-if (backendUrl.includes(':8000')) {
-  throw new Error(
-    '\n[E2E] BACKEND_URL zeigt auf Port 8000 — das ist der PRODUKTIV-Port!\n' +
-    '  E2E-Tests verwenden Port 8500.\n' +
-    '  Lösung: BACKEND_URL weglassen (→ auto 8500) oder BACKEND_URL=http://localhost:8500 setzen.\n'
-  )
-}
-
+// URLs und der Port-8000/3000-Guard: einzige Quelle e2e/env.ts.
+const backendUrl = BACKEND_URL
+const frontendUrl = BASE_URL
 const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
-const frontendUrl = process.env.FRONTEND_URL ?? `http://127.0.0.1:${frontendPort}`
 
 export default defineConfig({
   testDir: './e2e',

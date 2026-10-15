@@ -6,8 +6,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { ItemPhotoUpload } from '@/components/shop-admin/ItemPhotoUpload'
 import { OfferItemPhotos } from '@/components/shop-admin/OfferItemPhotos'
 import { OfferForm } from '@/components/shop-admin/OfferForm'
@@ -276,12 +274,5 @@ describe('resizeImageForUpload', () => {
   })
 })
 
-describe('Clean Boundary', () => {
-  for (const file of ['src/components/shop-admin/OfferItemPhotos.tsx', 'src/components/shop-admin/ItemPhotoUpload.tsx', 'src/lib/shop-admin-image-resize.ts']) {
-    it(`${file} has no customer-facing imports`, () => {
-      const src = readFileSync(join(process.cwd(), file), 'utf8')
-      expect(src).not.toMatch(/from ['"]@\/components\/(map|product|search|shop)\//)
-      expect(src).not.toMatch(/from ['"]@\/lib\/(api|translations)['"]/)
-    })
-  }
-})
+// Clean Boundary (keine Customer-Imports in OfferItemPhotos, ItemPhotoUpload, shop-admin-image-resize):
+// tests/unit/guards/shop-admin-boundary.test.ts

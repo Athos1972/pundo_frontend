@@ -12,21 +12,21 @@
  * Fix: Migration 0c09189b8ee0_fix_offers_shop_listing_cascade.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { e2eName, e2eSlug } from './_helpers/test-data'
-import { adminLogin as adminApiLogin } from './_helpers'
+import { adminLogin, adminHeaders, apiFetch } from './_helpers'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { createStepLog } from '../fixtures'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
 
-const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const UUID = randomUUID().slice(0, 8)
 // B8950-012: Marker am Anfang von Name und Slug (verankerter Selektor ^e2e-<run>-)
 const SHOP_NAME = e2eName('ADMIN-SHOP', 'Shop')
@@ -50,56 +50,7 @@ const ctx = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function adminLogin(): Promise<string> {
-  const { execSync } = await import('child_process')
-  const pyBin = `${BACKEND_REPO}/.venv/bin/python`
-  const adminEmail = 'e2e-admin@pundo-e2e.io'
-  const adminPassword = 'E2eAdminPassword!99'
-
-  let testDbUrl = process.env.DATABASE_URL_TEST
-  if (!testDbUrl) {
-    try {
-      const envFile = fs.readFileSync(path.join(BACKEND_REPO, '.env'), 'utf8')
-      const match = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)
-      if (match) testDbUrl = match[1].trim()
-    } catch { /* ignore */ }
-  }
-  if (testDbUrl) {
-    try {
-      execSync(
-        `${pyBin} scripts/seed_admin.py --email ${adminEmail} --password ${adminPassword}`,
-        { cwd: BACKEND_REPO, stdio: 'pipe', env: { ...process.env, DATABASE_URL: testDbUrl } }
-      )
-    } catch { /* admin may already exist */ }
-  }
-
-  return adminApiLogin(adminEmail, adminPassword)
-}
-
-function adminHeaders() {
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
-
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
-  ctx.stepLog.push({ step, desc, expected, actual, status })
-}
-
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-  headers: Record<string, string> = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const res = await fetch(`${BACKEND_URL}${urlPath}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(15_000),
-  })
-  let data: unknown = null
-  try { data = await res.json() } catch { /* no body */ }
-  return { ok: res.ok, status: res.status, data }
-}
+const { logStep } = createStepLog(ctx.stepLog)
 
 // ─── Report ───────────────────────────────────────────────────────────────────
 
@@ -169,26 +120,19 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
 
   // ── Step 1–5: Shop anlegen via Browser-UI ────────────────────────────────────
 
-  test('AC-1: Shop anlegen via Admin-UI → erscheint in der Liste', async ({ page }) => {
+  test('AC-1: Shop anlegen via Admin-UI → erscheint in der Liste', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
 
     // Step 1: Login-Flow via Browser (Cookie setzen)
     await page.goto(`${BASE_URL}/admin/login`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Cookie direkt setzen statt Login-Formular — schneller und zuverlässiger
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     logStep(1, 'Admin-Token Cookie gesetzt', 'Cookie vorhanden', `admin_token=${ctx.adminToken!.slice(0, 20)}...`, 'PASS')
 
     // Step 2: /admin/shops/new aufrufen
     await page.goto(`${BASE_URL}/admin/shops/new`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const heading = page.locator('h1')
     await expect(heading).toBeVisible()
@@ -213,7 +157,7 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
 
     // Step 6: Shop in Liste suchen — URL enthält q=SHOP_NAME oder wir suchen selbst
     await page.goto(`${BASE_URL}/admin/shops?q=${encodeURIComponent(SHOP_NAME)}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Step 7: Shop muss in der Liste erscheinen
     const shopRow = page.locator('td', { hasText: SHOP_NAME })
@@ -231,24 +175,17 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
 
   // ── Step 8–10: Shop löschen via Browser-UI ───────────────────────────────────
 
-  test('AC-2+AC-3: Delete-Button + Confirm-Dialog → Shop gelöscht', async ({ page }) => {
+  test('AC-2+AC-3: Delete-Button + Confirm-Dialog → Shop gelöscht', async ({ adminPage: page }) => {
     test.setTimeout(60_000)
 
     // Voraussetzung: Shop wurde in AC-1 angelegt
     expect(ctx.createdShopId, 'Shop-ID muss aus AC-1 bekannt sein').not.toBeNull()
 
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     // Drift-Fix (B8950-012): Seit fe5b5b6 (2026-06-05, "Shop-Delete") gibt es in der Shops-LISTE keinen Delete-Button
     // mehr (EntityTable ohne deleteUrl). Der Hard-Delete lebt auf der Edit-Seite (ShopHardDeleteSection):
     // "Delete shop…" → Dialog → Shop-Name zur Bestätigung eintippen → Löschen → Redirect auf /admin/shops.
     await page.goto(`${BASE_URL}/admin/shops/${ctx.createdShopId}/edit`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Step 8: Delete-Button klicken → Confirm-Dialog erscheint
     const deleteBtn = page.getByRole('button', { name: /^(delete shop|shop löschen)/i })
@@ -271,12 +208,12 @@ test.describe.serial('Admin Shop Create + Delete (UI Golden Path)', () => {
 
     // Nach erfolgreichem Delete: Redirect auf die Shops-Liste
     await page.waitForURL(`${BASE_URL}/admin/shops`, { timeout: 15_000 })
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     logStep(9, 'Delete bestätigt', '204 + Redirect auf /admin/shops', 'Confirm geklickt', 'PASS')
 
     // Step 10: Shop darf nicht mehr in der Liste erscheinen
     await page.goto(`${BASE_URL}/admin/shops?q=${encodeURIComponent(SHOP_NAME)}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const deletedRow = page.locator('td', { hasText: SHOP_NAME })
     await expect(deletedRow).not.toBeVisible({ timeout: 8_000 })
     logStep(10, 'Shop nicht mehr in Liste', 'Zeile weg', 'Zeile nicht sichtbar', 'PASS')

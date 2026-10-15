@@ -13,7 +13,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('HTTP Security Headers', () => {
   test('GET / returns all required security headers', async ({ page }) => {
-    const response = await page.request.get('http://localhost:3500/')
+    const response = await page.request.get('/')
 
     expect(response.ok()).toBeTruthy()
 

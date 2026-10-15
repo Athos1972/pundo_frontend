@@ -18,7 +18,7 @@
  * dass der Teardown (e2e/cleanup-run.ts) den Kunden entfernt. Den Spec-Shop loescht afterAll per Admin-API.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect, createStepLog } from '../fixtures'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -26,10 +26,9 @@ import { RUN_ID } from './_helpers/test-data'
 import { adminLogin } from './_helpers'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { BASE_URL, BACKEND_URL } from '../env'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
 }
@@ -58,9 +57,7 @@ const ctx = {
 
 let shop: WorkerShop
 
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL') {
-  ctx.stepLog.push({ step, desc, expected, actual, status })
-}
+const { logStep } = createStepLog(ctx.stepLog)
 
 async function api(method: string, urlPath: string, opts: { body?: unknown; headers?: Record<string, string> } = {}) {
   const res = await fetch(`${BACKEND_URL}${urlPath}`, {
@@ -198,17 +195,11 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
 
   // ── PHASE 3 — Admin-Moderation ────────────────────────────────────────────
 
-  test('Schritt 7 — Admin-Moderationsliste ist erreichbar', async ({ browser }) => {
-    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
-    const page = await context.newPage()
-    try {
-      await page.goto(BASE_URL + '/admin/reviews')
-      await expect(page).toHaveURL(/\/admin\/reviews/)
-      await expect(page).not.toHaveURL(/\/admin\/login/)
-      logStep(7, 'Admin /admin/reviews', 'Seite geladen (kein Login-Redirect)', page.url(), 'PASS')
-    } finally {
-      await context.close()
-    }
+  test('Schritt 7 — Admin-Moderationsliste ist erreichbar', async ({ adminPage: page }) => {
+    await page.goto(BASE_URL + '/admin/reviews')
+    await expect(page).toHaveURL(/\/admin\/reviews/)
+    await expect(page).not.toHaveURL(/\/admin\/login/)
+    logStep(7, 'Admin /admin/reviews', 'Seite geladen (kein Login-Redirect)', page.url(), 'PASS')
   })
 
   test('Schritt 8 — Admin invalidiert die Review (verschwindet) und stellt sie wieder her', async () => {

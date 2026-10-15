@@ -18,7 +18,7 @@ test.describe('Naidivse Live — Coming-Soon entfernt', () => {
     expect(post.status(), 'AC4: POST /api/coming-soon').toBe(404)
 
     // AC1
-    const home = await request.get('http://localhost:3500/', { headers: { Host: 'naidivse.com' } })
+    const home = await request.get('/', { headers: { Host: 'naidivse.com' } })
     expect(home.status(), 'AC1: GET / (Host naidivse.com)').toBe(200)
     const homeBody = await home.text()
     expect(homeBody).not.toContain('coming_soon')
@@ -26,7 +26,7 @@ test.describe('Naidivse Live — Coming-Soon entfernt', () => {
     expect(homeBody, 'Brand Naidivse vorhanden').toContain('Naidivse')
 
     // AC2
-    const shops = await request.get('http://localhost:3500/shops', { headers: { Host: 'naidivse.com' } })
+    const shops = await request.get('/shops', { headers: { Host: 'naidivse.com' } })
     expect(shops.status(), 'AC2: GET /shops (Host naidivse.com)').toBe(200)
     expect(await shops.text()).not.toContain('coming_soon')
   })

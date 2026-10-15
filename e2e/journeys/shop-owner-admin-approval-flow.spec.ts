@@ -16,16 +16,17 @@
  * Ports: Frontend 3500, Backend 8500, DB: pundo_test — NEVER 3000/8000
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures'
 import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
-import { adminLogin as adminApiLogin, shopOwnerLogin } from './_helpers'
+import { adminLogin, shopOwnerLogin, adminHeaders, apiFetch } from './_helpers'
 import fs from 'fs'
 import path from 'path'
+import { BASE_URL, BACKEND_URL } from '../env'
+import { createStepLog } from '../fixtures'
+import { waitForPageHydrated } from './_helpers/hydration'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
-const BASE_URL = process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL = process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[shop-owner-admin-approval-flow] Safety: NEVER run against prod ports 3000/8000!')
@@ -58,32 +59,7 @@ const ctx = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function logStep(step: number, desc: string, expected: string, actual: string, status: 'PASS' | 'FAIL' | 'SKIP') {
-  ctx.stepLog.push({ step, desc, expected, actual, status })
-  console.log(`[approval-flow] Step ${step} [${status}]: ${desc} | expected: ${expected} | actual: ${actual}`)
-}
-
-async function apiFetch(
-  method: string,
-  urlPath: string,
-  body?: unknown,
-  headers: Record<string, string> = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
-  const url = urlPath.startsWith('http') ? urlPath : `${BACKEND_URL}${urlPath}`
-  const res = await fetch(url, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json', ...headers } : headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  let data: unknown = {}
-  try { if (res.status !== 204) data = await res.json() } catch { /* empty */ }
-  return { ok: res.ok, status: res.status, data }
-}
-
-function adminHeaders(): Record<string, string> {
-  if (!ctx.adminToken) throw new Error('adminToken not set')
-  return { Cookie: `admin_token=${ctx.adminToken}` }
-}
+const { logStep } = createStepLog(ctx.stepLog, 'approval-flow')
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
@@ -102,7 +78,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     if (!health.ok) throw new Error(`Backend health check failed: ${health.status}`)
 
     // Admin-Token
-    ctx.adminToken = await adminApiLogin()
+    ctx.adminToken = await adminLogin()
 
     // Fixture A: Pending owner with shop (via legacy register endpoint)
     const regA = await apiFetch('POST', '/api/v1/shop-owner/register', {
@@ -161,7 +137,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   test('AC-1: Admin-Login via Browser-Formular', async ({ page }) => {
     test.setTimeout(30_000)
     await page.goto(`${BASE_URL}/admin/login`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     await page.fill('input[name="email"]', 'e2e-admin@pundo-e2e.io')
     await page.fill('input[name="password"]', 'E2eAdminPassword!99')
@@ -181,19 +157,12 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   })
 
   // AC-2: Shop-Owner-Liste lädt (Regression-Guard 500-Bug)
-  test('AC-2: Shop-Owner-Liste lädt ohne 500 (Regression-Guard)', async ({ page }) => {
+  test('AC-2: Shop-Owner-Liste lädt ohne 500 (Regression-Guard)', async ({ adminPage: page }) => {
     test.setTimeout(20_000)
 
     // Set cookie directly (faster than re-login)
-    await page.context().addCookies([{
-      name: 'admin_token',
-      value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/shop-owners`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Must show at least one row (our fixtures exist)
     // The old bug caused a 500 when any pre_signup account existed → catch → 0 rows
@@ -205,16 +174,11 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   })
 
   // AC-3: Filter pending zeigt Fixture A
-  test('AC-3: Filter "pending" zeigt Fixture A', async ({ page }) => {
+  test('AC-3: Filter "pending" zeigt Fixture A', async ({ adminPage: page }) => {
     test.setTimeout(20_000)
 
-    await page.context().addCookies([{
-      name: 'admin_token', value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname, path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/shop-owners?status=pending&q=${encodeURIComponent(ctx.approvalEmail)}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Fixture A email should appear
     const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.approvalEmail })
@@ -224,16 +188,11 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   })
 
   // AC-4: Filter pre_signup zeigt Fixture B (Regression-Guard fehlender Filter)
-  test('AC-4: Filter "pre_signup" zeigt Fixture B (Regression-Guard)', async ({ page }) => {
+  test('AC-4: Filter "pre_signup" zeigt Fixture B (Regression-Guard)', async ({ adminPage: page }) => {
     test.setTimeout(20_000)
 
-    await page.context().addCookies([{
-      name: 'admin_token', value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname, path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/shop-owners?status=pre_signup&q=${encodeURIComponent(ctx.presignupEmail)}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     const emailCell = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.presignupEmail })
     await expect(emailCell.first(), `Fixture B (${ctx.presignupEmail}) muss in pre_signup-Filter sichtbar sein`).toBeVisible({ timeout: 5_000 })
@@ -242,18 +201,13 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
   })
 
   // AC-5+6: Approve via Edit-Seite
-  test('AC-5+6: Approve Fixture A via Browser-UI', async ({ page }) => {
+  test('AC-5+6: Approve Fixture A via Browser-UI', async ({ adminPage: page }) => {
     test.setTimeout(30_000)
 
     if (!ctx.approvalOwnerId) test.skip(true, 'Fixture A nicht aufgebaut')
 
-    await page.context().addCookies([{
-      name: 'admin_token', value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname, path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/shop-owners/${ctx.approvalOwnerId}/edit`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Status-Badge muss 'pending' zeigen
     const statusBadge = page.locator('span').filter({ hasText: /^pending$/i })
@@ -264,9 +218,6 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     const approveBtn = page.locator('button').filter({ hasText: /approve/i })
     await expect(approveBtn).toBeVisible()
     await approveBtn.click()
-
-    // Kurz warten auf Status-Update
-    await page.waitForTimeout(1_500)
 
     // Status-Badge muss 'approved' zeigen
     const approvedBadge = page.locator('span').filter({ hasText: /^approved$/i })
@@ -281,26 +232,21 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
 
     // In approved-Liste sichtbar
     await page.goto(`${BASE_URL}/admin/shop-owners?status=approved&q=${encodeURIComponent(ctx.approvalEmail)}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
     const approvedRow = page.locator('td, [data-testid="entity-cell"]').filter({ hasText: ctx.approvalEmail })
     await expect(approvedRow.first()).toBeVisible({ timeout: 5_000 })
     logStep(6, 'In approved-Filter sichtbar', 'Fixture A in approved-Liste', ctx.approvalEmail, 'PASS')
   })
 
   // AC-7: Admin-Logout
-  test('AC-7: Admin-Logout → Cookie gelöscht, Redirect auf Login', async ({ page }) => {
+  test('AC-7: Admin-Logout → Cookie gelöscht, Redirect auf Login', async ({ adminPage: page }) => {
     test.setTimeout(20_000)
 
     // Desktop viewport: sidebar uses hidden md:flex (768px breakpoint)
     await page.setViewportSize({ width: 1280, height: 800 })
 
-    await page.context().addCookies([{
-      name: 'admin_token', value: ctx.adminToken!,
-      domain: new URL(BASE_URL).hostname, path: '/',
-    }])
-
     await page.goto(`${BASE_URL}/admin/shop-owners`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Logout-Button ist in der Desktop-Sidebar (hidden md:flex)
     // tr.logout = 'Sign out' (en) — kein 'Logout'!
@@ -334,7 +280,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
 
     // Login via Formular (kein OAuth)
     await page.goto(`${BASE_URL}/shop-admin/login`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     await page.fill('input[name="email"]', ctx.approvalEmail)
     await page.fill('input[name="password"]', PASSWORD)
@@ -364,7 +310,7 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     }])
 
     await page.goto(`${BASE_URL}/shop-admin/profile`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // input[name="name"] muss einen Wert haben (Shop-Name aus Registration)
     const nameInput = page.locator('input[name="name"]')

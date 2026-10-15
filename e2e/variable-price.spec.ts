@@ -19,8 +19,8 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { BACKEND_URL } from './env'
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 // Erwartete price_note je Fixture (Backend: UnifiedOffer.description, prepare_e2e_db.py seed_price_type_fixtures()).
 // `fixed` hat bewusst keine Notiz.

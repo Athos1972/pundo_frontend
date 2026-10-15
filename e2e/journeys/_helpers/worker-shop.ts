@@ -14,13 +14,12 @@
  * Der globale `e2e-test-shop` bleibt nur fuer Login/Logout und Read-only-Pruefungen des echten
  * Passwort-Owners.
  */
-import { test as base, expect } from '@playwright/test'
+import { test as base, expect } from '../../fixtures'
+import { BACKEND_URL, BASE_URL } from '../../env'
+import { makePng } from './png'
 import {
   adminApi, ownerApi, RUN_ID, TestDataTracker, rand4, isMarkerSlug, e2eName, psql, type ApiResult,
 } from './test-data'
-
-const FRONTEND_URL = process.env.FRONTEND_URL ?? `http://127.0.0.1:${process.env.E2E_FRONTEND_PORT ?? '3500'}`
-if (FRONTEND_URL.includes(':3000')) throw new Error('[worker-shop] Safety: NEVER use production port 3000!')
 
 export interface StorageStateCookie {
   name: string; value: string; domain: string; path: string
@@ -47,6 +46,12 @@ export interface WorkerShop {
    * Fuzzy-409 des Backends vergleicht Namen innerhalb einer Kategorie).
    */
   createItem(spec: string, label: string, opts?: { listing?: boolean; categoryId?: number }): Promise<CreatedItem>
+  /**
+   * Laedt ein gueltiges 64x64-PNG als Produktfoto des Items hoch (`POST /shop-owner/items/{id}/photos`).
+   * `shade` macht die Pixel eindeutig (SHA-Dedup). Die Datei liegt danach im Dateisystem des Backends; nur der
+   * Shop-Delete (`destroy`) raeumt sie weg.
+   */
+  uploadPhoto(itemId: number, shade?: number): Promise<{ status: number; text: string }>
   /** Pflicht-afterAll jeder Spec: Offers archivieren, Listings loeschen, Items fuer den Teardown merken. */
   cleanupSpecData(): Promise<void>
   /** Shop + getrackte Items loeschen (specShop: in afterAll; Worker-Shop macht das die Fixture). */
@@ -56,7 +61,7 @@ export interface WorkerShop {
 function toStorageState(token: string): StorageState {
   return {
     cookies: [{
-      name: 'shop_owner_token', value: token, domain: new URL(FRONTEND_URL).hostname, path: '/',
+      name: 'shop_owner_token', value: token, domain: new URL(BASE_URL).hostname, path: '/',
       expires: -1, httpOnly: true, secure: false, sameSite: 'Lax',
     }],
     origins: [],
@@ -101,6 +106,16 @@ async function createShop(slugPart: string, label: string): Promise<WorkerShop> 
         created.listingId = l.json.id
       }
       return created
+    },
+    async uploadPhoto(itemId, shade = 1) {
+      const fd = new FormData()
+      fd.append('file', new Blob([new Uint8Array(makePng(shade))], { type: 'image/png' }), `p${shade}.png`)
+      const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/items/${itemId}/photos`, {
+        method: 'POST', headers: { Authorization: `Bearer ${ownerToken}` }, body: fd, signal: AbortSignal.timeout(60_000),
+      })
+      const text = await res.text()
+      if (res.status !== 201 && res.status !== 200) throw new Error(`[worker-shop] Foto hochladen: ${res.status} ${text.slice(0, 200)}`)
+      return { status: res.status, text }
     },
     async cleanupSpecData() {
       // 1. Offers: aktive archivieren (Admin), dann ALLE per Owner-API loeschen. Ein Listing mit (auch nur

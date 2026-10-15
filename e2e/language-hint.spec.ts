@@ -16,6 +16,7 @@
  *   H10 — Kein Hinweis auf Bypass-Bereichen (shop-admin)
  */
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
+import { waitForPageHydrated } from './journeys/_helpers/hydration'
 
 const COOKIE_DOMAIN = process.env.E2E_COOKIE_DOMAIN ?? '127.0.0.1'
 const HINT_COOKIE = 'lang_hint_dismissed'
@@ -70,8 +71,7 @@ test.describe('LanguageHint — F6310', () => {
     expect(cookie!.expires - Date.now() / 1000).toBeGreaterThan(364 * 24 * 3600)
 
     await page.reload()
-    await page.waitForLoadState('load')
-    await page.waitForTimeout(500) // Hydration abwarten — Hinweis darf auch danach nicht erscheinen
+    await waitForPageHydrated(page) // Hinweis darf auch nach der Hydration nicht erscheinen
     await expect(hint(page)).toHaveCount(0)
   })
 
@@ -159,8 +159,7 @@ test.describe('LanguageHint — F6310', () => {
     await firstVisitor(context)
     await addCookie(context, HINT_COOKIE, '1')
     await page.goto('/de')
-    await page.waitForLoadState('load')
-    await page.waitForTimeout(500)
+    await waitForPageHydrated(page)
     await expect(hint(page)).toHaveCount(0)
   })
 
@@ -188,8 +187,7 @@ test.describe('LanguageHint — F6310', () => {
   test('H10: kein Hinweis auf Bypass-Bereichen (shop-admin)', async ({ page, context }) => {
     await firstVisitor(context)
     await page.goto('/shop-admin/login')
-    await page.waitForLoadState('load')
-    await page.waitForTimeout(500)
+    await waitForPageHydrated(page)
     await expect(hint(page)).toHaveCount(0)
   })
 })

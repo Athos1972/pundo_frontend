@@ -13,9 +13,8 @@
  */
 import { test, expect } from '@playwright/test'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5950-001] Safety: NEVER use production ports!')
 }
@@ -61,14 +60,14 @@ for (const [lang, rtl] of [['en', false], ['de', false], ['el', false], ['ar', t
     const errors: string[] = []
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
     page.on('pageerror', (e) => errors.push(e.message))
-    await page.goto(`${FRONTEND_URL}/${lang}/shops/${shop.slug}`, { waitUntil: 'networkidle' })
+    await page.goto(`${FRONTEND_URL}/${lang}/shops/${shop.slug}`, { waitUntil: 'load' })
 
-    const mon = page.getByTestId('shop-hours-mon')
+    const mon = page.locator('[data-testid=\"shop-hours-mon\"]:visible')
     await expect(mon).toContainText('07:00 – 14:00, 16:30 – 19:00')
     await expect(mon.locator('[dir="ltr"]')).toHaveCount(1)
-    await expect(page.getByTestId('shop-hours-sat')).toContainText('07:00 – 14:00')
-    await expect(page.getByTestId('shop-hours-sat')).not.toContainText('16:30')
-    await expect(page.getByTestId('shop-hours-sun')).not.toContainText('07:00')
+    await expect(page.locator('[data-testid=\"shop-hours-sat\"]:visible')).toContainText('07:00 – 14:00')
+    await expect(page.locator('[data-testid=\"shop-hours-sat\"]:visible')).not.toContainText('16:30')
+    await expect(page.locator('[data-testid=\"shop-hours-sun\"]:visible')).not.toContainText('07:00')
     expect(await page.evaluate(() => document.documentElement.dir)).toBe(rtl ? 'rtl' : 'ltr')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
     expect(await page.content()).not.toContain('undefined –')

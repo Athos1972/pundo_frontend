@@ -33,13 +33,10 @@ import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
 import fs from 'fs'
 import path from 'path'
 import { openItemPickerModal } from './_helpers/hydration'
+import { BASE_URL, BACKEND_URL } from '../env'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
-const BASE_URL =
-  process.env.TEST_BASE_URL ?? process.env.FRONTEND_URL ?? 'http://localhost:3500'
-const BACKEND_URL =
-  process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error(

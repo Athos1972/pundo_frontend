@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { waitForPageHydrated } from './journeys/_helpers/hydration'
 
 // E2E-Tests für Community-Feedback-System (F3200 / F3400 / F3500)
 // Läuft auf Port 3500 (Test-Frontend) + 8500 (Test-Backend)
@@ -49,7 +50,7 @@ test.describe('Community-Feedback: Shop-Detailseite', () => {
     test.skip(!slug, 'Kein Shop in Test-DB')
 
     await page.goto(`/shops/${slug}`)
-    await page.waitForLoadState('networkidle')
+    await waitForPageHydrated(page)
 
     // Keine JS-Fehler (Next.js hydration errors etc.)
     // Exclude known false-positives: favicons, browser extensions, CSP inline-style warnings,

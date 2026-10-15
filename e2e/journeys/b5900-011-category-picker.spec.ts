@@ -17,9 +17,8 @@ import { marker } from './_helpers/test-data'
 import { tAdmin } from '../../src/lib/shop-admin-translations'
 import { fillNameAndAwaitSuggestions, pickCategory } from './_helpers/category-picker'
 import { openItemPickerModal } from './_helpers/hydration'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://127.0.0.1:3500'
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8500'
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('[b5900-011] Safety: NEVER use production ports!')
 }

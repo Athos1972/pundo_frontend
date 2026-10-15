@@ -11,6 +11,10 @@ vi.mock('@/config/brands', () => ({
   }),
 }))
 
+// generateMetadata never renders: stub the heavy client component so the dynamic import does not
+// transform its whole tree (>5s cold under load, nightly 2026-10-15).
+vi.mock('@/app/(customer)/[lang]/search/SearchContent', () => ({ default: () => null }))
+
 describe('Search page SEO — og:image completeness (B6400-005)', () => {
   it('canonical /{lang}/search includes a fully-populated openGraph.images entry', async () => {
     const { generateMetadata } = await import('@/app/(customer)/[lang]/search/page')

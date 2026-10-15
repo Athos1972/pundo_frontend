@@ -16,6 +16,19 @@ vi.mock('@/config/brands', () => ({
 vi.mock('@/lib/featured-categories', () => ({
   getFeaturedCategoryIds: vi.fn().mockReturnValue(null),
 }))
+// generateMetadata never renders: stub the page's UI components so the dynamic import does not
+// transform the whole component tree (took >5s cold under load, nightly 2026-10-15).
+vi.mock('@/components/activity-feed/ActivityFeed', () => ({ ActivityFeed: () => null }))
+vi.mock('@/components/community/CommunityCard', () => ({ CommunityCard: () => null }))
+vi.mock('@/components/guides/GuidesTeaser', () => ({ GuidesTeaser: () => null }))
+vi.mock('@/components/home/CharityHomepageSection', () => ({ CharityHomepageSection: () => null }))
+vi.mock('@/components/home/ForBusinessesBand', () => ({ ForBusinessesBand: () => null }))
+vi.mock('@/components/home/HomepageCategoryGrid', () => ({ HomepageCategoryGrid: () => null }))
+vi.mock('@/components/home/HomepageStatsStrip', () => ({ HomepageStatsStrip: () => null }))
+vi.mock('@/components/home/HomesickTeaser', () => ({ HomesickTeaser: () => null }))
+vi.mock('@/components/layout/Hero', () => ({ Hero: () => null }))
+vi.mock('@/components/recently-viewed/RecentlyViewedList', () => ({ RecentlyViewedList: () => null }))
+vi.mock('@/components/shop/NearbyShops', () => ({ NearbyShops: () => null }))
 
 describe('getSiteUrl', () => {
   const originalEnv = process.env.SITE_URL

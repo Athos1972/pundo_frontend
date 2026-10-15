@@ -14,6 +14,24 @@ vi.mock('@/lib/api', () => ({
 vi.mock('@/lib/customer-api', () => ({
   getCustomerSession: vi.fn().mockResolvedValue({ is_authenticated: false }),
 }))
+// generateMetadata never renders: stub the page's UI components so the dynamic import does not
+// transform the whole component tree (took >5s cold under load, nightly 2026-10-15).
+vi.mock('@/components/community/CharityVoteControl', () => ({ CharityVoteControl: () => null }))
+vi.mock('@/components/community/CommunityFeedbackSection', () => ({ CommunityFeedbackSection: () => null }))
+vi.mock('@/components/consent/PixelViewContent', () => ({ PixelViewContent: () => null }))
+vi.mock('@/components/map/ShopMapClient', () => ({ ShopMapClient: () => null }))
+vi.mock('@/components/product/ProductCard', () => ({ ProductCard: () => null }))
+vi.mock('@/components/recently-viewed/TrackShopView', () => ({ TrackShopView: () => null }))
+vi.mock('@/components/reviews/ReviewSection', () => ({ ReviewSection: () => null }))
+vi.mock('@/components/shop/RelatedShopsWidget', () => ({ RelatedShopsWidget: () => null }))
+vi.mock('@/components/shop/ShopLogoImage', () => ({ ShopLogoImage: () => null }))
+vi.mock('@/components/shop/ShopOfferCard', () => ({ ShopOfferCard: () => null }))
+vi.mock('@/components/ui/BackButton', () => ({ BackButton: () => null }))
+vi.mock('@/components/ui/Breadcrumb', () => ({ Breadcrumb: () => null }))
+vi.mock('@/components/ui/GlobeIcon', () => ({ GlobeIcon: () => null }))
+vi.mock('@/components/ui/LanguageChips', () => ({ LanguageChips: () => null }))
+vi.mock('@/components/ui/PhoneIcon', () => ({ PhoneIcon: () => null }))
+vi.mock('@/components/ui/WhatsAppIcon', () => ({ WhatsAppIcon: () => null }))
 
 function makeShop(overrides: Partial<ShopDetailResponse> = {}): ShopDetailResponse {
   return {

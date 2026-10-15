@@ -71,6 +71,15 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
     throw new Error('ONBOARDING_FAILED')
   }
 
+  if (res.status === 422) {
+    // Backend rejects non-http(s) website URLs (javascript:, data: …) with 422.
+    const body = await res.json().catch(() => ({})) as unknown
+    if (JSON.stringify(body).includes('website')) {
+      throw Object.assign(new Error('INVALID_URL'), { code: 'INVALID_URL' })
+    }
+    throw new Error('ONBOARDING_FAILED')
+  }
+
   if (res.status === 409) {
     const body = await res.json().catch(() => ({})) as { detail?: string }
     throw Object.assign(new Error(body.detail ?? 'EMAIL_TAKEN'), { code: 'EMAIL_TAKEN' })

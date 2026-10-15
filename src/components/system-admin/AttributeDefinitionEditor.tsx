@@ -1,7 +1,7 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { SysAdminCategoryAttributeDef } from '@/types/system-admin'
 
 export type AttrDefDraft = Omit<SysAdminCategoryAttributeDef, 'id' | 'category_id'>
@@ -28,6 +28,10 @@ export function AttributeDefinitionEditor({
   optionsPlaceholder,
 }: AttributeDefinitionEditorProps) {
   const allowedValues = Array.isArray(value.allowed_values) ? (value.allowed_values as string[]) : []
+  const keyId = useId()
+  const labelId = useId()
+  const typeId = useId()
+  const optionsId = useId()
   const [optionsInput, setOptionsInput] = useState(allowedValues.join(', '))
 
   function handleOptionsChange(raw: string) {
@@ -42,8 +46,9 @@ export function AttributeDefinitionEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">{keyLabel} <span className="text-red-500">*</span></label>
+        <label htmlFor={keyId} className="text-sm font-medium text-gray-700">{keyLabel} <span className="text-red-500">*</span></label>
         <input
+          id={keyId}
           type="text"
           value={value.attribute_key}
           onChange={(e) => onChange({ ...value, attribute_key: e.target.value })}
@@ -54,8 +59,9 @@ export function AttributeDefinitionEditor({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">{labelLabel} <span className="text-red-500">*</span></label>
+        <label htmlFor={labelId} className="text-sm font-medium text-gray-700">{labelLabel} <span className="text-red-500">*</span></label>
         <input
+          id={labelId}
           type="text"
           value={labelEn}
           onChange={(e) => onChange({ ...value, labels: { ...value.labels, en: e.target.value } })}
@@ -66,8 +72,9 @@ export function AttributeDefinitionEditor({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">{typeLabel}</label>
+        <label htmlFor={typeId} className="text-sm font-medium text-gray-700">{typeLabel}</label>
         <select
+          id={typeId}
           value={value.attribute_type}
           onChange={(e) => onChange({ ...value, attribute_type: e.target.value })}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
@@ -86,8 +93,9 @@ export function AttributeDefinitionEditor({
 
       {value.attribute_type === 'select' && (
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">{optionsLabel}</label>
+          <label htmlFor={optionsId} className="text-sm font-medium text-gray-700">{optionsLabel}</label>
           <input
+            id={optionsId}
             type="text"
             value={optionsInput}
             onChange={(e) => handleOptionsChange(e.target.value)}

@@ -42,7 +42,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!externalId.trim()) e.external_id = 'External ID is required'
+    if (!externalId.trim()) e.external_id = tr.error_external_id_required
     if (!taxonomyType.trim()) e.taxonomy_type = tr.error_required
     setErrors(e)
     return Object.keys(e).length === 0

@@ -106,6 +106,7 @@ describe('ItemPhotoUpload — upload error mapping', () => {
     [400, { detail: 'Unsupported file type: image/gif' }, tr.product_photos_type_error],
     [409, { detail: 'max_photos_reached' }, tr.product_photos_limit_error],
     [403, { detail: 'Forbidden' }, tr.photo_not_own_error],
+    [404, { detail: 'Not found' }, tr.photo_not_own_error],   // foreign listings answer 404 instead of 403
     [500, {}, tr.product_photos_upload_error],
   ]
   it.each(cases)('status %s -> mapped message', async (status, body, msg) => {
@@ -170,6 +171,13 @@ describe('ItemPhotoUpload — delete / set main', () => {
 
   it('shows visible error when delete fails', async () => {
     mockFetch.mockResolvedValue(jsonRes(403, {}))
+    render(<ItemPhotoUpload itemId={9} photos={[photo(1, 0, OWN)]} onChange={vi.fn()} lang="en" ownShopId={OWN} />)
+    fireEvent.click(screen.getByTestId('item-photo-delete-1'))
+    await waitFor(() => expect(screen.getByTestId('item-photo-error')).toHaveTextContent(tr.photo_not_own_error))
+  })
+
+  it('shows the not-own message when delete answers 404 (foreign photo hidden behind 404)', async () => {
+    mockFetch.mockResolvedValue(jsonRes(404, {}))
     render(<ItemPhotoUpload itemId={9} photos={[photo(1, 0, OWN)]} onChange={vi.fn()} lang="en" ownShopId={OWN} />)
     fireEvent.click(screen.getByTestId('item-photo-delete-1'))
     await waitFor(() => expect(screen.getByTestId('item-photo-error')).toHaveTextContent(tr.photo_not_own_error))

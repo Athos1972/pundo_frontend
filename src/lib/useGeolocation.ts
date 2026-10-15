@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-const LARNACA = { lat: 34.9009, lng: 33.6230 }
+import { LARNACA } from './default-location'
 
 export function useGeolocation() {
-  const [location, setLocation] = useState(LARNACA)
+  const [location, setLocation] = useState<{ lat: number; lng: number }>({ ...LARNACA })
 
   useEffect(() => {
     if (!('geolocation' in navigator)) return

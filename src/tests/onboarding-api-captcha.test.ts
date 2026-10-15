@@ -51,3 +51,20 @@ describe('submitOnboarding captcha', () => {
     ).rejects.toMatchObject({ code: 'RATE_LIMITED' })
   })
 })
+
+describe('submitOnboarding invalid website URL (422)', () => {
+  const creds = { credentials: { email: 'a@b.c', password: 'pw' }, turnstileToken: 't' } as const
+
+  it.each([
+    ['pydantic style', { detail: [{ loc: ['body', 'contact', 'website'], msg: 'bad scheme' }] }],
+    ['flat style', { error: 'invalid_url', field: 'website' }],
+  ])('maps 422 on the website field to INVALID_URL (%s)', async (_n, body) => {
+    reply(422, body)
+    await expect(submitOnboarding({ ...base, ...creds })).rejects.toMatchObject({ code: 'INVALID_URL' })
+  })
+
+  it('keeps other 422s generic', async () => {
+    reply(422, { detail: [{ loc: ['body', 'shop_name'], msg: 'x' }] })
+    await expect(submitOnboarding({ ...base, ...creds })).rejects.toThrow('ONBOARDING_FAILED')
+  })
+})

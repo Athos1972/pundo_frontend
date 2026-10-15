@@ -1,7 +1,7 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import Image from 'next/image'
 
 interface BrandLogoInputProps {
@@ -31,6 +31,7 @@ export function BrandLogoInput({
   errorMessage,
   saveFirstLabel,
 }: BrandLogoInputProps) {
+  const urlInputId = useId()
   const [tab, setTab] = useState<'url' | 'upload'>('url')
   const [urlInput, setUrlInput] = useState(value ?? '')
   const [uploadError, setUploadError] = useState('')
@@ -94,8 +95,9 @@ export function BrandLogoInput({
 
       {tab === 'url' ? (
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">{logoUrlLabel}</label>
+          <label htmlFor={urlInputId} className="text-sm font-medium text-gray-700">{logoUrlLabel}</label>
           <input
+            id={urlInputId}
             type="url"
             value={urlInput}
             onChange={handleUrlChange}

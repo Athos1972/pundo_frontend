@@ -39,8 +39,8 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!name.trim()) e.name = 'Name is required'
-    if (!slug.trim()) e.slug = 'Slug is required'
+    if (!name.trim()) e.name = tr.error_name_required
+    if (!slug.trim()) e.slug = tr.error_slug_required
     setErrors(e)
     return Object.keys(e).length === 0
   }

@@ -165,6 +165,9 @@ const sysAdminTranslations = {
     taxonomy_unspsc: 'UNSPSC',
     tree_truncated: 'Showing first {shown} of {total} categories. Filter by taxonomy type to see all.',
     error_required: 'Required',
+    error_name_required: 'Name is required',
+    error_slug_required: 'Slug is required',
+    error_external_id_required: 'External ID is required',
     // Impersonation
     enter_shop_admin: 'Manage shop operations',
     entering_shop_admin: 'Opening…',
@@ -531,6 +534,9 @@ const sysAdminTranslations = {
     taxonomy_unspsc: 'UNSPSC',
     tree_truncated: 'Εμφανίζονται οι πρώτες {shown} από {total} κατηγορίες. Φιλτράρετε κατά τύπο ταξινομίας για να τις δείτε όλες.',
     error_required: 'Υποχρεωτικό',
+    error_name_required: 'Το όνομα είναι υποχρεωτικό',
+    error_slug_required: 'Το slug είναι υποχρεωτικό',
+    error_external_id_required: 'Το εξωτερικό ID είναι υποχρεωτικό',
     // Impersonation
     enter_shop_admin: 'Διαχείριση λειτουργιών καταστήματος',
     entering_shop_admin: 'Άνοιγμα…',

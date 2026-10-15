@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
+import { LARNACA } from '@/lib/default-location'
 
 // ─── LocationEditor ─────────────────────────────────────────────────────────────
 // The leaflet map is loaded via next/dynamic; replace it with a probe that shows the
@@ -31,7 +32,7 @@ describe('LocationEditor', () => {
     expect(screen.getByTestId('map').getAttribute('data-lat')).toBe('35.1')
     expect((screen.getByLabelText('Latitude') as HTMLInputElement).value).toBe('35.1')
     rerender(<LocationEditor lat={null} lng={null} onChange={vi.fn()} {...labels} />)
-    expect(screen.getByTestId('map').getAttribute('data-lat')).toBe('48.2083')   // default pin
+    expect(screen.getByTestId('map').getAttribute('data-lat')).toBe(String(LARNACA.lat))   // default pin (Larnaca)
     expect((screen.getByLabelText('Latitude') as HTMLInputElement).value).toBe('')    // but the inputs stay empty
   })
 
@@ -58,7 +59,7 @@ describe('LocationEditor', () => {
     const onChange = vi.fn()
     render(<LocationEditor lat={null} lng={null} onChange={onChange} {...labels} />)
     fireEvent.change(screen.getByLabelText('Longitude'), { target: { value: '33' } })
-    expect(onChange).toHaveBeenLastCalledWith(48.2083, 33)
+    expect(onChange).toHaveBeenLastCalledWith(LARNACA.lat, 33)
   })
 
   describe('address search', () => {

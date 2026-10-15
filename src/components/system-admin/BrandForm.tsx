@@ -31,7 +31,7 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!name.trim()) e.name = 'Name is required'
+    if (!name.trim()) e.name = tr.error_name_required
     setErrors(e)
     return Object.keys(e).length === 0
   }

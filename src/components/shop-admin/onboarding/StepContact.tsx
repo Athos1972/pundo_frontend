@@ -7,6 +7,8 @@ import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
 interface StepContactProps {
   tr: ShopAdminTranslations
   initialContact: OnboardingContact
+  /** Localized server-side validation error for the website field (backend 422). */
+  websiteError?: string | null
   onNext: (contact: OnboardingContact) => void
   onBack: () => void
 }
@@ -20,10 +22,10 @@ const FIELDS: { key: ContactField; icon: string; inputType: string; label: (tr: 
   { key: 'instagram', icon: '📷', inputType: 'url', label: tr => tr.onboarding_contact_instagram },
   { key: 'telegram', icon: '✈️', inputType: 'text', label: tr => tr.onboarding_contact_telegram },
   { key: 'facebook', icon: '👥', inputType: 'url', label: tr => tr.onboarding_contact_facebook },
-  { key: 'website', icon: '🌐', inputType: 'url', label: tr => tr.onboarding_contact_website },
+  { key: 'website', icon: '🌐', inputType: 'text', label: tr => tr.onboarding_contact_website },
 ]
 
-export function StepContact({ tr, initialContact, onNext, onBack }: StepContactProps) {
+export function StepContact({ tr, initialContact, websiteError, onNext, onBack }: StepContactProps) {
   const [contact, setContact] = useState<OnboardingContact>(initialContact)
 
   function set(key: ContactField, value: string) {
@@ -43,16 +45,20 @@ export function StepContact({ tr, initialContact, onNext, onBack }: StepContactP
 
       <div className="flex flex-col gap-3">
         {FIELDS.map(({ key, icon, inputType, label }) => (
-          <div key={key} className="flex items-center gap-3">
+          <div key={key} className="flex flex-wrap items-center gap-3">
             <span className="text-xl w-7 text-center shrink-0">{icon}</span>
             <input
               type={inputType}
+              {...(key === 'website' ? { inputMode: 'url' as const, autoCapitalize: 'none', spellCheck: false, 'aria-invalid': !!websiteError } : {})}
               defaultValue={contact[key] ?? ''}
               onChange={e => set(key, e.target.value)}
               placeholder={label(tr)}
               className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               dir="auto"
             />
+            {key === 'website' && websiteError && (
+              <p role="alert" className="basis-full ps-10 text-xs text-red-600">{websiteError}</p>
+            )}
           </div>
         ))}
       </div>

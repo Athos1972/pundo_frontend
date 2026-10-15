@@ -9,6 +9,9 @@ import type { AdminItemPhoto } from '@/types/shop-admin'
 
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 const MAX_PHOTOS = 8
+
+// The backend answers 404 (not 403) for photos/listings of other shops so their existence isn't leaked.
+const isNotOwnStatus = (status: number) => status === 403 || status === 404
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 interface UploadingItem {
@@ -62,7 +65,7 @@ export function ItemPhotoUpload({ itemId, photos, onChange, lang, ownShopId = nu
     if (status === 413) return tr.product_photos_size_error
     if (status === 400 || status === 415) return tr.product_photos_type_error
     if (status === 409) return tr.product_photos_limit_error
-    if (status === 403) return tr.photo_not_own_error
+    if (isNotOwnStatus(status)) return tr.photo_not_own_error
     return tr.product_photos_upload_error
   }
 
@@ -126,7 +129,7 @@ export function ItemPhotoUpload({ itemId, photos, onChange, lang, ownShopId = nu
     try {
       const res = await fetch(`/api/shop-admin/items/${itemId}/photos/${photoId}`, { method: 'DELETE' })
       if (!res.ok) {
-        setError(res.status === 403 ? tr.photo_not_own_error : tr.photo_delete_error)
+        setError(isNotOwnStatus(res.status) ? tr.photo_not_own_error : tr.photo_delete_error)
         return
       }
       const wasCover = sorted[0]?.id === photoId
@@ -161,7 +164,7 @@ export function ItemPhotoUpload({ itemId, photos, onChange, lang, ownShopId = nu
         body: JSON.stringify({ sort_order: 0 }),
       })
       if (!res.ok) {
-        setError(res.status === 403 ? tr.photo_not_own_error : tr.photo_set_main_error)
+        setError(isNotOwnStatus(res.status) ? tr.photo_not_own_error : tr.photo_set_main_error)
         return
       }
       const photo = sorted.find((p) => p.id === photoId)

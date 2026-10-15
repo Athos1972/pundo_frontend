@@ -3,6 +3,7 @@
 
 import dynamic from 'next/dynamic'
 import { useState, useRef, useCallback, useId } from 'react'
+import { LARNACA } from '@/lib/default-location'
 
 const LocationEditorMap = dynamic(
   () => import('./LocationEditorMap').then((m) => m.LocationEditorMap),
@@ -49,9 +50,9 @@ export function LocationEditor({
   const latId = useId()
   const lngId = useId()
 
-  // Default position when none is set: Vienna
-  const effectiveLat = lat ?? 48.2083
-  const effectiveLng = lng ?? 16.3725
+  // Default position when none is set: Larnaca (platform default)
+  const effectiveLat = lat ?? LARNACA.lat
+  const effectiveLng = lng ?? LARNACA.lng
 
   const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value

@@ -55,6 +55,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [draftAge, setDraftAge] = useState(0)
   const [emailTakenError, setEmailTakenError] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -143,6 +144,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   }
 
   function handleStep4Next(contact: OnboardingContact) {
+    setWebsiteError(null)
     persistDraft({ contact })
     setStep(4)
   }
@@ -186,6 +188,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           // Backend rejected shop_name — jump back to step 4 (photo+name step)
           setStep(4)
           setSubmitError(tr.onboarding_step5_name_required_error)
+        } else if (code === 'INVALID_URL') {
+          // Backend rejected the website URL — back to the contact step with a field message
+          setStep(3)
+          setWebsiteError(tr.error_invalid_url)
         } else if (code === 'CAPTCHA_FAILED') {
           setSubmitError(tr.onboarding_error_captcha)
         } else if (code === 'RATE_LIMITED') {
@@ -224,6 +230,9 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         if (code === 'SHOP_NAME_INVALID') {
           setStep(4)
           setSubmitError(tr.onboarding_step5_name_required_error)
+        } else if (code === 'INVALID_URL') {
+          setStep(3)
+          setWebsiteError(tr.error_invalid_url)
         } else {
           setSubmitError(tr.onboarding_error_oauth_failed)
         }
@@ -307,6 +316,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           <StepContact
             tr={tr}
             initialContact={draft.contact}
+            websiteError={websiteError}
             onNext={handleStep4Next}
             onBack={() => setStep(2)}
           />

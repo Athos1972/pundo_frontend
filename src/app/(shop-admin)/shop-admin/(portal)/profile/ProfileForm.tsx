@@ -30,6 +30,7 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
   const [socialLinksValid, setSocialLinksValid] = useState(true)
   const [logoUrl, setLogoUrl] = useState<string | null>(shop?.logo_url ?? null)
   const [serverErrors, setServerErrors] = useState<Record<string, SocialLinkFieldError>>({})
+  const [urlErrors, setUrlErrors] = useState<{ website_url?: boolean; webshop_url?: boolean }>({})
 
   // F5300 / F3800 Phase 1a — Self-service attribute state
   const [radiusInput, setRadiusInput] = useState<string>(
@@ -74,6 +75,7 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
     e.preventDefault()
     if (!socialLinksValid) return
     const data = new FormData(e.currentTarget)
+    setUrlErrors({})
 
     const phone = (data.get('phone') as string).trim() || null
     const whatsapp = (data.get('whatsapp_number') as string).trim() || null
@@ -108,6 +110,7 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         })
         if (res.ok) {
           setServerErrors({})
+          setUrlErrors({})
           showToast(tr.saved, 'success')
         } else if (res.status === 422) {
           const body = await res.json().catch(() => null)
@@ -128,7 +131,16 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
             })
             showToast(tr.social_blocked_toast, 'error')
           } else {
-            showToast(tr.error_generic, 'error')
+            // Backend rejects non-http(s) schemes (javascript:, data: …) in website_url/webshop_url with 422.
+            const bodyText = JSON.stringify(body ?? {})
+            const website = bodyText.includes('website_url')
+            const webshop = bodyText.includes('webshop_url')
+            if (website || webshop) {
+              setUrlErrors({ website_url: website, webshop_url: webshop })
+              showToast(tr.error_invalid_url, 'error')
+            } else {
+              showToast(tr.error_generic, 'error')
+            }
           }
         } else {
           showToast(tr.error_generic, 'error')
@@ -192,15 +204,27 @@ export function ProfileForm({ shop, lang }: ProfileFormProps) {
         <FormField
           label={tr.website_url}
           name="website_url"
-          type="url"
-          placeholder="https://..."
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          dir="ltr"
+          placeholder="https://example.com"
+          error={urlErrors.website_url ? tr.error_invalid_url : undefined}
           defaultValue={shop?.website_url ?? ''}
         />
         <FormField
           label={tr.webshop_url}
           name="webshop_url"
-          type="url"
-          placeholder="https://..."
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          dir="ltr"
+          placeholder="https://shop.example.com"
+          error={urlErrors.webshop_url ? tr.error_invalid_url : undefined}
           defaultValue={shop?.webshop_url ?? ''}
         />
       </div>

@@ -26,11 +26,26 @@ export function getBlogSlugs(): string[] {
     .filter((entry) => fs.statSync(path.join(BLOG_DIR, entry)).isDirectory())
 }
 
+/**
+ * YAML turns an unquoted `date: 2026-05-17` into a Date object (gray-matter/js-yaml).
+ * Normalise Date | string | missing to a string: date-only Dates (UTC midnight) become
+ * "YYYY-MM-DD", others a full ISO timestamp; parsable strings pass through; unparsable/missing -> "".
+ */
+export function normalizeBlogDate(value: unknown): string {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return ''
+    const iso = value.toISOString()
+    return iso.endsWith('T00:00:00.000Z') ? iso.slice(0, 10) : iso
+  }
+  if (typeof value === 'string') return Number.isNaN(Date.parse(value)) ? '' : value.trim()
+  return ''
+}
+
 function readMdxFile(slug: string, lang: string): BlogPostContent | null {
   const filePath = path.join(BLOG_DIR, slug, `${lang}.mdx`)
   if (!fs.existsSync(filePath)) return null
   const { data, content } = matter(fs.readFileSync(filePath, 'utf-8'))
-  const meta = { ...data, slug } as BlogPostMeta
+  const meta = { ...data, slug, date: normalizeBlogDate(data.date) } as BlogPostMeta
   if (!meta.published && process.env.NODE_ENV === 'production') return null
   return { meta, content }
 }

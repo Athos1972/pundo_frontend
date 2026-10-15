@@ -4,7 +4,7 @@
 // Remove is disabled when only 1 channel remains (AK2c).
 // Clean Boundary: no imports from customer-facing code.
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { crmPost, crmDelete } from './crmFetch'
 import type { CrmContactDetail, CrmChannelOut, CrmChannelAddRequest, CrmChannelKindIn } from '@/types/system-admin'
@@ -30,6 +30,8 @@ function reachableBadge(state: string): string {
 
 export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
   const router = useRouter()
+  const kindId = useId()
+  const valueId = useId()
   const [isPending, startTransition] = useTransition()
 
   // Add-channel form
@@ -147,8 +149,9 @@ export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
           ) : (
             <form onSubmit={handleAdd} className="flex items-end gap-2 flex-wrap">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-600">{tr.crm_channel_kind}</label>
+                <label htmlFor={kindId} className="text-xs font-medium text-gray-600">{tr.crm_channel_kind}</label>
                 <select
+                  id={kindId}
                   value={addKind}
                   onChange={(e) => setAddKind(e.target.value as CrmChannelKindIn)}
                   disabled={isPending}
@@ -160,8 +163,9 @@ export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-1 flex-1 min-w-40">
-                <label className="text-xs font-medium text-gray-600">{tr.crm_channel_value}</label>
+                <label htmlFor={valueId} className="text-xs font-medium text-gray-600">{tr.crm_channel_value}</label>
                 <input
+                  id={valueId}
                   type="text"
                   value={addValue}
                   onChange={(e) => setAddValue(e.target.value)}

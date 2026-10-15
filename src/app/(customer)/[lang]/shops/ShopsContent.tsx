@@ -5,9 +5,9 @@ import { getShops } from '@/lib/api'
 import type { ShopListItem, ShopTypeRead } from '@/types/api'
 import { t } from '@/lib/translations'
 import { ShopCard } from '@/components/shop/ShopCard'
+import { LARNACA } from '@/lib/default-location'
 
 // Larnaca city centre — fallback when geolocation is unavailable
-const LARNACA = { lat: 34.9009, lng: 33.6230 }
 const MAX_DIST_KM = 25   // slider max / "no filter" sentinel
 const SPOKEN_LANGS = ['EL', 'EN', 'DE', 'RU', 'AR', 'HE'] as const
 

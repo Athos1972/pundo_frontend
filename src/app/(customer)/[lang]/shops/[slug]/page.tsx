@@ -26,8 +26,8 @@ import { BackButton } from '@/components/ui/BackButton'
 import { LanguageChips } from '@/components/ui/LanguageChips'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
 import { PhoneIcon } from '@/components/ui/PhoneIcon'
-import { GlobeIcon } from '@/components/ui/GlobeIcon'
-import { buildWhatsAppUrl, getHostname } from '@/lib/utils'
+import { ShopWebsiteLink } from '@/components/shop/ShopWebsiteLink'
+import { buildWhatsAppUrl } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
 import { CommunityFeedbackSection } from '@/components/community/CommunityFeedbackSection'
@@ -286,17 +286,7 @@ export default async function ShopPage({ params }: Props) {
                 {shop.phone}
               </a>
             )}
-            {shop.website && getHostname(shop.website) && (
-              <a
-                href={shop.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-accent hover:opacity-80"
-              >
-                <GlobeIcon size={15} />
-                {getHostname(shop.website)}
-              </a>
-            )}
+            <ShopWebsiteLink url={shop.website} />
           </div>
           {shop.spoken_languages && shop.spoken_languages.length > 0 && (
             <div className="mt-3">

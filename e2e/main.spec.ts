@@ -429,10 +429,10 @@ test.describe('E2E-11: Help & For-Shops Pages', () => {
 
   test('/for-shops has CTA link pointing to /shop-admin/register', async ({ page }) => {
     await page.goto('/for-shops')
-    const ctaLinks = await page.getByRole('link', { name: /register|registr|anmeld/i }).all()
-    expect(ctaLinks.length).toBeGreaterThanOrEqual(1)
-    const href = await ctaLinks[0].getAttribute('href')
-    expect(href).toContain('/shop-admin/register')
+    // Web-first: .all() does not wait, so a not-yet-rendered link flaked the count to 0.
+    const cta = page.getByRole('link', { name: /register|registr|anmeld/i }).first()
+    await expect(cta).toBeVisible()
+    await expect(cta).toHaveAttribute('href', /\/shop-admin\/register/)
   })
 
   test('/for-shops feature grid renders at least 4 cards', async ({ page }) => {

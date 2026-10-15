@@ -17,17 +17,20 @@ test.describe('Naidivse Live — Coming-Soon entfernt', () => {
     })
     expect(post.status(), 'AC4: POST /api/coming-soon').toBe(404)
 
-    // AC1
-    const home = await request.get('/', { headers: { Host: 'naidivse.com' } })
-    expect(home.status(), 'AC1: GET / (Host naidivse.com)').toBe(200)
+    // AC1. Playwright >= 1.62 verwirft einen eigenen Host-Header beim Folgen eines Redirects (/ -> 307 /en),
+    // deshalb den Redirect selbst pruefen und die Zielseite mit Host-Header direkt anfragen.
+    const root = await request.get('/', { headers: { Host: 'naidivse.com' }, maxRedirects: 0 })
+    expect([200, 307, 308], 'AC1: GET / (Host naidivse.com)').toContain(root.status())
+    const home = await request.get('/en', { headers: { Host: 'naidivse.com' } })
+    expect(home.status(), 'AC1: GET /en (Host naidivse.com)').toBe(200)
     const homeBody = await home.text()
     expect(homeBody).not.toContain('coming_soon')
     expect(homeBody).not.toContain('Find everything.')
     expect(homeBody, 'Brand Naidivse vorhanden').toContain('Naidivse')
 
     // AC2
-    const shops = await request.get('/shops', { headers: { Host: 'naidivse.com' } })
-    expect(shops.status(), 'AC2: GET /shops (Host naidivse.com)').toBe(200)
+    const shops = await request.get('/en/shops', { headers: { Host: 'naidivse.com' } })
+    expect(shops.status(), 'AC2: GET /en/shops (Host naidivse.com)').toBe(200)
     expect(await shops.text()).not.toContain('coming_soon')
   })
 })

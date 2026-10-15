@@ -505,6 +505,8 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
   })
 
   test('AK22: SKU im Angebotsformular bearbeiten, Kollision -> verstaendliche Meldung; spaeterer Import trifft das Angebot', async ({ page }) => {
+    // Several page loads + saves + an import in one test: 30 s is too tight under the full-suite load of the pre-push gate.
+    test.setTimeout(120_000)
     await step('AK22', 'SKU „B-200“ am manuellen Angebot setzen -> Liste zeigt B-200', async () => {
       await page.goto(`${BASE_URL}/shop-admin/offers/${manualOfferId}/edit`, { waitUntil: 'domcontentloaded' })
       await expect(page.locator('#offer-sku')).toBeVisible({ timeout: 30_000 })

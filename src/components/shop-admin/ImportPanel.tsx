@@ -1,11 +1,13 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
 import { FieldCatalog } from './FieldCatalog'
-import type { ImportStatus, ImportUploadResult } from '@/types/shop-admin'
+import { ImportRowErrorList } from './ImportRowErrorList'
+import { useImportStatusPolling } from './useImportStatusPolling'
+import type { ImportStatus, ImportSyncErrorCode, ImportUploadResult } from '@/types/shop-admin'
 
 interface ImportPanelProps {
   initialStatus: ImportStatus
@@ -20,43 +22,62 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
   const [isPendingUpload, startUploadTransition] = useTransition()
   const [isPendingSheets, startSheetsTransition] = useTransition()
   const [isPendingSync, startSyncTransition] = useTransition()
+  const [pollTimedOut, setPollTimedOut] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const { start: startPolling, stop: stopPolling } = useImportStatusPolling()
 
   function _mapUploadError(detail: string | undefined): string {
     if (!detail) return tr.error_generic
     if (detail.startsWith('Unsupported file format')) return tr.upload_error_unsupported_format
+    if (detail.startsWith('xlsx file could not be read')) return tr.upload_error_xlsx_unreadable
     if (detail.startsWith('xls file could not be read')) return tr.upload_error_xls_unreadable
     if (detail.startsWith('File too large')) return tr.upload_error_too_large
     return tr.error_generic
   }
 
-  // Auto-poll for image download status after upload with pending images
-  useEffect(() => {
-    if (!uploadResult?.image_download_pending) return
+  async function fetchStatus(): Promise<ImportStatus | null> {
+    const res = await fetch('/api/shop-admin/import/status')
+    return res.ok ? ((await res.json()) as ImportStatus) : null
+  }
 
-    let cancelled = false
+  // Waits until the background image downloads of an upload are finished.
+  function pollImages(baselineImageAt: string | null | undefined) {
+    setPollTimedOut(false)
+    startPolling({
+      fetchStatus,
+      isDone: (s) => (s.last_image_download_at ?? null) !== (baselineImageAt ?? null),
+      onStatus: setStatus,
+      onTimeout: () => setPollTimedOut(true),
+    })
+  }
 
-    async function pollStatus() {
-      try {
-        const res = await fetch('/api/shop-admin/import/status')
-        if (!cancelled && res.ok) {
-          const data: ImportStatus = await res.json()
-          setStatus(data)
+  // Waits for a (re)sync of the sheet; if it queued image downloads, waits for those as well.
+  function pollSync(baselineSync: string | null | undefined, baselineImageAt: string | null | undefined) {
+    setPollTimedOut(false)
+    startPolling({
+      fetchStatus,
+      isDone: (s) => {
+        if ((s.last_sync ?? null) === (baselineSync ?? null)) return false
+        if ((s.last_sync_result?.image_download_pending ?? 0) > 0) {
+          return (s.last_image_download_at ?? null) !== (baselineImageAt ?? null)
         }
-      } catch { /* ignore */ }
-    }
+        return true
+      },
+      onStatus: setStatus,
+      onTimeout: () => setPollTimedOut(true),
+    })
+  }
 
-    const t1 = setTimeout(async () => {
-      await pollStatus()
-      const t2 = setTimeout(pollStatus, 8000)
-      return () => clearTimeout(t2)
-    }, 3000)
-
-    return () => {
-      cancelled = true
-      clearTimeout(t1)
+  function syncErrorText(code: ImportSyncErrorCode | null | undefined, count: number | undefined): string {
+    switch (code) {
+      case 'sheet_url_invalid': return tr.sheets_error_url_invalid
+      case 'sheet_fetch_failed': return tr.sheets_error_fetch_failed
+      case 'sheet_not_public': return tr.sheets_error_not_public
+      case 'rows_failed': return tr.sheets_error_rows_failed.replace('{n}', String(count ?? 0))
+      case 'sync_failed': return tr.sheets_error_sync_failed
+      default: return tr.sheets_status_error
     }
-  }, [uploadResult])
+  }
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -70,7 +91,12 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
         if (res.ok) {
           const result: ImportUploadResult = await res.json()
           setUploadResult(result)
-          showToast(tr.upload_success.replace('{n}', String(result.imported)), 'success')
+          if (result.errors.length > 0) {
+            showToast(tr.upload_nothing_imported.replace('{n}', String(result.errors.length)), 'error')
+          } else {
+            showToast(tr.upload_success.replace('{n}', String(result.imported)), 'success')
+          }
+          if ((result.image_download_pending ?? 0) > 0) pollImages(status.last_image_download_at)
         } else {
           const body = await res.json().catch(() => null)
           showToast(_mapUploadError(body?.detail), 'error')
@@ -94,7 +120,8 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
         if (res.ok) {
           const data: ImportStatus = await res.json()
           setStatus(data)
-          showToast('Connected', 'success')
+          showToast(tr.sheets_connected_toast, 'success')
+          pollSync(null, status.last_image_download_at)
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -109,9 +136,18 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
       try {
         const res = await fetch('/api/shop-admin/import/google-sheets', { method: 'DELETE' })
         if (res.ok) {
-          setStatus((s) => ({ ...s, google_sheet_url: undefined, last_sync: undefined, last_sync_status: undefined }))
+          stopPolling()
+          setPollTimedOut(false)
+          setStatus((s) => ({
+            ...s,
+            google_sheet_url: undefined,
+            last_sync: undefined,
+            last_sync_status: undefined,
+            last_sync_message: undefined,
+            last_sync_result: undefined,
+          }))
           setSheetsUrl('')
-          showToast('Removed', 'success')
+          showToast(tr.sheets_removed_toast, 'success')
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -127,13 +163,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
         const res = await fetch('/api/shop-admin/import/google-sheets/sync', { method: 'POST' })
         if (res.ok) {
           showToast(tr.sheets_syncing, 'info')
-          // Refresh status after a short delay
-          setTimeout(async () => {
-            try {
-              const statusRes = await fetch('/api/shop-admin/import/status')
-              if (statusRes.ok) setStatus(await statusRes.json())
-            } catch { /* ignore */ }
-          }, 3000)
+          pollSync(status.last_sync, status.last_image_download_at)
         } else {
           showToast(tr.error_generic, 'error')
         }
@@ -180,18 +210,17 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
 
         {uploadResult && (
           <div className={`rounded-lg px-4 py-3 text-sm ${uploadResult.errors.length > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-            <p className="font-medium">{tr.upload_success.replace('{n}', String(uploadResult.imported))}</p>
-            {uploadResult.errors.length > 0 && (
+            {uploadResult.errors.length === 0 ? (
+              <p className="font-medium">{tr.upload_success.replace('{n}', String(uploadResult.imported))}</p>
+            ) : (
               <>
-                {uploadResult.errors.some((e) => e.message.includes('missing required column: name')) && (
+                <p className="font-medium text-amber-800">
+                  {tr.upload_nothing_imported.replace('{n}', String(uploadResult.errors.length))}
+                </p>
+                {uploadResult.errors.some((e) => e.code === 'missing_name') && (
                   <p className="text-amber-800 mt-1 text-xs font-medium">{tr.upload_hint_see_catalog}</p>
                 )}
-                <p className="text-amber-700 mt-1">{tr.upload_errors.replace('{n}', String(uploadResult.errors.length))}</p>
-                <ul className="mt-2 text-xs text-amber-600 space-y-0.5 max-h-32 overflow-y-auto">
-                  {uploadResult.errors.map((err) => (
-                    <li key={err.row}>{tr.upload_error_row.replace('{n}', String(err.row))}: {err.message}</li>
-                  ))}
-                </ul>
+                <ImportRowErrorList errors={uploadResult.errors} lang={lang} />
               </>
             )}
           </div>
@@ -222,6 +251,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
             </details>
           </div>
         )}
+        {pollTimedOut && <p className="text-xs text-gray-500">{tr.import_status_poll_timeout}</p>}
       </section>
 
       {/* Google Sheets */}
@@ -232,16 +262,38 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
           <div className="flex flex-col gap-3">
             <p className="text-sm text-gray-600 break-all">{status.google_sheet_url}</p>
             {status.last_sync && (
-              <p className="text-xs text-gray-400">
-                {tr.sheets_last_sync}: {new Date(status.last_sync).toLocaleString()}
-                {' · '}
-                <span className={status.last_sync_status === 'error' ? 'text-red-500' : 'text-green-600'}>
-                  {status.last_sync_status === 'error' ? tr.sheets_status_error : tr.sheets_status_ok}
-                </span>
-                {status.last_sync_status === 'error' && status.last_sync_message && (
-                  <span className="block text-red-400 mt-0.5">{status.last_sync_message}</span>
+              <div className="text-xs text-gray-400">
+                <p>
+                  {tr.sheets_last_sync}: {new Date(status.last_sync).toLocaleString(lang)}
+                  {' · '}
+                  <span className={status.last_sync_status === 'error' ? 'text-red-500' : status.last_sync_status === 'ok' ? 'text-green-600' : 'text-gray-500'}>
+                    {status.last_sync_status === 'error'
+                      ? tr.sheets_status_error
+                      : status.last_sync_status === 'ok'
+                        ? tr.sheets_status_ok
+                        : tr.sheets_status_unknown}
+                  </span>
+                </p>
+                {status.last_sync_status === 'error' && (
+                  <div className="mt-1 text-red-500">
+                    <p>{syncErrorText(status.last_sync_result?.error_code, status.last_sync_result?.error_count)}</p>
+                    {status.last_sync_result?.error_code === 'rows_failed' && (
+                      <>
+                        <ImportRowErrorList errors={status.last_sync_result.errors} lang={lang} />
+                        {status.last_sync_result.errors_truncated && (
+                          <p className="mt-1">{tr.sheets_errors_truncated.replace('{n}', String(status.last_sync_result.errors.length))}</p>
+                        )}
+                      </>
+                    )}
+                    {status.last_sync_message && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer">{tr.sheets_technical_details}</summary>
+                        <code dir="ltr" className="block mt-1 break-all">{status.last_sync_message}</code>
+                      </details>
+                    )}
+                  </div>
                 )}
-              </p>
+              </div>
             )}
             <div className="flex gap-2">
               <button
@@ -276,7 +328,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
               className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-semibold
                 hover:bg-accent-dark transition-colors disabled:opacity-50"
             >
-              {isPendingSheets ? '…' : tr.sheets_connect}
+              {isPendingSheets ? tr.sheets_connecting : tr.sheets_connect}
             </button>
           </div>
         )}

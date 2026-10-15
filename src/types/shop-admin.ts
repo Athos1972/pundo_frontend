@@ -241,18 +241,44 @@ export interface ImageDownloadError {
   reason: string
 }
 
+// All-or-nothing import (B5900-030): sync status is 'ok' or 'error'; faulty rows -> nothing imported.
+export type ImportSyncStatus = 'ok' | 'error'
+export type ImportRowErrorCode = 'missing_name' | 'row_failed'
+export type ImportSyncErrorCode =
+  | 'sheet_url_invalid'
+  | 'sheet_fetch_failed'
+  | 'sheet_not_public'
+  | 'rows_failed'
+  | 'sync_failed'
+
+export interface ImportRowError {
+  row: number
+  message: string
+  code?: ImportRowErrorCode | null
+}
+
+export interface ImportSyncResult {
+  imported: number
+  error_count: number
+  errors: ImportRowError[]
+  errors_truncated: boolean
+  image_download_pending: number
+  error_code?: ImportSyncErrorCode | null
+}
+
 export interface ImportStatus {
-  google_sheet_url?: string
-  last_sync?: string
-  last_sync_status?: 'ok' | 'error'
-  last_sync_message?: string
-  image_download_errors?: ImageDownloadError[]
-  last_image_download_at?: string
+  google_sheet_url?: string | null
+  last_sync?: string | null
+  last_sync_status?: ImportSyncStatus | null
+  last_sync_message?: string | null
+  last_sync_result?: ImportSyncResult | null
+  image_download_errors?: ImageDownloadError[] | null
+  last_image_download_at?: string | null
 }
 
 export interface ImportUploadResult {
   imported: number
-  errors: { row: number; message: string }[]
+  errors: ImportRowError[]
   image_download_pending?: number
 }
 

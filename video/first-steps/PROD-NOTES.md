@@ -8,6 +8,6 @@
   - B5910-007: Vorschläge nicht freigeschalteter/abgelehnter Shops in der Kundensuche; Knopf „Aktivieren" → „Übernehmen/Keep".
   - B5900-016: Shop-Seite zeigte im Produktraster Preise anderer Shops; Archivieren nimmt das Produkt jetzt von der Seite.
   - B5900-017: Angebotsliste auf dem Handy (Knöpfe überlagerten Namen bei EL/RU), „on request"/„free"/Datum/Toast übersetzt.
-  - Datenkorrektur: 5 Backwaren-Vorlagen aus „Cafeteria & Meal Services" in Google-Kategorien (pundo_test erledigt, Prod per to-prod-Nachricht).
+  - Datenkorrektur: 5 Backwaren-Vorlagen aus „Cafeteria & Meal Services" in Google-Kategorien (pundo_test und Prod erledigt, 2026-10-14; Prod-Backup unter /opt/backups/pundo/bakery-recategorize-20261014/).
 - Aktive Vorschläge kann man nicht löschen, nur archivieren (Löschen nur für archivierte/abgelaufene Angebote).
 - Recorder: Zeilen über `div.px-4.py-3` (bzw. `data-testid="offer-row"`), Sprach-Hinweis F6310 per Cookie `lang_hint_dismissed` in `record-lib.mjs` ausgeblendet.

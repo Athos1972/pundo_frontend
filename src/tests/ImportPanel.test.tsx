@@ -236,4 +236,111 @@ describe('ImportPanel', () => {
       expect(tr.field_image_url_desc).toBeTruthy()
     }
   })
+
+  // ── B5900-030: all-or-nothing results, translated messages ──────────────────
+
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/X/edit'
+  const base = { ...defaultStatus, google_sheet_url: sheetUrl, last_sync: '2026-10-15T10:00:00Z' }
+
+  it('sync error rows_failed: shows translated summary + every row, details only inside <details>', async () => {
+    const status = {
+      ...base,
+      last_sync_status: 'error' as const,
+      last_sync_message: '2 row error(s), nothing imported: missing required column: name',
+      last_sync_result: {
+        imported: 0, error_count: 2, errors_truncated: false, image_download_pending: 0,
+        error_code: 'rows_failed' as const,
+        errors: [
+          { row: 3, code: 'missing_name' as const, message: 'missing required column: name' },
+          { row: 9, code: 'row_failed' as const, message: 'row could not be imported' },
+        ],
+      },
+    }
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    render(<ImportPanel initialStatus={status} lang="de" />)
+    expect(screen.getByText(/Es wurde nichts importiert, weil 2 Zeilen Fehler enthalten/)).toBeInTheDocument()
+    expect(screen.getByText(/Zeile 3: Name fehlt/)).toBeInTheDocument()
+    expect(screen.getByText(/Zeile 9: Zeile konnte nicht importiert werden/)).toBeInTheDocument()
+    const msg = screen.getByText(/nothing imported: missing required column/)
+    expect(msg.closest('details')).not.toBeNull()
+  })
+
+  it('sync error sheet_not_public shows the sharing hint', async () => {
+    const status = {
+      ...base,
+      last_sync_status: 'error' as const,
+      last_sync_result: {
+        imported: 0, error_count: 0, errors: [], errors_truncated: false, image_download_pending: 0,
+        error_code: 'sheet_not_public' as const,
+      },
+    }
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    render(<ImportPanel initialStatus={status} lang="en" />)
+    expect(screen.getByText(/The sheet is not public/)).toBeInTheDocument()
+  })
+
+  it('unknown status value falls back to the neutral text', async () => {
+    const status = { ...base, last_sync_status: 'weird' as unknown as 'ok' }
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    render(<ImportPanel initialStatus={status} lang="en" />)
+    expect(screen.getByText('Unknown status')).toBeInTheDocument()
+  })
+
+  it('unknown row code falls back to the raw message', async () => {
+    const { ImportRowErrorList } = await import('@/components/shop-admin/ImportRowErrorList')
+    render(<ImportRowErrorList lang="en" errors={[{ row: 4, code: 'future_code' as never, message: 'raw text' }]} />)
+    expect(screen.getByText(/Row 4: raw text/)).toBeInTheDocument()
+  })
+
+  it('maps the xlsx read error to a dedicated translated message', async () => {
+    const { showToast } = await import('@/components/shop-admin/Toast')
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify({ detail: 'xlsx file could not be read — please check the file or use the template' }), { status: 400 })
+    )
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    Object.defineProperty(fileInput, 'files', { value: [new File(['x'], 'a.xlsx')], configurable: true })
+    const { fireEvent, act } = await import('@testing-library/react')
+    await act(async () => {
+      fireEvent.change(fileInput)
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(showToast).toHaveBeenCalledWith('This .xlsx file could not be read. Please check the file or use the template.', 'error')
+  })
+
+  it('upload with faulty rows shows nothing-imported message and every row error', async () => {
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify({
+        imported: 0, image_download_pending: 0,
+        errors: [{ row: 3, code: 'missing_name', message: 'missing required column: name' }],
+      }), { status: 200 })
+    )
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    Object.defineProperty(fileInput, 'files', { value: [new File(['x'], 'a.csv')], configurable: true })
+    const { fireEvent, act } = await import('@testing-library/react')
+    await act(async () => {
+      fireEvent.change(fileInput)
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(screen.getByText(/Nothing was imported because 1 rows contain errors/)).toBeInTheDocument()
+    expect(screen.getByText(/Row 3: Name is missing/)).toBeInTheDocument()
+  })
+
+  it('new B5900-030 keys exist in all 6 langs', async () => {
+    const { tAdmin } = await import('@/lib/shop-admin-translations')
+    const keys = [
+      'sheets_connected_toast', 'sheets_removed_toast', 'sheets_connecting', 'sheets_status_unknown',
+      'sheets_errors_truncated', 'sheets_error_url_invalid', 'sheets_error_fetch_failed',
+      'sheets_error_not_public', 'sheets_error_rows_failed', 'sheets_error_sync_failed',
+      'sheets_technical_details', 'import_status_poll_timeout', 'upload_error_xlsx_unreadable',
+      'upload_nothing_imported', 'row_error_missing_name', 'row_error_failed',
+    ] as const
+    for (const lang of ['en', 'de', 'el', 'ru', 'ar', 'he']) {
+      const tr = tAdmin(lang) as unknown as Record<string, string>
+      for (const k of keys) expect(tr[k], `${lang}.${k}`).toBeTruthy()
+    }
+  })
 })

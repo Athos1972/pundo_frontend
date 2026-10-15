@@ -131,13 +131,17 @@ Zwei Import-Wege:
 **Excel/CSV-Upload:**
 - Upload einer `.xlsx` oder `.csv`-Datei
 - Erwartete Spalten: `name`, `price`, `currency`, `unit`, `category`, `available`
-- Antwort: Anzahl importierter Einträge + Fehler pro Zeile
+- Antwort: Anzahl importierter Einträge + Fehler pro Zeile (`code`: `missing_name` | `row_failed`)
+- **Alles oder nichts (B5900-030):** Enthält die Datei fehlerhafte Zeilen, wird nichts importiert; jede fehlerhafte Zeile wird gelistet und übersetzt angezeigt
 
 **Google Sheets (Sync):**
 - Öffentliche Google-Sheets-URL hinterlegen
 - Automatischer Sync alle 4 Stunden (Backend-Cron)
 - Manueller Re-Sync per Button
-- Sync-Status (Zeitstempel, OK/Fehler) sichtbar
+- Das Sheet muss öffentlich lesbar sein („Jeder mit dem Link: Betrachter“); sonst `error_code: sheet_not_public`
+- Sync-Status (Zeitstempel, `ok` | `error`) sichtbar; bei fehlerhaften Zeilen wird nichts importiert (Status `error`, `last_sync_result.errors` listet jede Zeile, max. 50)
+- `GET /import/status` liefert zusätzlich `last_sync_result` { imported, error_count, errors[{row, code, message}], errors_truncated, image_download_pending, error_code }; Fehlercodes: `sheet_url_invalid | sheet_fetch_failed | sheet_not_public | rows_failed | sync_failed`
+- Bild-Status wird nach Upload/Sync mit Backoff (max. 2 min) abgefragt
 
 → Backend-Details: [`pundo_main_backend/docs/shop-owner-portal.md`](../../pundo_main_backend/docs/shop-owner-portal.md) — Abschnitt "Import"
 

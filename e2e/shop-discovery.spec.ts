@@ -145,11 +145,101 @@ async function expectNameVisible(page: import('@playwright/test').Page, name: st
   ).toBe(true)
 }
 
+// ─── Shop-Treffer in der Suche: Helfer ────────────────────────────────────────
+
+/** Larnaca-Fallback der Suchseite (`useGeolocation`) und ihr Default-Radius. */
+const LARNACA = { lat: 34.9009, lng: 33.623 }
+const DEFAULT_RADIUS_KM = 50
+
+/** AC10-Fixture (Spiegel von pundo_main_backend/scripts/prepare_e2e_db.py INACTIVE_SHOP_*). */
+const INACTIVE_SHOP_SLUG = 'e2e-inactive-search-shop'
+const INACTIVE_SHOP_NAME = 'Zzquokka Dormant Bakery'
+
+function loadSearchState() {
+  const state = loadStorageState() as ReturnType<typeof loadStorageState> & { shopSlug?: string }
+  if (!state.shopSlug) throw new Error('SETUP BROKEN: .test-state.json hat keinen shopSlug (Global Setup)')
+  return state as ReturnType<typeof loadStorageState> & { shopSlug: string }
+}
+
+interface ShopHit { slug: string; name: string; dist_km: number | null }
+
+async function apiShops(params: Record<string, string | number>): Promise<{ items: ShopHit[]; total: number | null }> {
+  const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))
+  const res = await fetch(`${BACKEND_URL}/api/v1/shops?${qs}`, { headers: { 'Accept-Language': 'en' } })
+  expect(res.ok, `GET /shops?${qs} -> ${res.status}`).toBe(true)
+  return res.json()
+}
+
+/**
+ * Vorbedingung der harten Tests (kein stiller Skip, B8950-012-Stil): der Global-Setup-Shop ist aktiv und liegt im
+ * Default-Radius der Suchseite um Larnaca. Sonst ist die Testumgebung kaputt, nicht die Suche.
+ */
+async function assertSetupShopInRadius(state: { shop_name: string; shopSlug: string }) {
+  const res = await apiShops({ q: state.shop_name, status: 'active', limit: 20, ...LARNACA, max_dist_km: DEFAULT_RADIUS_KM })
+  if (!res.items.some(i => i.slug === state.shopSlug)) {
+    throw new Error(
+      `SETUP BROKEN: Shop ${state.shopSlug} ("${state.shop_name}") ist nicht aktiv oder nicht innerhalb ${DEFAULT_RADIUS_KM} km um Larnaca ` +
+      `(GET /shops?q=... lieferte ${res.items.map(i => i.slug).join(', ') || 'nichts'})`)
+  }
+}
+
+/** Sichtbare Shop-Karte (die Liste steht fuer Mobile und Desktop im DOM, eine Kopie ist immer versteckt). */
+function shopHitCard(page: import('@playwright/test').Page, slug: string) {
+  return page.locator(
+    `[data-testid="search-shop-results"] [data-testid="search-shop-result"][data-shop-slug="${slug}"]`,
+  ).filter({ visible: true }).first()
+}
+
+/**
+ * B2250-001: Text sitzt am rechten Rand des Blocks (Leserand unter dir=rtl), nicht am linken.
+ * Gemessen wird die Textbox (Range ueber den Inhalt) gegen die Box des Elements; `text-align: end` waere unter
+ * RTL links und faellt hier durch. Ein Fuell-Block ueber die ganze Breite wuerde `box.right - text.right` nicht
+ * unterscheiden, deshalb muss der Text kuerzer als die Box sein (Ueberschriften sind es).
+ */
+async function textEdges(locator: import('@playwright/test').Locator) {
+  return locator.evaluate(el => {
+    const range = document.createRange()
+    range.selectNodeContents(el)
+    const text = range.getBoundingClientRect()
+    const box = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return {
+      label: (el.textContent ?? '').trim().slice(0, 40),
+      dir: cs.direction,
+      align: cs.textAlign,
+      gapRight: Math.round(box.right - text.right),
+      gapLeft: Math.round(text.left - box.left),
+      boxWidth: Math.round(box.width),
+      textWidth: Math.round(text.width),
+    }
+  })
+}
+
+async function expectRightAligned(locator: import('@playwright/test').Locator) {
+  const e = await textEdges(locator)
+  expect(e.dir, `${e.label}: direction`).toBe('rtl')
+  expect(e.textWidth, `${e.label}: Text muss kuerzer als die Box sein (sonst beweist die Messung nichts)`).toBeLessThan(e.boxWidth - 16)
+  expect(e.gapRight, `${e.label}: Abstand zum rechten Rand (align=${e.align})`).toBeLessThanOrEqual(2)
+  expect(e.gapLeft, `${e.label}: Abstand zum linken Rand (align=${e.align})`).toBeGreaterThan(8)
+}
+
+/** Alle sichtbaren Sektionsueberschriften der Suchergebnisse (ohne Header/Footer/Cookie-Banner/Dialoge). */
+function resultHeadings(page: import('@playwright/test').Page) {
+  return page.locator('h2:not(header h2):not(footer h2):not([role="dialog"] h2)').filter({ visible: true })
+}
+
+function watchConsole(page: import('@playwright/test').Page) {
+  const problems: string[] = []
+  page.on('pageerror', e => problems.push(`pageerror: ${e.message}`))
+  page.on('response', r => { if (r.url().includes('_rsc=') && r.status() === 404) problems.push(`RSC 404: ${r.url()}`) })
+  return problems
+}
+
 // ─── Suche ────────────────────────────────────────────────────────────────────
 
 test.describe('Shop-Suche', () => {
   test('Textsuche nach Shop-Name findet den Test-Shop', async ({ page }) => {
-    const state = loadStorageState()
+    const state = loadSearchState()
     await page.goto('/')
 
     // Suchfeld befüllen
@@ -159,16 +249,20 @@ test.describe('Shop-Suche', () => {
     await searchInput.press('Enter')
 
     // Auf Suchergebnis-Seite warten
-    await page.waitForURL(/\/(search|shops)/, { timeout: 10_000 })
+    await page.waitForURL(/\/search\?/, { timeout: 10_000 })
     await waitForPageHydrated(page)
 
-    // Befund F8950 Stufe 4: die Suchseite zeigt Shops nicht nach Namen; der Name steht nur in versteckten Ticker-Texten
-    // ("New: <Shop> in …"). Frueher endete der Test hier mit `return` (gruen ohne Pruefung). Jetzt ein sichtbarer Skip mit
-    // Grund; die Shop-Suche nach Namen deckt der naechste Test per API ab.
-    const visible = await page.getByText(state.shop_name, { exact: false }).evaluateAll(
-      els => els.filter(e => (e as HTMLElement).offsetParent !== null).length)
-    test.skip(visible === 0, 'Suchseite zeigt Shops nicht nach Namen (nur versteckte Ticker-Texte) - Abdeckung: API-Suche (naechster Test)')
-    await expectNameVisible(page, state.shop_name)
+    // Shop-Treffer in der Suche: die Ergebnisseite zeigt passende Shops als eigene Sektion (Scope auf die Sektion,
+    // nicht auf die ganze Seite: der Aktivitaets-Ticker nennt Shop-Namen ebenfalls).
+    await assertSetupShopInRadius(state)
+    const card = shopHitCard(page, state.shopSlug)
+    await expect(card).toBeVisible({ timeout: 10_000 })
+    await expect(card).toContainText(state.shop_name)
+
+    // AC2: Klick fuehrt auf die Shop-Detailseite, H1 zeigt den Namen
+    await card.click()
+    await expect(page).toHaveURL(new RegExp(`/shops/${state.shopSlug}$`), { timeout: 10_000 })
+    await expect(page.getByRole('heading', { level: 1, name: state.shop_name })).toBeVisible({ timeout: 10_000 })
   })
 
   test('API-Suche nach Shop-Name findet den Test-Shop', async () => {
@@ -200,6 +294,156 @@ test.describe('Shop-Suche', () => {
       (s.name ?? s.shop_name ?? '').toLowerCase().includes(state.shop_name.toLowerCase())
     )
     expect(found, 'Test-Shop nicht in Geo-Suche gefunden').toBe(true)
+  })
+})
+
+// ─── Shop-Treffer in der Suche ────────────────────────────────────────────────
+
+test.describe('Shop-Treffer in der Suche', () => {
+  test('Mobile (390x844): Shop-Karte im Bottom-Sheet, keine Konsolenfehler (AC14, AC20)', async ({ page }) => {
+    const state = loadSearchState()
+    await assertSetupShopInRadius(state)
+    const problems = watchConsole(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`/en/search?q=${encodeURIComponent(state.shop_name)}`)
+    await waitForPageHydrated(page)
+    await expect(shopHitCard(page, state.shopSlug)).toBeVisible({ timeout: 10_000 })
+    expect(problems).toEqual([])
+  })
+
+  test('RTL (/ar): Sektionsueberschrift sichtbar und uebersetzt, Dokument rechts-nach-links (AC15, AC16)', async ({ page }) => {
+    const state = loadSearchState()
+    await assertSetupShopInRadius(state)
+    await page.goto(`/ar/search?q=${encodeURIComponent(state.shop_name)}`)
+    await waitForPageHydrated(page)
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+    await expect(shopHitCard(page, state.shopSlug)).toBeVisible({ timeout: 10_000 })
+    const heading = page.locator('[data-testid="search-shop-results"] h2').filter({ visible: true }).first()
+    await expect(heading).toBeVisible()
+    await expect(heading).toHaveText('المتاجر')
+  })
+
+  for (const vp of [{ name: 'Mobile 390x844', width: 390, height: 844 }, { name: 'Desktop 1280x800', width: 1280, height: 800 }]) {
+    test(`RTL (/ar, ${vp.name}): Shop-Ueberschrift folgt der Leserichtung, steht rechts (B2250-001, AC15)`, async ({ page }) => {
+      const state = loadSearchState()
+      await assertSetupShopInRadius(state)
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      await page.goto(`/ar/search?q=${encodeURIComponent(state.shop_name)}`)
+      await waitForPageHydrated(page)
+      await expect(shopHitCard(page, state.shopSlug)).toBeVisible({ timeout: 10_000 })
+      const heading = page.locator('[data-testid="search-shop-results"] h2').filter({ visible: true }).first()
+      await expect(heading).toHaveText('المتاجر')
+      await expectRightAligned(heading)
+    })
+
+    // Realdaten: alle Sektionsueberschriften der Suchseite (Shops, lokale Shops, Online-Haendler, Dienstleistungen)
+    test(`RTL (/ar, ${vp.name}): ALLE Sektionsueberschriften der Ergebnisliste stehen rechts (B2250-001)`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      for (const q of ['pet', 'plumber']) {
+        await page.goto(`/ar/search?q=${q}`)
+        await waitForPageHydrated(page)
+        const headings = resultHeadings(page)
+        await expect.poll(() => headings.count(), { message: `Ueberschriften zu "${q}"`, timeout: 15_000 }).toBeGreaterThan(0)
+        for (const h of await headings.all()) await expectRightAligned(h)
+      }
+    })
+  }
+
+  test.describe('Umkreis-Hinweis (Standort Limassol, ~58 km zum Test-Shop)', () => {
+    test.use({ geolocation: { latitude: 34.68, longitude: 33.04 }, permissions: ['geolocation'] })
+
+    test('Hinweis "Shops ausserhalb" -> "Umkreis erweitern" macht den Treffer sichtbar', async ({ page }) => {
+      const state = loadSearchState()
+      const here = { lat: 34.68, lng: 33.04 }
+      // Vorbedingung (API): im Default-Radius um Limassol gibt es keinen Treffer, ausserhalb schon
+      const inside = await apiShops({ q: state.shop_name, status: 'active', limit: 4, ...here, max_dist_km: DEFAULT_RADIUS_KM })
+      if (inside.items.length > 0) throw new Error(`SETUP BROKEN: "${state.shop_name}" hat Treffer innerhalb ${DEFAULT_RADIUS_KM} km um Limassol: ${inside.items.map(i => i.slug)}`)
+      const outside = await apiShops({ q: state.shop_name, status: 'active', limit: 4, ...here })
+      const dists = outside.items.map(i => i.dist_km).filter((d): d is number => d != null)
+      if (dists.length === 0) throw new Error('SETUP BROKEN: kein Treffer mit Distanz ausserhalb des Umkreises')
+      // Ziel-Radius aus der API-Distanz (nicht hart verdrahtet): aufgerundet auf den Slider-Schritt 5, hoechstens 100
+      const target = Math.min(100, Math.ceil(Math.min(...dists) / 5) * 5)
+
+      await page.goto(`/en/search?q=${encodeURIComponent(state.shop_name)}`)
+      await waitForPageHydrated(page)
+      const hint = page.locator('[data-testid="search-shop-outside-hint"]').filter({ visible: true }).first()
+      await expect(hint).toBeVisible({ timeout: 15_000 })
+      await expect(hint).toContainText('outside your radius')
+      // der Leerzustand "No results found." erscheint nicht zusaetzlich
+      await expect(page.getByText('No results found.', { exact: true }).filter({ visible: true })).toHaveCount(0)
+
+      await page.locator('[data-testid="search-shop-expand-radius"]').filter({ visible: true }).first().click()
+      await expect(page).toHaveURL(new RegExp(`max_dist_km=${target}(&|$)`), { timeout: 10_000 })
+      await expect(shopHitCard(page, state.shopSlug)).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator('[data-testid="search-shop-outside-hint"]').filter({ visible: true })).toHaveCount(0)
+    })
+  })
+
+
+  // B2250-001: der Hinweis folgt in RTL der Leserichtung (rechts)
+  test.describe('Umkreis-Hinweis in RTL (Standort Limassol)', () => {
+    test.use({ geolocation: { latitude: 34.68, longitude: 33.04 }, permissions: ['geolocation'] })
+
+    for (const vp of [{ name: 'Mobile 390x844', width: 390, height: 844 }, { name: 'Desktop 1280x800', width: 1280, height: 800 }]) {
+      test(`/ar, ${vp.name}: Hinweis "Shops ausserhalb" und Ueberschrift stehen rechts`, async ({ page }) => {
+        const state = loadSearchState()
+        await page.setViewportSize({ width: vp.width, height: vp.height })
+        await page.goto(`/ar/search?q=${encodeURIComponent(state.shop_name)}`)
+        await waitForPageHydrated(page)
+        const hint = page.locator('[data-testid="search-shop-outside-hint"]').filter({ visible: true }).first()
+        await expect(hint).toBeVisible({ timeout: 15_000 })
+        await expectRightAligned(hint)
+        await expectRightAligned(page.locator('[data-testid="search-shop-results"] h2').filter({ visible: true }).first())
+      })
+    }
+  })
+
+  // AC10: eigene Fixture (global-setup -> prepare_e2e_db.py --seed-inactive-shop). Ohne Statusfilter laege der
+  // inaktive Shop im Radius und wuerde per Name gefunden.
+  test('Inaktiver Shop erscheint bei der Namenssuche nicht (AC10)', async ({ page }) => {
+    const here = LARNACA
+    const q = INACTIVE_SHOP_NAME
+    // Vorbedingung (API): die Fixture existiert, ist inaktiv und liegt im Radius. Sonst ist die Testumgebung kaputt.
+    const asInactive = await apiShops({ q, status: 'inactive', limit: 5, ...here, max_dist_km: DEFAULT_RADIUS_KM })
+    if (!asInactive.items.some(i => i.slug === INACTIVE_SHOP_SLUG)) {
+      throw new Error(
+        `SETUP BROKEN: Fixture ${INACTIVE_SHOP_SLUG} fehlt/ist nicht inaktiv/liegt ausserhalb ${DEFAULT_RADIUS_KM} km. ` +
+        'Abhilfe: `cd pundo_main_backend && .venv/bin/python scripts/prepare_e2e_db.py --seed-inactive-shop`')
+    }
+    // API: weder mit status=active noch ohne status (Default active)
+    const asActive = await apiShops({ q, status: 'active', limit: 5, ...here, max_dist_km: DEFAULT_RADIUS_KM })
+    expect(asActive.items.map(i => i.slug)).not.toContain(INACTIVE_SHOP_SLUG)
+    expect(asActive.total).toBe(0)
+
+    // UI: keine Shop-Sektion, keine Karte, der Leerzustand der Suche erscheint
+    const problems = watchConsole(page)
+    await page.goto(`/en/search?q=${encodeURIComponent(q)}`)
+    await waitForPageHydrated(page)
+    await expect(page.getByText('No results found.', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('[data-testid="search-shop-results"]')).toHaveCount(0)
+    await expect(page.locator(`[data-testid="search-shop-result"][data-shop-slug="${INACTIVE_SHOP_SLUG}"]`)).toHaveCount(0)
+    expect(problems).toEqual([])
+  })
+
+  test('Mehr als 3 Treffer: 3 Karten und Link auf /shops?q= mit vorbefuelltem Suchfeld (AC4, AC6; Realdaten)', async ({ page }) => {
+    // Ebene 2: braucht Prod-Kopie-Daten. Skip nur mit konkretem Grund.
+    const q = 'pet'
+    const res = await apiShops({ q, status: 'active', limit: 4, ...LARNACA, max_dist_km: DEFAULT_RADIUS_KM })
+    test.skip((res.total ?? res.items.length) < 4, `pundo_test hat < 4 aktive Shops zu "${q}" im ${DEFAULT_RADIUS_KM}-km-Umkreis von Larnaca`)
+
+    await page.goto(`/en/search?q=${q}`)
+    await waitForPageHydrated(page)
+    const cards = page.locator('[data-testid="search-shop-results"] [data-testid="search-shop-result"]').filter({ visible: true })
+    await expect(cards).toHaveCount(3, { timeout: 10_000 })
+    const all = page.locator('[data-testid="search-shop-results-all"]').filter({ visible: true }).first()
+    await expect(all).toBeVisible()
+    await expect(all).toHaveAttribute('href', `/en/shops?q=${q}`)
+
+    await all.click()
+    await expect(page).toHaveURL(new RegExp(`/en/shops\\?q=${q}$`), { timeout: 10_000 })
+    await expect(page.getByRole('searchbox')).toHaveValue(q)
+    // gefilterte Liste = Antwort der API fuer q (erste Karte der Seite ist ein Treffer)
+    await expect(page.locator('a[href^="/en/shops/"]').first()).toBeVisible({ timeout: 10_000 })
   })
 })
 

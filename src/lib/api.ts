@@ -115,7 +115,8 @@ export async function getShops(
     /** B5900-007: only return shops meeting the B5900-006 completeness/indexability predicate */
     indexable?: boolean;
   } = {},
-  lang: string
+  lang: string,
+  opts?: { signal?: AbortSignal }
 ): Promise<ShopListResponse> {
   const qs = new URLSearchParams();
   if (params.q) qs.set('q', params.q);
@@ -137,7 +138,7 @@ export async function getShops(
   if (params.city) qs.set('city', params.city);
   if (params.indexable != null) qs.set('indexable', String(params.indexable));
   const q = qs.toString();
-  return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang);
+  return apiFetch<ShopListResponse>(`/shops${q ? `?${q}` : ''}`, lang, opts?.signal ? { signal: opts.signal } : undefined);
 }
 
 // ── B5900-007: Städte-Index (Orphan-Shop-Pages Fix) ─────────────────────────

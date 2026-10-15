@@ -170,7 +170,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
                 <li key={`cat-${cat.id}`}>
                   <button
                     onMouseDown={() => navigateCategory(cat.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors border-b border-border last:border-0 ${
                       idx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                     }`}
                   >
@@ -211,7 +211,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
                   <li key={`shop-${shop.id}`}>
                     <button
                       onMouseDown={() => navigateShop(shop.slug)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-border last:border-0 ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors border-b border-border last:border-0 ${
                         globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                       }`}
                     >
@@ -244,7 +244,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
                   <li key={`prod-${item.id}`}>
                     <button
                       onMouseDown={() => navigateProduct(item.slug)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors ${
                         globalIdx === activeIdx ? 'bg-accent-light' : 'hover:bg-surface-alt'
                       } ${idx > 0 ? 'border-t border-border' : ''}`}
                     >
@@ -273,7 +273,7 @@ export function SearchBar({ placeholder, defaultValue = '', lang: langProp }: Pr
           <li className="border-t border-border">
             <button
               onMouseDown={(e) => handleSubmit(e as unknown as React.FormEvent)}
-              className="w-full px-4 py-2.5 text-xs text-text-muted hover:text-accent hover:bg-surface-alt transition-colors text-left"
+              className="w-full px-4 py-2.5 text-xs text-text-muted hover:text-accent hover:bg-surface-alt transition-colors text-start"
             >
               {tr.dropdown_all_results(value)}
             </button>

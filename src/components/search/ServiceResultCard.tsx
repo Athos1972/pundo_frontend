@@ -44,7 +44,7 @@ export function ServiceResultCard({ item, lang }: ServiceResultCardProps) {
     <div className="w-full">
       <button
         onClick={handleClick}
-        className="w-full text-start rtl:text-end bg-surface border border-indigo-200 dark:border-indigo-900 rounded-xl overflow-hidden hover:border-indigo-400 hover:shadow-sm transition-all flex items-stretch group"
+        className="w-full text-start bg-surface border border-indigo-200 dark:border-indigo-900 rounded-xl overflow-hidden hover:border-indigo-400 hover:shadow-sm transition-all flex items-stretch group"
         aria-label={`${item.name} — ${providerLabel}`}
       >
         {/* Left accent strip — indigo to distinguish from product cards */}
@@ -102,7 +102,7 @@ export function ServiceResultCard({ item, lang }: ServiceResultCardProps) {
       {item.provider_count === 0 && (
         <p
           data-testid="service-provider-hint"
-          className="mt-1 px-1 text-xs text-text-muted text-start rtl:text-end"
+          className="mt-1 px-1 text-xs text-text-muted text-start"
         >
           {tr.result_service_provider_prompt}{' '}
           {/* /shop-admin is a bypass path: no lang prefix, no localePath */}

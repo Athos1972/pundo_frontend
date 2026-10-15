@@ -80,7 +80,7 @@ describe('ServiceResultCard provider hint (F2970)', () => {
     expect(tr.result_service_become_provider.length).toBeGreaterThan(3)
   })
 
-  it('renders the Hebrew hint with RTL text alignment classes (he)', () => {
+  it('renders the Hebrew hint following the reading direction: text-start, no rtl:text-end (he, B2250-001)', () => {
     render(
       <div dir="rtl">
         <ServiceResultCard item={item(0, 'מספרה וברבר')} lang="he" />
@@ -88,7 +88,10 @@ describe('ServiceResultCard provider hint (F2970)', () => {
     )
     const hint = screen.getByTestId('service-provider-hint')
     expect(hint.closest('[dir="rtl"]')).not.toBeNull()
-    expect(hint.className).toContain('rtl:text-end')
+    // B2250-001: the former assertion required `rtl:text-end`, which is the LEFT edge under dir=rtl.
+    // `text-start` is the reading-direction edge (right in RTL); the Playwright test measures the position.
+    expect(hint.className).toContain('text-start')
+    expect(hint.className).not.toContain('rtl:text-end')
     expect(hint.textContent).toContain('הוסיפו את העסק שלכם בחינם')
     expect(screen.getByRole('link').getAttribute('href')).toBe('/shop-admin/onboarding')
   })

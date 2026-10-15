@@ -1,9 +1,9 @@
 'use client'
 import { t } from '@/lib/translations'
 
-const MIN = 10
-const MAX = 100
-const STEP = 5
+export const DISTANCE_MIN_KM = 10
+export const DISTANCE_MAX_KM = 100
+export const DISTANCE_STEP_KM = 5
 
 export function DistanceSlider({
   value,
@@ -20,17 +20,17 @@ export function DistanceSlider({
       <span className="text-xs text-text-muted flex-shrink-0">{tr.distance_label}</span>
       <input
         type="range"
-        min={MIN}
-        max={MAX}
-        step={STEP}
+        min={DISTANCE_MIN_KM}
+        max={DISTANCE_MAX_KM}
+        step={DISTANCE_STEP_KM}
         value={value}
         onChange={e => onChange(Number(e.target.value))}
         // range inputs must always be LTR — browsers render them inconsistently in RTL
         dir="ltr"
         className="flex-1 accent-accent h-1.5"
         aria-label={tr.distance_label}
-        aria-valuemin={MIN}
-        aria-valuemax={MAX}
+        aria-valuemin={DISTANCE_MIN_KM}
+        aria-valuemax={DISTANCE_MAX_KM}
         aria-valuenow={value}
       />
       <span className="text-xs text-text font-medium w-12 text-right flex-shrink-0">

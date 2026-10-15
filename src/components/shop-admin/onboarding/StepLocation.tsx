@@ -204,7 +204,7 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
           type="button"
           onClick={handleGpsButtonClick}
           disabled={isGeoRequesting}
-          className="flex items-center gap-2 text-sm text-accent hover:text-accent-dark font-medium text-start rtl:text-end disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 text-sm text-accent hover:text-accent-dark font-medium text-start disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGeoRequesting && (
             <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin inline-block shrink-0" />
@@ -215,7 +215,7 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
 
       {/* Denied hint — shown when GPS is denied and no pin is set */}
       {showGpsDeniedHint && (
-        <p className="text-xs text-gray-500 text-start rtl:text-end">
+        <p className="text-xs text-gray-500 text-start">
           {tr.onboarding_location_geolocate_denied}
         </p>
       )}

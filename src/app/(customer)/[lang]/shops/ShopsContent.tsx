@@ -31,8 +31,10 @@ export function ShopsContent({ lang }: { lang: string }) {
   const geoResolved = useRef(false)
 
   // Search
-  const [q, setQ] = useState('')
-  const [debouncedQ, setDebouncedQ] = useState('')
+  // ?q= (link "All shops matching ..." on the search page): prefill the field and make the FIRST
+  // fetch already filtered. The URL is not kept in sync while typing.
+  const [q, setQ] = useState(() => searchParams.get('q') ?? '')
+  const [debouncedQ, setDebouncedQ] = useState(() => searchParams.get('q') ?? '')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Filter state
@@ -106,8 +108,13 @@ export function ShopsContent({ lang }: { lang: string }) {
       ...(appointmentRequiredFilter && { appointment_required: true }),
     }
 
-    getShops(params, lang)
+    // B2250-003: only the response of the most recently started request may win. The first fetch runs
+    // without coordinates, the second (after geolocation) with them; a late first answer must not
+    // overwrite the second. The cleanup aborts the superseded request and its handlers become no-ops.
+    const ctrl = new AbortController()
+    getShops(params, lang, { signal: ctrl.signal })
       .then(res => {
+        if (ctrl.signal.aborted) return
         setShops(res.items)
         // Accumulate shop types — never shrink the list
         const newTypes: ShopTypeRead[] = []
@@ -123,9 +130,11 @@ export function ShopsContent({ lang }: { lang: string }) {
         setLoading(false)
       })
       .catch((err: unknown) => {
+        if (ctrl.signal.aborted) return
         setErrorMsg(err instanceof Error ? err.message : String(err))
         setLoading(false)
       })
+    return () => ctrl.abort()
   }, [coords, debouncedQ, shopTypeId, openNow, maxDist, hasParking, hasDelivery, isOnlineOnly, langFilter, lang, serviceCategoryId, appointmentRequiredFilter])
 
   // ── Helper: type display name ─────────────────────────────────────────────────

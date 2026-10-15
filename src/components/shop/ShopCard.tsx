@@ -99,12 +99,83 @@ function formatDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`
 }
 
-export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
+interface ShopCardProps {
+  shop: ShopListItem
+  lang: string
+  /** 'default' = the /shops card. 'compact' = slim card for result lists (search page). */
+  variant?: 'default' | 'compact'
+  /** compact only: accent frame, same classes as a highlighted ProductCard (map pin <-> card). */
+  isHighlighted?: boolean
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+  /** Sets data-testid, data-shop-slug and data-shop-id. Without it the default markup has no data-* attributes. */
+  testId?: string
+}
+
+export function ShopCard({ shop, lang, variant = 'default', isHighlighted, onMouseEnter, onMouseLeave, testId }: ShopCardProps) {
   const tr = t(lang)
 
   const shopTypeName = shop.shop_type
     ? (shop.shop_type.translations[lang as keyof typeof shop.shop_type.translations] ?? shop.shop_type.canonical)
     : null
+
+  const testAttrs = testId
+    ? { 'data-testid': testId, 'data-shop-slug': shop.slug, 'data-shop-id': shop.id }
+    : {}
+
+  if (variant === 'compact') {
+    const secondLine = shop.address_raw ?? shop.city
+    return (
+      <Link
+        href={localePath(lang as Lang, `/shops/${shop.slug}`)}
+        className={`block bg-surface border rounded-xl p-3 transition-colors ${isHighlighted ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-border hover:border-accent'}`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        {...testAttrs}
+      >
+        <div className="flex gap-3 items-start">
+          <ShopAvatar name={shop.name} shopId={shop.id} size="md" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-bold text-text truncate font-heading">{shop.name ?? 'Shop'}</p>
+              {shop.dist_km != null && (
+                <span className="flex-shrink-0 text-sm font-medium text-accent">{formatDist(shop.dist_km)}</span>
+              )}
+            </div>
+            {secondLine && <p className="text-sm text-text-muted truncate mt-0.5">{secondLine}</p>}
+            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
+              {shopTypeName && (
+                <span className="text-xs bg-surface-alt border border-border text-text-muted px-2 py-0.5 rounded-full">
+                  {shopTypeName}
+                </span>
+              )}
+              {shop.is_open_now === true && (
+                <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
+                  {tr.shop_open_now}
+                </span>
+              )}
+              {shop.is_open_now === false && (
+                <span className="text-xs bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                  {tr.closed}
+                </span>
+              )}
+              {shop.is_charity_supporter === true && (
+                <Tooltip content={tr.charity_badge_label}>
+                  <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full cursor-default">
+                    <HeartIcon />
+                    <span className="sr-only">{tr.charity_badge_label}</span>
+                  </span>
+                </Tooltip>
+              )}
+              {shop.product_count > 0 && (
+                <span className="text-xs text-text-light">{shop.product_count} {tr.products}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
 
   const hasRating = shop.review_stats != null && shop.review_stats.total_count > 0
   const showAttrs = shop.has_parking === true || shop.has_own_delivery === true || shop.is_online_only === true
@@ -115,6 +186,7 @@ export function ShopCard({ shop, lang }: { shop: ShopListItem; lang: string }) {
     <Link
       href={localePath(lang as Lang,`/shops/${shop.slug}`)}
       className="block bg-surface border border-border rounded-xl p-4 hover:border-accent transition-colors"
+      {...testAttrs}
     >
       <div className="flex gap-3 items-start">
         <ShopAvatar name={shop.name} shopId={shop.id} size="md" />

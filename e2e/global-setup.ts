@@ -439,6 +439,23 @@ export default async function globalSetup() {
       err instanceof Error ? err.message.split('\n')[0] : err)
   }
 
+  // ── 1c2. Inaktiver Such-Shop (F2250 AC10) ─────────────────────────────────
+  // Eigene, permanente Fixture (Shop `e2e-inactive-search-shop`, Status inactive, Larnaca): ohne Statusfilter
+  // wuerde die Namenssuche ihn finden. e2e/shop-discovery.spec.ts prueft, dass er NICHT erscheint.
+  // Idempotenter Upsert bei jedem Lauf, nur pundo_test (Skript verweigert andere DBs). Fehlt sie, schlaegt der
+  // Test mit klarer Meldung fehl (kein Skip).
+  try {
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --seed-inactive-shop`,
+      { cwd: BACKEND_REPO, encoding: 'utf8', timeout: 60_000, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONPATH: BACKEND_REPO } }
+    )
+    const inactive = JSON.parse(out.trim().split('\n').at(-1)!).inactive_shop as { shop_id: number; shop_slug: string }
+    console.log(`[E2E Setup] Inaktive Such-Fixture aktualisiert (Shop ${inactive.shop_id}, ${inactive.shop_slug}).`)
+  } catch (err) {
+    console.warn('[E2E Setup] Inaktive Such-Fixture konnte nicht geseedet werden — der AC10-Test in shop-discovery.spec.ts wird fehlschlagen:',
+      err instanceof Error ? err.message.split('\n')[0] : err)
+  }
+
   // ── 1d. Globales Kontakt-Tageslimit zuruecksetzen (F8950 Folgepunkt 2) ─────
   // Die Test-Instanz skaliert jedes Limit mit RATE_LIMIT_TEST_MULTIPLIER (40): 100/Tag global wird 4000/Tag.
   // contact-form C4 sendet pro Lauf ca. 120 Requests bis zum 429 und verbraucht davon 120 vom globalen Zaehler;

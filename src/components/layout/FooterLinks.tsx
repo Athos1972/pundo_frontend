@@ -47,7 +47,7 @@ export function FooterLinks({ fallbackLang, hasForShops }: { fallbackLang: Lang;
       </Link>
       <button
         onClick={openSettings}
-        className="hover:text-text transition-colors text-left"
+        className="hover:text-text transition-colors text-start"
       >
         {trc.footer_cookie_settings}
       </button>

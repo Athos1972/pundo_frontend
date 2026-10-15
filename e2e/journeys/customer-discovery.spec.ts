@@ -41,7 +41,7 @@ function loadTestState(): TestState | null {
 
 // Step log for report
 interface StepEntry {
-  step: number
+  step: number | string
   desc: string
   expected: string
   actual: string
@@ -210,6 +210,25 @@ test.describe.serial('Customer Discovery Flow', () => {
 
     logStep(3, 'Suchergebnisse — mindestens 1 Karte', '≥1 Karte sichtbar', found > 0 ? `${found} Karten gefunden` : 'keine Karten', found > 0 ? 'PASS' : 'FAIL')
     expect(found, 'Keine Suchergebnisse (kein stiller Skip mehr, B8950-012)').toBeGreaterThan(0)
+  })
+
+  // Step 3b: Shop-Name-Suche → Shop-Sektion zeigt den Seed-Shop → Klick → Shop-Detailseite
+  test('Schritt 3b — Shop-Name-Suche zeigt Shop-Sektion und führt zur Shop-Detailseite', async ({ page }) => {
+    // Seed-Shop (global-setup) ist aktiv und liegt im Default-Radius um Larnaca. Scope auf die Shop-Sektion: der
+    // Aktivitäts-Ticker nennt Shop-Namen ebenfalls. Kein stiller Skip.
+    await page.goto(BASE_URL + `/en/search?q=${encodeURIComponent(seedShopName!)}`)
+    await waitForPageHydrated(page)
+    const card = page.locator(
+      `[data-testid="search-shop-results"] [data-testid="search-shop-result"][data-shop-slug="${seedShopSlug}"]`,
+    ).filter({ visible: true }).first()
+    const found = await expect(card).toBeVisible({ timeout: 15_000 }).then(() => true, () => false)
+    logStep('3b', 'Shop-Name-Suche → Shop-Sektion', `Karte für ${seedShopSlug} in der Shop-Sektion`, found ? 'gefunden' : 'nicht gefunden', found ? 'PASS' : 'FAIL')
+    await expect(card, `Seed-Shop ${seedShopSlug} fehlt in der Shop-Sektion`).toBeVisible({ timeout: 1_000 })
+
+    await card.click()
+    await expect(page).toHaveURL(new RegExp(`/shops/${seedShopSlug}$`), { timeout: 10_000 })
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 10_000 })
+    logStep('3b', 'Klick auf Shop-Karte → Shop-Detailseite', `URL /shops/${seedShopSlug}, H1 sichtbar`, page.url(), 'PASS')
   })
 
   // Step 4: Klick auf ProductCard → Produkt-Detailseite

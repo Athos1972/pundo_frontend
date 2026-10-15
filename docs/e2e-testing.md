@@ -251,6 +251,8 @@ Regeln für Ebene-1-Fixtures:
 
 Preisverlauf-Fixture (`--seed-price-history`, Shop `e2e-price-history-shop`): `e2e-price-history-falling` (4 Punkte, aktuell = Tiefstwert), `-rising` (aktuell ≠ Tiefstwert), `-flat` (gleiche Preise, kein Trend-Badge), `-single` (genau 1 Punkt → Empty-State), `-outside-window` (einziger Crawl vor 120 Tagen → kein Block).
 
+Inaktive Such-Fixture (`--seed-inactive-shop`, Shop `e2e-inactive-search-shop`, Name „Zzquokka Dormant Bakery“, Status `inactive`, Standort Larnaca): bewusst **mit** Location im Default-Radius und mit eindeutigem Namen, damit die Namenssuche ihn ohne Statusfilter fände; `shop-discovery.spec.ts` prüft, dass er nicht erscheint (AC10, F2250). Eigene Fixture je ausschließendem Zustand (aktiv/inaktiv), keine „Alles-Fixture“. Läuft bei jedem Lauf aus `e2e/global-setup.ts` (Schritt 1c2), nur gegen `pundo_test`.
+
 ---
 
 ## Test-Dateien

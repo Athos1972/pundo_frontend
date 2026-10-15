@@ -2,6 +2,7 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { searchAll, searchProducts, getCategories, getRelatedCategories } from '@/lib/api'
+import { fetchShopHits, expandRadiusTarget, EMPTY_SHOP_HITS, SHOP_HITS_SHOWN, type ShopHits } from '@/lib/search-shop-hits'
 import { trackPixelEvent, PixelEvents } from '@/lib/meta-pixel'
 import { t } from '@/lib/translations'
 import type { Lang } from '@/lib/lang'
@@ -12,6 +13,7 @@ import { useInfiniteScroll } from '@/lib/useInfiniteScroll'
 import { SearchBar } from '@/components/search/SearchBar'
 import { ServiceResultCard } from '@/components/search/ServiceResultCard'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ShopCard } from '@/components/shop/ShopCard'
 import { FilterChips } from '@/components/search/FilterChips'
 import { DistanceSlider } from '@/components/search/DistanceSlider'
 import { localePath } from '@/lib/routing'
@@ -72,6 +74,8 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   const [offset, setOffset] = useState(0)
   const [categoryName, setCategoryName] = useState<string | null>(null)
   const [relatedCategories, setRelatedCategories] = useState<import('@/types/api').CategoryItem[]>([])
+  // Shop name hits (text mode only). Set together with `items` after a reset load.
+  const [shopHits, setShopHits] = useState<ShopHits>(EMPTY_SHOP_HITS)
 
   // Hover/highlight state for desktop list ↔ map pin connection
   const [hoveredShopId, setHoveredShopId] = useState<number | null>(null)
@@ -83,9 +87,6 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
   // Scroll containers
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)   // desktop
   const mobileScrollRef = useRef<HTMLDivElement | null>(null)      // mobile sheet
-
-  // Refs to product card DOM nodes keyed by shop_id (for scroll-to-card on pin tap)
-  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // Map bounds for bbox-based provider_count (BB Q2: Map Viewport)
   const [mapBbox, _setMapBbox] = useState<string | undefined>(undefined)
@@ -100,6 +101,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     if (!categoryId && !shopId && (!q || q.length < 2)) {
       setItems([])
       setTotal(0)
+      setShopHits(EMPTY_SHOP_HITS)
       return
     }
     setLoading(true)
@@ -123,6 +125,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           lang
         )
         if (seq !== loadSeq.current) return
+        setShopHits(EMPTY_SHOP_HITS)
         // T3: Map ProductListItem → SearchProductItem for the existing render pipeline
         setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
         setTotal(res.total)
@@ -142,33 +145,43 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           lang
         )
         if (seq !== loadSeq.current) return
+        setShopHits(EMPTY_SHOP_HITS)
         setItems(prev => reset ? res.items.map(toSearchProductItem) : [...prev, ...res.items.map(toSearchProductItem)])
         setTotal(res.total)
         setOffset(newOffset + res.items.length)
       } else {
         // Existing search mode
-        const res = await searchAll(
-          {
-            q,
-            lat: location.lat,
-            lng: location.lng,
-            bbox: mapBbox,
-            limit: PAGE_SIZE,
-            offset: newOffset,
-          },
-          lang
-        )
+        // Shop name hits belong to the first page only: "load more" never refetches them.
+        // fetchShopHits never throws, so a failing shop request cannot break the product list.
+        const [res, hits] = await Promise.all([
+          searchAll(
+            {
+              q,
+              lat: location.lat,
+              lng: location.lng,
+              bbox: mapBbox,
+              limit: PAGE_SIZE,
+              offset: newOffset,
+            },
+            lang
+          ),
+          reset
+            ? fetchShopHits({ q, lat: location.lat, lng: location.lng, maxDistKm, includeOnline, lang })
+            : Promise.resolve<ShopHits | null>(null),
+        ])
         if (seq !== loadSeq.current) return
+        if (hits) setShopHits(hits)
         setItems(prev => reset ? res.items : [...prev, ...res.items])
         setTotal(res.total)
         setOffset(newOffset + res.items.length)
       }
     } catch {
-      // keep existing
+      // keep existing; a failed reset must not leave stale shop hits of the previous query
+      if (reset && seq === loadSeq.current) setShopHits(EMPTY_SHOP_HITS)
     } finally {
       if (seq === loadSeq.current) setLoading(false)
     }
-  }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang, hasExplicitMaxDist, maxDistKm])
+  }, [q, categoryId, shopId, location.lat, location.lng, mapBbox, lang, hasExplicitMaxDist, maxDistKm, includeOnline])
 
   // T5: Load category name when categoryId is set (non-blocking, with fallback)
   useEffect(() => {
@@ -194,12 +207,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     setOffset(0)
     setRelatedCategories([])
     load(true, 0)
-  }, [q, categoryId, shopId, available, withPrice, maxDistKm, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Clear item refs when result set changes so stale shopId → DOM mappings don't linger
-  useEffect(() => {
-    itemRefs.current.clear()
-  }, [q, categoryId, shopId])
+  }, [q, categoryId, shopId, available, withPrice, maxDistKm, includeOnline, location.lat, location.lng, mapBbox]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fire Meta Pixel Search event when query changes and results are loaded
   useEffect(() => {
@@ -260,7 +268,11 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     setSheetSnap('half')
     // Wait for snap animation (250ms) then scroll
     setTimeout(() => {
-      const el = itemRefs.current.get(shopId)
+      // listContent is rendered twice (mobile sheet + desktop panel; the hidden copy is display:none, where
+      // scrollIntoView does nothing). Look the card up inside the container that is actually visible.
+      // Shop hits and product cards both carry data-shop-id; several products can share a shop -> first one.
+      const container = window.matchMedia('(min-width: 768px)').matches ? scrollContainerRef.current : mobileScrollRef.current
+      const el = container?.querySelector<HTMLElement>(`[data-shop-id="${shopId}"]`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, 280)
     // Remove highlight after card is visible
@@ -289,20 +301,30 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     })
   const onlineItems = filteredProducts.filter(item => isOnlineOffer(item.best_offer))
 
+  // Pins: shop hits with a location plus the shops of the local offers, one pin per shop id.
   const mapShops = Array.from(
-    new Map(
-      localItems
+    new Map([
+      ...shopHits.items
+        .filter(s => s.location)
+        .map(s => [s.id, { id: s.id, name: s.name ?? '', lat: s.location!.lat, lng: s.location!.lng }] as const),
+      ...localItems
         .filter(i => i.best_offer?.shop_location)
         .map(i => [i.best_offer!.shop_id, {
           id: i.best_offer!.shop_id,
           name: i.best_offer!.shop_name,
           lat: i.best_offer!.shop_location!.lat,
           lng: i.best_offer!.shop_location!.lng,
-        }])
-    ).values()
+        }] as const),
+    ]).values()
   )
 
-  const isEmpty = !loading && items.length === 0
+  const showShopHits = !isCategoryMode && !shopId
+  const hasShopSection = showShopHits && (shopHits.items.length > 0 || shopHits.outside != null)
+  const onlyShopSection = hasShopSection && localItems.length === 0 && serviceItems.length === 0
+  const isEmpty = !loading && items.length === 0 && !hasShopSection
+  const outsideOnly = hasShopSection && shopHits.items.length === 0 && items.length === 0
+  const allShopsHref = `${localePath(lang, '/shops')}?q=${encodeURIComponent(q)}`
+  const expandTarget = shopHits.outside ? expandRadiusTarget(shopHits.outside.nearestKm, maxDistKm) : null
 
   const displayCategoryName = categoryName
 
@@ -311,9 +333,11 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
     ? tr.search_loading ?? 'Loading…'
     : isEmpty
       ? tr.no_results
-      : tr.search_result_count
-        ? tr.search_result_count(total)
-        : `${total} results`
+      : outsideOnly && shopHits.outside
+        ? tr.search_shops_outside_radius(shopHits.outside.count)
+        : tr.search_result_count
+          ? tr.search_result_count(total + shopHits.items.length)
+          : `${total + shopHits.items.length} results`
 
   // Shared list content rendered inside both mobile sheet and desktop panel
   const listContent = (
@@ -322,10 +346,71 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {statusMessage}
       </div>
+      {/* Shop name hits — text mode only, above services and products */}
+      {hasShopSection && (
+        <section data-testid="search-shop-results" className="space-y-2">
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">
+            {tr.search_shops_heading}
+          </h2>
+          {shopHits.items.slice(0, SHOP_HITS_SHOWN).map(shop => (
+            <ShopCard
+              key={`shop-hit-${shop.id}`}
+              shop={shop}
+              lang={lang}
+              variant="compact"
+              testId="search-shop-result"
+              isHighlighted={pinnedShopId != null && pinnedShopId === shop.id}
+              onMouseEnter={() => setHoveredShopId(shop.id)}
+              onMouseLeave={() => setHoveredShopId(null)}
+            />
+          ))}
+          {shopHits.items.length > 0 && shopHits.total > SHOP_HITS_SHOWN && (
+            <Link
+              href={allShopsHref}
+              data-testid="search-shop-results-all"
+              className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+            >
+              {tr.search_shops_show_all(q)}
+              <svg className="w-4 h-4 rtl:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          )}
+          {shopHits.items.length === 0 && shopHits.outside && (
+            <div className="space-y-2">
+              <p data-testid="search-shop-outside-hint" className="text-sm text-text-muted">
+                {tr.search_shops_outside_radius(shopHits.outside.count)}
+              </p>
+              {expandTarget != null ? (
+                <button
+                  type="button"
+                  data-testid="search-shop-expand-radius"
+                  onClick={() => setParam('max_dist_km', expandTarget === DEFAULT_MAX_DIST_KM ? null : String(expandTarget))}
+                  className="text-sm font-medium text-accent hover:underline"
+                >
+                  {tr.search_shops_expand_radius}
+                </button>
+              ) : (
+                <Link
+                  href={allShopsHref}
+                  data-testid="search-shop-results-all"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+                >
+                  {tr.search_shops_show_all(q)}
+                  <svg className="w-4 h-4 rtl:rotate-180" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Service results section — text mode only */}
       {!isCategoryMode && serviceItems.length > 0 && (
         <>
-          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">
             {tr.result_service_badge}
           </h2>
           {serviceItems.map(item => (
@@ -334,18 +419,18 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         </>
       )}
 
-      {/* Local shops section */}
-      <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1 rtl:text-end">{tr.local_shops}</h2>
+      {/* Local shops section (products of local shops) — hidden when only shop hits exist */}
+      {!onlyShopSection && (
+        <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-1">{tr.local_shops}</h2>
+      )}
       {localItems.map(item => {
         const shopId = item.best_offer?.shop_id
         const hasLocation = !!item.best_offer?.shop_location
         return (
           <div
             key={`local-${item.id}`}
-            ref={el => {
-              if (shopId == null) return
-              if (el) { itemRefs.current.set(shopId, el) } else { itemRefs.current.delete(shopId) }
-            }}
+            data-testid="search-local-result"
+            data-shop-id={shopId}
           >
             <ProductCard
               item={item}
@@ -359,14 +444,14 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
           </div>
         )
       })}
-      {!loading && localItems.length === 0 && (!isCategoryMode && serviceItems.length === 0) && (
+      {!loading && !onlyShopSection && localItems.length === 0 && (!isCategoryMode && serviceItems.length === 0) && (
         <p className="text-sm text-text-muted py-2">{tr.no_local_results}</p>
       )}
 
       {/* Online retailers section */}
       {includeOnline && onlineItems.length > 0 && (
         <>
-          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3 rtl:text-end">{tr.online_retailers}</h2>
+          <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider pt-3">{tr.online_retailers}</h2>
           {onlineItems.map(item => <ProductCard key={`online-${item.id}`} item={item} lang={lang} variant="horizontal" />)}
         </>
       )}
@@ -459,7 +544,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         >
           {/* Category heading inside sheet so it adapts to the sheet's scroll */}
           {isCategoryMode && (
-            <h2 className="text-lg font-semibold text-text rtl:text-end pt-1 pb-0.5">
+            <h2 className="text-lg font-semibold text-text pt-1 pb-0.5">
               {displayCategoryName || tr.category_results_title}
             </h2>
           )}
@@ -474,7 +559,7 @@ export default function SearchContent({ lang, initialCategoryId }: { lang: Lang;
         <div ref={scrollContainerRef} aria-busy={loading} className="w-[55%] overflow-y-auto px-4 pb-4 space-y-3 pt-3">
           {/* Category heading in desktop left panel */}
           {isCategoryMode && (
-            <h2 className="text-lg font-semibold text-text rtl:text-end">
+            <h2 className="text-lg font-semibold text-text">
               {displayCategoryName || tr.category_results_title}
             </h2>
           )}

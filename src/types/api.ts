@@ -104,7 +104,8 @@ export interface ShopListItem {
   appointment_required?: boolean;
   payment_methods?: string[];
 }
-export interface ShopListResponse { items: ShopListItem[]; }
+/** `total` = all matches without limit/offset; null with `open_now` (the backend cannot count that), absent on older backends. */
+export interface ShopListResponse { items: ShopListItem[]; total?: number | null; }
 export interface TopProduct { id: number; slug: string; name: string | null; price: string | null; currency: string; price_type: PriceType; }
 
 export interface OpeningHoursPeriodTime { day: number; hour: number; minute: number; }

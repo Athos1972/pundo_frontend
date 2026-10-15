@@ -14,9 +14,10 @@ vi.mock('@/lib/api', () => ({
   getShops: vi.fn(() => Promise.resolve({ items: [], total: 0 })),
 }))
 
+let mockSearchParams = new URLSearchParams()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }))
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ describe('ShopsContent — search field', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+    mockSearchParams = new URLSearchParams()
   })
 
   it('renders a search input with correct placeholder (DE)', async () => {
@@ -112,5 +114,55 @@ describe('ShopsContent — search field', () => {
 
     const qCalls = mockGetShops.mock.calls.filter(args => args[0]?.q === 'Bio')
     expect(qCalls.length).toBeGreaterThan(0)
+  })
+})
+
+describe('ShopsContent — ?q= from the search page link', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.stubGlobal('navigator', {
+      geolocation: {
+        getCurrentPosition: (_s: unknown, error: (e: GeolocationPositionError) => void) => {
+          error({ code: 1, message: 'denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError)
+        },
+      },
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+    mockSearchParams = new URLSearchParams()
+  })
+
+  it('prefills the search field with ?q= and the FIRST shop request is already filtered', async () => {
+    const { getShops } = await import('@/lib/api')
+    const mockGetShops = vi.mocked(getShops)
+    mockGetShops.mockClear()
+    mockSearchParams = new URLSearchParams('q=pet')
+
+    await act(async () => {
+      render(<ShopsContent lang="en" />)
+    })
+    await act(async () => { vi.advanceTimersByTime(50) })
+
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('pet')
+    expect(mockGetShops.mock.calls.length).toBeGreaterThan(0)
+    // no unfiltered request ran ahead of the filtered one
+    expect(mockGetShops.mock.calls.every(args => args[0]?.q === 'pet')).toBe(true)
+  })
+
+  it('without ?q= the field is empty and no q is sent', async () => {
+    const { getShops } = await import('@/lib/api')
+    const mockGetShops = vi.mocked(getShops)
+    mockGetShops.mockClear()
+
+    await act(async () => {
+      render(<ShopsContent lang="en" />)
+    })
+    await act(async () => { vi.advanceTimersByTime(50) })
+
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('')
+    expect(mockGetShops.mock.calls.every(args => !args[0]?.q)).toBe(true)
   })
 })

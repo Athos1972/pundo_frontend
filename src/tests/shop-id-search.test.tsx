@@ -26,6 +26,7 @@ vi.mock('@/lib/api', () => ({
   searchAll: (...args: unknown[]) => mockSearchAll(...args),
   getCategories: (...args: unknown[]) => mockGetCategories(...args),
   getRelatedCategories: (...args: unknown[]) => mockGetRelatedCategories(...args),
+  getShops: vi.fn().mockResolvedValue({ items: [], total: 0 }),
 }))
 
 // ─── Next.js mocks ────────────────────────────────────────────────────────────

@@ -92,6 +92,36 @@ Online-Händler zeigen ein "Delivery available"-Badge falls `delivery_available=
 
 ---
 
+## Shop-Treffer (Shop-Name in der Suche)
+
+Im **Text-Modus** (`?q=` mit mindestens 2 Zeichen, weder `category_id` noch `shop_id`) zeigt `SearchContent` über den Services und Produkten die Sektion **„Shops"** (`data-testid="search-shop-results"`). Logik: `src/lib/search-shop-hits.ts`, Karte: `ShopCard` mit `variant="compact"` (`/shops` nutzt unverändert die Default-Variante).
+
+**Reihenfolge der Liste:** Shop-Sektion → Services → „Lokale Shops" (Produkte) → Online-Händler.
+
+**Requests** (nur beim Reset-Load, parallel zu `searchAll`; „Mehr laden" lädt sie nicht neu):
+
+| | Request | Wann |
+|---|---|---|
+| R1 | `GET /shops?q&status=active&limit=4&lat&lng&max_dist_km=<Slider>[&is_online_only=false]` | immer |
+| R2 | wie R1 **ohne** `max_dist_km` | nur wenn R1 leer ist |
+
+- `limit=4`: angezeigt werden 3 Karten; ein viertes Item (oder `total > 3`) blendet den Link `search-shop-results-all` → `/{lang}/shops?q=<q>` ein.
+- `include_online=0` schickt `is_online_only=false` (serverseitig). Der Slider (`max_dist_km`, Default 50) gilt auch für Shops. `available` und `with_price` wirken nicht auf Shops.
+- Ein Fehler in R1/R2 lässt die Sektion still entfallen (`fetchShopHits` wirft nie).
+- Backend: `q` matcht nur die Namenswerte (alle Sprachen) und `city`, nie die JSON-Schlüssel. Sortierung mit `q`: Relevanz (exakt, Präfix, enthält), dann Distanz. `total` zählt alle Treffer ohne `limit`.
+
+**Umkreis-Hinweis:** Gibt es im Umkreis keinen, aber außerhalb Treffer (R2), zeigt die Sektion `search-shop-outside-hint` („N Shops außerhalb des Umkreises") und den Button `search-shop-expand-radius`. Der Klick setzt `max_dist_km` auf die Distanz des nächsten Treffers, aufgerundet auf den Slider-Schritt (5 km), höchstens 100 km (`expandRadiusTarget`). Ist nichts zu erweitern (Slider schon auf 100, keine Distanz bekannt), steht stattdessen der Link `search-shop-results-all`.
+
+**Leerzustand:** Shop-Treffer und der Außerhalb-Hinweis unterdrücken „Keine Ergebnisse" (Text und ContactCtaLink); die Überschrift „Lokale Shops" und der Hinweis `no_local_results` entfallen, wenn es nur Shop-Treffer gibt. Die Live-Region zählt Produkt-`total` + angezeigte Shop-Treffer.
+
+**Karte:** Shop-Treffer mit `location` erscheinen als Pins (dedupliziert mit den Pins der Angebots-Shops). Ein Pin-Tap scrollt die Karte (Shop-Treffer und Produkt-Karten, beide mit `data-shop-id`) im **sichtbaren** Container in Sicht (`listContent` ist für Mobile-Sheet und Desktop-Panel zweimal im DOM; deshalb `querySelector` im Container, kein `itemRefs`; B2250-002).
+
+**RTL-Ausrichtung:** Überschriften und Hinweise bekommen **keinen** `rtl:text-end`-Override. `text-align: end` ist unter `dir=rtl` der *linke* Rand; die Standardausrichtung (`start`) folgt der Leserichtung (rechts). Gleiches gilt für `text-left` (nicht spiegelnd): `text-start` verwenden. Ein Vitest-Guard (`src/tests/rtl-text-align-guard.test.ts`) und Playwright-Messungen in `e2e/shop-discovery.spec.ts` sichern das (B2250-001).
+
+**`/shops?q=`:** `ShopsContent` übernimmt `q` aus der URL (Suchfeld vorbefüllt, erster Request gefiltert). Die URL wird beim Tippen nicht mitgeführt.
+
+---
+
 ## Karte
 
 Die Karte (`ShopMapClient`) ist eine **Client-only Component** (Leaflet läuft nur im Browser).  

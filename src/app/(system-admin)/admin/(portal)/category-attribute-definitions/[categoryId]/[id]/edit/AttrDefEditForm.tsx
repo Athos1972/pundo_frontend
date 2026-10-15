@@ -34,7 +34,7 @@ export function AttrDefEditForm({ def, categoryId, tr }: Props) {
     e.preventDefault()
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/admin/categories/${categoryId}/attribute-definitions/${def.id}`, {
+        const res = await fetch(`/api/admin/category-attribute-definitions/${def.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(value),

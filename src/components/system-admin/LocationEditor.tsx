@@ -2,7 +2,7 @@
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
 import dynamic from 'next/dynamic'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useId } from 'react'
 
 const LocationEditorMap = dynamic(
   () => import('./LocationEditorMap').then((m) => m.LocationEditorMap),
@@ -46,6 +46,8 @@ export function LocationEditor({
   const [showResults, setShowResults] = useState(false)
   const [searching, setSearching] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latId = useId()
+  const lngId = useId()
 
   // Default position when none is set: Vienna
   const effectiveLat = lat ?? 48.2083
@@ -135,8 +137,9 @@ export function LocationEditor({
       {/* Manual lat/lng inputs */}
       <div className="flex gap-3">
         <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-gray-600">{latLabel}</label>
+          <label htmlFor={latId} className="text-xs font-medium text-gray-600">{latLabel}</label>
           <input
+            id={latId}
             type="number"
             step="any"
             value={lat ?? ''}
@@ -149,8 +152,9 @@ export function LocationEditor({
           />
         </div>
         <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-gray-600">{lngLabel}</label>
+          <label htmlFor={lngId} className="text-xs font-medium text-gray-600">{lngLabel}</label>
           <input
+            id={lngId}
             type="number"
             step="any"
             value={lng ?? ''}

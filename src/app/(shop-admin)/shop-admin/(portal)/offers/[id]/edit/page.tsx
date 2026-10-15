@@ -23,7 +23,7 @@ export default async function EditOfferPage({ params }: Props) {
   try {
     const [fetchedOffer, units, me] = await Promise.all([
       getAdminOffer(Number(id), lang).catch(() => null),
-      getAdminPriceUnits(lang),
+      getAdminPriceUnits(lang).catch(() => []),
       getMe(lang).catch(() => null),
     ])
     offer = fetchedOffer

@@ -30,7 +30,8 @@ export function RuleForm({ tr }: RuleFormProps) {
   function validateHost(host: string): boolean {
     const trimmed = host.trim()
     if (!trimmed) return false
-    if (trimmed.includes('/') || trimmed.includes(' ') || trimmed.startsWith('http')) return false
+    // URLs ("https://x") are rejected by the '/' check and the host regex (no ':').
+    if (trimmed.includes('/') || trimmed.includes(' ')) return false
     const hostRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-\.]{0,251}[a-zA-Z0-9])?$/
     return hostRegex.test(trimmed)
   }

@@ -48,6 +48,15 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
     taxonomy_type: c.taxonomy_type,
   }))
 
+  // View-toggle links keep the active filters; URLSearchParams encodes e.g. "dog food & cat".
+  function viewHref(target: 'tree' | 'table') {
+    const params = new URLSearchParams({ view: target })
+    if (q) params.set('q', q)
+    if (idQ) params.set('id', idQ)
+    if (taxonomyType) params.set('taxonomy_type', taxonomyType)
+    return `/admin/categories?${params.toString()}`
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
@@ -93,13 +102,13 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
         </form>
         <div className="flex gap-1">
           <Link
-            href={`/admin/categories?view=tree${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
+            href={viewHref('tree')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'tree' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             {tr.view_tree}
           </Link>
           <Link
-            href={`/admin/categories?view=table${q ? `&q=${q}` : ''}${idQ ? `&id=${idQ}` : ''}${taxonomyType ? `&taxonomy_type=${taxonomyType}` : ''}`}
+            href={viewHref('table')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${view === 'table' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             {tr.view_table}

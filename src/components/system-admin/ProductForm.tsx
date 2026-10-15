@@ -170,7 +170,8 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
           </div>
           <ProductAttributesTable
             productId={product.id}
-            attributes={attributes.filter(a => !attrFilter || a.attribute_key.toLowerCase().includes(attrFilter.toLowerCase()))}
+            attributes={attributes}
+            filter={attrFilter}
             labels={{
               key: tr.attribute_key,
               value: tr.attribute_value,

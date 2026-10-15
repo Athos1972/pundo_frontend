@@ -21,7 +21,7 @@ export default function NewCategoryAttrDefPage() {
     unit: null,
     is_filterable: false,
     display_order: 0,
-    override_mode: 'merge',
+    override_mode: 'inherit',
     labels: {},
     value_labels: null,
     created_at: '',
@@ -32,10 +32,10 @@ export default function NewCategoryAttrDefPage() {
     e.preventDefault()
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/admin/categories/${categoryId}/attribute-definitions`, {
+        const res = await fetch('/api/admin/category-attribute-definitions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(def),
+          body: JSON.stringify({ ...def, category_id: Number(categoryId) }),
         })
         if (!res.ok) { showToast(tr.error_generic, 'error'); return }
         showToast(tr.saved, 'success')

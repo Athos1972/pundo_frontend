@@ -221,7 +221,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
                       <button
                         type="button"
                         onClick={async () => {
-                          const res = await fetch(`/api/admin/categories/${category!.id}/attribute-definitions/${def.id}`, { method: 'DELETE' })
+                          const res = await fetch(`/api/admin/category-attribute-definitions/${def.id}`, { method: 'DELETE' })
                           if (res.ok || res.status === 204) {
                             setAttrDefs((prev) => prev.filter((d) => d.id !== def.id))
                           }

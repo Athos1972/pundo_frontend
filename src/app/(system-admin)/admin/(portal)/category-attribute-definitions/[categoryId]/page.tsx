@@ -61,7 +61,7 @@ export default async function CategoryAttrDefsDetailPage({ params }: PageProps) 
         ]}
         rows={rows}
         editHref={`/admin/category-attribute-definitions/${categoryId}/{id}/edit`}
-        deleteUrl={`/api/admin/categories/${categoryId}/attribute-definitions/{id}`}
+        deleteUrl="/api/admin/category-attribute-definitions/{id}"
         deleteLabel={tr.delete}
         editLabel={tr.edit}
         confirmMessage={tr.confirm_delete}

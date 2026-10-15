@@ -10,6 +10,8 @@ import { ConfirmDialog } from './ConfirmDialog'
 interface ProductAttributesTableProps {
   productId: number
   attributes: SysAdminProductAttribute[]
+  /** Case-insensitive substring filter on the attribute key (applied on top of local add/delete state). */
+  filter?: string
   labels: {
     key: string
     value: string
@@ -42,6 +44,7 @@ const EMPTY_DRAFT: DraftAttribute = {
 export function ProductAttributesTable({
   productId,
   attributes: initial,
+  filter = '',
   labels,
 }: ProductAttributesTableProps) {
   const router = useRouter()
@@ -49,6 +52,10 @@ export function ProductAttributesTable({
   const [draft, setDraft] = useState<DraftAttribute | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
+  const needle = filter.trim().toLowerCase()
+  const visibleAttributes = needle
+    ? attributes.filter((a) => a.attribute_key.toLowerCase().includes(needle))
+    : attributes
 
   function handleAdd() {
     setDraft({ ...EMPTY_DRAFT })
@@ -130,7 +137,7 @@ export function ProductAttributesTable({
               </tr>
             </thead>
             <tbody>
-              {attributes.map((attr) => (
+              {visibleAttributes.map((attr) => (
                 <tr key={attr.id} className="border-b border-gray-100 last:border-0">
                   <td className="px-3 py-2 font-mono text-xs text-gray-700">{attr.attribute_key}</td>
                   <td className="px-3 py-2 text-gray-700">{String(attr.attribute_value ?? '—')}</td>

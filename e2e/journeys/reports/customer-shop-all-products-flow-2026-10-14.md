@@ -29,18 +29,18 @@
 | E1 manjo-pet-087d8709 nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
 | E1 manjo-pet-087d8709 +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
 | E1 anna-s-bakery nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
-| E1 anna-s-bakery product_count == total | 3 | 3 | **PASS** |
+| E1 anna-s-bakery product_count == total | 4 | 4 | **PASS** |
 | E1 anna-s-bakery +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
-| E1 anna-s-bakery +geo product_count == total | 3 | 3 | **PASS** |
+| E1 anna-s-bakery +geo product_count == total | 4 | 4 | **PASS** |
 | E1 o-phournos-tes-annas nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
 | E1 o-phournos-tes-annas product_count == total | 3 | 3 | **PASS** |
 | E1 o-phournos-tes-annas +geo nur eigene Angebote | 0 fremde/fehlende best_offer | 0 | **PASS** |
 | E1 o-phournos-tes-annas +geo product_count == total | 3 | 3 | **PASS** |
 | E2 anna-s-bakery nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
-| E2 anna-s-bakery Kartenanzahl | >= 3 | 4 | **PASS** |
+| E2 anna-s-bakery Kartenanzahl | >= 4 | 10 | **PASS** |
 | E2 o-phournos-tes-annas nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
-| E2 o-phournos-tes-annas Kartenanzahl | >= 3 | 4 | **PASS** |
-| E3 Anzahl Karten | 3 | 3 | **PASS** |
+| E2 o-phournos-tes-annas Kartenanzahl | >= 3 | 6 | **PASS** |
+| E3 Anzahl Karten | 4 | 4 | **PASS** |
 | E3 nur eigene Shop-Links | 0 fremde | 0 | **PASS** |
 
 ## Findings

@@ -1,12 +1,12 @@
 # Journey-Report: service-catalog-auto-assign
 
-**Datum:** 2026-10-14T09:37:19.290Z
+**Datum:** 2026-10-14T22:39:00.309Z
 **Frontend:** http://localhost:3500
 **Backend:** http://localhost:8500
-**Test-Owner:** e2e-20261014093505-sca-3c0b@pundo-e2e.io
-**Shop-ID:** 10582  **Owner-ID:** 3039
+**Test-Owner:** e2e-20261014223629-sca-79f3@pundo-e2e.io
+**Shop-ID:** 24976  **Owner-ID:** 6973
 
-## Ergebnis: 21/26 PASS  |  5 FAIL  |  0 SKIP
+## Ergebnis: 24/28 PASS  |  4 FAIL  |  0 SKIP
 
 ## Schritte
 
@@ -21,8 +21,8 @@
 | IDM-2c | Formularfeld item_id vorhanden | input[name=item_id] sichtbar | vorhanden | **PASS** |
 | IDM-2d | Create-Submit navigiert zurück zur Liste | /admin/item-domain-mappings | http://localhost:3500/admin/item-domain-mappings/new | **FAIL** |
 | IDM-3a | /admin/item-domain-mappings/29/edit erreichbar | URL enthält 29/edit | http://localhost:3500/admin/item-domain-mappings/29/edit | **PASS** |
-| IDM-3b | Priority-Feld bearbeitbar | Wert änderbar | 99 → 99 | **PASS** |
-| IDM-3c | Edit-Submit navigiert zurück | /admin/item-domain-mappings | http://localhost:3500/admin/item-domain-mappings/29/edit | **FAIL** |
+| IDM-3b | Priority-Feld bearbeitbar | Wert änderbar | 1 → 99 | **PASS** |
+| IDM-3c | Edit-Submit navigiert zurück | /admin/item-domain-mappings | http://localhost:3500/admin/item-domain-mappings | **PASS** |
 | IDM-4a | Test-Mapping erstellt | Mapping angelegt | Fehler: Error: POST http://localhost:8500/api/v1/admin/item-domain-mappings → 422: {"detail":[{"type":"value_error","loc":["body"],"msg":"Value error, At least one of domain_id or specialty_id must be set","input":{"item_id":18,"onboarding_domain_id":3,"auto_assign":false,"priority":99},"ctx":{"error":{}}}]} | **FAIL** |
 | IDM-5a | Gaps-Report erreichbar | URL enthält "gaps" | http://localhost:3500/admin/item-domain-mappings/gaps | **PASS** |
 | IDM-5b | Gaps-Report H1 vorhanden | H1 sichtbar | "Mapping Gaps" | **PASS** |
@@ -32,17 +32,18 @@
 | AC-5c | /shop-admin/offers erreichbar | URL enthält shop-admin | http://localhost:3500/shop-admin/offers | **PASS** |
 | AC-5d | Badge "Vorgeschlagen" sichtbar | Amber-Badge mit Text "Vorgeschlagen"/"Suggested" | Badge: "Suggested" | **PASS** |
 | AC-5e | Preis "Auf Anfrage" sichtbar | "Auf Anfrage" oder "On Request" im HTML | gefunden | **PASS** |
+| S3b-1 | Vor Freigabe: Vorschläge nicht in Suche/Produktliste/Produktdetail/Shop-Detail | keine Leaks | keine Leaks | **PASS** |
+| S3b-2 | Nach Freigabe: Vorschläge öffentlich sichtbar | mind. ein öffentlicher Pfad zeigt Angebote | /products?shop_id (total=3), /search best_offer, /products/by-slug/elektriker-elektroinstallation, /products/by-slug/elektriker-smart-home-einrichtung, /products/by-slug/elektriker-solaranlage-installation, /shops/{id} top_products/product_count | **PASS** |
 | S5a | Owner Login | HTTP 200 | HTTP 200 | **PASS** |
-| S5b | Preis via API auf 50 EUR gesetzt | PATCH erfolgreich | Fehler: Error: PATCH http://localhost:8500/api/v1/shop-owner/offers/26605 → 422: {"detail":[{"type":"string_type","loc":["body","price_tiers",0,"unit"],"msg":"Input should be a valid string","input":null},{"type":"missing","loc":["body","price_tiers",0,"steps"],"msg":"Field required","input":{"currency":"EUR","amount":50,"unit":null}}]} | **FAIL** |
-| S6a | Shop-Seite erreichbar | HTTP 200, Shop-Seite sichtbar | http://localhost:3500/en/shops/e2e-20261014093505-sca-shop-0dcd | **PASS** |
-| S6b | Listings in Customer-Sicht sichtbar | ≥1 Listing/Offer-Card | 3 product-links, 0 offer-cards | **PASS** |
+| S5b | Preis via API auf 50 EUR gesetzt | PATCH erfolgreich | Fehler: Error: PATCH http://localhost:8500/api/v1/shop-owner/offers/42905 → 422: {"detail":[{"type":"string_type","loc":["body","price_tiers",0,"unit"],"msg":"Input should be a valid string","input":null},{"type":"missing","loc":["body","price_tiers",0,"steps"],"msg":"Field required","input":{"currency":"EUR","amount":50,"unit":null}}]} | **FAIL** |
+| S6a | Shop-Seite erreichbar | HTTP 200, Shop-Seite sichtbar | http://localhost:3500/en/shops/e2e-20261014223629-sca-shop-d4c2 | **PASS** |
+| S6b | Listings in Customer-Sicht sichtbar | ≥1 Listing/Offer-Card | 6 product-links, 0 offer-cards | **PASS** |
 | S7a | "Auf Anfrage"-Preis in Customer-Sicht | "Auf Anfrage" oder lokalisierter Text sichtbar | "Auf Anfrage" gefunden | **PASS** |
-| S6c | Bilder in Customer-Sicht geladen | ≥0 Bilder (Shop hat evtl. keine Bilder) | 8 geladen | **PASS** |
+| S6c | Bilder in Customer-Sicht geladen | ≥0 Bilder (Shop hat evtl. keine Bilder) | 7 geladen | **PASS** |
 
 ## Findings
 
 - IDM-2d: Create-Submit navigierte nicht zurück. URL="http://localhost:3500/admin/item-domain-mappings/new" Fehler="*"
-- IDM-3c: Edit-Submit navigierte nicht zurück. URL="http://localhost:3500/admin/item-domain-mappings/29/edit"
 - IDM-4a: Wegwerf-Mapping konnte nicht angelegt werden: Error: POST http://localhost:8500/api/v1/admin/item-domain-mappings → 422: {"detail":[{"type":"value_error","loc":["body"],"msg":"Value error, At least one of domain_id or specialty_id must be set","input":{"item_id":18,"onboarding_domain_id":3,"auto_assign":false,"priority":99},"ctx":{"error":{}}}]}
 - IDM-5c: Gaps-Seite zeigt Fehler. Bekannte Ursache: getMappingGaps() erwartet MappingGapEntry[] aber Backend liefert {uncovered_domains:[], uncovered_specialties:[]}. gaps.filter() schlägt auf Objekt fehl.
-- S5b: Preis-Update fehlgeschlagen. err1="Error: PATCH http://localhost:8500/api/v1/shop-owner/shop-listings/26605/offers → 404: {"detail":"Not Found"}" err2="Error: PATCH http://localhost:8500/api/v1/shop-owner/offers/26605 → 422: {"detail":[{"type":"string_type","loc":["body","price_tiers",0,"unit"],"msg":"Input should be a valid string","input":null},{"type":"missing","loc":["body","price_tiers",0,"steps"],"msg":"Field required","input":{"currency":"EUR","amount":50,"unit":null}}]}"
+- S5b: Preis-Update fehlgeschlagen. err1="Error: PATCH http://localhost:8500/api/v1/shop-owner/shop-listings/42905/offers → 404: {"detail":"Not Found"}" err2="Error: PATCH http://localhost:8500/api/v1/shop-owner/offers/42905 → 422: {"detail":[{"type":"string_type","loc":["body","price_tiers",0,"unit"],"msg":"Input should be a valid string","input":null},{"type":"missing","loc":["body","price_tiers",0,"steps"],"msg":"Field required","input":{"currency":"EUR","amount":50,"unit":null}}]}"

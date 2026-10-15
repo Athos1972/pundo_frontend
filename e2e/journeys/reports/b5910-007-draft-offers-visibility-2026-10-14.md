@@ -1,8 +1,8 @@
 # Journey-Report: b5910-007-draft-offers-visibility
 
-**Datum:** 2026-10-14T12:50:50.175Z
+**Datum:** 2026-10-14T22:38:33.019Z
 **Frontend:** http://localhost:3500  **Backend:** http://localhost:8500
-**Shop A:** e2e-20261014125012-b5910-007-bakery-a-c82a  **Shop B:** e2e-20261014125012-b5910-007-bakery-b-02e0
+**Shop A:** e2e-20261014223629-b5910-007-bakery-a-270c  **Shop B:** e2e-20261014223629-b5910-007-bakery-b-0bf9
 
 | Schritt | Beschreibung | Status |
 |---|---|---|
@@ -32,6 +32,9 @@
 | P2 | Löschen (UI): archivieren + löschen | **PASS** |
 | P2 | DB: Brot/Torte shop_manual, Hochzeitstorte-Angebot gelöscht | **PASS** |
 | P2 | Übernommene/bearbeitete Vorschläge vor Freigabe weiter unsichtbar | **PASS** |
+| P2b | EL 390 px: 3 Vorschlags-Zeilen, Aktionen unter dem Namen | **PASS** |
+| P2b | EL 390 px: Bestätigungszustand ohne Überlagerung | **PASS** |
+| P2b | AR 390 px: Thumbnail rechts, keine Überlagerung | **PASS** |
 | P3 | Suche: übernommener + bearbeiteter Vorschlag sichtbar | **PASS** |
 | P3 | Produktdetail: übernommen/bearbeitet/unbearbeitet sichtbar, gelöscht nicht | **PASS** |
 | P3 | /products?shop_id= = 5, Hochzeitstorte available=false | **PASS** |

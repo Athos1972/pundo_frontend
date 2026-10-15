@@ -1,5 +1,5 @@
 # Journey Report: shop-owner-self-deactivate
-Date: 2026-10-14T09:37:37.593Z
+Date: 2026-10-14T22:38:58.366Z
 Status: PASSED
 
 ## Steps run

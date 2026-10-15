@@ -15,6 +15,8 @@ Messung: `npx playwright test`, warmer Standalone-Build, Workers 4, Backend 8500
 | URL-Literale `localhost/127.0.0.1:3500/8500` in `e2e/` | 102 | 2 (nur `env.ts`) |
 | Specs über 600 Zeilen | 6 | 2 (begründete Ausnahmen: `shop-owner-full-lifecycle`, `shop-detail-attribute-matrix`) |
 
+Gates (T34, 2026-10-15): `scripts/test-gate.sh fast` 47 s (tsc 3 s, eslint 16 s, lint:i18n 1 s, Vitest 27 s), `smoke` 45 s, `push` 161 s (Playwright voll 115 s: 710 Tests, 703 passed, 7 skipped, 0 failed, 0 flaky; `npm audit` rc 0; gitleaks lokal nicht installiert). Hook `.githooks/pre-push`, Nightly `pundo_main_backend/scripts/nightly.sh`. Befehle: `docs/e2e-testing.md`, Abschnitt „Gates, Hooks und Nightly“.
+
 Skips (7, alle mit Grund im Test): `price-history` Realdaten, 4× `admin-catalog-review` (Gateway 8600), `shop-admin-import-image-url` AC-3/4, `shop-discovery` „Textsuche nach Shop-Name“ (Suchseite zeigt Shops nicht nach Namen; vorher stilles `return`).
 
 ---
@@ -34,7 +36,7 @@ Messung: `npx playwright test` mit warmem Standalone-Build, Workers 4, Backend 8
 
 Verbleibende Skips (bedingt, Grund im Test): `price-history` Realdaten (kein Crawl im 90-Tage-Fenster der Prod-Kopie), 4× `admin-catalog-review` (Gateway-Test-Server 8600 nicht erreichbar), `shop-admin-import-image-url` AC-3/4 (braucht Mock-Bild-Server); `b5950-001` AK4 überspringt zwischen ca. 23:30 und 00:30 Ortszeit (zu nah an Mitternacht).
 
-`shop-type-api-matrix` (44 Tests, reiner API-Vertrag ohne Browser) ist seit T19 ein parametrisierter Backend-Test (`pundo_main_backend/ingestor/tests/test_shop_type_matrix.py`, 44 + 3 Drift-Tests, ca. 4 s); Spec und Journey-Datei sind gelöscht.
+`shop-type-api-matrix` (44 Tests, reiner API-Vertrag ohne Browser) ist seit T19 ein parametrisierter Backend-Test (`pundo_main_backend/ingestor/tests/prodcopy/test_shop_type_matrix.py`, 44 + 3 Drift-Tests, ca. 4 s); Spec und Journey-Datei sind gelöscht.
 
 ---
 

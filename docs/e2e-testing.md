@@ -38,7 +38,7 @@ Playwright-Safety-Check in `playwright.config.ts` verwirft Port 8000 explizit.
 | Geo-Nearby findet Shop | `GET /api/v1/shops/nearby?lat=...&lng=...` |
 | Produkte via API abrufbar | `GET /api/v1/shops/{id}/products` |
 | Öffnungszeiten via API | `GET /api/v1/shops/{id}/hours` |
-| Onboarding → Login → Item → Shop je Shop-Unterart (44) | Seit F8950 T19 Backend-pytest: `pundo_main_backend/ingestor/tests/test_shop_type_matrix.py` |
+| Onboarding → Login → Item → Shop je Shop-Unterart (44) | Seit F8950 T19 Backend-pytest: `pundo_main_backend/ingestor/tests/prodcopy/test_shop_type_matrix.py` |
 
 ---
 
@@ -74,18 +74,56 @@ GOOGLE_GEOCODING_API_KEY=AIza...
 
 ---
 
+## Gates, Hooks und Nightly (F8950 T34)
+
+Ein Skript für alle Läufe: `scripts/test-gate.sh <lane>` (gemeinsame Helfer `scripts/gate-lib.sh`: Lock, Timeout, Logs, `last_run`; eine inhaltsgleiche Kopie liegt im Backend-Repo, Änderungen immer in beiden Repos nachziehen).
+
+| Lane | Befehl | Inhalt | Dauer (2026-10-15) |
+|---|---|---|---|
+| fast | `scripts/test-gate.sh fast` | `tsc --noEmit`, eslint, `lint:i18n`, Vitest | 47 s |
+| commit | `scripts/test-gate.sh commit` | `lint:i18n` + Vitest (manuell; **kein** pre-commit-Hook, mehrere Sessions committen aus einem Working Tree) | ca. 30 s |
+| smoke | `scripts/test-gate.sh smoke` | Playwright-Projekt `smoke` (das Backend-Push-Gate ruft das, A5) | 45 s |
+| push | `scripts/test-gate.sh push` (Pre-Push-Hook) | fast + Playwright voll (smoke, dann full) + `npm audit --omit=dev --audit-level=high` (wie die CI) + gitleaks, falls installiert | 161 s |
+| nightly | `scripts/test-gate.sh nightly` (von `pundo_main_backend/scripts/nightly.sh` gerufen) | fast + Playwright `--repeat-each=2 --retries=0` + audit + gitleaks | siehe Nightly |
+
+**Vitest** läuft in `fast` (`npx vitest run`, ca. 12 bis 27 s je nach Last). Tests liegen in `src/tests/` (Komponenten, Utilities), Architektur-Guards über viele Dateien in `tests/unit/guards/` (z. B. Client-IP-Helper in allen Routen, Shop-Admin-Boundary), Journey-Parser in `e2e/journeys/_parser.spec.ts`. Kein Test liest den Quelltext einer einzelnen Komponente per Regex; dafür gibt es Render-Tests (Testing Library).
+
+**Aktivierung des Hooks (einmal je Klon, nicht automatisch).**
+
+```bash
+scripts/install-hooks.sh                 # = git config core.hooksPath .githooks
+git config --unset core.hooksPath        # deaktivieren
+```
+
+`.githooks/pre-push` prüft nur Pushes, die `refs/heads/main` aktualisieren (andere Branches und Löschungen laufen durch) und startet `scripts/test-gate.sh push`.
+
+**Robustheit (mehrere Sessions, ein Working Tree).**
+- **Fail-closed.** PostgreSQL aus `pundo_main_backend/.env` (`DATABASE_URL_TEST`) nicht erreichbar, Backend-Repo oder `.venv` fehlt → sofort Abbruch mit Hinweis. Test-Backend 8500 startet der Playwright-Global-Setup selbst (kill + restart), das Test-Frontend 3500 der `webServer` (Standalone-Build, ein Rebuild kostet ca. 3 min); jeder Schritt hat ein hartes Timeout (die Prozessgruppe wird beendet), das Gate hängt also nie.
+- **Ein Lauf zur Zeit.** Gemeinsamer Lock `~/Library/Caches/pundo-test-gate/lock.d` für Backend-Gate, Frontend-Gate und Nightly (verwaiste Locks toter Prozesse werden übernommen), zusätzlich der Playwright-Lauf-Lock der Specs. Ist der Gate-Lock belegt, bricht der Hook mit PID und Lane ab (`GATE_LOCK_WAIT=<s>` wartet stattdessen). Laufende fremde `pytest`- oder `playwright test`-Prozesse (beide Seiten teilen `pundo_test`) lässt das Gate bis zu 90 s (`GATE_BUSY_WAIT`) abklingen und bricht dann ab.
+- **Bereits grün.** Lief das Push-Gate für genau den zu pushenden Commit grün (Arbeitsbaum ohne getrackte Änderungen, < 6 h), überspringt der Hook den zweiten Lauf (`GATE_FORCE=1` erzwingt ihn).
+- **Der Lauf testet den Arbeitsbaum**, nicht isoliert den gepushten Commit. Halbfertige Änderungen anderer Sessions können das Gate rot machen: klären, nicht umgehen. Die Playwright-Läufe schreiben außerdem `e2e/journeys/reports/*` neu (nie mitcommitten).
+- **Nachweis.** `.claude/playbooks/state/test-gate.last_run` (JSON: Lane, Start, Dauer, Ergebnis, Commit, Einzelschritte, Log-Pfad; gitignored) plus `test-gate.<lane>.last_run`. Logs je Schritt: `~/Library/Logs/pundo-test-gate/<Zeit>-<repo>-<lane>/<Schritt>.log` (14 Tage).
+- **`--no-verify` ist verboten ohne Bernhards Freigabe.** Zulässige Gründe: Gate selbst defekt (Skriptfehler, Registry/npm nicht erreichbar bei dringendem Hotfix) oder reine Doku-/Vault-Änderung. Der Grund steht in der Handoff-Notiz bzw. Commit-Nachricht; die nächste Nightly prüft nach.
+- Agents rufen `git push` mit hohem Tool-Timeout (mind. 600000 ms) auf.
+- **gitleaks** ist lokal optional (`brew install gitleaks`); ohne Installation meldet das Gate `skip gitleaks` und die CI scannt weiterhin. Das ist eine bekannte Lücke gegenüber der CI.
+
+**Nightly.** `pundo_main_backend/scripts/nightly.sh` (launchd-Vorlage und Installationsanleitung: `pundo_main_backend/ops/launchd/`) läuft beide Repos nacheinander: Backend ruff, Semgrep, pytest in vier Varianten (Template-DB / Prod-Kopie x fest / zufällig), dann dieses Repo mit `scripts/test-gate.sh nightly`. Logs: `~/Library/Logs/pundo-nightly/<Datum>/`, bei Rot eine macOS-Benachrichtigung.
+
 ## E2E-Tests ausführen
 
 ### Standard (empfohlen)
 
 ```bash
-cd /path/to/pundo_frontend
-npx playwright test e2e/journeys e2e/smoke.spec.ts e2e/smoke-shop-visibility.spec.ts
+cd /Users/bb_studio_2025/dev/github/pundo_frontend
+scripts/test-gate.sh push                    # Gate: statisch + Vitest + Playwright voll + audit (ca. 2,7 min)
+npx playwright test                          # nur Playwright voll: smoke, dann full (ca. 1,9 min, warmer Build)
+npx playwright test --project=smoke          # nur das Smoke-Gate (ca. 45 s)
+npx playwright test --repeat-each=2 --retries=0    # Flake-Prüfung (ca. 3,1 min)
 ```
 
 Das Global Setup startet das Test-Backend (Port 8500) selbst neu. **Das Frontend startet ausschließlich Playwright** (`webServer` → `node scripts/e2e-frontend.cjs start`, siehe unten) — das Global Setup startet/kill-t kein Frontend mehr, sondern prüft nur, dass der Server auf 3500 aktuellen Code ausliefert.
 
-`BACKEND_URL` und `E2E_FRONTEND_PORT` sind in `playwright.config.ts` auf 8500/3500 vorbelegt — kein Setzen nötig. **Rate-Limits:** Onboarding 5/min und Login 10/min gelten pro IP (kein Bypass seit B6220-001). Damit volle Parallel-Läufe nicht in 429 laufen, startet `scripts/start_test_server.sh` das Test-Backend mit `RATE_LIMIT_TEST_MULTIPLIER=40` (Zähler ×40, keine Ausnahme; seit F6225 zählen alle 4 Backend-Worker gemeinsam in Postgres `pundo_test.rate_limit_counters`, der Multiplikator wirkt daher exakt statt bis ×4 lockerer; wirkt nur bei DB `pundo_test` und nicht-produktivem `ENVIRONMENT`, sonst ignoriert mit Warn-Log — Details `pundo_main_backend/docs/testing.md`). Ein Backend, das nicht über dieses Skript/das Global-Setup gestartet wurde, ist strikt; Start-Log: `Rate limits relaxed x40`. Die Helfer (`shopOwnerOnboardWithRetry`, `shopOwnerLogin`) warten bei 429; UI-Logins ohne Retry vermeiden (Cookie-Injection, `adminLogin()` nutzt den Admin-Token aus dem Setup). **Es darf immer nur ein E2E-Lauf gleichzeitig laufen** (und kein voller Backend-pytest gleichzeitig: beide teilen `pundo_test`) (Lauf-Lock `<tmpdir>/pundo-e2e-run.lock`; ein zweiter Lauf bricht mit Meldung ab, ein toter Lock wird übernommen).
+`BACKEND_URL` und `E2E_FRONTEND_PORT` sind in `playwright.config.ts` auf 8500/3500 vorbelegt — kein Setzen nötig. **Rate-Limits:** Onboarding 5/min und Login 10/min gelten pro IP (kein Bypass seit B6220-001). Damit volle Parallel-Läufe nicht in 429 laufen, startet `scripts/start_test_server.sh` das Test-Backend mit `RATE_LIMIT_TEST_MULTIPLIER=40` (Zähler ×40, keine Ausnahme; seit F6225 zählen alle 4 Backend-Worker gemeinsam in Postgres `pundo_test.rate_limit_counters`, der Multiplikator wirkt daher exakt statt bis ×4 lockerer; wirkt nur bei DB `pundo_test` und nicht-produktivem `ENVIRONMENT`, sonst ignoriert mit Warn-Log — Details `pundo_main_backend/docs/testing.md`). Ein Backend, das nicht über dieses Skript/das Global-Setup gestartet wurde, ist strikt; Start-Log: `Rate limits relaxed x40`. Die Helfer (`shopOwnerOnboardWithRetry`, `shopOwnerLogin`) warten bei 429; UI-Logins ohne Retry vermeiden (Cookie-Injection, `adminLogin()` nutzt den Admin-Token aus dem Setup). **Es darf immer nur ein E2E-Lauf gleichzeitig laufen** (und kein voller Backend-pytest gleichzeitig: beide teilen `pundo_test`; `scripts/test-gate.sh` prüft das vor dem Start) (Lauf-Lock `<tmpdir>/pundo-e2e-run.lock`; ein zweiter Lauf bricht mit Meldung ab, ein toter Lock wird übernommen).
 
 ### Projekte `smoke` und `full`, Workers (F8950 T15/T16)
 
@@ -139,6 +177,8 @@ BACKEND_URL=http://localhost:8500 E2E_FRONTEND_PORT=3500 npx playwright test
 ```
 
 ### Einzelne Test-Datei
+
+Einzelaufrufe laufen ohne Gate-Lock, aber mit Global Setup und Lauf-Lock (nie neben einem Backend-pytest-Volllauf):
 
 ```bash
 npx playwright test e2e/shop-admin-e2e.spec.ts
@@ -215,18 +255,21 @@ Preisverlauf-Fixture (`--seed-price-history`, Shop `e2e-price-history-shop`): `e
 
 ## Test-Dateien
 
+Stand 2026-10-15: 710 Tests (39 `smoke`, 671 `full`; 703 passed, 7 bedingte Skips mit Grund im Test). Verteilung: 24 Specs im Wurzelverzeichnis `e2e/`, 45 Journey-Specs in `e2e/journeys/` (je Journey eine `.md` im Katalog, `CATALOG.md`), 3 Security-Specs in `e2e/security/`. Auswahl:
+
 | Datei | Scope | Auth |
 |-------|-------|------|
+| `e2e/smoke.spec.ts`, `smoke-shop-visibility.spec.ts` | Smoke-Gate (Tag `@smoke`) | Nein |
 | `e2e/main.spec.ts` | Customer-Facing (Homepage, Suche, RTL, Mobile, Auth-Redirect) | Nein |
 | `e2e/shop-admin-e2e.spec.ts` | Shop-Admin Portal (Login, CRUD, Logout) | Ja (storageState) |
 | `e2e/shop-discovery.spec.ts` | Shop Discovery (Geocoding, Suche, Customer-Seite) | Gemischt |
-| `e2e/admin.spec.ts` | System-Admin-Portal | Ja |
-| `e2e/smoke.spec.ts` | Schneller Smoke-Test | Nein |
+| `e2e/admin.spec.ts` | System-Admin-Portal (Admin-storageState) | Ja |
 | `e2e/f2350-category-search.spec.ts` | Kategoriesuche | Nein |
-| `e2e/language-smoke.spec.ts` | Sprachumschaltung | Nein |
-| `e2e/price-history.spec.ts` | Preisverlauf | Nein |
+| `e2e/language-smoke.spec.ts` | Sprachumschaltung (en, ar im Smoke) | Nein |
+| `e2e/price-history.spec.ts` | Preisverlauf (Zwei-Ebenen-Referenz) | Nein |
+| `e2e/journeys/*.spec.ts` | Katalog-Journeys (Shop-Owner-Lebenszyklus, Admin, Customer, Offers, Onboarding, Service-Katalog …) | Gemischt |
 
-Vollständiger Katalog: `e2e/TESTSET.md`
+Vollständiger Katalog und Messwerte: `e2e/TESTSET.md`
 
 ---
 

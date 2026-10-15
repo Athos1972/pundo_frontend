@@ -68,6 +68,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Produktiv-Instanzen (Port **3000** / **8000**) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung
 <!-- END:port-convention -->
 
+<!-- BEGIN:test-gates -->
+# Test-Gates und Pre-Push-Hook (F8950 T34) — PFLICHT vor jedem Push auf main
+
+Ein Push auf `main` deployt direkt nach Prod. Deshalb gibt es je Repo ein versioniertes Pre-Push-Gate (`.githooks/pre-push` → `scripts/test-gate.sh push`); aktivieren: `scripts/install-hooks.sh` (= `git config core.hooksPath .githooks`).
+
+| Repo | Alltag | Push-Gate (automatisch bei `git push` auf main) |
+|---|---|---|
+| `pundo_main_backend` | `scripts/test-gate.sh fast` (14 s) / `full` (28 s) / `lint` (ruff + Semgrep) | ruff, **Semgrep wie in der CI**, pytest full, Playwright-Smoke im Frontend-Repo (ca. 80 s) |
+| `pundo_frontend` | `scripts/test-gate.sh fast` (tsc, eslint, `lint:i18n`, Vitest; 47 s) | fast + Playwright voll + `npm audit` + gitleaks (falls installiert) (ca. 160 s) |
+
+- **`git push --no-verify` nur mit Bernhards ausdrücklicher Freigabe** und mit Grund in der Handoff-Notiz.
+- Das Gate bricht fail-closed ab (PostgreSQL nicht erreichbar, anderer Gate-/Testlauf aktiv, Timeout), statt zu hängen. Es nimmt einen gemeinsamen Lock für beide Repos und die Nightly; volle pytest- und Playwright-Läufe laufen **nie gleichzeitig** (beide teilen `pundo_test`).
+- Der Nachweis des letzten Laufs steht in `.claude/playbooks/state/test-gate.last_run` (lokal, nicht committen). Die Nightly (`pundo_main_backend/scripts/nightly.sh`, launchd) prüft beide Repos nachts inkl. Prod-Kopie-Modus und `--repeat-each=2`; Ergebnis: `~/Library/Logs/pundo-nightly/latest/summary.txt`.
+- Details: Backend `docs/testing.md` („Gates und Hooks“), Frontend `docs/e2e-testing.md`.
+<!-- END:test-gates -->
+
 <!-- BEGIN:backend-repo -->
 # Repositories — Übersicht
 

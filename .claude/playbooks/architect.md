@@ -20,6 +20,7 @@ Nähe des Nutzers. Das Frontend ist die User-facing Next.js-App; das Backend
 - **API-Proxy:** Kein direkter Backend-Zugriff vom Browser — alles via `/api/v1/` Next.js-Rewrite
 - **Lean Typen:** TypeScript-Interfaces in `src/types/api.ts` spiegeln Backend-Schema; kein Over-Engineering
 - **Backend als Quelle der Wahrheit:** Kategorien und übersetzte Inhalte kommen vom Backend. RTL dagegen über `isRTL()` aus `src/lib/lang.ts` — keine eigenen Sprachlisten
+- **Tests im Plan (F8950):** Jeder Task nennt die Test-Ebene und den Lauf: Vitest (`src/tests/`, Guards in `tests/unit/guards/`) → `scripts/test-gate.sh fast`; Playwright → Projekt `smoke` (nur echte Gate-Kandidaten, Tag `@smoke`) oder `full`, Spec unter ca. 600 Zeilen. Datenabhängige Prüfungen nach dem **Zwei-Ebenen-Prinzip** planen (Ebene 1 synthetisch und immer, Ebene 2 Realdaten mit Skip-Grund); Fixtures kommen aus `e2e/fixtures.ts`, URLs aus `e2e/env.ts`. Backend-Anteile: Marker/Ordner siehe Backend-Playbook (`unit/`, `integration/`, `prodcopy/`). Ein Push auf `main` läuft durch das Pre-Push-Gate beider Repos (`scripts/test-gate.sh push`, Playwright voll bzw. Smoke); der Plan darf Gate-Laufzeiten nicht sprengen (Ziel: Playwright voll unter 4 min).
 - **Restart-Regel:** Test-Instanzen (Frontend 3500 / Backend 8500) dürfen automatisch neu gestartet werden. Produktiv-Instanzen (3000 / 8000) startet nur der User manuell oder auf ausdrückliche Aufforderung neu, weil dort Echtdaten und laufende Nutzer hängen.
 
 ---

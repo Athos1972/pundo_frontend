@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# F8950 T34: Pre-Push-Gate. Ein Push auf main deployt per Webhook nach Prod, deshalb laeuft vorher
+# `scripts/test-gate.sh push` (tsc, eslint, lint:i18n, Vitest, Playwright voll, npm audit, gitleaks falls installiert).
+#
+#   Aktivieren (einmal je Klon):   git config core.hooksPath .githooks      (oder: scripts/install-hooks.sh)
+#   Deaktivieren:                  git config --unset core.hooksPath
+#   Ausnahme im Notfall:           git push --no-verify   (nur mit Bernhards Freigabe und Grund in der Commit-/Handoff-Notiz)
+#
+# Verhalten: nur Pushes, die refs/heads/main aktualisieren, werden geprueft; Branch-Loeschungen und andere Refs laufen durch.
+# Fail-closed: PostgreSQL nicht erreichbar, anderer Gate-/Testlauf aktiv oder Timeout -> Push wird abgelehnt (Meldung oben).
+# Hinweis fuer Agents: Der Lauf dauert ca. 3 bis 6 min (Rebuild des Frontends); Tool-Timeout entsprechend hoch setzen.
+set -u
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ZERO="0000000000000000000000000000000000000000"
+sha=""
+while read -r _lref lsha rref _rsha; do
+  [ "$rref" = "refs/heads/main" ] || continue
+  [ "$lsha" = "$ZERO" ] && continue
+  sha="$lsha"
+done
+
+if [ -z "$sha" ]; then
+  echo "pre-push: kein Push auf main, Gate uebersprungen." >&2
+  exit 0
+fi
+
+echo "pre-push: Push auf main (${sha:0:10}): Gate laeuft (Umgehen nur mit --no-verify und Grund)." >&2
+GATE_PUSHED_SHA="$sha" "$ROOT/scripts/test-gate.sh" push </dev/null
+rc=$?
+if [ "$rc" != 0 ]; then
+  echo "pre-push: Gate ROT (rc=$rc). Push abgebrochen. Logs und Details stehen oben." >&2
+fi
+exit "$rc"

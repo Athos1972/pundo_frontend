@@ -150,7 +150,11 @@ Wenn beim Entwickeln einer Journey-Spec ein Test-Schritt nicht grün wird:
 
 ### Test-Setup (Vitest)
 
-Vitest ist eingerichtet — Konfiguration in `vitest.config.ts` (jsdom, `globals`, Setup `src/tests/setup.ts`, Alias `@` → `src`, `include`-Muster für `src/tests/**`). Neue Tests unter `src/tests/` ablegen; Lauf: `npx vitest run [pfad]`.
+Vitest ist eingerichtet — Konfiguration in `vitest.config.ts` (jsdom, `globals`, Setup `src/tests/setup.ts`, Alias `@` → `src`, `include`-Muster für `src/tests/**`). Neue Tests unter `src/tests/` ablegen; Lauf: `npx vitest run [pfad]`. Architektur-Guards über viele Dateien (z. B. „alle Routen nutzen den Client-IP-Helper“) liegen in `tests/unit/guards/`; Komponenten werden per Render-Test (Testing Library) geprüft, nie per Regex über den Quelltext einer einzelnen Komponente (F8950 T33).
+
+**Test-Gates (F8950 T34):** Vor dem Handoff `scripts/test-gate.sh fast` (tsc, eslint, `lint:i18n`, Vitest; ca. 50 s) grün. Ein Push auf `main` löst den Pre-Push-Hook aus (`scripts/test-gate.sh push`: fast + Playwright voll + `npm audit --omit=dev --audit-level=high`, ca. 160 s). Hook aktivieren: `scripts/install-hooks.sh`. **`git push --no-verify` nur mit Bernhards Freigabe** und Grund im Handoff. Das Gate nimmt einen Lock (kein Parallellauf mit einem Backend-pytest-Volllauf) und bricht fail-closed ab, wenn PostgreSQL nicht erreichbar ist. Details: `docs/e2e-testing.md`, Abschnitt „Gates, Hooks und Nightly“.
+
+**E2E-Specs schreiben (Kurzfassung, Details `docs/e2e-testing.md`):** `test`/`expect` aus `e2e/fixtures.ts` (bzw. `journeys/_helpers/worker-shop.ts`), URLs nur aus `e2e/env.ts`, keine lokalen Kopien von `logStep`/`apiFetch`/`adminLogin`, kein `networkidle`/`waitForTimeout`, keine festen Prod-Slugs für Kernprüfungen. **Zwei-Ebenen-Prinzip:** Ebene 1 prüft die Funktion mit selbst angelegten Daten (immer, kein Skip), Ebene 2 prüft Realdaten der Prod-Kopie (Skip nur mit konkretem Grund). Neue Specs: Tag `@smoke` nur für das Gate (ca. 40 Tests), Datei unter ca. 600 Zeilen.
 
 ### Pflicht: Transformationsfunktionen mit realistischen Backend-Daten testen
 

@@ -89,3 +89,6 @@ video/_branding/pronunciation-test/
 /e2e/.test-state.json
 # Admin-storageState (Test-JWT) — F8950 (test-results/ ist oben schon ignoriert)
 /e2e/.auth/
+
+# F8950 T34: Nachweis des letzten Gate-Laufs (lokal, nicht committen)
+.claude/playbooks/state/test-gate*.last_run

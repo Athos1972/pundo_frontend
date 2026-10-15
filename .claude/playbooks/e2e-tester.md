@@ -22,6 +22,8 @@ Rolle in diesem Repo: Gesamtverantwortung für die Testabdeckung — Diff seit l
 - Commit-Policy, Rückfragen, Verdict-Definitionen: siehe Agent und Conventions § Spec-Workflow.
 - Bei Coverage-Unterschreitung dokumentieren und weitermachen, statt zu blockieren.
 - **Kein Schöntesten:** Journey-Tests werden nie "passend gebogen". FAIL = FAIL, bis RCA entschieden hat ob Testfehler oder Funktionsfehler. Findings sind wertvoller als grüne Tests die Fehler verstecken.
+- **Welche Lane wann (F8950 T34):** Statische Prüfung und Vitest mit `scripts/test-gate.sh fast`; Browser-Läufe mit `npx playwright test` (voll, ca. 1,9 min), `--project=smoke` (Gate, ca. 45 s) bzw. gezielt eine Spec; Vor dem Verdict einmal `scripts/test-gate.sh push` (fast + Playwright voll + npm audit) und für Flake-Nachweise `npx playwright test --repeat-each=2 --retries=0` (ca. 3,1 min, 0 Fehler). Nie parallel zu einem vollen Backend-pytest (beide teilen `pundo_test`; das Gate prüft das). Die Nightly (`~/Library/Logs/pundo-nightly/latest/summary.txt`) und `.claude/playbooks/state/test-gate.last_run` (lokal, nicht committen) sind der Nachweis. `git push --no-verify` ist verboten ohne Bernhards Freigabe. Details: `docs/e2e-testing.md`.
+- **Spec-Regeln (F8950 Stufe 3/4):** `e2e/fixtures.ts` + `e2e/env.ts` (eine URL-Quelle), Playwright-Projekte `smoke`/`full`, Workers 4, keine festen Prod-Kopie-Slugs in Kernprüfungen, **Zwei-Ebenen-Prinzip** (Ebene 1 synthetische Daten, nie Skip; Ebene 2 Realdaten, Skip nur mit konkretem Grund), kein stilles `test.skip` bei Setup-Fehlern (stattdessen Fehlschlag). Ein Skip ohne Grund im Test ist ein Befund.
 - **Kein pre-existing-Label (F8950):** Es gibt keinen Status "pre-existing" mehr. Jedes FAIL ist `OFFEN`, `IN ARBEIT`, `GELÖST` oder `QUARANTÄNE` und hat eine Bug-Datei im zentralen Vault-Register (`00 Überblick/__ Bugs & Hotfixes/`). Ein FAIL blockiert das Verdict bis er GELÖST ist oder BB explizit entschieden hat. Quarantäne erfordert BB-Signatur (`test.fixme()` + `// QUARANTÄNE B<id> — <Grund> — <Datum>`).
 - **Gate-Invariante (F8950):** `verdict:"SHIP"` ist nur erlaubt wenn `open_failures` ein leeres Array ist. Vor dem SHIP-Verdict: `node scripts/verdict-gate.mjs` ausführen — bei exit≠0 ist SHIP verboten → Verdict `FIX` oder `ESCALATE`.
 - **Human-readable Reports:** Jeder Journey-Lauf produziert einen Report in `e2e/journeys/reports/`, der ohne Code-Kenntnisse nachvollziehbar ist.
@@ -265,7 +267,8 @@ Status: dokumentiert, kein Blocker
 Echte Specs (nicht im Playbook duplizieren): `e2e/smoke.spec.ts`, `e2e/smoke-shop-visibility.spec.ts` (ggf. `e2e/journeys/visual-smoke.spec.ts`).
 
 ```bash
-npx playwright test --config e2e/smoke-only.config.ts
+npx playwright test --project=smoke                 # Standard (mit Global Setup, ca. 45 s)
+npx playwright test --config e2e/smoke-only.config.ts   # ohne Global Setup (smoketest.yml)
 ```
 
 Prinzipien, die neue Smoke-Checks erfüllen müssen: Customer-Routen immer mit `/{lang}/`-Präfix (z. B. `/de/products/<slug>`), Bilder über `naturalWidth > 0` prüfen, keine verdächtigen 3xx-Redirects (CDN-Hotlink-Block), Carousel bei Tablet-Breite ≥ 2 sichtbare Items.

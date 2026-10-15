@@ -10,6 +10,7 @@ import { shopAdminOffersTranslationsMap } from './i18n/shop-admin-offers'
 import { shopAdminCommonTranslationsMap } from './i18n/shop-admin-common'
 import { shopAdminCatalogReviewTranslationsMap } from './i18n/shop-admin-catalog-review'
 import { shopAdminCategoryPickerTranslationsMap } from './i18n/shop-admin-category-picker'
+import { shopAdminImportTranslationsMap } from './i18n/shop-admin-import'
 
 export { tShopAdminAuth, type ShopAdminAuthTranslations } from './i18n/shop-admin-auth'
 export { tShopAdminCatalog, type ShopAdminCatalogTranslations } from './i18n/shop-admin-catalog'
@@ -17,6 +18,7 @@ export { tShopAdminOffers, type ShopAdminOffersTranslations } from './i18n/shop-
 export { tShopAdminCommon, type ShopAdminCommonTranslations } from './i18n/shop-admin-common'
 export { tShopAdminCatalogReview, type ShopAdminCatalogReviewTranslations } from './i18n/shop-admin-catalog-review'
 export { tShopAdminCategoryPicker, type ShopAdminCategoryPickerTranslations } from './i18n/shop-admin-category-picker'
+export { tShopAdminImport, type ShopAdminImportTranslations } from './i18n/shop-admin-import'
 
 type Lang = 'en' | 'de' | 'el' | 'ru' | 'ar' | 'he'
 
@@ -26,17 +28,21 @@ type MergedLang =
   typeof shopAdminOffersTranslationsMap.en &
   typeof shopAdminCommonTranslationsMap.en &
   typeof shopAdminCatalogReviewTranslationsMap.en &
-  typeof shopAdminCategoryPickerTranslationsMap.en
+  typeof shopAdminCategoryPickerTranslationsMap.en &
+  typeof shopAdminImportTranslationsMap.en
 
 function mergeLang(lang: Lang): MergedLang {
-  return {
-    ...shopAdminAuthTranslationsMap[lang],
-    ...shopAdminCatalogTranslationsMap[lang],
-    ...shopAdminOffersTranslationsMap[lang],
-    ...shopAdminCommonTranslationsMap[lang],
-    ...shopAdminCatalogReviewTranslationsMap[lang],
-    ...shopAdminCategoryPickerTranslationsMap[lang],
-  } as MergedLang
+  // Object.assign instead of 7 object spreads: spreading seven 6-way unions exceeds the TypeScript union limit (TS2590).
+  return Object.assign(
+    {},
+    shopAdminAuthTranslationsMap[lang],
+    shopAdminCatalogTranslationsMap[lang],
+    shopAdminOffersTranslationsMap[lang],
+    shopAdminCommonTranslationsMap[lang],
+    shopAdminCatalogReviewTranslationsMap[lang],
+    shopAdminCategoryPickerTranslationsMap[lang],
+    shopAdminImportTranslationsMap[lang],
+  ) as MergedLang
 }
 
 const shopAdminTranslations = {

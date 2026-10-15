@@ -1,13 +1,17 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition, useRef } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { showToast } from './Toast'
 import { FieldCatalog } from './FieldCatalog'
 import { ImportRowErrorList } from './ImportRowErrorList'
+import { ImportCountTiles } from './ImportCountTiles'
+import { ImportPreview, importErrorText } from './ImportPreview'
+import { ImportResult } from './ImportResult'
+import { useImportPreview } from './useImportPreview'
 import { useImportStatusPolling } from './useImportStatusPolling'
-import type { ImportStatus, ImportSyncErrorCode, ImportUploadResult } from '@/types/shop-admin'
+import type { ImportStatus, ImportSyncErrorCode } from '@/types/shop-admin'
 
 interface ImportPanelProps {
   initialStatus: ImportStatus
@@ -17,30 +21,31 @@ interface ImportPanelProps {
 export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
   const tr = tAdmin(lang)
   const [status, setStatus] = useState<ImportStatus>(initialStatus)
-  const [uploadResult, setUploadResult] = useState<ImportUploadResult | null>(null)
+  const statusRef = useRef<ImportStatus>(initialStatus)
+  useEffect(() => {
+    statusRef.current = status
+  })
+  const [fullList, setFullList] = useState(false)
   const [sheetsUrl, setSheetsUrl] = useState(initialStatus.google_sheet_url ?? '')
-  const [isPendingUpload, startUploadTransition] = useTransition()
   const [isPendingSheets, startSheetsTransition] = useTransition()
   const [isPendingSync, startSyncTransition] = useTransition()
   const [pollTimedOut, setPollTimedOut] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const { start: startPolling, stop: stopPolling } = useImportStatusPolling()
-
-  function _mapUploadError(detail: string | undefined): string {
-    if (!detail) return tr.error_generic
-    if (detail.startsWith('Unsupported file format')) return tr.upload_error_unsupported_format
-    if (detail.startsWith('xlsx file could not be read')) return tr.upload_error_xlsx_unreadable
-    if (detail.startsWith('xls file could not be read')) return tr.upload_error_xls_unreadable
-    if (detail.startsWith('File too large')) return tr.upload_error_too_large
-    return tr.error_generic
-  }
+  // After "apply": the image downloads of the new photos run in the background -> wait for them once.
+  const flow = useImportPreview({
+    onApplied: (p) => {
+      if ((p.result?.image_download_pending ?? 0) > 0) pollImages(statusRef.current.last_image_download_at)
+    },
+  })
+  const { phase, preview } = flow
 
   async function fetchStatus(): Promise<ImportStatus | null> {
     const res = await fetch('/api/shop-admin/import/status')
     return res.ok ? ((await res.json()) as ImportStatus) : null
   }
 
-  // Waits until the background image downloads of an upload are finished.
+  // Waits until the background image downloads of an import are finished.
   function pollImages(baselineImageAt: string | null | undefined) {
     setPollTimedOut(false)
     startPolling({
@@ -75,37 +80,19 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
       case 'sheet_not_public': return tr.sheets_error_not_public
       case 'rows_failed': return tr.sheets_error_rows_failed.replace('{n}', String(count ?? 0))
       case 'sync_failed': return tr.sheets_error_sync_failed
+      case 'empty_sheet': return tr.sheets_error_empty_sheet
+      case 'missing_name_column': return tr.sheets_error_missing_name_column
+      case 'too_many_rows': return tr.sheets_error_too_many_rows
       default: return tr.sheets_status_error
     }
   }
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-
-    startUploadTransition(async () => {
-      try {
-        const form = new FormData()
-        form.append('file', file)
-        const res = await fetch('/api/shop-admin/import/upload', { method: 'POST', body: form })
-        if (res.ok) {
-          const result: ImportUploadResult = await res.json()
-          setUploadResult(result)
-          if (result.errors.length > 0) {
-            showToast(tr.upload_nothing_imported.replace('{n}', String(result.errors.length)), 'error')
-          } else {
-            showToast(tr.upload_success.replace('{n}', String(result.imported)), 'success')
-          }
-          if ((result.image_download_pending ?? 0) > 0) pollImages(status.last_image_download_at)
-        } else {
-          const body = await res.json().catch(() => null)
-          showToast(_mapUploadError(body?.detail), 'error')
-        }
-      } catch {
-        showToast(tr.error_generic, 'error')
-      }
-      if (fileRef.current) fileRef.current.value = ''
-    })
+    const input = e.target
+    await flow.create(file, fullList, lang)
+    input.value = '' // the same file can be chosen again after a correction
   }
 
   function handleConnectSheets() {
@@ -115,7 +102,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
         const res = await fetch('/api/shop-admin/import/google-sheets', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: sheetsUrl.trim() }),
+          body: JSON.stringify({ url: sheetsUrl.trim(), default_lang: lang }),
         })
         if (res.ok) {
           const data: ImportStatus = await res.json()
@@ -160,7 +147,7 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
   function handleManualSync() {
     startSyncTransition(async () => {
       try {
-        const res = await fetch('/api/shop-admin/import/google-sheets/sync', { method: 'POST' })
+        const res = await fetch(`/api/shop-admin/import/google-sheets/sync?lang=${encodeURIComponent(lang)}`, { method: 'POST' })
         if (res.ok) {
           showToast(tr.sheets_syncing, 'info')
           pollSync(status.last_sync, status.last_image_download_at)
@@ -173,83 +160,153 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
     })
   }
 
+  const checking = phase === 'checking'
+  const showPreview = (phase === 'preview' || phase === 'applying') && preview !== null
+  const wide = showPreview || phase === 'result'
+  const syncResult = status.last_sync_result
+
   return (
-    <div className="flex flex-col gap-6 max-w-xl">
-      {/* Excel / CSV Upload */}
-      <section className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
-        <h2 className="text-base font-semibold text-gray-800">{tr.upload_label}</h2>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-gray-400">{tr.upload_formats_hint}</p>
-          <a
-            href="/api/shop-admin/import/template"
-            download
-            className="text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
-          >
-            {tr.download_template}
-          </a>
-        </div>
-
-        <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl py-8 px-4 cursor-pointer transition-colors
-          ${isPendingUpload ? 'border-gray-200 bg-gray-50 cursor-wait' : 'border-gray-300 hover:border-accent'}`}>
-          <span className="text-2xl mb-2" aria-hidden="true">📂</span>
-          <span className="text-sm text-gray-600 font-medium">
-            {isPendingUpload ? tr.uploading : tr.upload_btn}
-          </span>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            className="sr-only"
-            onChange={handleUpload}
-            disabled={isPendingUpload}
-            aria-label={tr.upload_label}
+    <div className={`flex flex-col gap-6 ${wide ? 'max-w-4xl' : 'max-w-xl'}`}>
+      {/* Excel / CSV: upload -> preview -> apply -> result */}
+      <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 flex flex-col gap-4">
+        {showPreview ? (
+          <ImportPreview
+            preview={preview!}
+            lang={lang}
+            applying={phase === 'applying'}
+            error={flow.error}
+            timedOut={flow.timedOut}
+            filter={flow.filter}
+            loadingMore={flow.loadingMore}
+            onApply={(decisions) => { void flow.apply(decisions) }}
+            onCancel={() => { void flow.cancel() }}
+            onFilter={(s) => { void flow.setFilter(s) }}
+            onLoadMore={() => { void flow.loadMore() }}
           />
-        </label>
-
-        <FieldCatalog lang={lang} />
-
-        {uploadResult && (
-          <div className={`rounded-lg px-4 py-3 text-sm ${uploadResult.errors.length > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-            {uploadResult.errors.length === 0 ? (
-              <p className="font-medium">{tr.upload_success.replace('{n}', String(uploadResult.imported))}</p>
-            ) : (
-              <>
-                <p className="font-medium text-amber-800">
-                  {tr.upload_nothing_imported.replace('{n}', String(uploadResult.errors.length))}
-                </p>
-                {uploadResult.errors.some((e) => e.code === 'missing_name') && (
-                  <p className="text-amber-800 mt-1 text-xs font-medium">{tr.upload_hint_see_catalog}</p>
-                )}
-                <ImportRowErrorList errors={uploadResult.errors} lang={lang} />
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Info block: image downloads pending */}
-        {(uploadResult?.image_download_pending ?? 0) > 0 && (
-          <div className="rounded-lg px-4 py-3 text-sm bg-blue-50 border border-blue-200">
-            <p>{tr.image_download_pending.replace('{n}', String(uploadResult!.image_download_pending))}</p>
-          </div>
-        )}
-
-        {/* Amber banner: image download errors */}
-        {(status.image_download_errors?.length ?? 0) > 0 && (
-          <div className="rounded-lg px-4 py-3 text-sm bg-amber-50 border border-amber-200">
-            <p className="font-medium">
-              {tr.image_download_errors_title.replace('{n}', String(status.image_download_errors!.length))}
+        ) : phase === 'result' && preview?.result ? (
+          <ImportResult result={preview.result} lang={lang} onNewUpload={flow.reset} />
+        ) : phase === 'failed' ? (
+          <div className="flex flex-col gap-3">
+            <p role="alert" className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {importErrorText(flow.error ?? { code: 'unknown' }, tr)}
             </p>
-            <details>
-              <summary className="cursor-pointer text-amber-700 mt-1">{tr.image_download_errors_detail_toggle}</summary>
-              <ul className="mt-2 text-xs space-y-1">
-                {status.image_download_errors!.map((err, i) => (
-                  <li key={i}>
-                    {err.product_name} · <code dir="ltr">{err.url}</code> · {err.reason}
-                  </li>
-                ))}
-              </ul>
-            </details>
+            <button type="button" onClick={flow.reset} className="self-start px-4 py-2 text-sm text-accent hover:underline">
+              {tr.preview_upload_again}
+            </button>
           </div>
+        ) : (
+          <>
+            <h2 className="text-base font-semibold text-gray-800">{tr.upload_label}</h2>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-gray-400">{tr.upload_formats_hint}</p>
+              <a
+                href="/api/shop-admin/import/template"
+                download
+                className="text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+              >
+                {tr.download_template}
+              </a>
+            </div>
+
+            <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                data-testid="import-full-list"
+                checked={fullList}
+                onChange={(e) => setFullList(e.target.checked)}
+                disabled={checking}
+                className="mt-0.5 accent-accent shrink-0"
+              />
+              <span>
+                <span className="font-medium">{tr.import_full_list_label}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">{tr.import_full_list_hint}</span>
+              </span>
+            </label>
+
+            {flow.error && (
+              <p role="alert" data-testid="import-upload-error" className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {importErrorText(flow.error, tr)}
+              </p>
+            )}
+
+            <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl py-8 px-4 cursor-pointer transition-colors
+              ${checking ? 'border-gray-200 bg-gray-50 cursor-wait' : 'border-gray-300 hover:border-accent'}`}>
+              <span className="text-2xl mb-2" aria-hidden="true">📂</span>
+              <span className="text-sm text-gray-600 font-medium">
+                {checking ? tr.uploading : tr.upload_btn}
+              </span>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="sr-only"
+                onChange={handleFile}
+                disabled={checking}
+                aria-label={tr.upload_label}
+              />
+            </label>
+
+            {checking && (
+              <div role="status" data-testid="import-checking" className="flex flex-col gap-1.5 text-sm text-gray-600">
+                <p>
+                  {tr.import_checking}
+                  {preview?.progress && preview.progress.total > 0 && (
+                    <span className="text-gray-400">
+                      {' '}
+                      {(tr as unknown as Record<string, string | undefined>)[`import_phase_${preview.progress.phase}`] ?? ''}
+                      {' '}
+                      {tr.import_progress_rows.replace('{done}', String(preview.progress.done)).replace('{total}', String(preview.progress.total))}
+                    </span>
+                  )}
+                </p>
+                {preview?.progress && preview.progress.total > 0 && (() => {
+                  const percent = Math.min(100, Math.floor((preview.progress.done / preview.progress.total) * 100))
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={percent}
+                        className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden"
+                      >
+                        <div
+                          className="h-full bg-accent transition-all"
+                          // @csp-allow-inline-style — computed progress width
+                          style={{ inlineSize: `${percent}%` }}
+                        />
+                      </div>
+                      <span dir="ltr" className="text-xs text-gray-500 tabular-nums">
+                        {tr.import_progress_percent.replace('{percent}', String(percent))}
+                      </span>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+            {checking && flow.timedOut && <p className="text-xs text-gray-500">{tr.preview_poll_timeout}</p>}
+
+            <FieldCatalog lang={lang} />
+
+            {/* Amber banner: image download errors */}
+            {(status.image_download_errors?.length ?? 0) > 0 && (
+              <div className="rounded-lg px-4 py-3 text-sm bg-amber-50 border border-amber-200">
+                <p className="font-medium">
+                  {tr.image_download_errors_title.replace('{n}', String(status.image_download_errors!.length))}
+                </p>
+                <details>
+                  <summary className="cursor-pointer text-amber-700 mt-1">{tr.image_download_errors_detail_toggle}</summary>
+                  <ul className="mt-2 text-xs space-y-1">
+                    {status.image_download_errors!.map((err, i) => (
+                      <li key={i}>
+                        {err.product_name} · <code dir="ltr">{err.url}</code> · {err.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+            )}
+          </>
         )}
         {pollTimedOut && <p className="text-xs text-gray-500">{tr.import_status_poll_timeout}</p>}
       </section>
@@ -274,14 +331,42 @@ export function ImportPanel({ initialStatus, lang }: ImportPanelProps) {
                         : tr.sheets_status_unknown}
                   </span>
                 </p>
+                {status.last_sync_status === 'ok' && syncResult && syncResult.created !== undefined && (
+                  <div className="mt-1" data-testid="sheets-sync-counts">
+                    <ImportCountTiles
+                      compact
+                      testId="sheets-sync-tiles"
+                      tiles={[
+                        { key: 'new', label: tr.count_new, value: syncResult.created ?? 0, tone: 'green' },
+                        { key: 'updated', label: tr.count_updated, value: syncResult.updated ?? 0, tone: 'blue' },
+                        { key: 'deactivate', label: tr.count_deactivated, value: syncResult.deactivated ?? 0, tone: 'orange' },
+                        { key: 'error', label: tr.count_error, value: syncResult.error_count ?? 0, tone: 'red' },
+                      ]}
+                    />
+                    {(syncResult.possible_duplicates ?? 0) > 0 && (
+                      <details className="mt-1 text-amber-700" data-testid="sheets-possible-duplicates">
+                        <summary className="cursor-pointer">
+                          {tr.sheets_possible_duplicates.replace('{n}', String(syncResult.possible_duplicates))}
+                        </summary>
+                        <ul className="mt-1 space-y-0.5 max-h-32 overflow-y-auto">
+                          {(syncResult.possible_duplicate_rows ?? []).map((d) => (
+                            <li key={d.row} className="break-words">
+                              {tr.upload_error_row.replace('{n}', String(d.row))}: {d.name}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
                 {status.last_sync_status === 'error' && (
                   <div className="mt-1 text-red-500">
-                    <p>{syncErrorText(status.last_sync_result?.error_code, status.last_sync_result?.error_count)}</p>
-                    {status.last_sync_result?.error_code === 'rows_failed' && (
+                    <p>{syncErrorText(syncResult?.error_code, syncResult?.error_count)}</p>
+                    {syncResult?.error_code === 'rows_failed' && (
                       <>
-                        <ImportRowErrorList errors={status.last_sync_result.errors} lang={lang} />
-                        {status.last_sync_result.errors_truncated && (
-                          <p className="mt-1">{tr.sheets_errors_truncated.replace('{n}', String(status.last_sync_result.errors.length))}</p>
+                        <ImportRowErrorList errors={syncResult.errors} lang={lang} />
+                        {syncResult.errors_truncated && (
+                          <p className="mt-1">{tr.sheets_errors_truncated.replace('{n}', String(syncResult.errors.length))}</p>
                         )}
                       </>
                     )}

@@ -17,9 +17,9 @@
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
 | [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | PASS |
 | [admin-shop-create-delete](admin-shop-create-delete.md) | Admin Shop Create + Delete (UI Golden Path) | implemented | P2 | PASS |
-| [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check | implemented | P2 | PASS |
-| [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow | implemented | P2 | PASS |
-| [shop-admin-import-all-or-nothing](shop-admin-import-all-or-nothing.md) | Katalog-Import alles-oder-nichts, Zeilenfehler uebersetzt, Foto-Dedup (B5900-030) | implemented | P2 | PASS (10/10, 2026-10-15) |
+| [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check (F5920: Vorschau, Wiedererkennung, komplette Liste, Kundensicht) | implemented | P2 | PASS (26/26, 2026-10-15) |
+| [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow (F5920: Vorschau-Schritt, Foto-Schutz) | implemented | P2 | PASS (5/5, 1 skip, 2026-10-15) |
+| [shop-admin-import-all-or-nothing](shop-admin-import-all-or-nothing.md) | Katalog-Import alles-oder-nichts, Zeilenfehler uebersetzt, Foto-Dedup (B5900-030) | implemented | P2 | PASS (15/15, 2026-10-15) |
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
 | [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS |

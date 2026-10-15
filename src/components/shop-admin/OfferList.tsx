@@ -267,6 +267,11 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                         {tr.offer_status_draft}
                       </span>
                     )}
+                    {offer.listing_available === false && (
+                      <span data-testid="offer-not-available-badge" className="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
+                        {tr.offer_not_available_badge}
+                      </span>
+                    )}
                     {categoryName && (
                       <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
                         {categoryName}
@@ -276,6 +281,11 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   {offer.item?.descriptions && (
                     <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
                       {offer.item.descriptions[lang] ?? offer.item.descriptions['en'] ?? null}
+                    </p>
+                  )}
+                  {offer.listing_sku && (
+                    <p data-testid="offer-sku" className="text-xs text-gray-500 mt-0.5">
+                      {tr.offer_sku_short} <code dir="ltr" className="font-mono bg-gray-100 rounded px-1">{offer.listing_sku}</code>
                     </p>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">

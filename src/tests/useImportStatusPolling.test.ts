@@ -88,4 +88,18 @@ describe('startStatusPolling', () => {
     await vi.advanceTimersByTimeAsync(300)
     expect(onStatus).toHaveBeenCalledTimes(1)
   })
+
+  it('is generic: polls any resource, not only the Sheets status (F5920 preview polling)', async () => {
+    type Job = { status: 'processing' | 'ready' }
+    const onStatus = vi.fn()
+    const fetchStatus = vi.fn<() => Promise<Job | null>>()
+      .mockResolvedValueOnce({ status: 'processing' })
+      .mockResolvedValueOnce({ status: 'ready' })
+    startStatusPolling<Job>({
+      fetchStatus, isDone: (j) => j.status === 'ready', onStatus, onTimeout: vi.fn(), delaysMs: [100], maxTotalMs: 10000,
+    })
+    await vi.advanceTimersByTimeAsync(500)
+    expect(onStatus).toHaveBeenLastCalledWith({ status: 'ready' })
+    expect(vi.getTimerCount()).toBe(0)
+  })
 })

@@ -4,10 +4,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { ImportStatus } from '@/types/shop-admin'
 
-export interface StartStatusPollingOptions {
-  fetchStatus: () => Promise<ImportStatus | null>
-  isDone: (status: ImportStatus) => boolean
-  onStatus: (status: ImportStatus) => void
+export interface StartStatusPollingOptions<T = ImportStatus> {
+  fetchStatus: () => Promise<T | null>
+  isDone: (status: T) => boolean
+  onStatus: (status: T) => void
   onTimeout: () => void
   delaysMs?: number[]
   maxTotalMs?: number
@@ -17,19 +17,19 @@ export const DEFAULT_POLL_DELAYS_MS = [2000, 3000, 5000, 8000, 10000]
 export const DEFAULT_POLL_MAX_TOTAL_MS = 120000
 
 /**
- * Polls the import status with growing delays until `isDone` is true or `maxTotalMs` has passed.
+ * Polls the import status (or any other resource, see the type parameter) with growing delays until `isDone` is true or `maxTotalMs` has passed.
  * After the last delay the last value is repeated. Only one timer is active at a time.
  * `cancel()` clears the timer and blocks any `onStatus`/`onTimeout` call, even for a fetch that is
  * still in flight.
  */
-export function startStatusPolling({
+export function startStatusPolling<T = ImportStatus>({
   fetchStatus,
   isDone,
   onStatus,
   onTimeout,
   delaysMs = DEFAULT_POLL_DELAYS_MS,
   maxTotalMs = DEFAULT_POLL_MAX_TOTAL_MS,
-}: StartStatusPollingOptions): () => void {
+}: StartStatusPollingOptions<T>): () => void {
   let cancelled = false
   let timer: ReturnType<typeof setTimeout> | null = null
   let elapsed = 0
@@ -44,7 +44,7 @@ export function startStatusPolling({
 
   async function tick() {
     timer = null
-    let status: ImportStatus | null = null
+    let status: T | null = null
     try {
       status = await fetchStatus()
     } catch {
@@ -81,9 +81,9 @@ export function useImportStatusPolling() {
   }, [])
 
   const start = useCallback(
-    (options: StartStatusPollingOptions) => {
+    <T = ImportStatus,>(options: StartStatusPollingOptions<T>) => {
       stop()
-      cancelRef.current = startStatusPolling(options)
+      cancelRef.current = startStatusPolling<T>(options)
     },
     [stop],
   )

@@ -41,6 +41,9 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
   const [promoTiers, setPromoTiers] = useState<PriceTier[]>(offer?.promo_price_tiers ?? [])
   const [promoType, setPromoType] = useState<string>(offer?.promo_price_type ?? 'fixed')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // F5920: article number of the shop listing (unique per shop). Edit mode starts with the stored value.
+  const initialSku = offer?.listing_sku ?? ''
+  const [sku, setSku] = useState<string>(initialSku)
 
   const isEdit = !!offer
   // Scraper offers are shown but not editable in step 1 (item is fixed)
@@ -91,6 +94,27 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
 
     startTransition(async () => {
       try {
+        // F5920: save the article number first. A clash (409 sku_conflict) saves nothing at all.
+        const wantedSku = sku.trim()
+        const skuChanged = isEdit ? wantedSku !== initialSku : wantedSku !== ''
+        if (skuChanged && shopListingId) {
+          const skuRes = await fetch(`/api/shop-admin/shop-listings/${shopListingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sku: wantedSku || null }),
+          })
+          if (!skuRes.ok) {
+            const skuJson = await skuRes.json().catch(() => null) as { detail?: { code?: string } } | null
+            if (skuRes.status === 409 && skuJson?.detail?.code === 'sku_conflict') {
+              setErrors({ sku: tr.offer_sku_conflict })
+            } else {
+              setErrors({ sku: tr.error_generic })
+            }
+            showToast(tr.error_generic, 'error')
+            return
+          }
+        }
+
         // Normalize price strings: replace German comma decimal separator with dot
         const normalizedTiers = priceTiers.map((tier) => ({
           ...tier,
@@ -311,6 +335,26 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
               />
             </div>
           )}
+
+          {/* Article number (SKU) — F5920 */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="offer-sku" className="text-sm font-medium text-gray-700">{tr.offer_sku_label}</label>
+            <input
+              id="offer-sku"
+              name="sku"
+              type="text"
+              dir="ltr"
+              maxLength={128}
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              aria-invalid={!!errors.sku}
+              aria-describedby={errors.sku ? 'offer-sku-error' : 'offer-sku-hint'}
+              className={`w-full rounded-lg border px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
+                ${errors.sku ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
+            />
+            <p id="offer-sku-hint" className="text-xs text-gray-400">{tr.offer_sku_hint}</p>
+            {errors.sku && <p id="offer-sku-error" role="alert" className="text-xs text-red-600">{errors.sku}</p>}
+          </div>
 
           {/* Standardpreis */}
           <div className="border border-gray-200 rounded-xl p-4 space-y-3">

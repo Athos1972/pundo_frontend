@@ -10,16 +10,20 @@ touches-modules:
   - src/app/(shop-admin)/shop-admin/(portal)/import/**
   - src/components/shop-admin/ImportPanel.tsx
   - src/components/shop-admin/FieldCatalog.tsx
+  - src/components/shop-admin/ImportPreview.tsx
+  - src/components/shop-admin/ImportPreviewRow.tsx
+  - src/components/shop-admin/ImportResult.tsx
+  - src/components/shop-admin/useImportPreview.ts
 touches-roles:
   - shop-owner
 touches-states:
   - Import.status:pending
   - Import.status:error
-status-changed-at: 2026-04-24T14:00:00Z
-status-changed-by-spec: shop-admin-import-image-url-20260424
-last-run: 2026-05-15T05:30:00Z
+status-changed-at: 2026-10-15T00:00:00Z
+status-changed-by-spec: 2026-10-15-katalog-import-wiedererkennung-vorschau
+last-run: 2026-10-15T19:30:00Z
 last-result: PASS
-last-run-sha: 7a979abbe123e3e1789528642ca786daaf1fb5cb
+last-run-sha: 9f50892
 ---
 
 # Journey: shop-admin-import-image-url
@@ -35,6 +39,13 @@ Verify that the `image_url` column is surfaced correctly in the Shop-Admin impor
 2. Template download includes `image_url` header
 3. Import without `image_url` column shows no pending/error banners
 4. (Requires live backend) Full async flow: upload CSV with image URLs → pending banner → error banner after poll
+
+### F5920 — Vorschau-Schritt + Foto-Schutz (AK 16, seit 2026-10-15)
+
+Zweiter Spec-Shop besitzt gemeinsame Katalog-Artikel (mit EAN).
+
+1. AK16: Artikel MIT Foto, Import-Zeile mit dessen EAN + `image_url` -> Vorschau zeigt „Recognised by EAN“ und den Hinweis „The photo was not added: this catalogue article already has one.“, der Import-Shop hat vor „Apply“ keine Listings; nach „Apply“ steht der Hinweis im Ergebnis, kein „images are being downloaded“-Block, der gemeinsame Artikel hat nach 12 s weiter genau 1 Foto, sein Name ist unveraendert.
+2. AK16b: Artikel OHNE Foto + `image_url` -> kein Hinweis, Foto wird angehaengt (1 Foto nach Polling).
 
 ## Pre-conditions
 

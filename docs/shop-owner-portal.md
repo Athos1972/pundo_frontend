@@ -126,22 +126,28 @@ So bleibt der JWT-Token im HttpOnly Cookie — er verlässt nie den Server-seiti
 - E2E-Helper: `e2e/journeys/_helpers/category-picker.ts` (`pickCategory`); Spec `e2e/journeys/b5900-011-category-picker.spec.ts`.
 
 ### Import (`/shop-admin/import`)
-Zwei Import-Wege:
+Zwei Import-Wege (F5920: wiederholbar, mit Vorschau):
 
-**Excel/CSV-Upload:**
-- Upload einer `.xlsx` oder `.csv`-Datei
-- Erwartete Spalten: `name`, `price`, `currency`, `unit`, `category`, `available`
-- Antwort: Anzahl importierter Einträge + Fehler pro Zeile (`code`: `missing_name` | `row_failed`)
-- **Alles oder nichts (B5900-030):** Enthält die Datei fehlerhafte Zeilen, wird nichts importiert; jede fehlerhafte Zeile wird gelistet und übersetzt angezeigt
+**Excel/CSV-Upload (`ImportPanel`):**
+1. Datei wählen (`.xlsx`, `.xls`, `.csv`, max. 20 MB). Optional **vorher** das Kästchen „Diese Datei ist meine komplette Liste“ setzen (dann werden Import-Artikel, die in der Datei fehlen, auf „nicht verfügbar“ gesetzt; nichts wird gelöscht).
+2. `useImportPreview` lädt die Datei hoch (`POST /api/shop-admin/import/previews`, `full_list`, `default_lang` = UI-Sprache) und pollt die Analyse (`GET /import/previews/{id}`, Intervalle 1/2/3 s, Obergrenze 5 min). Es wird **nichts gespeichert**.
+3. `ImportPreview`: Zähler-Kacheln (Neu · Aktualisiert · Unverändert · Fehler · Mögliche Duplikate · bei kompletter Liste „Werden auf ‚nicht verfügbar‘ gesetzt“), Statusfilter, Zeilen (Karten mobil, Tabellenraster ab `md`), Seiten à 100 mit „Mehr anzeigen“. Mögliche Duplikate: pro Zeile Auswahl „Bestehenden Artikel verwenden“ (Name, Foto, Ähnlichkeit) oder „Als neuen Artikel anlegen“ (Standard).
+4. **Alles oder nichts:** Solange die Vorschau Fehlerzeilen enthält, ist „Übernehmen“ deaktiviert; jede Fehlerzeile zeigt ihre übersetzte Ursache (`row_error_<code>`).
+5. „Übernehmen“ → `POST /import/previews/{id}/apply` mit `decisions`, Polling bis `applied`; `ImportResult` zeigt die Zähler und den Link „Zu meinen Angeboten“ (`/shop-admin/offers`, Bypass-Pfad ohne Sprachpräfix). „Abbrechen“ → `DELETE /import/previews/{id}`, leeres Formular.
+- Spalten: `sku, name, language, ean, category, available, price, currency, image_url` (Feldkatalog `FieldCatalog`, Vorlage vom Backend). Wiedererkennung: SKU → EAN → exakter Name (eigener Shop).
+- Fehler: Datei-Fehler kommen synchron als `detail.code` (`unsupported_format`, `xlsx_unreadable`, `xls_unreadable`, `csv_unreadable`, `missing_name_column`, `empty_file`, `too_many_rows` + `limit`, `file_too_large`, `preview_in_progress`), Job-Fehler als `error_code` (`job_lost`, `preview_stale`, `apply_failed`, `preview_failed`); alle Texte in `src/lib/i18n/shop-admin-import.ts` (6 Sprachen, Parität: `npm run lint:i18n`).
+- Vorschau läuft 30 Minuten; danach „Vorschau abgelaufen, bitte erneut hochladen“ (410).
 
 **Google Sheets (Sync):**
-- Öffentliche Google-Sheets-URL hinterlegen
-- Automatischer Sync alle 4 Stunden (Backend-Cron)
-- Manueller Re-Sync per Button
+- Öffentliche Google-Sheets-URL hinterlegen (`default_lang` = UI-Sprache wird mitgeschickt; Namen ohne Spalte `language` werden in dieser Sprache gespeichert)
+- Automatischer Sync alle 4 Stunden (Backend-Cron), manueller Re-Sync per Button (`?lang=`)
 - Das Sheet muss öffentlich lesbar sein („Jeder mit dem Link: Betrachter“); sonst `error_code: sheet_not_public`
-- Sync-Status (Zeitstempel, `ok` | `error`) sichtbar; bei fehlerhaften Zeilen wird nichts importiert (Status `error`, `last_sync_result.errors` listet jede Zeile, max. 50)
-- `GET /import/status` liefert zusätzlich `last_sync_result` { imported, error_count, errors[{row, code, message}], errors_truncated, image_download_pending, error_code }; Fehlercodes: `sheet_url_invalid | sheet_fetch_failed | sheet_not_public | rows_failed | sync_failed`
-- Bild-Status wird nach Upload/Sync mit Backoff (max. 2 min) abgefragt
+- Gleiche Wiedererkennung wie beim Datei-Import; im Sheet fehlende Import-Artikel werden **immer** auf „nicht verfügbar“ gesetzt. Mögliche Duplikate werden als neuer eigener Artikel angelegt und aufklappbar gemeldet.
+- Sync-Status: „Letzter Sync: <Zeit> · OK“ plus Zähler (neu · aktualisiert · deaktiviert · Fehler) über `ImportCountTiles` (kompakt). Bei fehlerhaften Zeilen wird nichts importiert und nichts deaktiviert (Status `error`, `last_sync_result.errors` listet jede Zeile, max. 50).
+- `GET /import/status` liefert `last_sync_result` { imported, created, updated, unchanged, deactivated, possible_duplicates, possible_duplicate_rows[{row,name}], row_count, error_count, errors[{row, code, message}], errors_truncated, image_download_pending, error_code }; Fehlercodes: `sheet_url_invalid | sheet_fetch_failed | sheet_not_public | rows_failed | sync_failed | empty_sheet | missing_name_column | too_many_rows`
+- Bild-Status wird nach Übernehmen/Sync mit Backoff (max. 2 min) abgefragt
+
+**Artikelnummer (SKU) im Angebot:** `OfferList` zeigt die SKU (`listing_sku`, `dir="ltr"`) und ein Badge „Nicht verfügbar“ (`listing_available === false`). `OfferForm` hat das Feld „Artikelnummer (SKU)“; Speichern per `PATCH /api/shop-admin/shop-listings/{id}` **vor** dem Angebot, ein `409 sku_conflict` zeigt eine Feldmeldung und speichert nichts.
 
 → Backend-Details: [`pundo_main_backend/docs/shop-owner-portal.md`](../../pundo_main_backend/docs/shop-owner-portal.md) — Abschnitt "Import"
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { tAdmin } from '@/lib/shop-admin-translations'
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -143,52 +144,6 @@ describe('ImportPanel', () => {
     expect(screen.getByText('دليل الحقول')).toBeInTheDocument()
   })
 
-  it('shows image_download_pending info block when pending > 0', async () => {
-    // Mock fetch to return a result with image_download_pending = 3
-    fetchSpy.mockResolvedValue(
-      new Response(JSON.stringify({ imported: 5, errors: [], image_download_pending: 3 }), { status: 200 })
-    )
-
-    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
-    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
-
-    // Simulate file upload by triggering handleUpload
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
-    const file = new File(['col\nval'], 'test.csv', { type: 'text/csv' })
-    Object.defineProperty(fileInput, 'files', { value: [file], configurable: true })
-
-    const { fireEvent, act } = await import('@testing-library/react')
-    await act(async () => {
-      fireEvent.change(fileInput)
-      // Wait for transition
-      await new Promise((r) => setTimeout(r, 50))
-    })
-
-    // The info block should appear
-    expect(screen.getByText(/3 product images are being downloaded/)).toBeInTheDocument()
-  })
-
-  it('does not show image_download_pending block when pending is 0', async () => {
-    fetchSpy.mockResolvedValue(
-      new Response(JSON.stringify({ imported: 5, errors: [], image_download_pending: 0 }), { status: 200 })
-    )
-
-    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
-    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
-
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
-    const file = new File(['col\nval'], 'test.csv', { type: 'text/csv' })
-    Object.defineProperty(fileInput, 'files', { value: [file], configurable: true })
-
-    const { fireEvent, act } = await import('@testing-library/react')
-    await act(async () => {
-      fireEvent.change(fileInput)
-      await new Promise((r) => setTimeout(r, 50))
-    })
-
-    expect(screen.queryByText(/product images are being downloaded/)).not.toBeInTheDocument()
-  })
-
   it('shows amber banner when status has image_download_errors', async () => {
     const statusWithErrors = {
       ...defaultStatus,
@@ -292,43 +247,6 @@ describe('ImportPanel', () => {
     expect(screen.getByText(/Row 4: raw text/)).toBeInTheDocument()
   })
 
-  it('maps the xlsx read error to a dedicated translated message', async () => {
-    const { showToast } = await import('@/components/shop-admin/Toast')
-    fetchSpy.mockResolvedValue(
-      new Response(JSON.stringify({ detail: 'xlsx file could not be read — please check the file or use the template' }), { status: 400 })
-    )
-    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
-    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
-    Object.defineProperty(fileInput, 'files', { value: [new File(['x'], 'a.xlsx')], configurable: true })
-    const { fireEvent, act } = await import('@testing-library/react')
-    await act(async () => {
-      fireEvent.change(fileInput)
-      await new Promise((r) => setTimeout(r, 50))
-    })
-    expect(showToast).toHaveBeenCalledWith('This .xlsx file could not be read. Please check the file or use the template.', 'error')
-  })
-
-  it('upload with faulty rows shows nothing-imported message and every row error', async () => {
-    fetchSpy.mockResolvedValue(
-      new Response(JSON.stringify({
-        imported: 0, image_download_pending: 0,
-        errors: [{ row: 3, code: 'missing_name', message: 'missing required column: name' }],
-      }), { status: 200 })
-    )
-    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
-    const { container } = render(<ImportPanel initialStatus={defaultStatus} lang="en" />)
-    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
-    Object.defineProperty(fileInput, 'files', { value: [new File(['x'], 'a.csv')], configurable: true })
-    const { fireEvent, act } = await import('@testing-library/react')
-    await act(async () => {
-      fireEvent.change(fileInput)
-      await new Promise((r) => setTimeout(r, 50))
-    })
-    expect(screen.getByText(/Nothing was imported because 1 rows contain errors/)).toBeInTheDocument()
-    expect(screen.getByText(/Row 3: Name is missing/)).toBeInTheDocument()
-  })
-
   it('new B5900-030 keys exist in all 6 langs', async () => {
     const { tAdmin } = await import('@/lib/shop-admin-translations')
     const keys = [
@@ -342,5 +260,305 @@ describe('ImportPanel', () => {
       const tr = tAdmin(lang) as unknown as Record<string, string>
       for (const k of keys) expect(tr[k], `${lang}.${k}`).toBeTruthy()
     }
+  })
+})
+
+// ─── F5920: upload -> preview -> apply -> result (replaces the direct upload tests) ─────────────
+
+import { fireEvent, act } from '@testing-library/react'
+
+const json = (status: number, body: unknown = {}) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+
+const COUNTS = { new: 3, updated: 0, unchanged: 0, error: 0, possible_duplicate: 0, deactivate: 0 }
+const rowOf = (n: number, extra: Record<string, unknown> = {}) => ({
+  row: n, status: 'new', name: `Item ${n}`, language: 'en', changes: [], candidates: [], errors: [], hints: [], ...extra,
+})
+const previewOf = (extra: Record<string, unknown> = {}) => ({
+  id: 'p-1', status: 'ready', full_list: false, default_lang: 'en', filename: 'a.csv', row_count: 3,
+  expires_at: '2026-10-15T20:30:00Z', expired: false, can_apply: true, counts: COUNTS,
+  rows: [rowOf(2), rowOf(3), rowOf(4)], rows_total: 3, deactivations: [], deactivations_total: 0, ...extra,
+})
+const RESULT = {
+  created: 3, updated: 0, unchanged: 0, deactivated: 0, linked_existing: 0, image_download_pending: 0,
+  translation_queued: 3, row_count: 3, hints: {},
+}
+
+describe('ImportPanel — catalog import flow (F5920)', () => {
+  type Call = { url: string; method: string; body: unknown }
+  let calls: Call[]
+  let routes: { post: () => Response; get: () => Response; apply: () => Response; del: () => Response; status: () => Response }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: false })
+    calls = []
+    routes = {
+      post: () => json(202, { id: 'p-1', status: 'processing', expires_at: 'x', row_count: 3 }),
+      get: () => json(200, previewOf()),
+      apply: () => json(202, { id: 'p-1', status: 'applying' }),
+      del: () => new Response(null, { status: 204 }),
+      status: () => json(200, {}),
+    }
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      const method = init?.method ?? 'GET'
+      calls.push({ url, method, body: init?.body ?? null })
+      if (url.endsWith('/import/previews') && method === 'POST') return routes.post()
+      if (url.endsWith('/apply')) return routes.apply()
+      if (url.includes('/import/previews/') && method === 'DELETE') return routes.del()
+      if (url.includes('/import/previews/')) return routes.get()
+      if (url.endsWith('/import/status')) return routes.status()
+      return json(200, {})
+    }))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  const base = { google_sheet_url: undefined, last_sync: undefined, last_sync_status: undefined, last_sync_message: undefined }
+
+  async function mount(lang = 'en', status: Record<string, unknown> = base) {
+    const { ImportPanel } = await import('@/components/shop-admin/ImportPanel')
+    return render(<ImportPanel initialStatus={status} lang={lang} />)
+  }
+
+  async function choose(container: HTMLElement, name = 'a.csv') {
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    Object.defineProperty(input, 'files', { value: [new File(['name\nX\n'], name)], configurable: true })
+    await act(async () => { fireEvent.change(input) })
+  }
+  const tick = async (ms: number) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms) }) }
+
+  it('AK 1: choosing a file starts a PREVIEW (no direct import) with the UI language; nothing is saved', async () => {
+    const { container } = await mount('el')
+    await choose(container)
+    const post = calls.find((c) => c.method === 'POST')!
+    expect(post.url).toBe('/api/shop-admin/import/previews')
+    expect(calls.some((c) => c.url.endsWith('/import/upload'))).toBe(false)
+    const form = post.body as FormData
+    expect(form.get('default_lang')).toBe('el')
+    expect(form.get('full_list')).toBe('false')
+    expect(screen.getByTestId('import-checking')).toBeInTheDocument()
+    await tick(1000)
+    expect(screen.getByTestId('import-preview')).toBeInTheDocument()
+    expect(screen.getAllByTestId('import-preview-row')).toHaveLength(3)
+    expect(screen.getByTestId('import-count-tiles').querySelector('[data-tile="new"] dd')!.textContent).toBe('3')
+  })
+
+  it('the "This file is my complete list" box is unchecked by default, explained, and sent as full_list=true when ticked', async () => {
+    const { container } = await mount()
+    const box = screen.getByTestId('import-full-list') as HTMLInputElement
+    expect(box.checked).toBe(false)
+    expect(screen.getByText('This file is my complete list')).toBeInTheDocument()
+    expect(screen.getByText(/missing in this file are set to “not available”/)).toBeInTheDocument()
+    fireEvent.click(box)
+    await choose(container)
+    expect(((calls.find((c) => c.method === 'POST')!.body) as FormData).get('full_list')).toBe('true')
+  })
+
+  it('shows the progress of the analysis while it runs', async () => {
+    routes.get = () => json(200, previewOf({ status: 'processing', rows: [], counts: null, progress: { phase: 'enrich', done: 40, total: 100 } }))
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    expect(screen.getByTestId('import-checking')).toHaveTextContent('Looking for categories and similar articles… 40 of 100')
+  })
+
+  it('shows a progress bar with percent and rows while the (long) analysis runs', async () => {
+    routes.get = () => json(200, previewOf({ status: 'processing', rows: [], counts: null, progress: { phase: 'enrich', done: 1250, total: 5000 } }))
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    const bar = screen.getByRole('progressbar')
+    expect(bar).toHaveAttribute('aria-valuenow', '25')
+    expect(screen.getByTestId('import-checking')).toHaveTextContent('25%')
+    expect(screen.getByTestId('import-checking')).toHaveTextContent('1250 of 5000')
+  })
+
+  it('AK 2: "Cancel" discards the preview and shows the empty upload form again', async () => {
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    await act(async () => { fireEvent.click(screen.getByTestId('import-cancel')) })
+    expect(calls.some((c) => c.method === 'DELETE' && c.url.endsWith('/previews/p-1'))).toBe(true)
+    expect(screen.queryByTestId('import-preview')).toBeNull()
+    expect(container.querySelector('input[type="file"]')).not.toBeNull()
+    expect((screen.getByTestId('import-full-list') as HTMLInputElement).checked).toBe(false)
+    expect(screen.getByText('Field reference')).toBeInTheDocument()
+  })
+
+  it('AK 3: "Apply" writes, then the result shows the counters and the link to the offers', async () => {
+    let applied = false
+    routes.apply = () => { applied = true; return json(202, { id: 'p-1', status: 'applying' }) }
+    routes.get = () => json(200, applied ? previewOf({ status: 'applied', rows: [], result: RESULT }) : previewOf())
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    await act(async () => { fireEvent.click(screen.getByTestId('import-apply')) })
+    expect(calls.find((c) => c.url.endsWith('/apply'))!.body).toBe(JSON.stringify({ decisions: [] }))
+    await tick(1000)
+    const result = screen.getByTestId('import-result')
+    expect(result).toHaveTextContent('3 new')
+    expect(screen.getByRole('link', { name: 'Go to my offers' })).toHaveAttribute('href', '/shop-admin/offers')
+    fireEvent.click(screen.getByRole('button', { name: 'Upload another file' }))
+    expect(container.querySelector('input[type="file"]')).not.toBeNull()
+  })
+
+  it('shows the image_download_pending info block after apply and waits for the downloads (was: after upload)', async () => {
+    let applied = false
+    routes.apply = () => { applied = true; return json(202, { id: 'p-1', status: 'applying' }) }
+    routes.get = () => json(200, applied ? previewOf({ status: 'applied', rows: [], result: { ...RESULT, image_download_pending: 3 } }) : previewOf())
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    await act(async () => { fireEvent.click(screen.getByTestId('import-apply')) })
+    await tick(1000)
+    expect(screen.getByText(/3 product images are being downloaded/)).toBeInTheDocument()
+    await tick(2000) // the status poll for the downloads runs
+    expect(calls.some((c) => c.url.endsWith('/import/status'))).toBe(true)
+  })
+
+  it('does not show the image block when no download is pending', async () => {
+    let applied = false
+    routes.apply = () => { applied = true; return json(202, { id: 'p-1', status: 'applying' }) }
+    routes.get = () => json(200, applied ? previewOf({ status: 'applied', rows: [], result: RESULT }) : previewOf())
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    await act(async () => { fireEvent.click(screen.getByTestId('import-apply')) })
+    await tick(1000)
+    expect(screen.queryByText(/product images are being downloaded/)).toBeNull()
+  })
+
+  it('AK 23: faulty rows -> "Apply" disabled, reason shown, every row error translated, nothing applied (was: direct upload with errors)', async () => {
+    routes.get = () => json(200, previewOf({
+      can_apply: false, counts: { ...COUNTS, new: 0, error: 1 }, rows_total: 1,
+      rows: [rowOf(3, { status: 'error', name: null, errors: [{ row: 3, code: 'missing_name', message: 'missing required column: name' }] })],
+    }))
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    expect(screen.getByTestId('import-apply')).toBeDisabled()
+    expect(screen.getByTestId('import-apply-blocked')).toHaveTextContent('Fix the 1 faulty rows in your file')
+    expect(screen.getByTestId('import-row-errors')).toHaveTextContent('Name is missing')
+    expect(calls.some((c) => c.url.endsWith('/apply'))).toBe(false)
+  })
+
+  it.each([
+    ['xlsx_unreadable', 'This .xlsx file could not be read. Please check the file or use the template.'],
+    ['xls_unreadable', 'This .xls file could not be read. Please save it as .xlsx or .csv.'],
+    ['unsupported_format', 'Unsupported file format. Use .xlsx, .xls or .csv.'],
+    ['file_too_large', 'File too large. Maximum size is 20 MB.'],
+    ['missing_name_column', 'The file needs a column called “name”.'],
+    ['empty_file', 'The file contains no rows.'],
+    ['csv_unreadable', 'This .csv file could not be read.'],
+    ['preview_in_progress', 'Another import is still running.'],
+  ])('upload error %s is shown translated inline and the form stays usable', async (code, text) => {
+    routes.post = () => json(code === 'file_too_large' ? 413 : code === 'preview_in_progress' ? 429 : 400, { detail: { code } })
+    const { container } = await mount()
+    await choose(container)
+    expect(screen.getByTestId('import-upload-error')).toHaveTextContent(text)
+    expect(container.querySelector('input[type="file"]')).not.toBeDisabled()
+  })
+
+  it('too_many_rows names the limit of the shop', async () => {
+    routes.post = () => json(400, { detail: { code: 'too_many_rows', limit: 65536 } })
+    const { container } = await mount()
+    await choose(container)
+    expect(screen.getByTestId('import-upload-error')).toHaveTextContent('65536')
+  })
+
+  it('AK 18: a failed apply (preview expired / stale) shows the translated message and the user can upload again', async () => {
+    routes.apply = () => json(410, { detail: { code: 'preview_expired' } })
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    await act(async () => { fireEvent.click(screen.getByTestId('import-apply')) })
+    expect(screen.getByRole('alert')).toHaveTextContent('The preview has expired. Please upload the file again.')
+    expect(screen.getByTestId('import-preview')).toBeInTheDocument() // still shown, nothing was written
+  })
+
+  it('a job that failed on the server ends on a message with "upload another file"', async () => {
+    routes.get = () => json(200, previewOf({ status: 'failed', rows: [], counts: null, error_code: 'job_lost' }))
+    const { container } = await mount()
+    await choose(container)
+    await tick(1000)
+    expect(screen.getByRole('alert')).toHaveTextContent('The check was interrupted. Please upload the file again.')
+    fireEvent.click(screen.getByRole('button', { name: 'Upload another file' }))
+    expect(container.querySelector('input[type="file"]')).not.toBeNull()
+  })
+
+  it('AK 21: the preview uses the wide layout; Arabic is rendered right-to-left safe (no physical margins)', async () => {
+    const { container } = await mount('ar')
+    await choose(container)
+    await tick(1000)
+    expect(container.firstElementChild!.className).toContain('max-w-4xl')
+    expect(container.innerHTML).not.toMatch(/(^|[\s"'])(ml|mr|pl|pr|text-left|text-right)-/)
+  })
+
+  // ── Google Sheets (AK 19) ──────────────────────────────────────────────────
+
+  const sheet = 'https://docs.google.com/spreadsheets/d/X/edit'
+  const synced = (result: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({
+    ...base, google_sheet_url: sheet, last_sync: '2026-10-15T10:00:00Z', last_sync_status: 'ok', last_sync_result: {
+      imported: 2, error_count: 0, errors: [], errors_truncated: false, image_download_pending: 0, ...result,
+    }, ...extra,
+  })
+
+  it('AK 19: status line shows time and the counters "n new, n updated, n not available, n errors"', async () => {
+    await mount('en', synced({ created: 0, updated: 1, unchanged: 1, deactivated: 1 }))
+    const tiles = screen.getByTestId('sheets-sync-tiles')
+    expect(tiles.querySelector('[data-tile="updated"]')).toHaveTextContent('1 Updated')
+    expect(tiles.querySelector('[data-tile="deactivate"]')).toHaveTextContent('1 Set to “not available”')
+    expect(tiles.querySelector('[data-tile="new"]')).toHaveTextContent('0 New')
+    expect(tiles.querySelector('[data-tile="error"]')).toHaveTextContent('0 Errors')
+    expect(screen.getByText(/Last sync:/)).toBeInTheDocument()
+  })
+
+  it('an old result without counters shows no counter line (no crash)', async () => {
+    await mount('en', synced({}))
+    expect(screen.queryByTestId('sheets-sync-tiles')).toBeNull()
+    expect(screen.getByText('OK')).toBeInTheDocument()
+  })
+
+  it('possible duplicates of a sync are listed in a collapsible block', async () => {
+    await mount('en', synced({ created: 2, possible_duplicates: 2, possible_duplicate_rows: [{ row: 4, name: 'Cat Food' }, { row: 9, name: 'Dog Food' }] }))
+    const block = screen.getByTestId('sheets-possible-duplicates')
+    expect(block.tagName).toBe('DETAILS')
+    expect(block).toHaveTextContent('2 possible duplicates were created as new articles')
+    expect(block).toHaveTextContent('Row 4: Cat Food')
+  })
+
+  it.each([
+    ['empty_sheet', 'The sheet contains no rows. Nothing was changed.'],
+    ['missing_name_column', 'The sheet needs a column called “name”. Nothing was changed.'],
+    ['too_many_rows', 'The sheet has more rows than allowed for your shop. Nothing was changed.'],
+  ])('sync error %s is translated', async (code, text) => {
+    await mount('en', synced({ error_code: code }, { last_sync_status: 'error' }))
+    expect(screen.getByText(text)).toBeInTheDocument()
+  })
+
+  it('new row error codes of a failed sync are translated (AK 23, sheet)', async () => {
+    await mount('de', synced({
+      error_code: 'rows_failed', error_count: 2,
+      errors: [{ row: 3, code: 'invalid_ean', message: 'x' }, { row: 5, code: 'duplicate_in_file', message: 'x' }],
+    }, { last_sync_status: 'error' }))
+    expect(screen.getByText(/Zeile 3: EAN ist ungültig/)).toBeInTheDocument()
+    expect(screen.getByText(/Zeile 5: Doppelt in der Datei/)).toBeInTheDocument()
+  })
+
+  it('connecting the sheet sends the UI language; a manual sync passes it as ?lang=', async () => {
+    await mount('ru')
+    fireEvent.change(screen.getByPlaceholderText(/docs.google.com/), { target: { value: sheet } })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: tAdmin('ru').sheets_connect }) ) })
+    const connect = calls.find((c) => c.url.endsWith('/import/google-sheets') && c.method === 'POST')!
+    expect(JSON.parse(connect.body as string)).toEqual({ url: sheet, default_lang: 'ru' })
+  })
+
+  it('manual sync call carries the language', async () => {
+    await mount('de', synced({ created: 1 }))
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: tAdmin('de').sheets_sync })) })
+    expect(calls.some((c) => c.url === '/api/shop-admin/import/google-sheets/sync?lang=de' && c.method === 'POST')).toBe(true)
   })
 })

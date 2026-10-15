@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
+import { psql } from './_helpers/test-data'
+import { csv, openImport, uploadToPreview, applyToResult, previewRow, uniqName } from './_helpers/import-flow'
+import { BACKEND_URL } from '../env'
 
 /**
  * E2E smoke tests for the shop-admin import image_url feature.
@@ -18,14 +21,18 @@ import { specShop, type WorkerShop } from './_helpers/worker-shop'
 // "happy-pets-nicosia"). Der (derzeit uebersprungene) Async-Flow-Test laedt eine CSV in den Shop des Owners
 // hoch; das darf nie in einen Shop der Prod-Kopie schreiben. Die Owner-Session kommt per Impersonation.
 let importShop: WorkerShop
+// F5920 (AK 16): zweiter Shop, dem die gemeinsamen Katalog-Artikel (mit/ohne Foto) gehoeren
+let catalogShop: WorkerShop
 
 test.beforeAll(async () => {
   test.setTimeout(120_000)
   importShop = await specShop('IMPORT-IMAGE-URL')
+  catalogShop = await specShop('IMPORT-IMAGE-URL-CAT')
 })
 
 test.afterAll(async () => {
   await importShop?.destroy()
+  await catalogShop?.destroy()
 })
 
 test.beforeEach(async ({ context }) => {
@@ -128,5 +135,63 @@ test.describe('Import image_url — Full async flow', () => {
     // Open details
     await page.locator('details').last().click()
     await expect(page.locator('li').filter({ hasText: 'http 404' })).toBeVisible()
+  })
+})
+
+// ── F5920: Vorschau-Schritt + Foto-Schutz bei gemeinsamen Katalog-Artikeln (AK 16) ───────────────────────
+// Bild-URL: oeffentliche Google-Logo-PNG (wie shop-admin-import-all-or-nothing); nicht erreichbar -> Test schlaegt fehl.
+
+const IMG = 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'
+
+async function photoCountOf(itemId: number): Promise<number> {
+  const r = await fetch(`${BACKEND_URL}/api/v1/shop-owner/items/${itemId}`, { headers: { Authorization: `Bearer ${catalogShop.ownerToken}` } })
+  return ((await r.json()) as { photos: unknown[] }).photos.length
+}
+
+async function sharedItem(label: string, withPhoto: boolean): Promise<{ id: number; ean: string; name: string }> {
+  const ean = '42' + String(Math.floor(Math.random() * 1e11)).padStart(11, '0')
+  const name = uniqName(label)
+  const cat = Number(psql('select category_id from items where category_id is not null order by random() limit 1'))
+  const it = await catalogShop.api<{ id: number; slug: string }>('POST', '/items', { name, name_lang: 'en', category_id: cat, confirmed: true, ean })
+  expect(it.status).toBe(201)
+  catalogShop.tracker.item(it.json.id, it.json.slug)
+  expect((await catalogShop.api('POST', '/shop-listings', { item_id: it.json.id })).status).toBe(201)
+  if (withPhoto) await catalogShop.uploadPhoto(it.json.id, 21)
+  return { id: it.json.id, ean, name }
+}
+
+test.describe('F5920 — Foto-Schutz am gemeinsamen Katalog-Artikel (AK 16) und Vorschau-Schritt', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  test('AK16: EAN eines gemeinsamen Artikels MIT Foto + image_url -> kein zusaetzliches Foto, Hinweis in Vorschau und Ergebnis', async ({ page }) => {
+    test.setTimeout(120_000)
+    const shared = await sharedItem('shared-with-photo', true)
+    expect(await photoCountOf(shared.id)).toBe(1)
+    await openImport(page, 'en')
+    await uploadToPreview(page, 'photo.csv', csv(['name', 'ean', 'image_url'], [[uniqName('own-spelling'), shared.ean, IMG]]))
+    // Vorschau-Schritt: Hinweis steht schon vor dem Uebernehmen da, nichts wurde geschrieben
+    await expect(previewRow(page, 2)).toContainText('The photo was not added: this catalogue article already has one.')
+    await expect(previewRow(page, 2)).toContainText('Recognised by EAN')
+    expect(psql(`select count(*) from shop_listings where shop_id=${importShop.id}`)).toBe('0')
+    await applyToResult(page)
+    await expect(page.getByTestId('import-result')).toContainText('The photo was not added: this catalogue article already has one.')
+    await expect(page.getByTestId('import-result')).not.toContainText('product images are being downloaded')
+    await page.waitForTimeout(12_000)
+    expect(await photoCountOf(shared.id), 'gemeinsamer Artikel darf kein 2. Foto bekommen').toBe(1)
+    expect(psql(`select count(*) from item_photos where item_id=${shared.id}`)).toBe('1')
+    // der Name des fremden Artikels bleibt unveraendert
+    expect(psql(`select names->>'en' from items where id=${shared.id}`)).toBe(shared.name)
+  })
+
+  test('AK16b: gemeinsamer Artikel OHNE Foto + image_url -> Foto wird angehaengt (nur wenn noch keins)', async ({ page }) => {
+    test.setTimeout(150_000)
+    const shared = await sharedItem('shared-no-photo', false)
+    expect(await photoCountOf(shared.id)).toBe(0)
+    await openImport(page, 'en')
+    await uploadToPreview(page, 'photo2.csv', csv(['name', 'ean', 'image_url'], [[uniqName('own-spelling2'), shared.ean, IMG]]))
+    await expect(previewRow(page, 2)).not.toContainText('The photo was not added')
+    await applyToResult(page)
+    await expect(page.getByTestId('import-result')).toContainText('product images are being downloaded')
+    await expect.poll(() => photoCountOf(shared.id), { timeout: 60_000, intervals: [2000] }).toBe(1)
   })
 })

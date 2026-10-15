@@ -188,6 +188,9 @@ export interface AdminOffer {
   crawled_at: string | null
   created_at: string
   item?: AdminOfferItemEmbed
+  /** F5920: article number of the shop listing and whether it is available (import "not available") */
+  listing_sku?: string | null
+  listing_available?: boolean | null
 }
 
 // Keep backward-compat alias so any remaining usage of `offer.title` (non-null) still works
@@ -243,13 +246,26 @@ export interface ImageDownloadError {
 
 // All-or-nothing import (B5900-030): sync status is 'ok' or 'error'; faulty rows -> nothing imported.
 export type ImportSyncStatus = 'ok' | 'error'
-export type ImportRowErrorCode = 'missing_name' | 'row_failed'
+export type ImportRowErrorCode =
+  | 'missing_name'
+  | 'row_failed'
+  | 'invalid_ean'
+  | 'invalid_price'
+  | 'invalid_currency'
+  | 'invalid_available'
+  | 'invalid_language'
+  | 'invalid_image_url'
+  | 'invalid_sku'
+  | 'duplicate_in_file'
 export type ImportSyncErrorCode =
   | 'sheet_url_invalid'
   | 'sheet_fetch_failed'
   | 'sheet_not_public'
   | 'rows_failed'
   | 'sync_failed'
+  | 'empty_sheet'
+  | 'missing_name_column'
+  | 'too_many_rows'
 
 export interface ImportRowError {
   row: number
@@ -257,8 +273,21 @@ export interface ImportRowError {
   code?: ImportRowErrorCode | null
 }
 
+export interface ImportPossibleDuplicateRow {
+  row: number
+  name: string
+}
+
 export interface ImportSyncResult {
   imported: number
+  // F5920 counters (absent in results stored before F5920)
+  created?: number
+  updated?: number
+  unchanged?: number
+  deactivated?: number
+  possible_duplicates?: number
+  possible_duplicate_rows?: ImportPossibleDuplicateRow[]
+  row_count?: number
   error_count: number
   errors: ImportRowError[]
   errors_truncated: boolean
@@ -276,10 +305,138 @@ export interface ImportStatus {
   last_image_download_at?: string | null
 }
 
+/** Legacy direct upload (deprecated endpoint, kept for typing old responses). */
 export interface ImportUploadResult {
   imported: number
   errors: ImportRowError[]
   image_download_pending?: number
+}
+
+// ─── F5920 Katalog-Import: Vorschau → Übernehmen ──────────────────────────────
+
+export type ImportPreviewStatus = 'processing' | 'ready' | 'applying' | 'applied' | 'failed'
+export type ImportRowStatus = 'new' | 'updated' | 'unchanged' | 'error' | 'possible_duplicate'
+export type ImportChangeField = 'available' | 'price' | 'name' | 'sku' | 'category' | 'reactivated'
+export type ImportMatchedBy = 'sku' | 'ean' | 'name' | 'decision'
+export type ImportRowHintCode =
+  | 'linked_catalog_item'
+  | 'ambiguous_name_match'
+  | 'name_not_updated_shared'
+  | 'photo_skipped_shared'
+  | 'category_unresolved'
+  | 'category_hint_unknown'
+  | 'no_price'
+  | 'offer_replaced_complex'
+  | 'ean_mismatch'
+export type ImportPreviewErrorCode = 'job_lost' | 'preview_stale' | 'apply_failed' | 'preview_failed'
+/** Datei-/Upload-Fehler, die der Server synchron mit 400/413/429 meldet (`detail.code`). */
+export type ImportFileErrorCode =
+  | 'unsupported_format'
+  | 'xlsx_unreadable'
+  | 'xls_unreadable'
+  | 'csv_unreadable'
+  | 'missing_name_column'
+  | 'empty_file'
+  | 'too_many_rows'
+  | 'invalid_default_lang'
+  | 'file_too_large'
+  | 'preview_in_progress'
+
+export interface ImportPreviewCounts {
+  new: number
+  updated: number
+  unchanged: number
+  error: number
+  possible_duplicate: number
+  deactivate: number
+}
+
+export interface ImportDuplicateCandidate {
+  item_id: number
+  name: string
+  photo_url?: string | null
+  score: number
+}
+
+export interface ImportPreviewRow {
+  row: number
+  status: ImportRowStatus
+  name?: string | null
+  language: string
+  sku?: string | null
+  ean?: string | null
+  price?: string | null
+  currency?: string | null
+  available?: boolean | null
+  matched_by?: ImportMatchedBy | null
+  matched_listing_id?: number | null
+  matched_item_id?: number | null
+  matched_name?: string | null
+  changes: ImportChangeField[]
+  category_id?: number | null
+  category_path?: string | null
+  category_source?: 'column' | 'suggested' | 'existing' | null
+  candidates: ImportDuplicateCandidate[]
+  errors: ImportRowError[]
+  hints: ImportRowHintCode[]
+}
+
+export interface ImportDeactivation {
+  listing_id: number
+  item_id: number
+  name: string
+  sku?: string | null
+}
+
+export interface ImportApplyResult {
+  created: number
+  updated: number
+  unchanged: number
+  deactivated: number
+  linked_existing: number
+  image_download_pending: number
+  translation_queued: number
+  row_count: number
+  hints: Record<string, number>
+}
+
+export interface ImportPreviewProgress {
+  phase: string
+  done: number
+  total: number
+}
+
+export interface ImportPreview {
+  id: string
+  status: ImportPreviewStatus
+  full_list: boolean
+  default_lang: string
+  filename?: string | null
+  row_count: number
+  progress?: ImportPreviewProgress | null
+  expires_at: string
+  expired: boolean
+  can_apply: boolean
+  counts: ImportPreviewCounts | null
+  rows: ImportPreviewRow[]
+  rows_total: number
+  deactivations: ImportDeactivation[]
+  deactivations_total: number
+  result?: ImportApplyResult | null
+  error_code?: ImportPreviewErrorCode | null
+}
+
+export interface ImportPreviewCreated {
+  id: string
+  status: ImportPreviewStatus
+  expires_at: string
+  row_count: number
+}
+
+export interface ImportApplyDecision {
+  row: number
+  action: 'use_existing' | 'create_new'
+  item_id?: number
 }
 
 // ─── Review Moderation (admin-only, never imported by customer code) ──────────

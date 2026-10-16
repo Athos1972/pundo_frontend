@@ -48,6 +48,8 @@ video/
 | `short-pitch` | Short (9:16) zum Pitch: Suche, Sprachen, Kontakt, kostenlos; nutzt `../pitch/prepare_pitch.py` | Test-Instanz 3500/8500 |
 | `first-steps` | Teil 2 „Die ersten 10 Minuten“: Vorschläge übernehmen / Preis setzen / archivieren, Profil, eigene Produkte, Kundensicht; `prepare_first_steps.py` (Backend-venv) | Test-Instanz 3500/8500 |
 | `short-first-steps` | Short (9:16) zu Teil 2: Vorschläge, Übernehmen, Preis, Kundensicht; nutzt `../first-steps/prepare_first_steps.py` | Test-Instanz 3500/8500 |
+| `catalog-import` | Teil 9: Katalog-Import (Excel-Vorschau, Fehler, Duplikat, Update mit „komplette Liste“, öffentliches Test-Sheet, Produktfotos aus Drive); `prepare_catalog_import.py` (Backend-venv), Dateien aus `catalog-data.json` (`make_catalog_files.py`); Übersetzungszeile braucht Test-Gateway :8600 (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
+| `short-catalog-import` | Short (9:16) zu Teil 9: Vorschau, Upload, Übernehmen, Kundensicht; nutzt `../catalog-import/prepare_catalog_import.py` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

@@ -1,0 +1,69 @@
+# YouTube Short (9:16) of tutorial #12 "Import your whole catalogue at once" (video/catalog-import).
+# Script: ../catalog-import/01-skript.de.md, section "Short" (BB 2026-10-16): scenes 0, 2 (shortened), 4 (only Apply +
+# result), 7. "Related video" in Studio = the tutorial. Same demo data (prepare: ../catalog-import/prepare_catalog_import.py).
+
+meta:
+  slug: short-catalog-import
+  format: vertical
+  title:                    # = hook card (intro)
+    en: "Whole catalogue in 1 minute"
+    el: "Όλος ο κατάλογος σε 1 λεπτό"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  thumbnail_scene: none
+  target_duration_s: 30
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'preview of the file: tiles New / 0 Errors, Apply highlighted'
+    callout:
+      en: "200 items? Don't type them"
+      el: "200 προϊόντα; Μην τα πληκτρολογείς"
+    narration:
+      en: >-
+        Hundreds of items? Don't type them in one by one. Upload your list.
+      el: >-
+        Εκατοντάδες προϊόντα; Μην τα πληκτρολογείς ένα ένα. Ανέβασε τη λίστα σου.
+
+  - id: upload
+    shot: 'choose file -> progress -> preview "nothing has been saved yet"'
+    callout:
+      en: "Check first, then save"
+      el: "Πρώτα έλεγχος, μετά αποθήκευση"
+    narration:
+      en: >-
+        pundo checks the file and shows you a preview. Nothing is saved yet.
+      el: >-
+        Το pundo ελέγχει το αρχείο και σου δείχνει μια προεπισκόπηση. Τίποτα δεν έχει αποθηκευτεί ακόμα.
+
+  - id: apply
+    shot: 'Apply -> result, translation line highlighted'
+    callout:
+      en: "Apply. Done."
+      el: "Εφαρμογή. Έτοιμο."
+    narration:
+      en: >-
+        Apply, done. pundo translates your new items into all languages.
+      el: >-
+        Εφαρμογή, έτοιμο. Το pundo μεταφράζει τα νέα σου προϊόντα σε όλες τις γλώσσες.
+
+  - id: customer
+    shot: "customer shop page of Niko's Survival Shop: products with prices"
+    callout:
+      en: "Online. With one upload."
+      el: "Online. Με ένα ανέβασμα."
+    narration:
+      en: >-
+        And this is what your customers see.
+      el: >-
+        Και έτσι το βλέπουν οι πελάτες σου.
+
+  - id: outro
+    branding: outro

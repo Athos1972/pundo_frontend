@@ -1,0 +1,133 @@
+# Tutorial #12 "Import your whole catalogue at once" (EN + EL), series "pundo for businesses", part 9.
+# Approved German script: 01-skript.de.md (BB 2026-10-16). Demo: Niko's Survival Shop (Larnaca), new and approved,
+# no offers yet; 24 outdoor/survival articles in catalog-data.json -> niko-catalog*.xlsx (make_catalog_files.py).
+# Before recording: prepare_catalog_import.py (pundo_test only; called by record.mjs).
+
+meta:
+  slug: catalog-import
+  title:
+    en: "Import your whole catalogue at once"
+    el: "Εισήγαγε όλο τον κατάλογό σου με μία κίνηση"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "All tutorials: playlist \"pundo for businesses\""
+    el: "Όλοι οι οδηγοί: playlist «pundo για επιχειρήσεις»"
+  demo:
+    shop: { en: "Niko's Survival Shop", el: "Το κατάστημα επιβίωσης του Νίκου" }
+    files: { error: niko-catalog.xlsx, fixed: niko-catalog-fixed.xlsx, update: niko-catalog-update.xlsx }
+    sheet_url: "https://docs.google.com/spreadsheets/d/1oVcXoSVwU7HvwzA7NAtCByGfW_M4lkIU6pVozv-twLQ/edit"   # public read-only test sheet (BB) = state after scene 5 (niko-sheet.csv)
+    share_card:
+      en: { title: "In Google Sheets", line: "Share → Anyone with the link: Viewer" }
+      el: { title: "Στο Google Sheets", line: "Κοινή χρήση → Οποιοσδήποτε έχει τον σύνδεσμο: Θεατής" }
+  thumbnail_scene: hook
+  timing: { tail_s: 1.6 }   # a bit more air after each scene (demo steps need reading time)
+  target_duration_s: 130
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'preview of the corrected file: tiles New / Possible duplicates / 0 Errors, Apply highlighted'
+    callout:
+      en: "200 items? Don't type them one by one"
+      el: "200 προϊόντα; Μην τα πληκτρολογείς ένα ένα"
+    narration:
+      en: >-
+        Got hundreds of items? Then don't type them in one by one. Just upload your list.
+      el: >-
+        Έχεις εκατοντάδες προϊόντα; Τότε μην τα πληκτρολογείς ένα ένα. Απλώς ανέβασε τη λίστα σου.
+
+  - id: template
+    shot: 'dashboard -> tile Import -> Download template -> spreadsheet view (columns) -> field reference, recognition order'
+    callout:
+      en: "Only the name is required"
+      el: "Μόνο το όνομα είναι υποχρεωτικό"
+    narration:
+      en: >-
+        Get the template. Only the name is required. With an article number, barcode and price it gets really good:
+        that's how pundo recognises your items later.
+      el: >-
+        Κατέβασε το πρότυπο. Υποχρεωτικό είναι μόνο το όνομα. Με κωδικό προϊόντος, barcode και τιμή γίνεται ακόμα καλύτερο:
+        έτσι το pundo αναγνωρίζει αργότερα τα προϊόντα σου.
+
+  - id: upload
+    shot: 'choose file -> progress bar -> preview (New 22, Errors 1, Possible duplicates 1) -> row with suggested category'
+    callout:
+      en: "Check first, then save"
+      el: "Πρώτα έλεγχος, μετά αποθήκευση"
+    narration:
+      en: >-
+        pundo checks the file and shows you a preview. Nothing is saved yet.
+        pundo suggests a category for every item, unless it's already in your file.
+      el: >-
+        Το pundo ελέγχει το αρχείο και σου δείχνει μια προεπισκόπηση. Τίποτα δεν έχει αποθηκευτεί ακόμα.
+        Για κάθε προϊόν το pundo προτείνει μια κατηγορία, εκτός αν την έχεις ήδη στο αρχείο.
+
+  - id: errors
+    shot: 'filter Errors -> row 14 "Price is not a number" (2,5O) -> apply blocked -> Cancel -> fix in the spreadsheet -> upload again -> 0 errors'
+    callout:
+      en: "All or nothing"
+      el: "Όλα ή τίποτα"
+    narration:
+      en: >-
+        One row has an error? Then nothing is imported at all, so no half catalogue goes online.
+        Fix the row, upload again, done.
+      el: >-
+        Μία γραμμή έχει λάθος; Τότε δεν περνάει τίποτα, ώστε να μη βγει online μισός κατάλογος.
+        Διόρθωσε τη γραμμή, ανέβασέ το ξανά, έτοιμο.
+
+  - id: duplicate
+    shot: 'row Victorinox Huntsman Swiss Army Knife: possible duplicate (Victorinox Huntsman Pocket Knife, 88 %) -> Use existing -> Apply -> result -> Go to my offers'
+    callout:
+      en: "Already there? Link it"
+      el: "Υπάρχει ήδη; Σύνδεσέ το"
+    narration:
+      en: >-
+        If pundo already knows an item, you decide: use the existing one or create a new one.
+        Apply, done. And pundo automatically translates your new items into all languages.
+      el: >-
+        Αν το pundo ξέρει ήδη ένα προϊόν, αποφασίζεις εσύ: χρησιμοποιείς το υπάρχον ή δημιουργείς νέο.
+        Εφαρμογή, έτοιμο. Και το pundo μεταφράζει αυτόματα τα νέα σου προϊόντα σε όλες τις γλώσσες.
+
+  - id: update
+    shot: 'spreadsheet: change one price, delete one row -> tick "complete list" -> upload -> Updated 1 (price changes), 1 set to not available -> Apply'
+    callout:
+      en: "Same list, new prices"
+      el: "Ίδια λίστα, νέες τιμές"
+    narration:
+      en: >-
+        Prices change? Just upload the same list again. pundo recognises every item by its article number,
+        so there are no duplicates. With "complete list", anything missing is set to not available, but never deleted.
+      el: >-
+        Άλλαξαν οι τιμές; Απλώς ανέβασε ξανά την ίδια λίστα. Το pundo αναγνωρίζει κάθε προϊόν από τον κωδικό του,
+        έτσι δεν δημιουργούνται διπλά. Με την «πλήρη λίστα», ό,τι λείπει γίνεται μη διαθέσιμο, αλλά δεν διαγράφεται ποτέ.
+
+  - id: sheets
+    shot: 'card "Share -> Anyone with the link: Viewer" -> paste link into Google Sheets URL -> Connect -> Last sync · OK (23 unchanged)'
+    callout:
+      en: "Automatically every 4 hours"
+      el: "Αυτόματα κάθε 4 ώρες"
+    narration:
+      en: >-
+        You keep your list in Google Sheets? Share the link, paste it, connect.
+        From now on, pundo picks up your changes every four hours by itself.
+      el: >-
+        Κρατάς τη λίστα σου στο Google Sheets; Μοιράσου τον σύνδεσμο, επικόλλησέ τον, πάτα σύνδεση.
+        Από εδώ και πέρα το pundo παίρνει μόνο του τις αλλαγές σου κάθε τέσσερις ώρες.
+
+  - id: customer
+    shot: "customer shop page of Niko's Survival Shop: product list with prices"
+    callout:
+      en: "Online. With one upload."
+      el: "Online. Με ένα ανέβασμα."
+    narration:
+      en: >-
+        And this is what your customers see. You'll find all parts of the series in our playlist.
+      el: >-
+        Και έτσι το βλέπουν οι πελάτες σου. Όλα τα μέρη της σειράς θα τα βρεις στην playlist μας.
+
+  - id: outro
+    branding: outro

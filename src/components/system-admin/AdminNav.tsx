@@ -66,6 +66,7 @@ export function SysAdminNav({ tr, adminEmail }: SysAdminNavProps) {
   const navItems: NavItem[] = [
     { href: '/admin/dashboard', label: tr.nav_dashboard, icon: '⊞' },
     { href: '/admin/shops', label: tr.nav_shops, icon: '🏪' },
+    { href: '/admin/scrape-runs', label: tr.nav_scrape_runs, icon: '◷' },
     { href: '/admin/shop-types', label: tr.nav_shop_types, icon: '🏷' },
     { href: '/admin/shop-owners', label: tr.nav_shop_owners, icon: '👤' },
     { href: '/admin/products', label: tr.nav_products, icon: '📦' },

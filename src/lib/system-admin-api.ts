@@ -18,6 +18,8 @@ import type {
   SysAdminBrand,
   SysAdminOffer,
   SysAdminShopOwnerOffer,
+  SysAdminScrapeRun,
+  SysAdminScrapeRunDetail,
   SysAdminApiKey,
   SysAdminSocialLinkRule,
   SocialLinkRuleCategory,
@@ -81,6 +83,20 @@ export async function getShops(
 
 export async function getShop(id: number): Promise<SysAdminShop> {
   return apiFetch<SysAdminShop>(`/shops/${id}`)
+}
+
+export async function getScrapeRuns(
+  params: { shop_id?: number; target_url?: string; status?: string; run_type?: string; limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<SysAdminScrapeRun>> {
+  return apiFetch<PaginatedResponse<SysAdminScrapeRun>>(`/scrape-runs${buildQs(params)}`)
+}
+
+export async function getScrapeRun(id: string): Promise<SysAdminScrapeRunDetail> {
+  return apiFetch<SysAdminScrapeRunDetail>(`/scrape-runs/${encodeURIComponent(id)}`)
+}
+
+export async function getShopScrapeRuns(shopId: number, limit = 20): Promise<SysAdminScrapeRun[]> {
+  return apiFetch<SysAdminScrapeRun[]>(`/shops/${shopId}/scrape-runs${buildQs({ limit })}`)
 }
 
 // ─── Shop Types ────────────────────────────────────────────────────────────────

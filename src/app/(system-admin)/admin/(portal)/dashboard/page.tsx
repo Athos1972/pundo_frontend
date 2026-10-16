@@ -4,6 +4,7 @@ import { tSysAdmin } from '@/lib/system-admin-translations'
 
 const ENTITIES = [
   { href: '/admin/shops', icon: '🏪', key: 'nav_shops' as const },
+  { href: '/admin/scrape-runs', icon: '◷', key: 'nav_scrape_runs' as const },
   { href: '/admin/shop-types', icon: '🏷', key: 'nav_shop_types' as const },
   { href: '/admin/shop-owners', icon: '👤', key: 'nav_shop_owners' as const },
   { href: '/admin/products', icon: '📦', key: 'nav_products' as const },

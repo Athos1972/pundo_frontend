@@ -71,6 +71,39 @@ export interface SysAdminShop {
   updated_at: string
 }
 
+// ─── Scrape runs ──────────────────────────────────────────────────────────────
+export interface SysAdminScrapeRun {
+  id: string
+  shop_id: number | null
+  target_url: string
+  run_type: string
+  runner_kind: string
+  trigger: string
+  status: string
+  started_at: string
+  finished_at: string | null
+  duration_ms: number | null
+  config_ref: string | null
+  source_revision: string | null
+  parameters: Record<string, unknown>
+  metrics: Record<string, unknown>
+  result: Record<string, unknown>
+  error_code: string | null
+  error_message: string | null
+  is_reconstructed: boolean
+  reconstruction_source: string | null
+}
+
+export interface SysAdminScrapeRunDetail extends SysAdminScrapeRun {
+  events: Array<{
+    id: number
+    occurred_at: string
+    event_type: string
+    level: string
+    payload: Record<string, unknown>
+  }>
+}
+
 // ─── Shop Types ────────────────────────────────────────────────────────────────
 export interface SysAdminShopType {
   id: number

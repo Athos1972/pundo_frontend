@@ -25,7 +25,7 @@ export function ApiKeyList({ initialKeys, lang }: ApiKeyListProps) {
         const res = await fetch(`/api/shop-admin/api-keys/${id}`, { method: 'DELETE' })
         if (res.ok) {
           setKeys((prev) => prev.filter((k) => k.id !== id))
-          showToast('Deleted', 'success')
+          showToast(tr.api_key_deleted, 'success')
         } else {
           showToast(tr.error_generic, 'error')
         }

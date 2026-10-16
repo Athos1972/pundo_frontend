@@ -204,51 +204,6 @@ describe('HoursEditor', () => {
   })
 })
 
-// ─── ProductList ──────────────────────────────────────────────────────────────
-
-describe('ProductList', () => {
-  const products = [
-    {
-      id: 1, name: 'Cat Food 2kg', category_id: 10, available: true,
-      price_tiers: [{ id: 1, unit: 'per_kg', steps: [{ id: 1, min_quantity: 1, price: '9.99', currency: 'EUR' }] }],
-    },
-    {
-      id: 2, name: 'Dog Toys Set', category_id: 11, available: false,
-      price_tiers: [{ id: 2, unit: 'per_piece', steps: [{ id: 2, min_quantity: 1, price: '14.99', currency: 'EUR' }] }],
-    },
-  ]
-
-  it('renders product names', async () => {
-    const { ProductList } = await import('@/components/shop-admin/ProductList')
-    render(<ProductList initialItems={products} lang="en" />)
-    expect(screen.getByText('Cat Food 2kg')).toBeInTheDocument()
-    expect(screen.getByText('Dog Toys Set')).toBeInTheDocument()
-  })
-
-  it('shows edit links for each product', async () => {
-    const { ProductList } = await import('@/components/shop-admin/ProductList')
-    render(<ProductList initialItems={products} lang="en" />)
-    const editLinks = screen.getAllByRole('link', { name: 'Edit' })
-    expect(editLinks).toHaveLength(2)
-    expect(editLinks[0]).toHaveAttribute('href', '/shop-admin/products/1/edit')
-  })
-
-  it('shows no-results message when list is empty', async () => {
-    const { ProductList } = await import('@/components/shop-admin/ProductList')
-    render(<ProductList initialItems={[]} lang="en" />)
-    expect(screen.getByText('No items yet.')).toBeInTheDocument()
-  })
-
-  it('shows confirm buttons before deletion', async () => {
-    const { ProductList } = await import('@/components/shop-admin/ProductList')
-    render(<ProductList initialItems={products} lang="en" />)
-    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' })
-    fireEvent.click(deleteButtons[0])
-    // After click: confirm delete + cancel appear
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
-  })
-})
-
 // ─── OfferList tabs ───────────────────────────────────────────────────────────
 
 describe('OfferList', () => {

@@ -27,7 +27,7 @@ export function PaymentMethodsField({ label, value, onChange, getLabel }: Paymen
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium text-gray-700">{label}</span>
-      <div className="flex flex-wrap gap-2 rtl:flex-row-reverse">
+      <div className="flex flex-wrap gap-2">
         {PAYMENT_METHODS.map(({ value: methodValue, labelKey, Icon }) => {
           const isSelected = value.includes(methodValue)
           return (

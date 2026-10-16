@@ -206,7 +206,7 @@ export function ProductPhotoUpload({
           {images.map((img, idx) => (
             <li
               key={img.id}
-              className="flex items-center gap-3 rtl:flex-row-reverse"
+              className="flex items-center gap-3"
             >
               {/* Thumbnail */}
               <div className="relative w-14 h-14 shrink-0 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
@@ -251,7 +251,7 @@ export function ProductPhotoUpload({
                 type="button"
                 onClick={() => handleRemoveCommitted(img.id)}
                 aria-label={`${tr.product_photos_remove} ${idx + 1}`}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors shrink-0 rtl:mr-auto ltr:ml-auto"
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors shrink-0 ms-auto"
               >
                 {tr.product_photos_remove}
               </button>
@@ -266,7 +266,7 @@ export function ProductPhotoUpload({
           {pendingFiles.map((pf, idx) => (
             <li
               key={pf.localId}
-              className="flex items-center gap-3 rtl:flex-row-reverse"
+              className="flex items-center gap-3"
             >
               <div className="relative w-14 h-14 shrink-0 rounded-lg border border-blue-200 bg-blue-50 overflow-hidden">
                 <Image
@@ -305,7 +305,7 @@ export function ProductPhotoUpload({
           {uploading.map((item) => (
             <li
               key={item.localId}
-              className="flex items-center gap-3 rtl:flex-row-reverse"
+              className="flex items-center gap-3"
             >
               <div className="relative w-14 h-14 shrink-0 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
                 <Image

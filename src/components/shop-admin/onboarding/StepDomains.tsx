@@ -156,7 +156,7 @@ export function StepDomains({ tr, lang, providerType, selectedDomainSlugs, selec
       ) : (
         <div className="flex flex-col gap-4">
           {specialtyGateActive && (
-            <p role="alert" data-testid="specialty-required-hint" className="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3 ltr:text-left rtl:text-right">
+            <p role="alert" data-testid="specialty-required-hint" className="text-sm text-amber-800 bg-amber-50 rounded-xl px-4 py-3">
               {tr.onboarding_specialty_required_hint.replace('{domains}', missingSpecialty.map(d => d.label).join(', '))}
             </p>
           )}

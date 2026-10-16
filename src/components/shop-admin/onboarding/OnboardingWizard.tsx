@@ -271,9 +271,9 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
               type="button"
               onClick={handleClose}
               aria-label={tr.onboarding_close}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors rtl:flex-row-reverse"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <span aria-hidden>←</span>
+              <span aria-hidden className="rtl:rotate-180">←</span>
               <span>{tr.onboarding_close}</span>
             </button>
           ) : (

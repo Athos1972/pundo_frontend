@@ -82,7 +82,7 @@ export function StepPhoto({ tr, initialFile, initialShopName, onNext, onBack }: 
       <div className="flex flex-col gap-1">
         <label
           htmlFor="shop-name"
-          className="text-sm font-medium text-gray-700 rtl:text-right"
+          className="text-sm font-medium text-gray-700"
         >
           {tr.onboarding_step5_name_label}
           {' '}
@@ -103,18 +103,18 @@ export function StepPhoto({ tr, initialFile, initialShopName, onNext, onBack }: 
           aria-invalid={nameErrorCode ? 'true' : 'false'}
           className={[
             'w-full rounded-xl border px-4 py-3 text-base outline-none transition-colors',
-            'focus:ring-2 focus:ring-accent/30 rtl:text-right',
+            'focus:ring-2 focus:ring-accent/30',
             nameErrorCode
               ? 'border-red-400 focus:border-red-400'
               : 'border-gray-300 focus:border-accent',
           ].join(' ')}
         />
         {nameErrorCode ? (
-          <p id="shop-name-error" className="text-xs text-red-600 rtl:text-right" role="alert">
+          <p id="shop-name-error" className="text-xs text-red-600" role="alert">
             {getNameErrorText()}
           </p>
         ) : (
-          <p id="shop-name-helper" className="text-xs text-gray-400 rtl:text-right">
+          <p id="shop-name-helper" className="text-xs text-gray-400">
             {tr.onboarding_step5_name_helper}
           </p>
         )}

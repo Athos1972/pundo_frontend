@@ -33,13 +33,13 @@ export function OfferFilterBar({
         value={searchText}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={tr.offer_search_placeholder}
-        className="flex-1 min-w-48 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent rtl:text-right"
+        className="flex-1 min-w-48 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
       />
       {categories.length > 0 && (
         <select
           value={selectedCategoryId ?? ''}
           onChange={(e) => onCategoryChange(e.target.value ? Number(e.target.value) : null)}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white rtl:text-right"
+          className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white"
         >
           <option value="">{tr.offer_filter_all_categories}</option>
           {categories.map((c) => (

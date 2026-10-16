@@ -28,7 +28,7 @@ export function OfferItemHeader({ item, lang, offerId: _offerId }: OfferItemHead
   const otherNames = Object.entries(item.names).filter(([code]) => code !== lang)
 
   return (
-    <div className="flex items-start gap-4 bg-gray-50 rounded-xl border border-gray-200 p-4 rtl:flex-row-reverse">
+    <div className="flex items-start gap-4 bg-gray-50 rounded-xl border border-gray-200 p-4">
       {/* Foto oder Platzhalter */}
       <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
         {coverUrl ? (

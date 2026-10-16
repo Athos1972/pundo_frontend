@@ -22,11 +22,11 @@ export default async function ShopAdminHelpPage() {
                   key={item.q}
                   className="group py-3 [&>summary]:list-none [&>summary::-webkit-details-marker]:hidden"
                 >
-                  <summary className="flex items-center justify-between gap-3 text-sm font-medium text-gray-800 select-none cursor-pointer rtl:flex-row-reverse">
+                  <summary className="flex items-center justify-between gap-3 text-sm font-medium text-gray-800 select-none cursor-pointer">
                     <span>{item.q}</span>
                     <span className="text-gray-400 shrink-0 transition-transform group-open:rotate-180">▾</span>
                   </summary>
-                  <p className="mt-2 text-sm text-gray-600 leading-relaxed rtl:text-right">
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                     {item.a}
                   </p>
                 </details>

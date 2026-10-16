@@ -209,6 +209,8 @@ export function CategoryPicker({ lang, itemType, itemName, value, onChange, erro
   // ── Not selected ───────────────────────────────────────────────────────────
   const loadFailed = !!(suggestions?.failed || searchResult?.failed || browseResult?.failed)
   const suggestionItems = suggestions?.items ?? []
+  // Only after a finished, successful suggestion lookup for a typed name that came back empty.
+  const showNoSuggestion = !!suggestions && !suggestions.failed && suggestions.items.length === 0
   const showNoResults = searchWanted && searchResult && !searchResult.failed && searchResult.items.length === 0
 
   return (
@@ -236,6 +238,12 @@ export function CategoryPicker({ lang, itemType, itemName, value, onChange, erro
             ))}
           </ul>
         </div>
+      )}
+
+      {showNoSuggestion && (
+        <p data-testid="category-no-suggestion" className="text-xs text-gray-500 text-start">
+          {tr.category_picker_no_suggestion}
+        </p>
       )}
 
       <div>

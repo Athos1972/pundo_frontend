@@ -94,6 +94,39 @@ describe('CategoryPicker', () => {
     expect(sugCall[0]).toContain('item_type=product')
   })
 
+  it('empty suggestion result shows the no-suggestion hint', async () => {
+    route({ suggest: [] })
+    render(<CategoryPicker lang="en" itemType="product" itemName="Sourdough bread" value={null} onChange={vi.fn()} />)
+    expect(await screen.findByTestId('category-no-suggestion')).toHaveTextContent(tAdmin('en').category_picker_no_suggestion)
+  })
+
+  it('suggestions present -> no no-suggestion hint', async () => {
+    route({ suggest: [suggestion] })
+    render(<CategoryPicker lang="en" itemType="product" itemName="Sourdough bread" value={null} onChange={vi.fn()} />)
+    await screen.findByTestId('category-suggestion')
+    expect(screen.queryByTestId('category-no-suggestion')).toBeNull()
+  })
+
+  it('no hint while loading, without a name, or on error', async () => {
+    mockFetch.mockImplementation(() => new Promise<Response>(() => {}))
+    const { unmount } = render(<CategoryPicker lang="en" itemType="product" itemName="Sourdough bread" value={null} onChange={vi.fn()} />)
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    expect(screen.queryByTestId('category-no-suggestion')).toBeNull()
+    unmount()
+    mockFetch.mockReset()
+    route({})
+    render(<CategoryPicker lang="en" itemType="product" itemName="" value={null} onChange={vi.fn()} />)
+    await new Promise((r) => setTimeout(r, 500))
+    expect(screen.queryByTestId('category-no-suggestion')).toBeNull()
+  })
+
+  it('no hint when the suggestion request fails (error path unchanged)', async () => {
+    mockFetch.mockResolvedValue(new Response('{}', { status: 502 }))
+    render(<CategoryPicker lang="en" itemType="product" itemName="Sourdough bread" value={null} onChange={vi.fn()} />)
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByTestId('category-no-suggestion')).toBeNull()
+  })
+
   it('does not request suggestions for names shorter than 2 chars', async () => {
     route({})
     render(<CategoryPicker lang="en" itemType="product" itemName=" a " value={null} onChange={vi.fn()} />)

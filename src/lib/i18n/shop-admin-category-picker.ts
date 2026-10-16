@@ -5,6 +5,7 @@
 const shopAdminCategoryPickerTranslations = {
   en: {
     category_picker_suggestions: 'Suggested categories',
+    category_picker_no_suggestion: 'No confident suggestion – please choose a category.',
     category_picker_recent: 'Used before',
     category_picker_domain: 'Your industry',
     category_picker_search_label: 'Search category',
@@ -24,6 +25,7 @@ const shopAdminCategoryPickerTranslations = {
   },
   de: {
     category_picker_suggestions: 'Vorgeschlagene Kategorien',
+    category_picker_no_suggestion: 'Kein sicherer Vorschlag – bitte Kategorie auswählen.',
     category_picker_recent: 'Schon verwendet',
     category_picker_domain: 'Deine Branche',
     category_picker_search_label: 'Kategorie suchen',
@@ -43,6 +45,7 @@ const shopAdminCategoryPickerTranslations = {
   },
   el: {
     category_picker_suggestions: 'Προτεινόμενες κατηγορίες',
+    category_picker_no_suggestion: 'Καμία σίγουρη πρόταση – παρακαλώ επιλέξτε κατηγορία.',
     category_picker_recent: 'Έχει ήδη χρησιμοποιηθεί',
     category_picker_domain: 'Ο κλάδος σας',
     category_picker_search_label: 'Αναζήτηση κατηγορίας',
@@ -62,6 +65,7 @@ const shopAdminCategoryPickerTranslations = {
   },
   ru: {
     category_picker_suggestions: 'Предлагаемые категории',
+    category_picker_no_suggestion: 'Нет надёжного предложения – пожалуйста, выберите категорию.',
     category_picker_recent: 'Уже использовалась',
     category_picker_domain: 'Ваша отрасль',
     category_picker_search_label: 'Поиск категории',
@@ -81,6 +85,7 @@ const shopAdminCategoryPickerTranslations = {
   },
   ar: {
     category_picker_suggestions: 'الفئات المقترحة',
+    category_picker_no_suggestion: 'لا يوجد اقتراح موثوق – يرجى اختيار فئة.',
     category_picker_recent: 'استُخدمت سابقًا',
     category_picker_domain: 'مجال عملك',
     category_picker_search_label: 'ابحث عن فئة',
@@ -100,6 +105,7 @@ const shopAdminCategoryPickerTranslations = {
   },
   he: {
     category_picker_suggestions: 'קטגוריות מוצעות',
+    category_picker_no_suggestion: 'אין הצעה בטוחה – נא לבחור קטגוריה.',
     category_picker_recent: 'כבר בשימוש',
     category_picker_domain: 'התחום שלך',
     category_picker_search_label: 'חיפוש קטגוריה',

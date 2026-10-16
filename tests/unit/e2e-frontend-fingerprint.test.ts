@@ -1,12 +1,14 @@
 /**
  * B8950-012 TF1: Fingerabdruck + Prozess-Klassifikation des E2E-Frontend-Starts.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import {
   assertFrontendFresh,
+  assertModeAllowed,
+  prepareGateFrontend,
   classifyChain,
   classifyCommand,
   computeFingerprint,
@@ -86,7 +88,7 @@ describe('fingerprint + assertFrontendFresh', () => {
 
   it('dev server: ok without stamp check', () => {
     const r = assertFrontendFresh({
-      repoRoot: root, chain: [{ pid: 1, command: 'next-server (v16)', startedMs: 0 }, { pid: 2, command: 'node next dev -p 3500', startedMs: 0 }], log: quiet,
+      repoRoot: root, chain: [{ pid: 1, command: 'next-server (v16)', startedMs: 0 }, { pid: 2, command: 'node next dev -p 3500', startedMs: 0 }], env: {}, log: quiet,
     })
     expect(r.mode).toBe('dev')
   })
@@ -118,5 +120,78 @@ describe('fingerprint + assertFrontendFresh', () => {
     expect(() => assertFrontendFresh({ repoRoot: root, chain: unknown, env: {}, log: quiet })).toThrow(/Unbekannter Prozess/)
     expect(assertFrontendFresh({ repoRoot: root, chain: unknown, env: { E2E_ALLOW_UNKNOWN_FRONTEND: '1' }, log: quiet }).mode).toBe('unknown')
     expect(() => assertFrontendFresh({ repoRoot: root, chain: [], log: quiet })).toThrow(/kein Frontend/)
+  })
+
+  it('gate mode: next dev aborts with Gate-Modus message; without the variable it only warns', () => {
+    const dev = [{ pid: 1, command: 'next-server (v16)', startedMs: 0 }, { pid: 2, command: 'node next dev -p 3500', startedMs: 0 }]
+    expect(() => assertFrontendFresh({ repoRoot: root, chain: dev, env: { E2E_REQUIRE_STANDALONE: '1' }, log: quiet })).toThrow(/Gate-Modus/)
+    const log = vi.fn()
+    expect(assertFrontendFresh({ repoRoot: root, chain: dev, env: {}, log }).mode).toBe('dev')
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('WARNUNG'))
+  })
+
+  describe('prepareGateFrontend', () => {
+    const devChain = [
+      { pid: 10, command: 'next-server (v16.3.8) ', startedMs: 0 },
+      { pid: 11, command: 'node /repo/node_modules/.bin/next dev -p 3500', startedMs: 0 },
+      { pid: 12, command: 'npm run dev:test', startedMs: 0 },
+      { pid: 13, command: '-zsh', startedMs: 0 },
+    ]
+    const base = () => ({ repoRoot: root, backendUrl: 'http://localhost:8500', head: 'abc', log: quiet, waitPortFree: () => true })
+
+    it('free port: nothing to do', () => {
+      const killPids = vi.fn()
+      expect(prepareGateFrontend({ ...base(), chain: [], killPids })).toEqual({ action: 'none', pids: [] })
+      expect(killPids).not.toHaveBeenCalled()
+    })
+
+    it('dev chain: kills listener + dev ancestors, not the shell', () => {
+      const killPids = vi.fn()
+      const r = prepareGateFrontend({ ...base(), chain: devChain, killPids })
+      expect(r).toEqual({ action: 'killed-dev', pids: [10, 11, 12] })
+      expect(killPids).toHaveBeenCalledWith([10, 11, 12])
+    })
+
+    it('killed-dev removes the dev-written .next/types (tsc poison), killed-stale does not need to', () => {
+      fs.mkdirSync(path.join(root, '.next/types'), { recursive: true })
+      fs.writeFileSync(path.join(root, '.next/types/validator.ts'), 'x')
+      prepareGateFrontend({ ...base(), chain: devChain, killPids: vi.fn() })
+      expect(fs.existsSync(path.join(root, '.next/types'))).toBe(false)
+    })
+
+    it('fresh standalone is kept, stale one is killed', () => {
+      writeStamp(fp(), Date.now() - 10_000)
+      const killPids = vi.fn()
+      expect(prepareGateFrontend({ ...base(), chain: standaloneChain(), killPids }).action).toBe('keep-standalone')
+      expect(killPids).not.toHaveBeenCalled()
+      const later = new Date(Date.now() + 60_000)
+      fs.utimesSync(path.join(root, 'src/a.ts'), later, later)
+      expect(prepareGateFrontend({ ...base(), chain: standaloneChain(), killPids })).toEqual({ action: 'killed-stale', pids: [42] })
+      expect(killPids).toHaveBeenCalledWith([42])
+    })
+
+    it('unknown process: throws without kill, unless explicitly allowed', () => {
+      const killPids = vi.fn()
+      const unknown = [{ pid: 9, command: 'python -m http.server', startedMs: 0 }]
+      expect(() => prepareGateFrontend({ ...base(), chain: unknown, killPids, env: {} })).toThrow(/Unbekannter Prozess/)
+      expect(prepareGateFrontend({ ...base(), chain: unknown, killPids, env: { E2E_ALLOW_UNKNOWN_FRONTEND: '1' } }).action).toBe('none')
+      expect(killPids).not.toHaveBeenCalled()
+    })
+
+    it('production ports are refused before anything is classified', () => {
+      const chain = vi.fn(() => devChain)
+      expect(() => prepareGateFrontend({ ...base(), port: '3000', chain: chain() })).toThrow(/Produktion/)
+      expect(() => prepareGateFrontend({ ...base(), port: '8000', chain: [] })).toThrow(/Produktion/)
+    })
+
+    it('port still busy after kill: throws', () => {
+      expect(() => prepareGateFrontend({ ...base(), chain: devChain, killPids: vi.fn(), waitPortFree: () => false })).toThrow(/nicht frei/)
+    })
+  })
+
+  it('assertModeAllowed: dev mode only forbidden in gate mode', () => {
+    expect(() => assertModeAllowed({ E2E_FRONTEND_MODE: 'dev', E2E_REQUIRE_STANDALONE: '1' })).toThrow(/nicht erlaubt/)
+    expect(() => assertModeAllowed({ E2E_FRONTEND_MODE: 'dev' })).not.toThrow()
+    expect(() => assertModeAllowed({ E2E_REQUIRE_STANDALONE: '1' })).not.toThrow()
   })
 })

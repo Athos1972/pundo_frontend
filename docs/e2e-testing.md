@@ -101,6 +101,7 @@ git config --unset core.hooksPath        # deaktivieren
 **Robustheit (mehrere Sessions, ein Working Tree).**
 - **Fail-closed.** PostgreSQL aus `pundo_main_backend/.env` (`DATABASE_URL_TEST`) nicht erreichbar, Backend-Repo oder `.venv` fehlt → sofort Abbruch mit Hinweis. Test-Backend 8500 startet der Playwright-Global-Setup selbst (kill + restart), das Test-Frontend 3500 der `webServer` (Standalone-Build, ein Rebuild kostet ca. 3 min); jeder Schritt hat ein hartes Timeout (die Prozessgruppe wird beendet), das Gate hängt also nie.
 - **Ein Lauf zur Zeit.** Gemeinsamer Lock `~/Library/Caches/pundo-test-gate/lock.d` für Backend-Gate, Frontend-Gate und Nightly (verwaiste Locks toter Prozesse werden übernommen), zusätzlich der Playwright-Lauf-Lock der Specs. Ist der Gate-Lock belegt, bricht der Hook mit PID und Lane ab (`GATE_LOCK_WAIT=<s>` wartet stattdessen). Laufende fremde `pytest`- oder `playwright test`-Prozesse (beide Seiten teilen `pundo_test`) lässt das Gate bis zu 90 s (`GATE_BUSY_WAIT`) abklingen und bricht dann ab.
+- **Frontend 3500 nur Standalone im Gate (B8950-013 §10).** Die Playwright-Lanes (`smoke`, `push`, `nightly`, `e2e-coverage`) rufen nach `gate_wait_idle` `node scripts/e2e-frontend.cjs gate-prepare` und setzen `E2E_REQUIRE_STANDALONE=1`: ein laufender `next dev` (und ein veralteter Standalone) auf 3500 wird beendet, `E2E_FRONTEND_MODE=dev` bricht ab. Taucht danach wieder ein `next dev` auf, bricht das Global Setup mit „Gate-Modus“ ab.
 - **Bereits grün.** Lief das Push-Gate für genau den zu pushenden Commit grün (Arbeitsbaum ohne getrackte Änderungen, < 6 h), überspringt der Hook den zweiten Lauf (`GATE_FORCE=1` erzwingt ihn).
 - **Der Lauf testet den Arbeitsbaum**, nicht isoliert den gepushten Commit. Halbfertige Änderungen anderer Sessions können das Gate rot machen: klären, nicht umgehen. Die Playwright-Läufe schreiben außerdem `e2e/journeys/reports/*` neu (nie mitcommitten).
 - **Nachweis.** `.claude/playbooks/state/test-gate.last_run` (JSON: Lane, Start, Dauer, Ergebnis, Commit, Einzelschritte, Log-Pfad; gitignored) plus `test-gate.<lane>.last_run`. Logs je Schritt: `~/Library/Logs/pundo-test-gate/<Zeit>-<repo>-<lane>/<Schritt>.log` (14 Tage).
@@ -167,9 +168,10 @@ Nachweis nach den Läufen: `e2e_test_data.py report` zeigt keine Reste; `item_ph
 |---|---|
 | `start` | Standalone-Build `.next/standalone/server.js` auf Port 3500. Fingerabdruck = `{git HEAD, BACKEND_URL, neueste mtime von src/, public/, content/, next.config.ts, package*.json, tsconfig.json, .env.local}` in `.next/standalone/.e2e-build-stamp.json`. Weicht er ab (oder fehlt der Build): `rm -rf .next/standalone`, `next build` (ca. 3 min), `static/` und `public/` **sauber** kopieren (kein `static/static`). Gleicher Fingerabdruck → kein Rebuild |
 | `check` | prüft den Server auf 3500 (siehe unten) |
+| `gate-prepare` | nur Gate (`test-gate.sh`, vor Playwright): beendet `next dev` (Listener + dev-Vorfahren) bzw. einen veralteten Standalone auf 3500; frischer Standalone bleibt, unbekannter Prozess → Abbruch (nie beendet). Ausgabe: JSON `{action, pids}`; Ports 3000/8000 werden verweigert |
 | `E2E_FRONTEND_MODE=dev` | `start` startet stattdessen `npm run dev:test` (aktueller Code, langsamer unter Last) |
 
-Läuft schon ein Server auf 3500 (`reuseExistingServer`), klassifiziert das Global Setup ihn über Prozess und Eltern-Kette: `next dev` → ok; Standalone → Stamp muss zum aktuellen Fingerabdruck passen **und** der Prozess muss nach dem Build gestartet sein, sonst **Abbruch** mit Anleitung (Port 3500 beenden, Playwright baut neu, oder `npm run dev:test`); unbekannter Prozess → Abbruch (außer `E2E_ALLOW_UNKNOWN_FRONTEND=1`). Ein von Hand gestartetes `node .next/standalone/server.js` ist **unbekannt** (der Prozess nennt sich `next-server`). `E2E_SKIP_FRONTEND_RESTART` ist ein No-op. Die Configs `e2e/smoke-only.config.ts` und `e2e/no-setup.config.ts` prüfen dasselbe über `e2e/frontend-freshness.ts`.
+Läuft schon ein Server auf 3500 (`reuseExistingServer`), klassifiziert das Global Setup ihn über Prozess und Eltern-Kette: `next dev` → ok bei lokalen Läufen (mit WARNUNG: kein Turnstile-Sitekey, Doppel-Render; nicht gate-gleichwertig), im Gate (`E2E_REQUIRE_STANDALONE=1`) beendet `test-gate.sh` ihn vorher und das Global Setup bricht ab, falls er wieder auftaucht; Standalone → Stamp muss zum aktuellen Fingerabdruck passen **und** der Prozess muss nach dem Build gestartet sein, sonst **Abbruch** mit Anleitung (Port 3500 beenden, Playwright baut neu, oder `npm run dev:test`); unbekannter Prozess → Abbruch (außer `E2E_ALLOW_UNKNOWN_FRONTEND=1`). Ein von Hand gestartetes `node .next/standalone/server.js` ist **unbekannt** (der Prozess nennt sich `next-server`). `E2E_SKIP_FRONTEND_RESTART` ist ein No-op. Die Configs `e2e/smoke-only.config.ts` und `e2e/no-setup.config.ts` prüfen dasselbe über `e2e/frontend-freshness.ts`.
 
 ### Mit expliziten Ports (Debugging)
 
@@ -311,7 +313,8 @@ Vollständiger Katalog und Messwerte: `e2e/TESTSET.md`
 | `BACKEND_URL` | `http://localhost:8500` | `e2e/env.ts` (global-setup, Configs, Specs) |
 | `FRONTEND_URL` | `http://localhost:3500` | playwright.config + global-setup Browser |
 | `E2E_FRONTEND_PORT` | `3500` | Port des Frontends (webServer / Freshness-Check) |
-| `E2E_FRONTEND_MODE` | — | `dev` → webServer startet `npm run dev:test` statt Standalone-Build |
+| `E2E_FRONTEND_MODE` | — | `dev` → webServer startet `npm run dev:test` statt Standalone-Build (im Gate nicht erlaubt) |
+| `E2E_REQUIRE_STANDALONE` | — | `1` (vom Gate gesetzt) → `next dev` auf dem Port bzw. `E2E_FRONTEND_MODE=dev` bricht ab |
 | `E2E_RUN_ID` | automatisch | Run-ID (UTC-Zeitstempel), vom Global Setup gesetzt |
 | `E2E_STALE_HOURS` | `6` | Ab wann Reste abgebrochener Läufe automatisch gelöscht werden |
 | `E2E_ALLOW_UNKNOWN_FRONTEND` | — | `1` → unbekannten Prozess auf 3500 tolerieren |

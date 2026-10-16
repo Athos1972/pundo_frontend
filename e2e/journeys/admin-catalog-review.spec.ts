@@ -3,15 +3,13 @@
  *
  * Covers the golden path AND the reject-rework loop of the F5980 Content-Review UI:
  *   Intake-Batch (catalog_case_id) → Auto-Kette (describe→translate→categorize→
- *   attribute→embed, driven here via direct Gateway calls — no live Ollama worker
- *   required, see 04-test-report.md "Golden Path" section) → Shop-Owner öffnet
+ *   attribute→embed; der Test-Worker (worker.test.yml) arbeitet die Kette ab, driveChain()
+ *   beschleunigt sie nur mit Canned-Antworten, B8950-013 §10) → Shop-Owner öffnet
  *   Katalog-Review-Übersicht → Detail/Stichprobe → Approve → Item live (Publish-Gate)
  *   sowie Reject → Rework-Loop → erneute Review.
  *
  * Because there is no HTTP endpoint to create a `catalog_case` (Consent-Capture is
- * explicitly out of scope for F5980, see 03-implementation.md §3.4 "Known Gap"),
- * and no live LLM worker is required for this test (F5980 Auftrag §2 explicitly
- * allows mocking/stubbing the Auto-Kette), this spec:
+ * explicitly out of scope for F5980, see 03-implementation.md §3.4 "Known Gap"), this spec:
  *   1. Provisions a `catalog_case` directly via a Python one-liner against
  *      `pundo_main_backend` (same pattern as admin-data-management.spec.ts's
  *      `execSync(... scripts/seed_admin.py ...)`).
@@ -19,7 +17,7 @@
  *      (internal API key, created on the fly) — this exercises the REAL
  *      correlation/dispatch code path (`_correlate_catalog_case_item`,
  *      `dispatch_describe`).
- *   3. Drives the real LLM-Gateway task queue (`GET /v1/tasks/next`,
+ *   3. Accelerates the real LLM-Gateway task queue (`GET /v1/tasks/next`,
  *      `POST /v1/tasks/{id}/result`) with canned "worker" responses — this
  *      exercises the REAL webhook-handler chain end-to-end (describe.item →
  *      translate.item → categorize.item → enrich.product_attributes →
@@ -33,8 +31,12 @@
  *     overridden for this journey to dispatch real Gateway tasks).
  *   - Gateway test server (8600) started with INTERNAL_API_KEY matching the
  *     backend's LLM_GATEWAY_API_KEY (repo defaults differ — see report).
- * If either pre-condition isn't met, the chain-driving steps are skipped with
- * a clear console warning rather than failing the whole suite (see `chainReady`).
+ *   - B8950-013 §10: ein laufender Test-Worker (pundo_llm_workers/restart_test_worker.sh,
+ *     worker.test.yml). Die Gateway-Queue der Prod-Kopie enthält fremde Tasks (z. B. translate.shop,
+ *     kein Canned-Result), an denen driveChain() sonst abbricht; ohne Worker bleibt der Case in
+ *     enrichment_in_progress. Override: E2E_LLM_WORKER_CHECK=0.
+ * Ist eine Vorbedingung nicht erfüllt, werden T0/T1/T2/T4 mit Begründung übersprungen
+ * (siehe `chainSkipReason`), nie still grün.
  *
  * B8950-012: läuft im WORKER-Shop (Catalog-Case für workerShop.id, eigene eindeutige webshop_url pro Lauf,
  * Intake-Namen mit Marker `E2E-<RUN>-CATALOG-REVIEW-…`). Ohne Gateway 8600 werden die Kettenschritte
@@ -58,6 +60,27 @@ import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
 const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
+// Muss zu pundo_llm_workers/restart_test_worker.sh passen (`pkill -f "workers.main $CONFIG"`) und darf den
+// Prod-Worker (`workers.main worker.prod.yml`, läuft am Studio) NICHT treffen.
+const TEST_WORKER_PATTERN = 'workers.main worker.test.yml'
+
+function testWorkerRunning(): boolean {
+  try {
+    execSync(`pgrep -f '${TEST_WORKER_PATTERN}'`, { stdio: 'ignore' })
+    return true
+  } catch {
+    return false // pgrep Exit 1 = kein Prozess
+  }
+}
+
+/** Zeitbasiertes Polling: Case-Status bis `awaiting_owner_review` (der Worker arbeitet parallel, driveChain beschleunigt). */
+async function caseStatus(caseId: number | null, ownerToken: string): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
+    headers: { Cookie: `shop_owner_token=${ownerToken}` },
+  })
+  const data = await res.json() as { cases: Array<{ id: number; status: string }> }
+  return data.cases.find(x => x.id === caseId)?.status ?? ''
+}
 
 if (FRONTEND_URL.includes(':3000') || BACKEND_URL.includes(':8000') || GATEWAY_URL.includes(':8100')) {
   throw new Error('[admin-catalog-review] Safety: NEVER run against production ports 3000/8000/8100!')
@@ -156,6 +179,16 @@ async function gatewayNextTask(): Promise<{ task_id: string; job_type: string; p
   return res.json()
 }
 
+/** Gibt einen geleasten Task ohne Canned-Result sofort an die Queue zurück (retryable), damit der echte Test-Worker ihn
+ * bekommt. Ohne das hält der Lease (120–300 s) die Kette an (categorize.descend, translate.shop, …; B8950-013 §10). */
+async function gatewayRelease(taskId: string) {
+  await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/fail`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Internal-API-Key': GATEWAY_API_KEY },
+    body: JSON.stringify({ worker_id: 'playwright-e2e', error: 'released by e2e driveChain (no canned result)', retryable: true }),
+  })
+}
+
 async function gatewaySubmitResult(taskId: string, result: unknown, model: string) {
   const res = await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/result`, {
     method: 'POST',
@@ -203,30 +236,30 @@ function buildCannedResult(jobType: string, payload: Record<string, unknown>): u
 }
 
 /** Drain the gateway queue, answering every describe/translate/categorize/
- * attribute/embed task with a canned result, until no task is available or
- * `maxSteps` is hit. Returns number of tasks processed. */
-async function driveChain(maxSteps = 30): Promise<number> {
+ * attribute/embed task with a canned result for up to `windowMs` (B8950-013 §10).
+ * Läuft ein echter Test-Worker, konkurrieren beide um jeden neuen Task: driveChain pollt deshalb schnell (der Worker
+ * pollt alle 2–5 s), damit die Canned-Kette (categorize.item mit hoher Konfidenz) gewinnt; ein echtes LLM kann den
+ * erfundenen Marker-Artikel nicht kategorisieren, und die Kette bliebe stehen. Tasks ohne Canned-Result
+ * (categorize.descend, translate.shop, …) gibt driveChain sofort zurück (retryable), damit der Test-Worker sie bekommt.
+ * Returns number of tasks processed. */
+async function driveChain(windowMs = 8000): Promise<number> {
   let processed = 0
-  for (let i = 0; i < maxSteps; i++) {
+  const end = Date.now() + windowMs
+  while (Date.now() < end) {
     const task = await gatewayNextTask()
     if (task === null) {
-      // Webhook delivery to the backend is async — give it a moment and retry once.
-      await new Promise(r => setTimeout(r, 1500))
-      const retry = await gatewayNextTask()
-      if (retry === null) break
-      const result = buildCannedResult(retry.job_type, retry.payload)
-      if (result === null) break
-      const model = retry.job_type === 'embed.text' ? 'bge-m3:latest' : 'gemma4:26b'
-      await gatewaySubmitResult(retry.task_id, result, model)
-      processed++
+      await new Promise(r => setTimeout(r, 100))
       continue
     }
     const result = buildCannedResult(task.job_type, task.payload)
-    if (result === null) break
+    if (result === null) {
+      await gatewayRelease(task.task_id)
+      await new Promise(r => setTimeout(r, 6000)) // länger als der Leerlauf-Backoff des Workers (5 s)
+      continue
+    }
     const model = task.job_type === 'embed.text' ? 'bge-m3:latest' : 'gemma4:26b'
     await gatewaySubmitResult(task.task_id, result, model)
     processed++
-    await new Promise(r => setTimeout(r, 300))
   }
   return processed
 }
@@ -248,7 +281,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   /** Whether the backend→gateway dispatch path is actually wired up in this
    * environment (LLM_GATEWAY_URL override + matching INTERNAL_API_KEY). If not,
    * the chain-dependent tests skip themselves instead of failing the suite. */
-  let chainReady = false
+  let chainSkipReason: string | null = 'SKIP (R11/Entscheidung 7): Vorbedingungen der Kette nicht geprüft'
   let goldenCaseId: number | null = null
   let rejectCaseId: number | null = null
   const GOLDEN_NAME = e2eName('CATALOG-REVIEW', 'Golden Path Widget')
@@ -259,13 +292,38 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     W = workerShop
     ensureShopWebshopUrl(SHOP_URL)
 
-    // Probe: does dispatching a describe.item task actually reach the gateway
+    // Vorbedingung 1: Gateway erreichbar (/healthz konsumiert keinen Task)
+    try {
+      const hz = await fetch(`${GATEWAY_URL}/healthz`, { signal: AbortSignal.timeout(3000) })
+      if (!hz.ok) throw new Error(`HTTP ${hz.status}`)
+    } catch (err) {
+      chainSkipReason = `SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar (${err instanceof Error ? err.message : err})`
+      console.warn(`[admin-catalog-review] ${chainSkipReason} — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
+      return
+    }
+    // Vorbedingung 2: Test-Worker (nicht Prod-Worker) läuft
+    if (process.env.E2E_LLM_WORKER_CHECK !== '0' && !testWorkerRunning()) {
+      chainSkipReason = 'SKIP (B8950-013 §10): kein Test-Worker aktiv (pundo_llm_workers/restart_test_worker.sh, worker.test.yml); '
+        + 'ohne Worker bleibt die Kette an fremden Queue-Tasks hängen'
+      console.warn(`[admin-catalog-review] ${chainSkipReason} — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
+      return
+    }
+
+    // Vorbedingung 3 / Probe: does dispatching a describe.item task actually reach the gateway
     // through the currently-running backend test server?
     goldenCaseId = createCatalogCase()
     const probe = await intakeBatch(goldenCaseId, [
       { name: GOLDEN_NAME, description: 'raw scraped description for golden path test' },
     ])
     expect(probe.status, 'intake batch must succeed (200)').toBe(200)
+
+    // Mit echtem Test-Worker konkurriert die Probe um den ersten Task (der Worker pollt alle 2 s und gewinnt
+    // praktisch immer → Skip trotz Verdrahtung, gemessen B8950-013 §10). Dann wird nichts konsumiert: ist der
+    // Dispatch nicht verdrahtet, zeigt T1 das als Timeout (rot, mit Meldung), nicht als stiller Skip.
+    if (process.env.E2E_LLM_WORKER_CHECK !== '0') {
+      chainSkipReason = null
+      return
+    }
 
     await new Promise(r => setTimeout(r, 1500))
     // Gateway 8600 nicht erreichbar (kein Test-Gateway gestartet) → Kette nicht prüfbar: sichtbar überspringen
@@ -276,11 +334,12 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
       console.warn(`[admin-catalog-review] Gateway ${GATEWAY_URL} nicht erreichbar (${err instanceof Error ? err.message : err}) — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
     }
     if (task !== null) {
-      chainReady = true
+      chainSkipReason = null
       // Complete this describe.item task now so it doesn't leak into later steps.
       const result = buildCannedResult(task.job_type, task.payload)
       if (result) await gatewaySubmitResult(task.task_id, result, 'gemma4:26b')
     } else {
+      chainSkipReason = 'SKIP (R11/Entscheidung 7): Dispatch nicht verdrahtet (kein Gateway-Task nach Intake)'
       console.warn(
         '[admin-catalog-review] No gateway task appeared after intake — backend is likely ' +
         'not configured with LLM_GATEWAY_URL pointing at the test gateway (8600), or the ' +
@@ -301,7 +360,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test('T0 — Overview shows a case in enrichment_in_progress with progress bar, no actions', async ({ page }) => {
-    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
     await page.goto(FRONTEND_URL + '/shop-admin/catalog-review')
     await waitHydrated(page)
 
@@ -316,26 +375,15 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test('T1 — Drive the auto-chain to awaiting_owner_review, sample shows enriched data', async ({ page }) => {
-    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
-    test.setTimeout(60_000)
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
+    test.setTimeout(300_000)
 
-    const processed = await driveChain(20)
-    expect(processed, 'expected at least 4 more chain steps (translate/categorize/attribute/embed)').toBeGreaterThan(0)
-
-    // Poll the shop-owner API until the case reaches awaiting_owner_review (chain is async).
+    // driveChain beschleunigt nur (Canned-Antworten); der Test-Worker beantwortet alles, was driveChain nicht kennt.
+    // Poll the shop-owner API until the case reaches awaiting_owner_review (chain is async; echter Worker braucht je Schritt ca. 15 s, die Kette 2–4 min).
     const cookie = await ownerLoginCookie()
-    let status = ''
-    for (let i = 0; i < 15; i++) {
-      const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
-        headers: { Cookie: `shop_owner_token=${cookie}` },
-      })
-      const data = await res.json() as { cases: Array<{ id: number; status: string }> }
-      const c = data.cases.find(x => x.id === goldenCaseId)
-      status = c?.status ?? ''
-      if (status === 'awaiting_owner_review') break
-      await new Promise(r => setTimeout(r, 1000))
-    }
-    expect(status, 'case did not reach awaiting_owner_review').toBe('awaiting_owner_review')
+    await expect.poll(async () => { await driveChain(); return caseStatus(goldenCaseId, cookie) }, {
+      message: 'case did not reach awaiting_owner_review', timeout: 240_000, intervals: [1000, 2000, 3000],
+    }).toBe('awaiting_owner_review')
 
     await page.goto(FRONTEND_URL + `/shop-admin/catalog-review/${goldenCaseId}`)
     await waitHydrated(page)
@@ -348,7 +396,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test('T2 — Approve publishes the case and item becomes visible in product search (Publish-Gate)', async ({ page }) => {
-    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
 
     await page.goto(FRONTEND_URL + `/shop-admin/catalog-review/${goldenCaseId}`)
     await waitHydrated(page)
@@ -382,8 +430,8 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test('T4 — Reject with feedback starts a rework cycle (progress bar again, no actions)', async ({ page }) => {
-    test.skip(!chainReady, 'SKIP (R11/Entscheidung 7): Gateway-Test-Server 8600 nicht erreichbar bzw. Dispatch nicht verdrahtet — Kettenschritt nicht prüfbar')
-    test.setTimeout(90_000)
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
+    test.setTimeout(360_000)
 
     rejectCaseId = createCatalogCase()
     const intake = await intakeBatch(rejectCaseId, [
@@ -393,14 +441,11 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
 
     // Drive it to awaiting_owner_review.
     let reachedReview = false
-    for (let i = 0; i < 6 && !reachedReview; i++) {
-      await driveChain(5)
-      const cookie = await ownerLoginCookie()
-      const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, {
-        headers: { Cookie: `shop_owner_token=${cookie}` },
-      })
-      const data = await res.json() as { cases: Array<{ id: number; status: string }> }
-      reachedReview = data.cases.find(c => c.id === rejectCaseId)?.status === 'awaiting_owner_review'
+    const deadline = Date.now() + 240_000
+    const rejectCookie = await ownerLoginCookie()
+    while (!reachedReview && Date.now() < deadline) {
+      await driveChain()
+      reachedReview = (await caseStatus(rejectCaseId, rejectCookie)) === 'awaiting_owner_review'
       if (!reachedReview) await new Promise(r => setTimeout(r, 1000))
     }
     expect(reachedReview, 'reject-case did not reach awaiting_owner_review before reject test').toBe(true)

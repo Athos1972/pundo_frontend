@@ -17,9 +17,11 @@ if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
 
 const LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
 
+// :visible — Next keeps the previous route's segment hidden in the DOM (B8950-013 #7, #10 Strict Mode)
+const visibleForm = (page: import('@playwright/test').Page) => page.locator('form:visible')
+
 async function fillForm(page: import('@playwright/test').Page) {
-  // :visible — Next keeps the previous route's segment hidden in the DOM (B8950-013 #7)
-  const form = page.locator('form:visible')
+  const form = visibleForm(page)
   await form.locator('input[type="text"]').nth(0).fill('B6220-003 subject')
   await form.locator('textarea').fill('Automated contact form journey, please ignore.')
   await form.locator('input[type="text"]').nth(1).fill('E2E Contact')
@@ -51,7 +53,7 @@ test.describe('contact-form journey (B6220-003)', () => {
 
       const reqPromise = page.waitForRequest((r) => r.url().endsWith('/api/contact') && r.method() === 'POST')
       const resPromise = page.waitForResponse((r) => r.url().endsWith('/api/contact') && r.request().method() === 'POST')
-      await page.locator('form').evaluate((f) => (f as HTMLFormElement).requestSubmit())
+      await visibleForm(page).evaluate((f) => (f as HTMLFormElement).requestSubmit())
       const sent = JSON.parse((await reqPromise).postData() ?? '{}')
       const res = await resPromise
 
@@ -71,7 +73,7 @@ test.describe('contact-form journey (B6220-003)', () => {
       route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'captcha_failed' }) }),
     )
     await openAndFill(page, `${BASE_URL}/en/contact`)
-    await page.locator('form').evaluate((f) => (f as HTMLFormElement).requestSubmit())
+    await visibleForm(page).evaluate((f) => (f as HTMLFormElement).requestSubmit())
     await expect(page.getByText(t('en').turnstile_failed)).toBeVisible()
   })
 
@@ -81,7 +83,7 @@ test.describe('contact-form journey (B6220-003)', () => {
         route.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ error: 'rate_limited' }) }),
       )
       await openAndFill(page, `${BASE_URL}/${lang}/contact`)
-      await page.locator('form').evaluate((f) => (f as HTMLFormElement).requestSubmit())
+      await visibleForm(page).evaluate((f) => (f as HTMLFormElement).requestSubmit())
       await expect(page.getByText(t(lang).contact_rate_limited)).toBeVisible()
       await expect(page.getByText(t(lang).contact_error)).toHaveCount(0)
     })

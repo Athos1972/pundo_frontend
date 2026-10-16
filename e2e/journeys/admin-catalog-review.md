@@ -32,6 +32,13 @@ last-run-sha: —
 
 Content-Review-UI der Auto-Kette: Intake-Batch (catalog_case_id) → describe/translate/categorize/attribute/embed (per Gateway 8600 mit Canned-Antworten) → Owner prüft Stichprobe → Approve (Publish-Gate) bzw. Reject → Rework-Loop. Läuft im Worker-Shop (Marker E2E-<RUN>-CATALOG-REVIEW). Ohne Gateway 8600 werden T0/T1/T2/T4 sichtbar mit Begründung übersprungen (B8950-012, Entscheidung 7).
 
+## Vorbedingungen
+
+- Gateway-Test-Server 8600 (`pundo_llm_gateway/scripts/start_test_server.sh`), Backend 8500 mit `LLM_GATEWAY_URL=http://localhost:8600`.
+- Test-Worker (`pundo_llm_workers/restart_test_worker.sh`, `worker.test.yml`; nie `worker.prod.yml`): arbeitet die Gateway-Queue ab; `driveChain()` in der Spec ist nur Beschleuniger (B8950-013 §10). Ohne Worker bleibt die Kette an fremden Queue-Tasks hängen.
+- Fehlt Gateway oder Worker, überspringen T0/T1/T2/T4 sichtbar mit Grund (Override des Worker-Checks: `E2E_LLM_WORKER_CHECK=0`).
+- Selbst gestartete Gateway-/Worker-Prozesse nach dem Lauf beenden (Gateway: `lsof -ti TCP:8600 -sTCP:LISTEN | xargs kill`, Worker: `pkill -f 'workers.main worker.test.yml'`).
+
 ## Spec
 
 `e2e/journeys/admin-catalog-review.spec.ts` — Ablauf und Assertions stehen dort (Quelle der Wahrheit).

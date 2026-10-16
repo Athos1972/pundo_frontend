@@ -6,6 +6,7 @@
  *
  *   node scripts/e2e-frontend.cjs start   # Playwright `webServer.command`
  *   node scripts/e2e-frontend.cjs check   # prueft, ob der Server auf :3500 aktuellen Code ausliefert
+ *   node scripts/e2e-frontend.cjs gate-prepare   # Gate (test-gate.sh): beendet next dev / veralteten Standalone auf :3500
  *
  * `start`: Standalone-Build mit Fingerabdruck-Cache. Der Fingerabdruck
  * (git HEAD, BACKEND_URL, neueste mtime von src/, public/, content/, next.config.ts,
@@ -22,6 +23,11 @@
  * wird er klassifiziert (next dev | standalone | unbekannt) und ein Standalone-Server gegen den
  * Stamp geprueft. Veraltet/unbekannt -> Fehler mit Anleitung. Das globale Setup killt/startet
  * KEIN Frontend mehr.
+ *
+ * Gate-Modus (B8950-013 §10): `E2E_REQUIRE_STANDALONE=1` (setzt scripts/test-gate.sh). `gate-prepare` laeuft VOR
+ * Playwright (die Wiederverwendungs-Entscheidung des webServers faellt vor dem Global Setup) und beendet einen
+ * laufenden `next dev` bzw. veralteten Standalone auf dem Testport; unbekannte Prozesse nie. Taucht danach doch wieder
+ * ein `next dev` auf, bricht assertFrontendFresh() ab; `E2E_FRONTEND_MODE=dev` ist verboten.
  */
 const { execFileSync, spawn } = require('node:child_process')
 const fs = require('node:fs')
@@ -135,6 +141,26 @@ function listenerChain(port) {
  * @typedef {{ pid: number, command: string, startedMs: number }} ProcInfo
  */
 
+/** Standalone-Server veraltet? (Stamp fehlt/weicht ab oder Prozess startete vor dem Stamp) */
+function standaloneStale({ repoRoot, backendUrl, head, startedMs }) {
+  const stamp = readStamp(repoRoot)
+  const fp = computeFingerprint({ repoRoot, backendUrl, head })
+  const stale = !stamp || !fingerprintsEqual(stamp.fingerprint, fp)
+    || (Number.isFinite(startedMs) && stamp.builtAtMs && startedMs + 2000 < stamp.builtAtMs)
+  return { stale, stamp }
+}
+
+/**
+ * Gate-Modus verbietet E2E_FRONTEND_MODE=dev.
+ * @param {Record<string, string | undefined>} [env]
+ */
+function assertModeAllowed(env = process.env) {
+  if (env.E2E_FRONTEND_MODE === 'dev' && env.E2E_REQUIRE_STANDALONE === '1') {
+    throw new Error('[E2E Frontend] Gate-Modus (E2E_REQUIRE_STANDALONE=1): E2E_FRONTEND_MODE=dev ist nicht erlaubt. '
+      + 'Das Gate testet nur gegen den Standalone-Build.')
+  }
+}
+
 /**
  * Wirft, wenn auf `port` ein veralteter oder nicht erkennbarer Frontend-Server laeuft.
  * Gibt {mode, detail} zurueck: 'dev' | 'standalone'.
@@ -153,15 +179,18 @@ function assertFrontendFresh({
   }
   const kind = classifyChain(procs.map(p => p.command))
   if (kind === 'dev') {
-    log(`[E2E Frontend] next dev (aktuell) auf Port ${port} - kein Restart.`)
+    if (env.E2E_REQUIRE_STANDALONE === '1') {
+      throw new Error(
+        `[E2E Frontend] Gate-Modus: auf Port ${port} laeuft \`next dev\` (PID ${procs[0].pid}). Das Gate testet nur gegen `
+        + 'den Standalone-Build. Ursache meist: ein Agent/eine Session hat `npm run dev:test` nach der Gate-Bereinigung '
+        + `neu gestartet.\n  Loesung: Dev-Server beenden (kill ${procs[0].pid}) und Gate erneut starten.`)
+    }
+    log(`[E2E Frontend] WARNUNG: next dev auf Port ${port}: Ergebnisse nicht gate-gleichwertig (kein Turnstile-Sitekey, `
+      + `Doppel-Render). Fuer Gate-gleiche Laeufe Port ${port} beenden; Playwright startet dann den Standalone-Build.`)
     return { mode: 'dev', detail: procs[0].command }
   }
   if (kind === 'standalone') {
-    const stamp = readStamp(repoRoot)
-    const fp = computeFingerprint({ repoRoot, backendUrl, head })
-    const startedMs = procs[0].startedMs
-    const stale = !stamp || !fingerprintsEqual(stamp.fingerprint, fp)
-      || (Number.isFinite(startedMs) && stamp.builtAtMs && startedMs + 2000 < stamp.builtAtMs)
+    const { stale, stamp } = standaloneStale({ repoRoot, backendUrl, head, startedMs: procs[0].startedMs })
     if (stale) {
       throw new Error(
         `[E2E Frontend] Der Standalone-Server auf Port ${port} (PID ${procs[0].pid}) ist VERALTET `
@@ -175,6 +204,71 @@ function assertFrontendFresh({
     log(`[E2E Frontend] WARNUNG: unbekannter Prozess auf Port ${port} (E2E_ALLOW_UNKNOWN_FRONTEND=1): ${procs[0].command}`)
     return { mode: 'unknown', detail: procs[0].command }
   }
+  throw new Error(
+    `[E2E Frontend] Unbekannter Prozess auf Port ${port}: "${procs[0].command}" (Eltern: `
+    + `${procs.slice(1).map(p => p.command).join(' | ') || '-'}).\n  Beenden oder E2E_ALLOW_UNKNOWN_FRONTEND=1 setzen.`)
+}
+
+// ── Gate-Vorbereitung ────────────────────────────────────────────────────────
+
+const sleepSync = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+
+function portFree(port, ms) {
+  const deadline = Date.now() + ms
+  for (;;) {
+    if (!sh('lsof', ['-ti', `TCP:${port}`, '-sTCP:LISTEN'])) return true
+    if (Date.now() >= deadline) return false
+    sleepSync(250)
+  }
+}
+
+function killPidsDefault(pids, port = process.env.E2E_FRONTEND_PORT ?? '3500') {
+  const send = sig => { for (const pid of pids) { try { process.kill(pid, sig) } catch { /* schon beendet */ } } }
+  send('SIGTERM')
+  if (portFree(port, 15_000)) return
+  send('SIGKILL')
+}
+
+/**
+ * Gate-Vorbereitung: beendet `next dev` (und veralteten Standalone) auf dem Testport, damit der webServer den
+ * Standalone-Build startet. Unbekannte Prozesse werden nie beendet.
+ * @param {{ port?: string, repoRoot?: string, backendUrl?: string, head?: string, env?: Record<string, string | undefined>,
+ *   chain?: ProcInfo[], killPids?: (pids: number[]) => void, waitPortFree?: (port: string, ms: number) => boolean,
+ *   log?: (msg: string) => void }} [opts]
+ * @returns {{ action: 'none' | 'killed-dev' | 'killed-stale' | 'keep-standalone', pids: number[] }}
+ */
+function prepareGateFrontend({
+  port = process.env.E2E_FRONTEND_PORT ?? '3500', repoRoot = REPO_ROOT, backendUrl, head, env = process.env,
+  chain, killPids, waitPortFree = portFree, log = console.log,
+} = {}) {
+  if (port === '3000' || port === '8000') throw new Error(`[E2E Frontend] Port ${port} ist Produktion - gate-prepare verweigert.`)
+  const doKill = killPids ?? (pids => killPidsDefault(pids, port))
+  const procs = chain ?? listenerChain(port)
+  if (procs.length === 0) return { action: 'none', pids: [] }
+  const kind = classifyChain(procs.map(p => p.command))
+  const pick = want => procs.filter((p, i) => i === 0 || classifyCommand(p.command) === want).map(p => p.pid)
+  const kill = (action, want) => {
+    const pids = pick(want)
+    log(`[E2E Frontend] gate-prepare: ${action} auf Port ${port}, beende PIDs ${pids.join(', ')}`)
+    doKill(pids)
+    if (!waitPortFree(port, 5_000)) {
+      throw new Error(`[E2E Frontend] Port ${port} ist nach dem Beenden (PIDs ${pids.join(', ')}) nicht frei.`)
+    }
+    return { action, pids }
+  }
+  if (kind === 'dev') {
+    const r = kill('killed-dev', 'dev')
+    // `next dev` ueberschreibt .next/types (validator.ts) mit Dev-Typen, die `tsc --noEmit` (tsconfig include) rot machen,
+    // bis ein `next build` sie neu schreibt. Das Gate laeuft tsc nach dieser Bereinigung -> Dev-Typen entfernen.
+    fs.rmSync(path.join(repoRoot, '.next/types'), { recursive: true, force: true })
+    return r
+  }
+  if (kind === 'standalone') {
+    const { stale } = standaloneStale({ repoRoot, backendUrl, head, startedMs: procs[0].startedMs })
+    if (stale) return kill('killed-stale', 'standalone')
+    return { action: 'keep-standalone', pids: [] }
+  }
+  if (env.E2E_ALLOW_UNKNOWN_FRONTEND === '1') return { action: 'none', pids: [] }
   throw new Error(
     `[E2E Frontend] Unbekannter Prozess auf Port ${port}: "${procs[0].command}" (Eltern: `
     + `${procs.slice(1).map(p => p.command).join(' | ') || '-'}).\n  Beenden oder E2E_ALLOW_UNKNOWN_FRONTEND=1 setzen.`)
@@ -233,6 +327,7 @@ function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console
 }
 
 function start() {
+  assertModeAllowed()
   const port = process.env.PORT ?? process.env.E2E_FRONTEND_PORT ?? '3500'
   const backend = process.env.BACKEND_URL ?? 'http://localhost:8500'
   if (backend.includes(':8000')) throw new Error('[E2E Frontend] BACKEND_URL zeigt auf Port 8000 (Produktion).')
@@ -261,6 +356,7 @@ function start() {
 module.exports = {
   REPO_ROOT, STAMP_REL, COVERAGE_DIST, coverageMode, distRel, stampRel, coverageServerRawDir, FINGERPRINT_INPUTS, newestMtimeMs, computeFingerprint, fingerprintsEqual,
   readStamp, classifyCommand, classifyChain, listenerChain, assertFrontendFresh, ensureStandaloneBuild,
+  prepareGateFrontend, assertModeAllowed,
 }
 
 if (require.main === module) {
@@ -270,8 +366,10 @@ if (require.main === module) {
     else if (cmd === 'check') {
       const r = assertFrontendFresh()
       console.log(JSON.stringify(r))
+    } else if (cmd === 'gate-prepare') {
+      console.log(JSON.stringify(prepareGateFrontend()))
     } else {
-      console.error('Usage: node scripts/e2e-frontend.cjs start|check')
+      console.error('Usage: node scripts/e2e-frontend.cjs start|check|gate-prepare')
       process.exit(2)
     }
   } catch (err) {

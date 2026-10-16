@@ -285,6 +285,11 @@ Konfiguration: bestehende `playwright.config.ts` (Port 3500/8500, verwirft Port 
 
 **Standard-Config (`playwright.config.ts`):** Kein manueller Start nötig. Das Global Setup startet das Test-Backend (8500) neu; das Frontend (3500) startet ausschließlich Playwright über `webServer` → `node scripts/e2e-frontend.cjs start` (Standalone-Build mit Fingerabdruck-Cache; `E2E_FRONTEND_MODE=dev` → `npm run dev:test`). Ein bereits laufender Server auf 3500 wird nur genutzt, wenn er aktuellen Code ausliefert — sonst bricht das Setup mit Anleitung ab. **Kein** `npm run dev:test &` „auf Verdacht“ starten und kein `kill -9` auf 3500, solange ein anderer Lauf aktiv sein könnte (Lauf-Lock). Details: `docs/e2e-testing.md` („Frontend-Start“).
 
+**Server-Hygiene (B8950-013 §10, Pflicht):**
+1. Kein `npm run dev:test` und kein `next dev` für Testläufe. Getestet wird gegen den Standalone-Build, den Playwright per `webServer` startet und am Ende selbst beendet. Gate-gleiche Ergebnisse gibt es nur so (Turnstile-Sitekey, kein Doppel-Render). `E2E_FRONTEND_MODE=dev` nicht verwenden; das Gate (`scripts/test-gate.sh`) beendet einen laufenden `next dev` auf 3500 ohnehin.
+2. Wer für manuelle Prüfungen oder Configs ohne webServer selbst einen Prozess startet (`node scripts/e2e-frontend.cjs start`, Backend 8500 außerhalb des Global Setup, Gateway 8600, Test-Worker), notiert die PID und beendet ihn vor dem Handoff: Frontend/Gateway über den Listener-Port (`lsof -ti TCP:<port> -sTCP:LISTEN | xargs kill`), Test-Worker per `pkill -f 'workers.main worker.test.yml'`, **nie** `worker.prod.yml` (läuft am Studio für Prod).
+3. Im 04-test-report unter „Environment“ aufführen, was gestartet und wieder beendet wurde. Ausnahme: Das Test-Backend 8500, das das Global Setup startet, bleibt stehen (Standard-Setup, der nächste Lauf startet es ohnehin neu).
+
 **Configs ohne webServer/Backend-Start** (z. B. `e2e/smoke-only.config.ts`): beide Dienste müssen bereits laufen:
 
 ```bash
@@ -298,7 +303,7 @@ curl -s -o /dev/null -w "%{http_code}" "http://localhost:8500/api/v1/shops?limit
 > Wenn ein Dienst down ist:
 > - **Backend down:** `cd /Users/bb_studio_2025/dev/github/pundo_main_backend && ./scripts/start_test_server.sh &`
 >   Warten bis Uvicorn "Application startup complete" meldet, dann health-Check wiederholen.
-> - **Frontend down:** `node scripts/e2e-frontend.cjs start` (oder `npm run dev:test`); `e2e/frontend-freshness.ts` prüft, dass der Server aktuellen Code ausliefert.
+> - **Frontend down:** `node scripts/e2e-frontend.cjs start` im Hintergrund starten und nach dem Lauf beenden (Server-Hygiene, kein `npm run dev:test`); `e2e/frontend-freshness.ts` prüft, dass der Server aktuellen Code ausliefert.
 >
 > Teste erst, wenn beide Dienste laufen — mit einem down-Dienst enden Tests mit ERR_ABORTED und maskieren echte Fehler.
 
@@ -542,6 +547,7 @@ Nicht-blocking. Ablauf, Heuristik-Befehle, Patch-Format und Verdict→Issue-Stat
 
 - Produktivdaten bleiben unverändert: kein Schreiben in die Produktiv-DB (siehe Grundregeln).
 - **Keine Migrationen „für prod“:** Prod migriert beim Backend-Start im Container automatisch (siehe Conventions.md, „Datenbanken“).
+- **Server-Hygiene (B8950-013 §10):** keine `next dev`-Server für Testläufe, selbst gestartete Prozesse (Gateway, Test-Worker, Frontend) vor dem Handoff beenden — Details in Phase 3.1.
 - **Test-Umgebung:** Frontend Port **3500**, Backend Port **8500**. Getestet wird gegen diese Test-Instanzen, nicht gegen Produktiv.
 - **AGENTS.md lesen:** Next.js (Version siehe `package.json`) hat Breaking Changes — Docs prüfen!
 - **RTL:** `dir` kommt aus `isRTL()` in `src/lib/lang.ts` — keine eigenen Sprachlisten in Tests oder Code.

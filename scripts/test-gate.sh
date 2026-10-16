@@ -18,6 +18,8 @@
 #
 # Umgebung: GATE_LOCK_WAIT=<s> (Default 0), GATE_BUSY_WAIT=<s> (Default 90), GATE_LOG_DIR, GATE_FORCE=1
 # (Push-Gate trotz gruenem Lauf fuer denselben Commit), PUNDO_GATE_LOCK_OWNER (vom Eltern-Gate gesetzt).
+# E2E_REQUIRE_STANDALONE=1 setzt das Gate selbst (Playwright-Lanes): next dev auf :3500 wird vorher beendet
+# (scripts/e2e-frontend.cjs gate-prepare), E2E_FRONTEND_MODE=dev bricht ab.
 # gitleaks ist optional (brew install gitleaks); ohne Installation wird der Schritt uebersprungen und gemeldet.
 set -euo pipefail
 
@@ -67,6 +69,12 @@ playwright_preflight() {
   [ -x "$BACKEND_REPO/.venv/bin/uvicorn" ] || gate_die 4 "$BACKEND_REPO/.venv fehlt (uv sync --all-extras --all-groups)."
   gate_preflight_db "$BACKEND_REPO"
   gate_wait_idle both
+  # B8950-013 §10: Das Gate testet nur gegen den Standalone-Build. Erst NACH gate_wait_idle (kein anderer Playwright-Lauf
+  # besitzt :3500) und VOR Playwright (der webServer entscheidet vor dem Global Setup ueber Wiederverwendung).
+  [ "${E2E_FRONTEND_MODE:-}" = "dev" ] && gate_die 4 "E2E_FRONTEND_MODE=dev ist im Gate nicht erlaubt (B8950-013 §10). Variable entfernen."
+  export E2E_REQUIRE_STANDALONE=1
+  node scripts/e2e-frontend.cjs gate-prepare || gate_die 4 "Frontend-Port 3500 nicht vorbereitbar (siehe Meldung oben)."
+  gate_say "Frontend 3500: Standalone-Build erzwungen (laufender next dev wird beendet)."
   gate_say "Playwright: Global Setup startet 8500 neu, webServer baut/startet 3500 (Rebuild ca. 3 min). Nur Test-Ports 3500/8500."
 }
 

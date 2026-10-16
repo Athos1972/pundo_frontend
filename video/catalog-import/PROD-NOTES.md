@@ -1,7 +1,9 @@
 # catalog-import: Produktionsnotizen (Stand 2026-10-16)
 
 Tutorial #12, **Teil 9** von „pundo for businesses“: „Import your whole catalogue at once“ (EN 1:58, EL 2:04). Freigegebenes DE-Skript: `01-skript.de.md`.
-Short: `../short-catalog-import/` (EN 0:30, EL 0:33). Neu gebaut 2026-10-16 mit Produktfotos und echtem Google Sheet; noch nicht freigegeben, nicht hochgeladen, nichts committet.
+Short: `../short-catalog-import/` (EN 0:30, EL 0:33).
+
+**Veröffentlicht 2026-10-16 (BB-Freigabe):** EN https://youtu.be/7i7nX0W1dZ0 · EL https://youtu.be/p60A-EhVE14 (öffentlich, Playlists am Ende, Abspann Playlist + Abo). Shorts EN https://youtube.com/shorts/Z0ULDtrLIRg (31.10.2026 18:00) · EL https://youtube.com/shorts/fQApYKAr5fY (1.11.2026 18:00), „Ähnliches Video“ = Teil 9. Teil 8 EN/EL verweist im Abspann auf Teil 9; Serienblock aller Beschreibungen ergänzt. Die tatsächlich hochgeladenen Beschreibungen weichen leicht von den Entwürfen unten ab (Stil wie Teil 8: Serienblock ohne eigenes Video, „Why pundo?“, „All playlists“, Hashtags); Kapitel: EN 0:00 Hundreds of items, one upload · 0:14 · 0:27 · 0:39 Fix errors: all or nothing · 0:54 · 1:08 · 1:26 · 1:39.
 
 ## Dateien
 | Datei | Inhalt |

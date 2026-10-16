@@ -569,7 +569,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
     })
     const TITLE: Record<string, string> = {
       en: 'How pundo recognises your articles', de: 'So erkennt pundo deine Artikel wieder',
-      el: 'Πώς το pundo αναγνωρίζει τα προϊόντα σας', ru: 'Как pundo узнаёт ваши товары',
+      el: 'Πώς το pundo αναγνωρίζει τα προϊόντα σου', ru: 'Как pundo узнаёт ваши товары',
       ar: 'كيف يتعرّف pundo على منتجاتك', he: 'כך pundo מזהה את הפריטים שלך',
     }
     for (const lang of Object.keys(TITLE)) {

@@ -97,13 +97,13 @@ describe('TrustProfileSection', () => {
   const profileBase = { user_id: 1, trust_level: 1, credits: 0, badges: [] }
 
   it('shows trust level and credits', () => {
-    render(<TrustProfileSection profile={{ ...profileBase, trust_level: 2, credits: 75 }} tr={tr_en} />)
+    render(<TrustProfileSection profile={{ ...profileBase, trust_level: 2, credits: 75 }} tr={tr_en} lang="en" />)
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('75')).toBeInTheDocument()
   })
 
   it('shows no-badges message when badges empty', () => {
-    render(<TrustProfileSection profile={profileBase} tr={tr_en} />)
+    render(<TrustProfileSection profile={profileBase} tr={tr_en} lang="en" />)
     expect(screen.getByText(tr_en.trust_no_badges)).toBeInTheDocument()
   })
 
@@ -112,18 +112,27 @@ describe('TrustProfileSection', () => {
       ...profileBase,
       badges: [{ badge_type: 'island_hero', awarded_at: '2026-01-01T00:00:00Z' }],
     }
-    render(<TrustProfileSection profile={profile} tr={tr_en} />)
+    render(<TrustProfileSection profile={profile} tr={tr_en} lang="en" />)
     expect(screen.getByText(tr_en.trust_badge_island_hero)).toBeInTheDocument()
   })
 
+  it('DE — Badge-Datum in der Seitensprache', () => {
+    const profile = {
+      ...profileBase,
+      badges: [{ badge_type: 'island_hero', awarded_at: '2026-10-16T09:00:00Z' }],
+    }
+    render(<TrustProfileSection profile={profile} tr={tr_de} lang="de" />)
+    expect(screen.getByText('16.10.2026')).toBeInTheDocument()
+  })
+
   it('DE — shows German labels', () => {
-    render(<TrustProfileSection profile={profileBase} tr={tr_de} />)
+    render(<TrustProfileSection profile={profileBase} tr={tr_de} lang="de" />)
     expect(screen.getByText(tr_de.trust_level)).toBeInTheDocument()
     expect(screen.getByText(tr_de.trust_credits)).toBeInTheDocument()
   })
 
   it('AR — shows Arabic labels (RTL)', () => {
-    render(<TrustProfileSection profile={profileBase} tr={tr_ar} />)
+    render(<TrustProfileSection profile={profileBase} tr={tr_ar} lang="ar" />)
     expect(screen.getByText(tr_ar.trust_level)).toBeInTheDocument()
     expect(screen.getByText(tr_ar.trust_no_badges)).toBeInTheDocument()
   })

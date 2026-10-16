@@ -107,9 +107,9 @@ export function ApiKeyList({ initialKeys, lang }: ApiKeyListProps) {
                 <p className="text-xs text-gray-400 mt-0.5">
                   {scopeLabel(k.scope)}
                   {' · '}
-                  {tr.key_created}: {new Date(k.created_at).toLocaleDateString()}
+                  {tr.key_created}: {new Date(k.created_at).toLocaleDateString(lang)}
                   {' · '}
-                  {tr.key_last_used}: {k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : tr.key_never}
+                  {tr.key_last_used}: {k.last_used_at ? new Date(k.last_used_at).toLocaleDateString(lang) : tr.key_never}
                 </p>
               </div>
               {confirmId === k.id ? (

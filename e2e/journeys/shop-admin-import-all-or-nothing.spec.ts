@@ -36,7 +36,7 @@ const IMGITEM = e2eName('B5900-030', 'img')
 // F5920: `blocked` = Sperr-Hinweis der Vorschau (preview_apply_blocked, src/lib/i18n/shop-admin-import.ts)
 const T = {
   en: { blocked: /Applying is only possible without errors\. Fix the 1 faulty rows/, missing: 'Name is missing', row: 'Row 3', xlsx: /\.xlsx file could not be read/, dup: 'Duplicate in the file' },
-  el: { blocked: /Η εφαρμογή είναι δυνατή μόνο χωρίς σφάλματα\. Διορθώστε τις 1 γραμμές/, missing: 'Λείπει το όνομα', row: 'Γραμμή 3', xlsx: /δεν ήταν δυνατό να διαβαστεί/, dup: 'Διπλότυπο στο αρχείο' },
+  el: { blocked: /Η εφαρμογή είναι δυνατή μόνο χωρίς σφάλματα\. Διόρθωσε τις 1 γραμμές/, missing: 'Λείπει το όνομα', row: 'Γραμμή 3', xlsx: /δεν ήταν δυνατό να διαβαστεί/, dup: 'Διπλότυπο στο αρχείο' },
   ar: { blocked: /لا يمكن التطبيق إلا بلا أخطاء\. صحّح الصفوف الخاطئة \(1\)/, missing: 'الاسم مفقود', row: 'الصف 3', xlsx: /تعذّر قراءة ملف \.xlsx/, dup: 'تكرار في الملف' },
 } as const
 

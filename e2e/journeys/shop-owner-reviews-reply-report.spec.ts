@@ -220,6 +220,19 @@ test.describe.serial('Shop-Owner Bewertungen: Antworten, Melden, Moderation', ()
     await expect(block).toContainText('Thank you for visiting!')
     await expect(block).toContainText(`Reply from ${shopA.name}`)
 
+    // B5930-001: Datum von Bewertung und Antwort in der Seitensprache (el), nicht im englischen Server-Default
+    await publicPage.goto(`/el/shops/${shopA.slug}`)
+    const blockEl = publicPage.getByTestId('owner-reply').first()
+    await expect(blockEl).toContainText('Thank you for visiting!')
+    const elDate = (iso: string) => new Intl.DateTimeFormat('el', { dateStyle: 'medium', timeZone: 'Asia/Nicosia' }).format(new Date(iso))
+    for (const t of [blockEl.locator('time'), blockEl.locator('xpath=ancestor::article').locator('time').first()]) {
+      const iso = await t.getAttribute('datetime')
+      const text = (await t.textContent())?.trim()
+      expect(text, 'el-Datum in Seitensprache').toBe(elDate(iso!))
+      expect(text).not.toMatch(/[A-Z][a-z]{2} \d{1,2}, \d{4}/)
+    }
+    logStep('4b', 'Datum auf /el/ in Seitensprache', 'el-Format', 'ok', 'PASS')
+
     await page.getByRole('button', { name: 'Edit', exact: true }).click()
     await page.getByRole('textbox', { name: 'Your public reply' }).fill('Edited: see you soon')
     await page.getByRole('button', { name: 'Save reply' }).click()

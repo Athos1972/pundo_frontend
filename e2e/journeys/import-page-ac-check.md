@@ -16,6 +16,8 @@ touches-modules:
   - src/components/shop-admin/useImportPreview.ts
   - src/components/shop-admin/OfferForm.tsx
   - src/components/shop-admin/OfferList.tsx
+  - src/lib/i18n/shop-admin-import.ts
+  - src/lib/i18n/shop-admin-catalog.ts
 touches-roles:
   - shop-owner
   - guest

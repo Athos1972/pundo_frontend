@@ -140,6 +140,17 @@ describe('ReviewCard — owner reply', () => {
     expect(container.textContent!.indexOf('Great product!')).toBeLessThan(container.textContent!.indexOf('Thank you'))
   })
 
+  it('el — Datum von Bewertung und Antwort in der Seitensprache (kein englisches Format)', async () => {
+    const { ReviewCard } = await import('@/components/reviews/ReviewCard')
+    const { formatDate } = await import('@/lib/format-date')
+    const { container } = render(<ReviewCard review={{ ...mockReview, owner_reply: reply }} tr={tr} lang="el" />)
+    const times = Array.from(container.querySelectorAll('time'))
+    expect(times).toHaveLength(2)
+    expect(times[0].textContent).toBe(formatDate(mockReview.created_at, 'el'))
+    expect(times[1].textContent).toBe(formatDate(reply.created_at, 'el'))
+    for (const tm of times) expect(tm.textContent).not.toMatch(/[A-Z][a-z]{2} \d/)
+  })
+
   it('renders no reply block without a reply (missing, null)', async () => {
     const { ReviewCard } = await import('@/components/reviews/ReviewCard')
     const { rerender } = render(<ReviewCard review={mockReview} tr={tr} lang="en" />)

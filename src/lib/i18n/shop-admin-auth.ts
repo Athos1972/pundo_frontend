@@ -273,7 +273,7 @@ const shopAdminAuthTranslations = {
     onboarding_google_btn: 'Συνέχεια με Google',
     onboarding_or: 'ή',
     onboarding_google_unavailable: 'Η σύνδεση με Google έρχεται σύντομα.',
-    onboarding_google_error: 'Η σύνδεση με Google δεν είναι διαθέσιμη αυτή τη στιγμή. Δοκιμάστε ξανά ή χρησιμοποιήστε email.',
+    onboarding_google_error: 'Η σύνδεση με Google δεν είναι διαθέσιμη αυτή τη στιγμή. Δοκίμασε ξανά ή χρησιμοποίησε email.',
     onboarding_error_email_taken: 'Αυτή η διεύθυνση email είναι ήδη καταχωρημένη.',
     onboarding_error_generic: 'Κάτι πήγε στραβά. Παρακαλώ δοκίμασε ξανά.',
     onboarding_turnstile_loading: 'Φόρτωση ελέγχου ασφαλείας...',
@@ -291,7 +291,7 @@ const shopAdminAuthTranslations = {
     onboarding_logo_home_aria: 'pundo — επιστροφή στην αρχική',
     onboarding_back_link: '← Πίσω',
     onboarding_photo_preview_alt: 'Προεπισκόπηση φωτογραφίας',
-    onboarding_page_title: 'Εγγραφείτε τώρα | Pundo',
+    onboarding_page_title: 'Εγγράψου τώρα | Pundo',
   },
   ru: {
     register_title: 'Регистрация магазина',

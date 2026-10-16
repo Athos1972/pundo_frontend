@@ -2,6 +2,7 @@
 
 import type { TrustProfileResponse } from '@/types/api'
 import type { Translations } from '@/lib/translations'
+import { formatDate } from '@/lib/format-date'
 
 const BADGE_LABEL_KEY: Record<string, keyof Translations> = {
   island_hero: 'trust_badge_island_hero',
@@ -18,9 +19,10 @@ const BADGE_EMOJI: Record<string, string> = {
 interface Props {
   profile: TrustProfileResponse
   tr: Translations
+  lang: string
 }
 
-export function TrustProfileSection({ profile, tr }: Props) {
+export function TrustProfileSection({ profile, tr, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Level + Credits */}
@@ -78,7 +80,7 @@ export function TrustProfileSection({ profile, tr }: Props) {
                     {tr[BADGE_LABEL_KEY[b.badge_type] ?? 'trust_badges'] as string}
                   </p>
                   <p className="text-xs text-text-muted">
-                    {new Date(b.awarded_at).toLocaleDateString()}
+                    {formatDate(b.awarded_at, lang)}
                   </p>
                 </div>
               </div>

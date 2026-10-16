@@ -13,6 +13,8 @@ touches-modules:
   - src/components/shop-admin/ImportPreview.tsx
   - src/components/shop-admin/ImportPreviewRow.tsx
   - src/components/shop-admin/useImportPreview.ts
+  - src/lib/i18n/shop-admin-import.ts
+  - src/lib/i18n/shop-admin-catalog.ts
 touches-roles:
   - shop-owner
 touches-states:

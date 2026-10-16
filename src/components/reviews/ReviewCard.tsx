@@ -3,19 +3,12 @@ import type { Translations } from '@/lib/translations'
 import { StarRatingDisplay } from './StarRatingDisplay'
 import { ReviewPhotoGrid } from './ReviewPhotoGrid'
 import { ReportButton } from './ReportButton'
+import { formatDate } from '@/lib/format-date'
 
 interface Props {
   review: Review
   tr: Translations
   lang: string
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(iso))
-  } catch {
-    return iso
-  }
 }
 
 export function ReviewCard({ review, tr, lang }: Props) {
@@ -27,7 +20,7 @@ export function ReviewCard({ review, tr, lang }: Props) {
           <StarRatingDisplay stars={review.stars} size="sm" />
         </div>
         <time dateTime={review.created_at} className="text-xs text-text-muted shrink-0">
-          {formatDate(review.created_at)}
+          {formatDate(review.created_at, lang)}
         </time>
       </div>
 
@@ -43,7 +36,7 @@ export function ReviewCard({ review, tr, lang }: Props) {
             {tr.reviews_owner_reply_from(review.owner_reply.shop_name)}
           </p>
           <time dateTime={review.owner_reply.created_at} className="text-xs text-text-muted">
-            {formatDate(review.owner_reply.created_at)}
+            {formatDate(review.owner_reply.created_at, lang)}
           </time>
           <p dir="auto" className="text-sm text-text leading-relaxed mt-1 whitespace-pre-line">
             {review.owner_reply.body}

@@ -45,6 +45,17 @@ tester.run('no-hardcoded-jsx-text', rule, {
     },
     { code: 'const a = <div aria-label="Samsung" /> // @i18n-allow-literal' },
     { code: 'const a = <div>hello</div>', options: [{ allow: ['hello'] }] },
+    // toast helpers: translated / dynamic arguments are fine
+    { code: "showToast(tr.api_key_deleted, 'success')" },
+    { code: 'showToast(`Deleted ${n}`, "success")' },
+    { code: "toast(message)" },
+    { code: "showToast('', 'success')" },
+    { code: "showToast('42', 'success')" },
+    { code: "otherFn('Deleted')" },
+    { code: "showToast('Deleted', 'success') // @i18n-allow-literal" },
+    { code: "showToast(\n// @i18n-allow-literal\n'Deleted')" },
+    { code: "notify('Deleted')", options: [{ toastFunctions: ['showToast'] }] },
+    { code: "showToast('Deleted')", options: [{ toastFunctions: ['notify'] }] },
   ],
   invalid: [
     { code: 'const a = <h3>Without pundo</h3>', errors: err },
@@ -55,5 +66,10 @@ tester.run('no-hardcoded-jsx-text', rule, {
     { code: 'const a = <input placeholder={"Search"} />', errors: err },
     { code: 'const a = <h2>Etwas ist schiefgelaufen</h2>', errors: err },
     { code: 'const a = <span>Ελληνικά</span>', errors: err },
+    { code: "showToast('Deleted', 'success')", errors: err },
+    { code: 'showToast(`Archived`, "success")', errors: err },
+    { code: "toast('Saved')", errors: err },
+    { code: "toast.success('Saved')", errors: err },
+    { code: "notify('Deleted')", options: [{ toastFunctions: ['notify'] }], errors: err },
   ],
 })

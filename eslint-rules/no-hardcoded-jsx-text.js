@@ -10,6 +10,9 @@
  *   - JSX text children:            <h3>Without pundo</h3>
  *   - string literals as children:  <p>{'Hello'}</p>, <p>{`Hello`}</p>
  *   - user-visible string attributes: aria-label="5 stars", alt, title, placeholder, …
+ *   - static first argument of toast helpers: showToast('Deleted', 'success'), toast(`Saved`)
+ *     (function names configurable via the `toastFunctions` option, default showToast + toast;
+ *     also matches member calls like toast.success('x'))
  *
  * Not reported: text without at least two consecutive letters (numbers, prices,
  * symbols, emoji, "·", "→", "€0*"), URL examples, and allowlisted brand names (pundo,
@@ -43,6 +46,8 @@ const DEFAULT_ALLOW = [
   'Google Maps', 'Apple Maps', 'Waze', 'WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'Viber', 'Telegram',
 ]
 
+const DEFAULT_TOAST_FUNCTIONS = ['showToast', 'toast']
+
 const MARKER = '@i18n-allow-literal'
 
 // At least two consecutive letters in any script (Latin, Greek, Cyrillic, Arabic, Hebrew, …)
@@ -63,6 +68,7 @@ module.exports = {
         type: 'object',
         properties: {
           allow: { type: 'array', items: { type: 'string' } },
+          toastFunctions: { type: 'array', items: { type: 'string' } },
         },
         additionalProperties: false,
       },
@@ -76,6 +82,7 @@ module.exports = {
   create(context) {
     const options = context.options[0] || {}
     const allow = new Set([...DEFAULT_ALLOW, ...(options.allow || [])])
+    const toastFunctions = new Set(options.toastFunctions || DEFAULT_TOAST_FUNCTIONS)
     const sourceCode = context.sourceCode ?? context.getSourceCode()
     const lines = sourceCode.lines
 
@@ -112,7 +119,23 @@ module.exports = {
       return null
     }
 
+    function calleeName(callee) {
+      if (callee.type === 'Identifier') return callee.name
+      if (callee.type === 'MemberExpression' && !callee.computed && callee.object.type === 'Identifier') {
+        return callee.object.name // toast.success('x') -> toast
+      }
+      return null
+    }
+
     return {
+      CallExpression(node) {
+        const name = calleeName(node.callee)
+        if (!name || !toastFunctions.has(name)) return
+        const first = node.arguments[0]
+        const value = staticString(first)
+        if (value !== null) report(first, value)
+      },
+
       JSXText(node) {
         report(node, node.value)
       },

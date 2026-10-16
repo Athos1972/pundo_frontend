@@ -92,9 +92,10 @@ const cspInlineStyleRule = {
 // cannot see these. Every UI string must serve all 6 languages.
 // Exceptions (brand names in decorative mocks, language endonyms): add
 // // @i18n-allow-literal on the line above (or {/* @i18n-allow-literal */} in JSX children).
+// Also flags static first arguments of showToast()/toast() (B5900-020).
 const i18nHardcodedTextRule = {
-  files: ["src/app/**/*.tsx", "src/components/**/*.tsx"],
-  ignores: ["src/**/*.test.tsx", "src/tests/**"],
+  files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}", "src/lib/**/*.{ts,tsx}"],
+  ignores: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/tests/**"],
   plugins: {
     "local-i18n": {
       rules: {

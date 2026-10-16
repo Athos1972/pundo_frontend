@@ -35,6 +35,9 @@
  *     worker.test.yml). Die Gateway-Queue der Prod-Kopie enthält fremde Tasks (z. B. translate.shop,
  *     kein Canned-Result), an denen driveChain() sonst abbricht; ohne Worker bleibt der Case in
  *     enrichment_in_progress. Override: E2E_LLM_WORKER_CHECK=0.
+ *   - B8950-015: driveChain() fasst nur EIGENE Tasks an (Marker-/Item-ID-Filter per read-only Peek in der Gateway-TEST-DB
+ *     und Lease genau dieser IDs); fremde Queue-Tasks werden weder geleast noch per /fail zurückgegeben. Braucht
+ *     Lesezugriff auf `DATABASE_URL_TEST` aus dem Gateway-Repo-.env (GATEWAY_REPO / GATEWAY_DATABASE_URL_TEST).
  * Ist eine Vorbedingung nicht erfüllt, werden T0/T1/T2/T4 mit Begründung übersprungen
  * (siehe `chainSkipReason`), nie still grün.
  *
@@ -48,11 +51,11 @@
  */
 
 import { test, expect, type WorkerShop } from './_helpers/worker-shop'
-import { RUN_ID, e2eName, psql } from './_helpers/test-data'
+import { RUN_ID, e2eName, marker, psql } from './_helpers/test-data'
 import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
-import { execSync } from 'child_process'
+import { execSync, execFileSync } from 'child_process'
 import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
@@ -60,6 +63,7 @@ import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
 const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
+const GATEWAY_REPO = process.env.GATEWAY_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_llm_gateway'
 // Muss zu pundo_llm_workers/restart_test_worker.sh passen (`pkill -f "workers.main $CONFIG"`) und darf den
 // Prod-Worker (`workers.main worker.prod.yml`, läuft am Studio) NICHT treffen.
 const TEST_WORKER_PATTERN = 'workers.main worker.test.yml'
@@ -170,23 +174,51 @@ async function intakeBatch(caseId: number, items: Array<{ name: string; descript
   return { status: res.status, data: await res.json() }
 }
 
-async function gatewayNextTask(): Promise<{ task_id: string; job_type: string; payload: Record<string, unknown> } | null> {
-  const res = await fetch(`${GATEWAY_URL}/v1/tasks/next?capabilities=text,embed&worker_id=playwright-e2e`, {
-    headers: { 'X-Internal-API-Key': GATEWAY_API_KEY },
-  })
-  if (res.status === 204) return null
-  if (!res.ok) throw new Error(`gatewayNextTask failed: ${res.status}`)
-  return res.json()
+/** DB-URL der Gateway-TEST-Datenbank (pundo_llm_gateway_test) — nie die Prod-DB `pundo_llm_gateway`. */
+function gatewayTestDbUrl(): string {
+  let url = process.env.GATEWAY_DATABASE_URL_TEST
+  if (!url) {
+    const envFile = fs.readFileSync(path.join(GATEWAY_REPO, '.env'), 'utf8')
+    url = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)?.[1].trim()
+  }
+  if (!url) throw new Error('DATABASE_URL_TEST not found in gateway .env (GATEWAY_DATABASE_URL_TEST)')
+  url = url.replace('postgresql+psycopg://', 'postgresql://')
+  if (!url.endsWith('_test')) throw new Error('[admin-catalog-review] Safety: Gateway-DB muss die *_test-Datenbank sein')
+  return url
 }
 
-/** Gibt einen geleasten Task ohne Canned-Result sofort an die Queue zurück (retryable), damit der echte Test-Worker ihn
- * bekommt. Ohne das hält der Lease (120–300 s) die Kette an (categorize.descend, translate.shop, …; B8950-013 §10). */
-async function gatewayRelease(taskId: string) {
-  await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/fail`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Internal-API-Key': GATEWAY_API_KEY },
-    body: JSON.stringify({ worker_id: 'playwright-e2e', error: 'released by e2e driveChain (no canned result)', retryable: true }),
-  })
+function gatewayPsql(sql: string): string {
+  return execFileSync('psql', [gatewayTestDbUrl(), '-v', 'ON_ERROR_STOP=1', '-Atc', sql], { encoding: 'utf8' }).trim()
+}
+
+type GatewayTask = { task_id: string; job_type: string; payload: Record<string, unknown> }
+
+/**
+ * B8950-015: Das Gateway kennt weder Peek noch Filter noch Lease-Release (GET /v1/tasks/next leased IMMER den
+ * nächsten fremden Task; /fail zählt retry_count hoch und beendet Tasks nach max_retries als `failed` inkl.
+ * Fehler-Webhook). Deshalb fasst der Test fremde Tasks (Prod-Kopie in der Queue) nie an:
+ *   1. read-only Peek in der Gateway-TEST-DB nach queued Tasks, die eindeutig zu den eigenen Marker-Artikeln
+ *      dieses Laufs gehören (Payload enthält `E2E-<RUN>-CATALOG-REVIEW` oder `item_id` eines eigenen Marker-Items),
+ *   2. Lease genau dieser IDs (atomar, nur `status='queued'`, gleiche Felder wie lease.pull_next_task).
+ * Alles andere bleibt unberührt in der Queue und gehört dem Test-Worker.
+ */
+function leaseOwnTasks(): GatewayTask[] {
+  const jobTypes = ['describe.item', 'translate.item', 'categorize.item', 'enrich.product_attributes', 'embed.text']
+  const itemIds = psql(`select id from items where slug ~ '^e2e-${RUN_ID}-catalog-review-'`)
+    .split('\n').filter(Boolean).map(Number).filter(Number.isInteger)
+  const idClause = itemIds.length ? ` or (payload->>'item_id') in (${itemIds.map(i => `'${i}'`).join(',')})` : ''
+  const mk = marker('CATALOG-REVIEW').replace(/[^A-Za-z0-9-]/g, '')
+  const out = gatewayPsql(
+    `with own as (select id from llm_tasks where status = 'queued' and capability in ('text','embed') ` +
+    `and job_type in (${jobTypes.map(j => `'${j}'`).join(',')}) ` +
+    `and (payload::text like '%${mk}%'${idClause}) order by priority, created_at) ` +
+    `update llm_tasks t set status = 'in_progress', leased_by = 'playwright-e2e', ` +
+    `lease_until = now() + (t.lease_seconds * interval '1 second'), started_at = coalesce(t.started_at, now()) ` +
+    `from own where t.id = own.id and t.status = 'queued' ` +
+    `returning json_build_object('task_id', t.id, 'job_type', t.job_type, 'payload', t.payload)`
+  )
+  // psql hängt die Kommandozeile „UPDATE n“ an → nur JSON-Zeilen
+  return out.split('\n').filter(l => l.startsWith('{')).map(l => JSON.parse(l) as GatewayTask)
 }
 
 async function gatewaySubmitResult(taskId: string, result: unknown, model: string) {
@@ -235,31 +267,28 @@ function buildCannedResult(jobType: string, payload: Record<string, unknown>): u
   return null
 }
 
-/** Drain the gateway queue, answering every describe/translate/categorize/
- * attribute/embed task with a canned result for up to `windowMs` (B8950-013 §10).
- * Läuft ein echter Test-Worker, konkurrieren beide um jeden neuen Task: driveChain pollt deshalb schnell (der Worker
- * pollt alle 2–5 s), damit die Canned-Kette (categorize.item mit hoher Konfidenz) gewinnt; ein echtes LLM kann den
- * erfundenen Marker-Artikel nicht kategorisieren, und die Kette bliebe stehen. Tasks ohne Canned-Result
- * (categorize.descend, translate.shop, …) gibt driveChain sofort zurück (retryable), damit der Test-Worker sie bekommt.
- * Returns number of tasks processed. */
+/** Beantwortet die EIGENEN Marker-Tasks (describe/translate/categorize/attribute/embed) mit Canned-Antworten
+ * für bis zu `windowMs` (B8950-013 §10, B8950-015). Fremde Tasks der Queue (Prod-Kopie) und eigene Tasks ohne
+ * Canned-Result (categorize.descend, translate.shop, …) werden weder geleast noch zurückgegeben/als failed
+ * markiert: sie bleiben `queued` für den echten Test-Worker. Der Worker konkurriert um die eigenen Tasks
+ * (Poll alle 2–5 s); driveChain pollt deshalb schnell, damit die Canned-Kette (categorize.item mit hoher
+ * Konfidenz) gewinnt. Returns number of tasks processed. */
 async function driveChain(windowMs = 8000): Promise<number> {
   let processed = 0
   const end = Date.now() + windowMs
   while (Date.now() < end) {
-    const task = await gatewayNextTask()
-    if (task === null) {
-      await new Promise(r => setTimeout(r, 100))
+    const tasks = leaseOwnTasks()
+    if (tasks.length === 0) {
+      await new Promise(r => setTimeout(r, 300))
       continue
     }
-    const result = buildCannedResult(task.job_type, task.payload)
-    if (result === null) {
-      await gatewayRelease(task.task_id)
-      await new Promise(r => setTimeout(r, 6000)) // länger als der Leerlauf-Backoff des Workers (5 s)
-      continue
+    for (const task of tasks) {
+      const result = buildCannedResult(task.job_type, task.payload)
+      if (result === null) continue // kann durch den jobTypes-Filter nicht vorkommen
+      const model = task.job_type === 'embed.text' ? 'bge-m3:latest' : 'gemma4:26b'
+      await gatewaySubmitResult(task.task_id, result, model)
+      processed++
     }
-    const model = task.job_type === 'embed.text' ? 'bge-m3:latest' : 'gemma4:26b'
-    await gatewaySubmitResult(task.task_id, result, model)
-    processed++
   }
   return processed
 }
@@ -327,9 +356,9 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
 
     await new Promise(r => setTimeout(r, 1500))
     // Gateway 8600 nicht erreichbar (kein Test-Gateway gestartet) → Kette nicht prüfbar: sichtbar überspringen
-    let task: Awaited<ReturnType<typeof gatewayNextTask>> = null
+    let task: GatewayTask | null = null
     try {
-      task = await gatewayNextTask()
+      task = leaseOwnTasks()[0] ?? null
     } catch (err) {
       console.warn(`[admin-catalog-review] Gateway ${GATEWAY_URL} nicht erreichbar (${err instanceof Error ? err.message : err}) — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
     }

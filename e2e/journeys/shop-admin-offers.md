@@ -12,22 +12,29 @@ touches-modules:
   - src/lib/shop-admin-api.ts
   - src/lib/shop-admin-translations.ts
   - src/types/shop-admin.ts
+  - src/app/(system-admin)/admin/(portal)/offers/**
+  - src/app/(system-admin)/admin/(portal)/shop-owner-offers/**
+  - src/types/system-admin.ts
+  - src/lib/system-admin-api.ts
 touches-roles:
   - shop-owner
   - guest
+  - admin
 touches-states:
   - Offer.status:active
   - Offer.status:archived
   - Offer.promo:active
   - Offer.promo:absent
+  - ShopListing.sku:set
+  - ShopListing.sku:conflict
 status-changed-at: 2026-05-19T14:00:00Z
 status-changed-by-spec: 2026-05-19-offer-list-item-details
-last-run: 2026-05-19T14:45:00Z
+last-run: 2026-10-16T01:08:00Z
 last-result: PASS
-last-run-sha: 312ae62
+last-run-sha: 62efc7e
 ---
 
-> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (Gruppen A, B, Regression). Die übrigen Gruppen liegen in `shop-admin-offers-archive.spec.ts` (C, D), `shop-admin-offers-cross-shop.spec.ts` (XS, AR, SP, DT) und `shop-admin-offers-item-details.spec.ts` (E); Helfer in `_helpers/offers-api.ts`. Testdaten sind Marker-Items im Worker-Shop (keine Prod-Items mehr).
+> **Spec-Dateien (F8950 T32):** `spec-file` ist die Hauptdatei (Gruppen A, B, Regression). Die übrigen Gruppen liegen in `shop-admin-offers-archive.spec.ts` (C, D), `shop-admin-offers-cross-shop.spec.ts` (XS, AR, SP, DT) und `shop-admin-offers-item-details.spec.ts` (E) und `shop-admin-offers-sku.spec.ts` (SKU: Owner-Neu-Flow SKU-1..4, System-Admin ADM-1..4, I18N; F5920 Nachtrag `2026-10-15-sku-admin-und-anlage`); Helfer in `_helpers/offers-api.ts`. Testdaten sind Marker-Items im Worker-Shop (keine Prod-Items mehr).
 
 ### Journey: Shop-Admin Angebote CRUD
 

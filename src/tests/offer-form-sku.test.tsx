@@ -20,7 +20,15 @@ vi.mock('next/image', () => ({
 }))
 vi.mock('@/components/shop-admin/Toast', () => ({ showToast: (...a: unknown[]) => showToast(...a) }))
 vi.mock('@/components/shop-admin/PriceTierEditor', () => ({ PriceTierEditor: () => <div /> }))
-vi.mock('@/components/shop-admin/ItemPickerModal', () => ({ ItemPickerModal: () => null }))
+// The picker stub exposes the chosen listing: a test sets pickerSelection, the button calls onSelect like the real modal.
+let pickerSelection: { listingId?: number; sku?: string | null } = {}
+vi.mock('@/components/shop-admin/ItemPickerModal', () => ({
+  ItemPickerModal: ({ onSelect }: { onSelect: (item: unknown, id?: number, sku?: string | null) => void }) => (
+    <button type="button" onClick={() => onSelect({ id: 5, slug: 'x', item_type: 'product', name: 'Cola', category_id: 1, ean: null, photo_url: null }, pickerSelection.listingId, pickerSelection.sku)}>
+      pick
+    </button>
+  ),
+}))
 vi.mock('@/components/shop-admin/OfferItemPhotos', () => ({ OfferItemPhotos: () => <div /> }))
 
 import { OfferForm } from '@/components/shop-admin/OfferForm'
@@ -126,5 +134,76 @@ describe('OfferForm — SKU field', () => {
     render(<OfferForm offer={OFFER} lang="ar" />)
     const input = screen.getByLabelText(tAdmin('ar').offer_sku_label)
     expect(input.getAttribute('dir')).toBe('ltr')
+  })
+})
+
+
+describe('OfferForm — SKU in the create flow (atomic with POST /offers)', () => {
+  async function pick(listingId: number, sku: string | null | undefined, lang = 'en') {
+    pickerSelection = { listingId, sku }
+    const view = render(<OfferForm lang={lang} />)
+    fireEvent.click(screen.getByText(/^\+ /))      // opens the (stubbed) picker
+    fireEvent.click(await screen.findByText('pick'))
+    await screen.findByLabelText(tAdmin(lang).offer_sku_label)
+    // price on request: no tier editor needed to pass the form validation
+    fireEvent.change(view.container.querySelector('select')!, { target: { value: 'on_request' } })
+    return view
+  }
+  const submit = (c: HTMLElement) => fireEvent.submit(c.querySelector('form')!)
+  const offerPost = () => calls.find((c) => c.url === '/api/shop-admin/offers')!
+
+  it('prefills the SKU of an already existing listing (from the picker)', async () => {
+    await pick(77, 'P-1')
+    expect((screen.getByLabelText('Article number (SKU)') as HTMLInputElement).value).toBe('P-1')
+  })
+
+  it('new listing: empty field, typing a SKU sends it in the POST body and never PATCHes the listing', async () => {
+    mockFetch(() => json(201, {}))
+    const { container } = await pick(77, null)
+    setSku('  N-1 ')
+    submit(container)
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/shop-admin/offers'))
+    expect(calls.map((c) => c.method + ' ' + c.url)).toEqual(['POST /api/shop-admin/offers'])
+    expect(offerPost().body).toMatchObject({ shop_listing_id: 77, sku: 'N-1' })
+  })
+
+  it('existing SKU left as is: no sku key in the POST body (backend keeps it)', async () => {
+    mockFetch(() => json(201, {}))
+    const { container } = await pick(77, 'P-1')
+    submit(container)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(offerPost().body).not.toHaveProperty('sku')
+  })
+
+  it('existing SKU emptied: sku null in the POST body', async () => {
+    mockFetch(() => json(201, {}))
+    const { container } = await pick(77, 'P-1')
+    setSku('')
+    submit(container)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(offerPost().body).toHaveProperty('sku', null)
+  })
+
+  it('no SKU at all: no sku key', async () => {
+    mockFetch(() => json(201, {}))
+    const { container } = await pick(77, undefined)
+    submit(container)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(offerPost().body).not.toHaveProperty('sku')
+  })
+
+  it('409 sku_conflict from the POST: field error, toast, no navigation', async () => {
+    mockFetch(() => json(409, { detail: { code: 'sku_conflict', shop_listing_id: 3 } }))
+    const { container } = await pick(77, null)
+    setSku('N-1')
+    submit(container)
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(tAdmin('en').offer_sku_conflict))
+    expect(push).not.toHaveBeenCalled()
+    expect(showToast).toHaveBeenCalledWith(tAdmin('en').error_generic, 'error')
+  })
+
+  it('rtl: input stays ltr in the create flow', async () => {
+    await pick(77, 'P-1', 'ar')
+    expect(screen.getByLabelText(tAdmin('ar').offer_sku_label).getAttribute('dir')).toBe('ltr')
   })
 })

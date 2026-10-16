@@ -10,8 +10,11 @@ import type { ItemSearchResult } from '@/types/shop-admin'
 interface ItemPickerModalProps {
   isOpen: boolean
   onClose: () => void
-  /** Called when user selects or creates an item. shopListingId is set when a ShopListing was already created. */
-  onSelect: (item: ItemSearchResult, shopListingId?: number) => void
+  /**
+   * Called when user selects or creates an item. shopListingId is set when a ShopListing was already created;
+   * listingSku is the article number that listing already carries (F5920, null for a new listing).
+   */
+  onSelect: (item: ItemSearchResult, shopListingId?: number, listingSku?: string | null) => void
   lang: string
 }
 
@@ -119,13 +122,14 @@ export function ItemPickerModal({ isOpen, onClose, onSelect, lang }: ItemPickerM
         body: JSON.stringify({ item_id: item.id }),
       })
       if (res.ok) {
-        const listing = await res.json() as { id: number }
-        onSelect(item, listing.id)
+        const listing = await res.json() as { id: number; sku?: string | null }
+        onSelect(item, listing.id, listing.sku ?? null)
       } else if (res.status === 409) {
         // ShopListing already exists — backend returns {"detail": {"shop_listing_id": N}}
-        const body = await res.json() as { id?: number; shop_listing_id?: number; detail?: { shop_listing_id?: number } }
+        const body = await res.json() as { id?: number; shop_listing_id?: number; sku?: string | null; detail?: { shop_listing_id?: number; sku?: string | null } }
         const existingId = body.id ?? body.shop_listing_id ?? body.detail?.shop_listing_id
-        onSelect(item, existingId)
+        // F5920: the 409 carries the SKU of the existing listing so the form can show it.
+        onSelect(item, existingId, body.sku ?? body.detail?.sku ?? null)
       } else {
         onSelect(item)
       }
@@ -135,8 +139,8 @@ export function ItemPickerModal({ isOpen, onClose, onSelect, lang }: ItemPickerM
     onClose()
   }, [lang, onSelect, onClose])
 
-  const handleCreated = useCallback((item: ItemSearchResult, shopListingId: number) => {
-    onSelect(item, shopListingId)
+  const handleCreated = useCallback((item: ItemSearchResult, shopListingId: number, listingSku?: string | null) => {
+    onSelect(item, shopListingId, listingSku ?? null)
     onClose()
   }, [onSelect, onClose])
 

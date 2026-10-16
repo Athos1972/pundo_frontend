@@ -17,6 +17,7 @@ import type {
   SysAdminCategoryTranslation,
   SysAdminBrand,
   SysAdminOffer,
+  SysAdminShopOwnerOffer,
   SysAdminApiKey,
   SysAdminSocialLinkRule,
   SocialLinkRuleCategory,
@@ -30,7 +31,6 @@ import type {
 // Keep deprecated aliases available in this file so existing callers still compile
 type SysAdminProduct = SysAdminItem
 type SysAdminProductAttribute = SysAdminItemAttribute
-type SysAdminShopOwnerOffer = SysAdminOffer
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
 const BASE = `${BACKEND}/api/v1/admin`
@@ -154,7 +154,7 @@ export async function getBrand(id: number): Promise<SysAdminBrand> {
 
 // ─── Offers ────────────────────────────────────────────────────────────────────
 export async function getOffers(
-  params: { q?: string; shop_id?: number; product_id?: number; is_available?: boolean; limit?: number; offset?: number } = {},
+  params: { q?: string; shop_id?: number; shop_listing_id?: number; sku?: string; product_id?: number; is_available?: boolean; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<SysAdminOffer>> {
   return apiFetch<PaginatedResponse<SysAdminOffer>>(`/offers${buildQs(params)}`)
 }

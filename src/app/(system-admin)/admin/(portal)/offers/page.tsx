@@ -8,7 +8,7 @@ import type { Column } from '@/components/system-admin/EntityTable'
 const LIMIT = 20
 
 interface PageProps {
-  searchParams: Promise<{ page?: string; q?: string; shop_listing_id?: string }>
+  searchParams: Promise<{ page?: string; q?: string; shop_listing_id?: string; sku?: string }>
 }
 
 export default async function OffersPage({ searchParams }: PageProps) {
@@ -18,9 +18,13 @@ export default async function OffersPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(sp.page ?? 1))
   const q = sp.q ?? ''
   const shopListingIdQ = sp.shop_listing_id ?? ''
+  const skuQ = (sp.sku ?? '').trim()
+  const listingIdNum = Number(shopListingIdQ)
 
   const data = await getOffers({
     q: q || undefined,
+    shop_listing_id: Number.isInteger(listingIdNum) && listingIdNum > 0 ? listingIdNum : undefined,
+    sku: skuQ || undefined,
     shop_id: undefined,
     product_id: undefined,
     limit: LIMIT,
@@ -34,7 +38,9 @@ export default async function OffersPage({ searchParams }: PageProps) {
 
   const rows = data.items.map((o) => ({
     id: o.id,
+    item_name: o.item_name ?? '—',
     shop_listing_id: o.shop_listing_id,
+    sku: o.sku ?? '—',
     title: o.title ?? '—',
     source: o.source,
     currency: o.currency,
@@ -44,17 +50,19 @@ export default async function OffersPage({ searchParams }: PageProps) {
 
   const columns: Column[] = [
     { key: 'id', label: tr.id },
-    { key: 'shop_listing_id', label: 'Shop Listing' },
+    { key: 'item_name', label: tr.item },
+    { key: 'shop_listing_id', label: tr.shop_listing_id },
+    { key: 'sku', label: tr.sku },
     { key: 'title', label: tr.offer_title },
-    { key: 'source', label: 'Source' },
+    { key: 'source', label: tr.source },
     { key: 'currency', label: tr.currency },
     { key: 'price_type', label: tr.price_type },
     {
       key: 'archived',
-      label: tr.archived ?? 'Archived',
+      label: tr.archived,
       boolDisplay: {
-        trueLabel: 'Yes',
-        falseLabel: 'No',
+        trueLabel: tr.yes,
+        falseLabel: tr.no,
         trueClass: 'text-gray-400',
         falseClass: 'text-green-600',
       },
@@ -63,15 +71,7 @@ export default async function OffersPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-gray-900">{tr.nav_offers}</h1>
-        <Link
-          href="/admin/offers/new"
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          + {tr.add_new}
-        </Link>
-      </div>
+      <h1 className="text-xl font-semibold text-gray-900">{tr.nav_offers}</h1>
 
       <form method="GET" className="flex gap-2 flex-wrap items-end">
         <input
@@ -90,13 +90,22 @@ export default async function OffersPage({ searchParams }: PageProps) {
           className="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm
             focus:outline-none focus:ring-2 focus:ring-slate-600"
         />
+        <input
+          name="sku"
+          defaultValue={skuQ}
+          placeholder={tr.filter_sku}
+          aria-label={tr.filter_sku}
+          dir="ltr"
+          className="w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-slate-600"
+        />
         <button
           type="submit"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 rounded-lg"
         >
           ↵
         </button>
-        {(q || shopListingIdQ) && (
+        {(q || shopListingIdQ || skuQ) && (
           <Link href="/admin/offers" className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
             {tr.clear}
           </Link>

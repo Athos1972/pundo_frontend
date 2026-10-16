@@ -170,26 +170,49 @@ export interface SysAdminBrand {
   updated_at: string
 }
 
-// ─── Offers (unified — covers both scraped and shop-owner offers) ─────────────
+// ─── Offers (GET /admin/offers — AdminOfferResponse) ─────────────────────────
 export interface SysAdminOffer {
   id: number
   shop_listing_id: number
+  product_id: number             // = item_id
+  shop_id: number
+  item_name: string | null
   title: string | null
   description: string | null
+  offer_url: string | null
+  source: string
+  archived: boolean
+  created_at: string | null
+  price: string | null
   price_type: string
-  price_tiers: unknown[]   // JSONB — same shape as AdminOffer.price_tiers in shop-admin.ts
+  price_note: string | null      // legacy, same column as description
+  currency: string
+  stock_status: string
+  is_available: boolean
+  sku: string | null             // SKU of the listing (shop-wide unique)
+  url: string | null
+  image_url: string | null
+  crawled_at: string | null
+}
+
+// ─── Shop-owner offers (GET /admin/shop-owner-offers — AdminShopOwnerOfferResponse) ──
+export interface SysAdminShopOwnerOffer {
+  id: number
+  shop_id: number
+  shop_listing_id: number
+  sku: string | null
+  title: string
+  description: string | null
+  price: string | null
   currency: string
   valid_from: string | null
   valid_until: string | null
-  source: string
-  offer_url: string | null
+  offer_url?: string | null
+  product_id: number | null
   archived: boolean
-  crawled_at: string | null
   created_at: string
+  updated_at: string
 }
-
-/** @deprecated SysAdminShopOwnerOffer is replaced by the unified SysAdminOffer */
-export type SysAdminShopOwnerOffer = SysAdminOffer
 
 // ─── Social-Link Rules ────────────────────────────────────────────────────────
 

@@ -23,17 +23,17 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
 
   const columns: Column[] = [
     { key: 'id', label: tr.id },
-    { key: 'shop_listing_id', label: 'Shop Listing' },
+    { key: 'shop_listing_id', label: tr.shop_listing_id },
+    { key: 'sku', label: tr.sku },
     { key: 'title', label: tr.offer_title },
-    { key: 'source', label: 'Source' },
     { key: 'valid_from', label: tr.valid_from },
     { key: 'valid_until', label: tr.valid_until },
     {
       key: 'archived',
       label: tr.archived,
       boolDisplay: {
-        trueLabel: 'Yes',
-        falseLabel: 'No',
+        trueLabel: tr.yes,
+        falseLabel: tr.no,
         trueClass: 'text-gray-400',
         falseClass: 'text-green-600',
       },
@@ -46,7 +46,7 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
 
       <EntityTable
         columns={columns}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
+        rows={data.items.map((o) => ({ ...o, sku: o.sku ?? '—' })) as unknown as Array<Record<string, unknown> & { id: number }>}
         editHref="/admin/shop-owner-offers/{id}/edit"
         deleteUrl="/api/admin/shop-owner-offers/{id}"
         deleteLabel={tr.delete}

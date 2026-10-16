@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import type { SysAdminOffer } from '@/types/system-admin'
+import type { SysAdminShopOwnerOffer } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { SimpleEntityForm } from '@/components/system-admin/SimpleEntityForm'
 
 interface Props {
-  offer: SysAdminOffer
+  offer: SysAdminShopOwnerOffer
   tr: SysAdminTranslations
 }
 

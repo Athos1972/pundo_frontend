@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import type {
-  SysAdminOffer, SysAdminShopType, SysAdminShopOwner, SysAdminItemDomainMapping,
+  SysAdminOffer, SysAdminShopOwnerOffer, SysAdminShopType, SysAdminShopOwner, SysAdminItemDomainMapping,
   SysAdminSocialLinkRule, SysAdminCategoryAttributeDef,
 } from '@/types/system-admin'
 
@@ -167,46 +167,108 @@ describe('ShopOwnerEditForm', () => {
 
 describe('OfferForm', () => {
   const offer: SysAdminOffer = {
-    id: 21, shop_listing_id: 5, title: 'Sale', description: null, price_type: 'free', price_tiers: [], currency: 'USD',
-    valid_from: null, valid_until: null, source: 'admin', offer_url: null, archived: false, crawled_at: null, created_at: '',
+    id: 21, shop_listing_id: 5, product_id: 3, shop_id: 8, item_name: 'Cola', title: 'Sale', description: null,
+    offer_url: null, source: 'admin', archived: false, created_at: null, price: null, price_type: 'free',
+    price_note: null, currency: 'USD', stock_status: 'in_stock', is_available: true, sku: 'OLD-1', url: null,
+    image_url: null, crawled_at: null,
   }
+  const body = () => JSON.parse(mockFetch.mock.calls[0][1].body)
 
-  it('create: defaults to fixed price in EUR; blank texts become null; no listing id -> null', async () => {
-    const user = userEvent.setup()
-    mockFetch.mockResolvedValue(ok(201))
-    render(<OfferForm offer={null} tr={tr} />)
-    await user.click(screen.getByRole('button', { name: tr.save }))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/offers'))
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/offers')
-    expect(mockFetch.mock.calls[0][1].method).toBe('POST')
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
-      shop_listing_id: null, currency: 'EUR', price_type: 'fixed', title: null, description: null, offer_url: null, price_tiers: [],
-    })
-  })
-
-  it('edit: prefills and PATCHes with edited values', async () => {
+  it('edit: prefills (listing and shop read-only, SKU ltr) and PATCHes only AdminOfferUpdate fields', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue(ok())
     render(<OfferForm offer={offer} tr={tr} />)
-    expect((screen.getByLabelText(tr.shop_listing_id) as HTMLInputElement).value).toBe('5')
+    const listing = screen.getByLabelText(tr.shop_listing_id) as HTMLInputElement
+    expect(listing.value).toBe('5')
+    expect(listing.readOnly).toBe(true)
+    expect((screen.getByLabelText(tr.shop_id) as HTMLInputElement).value).toBe('8')
+    const skuInput = screen.getByLabelText(tr.sku) as HTMLInputElement
+    expect(skuInput.value).toBe('OLD-1')
+    expect(skuInput.getAttribute('dir')).toBe('ltr')
+    expect(skuInput.id).toBe('admin-offer-sku')
     expect((screen.getByLabelText(tr.price_type) as HTMLSelectElement).value).toBe('free')
     await user.type(screen.getByLabelText(tr.offer_desc), ' Details ')
     await user.selectOptions(screen.getByLabelText(tr.price_type), 'on_request')
     await user.click(screen.getByRole('button', { name: tr.save }))
-    await waitFor(() => expect(push).toHaveBeenCalled())
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/offers'))
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/offers/21')
     expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toMatchObject({
-      shop_listing_id: 5, currency: 'USD', price_type: 'on_request', title: 'Sale', description: 'Details',
-    })
+    expect(body()).toEqual({ currency: 'USD', price_type: 'on_request', title: 'Sale', description: 'Details', offer_url: null })
   })
 
-  it('toasts on rejection and network failure', async () => {
+  it('sends a changed SKU trimmed', async () => {
     const user = userEvent.setup()
-    mockFetch.mockResolvedValueOnce(ok(422))
+    mockFetch.mockResolvedValue(ok())
+    render(<OfferForm offer={offer} tr={tr} />)
+    const input = screen.getByLabelText(tr.sku)
+    await user.clear(input)
+    await user.type(input, '  ADM-1 ')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(push).toHaveBeenCalled())
+    expect(body().sku).toBe('ADM-1')
+  })
+
+  it('sends null when the SKU is emptied', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok())
+    render(<OfferForm offer={offer} tr={tr} />)
+    await user.clear(screen.getByLabelText(tr.sku))
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(push).toHaveBeenCalled())
+    expect(body()).toHaveProperty('sku', null)
+  })
+
+  it('an empty SKU that stays empty is not sent', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok())
+    render(<OfferForm offer={{ ...offer, sku: null }} tr={tr} />)
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(push).toHaveBeenCalled())
+    expect(body()).not.toHaveProperty('sku')
+  })
+
+  it('409 sku_conflict shows the field error (EL too), stays on the page', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok(409, { detail: { code: 'sku_conflict', shop_listing_id: 9 } }))
+    render(<OfferForm offer={offer} tr={trEl} />)
+    await user.type(screen.getByLabelText(trEl.sku), 'X')
+    await user.click(screen.getByRole('button', { name: trEl.save }))
+    const err = await screen.findByText(trEl.sku_conflict)
+    expect(err.id).toBe('admin-offer-sku-error')
+    expect(showToast).toHaveBeenCalledWith(trEl.error_generic, 'error')
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('422 invalid_sku shows the length message', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok(422, { detail: { code: 'invalid_sku', message: 'x' } }))
+    render(<OfferForm offer={offer} tr={tr} />)
+    await user.type(screen.getByLabelText(tr.sku), 'X')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    expect(await screen.findByText(tr.sku_invalid)).toBeTruthy()
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('the conflict message is cleared on the next submit', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValueOnce(ok(409, { detail: { code: 'sku_conflict' } }))
+    render(<OfferForm offer={offer} tr={tr} />)
+    await user.type(screen.getByLabelText(tr.sku), 'X')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await screen.findByText(tr.sku_conflict)
+    mockFetch.mockResolvedValueOnce(ok())
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/offers'))
+    expect(screen.queryByText(tr.sku_conflict)).toBeNull()
+  })
+
+  it('toasts on other rejections and network failure', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValueOnce(ok(500, 'boom'))
     render(<OfferForm offer={offer} tr={tr} />)
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(showToast).toHaveBeenCalledWith(tr.error_generic, 'error'))
+    expect(screen.queryByText(tr.sku_conflict)).toBeNull()
     mockFetch.mockRejectedValueOnce(new Error('down'))
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(showToast).toHaveBeenCalledWith(tr.error_backend, 'error'))
@@ -219,7 +281,7 @@ describe('ShopOwnerOfferEditForm', () => {
   it('PATCHes the edited offer, blank dates become null', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue(ok())
-    const offer = { id: 3, shop_listing_id: 1, title: 'T', description: 'D', price_type: 'fixed', price_tiers: [], currency: 'EUR', valid_from: '2026-01-01', valid_until: null, source: 'owner', offer_url: null, archived: false, crawled_at: null, created_at: '' } as SysAdminOffer
+    const offer: SysAdminShopOwnerOffer = { id: 3, shop_id: 1, shop_listing_id: 1, sku: 'S-1', title: 'T', description: 'D', price: null, currency: 'EUR', valid_from: '2026-01-01', valid_until: null, offer_url: null, product_id: null, archived: false, created_at: '', updated_at: '' }
     render(<ShopOwnerOfferEditForm offer={offer} tr={tr} />)
     expect((screen.getByLabelText(tr.valid_from) as HTMLInputElement).value).toBe('2026-01-01')
     await user.click(screen.getByRole('button', { name: tr.save }))

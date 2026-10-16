@@ -280,17 +280,37 @@ describe('shop types / owners / offers / api keys lists', () => {
     expect(screen.getByText(tr.no_items)).toBeTruthy()
   })
 
-  it('offers: title falls back to a dash, archived is shown as Yes/No', async () => {
+  it('offers: title falls back to a dash, archived is shown as Yes/No, SKU and listing are columns', async () => {
     vi.mocked(api.getOffers).mockResolvedValue(paged([
-      { id: 1, shop_listing_id: 5, title: null, source: 'owner', currency: 'EUR', price_type: 'fixed', archived: true },
-      { id: 2, shop_listing_id: 6, title: 'Deal', source: 'crawl', currency: 'EUR', price_type: 'free', archived: false },
+      { id: 1, shop_listing_id: 5, item_name: 'Cola', sku: 'A-100', title: null, source: 'owner', currency: 'EUR', price_type: 'fixed', archived: true },
+      { id: 2, shop_listing_id: 6, item_name: null, sku: null, title: 'Deal', source: 'crawl', currency: 'EUR', price_type: 'free', archived: false },
     ]) as never)
     const { default: Page } = await import(`${A}/offers/page`)
     await show(Page, sp({ q: 'x', page: '2' }))
     expect(api.getOffers).toHaveBeenCalledWith(expect.objectContaining({ q: 'x', limit: 20, offset: 20 }))
+    expect(screen.getByRole('columnheader', { name: tr.sku })).toBeTruthy()
+    expect(within(bodyRows()[0]).getByText('A-100')).toBeTruthy()
+    expect(within(bodyRows()[0]).getByText('Cola')).toBeTruthy()
+    expect(within(bodyRows()[0]).getByText('5')).toBeTruthy()
     expect(within(bodyRows()[0]).getByText('Yes')).toBeTruthy()
     expect(within(bodyRows()[0]).getByText('—')).toBeTruthy()
     expect(within(bodyRows()[1]).getByText('No')).toBeTruthy()
+  })
+
+  it('offers: sku and shop_listing_id filters reach the API; there is no "new" link', async () => {
+    vi.mocked(api.getOffers).mockResolvedValue(paged([]) as never)
+    const { default: Page } = await import(`${A}/offers/page`)
+    await show(Page, sp({ sku: ' A-100 ', shop_listing_id: '7' }))
+    expect(api.getOffers).toHaveBeenCalledWith(expect.objectContaining({ sku: 'A-100', shop_listing_id: 7 }))
+    expect((screen.getByLabelText(tr.filter_sku) as HTMLInputElement).defaultValue).toBe('A-100')
+    expect(document.querySelector('a[href="/admin/offers/new"]')).toBeNull()
+  })
+
+  it('offers: ignores a non-numeric shop_listing_id', async () => {
+    vi.mocked(api.getOffers).mockResolvedValue(paged([]) as never)
+    const { default: Page } = await import(`${A}/offers/page`)
+    await show(Page, sp({ shop_listing_id: 'abc' }))
+    expect(api.getOffers).toHaveBeenCalledWith(expect.objectContaining({ shop_listing_id: undefined, sku: undefined }))
   })
 
   it('offers: empty state on failure', async () => {
@@ -302,12 +322,14 @@ describe('shop types / owners / offers / api keys lists', () => {
 
   it('shop owner offers: paginated and failure-tolerant', async () => {
     vi.mocked(api.getShopOwnerOffers).mockResolvedValueOnce(paged([
-      { id: 1, shop_listing_id: 2, title: 'T', source: 'owner', valid_from: '2026-01-01', valid_until: null, archived: false },
+      { id: 1, shop_listing_id: 2, sku: 'S-9', title: 'T', valid_from: '2026-01-01', valid_until: null, archived: false },
     ]) as never)
     const { default: Page } = await import(`${A}/shop-owner-offers/page`)
     const { unmount } = await show(Page, sp({ page: '2' }))
     expect(api.getShopOwnerOffers).toHaveBeenCalledWith({ limit: 20, offset: 20 })
     expect(within(bodyRows()[0]).getByText('2026-01-01')).toBeTruthy()
+    expect(within(bodyRows()[0]).getByText('S-9')).toBeTruthy()
+    expect(screen.getByRole('columnheader', { name: tr.sku })).toBeTruthy()
     unmount()
     vi.mocked(api.getShopOwnerOffers).mockRejectedValueOnce(new Error('x'))
     await show(Page, sp())
@@ -481,7 +503,6 @@ describe('new pages', () => {
     ['brands/new/page', 'BrandForm', { brand: null }],
     ['products/new/page', 'ProductForm', { product: null, attributes: [] }],
     ['categories/new/page', 'CategoryForm', { category: null, translations: [], attrDefs: [] }],
-    ['offers/new/page', 'OfferForm', { offer: null }],
     ['item-domain-mappings/new/page', 'MappingForm', { mode: 'create' }],
     ['crm/contacts/new/page', 'ContactForm', {}],
   ] as const)('%s renders an empty form', async (file, stubName, expected) => {
@@ -491,6 +512,13 @@ describe('new pages', () => {
     const { default: Page } = await import(`${A}/${file}`)
     await show(Page)
     expect(stubProps(stubName)).toMatchObject(expected)
+  })
+
+  it('offers/new explains that offers are created elsewhere instead of rendering a form that ends in 405', async () => {
+    const { default: Page } = await import(`${A}/offers/new/page`)
+    await show(Page)
+    expect(screen.getByText(tr.offers_created_elsewhere)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: tr.save })).toBeNull()
   })
 
   it('social link rule and onboarding domain pages render their content', async () => {

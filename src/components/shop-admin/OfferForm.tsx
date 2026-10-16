@@ -41,17 +41,21 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
   const [promoTiers, setPromoTiers] = useState<PriceTier[]>(offer?.promo_price_tiers ?? [])
   const [promoType, setPromoType] = useState<string>(offer?.promo_price_type ?? 'fixed')
   const [errors, setErrors] = useState<Record<string, string>>({})
-  // F5920: article number of the shop listing (unique per shop). Edit mode starts with the stored value.
-  const initialSku = offer?.listing_sku ?? ''
-  const [sku, setSku] = useState<string>(initialSku)
+  // F5920: article number of the shop listing (unique per shop). Edit mode starts with the stored value;
+  // in create mode it is the SKU of the chosen listing (an already existing listing keeps its article number visible).
+  const [baselineSku, setBaselineSku] = useState<string>(offer?.listing_sku ?? '')
+  const [sku, setSku] = useState<string>(offer?.listing_sku ?? '')
 
   const isEdit = !!offer
   // Scraper offers are shown but not editable in step 1 (item is fixed)
   const isScraperOffer = offer?.source === 'scraper'
 
-  function handleItemSelected(item: ItemSearchResult, listingId?: number) {
+  function handleItemSelected(item: ItemSearchResult, listingId?: number, listingSku?: string | null) {
     setSelectedItem(item)
     if (listingId) setShopListingId(listingId)
+    setBaselineSku(listingSku ?? '')
+    setSku(listingSku ?? '')
+    setErrors({})
     setShowPicker(false)
     setStep(2)
   }
@@ -94,10 +98,11 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
 
     startTransition(async () => {
       try {
-        // F5920: save the article number first. A clash (409 sku_conflict) saves nothing at all.
+        // F5920: edit mode saves the article number first (PATCH listing); a clash (409 sku_conflict) saves nothing at all.
+        // Create mode sends it atomically with POST /offers (see body below), so a failed save leaves no stray SKU behind.
         const wantedSku = sku.trim()
-        const skuChanged = isEdit ? wantedSku !== initialSku : wantedSku !== ''
-        if (skuChanged && shopListingId) {
+        const skuChanged = wantedSku !== baselineSku
+        if (isEdit && skuChanged && shopListingId) {
           const skuRes = await fetch(`/api/shop-admin/shop-listings/${shopListingId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -150,6 +155,7 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
           description: (data.get('description') as string) || null,
           offer_url: (data.get('offer_url') as string) || null,
         }
+        if (!isEdit && skuChanged) body.sku = wantedSku || null
 
         const url = isEdit ? `/api/shop-admin/offers/${offer!.id}` : '/api/shop-admin/offers'
         const res = await fetch(url, {
@@ -168,7 +174,10 @@ export function OfferForm({ offer, preloadedItem, priceUnits = [], lang, ownShop
           const json = await res.json().catch(() => null) as
             { detail?: { code?: string; active_offer_id?: number | null } } | null
           const detail = json?.detail
-          if (detail?.code === 'offer_archived' && detail.active_offer_id) {
+          if (detail?.code === 'sku_conflict') {
+            setErrors({ sku: tr.offer_sku_conflict })
+            showToast(tr.error_generic, 'error')
+          } else if (detail?.code === 'offer_archived' && detail.active_offer_id) {
             showToast(tr.offer_archived_conflict, 'error')
             router.push(`/shop-admin/offers/${detail.active_offer_id}/edit`)
           } else if (detail?.code === 'offer_archived') {

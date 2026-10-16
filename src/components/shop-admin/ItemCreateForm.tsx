@@ -9,7 +9,7 @@ import type { ItemSearchResult, ItemType, PickerCategory } from '@/types/shop-ad
 
 interface ItemCreateFormProps {
   lang: string
-  onCreated: (item: ItemSearchResult, shopListingId: number) => void
+  onCreated: (item: ItemSearchResult, shopListingId: number, listingSku?: string | null) => void
   onCancel: () => void
   /** pre-filled fuzzy-confirmed name */
   initialName?: string
@@ -90,7 +90,7 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
         return
       }
 
-      const listing = await listingRes.json() as { id: number }
+      const listing = await listingRes.json() as { id: number; sku?: string | null }
 
       const searchResult: ItemSearchResult = {
         id: itemData.id,
@@ -102,7 +102,7 @@ export function ItemCreateForm({ lang, onCreated, onCancel, initialName = '', co
         photo_url: itemData.photos?.[0]?.url ?? null,
       }
 
-      onCreated(searchResult, listing.id)
+      onCreated(searchResult, listing.id, listing.sku ?? null)
     } catch {
       setError(tr.error_generic)
     } finally {

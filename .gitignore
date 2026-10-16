@@ -96,3 +96,7 @@ video/_branding/pronunciation-test/
 # E2E-Coverage (docs/e2e-testing.md "Coverage"): eigener Build + Rohdaten/Berichte
 /.next-cov/
 /coverage-e2e/
+
+# Journey-Reports sind lokale Laufartefakte (jeder Playwright-Lauf schreibt sie neu), nicht versionieren (BB 2026-10-16)
+e2e/journeys/reports/*
+!e2e/journeys/reports/.gitkeep

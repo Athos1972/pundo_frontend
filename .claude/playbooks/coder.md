@@ -128,7 +128,7 @@ Lese mindestens:
 
 #### Report-Generierung
 
-Die Journey-Spec schreibt am Ende einen Human-readable Report nach `e2e/journeys/reports/<id>-<datum>.md`. Format: siehe CATALOG_SCHEMA.md §Journey-Prinzipien. Playwright-Hook: `test.afterAll` schreibt den Report — auch bei Failure.
+Die Journey-Spec schreibt am Ende einen Human-readable Report nach `e2e/journeys/reports/<id>-<datum>.md` (Verzeichnis gitignored, Report-Code muss das Verzeichnis mit `mkdirSync(…, { recursive: true })` anlegen). Format: siehe CATALOG_SCHEMA.md §Journey-Prinzipien. Playwright-Hook: `test.afterAll` schreibt den Report — auch bei Failure.
 
 #### RCA-Pflicht
 

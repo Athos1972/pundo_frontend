@@ -377,7 +377,7 @@ Das ist die einzige Katalog-Mutation, die **keine User-Bestätigung** erfordert.
 
 Nach jedem Journey-Lauf schreibt der Tester einen Human-readable Report nach dem Format aus `CATALOG_SCHEMA.md §Journey-Prinzipien`:
 
-- Datei: `e2e/journeys/reports/<journey-id>-<YYYY-MM-DD>.md`
+- Datei: `e2e/journeys/reports/<journey-id>-<YYYY-MM-DD>.md` (lokal, gitignored seit 2026-10-16: nicht in Commit-Listen aufnehmen; Ergebnisse gehören in `04-test-report.md`)
 - Enthält: Aufgebaute Fixtures mit IDs, Schritt-für-Schritt-Protokoll (Expected/Actual/Status), Findings-Tabelle, Cleanup-Status
 - Dieser Report ist für manuelle Tester lesbar — keine Code-Kenntnisse nötig
 

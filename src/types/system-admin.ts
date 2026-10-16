@@ -196,6 +196,7 @@ export interface SysAdminOffer {
 }
 
 // ─── Shop-owner offers (GET /admin/shop-owner-offers — AdminShopOwnerOfferResponse) ──
+// Editable via PATCH: title, description, price, currency, archived (AdminShopOwnerOfferUpdate).
 export interface SysAdminShopOwnerOffer {
   id: number
   shop_id: number
@@ -205,9 +206,8 @@ export interface SysAdminShopOwnerOffer {
   description: string | null
   price: string | null
   currency: string
-  valid_from: string | null
-  valid_until: string | null
-  offer_url?: string | null
+  // valid_from/valid_until are in the backend schema but always null (UnifiedOffer has no such
+  // columns) — deliberately not typed here. offer_url does not exist in this schema.
   product_id: number | null
   archived: boolean
   created_at: string

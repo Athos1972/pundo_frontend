@@ -26,8 +26,8 @@ export default async function ShopOwnerOffersPage({ searchParams }: PageProps) {
     { key: 'shop_listing_id', label: tr.shop_listing_id },
     { key: 'sku', label: tr.sku },
     { key: 'title', label: tr.offer_title },
-    { key: 'valid_from', label: tr.valid_from },
-    { key: 'valid_until', label: tr.valid_until },
+    { key: 'price', label: tr.price },
+    { key: 'currency', label: tr.currency },
     {
       key: 'archived',
       label: tr.archived,

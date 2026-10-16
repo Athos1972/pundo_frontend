@@ -322,12 +322,13 @@ describe('shop types / owners / offers / api keys lists', () => {
 
   it('shop owner offers: paginated and failure-tolerant', async () => {
     vi.mocked(api.getShopOwnerOffers).mockResolvedValueOnce(paged([
-      { id: 1, shop_listing_id: 2, sku: 'S-9', title: 'T', valid_from: '2026-01-01', valid_until: null, archived: false },
+      { id: 1, shop_listing_id: 2, sku: 'S-9', title: 'T', price: '12.50', currency: 'EUR', archived: false },
     ]) as never)
     const { default: Page } = await import(`${A}/shop-owner-offers/page`)
     const { unmount } = await show(Page, sp({ page: '2' }))
     expect(api.getShopOwnerOffers).toHaveBeenCalledWith({ limit: 20, offset: 20 })
-    expect(within(bodyRows()[0]).getByText('2026-01-01')).toBeTruthy()
+    expect(within(bodyRows()[0]).getByText('12.50')).toBeTruthy()
+    expect(screen.queryByRole('columnheader', { name: tr.valid_from })).toBeNull()
     expect(within(bodyRows()[0]).getByText('S-9')).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: tr.sku })).toBeTruthy()
     unmount()

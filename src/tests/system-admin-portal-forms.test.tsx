@@ -278,18 +278,57 @@ describe('OfferForm', () => {
 })
 
 describe('ShopOwnerOfferEditForm', () => {
-  it('PATCHes the edited offer, blank dates become null', async () => {
+  // Source of truth (B8950-014): pundo_main_backend ingestor/schemas/admin.py::AdminShopOwnerOfferUpdate
+  // (title, description, price, currency, valid_from, valid_until, product_id, archived) intersected
+  // with what ingestor/api/admin/shop_owner_offers.py::update_shop_owner_offer really persists.
+  // valid_from/valid_until are accepted but dropped (UnifiedOffer has no such columns); product_id
+  // is not applied either; archived is handled by the delete action, not by this form.
+  const BACKEND_PERSISTED_PATCH_FIELDS = ['title', 'description', 'price', 'currency', 'archived']
+  const offer: SysAdminShopOwnerOffer = { id: 3, shop_id: 1, shop_listing_id: 1, sku: 'S-1', title: 'T', description: 'D', price: '9.50', currency: 'EUR', product_id: null, archived: false, created_at: '', updated_at: '' }
+
+  it('PATCHes only fields the backend persists; blank description becomes null', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue(ok())
-    const offer: SysAdminShopOwnerOffer = { id: 3, shop_id: 1, shop_listing_id: 1, sku: 'S-1', title: 'T', description: 'D', price: null, currency: 'EUR', valid_from: '2026-01-01', valid_until: null, offer_url: null, product_id: null, archived: false, created_at: '', updated_at: '' }
-    render(<ShopOwnerOfferEditForm offer={offer} tr={tr} />)
-    expect((screen.getByLabelText(tr.valid_from) as HTMLInputElement).value).toBe('2026-01-01')
+    render(<ShopOwnerOfferEditForm offer={{ ...offer, description: null }} tr={tr} />)
+    expect((screen.getByLabelText(new RegExp(tr.price)) as HTMLInputElement).value).toBe('9.50')
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/shop-owner-offers'))
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/shop-owner-offers/3')
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
-      title: 'T', description: 'D', valid_from: '2026-01-01', valid_until: null, offer_url: null,
-    })
+    expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    expect(body).toEqual({ title: 'T', description: null, price: '9.50', currency: 'EUR' })
+    for (const key of Object.keys(body)) expect(BACKEND_PERSISTED_PATCH_FIELDS).toContain(key)
+    expect(showToast).toHaveBeenCalledWith(tr.saved, 'success')
+  })
+
+  it('never sends a null currency (NOT NULL column -> 500) and upper-cases it', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok())
+    render(<ShopOwnerOfferEditForm offer={offer} tr={tr} />)
+    const cur = screen.getByLabelText(new RegExp(tr.currency)) as HTMLInputElement
+    expect(cur.required).toBe(true)
+    expect(cur.maxLength).toBe(3)
+    await user.clear(cur)
+    await user.type(cur, 'usd')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body).currency).toBe('USD')
+  })
+
+  it('shows an error toast and stays on the page when the backend rejects', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue({ ok: false, status: 422, json: async () => ({}) })
+    render(<ShopOwnerOfferEditForm offer={offer} tr={tr} />)
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith(tr.error_generic, 'error'))
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('does not offer the dropped fields', () => {
+    render(<ShopOwnerOfferEditForm offer={offer} tr={tr} />)
+    expect(screen.queryByLabelText(tr.valid_from)).toBeNull()
+    expect(screen.queryByLabelText(tr.valid_until)).toBeNull()
+    expect(document.querySelector('[name="offer_url"]')).toBeNull()
   })
 })
 

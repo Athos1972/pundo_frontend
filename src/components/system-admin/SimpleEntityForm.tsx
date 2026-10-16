@@ -15,6 +15,8 @@ export interface SimpleField {
   required?: boolean
   options?: { value: string; label: string }[]
   rows?: number
+  maxLength?: number
+  step?: string
 }
 
 interface SimpleEntityFormProps {
@@ -87,6 +89,8 @@ export function SimpleEntityForm({
           type={field.type}
           required={field.required}
           rows={field.rows}
+          maxLength={field.maxLength}
+          step={field.step}
           value={values[field.name] ?? ''}
           onChange={(e) => onChange(field.name, e.target.value)}
           disabled={isPending}

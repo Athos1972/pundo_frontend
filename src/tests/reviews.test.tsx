@@ -118,6 +118,41 @@ describe('ReviewList', () => {
   })
 })
 
+// ── ReviewCard: owner reply (F5930) ────────────────────────────────────────────
+
+describe('ReviewCard — owner reply', () => {
+  const reply = {
+    body: 'Thank you for visiting!\nSee you soon.',
+    created_at: '2026-10-01T09:00:00Z',
+    updated_at: '2026-10-01T09:00:00Z',
+    shop_name: 'Cafe Larnaca',
+  }
+
+  it('shows the label with the shop name, the date and the text under the review', async () => {
+    const { ReviewCard } = await import('@/components/reviews/ReviewCard')
+    const { container } = render(<ReviewCard review={{ ...mockReview, owner_reply: reply }} tr={tr} lang="en" />)
+    const block = screen.getByTestId('owner-reply')
+    expect(block.textContent).toContain(tr.reviews_owner_reply_from('Cafe Larnaca'))
+    expect(block.textContent).toContain('Thank you for visiting!')
+    expect(block.querySelector('time')?.getAttribute('datetime')).toBe(reply.created_at)
+    expect(block.querySelector('p[dir="auto"]')).toBeTruthy()
+    // the customer's own text stays first, the reply follows it
+    expect(container.textContent!.indexOf('Great product!')).toBeLessThan(container.textContent!.indexOf('Thank you'))
+  })
+
+  it('renders no reply block without a reply (missing, null)', async () => {
+    const { ReviewCard } = await import('@/components/reviews/ReviewCard')
+    const { rerender } = render(<ReviewCard review={mockReview} tr={tr} lang="en" />)
+    expect(screen.queryByTestId('owner-reply')).toBeNull()
+    rerender(<ReviewCard review={{ ...mockReview, owner_reply: null }} tr={tr} lang="en" />)
+    expect(screen.queryByTestId('owner-reply')).toBeNull()
+  })
+
+  it.each(['en', 'de', 'el', 'ru', 'ar', 'he'] as const)('label exists in %s and contains the shop name', (lang) => {
+    expect(t(lang).reviews_owner_reply_from('Shop X')).toContain('Shop X')
+  })
+})
+
 // ── ReportButton (unauthenticated renders nothing) ─────────────────────────────
 // The top-level mock returns is_authenticated: true.
 // We test the authenticated state (button should be visible) since overriding

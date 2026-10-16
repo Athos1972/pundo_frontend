@@ -11,7 +11,7 @@ touches-modules:
   - src/app/(customer)/[lang]/shops/[slug]/**
   - src/components/shop/**
   - src/lib/shop-admin-api.ts
-  - src/lib/payment-methods.ts
+  - src/lib/payment-methods.tsx
 touches-roles:
   - shop-owner
   - guest

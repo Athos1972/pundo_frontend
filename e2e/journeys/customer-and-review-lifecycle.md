@@ -15,6 +15,8 @@ touches-modules:
   - src/lib/api.ts
   - src/components/auth/**
   - src/app/api/customer/customer/auth/signup/route.ts
+  - src/components/reviews/**
+  - src/app/(system-admin)/admin/(portal)/reviews/**
 touches-roles:
   - customer
   - admin
@@ -45,7 +47,7 @@ last-run-sha: 309239e58967e8aaa506a176c41ee5d7a88ad35c
 | `spec-shop` | Eigener Shop (`specShop('CARL')`) | Review-Ziel, sichtbar auf `/en/shops/<slug>` |
 | `review` | Review des Customers auf den Spec-Shop (`POST /customer/reviews`) | Sichtbarkeit und Moderation |
 
-**Schritte (Runbook, = die 8 Tests der Spec):**
+**Schritte (Runbook, = die 9 Tests der Spec):**
 
 PHASE 1 — Customer-Auth
 1. Signup (`POST /customer/auth/signup`) → 201, `is_verified=true`
@@ -56,9 +58,10 @@ PHASE 1 — Customer-Auth
 PHASE 2 — Customer Interaction
 5. Shop-Seite lädt (200, keine JS-Fehler) und zeigt den Review-Bereich
 6. Review abgeben (`POST /customer/reviews`, `entity_type=shop`) → 201 und in `/shops/{id}/reviews` gelistet
+6b. Der Owner des Spec-Shops antwortet per API (`POST /shop-owner/reviews/{id}/reply`) → die Antwort steht auf `/en/shops/<slug>` unter der Review (F5930)
 
 PHASE 3 — Admin Moderation
-7. `/admin/reviews` ist mit Admin-Session erreichbar
+7. `/admin/reviews?filter=all` zeigt mit Admin-Session das `<h1>` der Moderationsseite und den Review-Eintrag (vorher lief der Schritt gegen eine 404-Seite und meldete trotzdem PASS)
 8. Admin invalidiert die Review (`POST /admin/reviews/{id}/invalidate`) → nicht mehr öffentlich; `restore` → wieder öffentlich
 
 **Nicht mehr Teil dieser Journey (Zuordnung in `03-implementation.md`):** E-Mail-Verify per Admin-Bypass (Schritt 3 alt; @pundo.com ist auto-verifiziert, der OTP-Fluss ist Backend-pytest), Spotted (Schritt 9 alt; seit dem Umbau Foto-Upload mit KI-Erkennung, braucht Gateway/LLM), Admin-„Approve" (Schritt 11 alt; Reviews sind sofort sichtbar, moderiert wird per invalidate/restore) und der API-Key-Zyklus (Schritt 12 alt; `shop-admin-e2e.spec.ts` „API Key anlegen/löschen").

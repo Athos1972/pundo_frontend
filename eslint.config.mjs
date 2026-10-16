@@ -31,6 +31,7 @@ const shopAdminBoundaryRule = {
               "**/components/product/**",
               "**/components/search/**",
               "**/components/shop/**",
+              "**/components/reviews/**",
             ],
             message:
               "Shop-admin components must only import from src/components/ui/. Customer-facing components are not allowed here (Clean Boundary rule).",

@@ -1,7 +1,7 @@
 /**
  * Architektur-Guard "Shop-Admin Clean Boundary" (F8950 T33): `src/components/shop-admin/**`, `src/lib/shop-admin-api.ts`,
  * `src/lib/shop-admin-image-resize.ts` und `src/components/ui/TurnstileWidget.tsx` duerfen keine Customer-Module
- * importieren (`components/(map|product|search|shop)`, `@/lib/api`, `@/lib/translations`, `@/lib/lang` fuer das
+ * importieren (`components/(map|product|search|shop|reviews)`, `@/lib/api`, `@/lib/translations`, `@/lib/lang` fuer das
  * Turnstile-Widget). Sonst waere die spaetere Auslagerung des Shop-Admins teuer. Ersetzt die Quelltext-Regex-Tests
  * einzelner Komponenten in `offer-item-photos.test.tsx` und `turnstile-widget.test.tsx`; der Guard prueft alle Dateien.
  */
@@ -23,7 +23,7 @@ function imports(file: string): string[] {
   return [...src.matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map((m) => m[1])
 }
 
-const CUSTOMER_COMPONENTS = /^@\/components\/(map|product|search|shop)\//
+const CUSTOMER_COMPONENTS = /^@\/components\/(map|product|search|shop|reviews)\//
 const CUSTOMER_LIB = /^@\/lib\/(api|translations)$/
 
 const SHOP_ADMIN_FILES = [
@@ -37,7 +37,7 @@ describe('guard: Shop-Admin importiert nichts aus Customer-Code', () => {
     expect(SHOP_ADMIN_FILES.length).toBeGreaterThan(10)
   })
 
-  it('keine Imports aus components/(map|product|search|shop) oder lib/(api|translations)', () => {
+  it('keine Imports aus components/(map|product|search|shop|reviews) oder lib/(api|translations)', () => {
     const offenders = SHOP_ADMIN_FILES.flatMap((f) =>
       imports(f).filter((i) => CUSTOMER_COMPONENTS.test(i) || CUSTOMER_LIB.test(i)).map((i) => `${f.replace(ROOT + '/', '')} -> ${i}`),
     )

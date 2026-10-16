@@ -61,7 +61,7 @@ src/app/(shop-admin)/shop-admin/
     ├── catalog-review/     ← Katalog-Review-Fälle ([caseId])
     ├── import/             ← Excel/CSV-Upload + Google Sheets
     ├── api-keys/           ← API-Key-Verwaltung
-    ├── reviews/            ← Kundenbewertungen ([id]/audit-log)
+    ├── reviews/            ← Bewertungen des Shops und seiner Produkte (?scope=shop|products)
     ├── settings/           ← Einstellungen
     └── help/               ← Hilfe
 ```
@@ -153,6 +153,19 @@ Zwei Import-Wege (F5920: wiederholbar, mit Vorschau):
 
 → Backend-Details: [`pundo_main_backend/docs/shop-owner-portal.md`](../../pundo_main_backend/docs/shop-owner-portal.md) — Abschnitt "Import"
 
+### Bewertungen (`/shop-admin/reviews`, F5930)
+
+Der Owner sieht die Bewertungen seines Shops (Tab „Mein Shop“) und der Artikel, die sein Shop listet (Tab „Meine Produkte“, alle Listings). Die Tabs sind Links (`?scope=shop|products`, SSR). **Antworten** gibt es nur auf Shop-Bewertungen (öffentlich, 1–1000 Zeichen, nicht übersetzt, bearbeiten/löschen möglich); Produktbewertungen kann der Owner nur **melden** (Grund `spam|offensive|legal|wrong_shop|other` + optionaler Kommentar, einmal pro Bewertung). **Ausblenden macht nur pundo** im System-Admin (`/admin/reviews`, Filter „Reported by shop owner“); eine von pundo ausgeblendete Antwort kann der Owner weder bearbeiten noch löschen (409 `reply_hidden`).
+
+- **Datenfluss:** `page.tsx` (Server) lädt `getShopReviews({scope, limit: 20, offset: 0}, lang)` und `getShopReviewSummary(lang)` aus `shop-admin-api.ts` (`GET /api/v1/shop-owner/reviews`, `/summary`, Owner-Token). Der Client (`components/shop-admin/reviews/ShopReviewList`) lädt weitere Seiten, antwortet und meldet über den Proxy `/api/shop-admin/reviews/…` und schickt `Accept-Language` **explizit** mit (der Proxy reicht sonst die Browser-Sprache durch).
+- **Badge „neu“:** `(portal)/layout.tsx` lädt die Summary und gibt `reviewsNewCount` über `AdminShell` an `AdminNav`. Das Öffnen der Liste sendet einmal `POST /api/shop-admin/reviews/mark-seen {seen_until: generated_at}` und feuert `SHOP_REVIEWS_SEEN_EVENT` (`reviews/events.ts`); `AdminNav` setzt das Badge darauf auf 0, weil das Layout bei Client-Navigation nicht neu rendert. Die „Neu“-Markierungen bleiben in der geladenen Ansicht stehen. Ohne gespeicherten Zeitpunkt gelten alle sichtbaren Bewertungen als neu.
+- **Dashboard:** eigene Kachel „Bewertungen“ (neu, Ø, Anzahl).
+- **Texte:** `src/lib/i18n/shop-admin-reviews.ts` (6 Sprachen, `shop_reviews_*`); Hilfe-Abschnitt „Reviews“ in `shop-admin-help-content.ts`.
+- **RTL:** nur logische Klassen; Kunden- und Antworttexte mit `dir="auto"`.
+- **Entfallen:** `/shop-admin/reviews/[id]/audit-log` (404) und `ReviewModerationTable`; Moderation und Audit-Log liegen im System-Admin (`/admin/reviews`, `/admin/reviews/{id}/audit-log`, `components/system-admin/ReviewModerationList.tsx`, nur EN/EL).
+- **Öffentlich:** `ReviewCard` zeigt die Antwort unter der Bewertung (`owner_reply`, Label `reviews_owner_reply_from`); `ReviewsPopover` zeigt sie nicht.
+- Journey: `e2e/journeys/shop-owner-reviews-reply-report.md`. Backend: `pundo_main_backend/docs/api.md`, Abschnitt „Bewertungen im Shop-Portal (F5930)“.
+
 ### API-Keys (`/shop-admin/api-keys`)
 - Shop-Betreiber können eigene API-Keys für den Pundo-Scraper-Zugang erstellen
 - Scopes: `read`, `write`, `read_write`
@@ -172,7 +185,7 @@ Der gesamte Shop-Admin-Code ist **isoliert** vom Customer-Frontend:
 | Admin-API-Client | `src/lib/shop-admin-api.ts` |
 | Admin-Übersetzungen | `src/lib/shop-admin-translations.ts` |
 
-`src/components/shop-admin/` darf **nur** aus `src/components/ui/` importieren — keine Imports aus `map/`, `product/`, `search/`, `shop/`.
+`src/components/shop-admin/` darf **nur** aus `src/components/ui/` importieren — keine Imports aus `map/`, `product/`, `search/`, `shop/`, `reviews/` (Guard: `tests/unit/guards/shop-admin-boundary.test.ts`, ESLint-Gruppe in `eslint.config.mjs`). Infrastruktur wie `@/lib/lang` und `@/lib/routing` (`localePath`) ist erlaubt.
 
 **Warum:** Ermöglicht die spätere Auslagerung in ein separates Repo in Tagen statt Wochen.
 

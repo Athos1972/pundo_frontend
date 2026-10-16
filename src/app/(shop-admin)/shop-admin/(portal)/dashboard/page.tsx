@@ -1,6 +1,7 @@
 import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
-import { getMe } from '@/lib/shop-admin-api'
+import { getMe, getShopReviewSummary } from '@/lib/shop-admin-api'
+import type { ShopOwnerReviewSummary } from '@/types/shop-admin'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
@@ -13,6 +14,13 @@ export default async function DashboardPage() {
     name = me.name
   } catch {
     // Backend not yet available — show generic welcome
+  }
+
+  let reviews: ShopOwnerReviewSummary | null = null
+  try {
+    reviews = (await getShopReviewSummary(lang)) ?? null
+  } catch {
+    // tile still links to the reviews page, just without numbers
   }
 
   const quickLinks = [
@@ -42,6 +50,31 @@ export default async function DashboardPage() {
             </span>
           </Link>
         ))}
+        <Link
+          href="/shop-admin/reviews"
+          className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-2 hover:border-accent hover:shadow-sm transition-all group"
+        >
+          <span className="text-2xl" aria-hidden="true">★</span>
+          <span className="text-sm font-medium text-gray-700 group-hover:text-accent transition-colors">
+            {tr.shop_reviews_tile_title}
+          </span>
+          {reviews && (
+            <>
+              <span className={`text-xs ${reviews.new_count > 0 ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
+                {reviews.new_count > 0
+                  ? tr.shop_reviews_tile_new.replace('{n}', String(reviews.new_count))
+                  : tr.shop_reviews_tile_none_new}
+              </span>
+              <span className="text-xs text-gray-500">
+                {reviews.shop_total > 0
+                  ? tr.shop_reviews_tile_average
+                      .replace('{avg}', reviews.shop_average_stars.toFixed(1))
+                      .replace('{total}', String(reviews.shop_total))
+                  : tr.shop_reviews_tile_no_reviews}
+              </span>
+            </>
+          )}
+        </Link>
       </div>
     </div>
   )

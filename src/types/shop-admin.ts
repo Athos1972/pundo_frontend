@@ -439,46 +439,59 @@ export interface ImportApplyDecision {
   item_id?: number
 }
 
-// ─── Review Moderation (admin-only, never imported by customer code) ──────────
+// ─── Reviews of the own shop (F5930, GET /api/v1/shop-owner/reviews) ──────────
 
-export interface AdminReviewPhoto {
+export type ShopReviewScope = 'shop' | 'products'
+
+export type ShopReviewReportReason = 'spam' | 'offensive' | 'legal' | 'wrong_shop' | 'other'
+
+export interface ShopOwnerReviewReply {
   id: number
-  url: string
-  thumbnail_url: string | null
-  status: 'pending' | 'approved' | 'rejected'
-  moderation_reason: string | null
-  moderation_categories: string[] | null
+  body: string
+  created_at: string
+  updated_at: string
+  /** false = hidden by pundo (owner can neither edit nor delete it) */
+  is_visible: boolean
 }
 
-export interface AdminReview {
+export interface ShopOwnerReview {
   id: number
-  user_id: number
+  /** null when the product / shop no longer exists */
+  entity: { type: 'shop' | 'product'; id: number; slug: string; name: string } | null
   user_display_name: string
-  entity_type: 'product' | 'shop'
-  entity_id: number
   stars: number
   comment: string | null
-  photos: AdminReviewPhoto[]
+  photos: { id: number; url: string; thumbnail_url: string | null }[]
+  /** false = hidden by pundo */
   is_visible: boolean
   created_at: string
   updated_at: string
-  reporter_count: number
-  last_reported_at: string | null
-  invalidated_at: string | null
-  invalidated_by: number | null
+  is_new: boolean
+  reported_by_shop: boolean
+  reply: ShopOwnerReviewReply | null
+  can_reply: boolean
+  can_report: boolean
 }
 
-export interface AuditLogEntry {
-  id: number
-  review_id: number
-  action: string
-  actor_type: string
-  actor_id: number | null
-  actor_ip: string | null
-  moderation_model: string | null
-  moderation_confidence: number | null
-  reason: string | null
-  timestamp: string
+export interface ShopOwnerReviewPage {
+  items: ShopOwnerReview[]
+  total: number
+  limit: number
+  offset: number
+  scope: ShopReviewScope
+  /** server time of the query: input for mark-seen */
+  generated_at: string
+}
+
+export interface ShopOwnerReviewSummary {
+  new_count: number
+  new_shop_count: number
+  new_product_count: number
+  shop_total: number
+  shop_average_stars: number
+  product_total: number
+  last_seen_at: string | null
+  shop_slug: string
 }
 
 // ─── Social-Link Moderation ───────────────────────────────────────────────────

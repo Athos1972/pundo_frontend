@@ -9,7 +9,6 @@ proposed-in-spec: social-link-moderation-20260424
 touches-modules:
   - src/app/(shop-admin)/shop-admin/(portal)/profile/**
   - src/components/shop-admin/SocialLinksEditor.tsx
-  - src/components/shop-admin/LinkPreview.tsx
   - src/lib/shop-admin-api.ts
 touches-roles:
   - shop-owner

@@ -381,3 +381,72 @@ export interface CrmContactDetail {
 export type CrmErrorDetail =
   | string                                              // e.g. "illegal_transition", "shop_id_required"
   | { detail: string; channel_kind?: string; current_version?: number; message_id?: number }
+
+
+// ─── Review moderation (F5930, /admin/reviews) ───────────────────────────────
+
+export interface SysAdminReviewPhoto {
+  id: number
+  url: string
+  thumbnail_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  moderation_reason: string | null
+  moderation_categories: string[] | null
+}
+
+export interface SysAdminReviewReport {
+  id: number
+  source: 'customer' | 'shop_owner'
+  reason: string | null
+  comment: string | null
+  /** customer: display name, shop owner: shop name, null if gone */
+  reporter_label: string | null
+  created_at: string
+}
+
+export interface SysAdminReviewReply {
+  id: number
+  shop_id: number
+  shop_name: string
+  body: string
+  is_visible: boolean
+  hidden_at: string | null
+  hidden_reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SysAdminReview {
+  id: number
+  user_id: number
+  user_display_name: string
+  entity_type: 'product' | 'shop'
+  entity_id: number
+  entity: { type: 'shop' | 'product'; id: number; slug: string; name: string } | null
+  stars: number
+  comment: string | null
+  photos: SysAdminReviewPhoto[]
+  is_visible: boolean
+  created_at: string
+  updated_at: string
+  reporter_count: number
+  owner_report_count: number
+  last_reported_at: string | null
+  invalidated_at: string | null
+  invalidated_by: number | null
+  reports: SysAdminReviewReport[]
+  reply: SysAdminReviewReply | null
+}
+
+export interface SysAdminReviewAuditEntry {
+  id: number
+  review_id: number
+  action: string
+  actor_type: string
+  actor_id: number | null
+  actor_ip: string | null
+  moderation_model: string | null
+  moderation_confidence: number | null
+  reason: string | null
+  timestamp: string
+}

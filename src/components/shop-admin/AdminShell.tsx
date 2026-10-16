@@ -7,12 +7,13 @@ interface AdminShellProps {
   children: React.ReactNode
   tr: ShopAdminTranslations
   ownerName: string
+  reviewsNewCount?: number
 }
 
-export function AdminShell({ children, tr, ownerName }: AdminShellProps) {
+export function AdminShell({ children, tr, ownerName, reviewsNewCount }: AdminShellProps) {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <AdminNav tr={tr} ownerName={ownerName} />
+      <AdminNav tr={tr} ownerName={ownerName} reviewsNewCount={reviewsNewCount} />
       <main className="flex-1 p-4 md:p-8 max-w-5xl w-full mx-auto">
         {children}
       </main>

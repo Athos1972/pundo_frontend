@@ -20,6 +20,9 @@ import type {
   PriceUnitOption,
   CatalogCaseListResponse,
   CatalogCaseSampleResponse,
+  ShopOwnerReviewPage,
+  ShopOwnerReviewSummary,
+  ShopReviewScope,
 } from '@/types/shop-admin'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
@@ -231,4 +234,24 @@ export async function getAdminCategories(lang: string): Promise<{ id: number; na
   if (!res.ok) return []
   const data = await res.json() as { items?: { id: number; name?: string | null }[] }
   return (data.items ?? []).map((c) => ({ id: c.id, name: c.name ?? '' }))
+}
+
+// ─── Reviews (F5930) ─────────────────────────────────────────────────────────
+
+/** Reviews of the own shop / its products — GET /api/v1/shop-owner/reviews */
+export async function getShopReviews(
+  params: { scope?: ShopReviewScope; limit?: number; offset?: number },
+  lang: string,
+): Promise<ShopOwnerReviewPage> {
+  const qs = new URLSearchParams()
+  if (params.scope) qs.set('scope', params.scope)
+  if (params.limit != null) qs.set('limit', String(params.limit))
+  if (params.offset != null) qs.set('offset', String(params.offset))
+  const s = qs.toString()
+  return apiFetchAdmin<ShopOwnerReviewPage>(`/reviews${s ? `?${s}` : ''}`, lang)
+}
+
+/** Counters for nav badge, dashboard tile, empty state — GET /api/v1/shop-owner/reviews/summary */
+export async function getShopReviewSummary(lang: string): Promise<ShopOwnerReviewSummary> {
+  return apiFetchAdmin<ShopOwnerReviewSummary>('/reviews/summary', lang)
 }

@@ -15,6 +15,7 @@
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
+| [shop-owner-reviews-reply-report](shop-owner-reviews-reply-report.md) | Shop-Owner Bewertungen: Antworten, Melden, Moderation (F5930) | implemented | P2 | — |
 | [admin-data-management](admin-data-management.md) | Admin Data Management Sweep | implemented | P3 | PASS |
 | [admin-shop-create-delete](admin-shop-create-delete.md) | Admin Shop Create + Delete (UI Golden Path) | implemented | P2 | PASS |
 | [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check (F5920: Vorschau, Wiedererkennung, komplette Liste, Kundensicht) | implemented | P2 | PASS (26/26, 2026-10-15) |

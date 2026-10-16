@@ -59,12 +59,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'Reviews',
       items: [
         {
-          q: 'How do I respond to reviews?',
-          a: 'Currently reviews are read-only for shop owners. You can invalidate reviews that violate our guidelines via Reviews → Invalidate (with a reason).',
+          q: 'How do I reply to a review?',
+          a: 'Open Reviews, choose the tab “My shop” and click “Reply” under a review. Your reply is public: it appears under the review on your shop page and in the customer’s account. You can edit or delete it later. A reply can be up to 1000 characters and is not translated. You can only reply to reviews of your shop, not to reviews of your products.',
         },
         {
-          q: 'Can I remove a fake or abusive review?',
-          a: 'You can invalidate a review with a reason (spam, offensive, legal, other). Invalidated reviews are hidden from customers. The audit log records all moderation actions.',
+          q: 'What can I do about a fake or abusive review?',
+          a: 'Click “Report to pundo” under the review, choose a reason (spam, offensive, legal, wrong shop or product, other) and optionally add a comment. You can report each review once. Reviews of your products can be reported too (tab “My products”). pundo checks the report.',
+        },
+        {
+          q: 'Can I hide or delete a review myself?',
+          a: 'No. Only pundo can hide a review. Hidden reviews stay visible to you, marked “Hidden by pundo”, but customers no longer see them. If pundo hides one of your replies, you cannot edit or delete it. A new review shows a “New” badge in the menu until you open the list.',
         },
       ],
     },
@@ -134,12 +138,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'Bewertungen',
       items: [
         {
-          q: 'Wie reagiere ich auf Bewertungen?',
-          a: 'Derzeit sind Bewertungen für Shop-Inhaber schreibgeschützt. Du kannst Bewertungen, die gegen unsere Richtlinien verstoßen, unter Bewertungen → Deaktivieren (mit Angabe eines Grundes) deaktivieren.',
+          q: 'Wie antworte ich auf eine Bewertung?',
+          a: 'Öffne Bewertungen, wähle den Reiter „Mein Shop“ und klicke unter einer Bewertung auf „Antworten“. Deine Antwort ist öffentlich: Sie erscheint unter der Bewertung auf deiner Shopseite und im Konto des Kunden. Du kannst sie später bearbeiten oder löschen. Eine Antwort darf bis zu 1000 Zeichen lang sein und wird nicht übersetzt. Du kannst nur auf Bewertungen deines Shops antworten, nicht auf Bewertungen deiner Produkte.',
         },
         {
-          q: 'Kann ich eine gefälschte oder missbräuchliche Bewertung entfernen?',
-          a: 'Du kannst eine Bewertung mit einem Grund (Spam, beleidigend, rechtlich, sonstiges) deaktivieren. Deaktivierte Bewertungen werden für Kunden ausgeblendet. Das Audit-Log zeichnet alle Moderationsmaßnahmen auf.',
+          q: 'Was kann ich gegen eine gefälschte oder beleidigende Bewertung tun?',
+          a: 'Klicke unter der Bewertung auf „Bei pundo melden“, wähle einen Grund (Spam, beleidigend, rechtlich, falscher Shop oder falsches Produkt, sonstiges) und ergänze optional einen Kommentar. Jede Bewertung kannst du einmal melden. Auch Bewertungen deiner Produkte lassen sich melden (Reiter „Meine Produkte“). pundo prüft die Meldung.',
+        },
+        {
+          q: 'Kann ich eine Bewertung selbst ausblenden oder löschen?',
+          a: 'Nein. Nur pundo kann eine Bewertung ausblenden. Ausgeblendete Bewertungen siehst du weiterhin, markiert mit „Von pundo ausgeblendet“, Kunden sehen sie nicht mehr. Blendet pundo eine deiner Antworten aus, kannst du sie weder bearbeiten noch löschen. Neue Bewertungen zeigen im Menü ein „Neu“-Abzeichen, bis du die Liste öffnest.',
         },
       ],
     },
@@ -196,8 +204,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'Αξιολογήσεις',
       items: [
         {
-          q: 'Πώς διαχειρίζομαι αξιολογήσεις;',
-          a: 'Μπορείς να απενεργοποιήσεις αξιολογήσεις που παραβιάζουν τις οδηγίες μας μέσα από Αξιολογήσεις → Απενεργοποίηση.',
+          q: 'Πώς απαντώ σε μια αξιολόγηση;',
+          a: 'Άνοιξε τις Αξιολογήσεις, διάλεξε την καρτέλα «Το κατάστημά μου» και πάτα «Απάντηση» κάτω από μια αξιολόγηση. Η απάντησή σου είναι δημόσια: εμφανίζεται κάτω από την αξιολόγηση στη σελίδα του καταστήματός σου και στον λογαριασμό του πελάτη. Μπορείς να την επεξεργαστείς ή να τη διαγράψεις αργότερα. Η απάντηση μπορεί να έχει έως 1000 χαρακτήρες και δεν μεταφράζεται. Μπορείς να απαντήσεις μόνο σε αξιολογήσεις του καταστήματός σου, όχι των προϊόντων σου.',
+        },
+        {
+          q: 'Τι μπορώ να κάνω για μια ψεύτικη ή προσβλητική αξιολόγηση;',
+          a: 'Πάτα «Αναφορά στο pundo» κάτω από την αξιολόγηση, διάλεξε λόγο (spam, προσβλητική, νομικό, λάθος κατάστημα ή προϊόν, άλλο) και πρόσθεσε προαιρετικά σχόλιο. Κάθε αξιολόγηση αναφέρεται μία φορά. Μπορείς να αναφέρεις και αξιολογήσεις των προϊόντων σου (καρτέλα «Τα προϊόντα μου»). Το pundo εξετάζει την αναφορά.',
+        },
+        {
+          q: 'Μπορώ να κρύψω ή να διαγράψω μόνος μια αξιολόγηση;',
+          a: 'Όχι. Μόνο το pundo μπορεί να κρύψει μια αξιολόγηση. Τις κρυμμένες αξιολογήσεις τις βλέπεις ακόμη, με την ένδειξη «Κρυμμένη από το pundo», αλλά οι πελάτες δεν τις βλέπουν. Αν το pundo κρύψει μια απάντησή σου, δεν μπορείς να την επεξεργαστείς ή να τη διαγράψεις. Οι νέες αξιολογήσεις εμφανίζουν ένδειξη «Νέα» στο μενού μέχρι να ανοίξεις τη λίστα.',
         },
       ],
     },
@@ -250,8 +266,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'Отзывы',
       items: [
         {
-          q: 'Как управлять отзывами?',
-          a: 'Вы можете деактивировать отзывы, нарушающие наши правила, через Отзывы → Деактивировать (с указанием причины).',
+          q: 'Как ответить на отзыв?',
+          a: 'Откройте «Отзывы», выберите вкладку «Мой магазин» и нажмите «Ответить» под отзывом. Ваш ответ публичный: он появляется под отзывом на странице вашего магазина и в аккаунте покупателя. Позже его можно изменить или удалить. Ответ — до 1000 символов, он не переводится. Отвечать можно только на отзывы о вашем магазине, но не на отзывы о ваших товарах.',
+        },
+        {
+          q: 'Что делать с поддельным или оскорбительным отзывом?',
+          a: 'Нажмите «Пожаловаться в pundo» под отзывом, выберите причину (спам, оскорбление, юридическая проблема, не тот магазин или товар, другое) и при желании добавьте комментарий. На каждый отзыв можно пожаловаться один раз. Жаловаться можно и на отзывы о ваших товарах (вкладка «Мои товары»). pundo проверяет жалобу.',
+        },
+        {
+          q: 'Можно ли самому скрыть или удалить отзыв?',
+          a: 'Нет. Скрыть отзыв может только pundo. Скрытые отзывы вы по-прежнему видите с пометкой «Скрыт в pundo», а покупатели — нет. Если pundo скроет ваш ответ, вы не сможете его изменить или удалить. Новые отзывы отмечаются в меню значком «Новый», пока вы не откроете список.',
         },
       ],
     },
@@ -304,8 +328,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'التقييمات',
       items: [
         {
-          q: 'كيف أدير التقييمات؟',
-          a: 'يمكنك تعطيل التقييمات التي تنتهك إرشاداتنا عبر التقييمات ← تعطيل (مع ذكر السبب).',
+          q: 'كيف أرد على تقييم؟',
+          a: 'افتح التقييمات، اختر تبويب «متجري» واضغط «رد» أسفل التقييم. ردّك علني: يظهر أسفل التقييم في صفحة متجرك وفي حساب العميل. يمكنك تعديله أو حذفه لاحقًا. يمكن أن يصل الرد إلى 1000 حرف ولا تتم ترجمته. يمكنك الرد فقط على تقييمات متجرك، لا على تقييمات منتجاتك.',
+        },
+        {
+          q: 'ماذا أفعل مع تقييم مزيّف أو مسيء؟',
+          a: 'اضغط «الإبلاغ إلى pundo» أسفل التقييم، واختر السبب (بريد مزعج، مسيء، قانوني، متجر أو منتج خاطئ، أخرى) وأضف تعليقًا اختياريًا. يمكنك الإبلاغ عن كل تقييم مرة واحدة. ويمكن الإبلاغ أيضًا عن تقييمات منتجاتك (تبويب «منتجاتي»). يراجع pundo البلاغ.',
+        },
+        {
+          q: 'هل يمكنني إخفاء تقييم أو حذفه بنفسي؟',
+          a: 'لا. وحده pundo يستطيع إخفاء تقييم. تبقى التقييمات المخفية ظاهرة لك مع علامة «مخفي بواسطة pundo»، بينما لا يراها العملاء. إذا أخفى pundo أحد ردودك فلا يمكنك تعديله أو حذفه. تظهر علامة «جديد» في القائمة للتقييمات الجديدة إلى أن تفتح القائمة.',
         },
       ],
     },
@@ -358,8 +390,16 @@ export const shopAdminHelpContent: Record<Lang, ShopAdminFaqCategory[]> = {
       title: 'ביקורות',
       items: [
         {
-          q: 'איך אני מנהל ביקורות?',
-          a: 'אפשר להשבית ביקורות שמפרות את ההנחיות שלנו דרך ביקורות ← השבת (עם ציון סיבה).',
+          q: 'איך מגיבים לביקורת?',
+          a: 'פתחו את ביקורות, בחרו בלשונית „החנות שלי” ולחצו „הגב” מתחת לביקורת. התגובה שלכם ציבורית: היא מופיעה מתחת לביקורת בעמוד החנות ובחשבון הלקוח. אפשר לערוך או למחוק אותה אחר כך. תגובה יכולה להכיל עד 1000 תווים והיא אינה מתורגמת. אפשר להגיב רק לביקורות על החנות שלכם, לא לביקורות על המוצרים.',
+        },
+        {
+          q: 'מה אפשר לעשות מול ביקורת מזויפת או פוגענית?',
+          a: 'לחצו „דווח ל-pundo” מתחת לביקורת, בחרו סיבה (ספאם, פוגענית, משפטית, חנות או מוצר לא נכונים, אחר) והוסיפו הערה אם רוצים. אפשר לדווח על כל ביקורת פעם אחת. אפשר לדווח גם על ביקורות על המוצרים שלכם (לשונית „המוצרים שלי”). pundo בודק את הדיווח.',
+        },
+        {
+          q: 'האם אפשר להסתיר או למחוק ביקורת בעצמי?',
+          a: 'לא. רק pundo יכול להסתיר ביקורת. ביקורות מוסתרות נשארות גלויות לכם עם הסימון „הוסתר על ידי pundo”, אבל לקוחות כבר לא רואים אותן. אם pundo מסתיר תגובה שלכם, אי אפשר לערוך או למחוק אותה. ביקורות חדשות מציגות בתפריט תג „חדש” עד שתפתחו את הרשימה.',
         },
       ],
     },

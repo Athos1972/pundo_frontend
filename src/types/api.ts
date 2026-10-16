@@ -170,12 +170,21 @@ export interface CategoryListResponse { items: CategoryItem[]; }
 
 // ─── Shop Review Preview (for Reviews Popover) ───────────────────────────────
 
+/** Visible reply of the shop to a review (F5930). `shop_name` is resolved by the backend. */
+export interface ReviewOwnerReply {
+  body: string
+  created_at: string
+  updated_at: string
+  shop_name: string
+}
+
 export interface ShopReviewPreview {
   id: number
   user_display_name: string
   stars: 1 | 2 | 3 | 4 | 5
   comment: string | null
   created_at: string
+  owner_reply?: ReviewOwnerReply | null
 }
 
 export interface ShopReviewsResponse {
@@ -205,6 +214,7 @@ export interface Review {
   is_visible: boolean
   created_at: string
   updated_at: string
+  owner_reply?: ReviewOwnerReply | null
 }
 
 /** Product or shop a review belongs to (name resolved by the backend via Accept-Language). */

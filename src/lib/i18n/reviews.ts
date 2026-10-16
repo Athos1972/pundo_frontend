@@ -30,6 +30,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'No reviews yet',
     reviews_popover_error: 'Could not load reviews',
     reviews_see_all: 'See all reviews',
+    reviews_owner_reply_from: (shop: string) => `Reply from ${shop}`,
   },
   de: {
     reviews_title: 'Bewertungen',
@@ -61,6 +62,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'Noch keine Bewertungen',
     reviews_popover_error: 'Bewertungen nicht ladbar',
     reviews_see_all: 'Alle Bewertungen',
+    reviews_owner_reply_from: (shop: string) => `Antwort von ${shop}`,
   },
   ru: {
     reviews_title: 'Отзывы',
@@ -92,6 +94,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'Пока нет отзывов',
     reviews_popover_error: 'Не удалось загрузить',
     reviews_see_all: 'Все отзывы',
+    reviews_owner_reply_from: (shop: string) => `Ответ от ${shop}`,
   },
   el: {
     reviews_title: 'Αξιολογήσεις',
@@ -123,6 +126,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'Δεν υπάρχουν αξιολογήσεις',
     reviews_popover_error: 'Σφάλμα φόρτωσης',
     reviews_see_all: 'Όλες οι κριτικές',
+    reviews_owner_reply_from: (shop: string) => `Απάντηση από ${shop}`,
   },
   ar: {
     reviews_title: 'التقييمات',
@@ -154,6 +158,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'لا توجد تقييمات بعد',
     reviews_popover_error: 'تعذّر تحميل التقييمات',
     reviews_see_all: 'عرض كل التقييمات',
+    reviews_owner_reply_from: (shop: string) => `رد من ${shop}`,
   },
   he: {
     reviews_title: 'ביקורות',
@@ -185,6 +190,7 @@ const reviewsTranslations = {
     reviews_popover_empty: 'אין ביקורות עדיין',
     reviews_popover_error: 'לא ניתן לטעון',
     reviews_see_all: 'כל הביקורות',
+    reviews_owner_reply_from: (shop: string) => `תגובה מאת ${shop}`,
   },
 } as const
 

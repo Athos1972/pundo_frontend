@@ -9,6 +9,8 @@ import * as oauth from '@/lib/oauth-api'
 import * as community from '@/lib/community-api'
 import * as activity from '@/lib/activity-api'
 import * as customer from '@/lib/customer-api'
+import * as shopAdmin from '@/lib/shop-admin-api'
+import * as sysAdmin from '@/lib/system-admin-api'
 
 const mockFetch = vi.fn()
 const res = (status: number, body: unknown = {}, text = '') => ({ ok: status < 400, status, json: async () => body, text: async () => text })
@@ -219,5 +221,61 @@ describe('customer-api', () => {
     expect(last().url).toMatch(/\/customer\/reviews\/stats\?entity_type=product&entity_id=3$/)
     mockFetch.mockResolvedValueOnce(res(500))
     await expect(customer.getReviewStats('product', 3, 'en')).resolves.toBeNull()
+  })
+})
+
+// ─── F5930 review clients ───────────────────────────────────────────────────────
+
+describe('shop-admin-api reviews (F5930)', () => {
+  it('list: scope/limit/offset in the query, owner token and app language, no cache', async () => {
+    cookieValues.shop_owner_token = 'sot'
+    mockFetch.mockResolvedValue(res(200, { items: [], total: 0 }))
+    await shopAdmin.getShopReviews({ scope: 'products', limit: 20, offset: 40 }, 'el')
+    const { url, init } = last()
+    expect(new URL(url).pathname).toBe('/api/v1/shop-owner/reviews')
+    expect(new URL(url).searchParams.get('scope')).toBe('products')
+    expect(new URL(url).searchParams.get('limit')).toBe('20')
+    expect(new URL(url).searchParams.get('offset')).toBe('40')
+    expect(init.headers['Authorization']).toBe('Bearer sot')
+    expect(init.headers['Accept-Language']).toBe('el')
+  })
+
+  it('list without params has no query string; summary hits /reviews/summary', async () => {
+    mockFetch.mockResolvedValue(res(200, {}))
+    await shopAdmin.getShopReviews({}, 'en')
+    expect(last().url).toMatch(/\/shop-owner\/reviews$/)
+    await shopAdmin.getShopReviewSummary('de')
+    expect(last().url).toMatch(/\/shop-owner\/reviews\/summary$/)
+    expect(last().init.headers['Accept-Language']).toBe('de')
+  })
+
+  it('401 / 403 surface as UNAUTHORIZED / FORBIDDEN (the portal layout redirects on them)', async () => {
+    mockFetch.mockResolvedValueOnce(res(401))
+    await expect(shopAdmin.getShopReviewSummary('en')).rejects.toThrow('UNAUTHORIZED')
+    mockFetch.mockResolvedValueOnce(res(403))
+    await expect(shopAdmin.getShopReviewSummary('en')).rejects.toThrow('FORBIDDEN')
+  })
+})
+
+describe('system-admin-api reviews (F5930)', () => {
+  it('list: filters in the query, admin token, language header', async () => {
+    cookieValues.admin_token = 'at'
+    mockFetch.mockResolvedValue(res(200, []))
+    await sysAdmin.getReviews({ report_source: 'shop_owner', limit: 50, offset: 50 }, 'el')
+    const { url, init } = last()
+    expect(new URL(url).pathname).toBe('/api/v1/admin/reviews')
+    expect(new URL(url).searchParams.get('report_source')).toBe('shop_owner')
+    expect(new URL(url).searchParams.get('offset')).toBe('50')
+    expect(init.headers['Authorization']).toBe('Bearer at')
+    expect(init.headers['Accept-Language']).toBe('el')
+  })
+
+  it('has_reports=false is sent (not dropped like undefined), audit log hits its path', async () => {
+    mockFetch.mockResolvedValue(res(200, []))
+    await sysAdmin.getReviews({ has_reports: true, is_visible: false })
+    expect(new URL(last().url).searchParams.get('has_reports')).toBe('true')
+    expect(new URL(last().url).searchParams.get('is_visible')).toBe('false')
+    await sysAdmin.getReviewAuditLog(12)
+    expect(last().url).toMatch(/\/admin\/reviews\/12\/audit-log$/)
   })
 })

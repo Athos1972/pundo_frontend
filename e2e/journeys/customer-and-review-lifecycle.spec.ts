@@ -12,7 +12,7 @@
  * |----------------|-------------------------------------------------------------|--------------------------------------|
  * | customer       | Frischer Customer `e2e-<run>-carl-<uuid>@pundo.com`          | Signup (auto-verified), Login, Logout|
  * | spec-shop      | Eigener Shop (specShop 'CARL') als Review-Ziel               | Review sichtbar/ausgeblendet         |
- * | review         | Review des Customers auf den Spec-Shop                       | Moderation (invalidate/restore)      |
+ * | review         | Review des Customers auf den Spec-Shop                       | Antwort des Shops, Moderation        |
  *
  * @pundo.com-Adressen werden automatisch verifiziert (kein OTP); das Marker-Praefix `e2e-<run>-` sorgt dafuer,
  * dass der Teardown (e2e/cleanup-run.ts) den Kunden entfernt. Den Spec-Shop loescht afterAll per Admin-API.
@@ -193,13 +193,28 @@ test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
     expect(visible, 'Review erscheint in /shops/{id}/reviews').toBe(true)
   })
 
+  test('Schritt 6b — Der Owner des Shops antwortet, die Antwort steht auf der Shopseite unter der Review (F5930)', async ({ page }) => {
+    expect(ctx.reviewId, 'Review aus Schritt 6').not.toBeNull()
+    const replyText = `Thank you for the review ${UUID}`
+    const r = await shop.api<{ body?: string }>('POST', `/reviews/${ctx.reviewId}/reply`, { body: replyText })
+    expect(r.status, `Owner-Antwort: ${r.text}`).toBe(201)
+
+    await page.goto(`${BASE_URL}/en/shops/${shop.slug}`)
+    // Die Shopseite rendert den Review-Bereich mehrfach (Layout-Varianten): der erste Block genuegt
+    const block = page.getByTestId('owner-reply').first()
+    await expect(block, 'Antwort unter der Review auf der Shopseite').toContainText(replyText)
+    await expect(block).toContainText(`Reply from ${shop.name}`)
+    logStep('6b', 'Owner-Antwort sichtbar', 'Antwort mit Shopname unter der Review', 'sichtbar', 'PASS')
+  })
+
   // ── PHASE 3 — Admin-Moderation ────────────────────────────────────────────
 
-  test('Schritt 7 — Admin-Moderationsliste ist erreichbar', async ({ adminPage: page }) => {
-    await page.goto(BASE_URL + '/admin/reviews')
-    await expect(page).toHaveURL(/\/admin\/reviews/)
+  test('Schritt 7 — Admin-Moderationsliste zeigt die Review (Seite existiert, Eintrag im Filter "alle")', async ({ adminPage: page }) => {
+    await page.goto(BASE_URL + '/admin/reviews?filter=all')
     await expect(page).not.toHaveURL(/\/admin\/login/)
-    logStep(7, 'Admin /admin/reviews', 'Seite geladen (kein Login-Redirect)', page.url(), 'PASS')
+    await expect(page.getByRole('heading', { level: 1 }), 'echte Moderationsseite, keine 404-Seite').toHaveText('Review moderation')
+    await expect(page.locator('article', { hasText: ctx.reviewText }), 'Review-Eintrag in der Liste').toBeVisible()
+    logStep(7, 'Admin /admin/reviews', 'H1 der Moderationsseite + Review-Eintrag', 'beides sichtbar', 'PASS')
   })
 
   test('Schritt 8 — Admin invalidiert die Review (verschwindet) und stellt sie wieder her', async () => {

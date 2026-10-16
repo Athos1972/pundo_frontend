@@ -4,13 +4,17 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
+import { SHOP_REVIEWS_SEEN_EVENT } from './reviews/events'
 
 interface NavItem {
   href: string
   label: string
   icon: string
+  /** number of new items: shown as a badge (visible number + screen-reader text) */
+  badge?: number
+  badgeSrLabel?: string
 }
 
 interface NavLinksProps {
@@ -40,6 +44,12 @@ function NavLinks({ items, pathname, onNavigate, ariaLabel }: NavLinksProps) {
               >
                 <span aria-hidden="true">{item.icon}</span>
                 {item.label}
+                {item.badge ? (
+                  <span className="ms-auto min-w-5 px-1.5 py-0.5 rounded-full bg-red-600 text-white text-xs text-center leading-none">
+                    <span aria-hidden="true">{item.badge > 99 ? '99+' : item.badge}</span>
+                    <span className="sr-only">{item.badgeSrLabel}</span>
+                  </span>
+                ) : null}
               </Link>
             </li>
           )
@@ -52,12 +62,24 @@ function NavLinks({ items, pathname, onNavigate, ariaLabel }: NavLinksProps) {
 interface AdminNavProps {
   tr: ShopAdminTranslations
   ownerName: string
+  /** unseen reviews (F5930), loaded by the portal layout */
+  reviewsNewCount?: number
 }
 
-export function AdminNav({ tr, ownerName }: AdminNavProps) {
+export function AdminNav({ tr, ownerName, reviewsNewCount = 0 }: AdminNavProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  // The count the user has already seen: derived state, so a changed server value shows the badge again
+  const [clearedFor, setClearedFor] = useState<number | null>(null)
+  const newReviews = clearedFor === reviewsNewCount ? 0 : reviewsNewCount
+
+  // The layout does not re-render on client navigation: the review list tells us when it marked everything as seen.
+  useEffect(() => {
+    const clear = () => setClearedFor(reviewsNewCount)
+    window.addEventListener(SHOP_REVIEWS_SEEN_EVENT, clear)
+    return () => window.removeEventListener(SHOP_REVIEWS_SEEN_EVENT, clear)
+  }, [reviewsNewCount])
 
   async function handleLogout() {
     await fetch('/api/shop-admin/logout', { method: 'POST' }).catch(() => {})
@@ -73,7 +95,13 @@ export function AdminNav({ tr, ownerName }: AdminNavProps) {
     { href: '/shop-admin/catalog-review', label: tr.nav_catalog_review, icon: '🧠' },
     { href: '/shop-admin/import', label: tr.nav_import, icon: '⬆' },
     { href: '/shop-admin/api-keys', label: tr.nav_api_keys, icon: '🔑' },
-    { href: '/shop-admin/reviews', label: tr.nav_reviews, icon: '★' },
+    {
+      href: '/shop-admin/reviews',
+      label: tr.nav_reviews,
+      icon: '★',
+      badge: newReviews,
+      badgeSrLabel: tr.shop_reviews_nav_new_sr.replace('{n}', String(newReviews)),
+    },
     { href: '/shop-admin/settings', label: tr.nav_settings ?? 'Settings', icon: '⚙️' },
     { href: '/shop-admin/help', label: tr.nav_help, icon: '?' },
   ]

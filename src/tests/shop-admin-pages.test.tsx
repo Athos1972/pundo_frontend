@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import React from 'react'
 import { tAdmin } from '@/lib/shop-admin-translations'
 
@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({
   redirect: (to: string) => { throw new RedirectError(to) },
 }))
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => React.createElement('a', { href }, children),
+  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => React.createElement('a', { href, ...rest }, children),
 }))
 vi.mock('next/headers', () => ({
   headers: async () => new Headers(),
@@ -30,8 +30,8 @@ vi.mock('next/headers', () => ({
 vi.mock('@/lib/lang', async (orig) => ({ ...(await orig<typeof import('@/lib/lang')>()), getLangServer: vi.fn(async () => 'en') }))
 vi.mock('@/lib/shop-admin-api')
 vi.mock('@/components/shop-admin/AdminShell', () => ({
-  AdminShell: ({ ownerName, children }: { ownerName: string; children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'shell', 'data-owner': ownerName }, children),
+  AdminShell: ({ ownerName, reviewsNewCount, children }: { ownerName: string; reviewsNewCount?: number; children: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'shell', 'data-owner': ownerName, 'data-new-reviews': String(reviewsNewCount) }, children),
 }))
 vi.mock('@/components/shop-admin/HoursEditor', () => ({ HoursEditor: stub('HoursEditor') }))
 vi.mock('@/components/shop-admin/OfferList', () => ({ OfferList: stub('OfferList') }))
@@ -44,7 +44,7 @@ vi.mock('@/components/shop-admin/ApiKeyList', () => ({ ApiKeyList: stub('ApiKeyL
 vi.mock('@/components/shop-admin/ImportPanel', () => ({ ImportPanel: stub('ImportPanel') }))
 vi.mock('@/components/shop-admin/ShopDangerZone', () => ({ ShopDangerZone: stub('ShopDangerZone') }))
 vi.mock('@/components/shop-admin/WebsiteStatusBanner', () => ({ WebsiteStatusBanner: stub('WebsiteStatusBanner') }))
-vi.mock('@/components/shop-admin/ReviewModerationTable', () => ({ ReviewModerationTable: stub('ReviewModerationTable') }))
+vi.mock('@/components/shop-admin/reviews/ShopReviewList', () => ({ ShopReviewList: stub('ShopReviewList') }))
 vi.mock('@/components/shop-admin/onboarding/OnboardingWizard', () => ({ OnboardingWizard: stub('OnboardingWizard') }))
 vi.mock('@/components/shop-admin/catalog-review/CatalogReviewOverview', () => ({ CatalogReviewOverview: stub('CatalogReviewOverview') }))
 vi.mock('@/components/shop-admin/catalog-review/EnrichmentProgress', () => ({ EnrichmentProgress: stub('EnrichmentProgress') }))
@@ -86,6 +86,35 @@ describe('portal layout', () => {
     await show(Layout, { children: React.createElement('p', null, 'page') })
     expect(screen.getByTestId('shell').getAttribute('data-owner')).toBe('Olga')
     expect(screen.getByText('page')).toBeTruthy()
+  })
+
+  it('passes the number of unseen reviews to the shell (badge)', async () => {
+    vi.mocked(api.getMe).mockResolvedValue(me('approved') as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValue({ new_count: 3 } as never)
+    const { default: Layout } = await import(`${P}/layout`)
+    await show(Layout, { children: null })
+    expect(api.getShopReviewSummary).toHaveBeenCalledWith('en')
+    expect(screen.getByTestId('shell').getAttribute('data-new-reviews')).toBe('3')
+  })
+
+  it.each([
+    ['summary request fails', () => vi.mocked(api.getShopReviewSummary).mockRejectedValue(new Error('API_ERROR:500'))],
+    ['summary request is unauthorized (must not redirect)', () => vi.mocked(api.getShopReviewSummary).mockRejectedValue(new Error('UNAUTHORIZED'))],
+    ['summary is empty', () => vi.mocked(api.getShopReviewSummary).mockResolvedValue(undefined as never)],
+  ])('%s -> badge 0, the page still renders', async (_name, arrange) => {
+    vi.mocked(api.getMe).mockResolvedValue(me('approved') as never)
+    arrange()
+    const { default: Layout } = await import(`${P}/layout`)
+    await show(Layout, { children: React.createElement('p', null, 'page') })
+    expect(screen.getByTestId('shell').getAttribute('data-new-reviews')).toBe('0')
+    expect(screen.getByText('page')).toBeTruthy()
+  })
+
+  it('does not load the summary for owners that are redirected', async () => {
+    vi.mocked(api.getMe).mockResolvedValue(me('pending') as never)
+    const { default: Layout } = await import(`${P}/layout`)
+    await expect(show(Layout, { children: null })).rejects.toMatchObject({ to: '/shop-admin/pending-approval' })
+    expect(api.getShopReviewSummary).not.toHaveBeenCalled()
   })
 
   // Regression: redirect() throws; the surrounding catch swallowed it, so owners that
@@ -136,7 +165,32 @@ describe('dashboard', () => {
     await show(Page)
     expect(screen.getByText(`${tr.dashboard_welcome}, Olga`)).toBeTruthy()
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'))
-    expect(hrefs).toEqual(['/shop-admin/profile', '/shop-admin/hours', '/shop-admin/offers', '/shop-admin/import', '/shop-admin/api-keys'])
+    expect(hrefs).toEqual(['/shop-admin/profile', '/shop-admin/hours', '/shop-admin/offers', '/shop-admin/import', '/shop-admin/api-keys', '/shop-admin/reviews'])
+  })
+
+  it('reviews tile: new count, average and total from the summary', async () => {
+    vi.mocked(api.getMe).mockResolvedValue({ name: 'Olga' } as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValue({ new_count: 2, shop_total: 12, shop_average_stars: 4.25 } as never)
+    const { default: Page } = await import(`${P}/dashboard/page`)
+    await show(Page)
+    const tile = screen.getByRole('link', { name: new RegExp(tr.shop_reviews_tile_title) })
+    expect(tile.getAttribute('href')).toBe('/shop-admin/reviews')
+    expect(tile.textContent).toContain(tr.shop_reviews_tile_new.replace('{n}', '2'))
+    expect(tile.textContent).toContain(tr.shop_reviews_tile_average.replace('{avg}', '4.3').replace('{total}', '12'))
+  })
+
+  it('reviews tile: nothing new / no reviews yet; without a summary the tile still links to the page', async () => {
+    vi.mocked(api.getMe).mockResolvedValue({ name: 'Olga' } as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValueOnce({ new_count: 0, shop_total: 0, shop_average_stars: 0 } as never)
+    const { default: Page } = await import(`${P}/dashboard/page`)
+    const { unmount } = await show(Page)
+    expect(screen.getByText(tr.shop_reviews_tile_none_new)).toBeTruthy()
+    expect(screen.getByText(tr.shop_reviews_tile_no_reviews)).toBeTruthy()
+    unmount()
+    vi.mocked(api.getShopReviewSummary).mockRejectedValueOnce(new Error('API_ERROR:500'))
+    await show(Page)
+    expect(screen.getByRole('link', { name: new RegExp(tr.shop_reviews_tile_title) }).getAttribute('href')).toBe('/shop-admin/reviews')
+    expect(screen.queryByText(tr.shop_reviews_tile_none_new)).toBeNull()
   })
 
   it('omits the greeting when the profile cannot be loaded', async () => {
@@ -409,78 +463,66 @@ describe('verify-email page', () => {
   })
 })
 
-// ─── Reviews ────────────────────────────────────────────────────────────────────
+// ─── Reviews (F5930) ────────────────────────────────────────────────────────────
 
 describe('reviews page', () => {
-  it('requests reviews with the language and the admin token (preferred over the owner token)', async () => {
-    cookieStore.values = { admin_token: 'adm', shop_owner_token: 'own' }
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [{ id: 1 }] })
+  const page = (over: Record<string, unknown> = {}) => ({ items: [{ id: 1 }], total: 1, limit: 20, offset: 0, scope: 'shop', generated_at: '2026-10-16T10:00:00Z', ...over })
+  const summary = { new_count: 1, shop_slug: 'cafe-larnaca' }
+
+  it('loads page 1 of the "shop" scope (default) with the language and hands list, slug and language to the list', async () => {
+    vi.mocked(api.getShopReviews).mockResolvedValue(page() as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValue(summary as never)
     const { default: Page } = await import(`${P}/reviews/page`)
-    await show(Page)
-    const [url, init] = fetchMock.mock.calls[0]
-    expect(url).toMatch(/\/api\/v1\/admin\/reviews\?limit=100$/)
-    expect(init.headers).toMatchObject({ 'Accept-Language': 'en', Authorization: 'Bearer adm' })
-    expect(stubProps('ReviewModerationTable').reviews).toEqual([{ id: 1 }])
+    await show(Page, sp())
+    expect(api.getShopReviews).toHaveBeenCalledWith({ scope: 'shop', limit: 20, offset: 0 }, 'en')
+    expect(api.getShopReviewSummary).toHaveBeenCalledWith('en')
+    const props = stubProps('ShopReviewList')
+    expect(props.initial.items).toEqual([{ id: 1 }])
+    expect(props.shopSlug).toBe('cafe-larnaca')
+    expect(props.lang).toBe('en')
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(tr.shop_reviews_title)
   })
 
-  it('uses the owner token when there is no admin token; sends no auth header without any', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [] })
+  it('?scope=products selects the product scope and marks its tab; unknown values fall back to "shop"', async () => {
+    vi.mocked(api.getShopReviews).mockResolvedValue(page({ scope: 'products' }) as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValue(summary as never)
     const { default: Page } = await import(`${P}/reviews/page`)
-    cookieStore.values = { shop_owner_token: 'own' }
-    const { unmount } = await show(Page)
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer own')
+    const { unmount } = await show(Page, sp({ scope: 'products' }))
+    expect(api.getShopReviews).toHaveBeenLastCalledWith({ scope: 'products', limit: 20, offset: 0 }, 'en')
+    expect(screen.getByRole('link', { name: tr.shop_reviews_tab_products }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: tr.shop_reviews_tab_shop }).getAttribute('aria-current')).toBeNull()
+    expect(screen.getByRole('link', { name: tr.shop_reviews_tab_products }).getAttribute('href')).toBe('/shop-admin/reviews?scope=products')
     unmount()
-    cookieStore.values = {}
-    await show(Page)
-    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBeUndefined()
+    await show(Page, sp({ scope: 'evil' }))
+    expect(api.getShopReviews).toHaveBeenLastCalledWith({ scope: 'shop', limit: 20, offset: 0 }, 'en')
   })
 
-  it('shows an empty table on HTTP errors and network failures', async () => {
+  it('uses the owner API only: no direct fetch to the admin endpoint any more', async () => {
+    vi.mocked(api.getShopReviews).mockResolvedValue(page() as never)
+    vi.mocked(api.getShopReviewSummary).mockResolvedValue(summary as never)
     const { default: Page } = await import(`${P}/reviews/page`)
-    fetchMock.mockResolvedValueOnce({ ok: false, json: async () => ({ detail: 'x' }) })
-    const { unmount } = await show(Page)
-    expect(stubProps('ReviewModerationTable').reviews).toEqual([])
-    unmount()
-    fetchMock.mockRejectedValueOnce(new Error('down'))
-    await show(Page)
-    expect(stubProps('ReviewModerationTable').reviews).toEqual([])
-  })
-})
-
-describe('review audit log page', () => {
-  const entry = (over: Record<string, unknown>) => ({
-    id: 1, timestamp: '2026-03-04T10:00:00Z', action: 'created', actor_type: 'user', actor_ip: '1.2.3.4',
-    reason: null, moderation_model: null, moderation_confidence: null, ...over,
+    await show(Page, sp())
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('renders entries with action labels, ip, reason and model confidence; dashes for missing values', async () => {
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [
-      entry({}),
-      entry({ id: 2, action: 'invalidated', actor_ip: null, reason: 'spam', moderation_model: 'gpt', moderation_confidence: 0.876 }),
-      entry({ id: 3, action: 'mystery', timestamp: 'not-a-date' }),
-    ] })
-    const { default: Page } = await import(`${P}/reviews/[id]/audit-log/page`)
-    await show(Page, par({ id: '77' }))
-    expect(fetchMock.mock.calls[0][0]).toMatch(/\/admin\/reviews\/77\/audit-log$/)
-    const rows = screen.getAllByRole('row').slice(1)
-    expect(within(rows[0]).getByText(tr.reviews_audit_action_created)).toBeTruthy()
-    expect(within(rows[0]).getByText('1.2.3.4')).toBeTruthy()
-    expect(within(rows[1]).getByText(tr.reviews_audit_action_invalidated)).toBeTruthy()
-    expect(within(rows[1]).getByText('spam')).toBeTruthy()
-    expect(within(rows[1]).getByText('gpt (88%)')).toBeTruthy()
-    expect(within(rows[2]).getByText('mystery')).toBeTruthy()      // unknown action -> raw value
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(`${tr.reviews_audit_log} #77`)
+  it.each([
+    ['list request fails', () => vi.mocked(api.getShopReviews).mockRejectedValue(new Error('API_ERROR:500'))],
+    ['summary request fails', () => {
+      vi.mocked(api.getShopReviews).mockResolvedValue(page() as never)
+      vi.mocked(api.getShopReviewSummary).mockRejectedValue(new Error('API_ERROR:500'))
+    }],
+  ])('%s -> error text, no list', async (_n, arrange) => {
+    arrange()
+    const { default: Page } = await import(`${P}/reviews/page`)
+    await show(Page, sp())
+    expect(screen.getByRole('alert').textContent).toBe(tr.shop_reviews_load_error)
+    expect(screen.queryByTestId('ShopReviewList')).toBeNull()
   })
 
-  it('empty state when there are no entries or the request fails', async () => {
-    const { default: Page } = await import(`${P}/reviews/[id]/audit-log/page`)
-    fetchMock.mockResolvedValueOnce({ ok: false })
-    const { unmount } = await show(Page, par({ id: '1' }))
-    expect(screen.getByText(tr.reviews_no_items)).toBeTruthy()
-    unmount()
-    fetchMock.mockRejectedValueOnce(new Error('down'))
-    await show(Page, par({ id: '1' }))
-    expect(screen.getByText(tr.reviews_no_items)).toBeTruthy()
+  it('the old moderation route is gone: no [id]/audit-log page below the portal reviews', async () => {
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(`${process.cwd()}/src/app/(shop-admin)/shop-admin/(portal)/reviews/[id]`)).toBe(false)
   })
 })
 

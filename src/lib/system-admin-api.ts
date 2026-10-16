@@ -26,6 +26,8 @@ import type {
   MappingGapEntry,
   CrmContactListItem,
   CrmContactDetail,
+  SysAdminReview,
+  SysAdminReviewAuditEntry,
 } from '@/types/system-admin'
 
 // Keep deprecated aliases available in this file so existing callers still compile
@@ -304,4 +306,24 @@ export async function getMappingGaps(): Promise<MappingGapEntry[]> {
   }))
 
   return [...domainEntries, ...specialtyEntries]
+}
+
+// ─── Review moderation (F5930) ────────────────────────────────────────────────
+
+export type ReviewListParams = {
+  has_reports?: boolean
+  report_source?: 'customer' | 'shop_owner'
+  is_visible?: boolean
+  limit?: number
+  offset?: number
+}
+
+/** GET /api/v1/admin/reviews — a plain list (no paging wrapper). `lang` selects the language of the names. */
+export async function getReviews(params: ReviewListParams = {}, lang = 'en'): Promise<SysAdminReview[]> {
+  return apiFetch<SysAdminReview[]>(`/reviews${buildQs(params)}`, { headers: { 'Accept-Language': lang } })
+}
+
+/** GET /api/v1/admin/reviews/{id}/audit-log */
+export async function getReviewAuditLog(id: number | string): Promise<SysAdminReviewAuditEntry[]> {
+  return apiFetch<SysAdminReviewAuditEntry[]>(`/reviews/${id}/audit-log`)
 }

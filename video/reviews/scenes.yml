@@ -1,0 +1,120 @@
+# Tutorial #13 "Reply to your reviews" (EN + EL), series "pundo for businesses", part 10.
+# Approved German script: 01-skript.de.md (BB 2026-10-16). Demo: Niko's Survival Shop (Larnaca, from part 9, 24 articles
+# with photos) with four fictional reviews of demo customers (A 5* + photo, B 3*, C 1* spam, D 4* on "Water Filter Straw").
+# Before recording: prepare_reviews.py (pundo_test only; called by record.mjs).
+
+meta:
+  slug: reviews
+  title:
+    en: "Reply to your reviews"
+    el: "Απάντησε στις αξιολογήσεις σου"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "All tutorials: playlist \"pundo for businesses\""
+    el: "Όλοι οι οδηγοί: playlist «pundo για επιχειρήσεις»"
+  demo:
+    # replies typed in the video (script: "Danke, Maria! ..." / "Danke für die Rückmeldung, Andreas. ...")
+    reply_a:
+      en: "Thank you, Maria! Have fun on your next camping trip."
+      el: "Ευχαριστούμε, Μαρία! Καλή διασκέδαση στο επόμενο κάμπινγκ."
+    reply_b:
+      en: "Thanks for your feedback, Andreas. The stove is back in stock, and from now on we're happy to reserve it for you via WhatsApp."
+      el: "Ευχαριστούμε για το σχόλιο, Ανδρέα. Το γκαζάκι είναι πάλι διαθέσιμο και από τώρα σου το κρατάμε ευχαρίστως μέσω WhatsApp."
+  thumbnail_scene: critique
+  target_duration_s: 105
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'dashboard, tile Reviews: "3 new · Ø 3.0 · 3 reviews"'
+    callout:
+      en: "Customers are talking about you"
+      el: "Οι πελάτες μιλούν για σένα"
+    narration:
+      en: >-
+        Your customers write reviews. Here's how to read them and reply, right in the portal.
+      el: >-
+        Οι πελάτες σου γράφουν αξιολογήσεις. Δες πώς τις διαβάζεις και τους απαντάς, απευθείας από τη διαχείριση του καταστήματος.
+
+  - id: find
+    shot: 'menu item Reviews with badge 3 -> list "My shop", badges New'
+    callout:
+      en: "All in one place"
+      el: "Όλα σε ένα σημείο"
+    narration:
+      en: >-
+        You see new reviews on the dashboard and in the menu. One tap, and you have them all at a glance,
+        with stars, text and photos.
+      el: >-
+        Τις νέες αξιολογήσεις τις βλέπεις στον πίνακα και στο μενού. Ένα άγγιγμα, και τις έχεις όλες μπροστά σου,
+        με αστέρια, κείμενο και φωτογραφίες.
+
+  - id: thanks
+    shot: 'review A (5 stars, photo) -> Reply -> short thank-you -> Save reply'
+    callout:
+      en: "A quick thank-you"
+      el: "Ένα σύντομο ευχαριστώ"
+    narration:
+      en: >-
+        For praise, a short thank-you is enough. Your reply is public and appears right under the review.
+      el: >-
+        Για έναν έπαινο αρκεί ένα σύντομο ευχαριστώ. Η απάντησή σου είναι δημόσια και εμφανίζεται ακριβώς κάτω από την αξιολόγηση.
+
+  - id: critique
+    shot: 'review B (3 stars) -> Reply -> "Thanks for your feedback, Andreas ..." -> save'
+    callout:
+      en: "Criticism? Friendly and specific"
+      el: "Κριτική; Φιλικά και συγκεκριμένα"
+    narration:
+      en: >-
+        With criticism, your reply matters most. Stay friendly, say what you've improved, and offer a solution.
+        All your other customers read it too.
+      el: >-
+        Στην κριτική η απάντησή σου μετράει περισσότερο. Απάντησε φιλικά, πες τι βελτίωσες και πρότεινε μια λύση.
+        Αυτό το διαβάζουν και όλοι οι άλλοι πελάτες.
+
+  - id: report
+    shot: 'review C (spam) -> Report to pundo -> reason "Spam or advertising" -> Send report -> badge Reported'
+    callout:
+      en: "Spam? Report it, don't delete it"
+      el: "Spam; Αναφορά, όχι διαγραφή"
+    narration:
+      en: >-
+        Spam or insults? Report them to pundo. We check the review and hide it if it breaks the rules.
+        Nobody can delete reviews themselves, and that's what makes reviews on pundo trustworthy.
+      el: >-
+        Spam ή προσβολές; Τα αναφέρεις στο pundo. Ελέγχουμε την αξιολόγηση και την κρύβουμε αν παραβιάζει τους κανόνες.
+        Κανείς δεν μπορεί να σβήσει μόνος του αξιολογήσεις, και γι' αυτό οι αξιολογήσεις στο pundo είναι αξιόπιστες.
+
+  - id: products
+    shot: 'tab My products -> review D on Water Filter Straw, hint "report, not reply"'
+    callout:
+      en: "Your products too"
+      el: "Και τα προϊόντα σου"
+    narration:
+      en: >-
+        Under "My products" you see what customers write about the products you carry. These reviews apply to all shops,
+        so here you can only read and report them.
+      el: >-
+        Στην καρτέλα «Τα προϊόντα μου» βλέπεις τι γράφουν οι πελάτες για τα προϊόντα που διαθέτεις. Αυτές οι αξιολογήσεις
+        ισχύουν για όλα τα καταστήματα, γι' αυτό εδώ μπορείς μόνο να τις διαβάσεις και να τις αναφέρεις.
+
+  - id: customer
+    shot: "customer shop page of Niko's Survival Shop -> reviews with \"Reply from Niko's Survival Shop\" under A and B"
+    callout:
+      en: "Replies build trust"
+      el: "Οι απαντήσεις χτίζουν εμπιστοσύνη"
+    narration:
+      en: >-
+        This is what your customers see. Shops that reply come across as approachable, and that builds trust.
+        You'll find all parts of the series in our playlist.
+      el: >-
+        Έτσι το βλέπουν οι πελάτες σου. Όποιος απαντά δείχνει ότι είναι κοντά στους πελάτες του, και αυτό χτίζει εμπιστοσύνη.
+        Όλα τα μέρη της σειράς θα τα βρεις στην playlist μας.
+
+  - id: outro
+    branding: outro

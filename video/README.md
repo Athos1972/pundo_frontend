@@ -50,6 +50,8 @@ video/
 | `short-first-steps` | Short (9:16) zu Teil 2: Vorschläge, Übernehmen, Preis, Kundensicht; nutzt `../first-steps/prepare_first_steps.py` | Test-Instanz 3500/8500 |
 | `catalog-import` | Teil 9: Katalog-Import (Excel-Vorschau, Fehler, Duplikat, Update mit „komplette Liste“, öffentliches Test-Sheet, Produktfotos aus Drive); `prepare_catalog_import.py` (Backend-venv), Dateien aus `catalog-data.json` (`make_catalog_files.py`); Übersetzungszeile braucht Test-Gateway :8600 (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
 | `short-catalog-import` | Short (9:16) zu Teil 9: Vorschau, Upload, Übernehmen, Kundensicht; nutzt `../catalog-import/prepare_catalog_import.py` | Test-Instanz 3500/8500 |
+| `reviews` | Teil 10: Bewertungen beantworten (Dashboard „3 neu“, Liste, Danke-Antwort, Antwort auf Kritik, Spam melden, „Meine Produkte“, Kundensicht); `prepare_reviews.py` (Backend-venv) legt 4 Demo-Bewertungen in den Niko-Shops aus Teil 9 an (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
+| `short-reviews` | Short (9:16) zu Teil 10: Dashboard, Antwort auf Kritik, Kundensicht; nutzt `../reviews/prepare_reviews.py` | Test-Instanz 3500/8500 |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

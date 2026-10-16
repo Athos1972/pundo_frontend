@@ -1,0 +1,63 @@
+# YouTube Short (9:16) of tutorial #13 "Reply to your reviews" (video/reviews).
+# Script: ../reviews/01-skript.de.md, section "Short" (BB 2026-10-16): scenes 0, 3 (shortened), 6; hook card
+# "Schlechte Bewertung? So antwortest du". "Related video" in Studio = the tutorial.
+# Same demo data (prepare: ../reviews/prepare_reviews.py).
+
+meta:
+  slug: short-reviews
+  format: vertical
+  title:                    # = hook card (intro)
+    en: "Bad review? Here's how to reply"
+    el: "Κακή αξιολόγηση; Έτσι απαντάς"
+  url:
+    en: "pundo.cy/shop-admin"
+    el: "pundo.cy/shop-admin"
+  next_video:
+    en: "Full tutorial ↓"
+    el: "Ολόκληρος ο οδηγός ↓"
+  demo:
+    reply_b:   # same text as ../reviews/scenes.yml -> meta.demo.reply_b
+      en: "Thanks for your feedback, Andreas. The stove is back in stock, and from now on we're happy to reserve it for you via WhatsApp."
+      el: "Ευχαριστούμε για το σχόλιο, Ανδρέα. Το γκαζάκι είναι πάλι διαθέσιμο και από τώρα σου το κρατάμε ευχαρίστως μέσω WhatsApp."
+  thumbnail_scene: none
+  target_duration_s: 30
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: hook
+    shot: 'dashboard, tile Reviews: "3 new · Ø 3.0 · 3 reviews"'
+    callout:
+      en: "Customers are talking about you"
+      el: "Οι πελάτες μιλούν για σένα"
+    narration:
+      en: >-
+        Your customers write reviews. Here's how to reply, right in the portal.
+      el: >-
+        Οι πελάτες σου γράφουν αξιολογήσεις. Δες πώς τους απαντάς.
+
+  - id: critique
+    shot: 'review B (3 stars) -> Reply -> "Thanks for your feedback, Andreas ..." -> save'
+    callout:
+      en: "Criticism? Friendly and specific"
+      el: "Κριτική; Φιλικά και συγκεκριμένα"
+    narration:
+      en: >-
+        With criticism, stay friendly, say what you've improved, and offer a solution.
+      el: >-
+        Στην κριτική απάντησε φιλικά, πες τι βελτίωσες και πρότεινε μια λύση.
+
+  - id: customer
+    shot: "customer shop page: review B with \"Reply from Niko's Survival Shop\""
+    callout:
+      en: "Replies build trust"
+      el: "Οι απαντήσεις χτίζουν εμπιστοσύνη"
+    narration:
+      en: >-
+        This is what your customers see. Replies build trust.
+      el: >-
+        Έτσι το βλέπουν οι πελάτες σου. Οι απαντήσεις χτίζουν εμπιστοσύνη.
+
+  - id: outro
+    branding: outro

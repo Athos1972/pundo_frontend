@@ -35,9 +35,9 @@
  *     worker.test.yml). Die Gateway-Queue der Prod-Kopie enthält fremde Tasks (z. B. translate.shop,
  *     kein Canned-Result), an denen driveChain() sonst abbricht; ohne Worker bleibt der Case in
  *     enrichment_in_progress. Override: E2E_LLM_WORKER_CHECK=0.
- *   - B8950-015: driveChain() fasst nur EIGENE Tasks an (Marker-/Item-ID-Filter per read-only Peek in der Gateway-TEST-DB
- *     und Lease genau dieser IDs); fremde Queue-Tasks werden weder geleast noch per /fail zurückgegeben. Braucht
- *     Lesezugriff auf `DATABASE_URL_TEST` aus dem Gateway-Repo-.env (GATEWAY_REPO / GATEWAY_DATABASE_URL_TEST).
+ *   - B8950-015: driveChain() fasst nur EIGENE Tasks an: `GET /v1/tasks/next` des Gateways mit den Filtern
+ *     `job_type` + `payload_contains` (Run-Marker / eigene item_id); fremde Queue-Tasks werden weder geleast noch per
+ *     /fail zurückgegeben. Braucht ein Gateway mit diesen Filtern (Gateway-Test-Server 8600 neu starten); kein DB-Zugriff mehr.
  * Ist eine Vorbedingung nicht erfüllt, werden T0/T1/T2/T4 mit Begründung übersprungen
  * (siehe `chainSkipReason`), nie still grün.
  *
@@ -55,7 +55,7 @@ import { RUN_ID, e2eName, marker, psql } from './_helpers/test-data'
 import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
-import { execSync, execFileSync } from 'child_process'
+import { execSync } from 'child_process'
 import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
@@ -63,7 +63,6 @@ import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
 const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
-const GATEWAY_REPO = process.env.GATEWAY_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_llm_gateway'
 // Muss zu pundo_llm_workers/restart_test_worker.sh passen (`pkill -f "workers.main $CONFIG"`) und darf den
 // Prod-Worker (`workers.main worker.prod.yml`, läuft am Studio) NICHT treffen.
 const TEST_WORKER_PATTERN = 'workers.main worker.test.yml'
@@ -174,51 +173,36 @@ async function intakeBatch(caseId: number, items: Array<{ name: string; descript
   return { status: res.status, data: await res.json() }
 }
 
-/** DB-URL der Gateway-TEST-Datenbank (pundo_llm_gateway_test) — nie die Prod-DB `pundo_llm_gateway`. */
-function gatewayTestDbUrl(): string {
-  let url = process.env.GATEWAY_DATABASE_URL_TEST
-  if (!url) {
-    const envFile = fs.readFileSync(path.join(GATEWAY_REPO, '.env'), 'utf8')
-    url = envFile.match(/^DATABASE_URL_TEST=(.+)$/m)?.[1].trim()
-  }
-  if (!url) throw new Error('DATABASE_URL_TEST not found in gateway .env (GATEWAY_DATABASE_URL_TEST)')
-  url = url.replace('postgresql+psycopg://', 'postgresql://')
-  if (!url.endsWith('_test')) throw new Error('[admin-catalog-review] Safety: Gateway-DB muss die *_test-Datenbank sein')
-  return url
-}
-
-function gatewayPsql(sql: string): string {
-  return execFileSync('psql', [gatewayTestDbUrl(), '-v', 'ON_ERROR_STOP=1', '-Atc', sql], { encoding: 'utf8' }).trim()
-}
-
 type GatewayTask = { task_id: string; job_type: string; payload: Record<string, unknown> }
 
+const OWN_JOB_TYPES = ['describe.item', 'translate.item', 'categorize.item', 'enrich.product_attributes', 'embed.text']
+
 /**
- * B8950-015: Das Gateway kennt weder Peek noch Filter noch Lease-Release (GET /v1/tasks/next leased IMMER den
- * nächsten fremden Task; /fail zählt retry_count hoch und beendet Tasks nach max_retries als `failed` inkl.
- * Fehler-Webhook). Deshalb fasst der Test fremde Tasks (Prod-Kopie in der Queue) nie an:
- *   1. read-only Peek in der Gateway-TEST-DB nach queued Tasks, die eindeutig zu den eigenen Marker-Artikeln
- *      dieses Laufs gehören (Payload enthält `E2E-<RUN>-CATALOG-REVIEW` oder `item_id` eines eigenen Marker-Items),
- *   2. Lease genau dieser IDs (atomar, nur `status='queued'`, gleiche Felder wie lease.pull_next_task).
- * Alles andere bleibt unberührt in der Queue und gehört dem Test-Worker.
+ * B8950-015: Das Gateway (Test-Instanz 8600) least per `GET /v1/tasks/next` mit den optionalen Filtern
+ * `job_type` und `payload_contains` ausschließlich EIGENE Tasks; fremde Queue-Tasks (Prod-Kopie) werden nie
+ * geleast, nie per /fail zurückgegeben. Kein direkter DB-Zugriff auf die Gateway-DB mehr.
+ * Eigen = Payload enthält den Run-Marker `E2E-<RUN>-CATALOG-REVIEW` oder die `item_id` eines eigenen
+ * Marker-Items (jsonb::text rendert `"item_id": 12}` bzw. `"item_id": 12,` — die Abschlusszeichen verhindern
+ * Präfix-Treffer wie 12 → 123).
+ * Lease einzeln (204 = nichts Eigenes queued); alles andere bleibt unberührt in der Queue beim Test-Worker.
  */
-function leaseOwnTasks(): GatewayTask[] {
-  const jobTypes = ['describe.item', 'translate.item', 'categorize.item', 'enrich.product_attributes', 'embed.text']
+async function leaseOwnTasks(): Promise<GatewayTask[]> {
   const itemIds = psql(`select id from items where slug ~ '^e2e-${RUN_ID}-catalog-review-'`)
     .split('\n').filter(Boolean).map(Number).filter(Number.isInteger)
-  const idClause = itemIds.length ? ` or (payload->>'item_id') in (${itemIds.map(i => `'${i}'`).join(',')})` : ''
   const mk = marker('CATALOG-REVIEW').replace(/[^A-Za-z0-9-]/g, '')
-  const out = gatewayPsql(
-    `with own as (select id from llm_tasks where status = 'queued' and capability in ('text','embed') ` +
-    `and job_type in (${jobTypes.map(j => `'${j}'`).join(',')}) ` +
-    `and (payload::text like '%${mk}%'${idClause}) order by priority, created_at) ` +
-    `update llm_tasks t set status = 'in_progress', leased_by = 'playwright-e2e', ` +
-    `lease_until = now() + (t.lease_seconds * interval '1 second'), started_at = coalesce(t.started_at, now()) ` +
-    `from own where t.id = own.id and t.status = 'queued' ` +
-    `returning json_build_object('task_id', t.id, 'job_type', t.job_type, 'payload', t.payload)`
-  )
-  // psql hängt die Kommandozeile „UPDATE n“ an → nur JSON-Zeilen
-  return out.split('\n').filter(l => l.startsWith('{')).map(l => JSON.parse(l) as GatewayTask)
+  const needles = [mk, ...itemIds.flatMap(i => [`"item_id": ${i}}`, `"item_id": ${i},`])]
+  const qs = new URLSearchParams({ capabilities: 'text,embed', worker_id: 'playwright-e2e' })
+  for (const j of OWN_JOB_TYPES) qs.append('job_type', j)
+  for (const n of needles) qs.append('payload_contains', n)
+
+  const tasks: GatewayTask[] = []
+  for (let i = 0; i < 50; i++) {
+    const res = await fetch(`${GATEWAY_URL}/v1/tasks/next?${qs}`, { headers: { 'X-Internal-API-Key': GATEWAY_API_KEY } })
+    if (res.status === 204) break
+    if (!res.ok) throw new Error(`[admin-catalog-review] Gateway /next → HTTP ${res.status}: ${await res.text()}`)
+    tasks.push(await res.json() as GatewayTask)
+  }
+  return tasks
 }
 
 async function gatewaySubmitResult(taskId: string, result: unknown, model: string) {
@@ -277,7 +261,7 @@ async function driveChain(windowMs = 8000): Promise<number> {
   let processed = 0
   const end = Date.now() + windowMs
   while (Date.now() < end) {
-    const tasks = leaseOwnTasks()
+    const tasks = await leaseOwnTasks()
     if (tasks.length === 0) {
       await new Promise(r => setTimeout(r, 300))
       continue
@@ -358,7 +342,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     // Gateway 8600 nicht erreichbar (kein Test-Gateway gestartet) → Kette nicht prüfbar: sichtbar überspringen
     let task: GatewayTask | null = null
     try {
-      task = leaseOwnTasks()[0] ?? null
+      task = (await leaseOwnTasks())[0] ?? null
     } catch (err) {
       console.warn(`[admin-catalog-review] Gateway ${GATEWAY_URL} nicht erreichbar (${err instanceof Error ? err.message : err}) — Kettenschritte T0/T1/T2/T4 werden übersprungen.`)
     }

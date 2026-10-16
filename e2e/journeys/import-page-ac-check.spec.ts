@@ -163,14 +163,21 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
   })
 
   /** Kundensicht: Gast (ohne Cookies) oeffnet die Shop-Seite und sieht Produkt-Links mit diesem Namen. */
-  async function guestSees(browser: import('@playwright/test').Browser, lang: string, name: string): Promise<boolean> {
+  /**
+   * Does a guest see a product link named ``name`` on the customer shop page?
+   * ``expected = true`` waits up to 15 s for the link (the product grid streams in after ``load`` and is late under
+   * full-suite load); ``expected = false`` checks once after ``load``.
+   */
+  async function guestSees(browser: import('@playwright/test').Browser, lang: string, name: string, expected: boolean): Promise<boolean> {
     const ctx = await browser.newContext({ baseURL: BASE_URL })
     try {
       const page = await ctx.newPage()
       const res = await page.goto(`${BASE_URL}/${lang}/shops/${shop.slug}`, { waitUntil: 'domcontentloaded' })
       expect(res?.status()).toBe(200)
       await page.waitForLoadState('load')
-      return (await page.locator(`a[href^="/${lang}/products/"]`, { hasText: name }).count()) > 0
+      const link = page.locator(`a[href^="/${lang}/products/"]`, { hasText: name })
+      if (expected) await link.first().waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {})
+      return (await link.count()) > 0
     } finally {
       await ctx.close()
     }
@@ -200,7 +207,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
       expect(await listListings(shop.ownerToken)).toHaveLength(0)
       expect(offerCount(shop.id).total).toBe(0)
       expect(await publicProductNames(shop.id)).toHaveLength(0)
-      expect(await guestSees(browser, 'en', N.a)).toBe(false)
+      expect(await guestSees(browser, 'en', N.a, false)).toBe(false)
     })
     await step('AK2', 'Abbrechen: Vorschau weg, Formular leer, Vorschau serverseitig verworfen', async () => {
       await page.getByTestId('import-cancel').click()
@@ -231,7 +238,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
     })
     await step('AK3', 'Kunden-Shop-Seite (Gast) zeigt die 3 Artikel', async () => {
       await expect.poll(async () => (await publicProductNames(shop.id)).length, { timeout: 20_000 }).toBe(3)
-      for (const nm of [N.a, N.b, N.c]) expect(await guestSees(browser, 'en', nm), nm).toBe(true)
+      for (const nm of [N.a, N.b, N.c]) expect(await guestSees(browser, 'en', nm, true), nm).toBe(true)
     })
   })
 
@@ -373,10 +380,10 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
       await page.goto(`${BASE_URL}/shop-admin/offers`, { waitUntil: 'domcontentloaded' })
       await expect(page.getByTestId('offer-not-available-badge')).toHaveCount(2, { timeout: 30_000 })
       await expect.poll(async () => (await publicProductNames(shop.id)).includes(N.b), { timeout: 20_000 }).toBe(false)
-      expect(await guestSees(browser, 'en', N.b)).toBe(false)
-      expect(await guestSees(browser, 'en', N.c)).toBe(false)
-      expect(await guestSees(browser, 'en', N.a)).toBe(true)
-      expect(await guestSees(browser, 'en', manualName)).toBe(true)
+      expect(await guestSees(browser, 'en', N.b, false)).toBe(false)
+      expect(await guestSees(browser, 'en', N.c, false)).toBe(false)
+      expect(await guestSees(browser, 'en', N.a, true)).toBe(true)
+      expect(await guestSees(browser, 'en', manualName, true)).toBe(true)
     })
     // AK11: Rueckkehr
     await resetAfterResult(page)
@@ -387,7 +394,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
       const l = await listListings(shop.ownerToken)
       expect(l.find((x) => x.sku === 'A-200')?.available).toBe(true)
       await expect.poll(async () => (await publicProductNames(shop.id)).includes(N.b), { timeout: 20_000 }).toBe(true)
-      expect(await guestSees(browser, 'en', N.b)).toBe(true)
+      expect(await guestSees(browser, 'en', N.b, true)).toBe(true)
     })
   })
 
@@ -463,7 +470,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
       expect(names).toContain('"el"')
       expect(names).not.toContain('"de"')
       await expect.poll(async () => (await publicProductNames(shop.id, 'el')).includes(greek), { timeout: 20_000 }).toBe(true)
-      expect(await guestSees(browser, 'el', greek)).toBe(true)
+      expect(await guestSees(browser, 'el', greek, true)).toBe(true)
     })
     await step('AK15', 'ohne language-Spalte (UI englisch): Name als englischer Name, nicht „de“', async () => {
       const names = psql(`select i.names::text from items i join shop_listings sl on sl.item_id=i.id where sl.shop_id=${shop.id} and i.names->>'en'='${plain}'`)

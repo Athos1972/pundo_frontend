@@ -12,6 +12,7 @@ touches-modules:
   - src/components/shop-admin/onboarding/**
   - src/lib/onboarding/**
   - src/lib/shop-admin-translations.ts
+  - src/lib/i18n/shop-admin-*.ts
   - src/components/shop-admin/OfferList.tsx
   - src/components/ui/TurnstileWidget.tsx
 touches-roles:

@@ -9,12 +9,14 @@ proposed-in-spec: 2026-10-13-e2e-isolation-hygiene
 touches-modules:
   - src/app/(shop-admin)/shop-admin/(portal)/catalog-review/**
   - src/components/shop-admin/catalog-review/**
+  - src/components/shop-admin/catalog-consent/**
 touches-roles:
   - shop-owner
 touches-states:
   - CatalogCase.status:awaiting_owner_review
   - CatalogCase.status:published
   - CatalogCase.status:rework_in_progress
+  - CatalogCase.status:consent_given
 status-changed-at: 2026-10-13T00:00:00Z
 status-changed-by-spec: 2026-10-13-e2e-isolation-hygiene
 last-run: never

@@ -24,6 +24,7 @@
 | [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
 | [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS |
+| [shop-owner-catalog-consent](shop-owner-catalog-consent.md) | Katalog-Onboarding-Zustimmung im Wizard und im Portal (F5980 AC1) | implemented | P1 | PASS (5/5, 2026-10-16) |
 | [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P1 | PASS |
 | [shop-admin-offer-product](shop-admin-offer-product.md) | Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix) — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-product-offer-ui](shop-admin-product-offer-ui.md) | Shop-Admin Produkt + Angebot anlegen (UI Golden Path) — DEPRECATED | deprecated | P2 | — |

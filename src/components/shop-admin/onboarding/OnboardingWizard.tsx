@@ -33,6 +33,7 @@ const EMPTY_DRAFT: Omit<OnboardingDraft, 'version' | 'expiresAt'> = {
   location: null,
   contact: {},
   shopName: '',
+  catalogConsent: false,
 }
 
 interface OnboardingWizardProps {
@@ -56,6 +57,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [emailTakenError, setEmailTakenError] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
+  const [consentError, setConsentError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -86,6 +88,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           contact: saved.contact,
           shopName: saved.shopName ?? '',
           credentials: { type: 'google' },
+          catalogConsent: saved.catalogConsent === true,
+          catalogConsentLang: lang,
         })
         clearDraft()
         router.push('/shop-admin/register/check-email')
@@ -106,6 +110,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       location: saved.location,
       contact: saved.contact,
       shopName: saved.shopName ?? '',
+      catalogConsent: saved.catalogConsent === true,
     })
     setShowDraftBanner(false)
     // Resume at the furthest completed step
@@ -143,9 +148,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     setStep(3)
   }
 
-  function handleStep4Next(contact: OnboardingContact) {
+  function handleStep4Next(contact: OnboardingContact, catalogConsent: boolean) {
     setWebsiteError(null)
-    persistDraft({ contact })
+    setConsentError(null)
+    persistDraft({ contact, catalogConsent })
     setStep(4)
   }
 
@@ -172,6 +178,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           shopName: draft.shopName,
           credentials: { email, password },
           turnstileToken,
+          catalogConsent: draft.catalogConsent === true,
+          catalogConsentLang: lang,
         })
         if (photoFile) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }
@@ -192,6 +200,11 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           // Backend rejected the website URL — back to the contact step with a field message
           setStep(3)
           setWebsiteError(tr.error_invalid_url)
+        } else if (code === 'CATALOG_CONSENT_INVALID') {
+          // Consent text version outdated: back to the contact step, consent must be given again
+          persistDraft({ catalogConsent: false })
+          setStep(3)
+          setConsentError(tr.catalog_consent_version_error)
         } else if (code === 'CAPTCHA_FAILED') {
           setSubmitError(tr.onboarding_error_captcha)
         } else if (code === 'RATE_LIMITED') {
@@ -218,6 +231,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           contact: draft.contact,
           shopName: draft.shopName,
           credentials: { type: 'google' },
+          catalogConsent: draft.catalogConsent === true,
+          catalogConsentLang: lang,
         })
         if (photoFile) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }
@@ -233,6 +248,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         } else if (code === 'INVALID_URL') {
           setStep(3)
           setWebsiteError(tr.error_invalid_url)
+        } else if (code === 'CATALOG_CONSENT_INVALID') {
+          persistDraft({ catalogConsent: false })
+          setStep(3)
+          setConsentError(tr.catalog_consent_version_error)
         } else {
           setSubmitError(tr.onboarding_error_oauth_failed)
         }
@@ -315,8 +334,11 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         {step === 3 && (
           <StepContact
             tr={tr}
+            lang={lang}
             initialContact={draft.contact}
+            initialCatalogConsent={draft.catalogConsent}
             websiteError={websiteError}
+            catalogConsentError={consentError}
             onNext={handleStep4Next}
             onBack={() => setStep(2)}
           />

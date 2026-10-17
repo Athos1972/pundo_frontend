@@ -20,6 +20,7 @@ import type {
   PriceUnitOption,
   CatalogCaseListResponse,
   CatalogCaseSampleResponse,
+  CatalogConsentStatus,
   ShopOwnerReviewPage,
   ShopOwnerReviewSummary,
   ShopReviewScope,
@@ -221,6 +222,11 @@ export async function getCatalogCaseSample(
   return apiFetchAdmin<CatalogCaseSampleResponse>(
     `/catalog-cases/${caseId}/sample?n=${n}`, lang,
   )
+}
+
+/** GET /api/v1/shop-owner/catalog-consent — consent status of the catalogue onboarding (F5980 AC1). */
+export async function getCatalogConsent(lang: string): Promise<CatalogConsentStatus> {
+  return apiFetchAdmin<CatalogConsentStatus>('/catalog-consent', lang)
 }
 
 // Categories are shared data needed for admin product forms.

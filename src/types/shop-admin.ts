@@ -564,6 +564,8 @@ export interface OnboardingDraft {
   shopName: string
   /** F2970: optional free text when "Other" is the chosen domain (max 120 chars). */
   otherOfferText?: string
+  /** F5980 AC1: explicit, never pre-checked consent to the catalogue onboarding (optional, old drafts = false). */
+  catalogConsent?: boolean
 }
 
 export interface OnboardingSubmitPayload {
@@ -578,6 +580,10 @@ export interface OnboardingSubmitPayload {
   otherOfferText?: string
   /** B6220-003: Cloudflare Turnstile token, verified by the backend (email path only). */
   turnstileToken?: string
+  /** F5980 AC1: consent checkbox state; only sent when true AND a website is set. */
+  catalogConsent?: boolean
+  /** F5980 AC1: UI language in which the consent text was shown (proof). */
+  catalogConsentLang?: string
 }
 
 export interface OnboardingSubmitResponse {
@@ -644,6 +650,25 @@ export interface CatalogCaseRejectResponse {
   id: number
   status: CatalogCaseStatus
   rework_cycle_count: number
+}
+
+// ─── Catalog consent (F5980 AC1) ─────────────────────────────────────────────
+// Mirrors pundo_main_backend/ingestor/schemas/catalog_consent.py.
+
+export interface CatalogConsentStatus {
+  status: 'none' | 'given'
+  given_at: string | null            // ISO
+  text_version: string | null        // version of the given consent
+  current_text_version: string       // current version according to the backend
+  catalog_case_id: number | null     // opened case, if any
+  has_catalog_source: boolean        // shop has website_url or webshop_url
+}
+
+export interface CatalogConsentCreateResponse {
+  consent_id: number
+  given_at: string
+  catalog_case_id: number | null
+  created: boolean                   // false = an active consent already existed
 }
 
 // ─── B5900-011: Category picker ──────────────────────────────────────────────

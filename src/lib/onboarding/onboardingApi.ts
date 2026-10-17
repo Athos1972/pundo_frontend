@@ -2,6 +2,7 @@
 
 import type { OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/shop-admin'
 import { OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
+import { CATALOG_CONSENT_TEXT_VERSION } from '@/lib/onboarding/catalogConsent'
 
 export async function submitOnboarding(payload: OnboardingSubmitPayload): Promise<OnboardingSubmitResponse> {
   // Transform camelCase frontend types to snake_case backend API format.
@@ -16,6 +17,9 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
   const otherOfferText = payload.domainSlugs.includes(OTHER_DOMAIN_SLUG)
     ? (payload.otherOfferText ?? '').trim().slice(0, OTHER_OFFER_MAX_LENGTH)
     : ''
+
+  // F5980 AC1: consent is only meaningful with a website (the import source); never sent otherwise.
+  const sendConsent = payload.catalogConsent === true && !!payload.contact.website
 
   const backendPayload = {
     provider_type: payload.providerType,
@@ -42,6 +46,15 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
       : { type: 'google' as const },
     lang: navigator.language?.slice(0, 2) ?? 'en',
     ...(otherOfferText ? { other_offer_text: otherOfferText } : {}),
+    ...(sendConsent
+      ? {
+          catalog_consent: {
+            accepted: true,
+            text_version: CATALOG_CONSENT_TEXT_VERSION,
+            ...(payload.catalogConsentLang ? { lang: payload.catalogConsentLang } : {}),
+          },
+        }
+      : {}),
     // B6220-003: backend verifies the captcha for the email path only (Google path: none)
     ...(emailCreds && payload.turnstileToken ? { turnstile_token: payload.turnstileToken } : {}),
   }
@@ -74,7 +87,13 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
   if (res.status === 422) {
     // Backend rejects non-http(s) website URLs (javascript:, data: …) with 422.
     const body = await res.json().catch(() => ({})) as unknown
-    if (JSON.stringify(body).includes('website')) {
+    const text = JSON.stringify(body)
+    // Consent codes first: the 422 body echoes the request (incl. a "website" key), which would
+    // otherwise be mistaken for INVALID_URL.
+    if (text.includes('catalog_consent_')) {
+      throw Object.assign(new Error('CATALOG_CONSENT_INVALID'), { code: 'CATALOG_CONSENT_INVALID' })
+    }
+    if (text.includes('website')) {
       throw Object.assign(new Error('INVALID_URL'), { code: 'INVALID_URL' })
     }
     throw new Error('ONBOARDING_FAILED')

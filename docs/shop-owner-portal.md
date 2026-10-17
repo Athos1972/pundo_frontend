@@ -166,6 +166,26 @@ Der Owner sieht die Bewertungen seines Shops (Tab „Mein Shop“) und der Artik
 - **Öffentlich:** `ReviewCard` zeigt die Antwort unter der Bewertung (`owner_reply`, Label `reviews_owner_reply_from`); `ReviewsPopover` zeigt sie nicht.
 - Journey: `e2e/journeys/shop-owner-reviews-reply-report.md`. Backend: `pundo_main_backend/docs/api.md`, Abschnitt „Bewertungen im Shop-Portal (F5930)“.
 
+### Katalog-Onboarding-Zustimmung (F5980 AC1)
+
+Der Owner stimmt dem automatischen Katalog-Onboarding (Import von der eigenen Website, KI-Aufbereitung, 6 Sprachen) ausdrücklich zu.
+Zwei Wege, ein Backend-Nachweis (`catalog_consents`, ein aktiver Consent je Shop):
+
+- **Onboarding-Wizard** (`StepContact`): Checkbox direkt unter dem Website-Feld, nur sichtbar, wenn eine Website eingetragen ist; nie
+  vorangehakt, optional (blockiert "Weiter" nicht); Website leeren setzt sie zurück. Der Wert liegt im Entwurf (`catalogConsent`, optional,
+  alte Drafts = `false`, Draft-Version bleibt 2) und geht in allen drei Submit-Pfaden (E-Mail, Google, OAuth-Resume) als
+  `catalog_consent {accepted, text_version, lang}` mit. `lang` ist die UI-Sprache, in der der Text angezeigt wurde. 422-Codes
+  `catalog_consent_*` werden vor dem `website`-Substring-Check zu `CATALOG_CONSENT_INVALID` gemappt (Rückkehr zum Kontakt-Schritt,
+  Consent wird zurückgesetzt).
+- **Portal-Karte** auf `/shop-admin/catalog-review` (`CatalogConsentCard`; deckt Bestands-Owner und per Claim/Admin zugeordnete Shops ab):
+  Zustände Formular (Website vorhanden) / Hinweis + Link zum Profil (keine Website) / "Zugestimmt am …" / Fehler mit Retry.
+  Lädt der Status-Endpoint nicht (Backend älter als Frontend), wird die Karte ausgeblendet.
+
+Der Case wird erst eröffnet, wenn der Owner `approved` ist (Backend). Wortlaut und Version: `src/lib/i18n/shop-admin-catalog-consent.ts`
+(6 Sprachen) und `src/lib/onboarding/catalogConsent.ts` (`CATALOG_CONSENT_TEXT_VERSION`). **Ein veröffentlichter Versionstext wird nie
+editiert**: jede inhaltliche Änderung braucht eine neue Version hier UND in `CATALOG_CONSENT_TEXT_VERSIONS` im Backend
+(`ingestor/schemas/catalog_consent.py`). Journey: `e2e/journeys/shop-owner-catalog-consent.spec.ts`.
+
 ### API-Keys (`/shop-admin/api-keys`)
 - Shop-Betreiber können eigene API-Keys für den Pundo-Scraper-Zugang erstellen
 - Scopes: `read`, `write`, `read_write`

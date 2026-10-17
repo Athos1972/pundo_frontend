@@ -12,6 +12,7 @@ import { shopAdminCatalogReviewTranslationsMap } from './i18n/shop-admin-catalog
 import { shopAdminCategoryPickerTranslationsMap } from './i18n/shop-admin-category-picker'
 import { shopAdminImportTranslationsMap } from './i18n/shop-admin-import'
 import { shopAdminReviewsTranslationsMap } from './i18n/shop-admin-reviews'
+import { shopAdminCatalogConsentTranslationsMap } from './i18n/shop-admin-catalog-consent'
 
 export { tShopAdminAuth, type ShopAdminAuthTranslations } from './i18n/shop-admin-auth'
 export { tShopAdminCatalog, type ShopAdminCatalogTranslations } from './i18n/shop-admin-catalog'
@@ -21,6 +22,7 @@ export { tShopAdminCatalogReview, type ShopAdminCatalogReviewTranslations } from
 export { tShopAdminCategoryPicker, type ShopAdminCategoryPickerTranslations } from './i18n/shop-admin-category-picker'
 export { tShopAdminImport, type ShopAdminImportTranslations } from './i18n/shop-admin-import'
 export { tShopAdminReviews, type ShopAdminReviewsTranslations } from './i18n/shop-admin-reviews'
+export { tShopAdminCatalogConsent, type ShopAdminCatalogConsentTranslations } from './i18n/shop-admin-catalog-consent'
 
 type Lang = 'en' | 'de' | 'el' | 'ru' | 'ar' | 'he'
 
@@ -32,10 +34,11 @@ type MergedLang =
   typeof shopAdminCatalogReviewTranslationsMap.en &
   typeof shopAdminCategoryPickerTranslationsMap.en &
   typeof shopAdminImportTranslationsMap.en &
-  typeof shopAdminReviewsTranslationsMap.en
+  typeof shopAdminReviewsTranslationsMap.en &
+  typeof shopAdminCatalogConsentTranslationsMap.en
 
 function mergeLang(lang: Lang): MergedLang {
-  // Object.assign instead of 8 object spreads: spreading seven 6-way unions exceeds the TypeScript union limit (TS2590).
+  // Object.assign instead of 9 object spreads: spreading seven 6-way unions exceeds the TypeScript union limit (TS2590).
   return Object.assign(
     {},
     shopAdminAuthTranslationsMap[lang],
@@ -46,6 +49,7 @@ function mergeLang(lang: Lang): MergedLang {
     shopAdminCategoryPickerTranslationsMap[lang],
     shopAdminImportTranslationsMap[lang],
     shopAdminReviewsTranslationsMap[lang],
+    shopAdminCatalogConsentTranslationsMap[lang],
   ) as MergedLang
 }
 

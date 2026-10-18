@@ -38,6 +38,25 @@ const _ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
 export const STATE_FILE = path.join(__dirname, '.test-state.json')
 export const ADMIN_STATE_FILE = path.join(__dirname, '.auth', 'admin.json')
 
+// F6997: das Backend loggt (Test-Server-Skript, Entry-Point ingestor.api.asgi) alles nach stdout im Format
+// `<UTC>Z <LEVEL> api/<pid> <logger> <msg>`. stdout MUSS gelesen werden (Pipe-Puffer), und WARNING/ERROR/CRITICAL
+// samt Traceback-Folgezeilen sollen wie frueher (stderr) als `[backend] ...` in der Playwright-Konsole erscheinen.
+const BACKEND_RECORD_START = /^\d{4}-\d{2}-\d{2}T\S+Z (DEBUG|INFO|WARNING|ERROR|CRITICAL) /
+
+function createBackendStdoutForwarder(): (chunk: Buffer) => void {
+  let rest = ''
+  let loud = false
+  return (chunk: Buffer) => {
+    const lines = (rest + chunk.toString()).split('\n')
+    rest = lines.pop() ?? ''
+    for (const line of lines) {
+      const start = BACKEND_RECORD_START.exec(line)
+      if (start) loud = start[1] === 'WARNING' || start[1] === 'ERROR' || start[1] === 'CRITICAL'
+      if (loud && line.trim()) console.log(`[backend] ${line}`)
+    }
+  }
+}
+
 /** Schreibt den Admin-Token als Playwright-storageState (T2, F8950). Host = Host von FRONTEND_URL (127.0.0.1). */
 function writeAdminStorageState(token: string): void {
   fs.mkdirSync(path.dirname(ADMIN_STATE_FILE), { recursive: true })
@@ -200,9 +219,9 @@ export default async function globalSetup() {
     detached: false,
     stdio: 'pipe',
   })
-  // stdout MUSS gelesen werden: uvicorn schreibt Access-Logs nach stdout; ein ungeleertes Pipe-Puffer (64 KB)
-  // blockiert den Backend-Prozess nach einigen Minuten (B8950-012: hängender 8500 mitten im Lauf).
-  backendProc.stdout?.on('data', () => { /* drain */ })
+  // stdout MUSS gelesen werden: das Backend schreibt Logs (F6997) und Access-Zeilen nach stdout; ein ungeleertes
+  // Pipe-Puffer (64 KB) blockiert den Backend-Prozess nach einigen Minuten (B8950-012: hängender 8500 mitten im Lauf).
+  backendProc.stdout?.on('data', createBackendStdoutForwarder())
   backendProc.stderr?.on('data', (d: Buffer) => {
     const line = d.toString().trim()
     if (line) console.log(`[backend] ${line}`)
@@ -329,7 +348,7 @@ export default async function globalSetup() {
     console.log('[E2E Setup] Stoppe Backend + alle Uvicorn-Worker vor DB-Reset...')
     try {
       execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
-      execSync(`pkill -9 -f "uvicorn ingestor.api.main:app.*${backendPort}" 2>/dev/null || true`, { stdio: 'pipe' })
+      execSync(`pkill -9 -f "uvicorn ingestor\\.api\\.(main|asgi):app.*${backendPort}" 2>/dev/null || true`, { stdio: 'pipe' })
       await new Promise(r => setTimeout(r, 2000))
       console.log('[E2E Setup] Backend + Worker gestoppt, alle DB-Verbindungen freigegeben.')
     } catch { /* ok */ }
@@ -379,7 +398,7 @@ export default async function globalSetup() {
       detached: false,
       stdio: 'pipe',
     })
-    backendProc2.stdout?.on('data', () => { /* drain, siehe oben */ })
+    backendProc2.stdout?.on('data', createBackendStdoutForwarder()) // drain + WARNING+, siehe oben
     backendProc2.stderr?.on('data', (d: Buffer) => {
       const line = d.toString().trim()
       if (line) console.log(`[backend] ${line}`)

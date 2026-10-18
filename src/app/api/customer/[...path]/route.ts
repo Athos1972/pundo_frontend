@@ -7,6 +7,7 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
+import { forwardedUserAgentHeaders } from '@/lib/proxy/forward-user-agent'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
@@ -35,6 +36,8 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   // Client IP for backend rate limits (B6220-002)
   Object.assign(headers, clientIpForwardHeaders(request.headers))
+  // Visitor UA for backend bot filter (F6998)
+  Object.assign(headers, forwardedUserAgentHeaders(request.headers))
 
   const hasBody = !['GET', 'HEAD'].includes(request.method)
   const body = hasBody ? await request.blob() : undefined

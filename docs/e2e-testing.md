@@ -304,6 +304,10 @@ Stand 2026-10-15: 710 Tests (39 `smoke`, 671 `full`; 703 passed, 7 bedingte Skip
 
 Vollständiger Katalog und Messwerte: `e2e/TESTSET.md`
 
+### Bot-User-Agents und Activity-Events (F6998)
+
+Das Backend loggt keine Activity-Events fuer Bot-UAs, und der Playwright-Default-UA `HeadlessChrome` gilt als Bot. Tests, die ein Event erwarten (`price_comparison_viewed`, `shop_discovered`, `search_performed`), muessen einen Browser-UA setzen (`browser.newContext({ userAgent })`, Konstante `BROWSER_UA` in `e2e/journeys/activity-feed-bot-filter.spec.ts`). Bisher prueft kein anderer Spec Events.
+
 ---
 
 ## Env-Variablen

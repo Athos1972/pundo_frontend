@@ -128,6 +128,18 @@ Backend-Rate-Limits sind pro Client-IP. Damit nicht alle Nutzer einen Bucket tei
 - Backend wertet `X-Forwarded-For` nur von Peers in `FORWARDED_ALLOW_IPS` aus (siehe Backend `docs/api.md`, "Client-IP (B6220-002)").
 - Neue Route-Handler mit `BACKEND_URL` muessen den Helper einbinden; `src/tests/proxy-client-ip-routes.test.ts` prueft das statisch.
 
+## Besucher-User-Agent an das Backend (F6998)
+
+Das Backend loggt Activity-Events (`price_comparison_viewed`, `shop_discovered`, `search_performed`) nicht fuer Bots. SSR-Fetches kommen aber mit dem Node-UA (`node`) an; deshalb senden wir den UA des **eingehenden** Requests als `X-Forwarded-User-Agent`.
+
+- Helper `src/lib/proxy/forward-user-agent.ts` (`forwardedUserAgentHeaders(headers)`): Wert immer aus dem eingehenden `user-agent` (ein eingehender `X-Forwarded-User-Agent` wird nie gelesen), max. 512 Zeichen, nur druckbares ASCII, leer bleibt `''` (leer = Bot).
+- `src/lib/api.ts`: opt-in per `apiFetch(path, lang, init, { forwardUserAgent: true })`, nur in `getProduct`, `getShop`, `searchAll` und `searchProducts` (nur `noStore` + `q`). `next/headers` wird dynamisch importiert (api.ts wird auch von Client-Komponenten genutzt); ausserhalb eines Request-Scopes (Build, Sitemap) entfaellt der Header.
+- **Nur mit `cache: 'no-store'`** (sonst wirft `apiFetch`): Mit Data-Cache wuerde der Header den Cache-Key aufspalten.
+- **Memoization:** `getProduct`/`getShop` laufen in `generateMetadata` und Page; Next memoisiert nur bei identischen URL und Options. Der Header entsteht daher immer aus `headers()` mit fester Key-Reihenfolge. Nie seitenspezifische Zusatzheader an diese Funktionen haengen, sonst zwei Events pro Seitenaufruf.
+- Die Route `src/app/api/customer/[...path]/route.ts` reicht den UA ebenfalls weiter.
+- Wirkung im Backend: ausschliesslich Unterdrueckung des Loggings (Status/Body unveraendert).
+- **Link-Prefetch (B6998-001):** Next-Link-Prefetch rendert Detailseiten (`getShop`/`getProduct`) ohne Besuch. `next-router-prefetch`/`rsc` sind weder in `headers()` noch im Proxy lesbar (Next 16.4 entfernt sie; geprueft). `api.ts` liest deshalb `isPrefetchRequest` aus dem Work-Store des Renders (`next/dist/server/app-render/work-async-storage.external`, intern) und sendet bei Prefetch zusaetzlich `X-Forwarded-Prefetch: 1`; das Backend unterdrueckt das Event. Ohne Prefetch bleibt der Request unveraendert (Memoization). Guard: `src/tests/next-prefetch-flag.test.ts` + Playwright P8/P9/P10; bei einem Next-Update pruefen.
+
 ## Turnstile (B6220-003)
 
 - **Widget im Browser, Pruefung nur im Backend.** `src/components/ui/TurnstileWidget.tsx` (generisches Primitive, Props `loadingText`, `resetKey`; kein Customer-Import, auch im Shop-Admin nutzbar) liefert den Token. Turnstile-Tokens sind einmalig; eine Pruefung im Route-Handler wuerde die Backend-Pruefung scheitern lassen. `src/lib/turnstile-server.ts` existiert deshalb nicht mehr.

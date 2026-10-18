@@ -93,4 +93,25 @@ describe.each(cases)('$name', (c) => {
   })
 })
 
+// F6998: Customer-Route reicht den UA des eingehenden Requests weiter (Bot-Filter im Backend)
+describe('customer catch-all: X-Forwarded-User-Agent (F6998)', () => {
+  const run = async (headers: Record<string, string>) => {
+    const mod = (await import('@/app/api/customer/[...path]/route')) as unknown as {
+      POST: (r: NextRequest, c: unknown) => Promise<Response>
+    }
+    await mod.POST(req('/api/customer/x/y', headers), { params: Promise.resolve({ path: ['x', 'y'] }) })
+    return backendHeaders()
+  }
+
+  it('forwards the incoming user-agent', async () => {
+    const h = await run({ 'user-agent': 'AhrefsBot/7.0' })
+    expect(h.get('x-forwarded-user-agent')).toBe('AhrefsBot/7.0')
+  })
+
+  it('ignores an incoming X-Forwarded-User-Agent', async () => {
+    const h = await run({ 'user-agent': 'AhrefsBot/7.0', 'x-forwarded-user-agent': 'Mozilla/5.0 Chrome' })
+    expect(h.get('x-forwarded-user-agent')).toBe('AhrefsBot/7.0')
+  })
+})
+
 // Statischer Guard (jede api-Route mit BACKEND_URL nutzt den Helper): tests/unit/guards/api-routes-client-ip.test.ts

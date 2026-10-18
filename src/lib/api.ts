@@ -6,6 +6,8 @@ import type {
   ShopOffer,
   SearchResponse,
 } from '@/types/api';
+import { unstable_rethrow } from 'next/navigation';
+import { forwardedUserAgentHeaders, forwardedPrefetchHeaders } from '@/lib/proxy/forward-user-agent';
 
 // Server Components (SSR/Node.js) brauchen absolute URLs — BACKEND_URL wird
 // server-seitig aus der Umgebung gelesen und ist nie im Browser sichtbar.
@@ -15,15 +17,60 @@ const BASE =
     ? `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1`
     : (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1');
 
-async function apiFetch<T>(path: string, lang: string, init?: RequestInit): Promise<T> {
+/**
+ * B6998-001: Rendert Next diesen Request gerade fuer einen Link-Prefetch (`next-router-prefetch`)?
+ * Next blendet den Header in `headers()` aus, setzt aber `isPrefetchRequest` im Work-Store des Renders.
+ * Das ist ein interner Next-Pfad (`next/dist/...`): Guard-Test `src/tests/next-prefetch-flag.test.ts` und
+ * Playwright P8/P9 fangen eine Aenderung bei einem Next-Update ab. Fehlt der Store -> kein Prefetch.
+ */
+async function isNextPrefetchRender(): Promise<boolean> {
+  try {
+    const { workAsyncStorage } = await import('next/dist/server/app-render/work-async-storage.external');
+    return workAsyncStorage.getStore()?.isPrefetchRequest === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * F6998: UA des Besuchers fuer den SSR-Fetch (Header X-Forwarded-User-Agent).
+ * Dynamischer Import, weil api.ts auch in Client-Komponenten importiert wird.
+ * Ausserhalb eines Request-Scopes (Build, Sitemap) -> {} (Backend prueft dann nur den Direkt-UA).
+ */
+async function ssrForwardedUserAgentHeaders(): Promise<Record<string, string>> {
+  if (typeof window !== 'undefined') return {};
+  try {
+    const { headers } = await import('next/headers');
+    const incoming = await headers();
+    return { ...forwardedUserAgentHeaders(incoming), ...forwardedPrefetchHeaders(await isNextPrefetchRender()) };
+  } catch (err) {
+    unstable_rethrow(err); // Next-interne Bailout-/Postpone-Fehler nicht schlucken
+    return {};
+  }
+}
+
+async function apiFetch<T>(
+  path: string,
+  lang: string,
+  init?: RequestInit,
+  opts?: { forwardUserAgent?: boolean },
+): Promise<T> {
   // Only apply the default revalidate when the caller hasn't explicitly set cache/revalidate.
   // next.revalidate and cache:'no-store' are mutually exclusive in Next.js — the revalidate
   // wins and silently ignores 'no-store', causing stale data to be served.
   const defaults: RequestInit = init?.cache ? {} : { next: { revalidate: 3600 } };
+  // F6998: UA-Weitergabe nur bei no-store. Mit Data-Cache (revalidate) wuerde der Header
+  // den Cache-Key aufspalten und Bots koennten gecachte Antworten "vergiften".
+  if (opts?.forwardUserAgent && init?.cache !== 'no-store') {
+    throw new Error(`apiFetch: forwardUserAgent requires cache 'no-store' (${path})`);
+  }
+  // Feste Key-Reihenfolge: generateMetadata und Page muessen identische Requests senden,
+  // sonst greift die Next-Request-Memoization nicht (doppeltes Activity-Event).
+  const forward = opts?.forwardUserAgent ? await ssrForwardedUserAgentHeaders() : {};
   const res = await fetch(`${BASE}${path}`, {
     ...defaults,
     ...init,
-    headers: { 'Accept-Language': lang, ...(init?.headers ?? {}) },
+    headers: { 'Accept-Language': lang, ...forward, ...(init?.headers ?? {}) },
   });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
   return res.json() as Promise<T>;
@@ -50,6 +97,8 @@ export async function searchProducts(
     `/products${q ? `?${q}` : ''}`,
     lang,
     opts?.noStore ? { cache: 'no-store' } : undefined,
+    // F6998: nur Suchen mit Suchbegriff erzeugen search_performed-Events
+    { forwardUserAgent: !!opts?.noStore && !!params.q },
   );
 }
 
@@ -78,12 +127,12 @@ export async function searchAll(
   if (params.bbox) qs.set('bbox', params.bbox);
   if (params.limit != null) qs.set('limit', String(params.limit));
   if (params.offset != null) qs.set('offset', String(params.offset));
-  return apiFetch<SearchResponse>(`/search?${qs.toString()}`, lang, { cache: 'no-store' });
+  return apiFetch<SearchResponse>(`/search?${qs.toString()}`, lang, { cache: 'no-store' }, { forwardUserAgent: true });
 }
 
 export async function getProduct(slug: string, lang: string): Promise<ProductDetailResponse> {
   // no-store: promo prices are dynamic and must always be fresh (same reasoning as getShopOffers)
-  return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang, { cache: 'no-store' });
+  return apiFetch<ProductDetailResponse>(`/products/by-slug/${slug}`, lang, { cache: 'no-store' }, { forwardUserAgent: true });
 }
 
 /**
@@ -196,7 +245,7 @@ export async function getShop(slug: string, lang: string): Promise<ShopDetailRes
   // (Same reasoning as getShopOffers — see SP4 fix 2026-05-03.)
   return apiFetch<ShopDetailResponse>(`/shops/by-slug/${slug}`, lang, {
     cache: 'no-store',
-  });
+  }, { forwardUserAgent: true });
 }
 
 export interface SitemapSlugsResponse {

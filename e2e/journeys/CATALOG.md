@@ -13,6 +13,7 @@
 |---|---|---|---|---|
 | [shop-owner-admin-approval-flow](shop-owner-admin-approval-flow.md) | Shop-Owner Admin-Approval via Browser-UI | implemented | P1 | PASS |
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
+| [activity-feed-bot-filter](activity-feed-bot-filter.md) | Activity-Feed Bot-Filter und Prefetch-Unterdrückung (F6998) | implemented | P2 | PASS (10/10, 2026-10-17) |
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
 | [customer-and-review-lifecycle](customer-and-review-lifecycle.md) | Customer Auth + Interaction + Review Lifecycle | implemented | P2 | PASS |
 | [shop-owner-reviews-reply-report](shop-owner-reviews-reply-report.md) | Shop-Owner Bewertungen: Antworten, Melden, Moderation (F5930) | implemented | P2 | — |

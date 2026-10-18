@@ -26,6 +26,7 @@
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
 | [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS (2026-10-18, T13-T15 neu) |
 | [shop-owner-catalog-consent](shop-owner-catalog-consent.md) | Katalog-Onboarding-Zustimmung im Wizard und im Portal (F5980 AC1) | implemented | P1 | PASS (6/6, 2026-10-18) |
+| [shop-owner-google-onboarding-resume](shop-owner-google-onboarding-resume.md) | Google-Onboarding-Resume ueber den Next-Proxy (B5910-010) | implemented | P1 | PASS (3/3, 2026-10-18) |
 | [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P1 | PASS |
 | [shop-admin-offer-product](shop-admin-offer-product.md) | Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix) — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-product-offer-ui](shop-admin-product-offer-ui.md) | Shop-Admin Produkt + Angebot anlegen (UI Golden Path) — DEPRECATED | deprecated | P2 | — |
@@ -54,7 +55,7 @@
 | [b5950-001-second-opening-slot](b5950-001-second-opening-slot.md) | Zweites Öffnungszeitfenster Kundensicht + is_open_now (B5950-001) | implemented | P2 | PASS (7/7, 2026-10-13) |
 | [b5900-013-null-price-display](b5900-013-null-price-display.md) | Kundenseiten zeigen nie "null/None/NaN EUR" bei Angeboten ohne Zahlpreis; 6 Sprachen, RTL (B5900-013) | implemented | P2 | PASS (6/6, 2026-10-13) |
 | [customer-offer-price-tiers](customer-offer-price-tiers.md) | Staffelpreise & Einheiten in der Kundensicht: Produktseite + Shop-Seite, mit/ohne Aktion, 6 Sprachen, RTL, 390 px (F5200) | implemented | P2 | PASS (11/11, 2026-10-13) |
-| [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | — |
+| [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | PASS (3/3, 2026-10-18) |
 | [consumer-service-eldercare-w4](consumer-service-eldercare-w4.md) | F2970 Welle 4: Seniorenbetreuung (px-eldercare) in der Kundensuche, 6 Sprachen, Abgrenzung, RTL 390 px | implemented | P2 | PASS (9/9, 2026-10-13) |
 | [shop-claim-self-service](shop-claim-self-service.md) | Shop-Claim per Self-Service (Domain-/Code-Nachweis), Admin-Entscheid, Superseded (F5970) | implemented | P1 | PASS (12/12, 2026-10-18) |
 | [shop-claim-dispute](shop-claim-dispute.md) | Shop-Claim Dispute: Dokument, Rückruf, Owner-Wechsel, Sperre, Angebote zu prüfen, assign-owner, Matching-Tab (F5970) | implemented | P1 | PASS (14/14, 2026-10-18) |

@@ -30,6 +30,11 @@ import type {
   CrmContactDetail,
   SysAdminReview,
   SysAdminReviewAuditEntry,
+  SysAdminClaimListItem,
+  SysAdminClaimSummary,
+  SysAdminClaimDetail,
+  SysAdminMatchingCheck,
+  SysAdminShopOwnerOverview,
 } from '@/types/system-admin'
 
 // Keep deprecated aliases available in this file so existing callers still compile
@@ -342,4 +347,46 @@ export async function getReviews(params: ReviewListParams = {}, lang = 'en'): Pr
 /** GET /api/v1/admin/reviews/{id}/audit-log */
 export async function getReviewAuditLog(id: number | string): Promise<SysAdminReviewAuditEntry[]> {
   return apiFetch<SysAdminReviewAuditEntry[]>(`/reviews/${id}/audit-log`)
+}
+
+// ─── Claims (F5970) ───────────────────────────────────────────────────────────
+// Mutations (callback, verify, accept, reject, assign-owner) run in the browser through /api/admin/...
+
+export type ClaimListParams = {
+  status?: string
+  kind?: string
+  source?: string
+  shop_id?: number
+  sort?: 'age' | 'proof'
+  limit?: number
+  offset?: number
+}
+
+/** GET /api/v1/admin/claim-requests */
+export async function getClaimRequests(
+  params: ClaimListParams = {},
+): Promise<PaginatedResponse<SysAdminClaimListItem>> {
+  return apiFetch<PaginatedResponse<SysAdminClaimListItem>>(`/claim-requests${buildQs(params)}`)
+}
+
+/** GET /api/v1/admin/claim-requests/summary -- counters for the dashboard tile and the tabs */
+export async function getClaimSummary(): Promise<SysAdminClaimSummary> {
+  return apiFetch<SysAdminClaimSummary>('/claim-requests/summary')
+}
+
+/** GET /api/v1/admin/claim-requests/{id} */
+export async function getClaimRequest(id: number | string): Promise<SysAdminClaimDetail> {
+  return apiFetch<SysAdminClaimDetail>(`/claim-requests/${id}`)
+}
+
+/** GET /api/v1/admin/shop-claim-checks -- matching checks (default: pending) */
+export async function getMatchingChecks(
+  params: { status?: string; limit?: number; offset?: number } = {},
+): Promise<{ items: SysAdminMatchingCheck[]; total: number }> {
+  return apiFetch<{ items: SysAdminMatchingCheck[]; total: number }>(`/shop-claim-checks${buildQs(params)}`)
+}
+
+/** GET /api/v1/admin/shops/{id}/owner -- current owner account and active applications of a shop */
+export async function getShopOwnerOverview(shopId: number | string): Promise<SysAdminShopOwnerOverview> {
+  return apiFetch<SysAdminShopOwnerOverview>(`/shops/${shopId}/owner`)
 }

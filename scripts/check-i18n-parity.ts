@@ -12,6 +12,7 @@ import { shopAdminImportTranslationsMap } from '../src/lib/i18n/shop-admin-impor
 import { shopAdminReviewsTranslationsMap } from '../src/lib/i18n/shop-admin-reviews'
 import { shopAdminCategoryPickerTranslationsMap } from '../src/lib/i18n/shop-admin-category-picker'
 import { shopAdminCatalogConsentTranslationsMap } from '../src/lib/i18n/shop-admin-catalog-consent'
+import { shopAdminClaimTranslationsMap } from '../src/lib/i18n/shop-admin-claim'
 import { commonTranslations } from '../src/lib/i18n/common'
 import { authTranslations } from '../src/lib/i18n/auth'
 import { searchTranslations } from '../src/lib/i18n/search'
@@ -45,6 +46,7 @@ const namespaces: { name: string; obj: AnyTranslationMap }[] = [
   { name: 'shop-admin-reviews', obj: shopAdminReviewsTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-category-picker', obj: shopAdminCategoryPickerTranslationsMap as unknown as AnyTranslationMap },
   { name: 'shop-admin-catalog-consent', obj: shopAdminCatalogConsentTranslationsMap as unknown as AnyTranslationMap },
+  { name: 'shop-admin-claim', obj: shopAdminClaimTranslationsMap as unknown as AnyTranslationMap },
 ]
 
 const LANGS = ['de', 'ru', 'el', 'ar', 'he'] as const

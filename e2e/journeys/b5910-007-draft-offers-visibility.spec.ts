@@ -504,3 +504,48 @@ test('P5b: Realdaten — Demo-Shops mit Preisen, gescrapter Shop ohne Owner unve
   logStep('P5', 'gescrapter Shop ohne Owner: Top-Produkte + Suchtreffer unverändert', true)
   void wasPending403
 })
+
+// ═════════════════════════════════════════════════════════════════════════════
+// P6 (F5970 A9): Listings, die nach einem Owner-Wechsel zur Prüfung markiert sind (ownership_review_since), sind in
+// allen öffentlichen Kanälen unsichtbar; der Shop bleibt sichtbar; ohne Marker sofort wieder da.
+// Fixture-Eingriff nur an den Listings des eigenen Test-Shops A (Marker per psql, danach wieder entfernt).
+// ═════════════════════════════════════════════════════════════════════════════
+
+test('P6: F5970 — markierte Listings sind in Suche, Produktseite, Shop-Detail, Produktliste und Sitemap unsichtbar, Shop bleibt', async ({ page }) => {
+  test.setTimeout(120_000)
+  const slugs = [BREAD, CAKE, ...metzSlugs]
+  const before = await publicView(A.shopId, slugs)
+  expect(before.searchEn, 'Ausgangslage: Shop A in der Suche sichtbar').toContain(A.slug)
+  expect(before.productsTotal, 'Ausgangslage: Angebote da').toBeGreaterThan(0)
+
+  psql(`update shop_listings set ownership_review_since = now() where shop_id=${A.shopId}`)
+  try {
+    const v = await publicView(A.shopId, slugs)
+    expect(v.searchRu, 'Suche хлеб').not.toContain(A.slug)
+    expect(v.searchEn, 'Suche bread').not.toContain(A.slug)
+    expect(v.searchCakeRu, 'Suche торты').not.toContain(A.slug)
+    expect(v.productsTotal, '/products?shop_id=').toBe(0)
+    expect(v.shopTopProducts, 'Shop-Detail top_products').toBe(0)
+    expect(v.shopProductCount, 'Shop-Detail product_count').toBe(0)
+    for (const sl of slugs) expect(v.detailOfferShops[sl], `Produktdetail ${sl}`).not.toContain(A.slug)
+    logStep('P6', 'markiert: Suche/Produktliste/Produktdetail/Shop-Detail ohne Angebote', true)
+
+    const bySlug = await pub<any>(`/shops/by-slug/${A.slug}`)
+    expect(bySlug.id).toBe(A.shopId)
+    const list = await pub<{ items: any[] }>('/shops', { q: A.name, lat: LAT, lng: LNG })
+    expect(list.items.map(x => x.slug)).toContain(A.slug)
+    const sm = await fetch(`${BASE_URL}/sitemap-shops.xml`).then(r => r.text())
+    expect(sm.includes(A.slug)).toBe(false)
+    await page.goto(`${BASE_URL}/en/shops/${A.slug}`, { waitUntil: 'domcontentloaded' })
+    await waitForPageHydrated(page)
+    await expect(page.locator('h1').first()).toContainText(A.name)
+    expect(await page.locator('a[href*="/products/"]').count()).toBe(0)
+    logStep('P6', 'markiert: Shop in Detail/Liste/UI sichtbar, nicht in der Sitemap', true)
+  } finally {
+    psql(`update shop_listings set ownership_review_since = null, ownership_review_claim_id = null where shop_id=${A.shopId}`)
+  }
+  const after = await publicView(A.shopId, slugs)
+  expect(after.searchEn).toContain(A.slug)
+  expect(after.productsTotal).toBe(before.productsTotal)
+  logStep('P6', 'Marker entfernt: Angebote wieder sichtbar (unverändert)', true)
+})

@@ -134,6 +134,8 @@ export interface ShopDetailResponse extends ShopListItem {
   description?: string | null;
   // shop_type and spoken_languages are now part of ShopListItem (enriched fields)
   images?: Array<{ url: string }> | null;
+  /** F5970 A8: an approved, non-system owner is attached (drives the claim call-to-action; never exposes who). */
+  is_claimed?: boolean;
 }
 
 export interface ShopOffer {

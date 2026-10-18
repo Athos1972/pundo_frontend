@@ -7,6 +7,7 @@ import { shopAdminAuthTranslationsMap } from '@/lib/i18n/shop-admin-auth'
 import { shopAdminCatalogTranslationsMap } from '@/lib/i18n/shop-admin-catalog'
 import { shopAdminCatalogReviewTranslationsMap } from '@/lib/i18n/shop-admin-catalog-review'
 import { shopAdminCategoryPickerTranslationsMap } from '@/lib/i18n/shop-admin-category-picker'
+import { shopAdminClaimTranslationsMap } from '@/lib/i18n/shop-admin-claim'
 import { shopAdminCommonTranslationsMap } from '@/lib/i18n/shop-admin-common'
 import { shopAdminImportTranslationsMap } from '@/lib/i18n/shop-admin-import'
 import { shopAdminOffersTranslationsMap } from '@/lib/i18n/shop-admin-offers'
@@ -20,6 +21,7 @@ const NAMESPACES: Record<string, Map> = {
   catalog: shopAdminCatalogTranslationsMap as unknown as Map,
   'catalog-review': shopAdminCatalogReviewTranslationsMap as unknown as Map,
   'category-picker': shopAdminCategoryPickerTranslationsMap as unknown as Map,
+  claim: shopAdminClaimTranslationsMap as unknown as Map,
   common: shopAdminCommonTranslationsMap as unknown as Map,
   import: shopAdminImportTranslationsMap as unknown as Map,
   offers: shopAdminOffersTranslationsMap as unknown as Map,

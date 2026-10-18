@@ -28,6 +28,10 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   if (token) headers['Authorization'] = `Bearer ${token}`
   const acceptLang = request.headers.get('accept-language')
   if (acceptLang) headers['Accept-Language'] = acceptLang
+  // F5970: access token of a claim application (status page without login). Allowlisted on purpose --
+  // this route does not forward arbitrary client headers.
+  const claimToken = request.headers.get('x-claim-token')
+  if (claimToken) headers['X-Claim-Token'] = claimToken
   // Forward client host so backend can set cookie-domain per brand (B6200-001)
   const clientHost = request.headers.get('host')
   if (clientHost) headers['X-Forwarded-Host'] = clientHost

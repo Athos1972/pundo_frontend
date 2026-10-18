@@ -1,20 +1,27 @@
 'use client'
 // Only imports from src/components/ui/ allowed (Clean Boundary)
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { fmtPrice } from '@/lib/utils'
 import { showToast } from './Toast'
+import { announceOwnershipReviewCount, OPEN_REVIEW_TAB_EVENT } from './ownership-review-events'
 import { OfferFilterBar } from './OfferFilterBar'
 import { resolveLocalizedName } from './OfferItemHeader'
-import type { AdminOffer, ItemSource } from '@/types/shop-admin'
+import type {
+  AdminOffer, ItemSource, OwnershipReviewArchiveResponse, OwnershipReviewConfirmResponse, OwnershipReviewSelection,
+} from '@/types/shop-admin'
+
+type Tab = 'active' | 'expired' | 'review'
 
 interface OfferListProps {
   activeItems: AdminOffer[]
   expiredItems: AdminOffer[]
   lang: string
+  /** F5970: `review` opens the "To review" tab (banner link `?review=1`). */
+  initialTab?: Tab
 }
 
 function sourceBadge(source: ItemSource | undefined, tr: ReturnType<typeof tAdmin>) {
@@ -53,9 +60,22 @@ function isDeletable(offer: AdminOffer): boolean {
   return offer.archived || isExpired(offer)
 }
 
-export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
+export function OfferList({ activeItems, expiredItems, lang, initialTab = 'active' }: OfferListProps) {
   const tr = tAdmin(lang)
-  const [tab, setTab] = useState<'active' | 'expired'>('active')
+  const [tab, setTab] = useState<Tab>(initialTab)
+  // `initialTab` comes from the URL (?review=1) and the list stays mounted on same-route navigation:
+  // follow a prop change (adjusting state while rendering, no extra paint) ...
+  const [seenInitialTab, setSeenInitialTab] = useState<Tab>(initialTab)
+  if (seenInitialTab !== initialTab) {
+    setSeenInitialTab(initialTab)
+    setTab(initialTab)
+  }
+  // ... and the banner link, which also fires when the URL is already ?review=1 (tab switched by hand in between)
+  useEffect(() => {
+    const open = () => setTab('review')
+    window.addEventListener(OPEN_REVIEW_TAB_EVENT, open)
+    return () => window.removeEventListener(OPEN_REVIEW_TAB_EVENT, open)
+  }, [])
   const [active, setActive] = useState(activeItems)
   const [expired, setExpired] = useState(expiredItems)
   const [confirmId, setConfirmId] = useState<number | null>(null)
@@ -65,7 +85,19 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
   const [searchText, setSearchText] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
 
-  const tabItems = tab === 'active' ? active : expired
+  const [archiveAllConfirm, setArchiveAllConfirm] = useState(false)
+
+  // F5970: active offers of a listing flagged after an owner change (hidden for customers until handled)
+  const reviewItems = useMemo(() => active.filter((o) => o.ownership_review === true), [active])
+  const tabItems = tab === 'active' ? active : tab === 'review' ? reviewItems : expired
+
+  // keep the layout banner in step with what this list shows (the layout does not re-render on client navigation)
+  // (skipped when the server list may be truncated at the 500-offer page size: the count would be too low)
+  const reviewCount = reviewItems.length
+  const listComplete = activeItems.length < 500
+  useEffect(() => {
+    if (listComplete) announceOwnershipReviewCount(reviewCount)
+  }, [reviewCount, listComplete])
 
   // Derive unique categories from all items with category_name
   const categories = useMemo(() => {
@@ -156,6 +188,39 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
     })
   }
 
+  /** Confirm / archive flagged offers through the bulk endpoints (also used for a single row). */
+  function reviewAction(kind: 'confirm' | 'archive', selection: OwnershipReviewSelection) {
+    const ids = 'offer_ids' in selection ? new Set(selection.offer_ids) : null
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/shop-admin/offers/ownership-review/${kind}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(selection),
+        })
+        if (!res.ok) {
+          showToast(tr.error_generic, 'error')
+          return
+        }
+        const body = await res.json() as OwnershipReviewConfirmResponse & OwnershipReviewArchiveResponse
+        const handled = (o: AdminOffer) => o.ownership_review === true && (ids === null || ids.has(o.id))
+        if (kind === 'confirm') {
+          setActive((prev) => prev.map((o) => (handled(o) ? { ...o, ownership_review: false } : o)))
+          showToast(tr.offer_review_confirmed_toast.replace('{n}', String(body.confirmed)), 'success')
+        } else {
+          const moved = active.filter(handled)
+          setActive((prev) => prev.filter((o) => !handled(o)))
+          setExpired((prev) => [...moved.map((o) => ({ ...o, archived: true, ownership_review: false })), ...prev])
+          showToast(tr.offer_review_archived_toast.replace('{n}', String(body.archived)), 'success')
+        }
+        announceOwnershipReviewCount(body.remaining)
+      } catch {
+        showToast(tr.error_generic, 'error')
+      }
+      setArchiveAllConfirm(false)
+    })
+  }
+
   function handleDelete(id: number) {
     startTransition(async () => {
       try {
@@ -213,23 +278,75 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
-        {(['active', 'expired'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${tab === t
-                ? 'border-accent text-accent'
-                : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-          >
-            {t === 'active' ? tr.active : tr.expired}
-          </button>
-        ))}
+        {(['active', 'review', 'expired'] as const)
+          .filter((t) => t !== 'review' || reviewCount > 0 || tab === 'review')
+          .map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              data-testid={`offer-tab-${t}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                ${tab === t
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              {t === 'active' ? tr.active : t === 'expired' ? tr.expired : tr.offer_review_tab}
+              {t === 'review' && reviewCount > 0 && (
+                <span className="ms-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-xs leading-none text-white">{reviewCount}</span>
+              )}
+            </button>
+          ))}
       </div>
+
+      {tab === 'review' && (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3" data-testid="offer-review-panel">
+          <p className="text-sm text-amber-900">{tr.offer_review_intro}</p>
+          {reviewCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => reviewAction('confirm', { all: true })}
+                disabled={isPending}
+                data-testid="offer-review-confirm-all"
+                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {tr.offer_review_confirm_all.replace('{n}', String(reviewCount))}
+              </button>
+              {archiveAllConfirm ? (
+                <span className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-amber-900">{tr.offer_review_archive_all_confirm.replace('{n}', String(reviewCount))}</span>
+                  <button
+                    type="button"
+                    onClick={() => reviewAction('archive', { all: true })}
+                    disabled={isPending}
+                    data-testid="offer-review-archive-all-yes"
+                    className="rounded-lg bg-orange-500 px-3 py-1.5 font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {tr.archive}
+                  </button>
+                  <button type="button" onClick={() => setArchiveAllConfirm(false)} className="text-gray-600 hover:underline">
+                    {tr.cancel}
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setArchiveAllConfirm(true)}
+                  disabled={isPending}
+                  data-testid="offer-review-archive-all"
+                  className="rounded-lg border border-orange-400 bg-white px-3 py-1.5 text-sm font-semibold text-orange-700 hover:bg-orange-50 disabled:opacity-50"
+                >
+                  {tr.offer_review_archive_all.replace('{n}', String(reviewCount))}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {filteredItems.length === 0 ? (
         <p className="text-gray-400 text-sm py-8 text-center">
-          {tabItems.length > 0 ? tr.offer_no_results_filtered : tr.no_results}
+          {tabItems.length > 0 ? tr.offer_no_results_filtered : tab === 'review' ? tr.offer_review_empty : tr.no_results}
         </p>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
@@ -267,6 +384,11 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                         {tr.offer_status_draft}
                       </span>
                     )}
+                    {offer.ownership_review === true && (
+                      <span data-testid="offer-review-badge" title={tr.offer_review_hidden_hint} className="inline-block text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                        {tr.offer_review_badge}
+                      </span>
+                    )}
                     {offer.listing_available === false && (
                       <span data-testid="offer-not-available-badge" className="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
                         {tr.offer_not_available_badge}
@@ -294,6 +416,26 @@ export function OfferList({ activeItems, expiredItems, lang }: OfferListProps) {
                   </p>
                 </div>
                 <div data-testid="offer-row-actions" className="flex flex-wrap items-center gap-x-3 gap-y-2 lg:shrink-0 lg:flex-nowrap">
+                  {tab === 'review' && (
+                    <>
+                      <button
+                        onClick={() => reviewAction('confirm', { offer_ids: [offer.id] })}
+                        disabled={isPending}
+                        data-testid="offer-review-confirm"
+                        className="text-xs text-white bg-green-600 px-2 py-0.5 rounded hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {tr.offer_review_confirm}
+                      </button>
+                      <button
+                        onClick={() => reviewAction('archive', { offer_ids: [offer.id] })}
+                        disabled={isPending}
+                        data-testid="offer-review-archive"
+                        className="text-xs text-orange-700 border border-orange-300 px-2 py-0.5 rounded hover:bg-orange-50 disabled:opacity-50"
+                      >
+                        {tr.offer_review_archive}
+                      </button>
+                    </>
+                  )}
                   {offer.source === 'auto_seeded' && (
                     <button
                       onClick={() => handleActivate(offer.id)}

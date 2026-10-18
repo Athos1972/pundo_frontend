@@ -9,6 +9,15 @@ import { clientIpForwardHeaders } from '@/lib/proxy/client-ip'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8500'
 
+/** Backend response headers (besides content-type / set-cookie) that reach the browser. */
+// (not exported: a Next route file may only export its handlers and route config)
+const PASS_THROUGH_RESPONSE_HEADERS = [
+  'cache-control',
+  'content-disposition',
+  'x-content-type-options',
+  'content-security-policy',
+] as const
+
 interface RouteContext {
   params: Promise<{ path: string[] }>
 }
@@ -51,6 +60,13 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   const responseContentType = backendRes.headers.get('content-type')
   if (responseContentType) responseHeaders.set('content-type', responseContentType)
+
+  // F5970: the claim proof-document viewer needs the backend's hardening headers (no-store, nosniff, the
+  // sandbox CSP, inline filename). Allowlist -- nothing else of the backend response is passed through.
+  for (const name of PASS_THROUGH_RESPONSE_HEADERS) {
+    const value = backendRes.headers.get(name)
+    if (value) responseHeaders.set(name, value)
+  }
 
   // 204 No Content must not have a body (e.g. DELETE returns 204)
   if (backendRes.status === 204) {

@@ -11,7 +11,7 @@
 
 | ID | Title | Status | Priority | Last Result |
 |---|---|---|---|---|
-| [shop-owner-admin-approval-flow](shop-owner-admin-approval-flow.md) | Shop-Owner Admin-Approval via Browser-UI | implemented | P1 | PASS |
+| [shop-owner-admin-approval-flow](shop-owner-admin-approval-flow.md) | Shop-Owner Admin-Approval via Browser-UI | implemented | P1 | PASS (9/9, 2026-10-18) |
 | [customer-discovery](customer-discovery.md) | Customer Discovery Flow | implemented | P2 | PASS |
 | [activity-feed-bot-filter](activity-feed-bot-filter.md) | Activity-Feed Bot-Filter und Prefetch-Unterdrückung (F6998) | implemented | P2 | PASS (10/10, 2026-10-17) |
 | [shop-owner-full-lifecycle](shop-owner-full-lifecycle.md) | Shop-Owner Full Lifecycle + UI-Kombinations-Matrix | implemented | P1 | PASS |
@@ -22,10 +22,10 @@
 | [import-page-ac-check](import-page-ac-check.md) | Import Page Acceptance Criteria Check (F5920: Vorschau, Wiedererkennung, komplette Liste, Kundensicht) | implemented | P2 | PASS (26/26, 2026-10-15) |
 | [shop-admin-import-image-url](shop-admin-import-image-url.md) | Import image_url Async-Flow (F5920: Vorschau-Schritt, Foto-Schutz) | implemented | P2 | PASS (5/5, 1 skip, 2026-10-15) |
 | [shop-admin-import-all-or-nothing](shop-admin-import-all-or-nothing.md) | Katalog-Import alles-oder-nichts, Zeilenfehler uebersetzt, Foto-Dedup (B5900-030) | implemented | P2 | PASS (15/15, 2026-10-15) |
-| [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS |
+| [shop-admin-offers](shop-admin-offers.md) | Shop-Admin Angebote CRUD (UI + API) | implemented | P1 | PASS (2026-10-18) |
 | [shop-owner-onboarding](shop-owner-onboarding.md) | Shop-Owner Onboarding: Register → Verify → Approve → Login | implemented | P1 | PASS |
-| [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS |
-| [shop-owner-catalog-consent](shop-owner-catalog-consent.md) | Katalog-Onboarding-Zustimmung im Wizard und im Portal (F5980 AC1) | implemented | P1 | PASS (5/5, 2026-10-16) |
+| [shop-owner-quick-onboarding](shop-owner-quick-onboarding.md) | Shop-Owner Schnell-Onboarding Wizard (F5910) | implemented | P1 | PASS (2026-10-18, T13-T15 neu) |
+| [shop-owner-catalog-consent](shop-owner-catalog-consent.md) | Katalog-Onboarding-Zustimmung im Wizard und im Portal (F5980 AC1) | implemented | P1 | PASS (6/6, 2026-10-18) |
 | [social-link-moderation](social-link-moderation.md) | Social-Link-Moderation AC1–AC10 | implemented | P1 | PASS |
 | [shop-admin-offer-product](shop-admin-offer-product.md) | Shop-Admin Angebot + Produkt-Verknüpfung (API-Matrix) — DEPRECATED | deprecated | P2 | — |
 | [shop-admin-product-offer-ui](shop-admin-product-offer-ui.md) | Shop-Admin Produkt + Angebot anlegen (UI Golden Path) — DEPRECATED | deprecated | P2 | — |
@@ -33,7 +33,7 @@
 | [write-to-read-createItem](write-to-read-createItem.md) | Write-to-Read: Item anlegen → Suche → Detailseite | approved | P1 | — |
 | [shop-detail-attribute-matrix](shop-detail-attribute-matrix.md) | Shop-Detail Attribut-Matrix (2 Datenvarianten) | approved | P2 | — |
 | [service-catalog-auto-assign](service-catalog-auto-assign.md) | Service-Katalog Auto-Assign: Badge + Admin IDM CRUD + Journey S4–S7 | implemented | P1 | PASS |
-| [b5910-007-draft-offers-visibility](b5910-007-draft-offers-visibility.md) | Onboarding-Vorschläge nicht freigeschalteter Shops öffentlich unsichtbar (B5910-007) | implemented | P1 | PASS |
+| [b5910-007-draft-offers-visibility](b5910-007-draft-offers-visibility.md) | Onboarding-Vorschläge nicht freigeschalteter Shops öffentlich unsichtbar (B5910-007) | implemented | P1 | PASS (8/8, 2026-10-18) |
 | [public-route-visibility-blog](public-route-visibility-blog.md) | Blog-Seite Sichtbarkeit + Soro-Embed | approved | P2 | — |
 | [shop-admin-product-crud](shop-admin-product-crud.md) | Shop-Admin Produkt-CRUD (F6710) | implemented | P2 | — |
 | [customer-shop-promo-visibility](customer-shop-promo-visibility.md) | Kunden-Sicht Shop-Aktionen (Aktionsblock vs. Produktblock) | implemented | P2 | — |
@@ -56,6 +56,8 @@
 | [customer-offer-price-tiers](customer-offer-price-tiers.md) | Staffelpreise & Einheiten in der Kundensicht: Produktseite + Shop-Seite, mit/ohne Aktion, 6 Sprachen, RTL, 390 px (F5200) | implemented | P2 | PASS (11/11, 2026-10-13) |
 | [consumer-service-discovery](consumer-service-discovery.md) | Endkunden-Dienstleistung: Listing → Kundensuche (6 Sprachen) → Anbieterliste (F2970) | implemented | P1 | — |
 | [consumer-service-eldercare-w4](consumer-service-eldercare-w4.md) | F2970 Welle 4: Seniorenbetreuung (px-eldercare) in der Kundensuche, 6 Sprachen, Abgrenzung, RTL 390 px | implemented | P2 | PASS (9/9, 2026-10-13) |
+| [shop-claim-self-service](shop-claim-self-service.md) | Shop-Claim per Self-Service (Domain-/Code-Nachweis), Admin-Entscheid, Superseded (F5970) | implemented | P1 | PASS (12/12, 2026-10-18) |
+| [shop-claim-dispute](shop-claim-dispute.md) | Shop-Claim Dispute: Dokument, Rückruf, Owner-Wechsel, Sperre, Angebote zu prüfen, assign-owner, Matching-Tab (F5970) | implemented | P1 | PASS (14/14, 2026-10-18) |
 | [contact-form](contact-form.md) | Kontaktformular senden (6 Sprachen), Captcha-Fehler, Rate-Limit (B6220-003) | implemented | P2 | PASS (10/10 dev 3500 + 10/10 Standalone-Build, 2026-10-13) |
 
 ## Smoketest Coverage
@@ -76,6 +78,8 @@
 | customer-and-review-lifecycle | Yes (read only) | `profile-after-login`, `login-flow` |
 | shop-owner-onboarding | No — writes + registers | — |
 | shop-owner-quick-onboarding | No — writes + registers | — |
+| shop-claim-self-service | No — writes + registers | — |
+| shop-claim-dispute | No — admin area, writes + registers | — |
 | shop-owner-full-lifecycle | No — shop-admin scope, V1 scope | — |
 | admin-data-management | No — admin area | — |
 | import-page-ac-check | No — admin area | — |

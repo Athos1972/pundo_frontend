@@ -119,8 +119,12 @@ export interface SysAdminShopOwner {
   id: number
   email: string
   name: string
-  status: 'pre_signup' | 'pending' | 'approved' | 'rejected'
+  status: 'pre_signup' | 'pending' | 'approved' | 'rejected' | 'inactive' | 'suspended'
   shop_id: number | null
+  /** F5970 */
+  suspended_at?: string | null
+  suspended_reason?: 'claim_reassigned' | 'admin_manual' | null
+  open_claim_request_id?: number | null
 }
 
 // ─── Items (was: Products) ─────────────────────────────────────────────────────
@@ -482,4 +486,157 @@ export interface SysAdminReviewAuditEntry {
   moderation_confidence: number | null
   reason: string | null
   timestamp: string
+}
+
+// ─── Claims (F5970) ──────────────────────────────────────────────────────────
+// Mirrors pundo_main_backend/ingestor/schemas/admin_claim.py (/api/v1/admin/claim-requests).
+
+export type SysAdminClaimStatus = 'open' | 'verified' | 'accepted' | 'rejected'
+export type SysAdminClaimSubState =
+  | 'awaiting_email_verification' | 'awaiting_code' | 'awaiting_callback' | 'callback_done_enter_code'
+  | 'awaiting_review' | 'decided'
+
+export interface SysAdminClaimListItem {
+  id: number
+  shop_id: number
+  shop_name: string
+  shop_slug: string
+  kind: 'claim' | 'dispute'
+  source: 'shop_page' | 'onboarding' | 'admin_assign'
+  status: SysAdminClaimStatus
+  rejection_reason: string | null
+  proof_method: string | null
+  proof_verified_at: string | null
+  sub_state: SysAdminClaimSubState
+  applicant: { id: number; name: string; email: string; email_verified: boolean } | null
+  open_requests_for_shop: number
+  current_owner_id: number | null
+  expires_at: string | null
+  created_at: string
+}
+
+export interface SysAdminClaimSummary {
+  open: number
+  verified: number
+  disputes_open: number
+  matching_pending: number
+}
+
+export interface SysAdminClaimDocument {
+  id: number
+  filename: string
+  media_type: string
+  size_bytes: number
+  created_at: string
+  deleted_at: string | null
+  view_count: number
+}
+
+export interface SysAdminClaimCurrentOwner {
+  id: number
+  email: string
+  name: string
+  status: string
+  since: string
+  offers_active: number
+  listings: number
+  is_system_account: boolean
+}
+
+export interface SysAdminClaimEvent {
+  at: string
+  type: string
+  from_status: string | null
+  to_status: string | null
+  actor_type: string
+  actor_id: number | null
+  payload: Record<string, unknown>
+}
+
+export interface SysAdminClaimDetail extends SysAdminClaimListItem {
+  applicant_message: string | null
+  applicant_lang: string
+  shop: {
+    id: number
+    slug: string
+    name: string
+    address: string | null
+    city: string | null
+    email: string | null
+    phone: string | null
+    website_url: string | null
+    webshop_url: string | null
+    source: string | null
+    source_url: string | null
+    status: string
+  }
+  shop_contact_snapshot: Record<string, string | null> | null
+  contact_changed_since_request: string[]
+  email_domain_match: boolean | null
+  code: { purpose: string; expires_at: string | null; failed_attempts: number } | null
+  callbacks: Array<{ at: string; outcome: 'reached' | 'not_reached'; note: string | null; admin_id: number | null }>
+  documents: SysAdminClaimDocument[]
+  current_owner: SysAdminClaimCurrentOwner | null
+  other_open_requests: Array<{ id: number; applicant_email: string | null; status: string }>
+  decision: {
+    by_admin_id: number | null
+    at: string | null
+    reason: string | null
+    notify_previous_owner: boolean | null
+    offers_flagged_count: number | null
+    withdrawn_consent_id: number | null
+    cancelled_case_ids: number[] | null
+    previous_owner_id: number | null
+  } | null
+  documents_deleted_at: string | null
+  events: SysAdminClaimEvent[]
+}
+
+export interface SysAdminCallbackCode {
+  code: string
+  expires_at: string
+}
+
+export interface SysAdminMatchingCandidate {
+  shop_id: number
+  name: string | null
+  city: string | null
+  website_url: string | null
+  webshop_url: string | null
+}
+
+export interface SysAdminMatchingCheck {
+  id: number
+  input_domain: string | null
+  input_shop_name: string | null
+  input_city: string | null
+  match_method: 'domain' | 'name_city' | 'none'
+  outcome: 'matched' | 'ambiguous' | 'ambiguous_owned' | 'no_match'
+  review_status: string
+  candidates: SysAdminMatchingCandidate[]
+  created_at: string
+}
+
+export interface SysAdminShopOwnerOverview {
+  owner: SysAdminClaimCurrentOwner | null
+  open_claims: SysAdminClaimListItem[]
+}
+
+export interface SysAdminAssignOwnerPayload {
+  shop_owner_id: number
+  reason: string
+  approve_owner?: boolean
+  replace_existing_owner?: boolean
+  deactivate_previous_shop_of_owner?: boolean
+  notify_previous_owner?: boolean
+  shop_claim_check_id?: number
+}
+
+export interface SysAdminAssignOwnerResult {
+  claim_request_id: number
+  shop_id: number
+  shop_owner_id: number
+  previous_owner_id: number | null
+  offers_flagged_count: number
+  deactivated_shop_id: number | null
 }

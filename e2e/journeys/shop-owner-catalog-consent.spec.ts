@@ -17,7 +17,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { test, expect, createStepLog, shopOwnerLogin, shopOwnerOnboardWithRetry } from '../fixtures'
-import { RUN_ID, TestDataTracker, psql, ownerApi } from './_helpers/test-data'
+import { RUN_ID, TestDataTracker, psql, ownerApi, adminApi } from './_helpers/test-data'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
 import { waitForHydrated } from './_helpers/hydration'
 import { BASE_URL, BACKEND_URL } from '../env'
@@ -222,4 +222,44 @@ test.describe.serial('Katalog-Consent: Wizard und Portal (F5980 AC1)', () => {
       await other.destroy()
     }
   })
+
+  test('E3: Owner-Wechsel (F5970 assign-owner): Consent zurueckgezogen, alter Case cancelled, neuer Owner startet bei "none" und bekommt genau einen neuen Case', async () => {
+    test.setTimeout(120_000)
+    // Ausgangslage aus E1: `email` ist approved Owner mit aktivem Consent und Case
+    const ownerRow = await adminApi<{ items: Array<{ id: number; shop_id: number }> }>('GET', `/shop-owners?q=${encodeURIComponent(email)}`)
+    const oldShopId = ownerRow.json.items[0].shop_id
+    tracker.shop(oldShopId)
+    const oldCase = Number(psql(`select id from catalog_cases where shop_id=${oldShopId} order by id desc limit 1`))
+    expect(psql(`select status from catalog_cases where id=${oldCase}`)).not.toBe('cancelled')
+
+    // Neuer Owner mit eigenem Shop (Auto-Approve), wird per assign-owner uebernommen
+    const newEmail = `e2e-${RUN_ID}-ccons-new-${UUID}@pundo.com`
+    const created = await shopOwnerOnboardWithRetry({
+      provider_type: 'dienstleister', domain_slugs: [], specialty_slugs: [],
+      location: { lat: 34.917, lng: 33.636, address: 'E2E Street 9', is_b2c_storefront: true },
+      contact: { website: 'https://e2e-consent-new.example' }, shop_name: `E2E-${RUN_ID}-CCONS-new-${UUID}`,
+      credentials: { type: 'email', email: newEmail, password, name: `E2E new ${UUID}` }, lang: 'en',
+    })
+    tracker.owner(created.user_id as number)
+    tracker.shop(created.shop_id as number)
+    const assign = await adminApi('POST', `/shops/${oldShopId}/assign-owner`, {
+      shop_owner_id: created.user_id, reason: 'E2E Owner-Wechsel', replace_existing_owner: true, deactivate_previous_shop_of_owner: true, notify_previous_owner: false,
+    })
+    expect(assign.status, assign.text).toBe(200)
+
+    expect(psql(`select withdrawn_reason from catalog_consents where shop_id=${oldShopId} order by id desc limit 1`)).toBe('owner_reassigned')
+    expect(psql(`select status from catalog_cases where id=${oldCase}`)).toBe('cancelled')
+    const newToken = await shopOwnerLogin(newEmail, password)
+    const status = await ownerApi<ConsentStatus>(newToken, 'GET', '/catalog-consent')
+    expect(status.json.status, 'neuer Owner: Karte "none"').toBe('none')
+    expect(psql(`select count(*) from catalog_cases where shop_id=${oldShopId} and status<>'cancelled'`)).toBe('0')
+    const given = await ownerApi<ConsentCreate>(newToken, 'POST', '/catalog-consent', { accepted: true, text_version: CATALOG_CONSENT_TEXT_VERSION })
+    expect(given.status).toBe(201)
+    expect(psql(`select count(*) from catalog_cases where shop_id=${oldShopId} and status<>'cancelled'`), 'genau ein neuer Case').toBe('1')
+    expect(psql(`select count(*) from catalog_cases where shop_id=${oldShopId}`)).toBe('2')
+    // die alte Zustimmung bleibt als Historie (zurueckgezogen), kein zweiter aktiver Consent
+    expect(psql(`select count(*) from catalog_consents where shop_id=${oldShopId} and withdrawn_at is null`)).toBe('1')
+    logStep('E3.1', 'Owner-Wechsel: Consent withdrawn, Case cancelled, neuer Consent -> neuer Case', true)
+  })
+
 })

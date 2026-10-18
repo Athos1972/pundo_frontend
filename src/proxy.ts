@@ -88,6 +88,8 @@ const PUBLIC_SHOP_ADMIN_PATHS = [
   '/shop-admin/onboarding',
   '/shop-admin/auth/callback',
   '/shop-admin/verify-email',
+  // F5970: self-service claim (also /shop-admin/claim/status) -- applicants have no session
+  '/shop-admin/claim',
 ]
 
 // T17 — System-Admin Proxy-Gate (F6990 Phase 2, M7)

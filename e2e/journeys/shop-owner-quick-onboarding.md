@@ -15,6 +15,7 @@ touches-modules:
   - src/lib/i18n/shop-admin-*.ts
   - src/components/shop-admin/OfferList.tsx
   - src/components/ui/TurnstileWidget.tsx
+  - src/components/shop-admin/onboarding/OnboardingExistingShopHint.tsx
 touches-roles:
   - shop-owner
   - admin
@@ -25,9 +26,10 @@ touches-states:
   - ShopOwner.status:approved
   - ShopListing.available:false
   - ShopListing.available:true
+  - ClaimRequest.source:onboarding
 status-changed-at: 2026-05-31T00:00:00Z
 status-changed-by-spec: onboarding-items-konsolidierung-20260531
-last-run: 2026-06-05T18:28:00Z
+last-run: 2026-10-18T08:45:00Z
 last-result: PASS
 ---
 
@@ -130,6 +132,10 @@ F5910-specific acceptance criteria for the 6-step onboarding wizard:
 4. `GET /api/v1/shop-owner/shop-listings` → Assert: Listings `available=true`, `category_id IS NOT NULL`, kein `tmpl-`-Slug
 5. Assert: alle Items haben Fotos
 6. `GET /api/v1/search` mit `Accept-Language: de` → Assert: ≥1 Service-Ergebnis für Domain/Specialty
+
+### T13-T15 (F5970 AC 34/35, 2026-10-18)
+
+T13: Website eines bestehenden Shops → Hinweis „Diesen Shop gibt es schon"; „Nein, anderer Shop" → Wizard läuft unverändert weiter (Name-Schritt). T14 (Regression): Website ohne Treffer → kein Hinweis. T15: „Das ist mein Shop" → `/shop-admin/claim?shop=<slug>&from=onboarding`, E-Mail aus dem Entwurf vorbelegt, kein neuer Shop/Owner.
 
 ## Notes
 

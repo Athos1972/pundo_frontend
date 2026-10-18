@@ -24,6 +24,8 @@ import type {
   ShopOwnerReviewPage,
   ShopOwnerReviewSummary,
   ShopReviewScope,
+  ClaimShopInfo,
+  OwnershipReviewSummary,
 } from '@/types/shop-admin'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
@@ -121,10 +123,12 @@ export async function createShopListing(
 
 export async function getAdminOffers(
   lang: string,
-  params: { archived?: boolean; limit?: number; offset?: number } = {},
+  params: { archived?: boolean; ownership_review?: boolean; limit?: number; offset?: number } = {},
 ): Promise<AdminOfferList> {
   const qs = new URLSearchParams()
   if (params.archived != null) qs.set('archived', String(params.archived))
+  // F5970: only offers flagged after an owner change ("Zu prüfen")
+  if (params.ownership_review != null) qs.set('ownership_review', String(params.ownership_review))
   qs.set('limit', String(params.limit ?? 500))
   if (params.offset != null) qs.set('offset', String(params.offset))
   const q = qs.toString()
@@ -260,4 +264,19 @@ export async function getShopReviews(
 /** Counters for nav badge, dashboard tile, empty state — GET /api/v1/shop-owner/reviews/summary */
 export async function getShopReviewSummary(lang: string): Promise<ShopOwnerReviewSummary> {
   return apiFetchAdmin<ShopOwnerReviewSummary>('/reviews/summary', lang)
+}
+
+// ─── Shop claim (F5970) ───────────────────────────────────────────────────────
+
+/**
+ * Data of the claim page -- GET /api/v1/shop-owner/claim/shops/{slug}. Public: works without a session
+ * (a logged-in visitor additionally gets `viewer`). Throws `API_ERROR:404` for an unknown / inactive shop.
+ */
+export async function getClaimShopInfo(slug: string, lang: string): Promise<ClaimShopInfo> {
+  return apiFetchAdmin<ClaimShopInfo>(`/claim/shops/${encodeURIComponent(slug)}`, lang)
+}
+
+/** Number of offers waiting for the new owner's confirmation -- GET /api/v1/shop-owner/offers/ownership-review/summary */
+export async function getOwnershipReviewSummary(lang: string): Promise<OwnershipReviewSummary> {
+  return apiFetchAdmin<OwnershipReviewSummary>('/offers/ownership-review/summary', lang)
 }

@@ -113,6 +113,8 @@ describe('proxy — Shop-Admin-Auth-Gate (F5910)', () => {
     '/shop-admin/onboarding',
     '/shop-admin/auth/callback',
     '/shop-admin/verify-email',
+    '/shop-admin/claim', // F5970 K11: Antrag ohne Konto-Sitzung
+    '/shop-admin/claim/status',
   ])('%s ist ohne Anmeldung erreichbar', (path) => {
     expect(isRedirect(proxy(req(path)))).toBe(false)
   })

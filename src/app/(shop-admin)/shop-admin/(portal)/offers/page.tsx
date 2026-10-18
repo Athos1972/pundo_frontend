@@ -4,9 +4,14 @@ import { getAdminOffers } from '@/lib/shop-admin-api'
 import { OfferList } from '@/components/shop-admin/OfferList'
 import Link from 'next/link'
 
-export default async function OffersPage() {
+interface Props {
+  searchParams?: Promise<{ review?: string }>
+}
+
+export default async function OffersPage({ searchParams }: Props) {
   const lang = await getLangServer()
   const tr = tAdmin(lang)
+  const { review } = (await searchParams) ?? {} // ?review=1 (banner link) opens the "To review" tab
 
   let activeItems: Awaited<ReturnType<typeof getAdminOffers>>['items'] = []
   let expiredItems: Awaited<ReturnType<typeof getAdminOffers>>['items'] = []
@@ -34,7 +39,7 @@ export default async function OffersPage() {
           + {tr.add_offer}
         </Link>
       </div>
-      <OfferList activeItems={activeItems} expiredItems={expiredItems} lang={lang} />
+      <OfferList activeItems={activeItems} expiredItems={expiredItems} lang={lang} initialTab={review === '1' ? 'review' : 'active'} />
     </div>
   )
 }

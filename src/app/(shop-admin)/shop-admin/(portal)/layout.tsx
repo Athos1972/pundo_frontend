@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
-import { getMe, getShopReviewSummary } from '@/lib/shop-admin-api'
+import { getMe, getShopReviewSummary, getOwnershipReviewSummary } from '@/lib/shop-admin-api'
 import { AdminShell } from '@/components/shop-admin/AdminShell'
 
 /** Unseen reviews for the nav badge; any failure just means "no badge" (never breaks the page). */
@@ -13,12 +13,22 @@ async function loadNewReviewCount(lang: string): Promise<number> {
   }
 }
 
+/** F5970: offers waiting for the new owner's confirmation (banner); any failure just means "no banner". */
+async function loadUnverifiedOffersCount(lang: string): Promise<number> {
+  try {
+    return (await getOwnershipReviewSummary(lang))?.count ?? 0
+  } catch {
+    return 0
+  }
+}
+
 export default async function ShopAdminLayout({ children }: { children: React.ReactNode }) {
   const lang = await getLangServer()
   const tr = tAdmin(lang)
 
   let ownerName = ''
   let reviewsNewCount = 0
+  let unverifiedOffersCount = 0
   // redirect() works by throwing; calling it inside the try block would let the catch
   // below swallow it and render the full portal for non-approved owners.
   let redirectTo: string | null = null
@@ -31,6 +41,7 @@ export default async function ShopAdminLayout({ children }: { children: React.Re
     else {
       ownerName = me.name
       reviewsNewCount = await loadNewReviewCount(lang)
+      unverifiedOffersCount = await loadUnverifiedOffersCount(lang)
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : ''
@@ -39,5 +50,9 @@ export default async function ShopAdminLayout({ children }: { children: React.Re
   }
   if (redirectTo) redirect(redirectTo)
 
-  return <AdminShell tr={tr} ownerName={ownerName} reviewsNewCount={reviewsNewCount}>{children}</AdminShell>
+  return (
+    <AdminShell tr={tr} ownerName={ownerName} reviewsNewCount={reviewsNewCount} unverifiedOffersCount={unverifiedOffersCount}>
+      {children}
+    </AdminShell>
+  )
 }

@@ -20,9 +20,10 @@ touches-states:
   - ShopOwner.status:pre_signup
   - ShopOwner.status:pending
   - ShopOwner.status:approved
+  - ShopOwner.status:suspended
 status-changed-at: 2026-06-05T00:00:00Z
 status-changed-by-spec: shop-owner-admin-approval-flow-20260605
-last-run: 2026-06-05T09:20:00Z
+last-run: 2026-10-18T08:45:00Z
 last-result: PASS
 ---
 
@@ -94,3 +95,7 @@ Absichert folgende Bugs:
 | AC-7 | 11 | Geschützter Zugriff | `/admin/shop-owners` → Redirect auf Login |
 | AC-8 | 13 | Shop-Owner-Dashboard | URL = `/shop-admin/dashboard`, kein Onboarding-Redirect |
 | AC-9 | 14 | Profil nicht leer | `input[name="name"]` nicht leer |
+
+#### AC-4b (F5970 AC 40, 2026-10-18)
+
+Manuelle Sperre (`PATCH status=suspended`): Fixture B erscheint im Filter `suspended` mit rotem Badge, nicht mehr in `pre_signup`; Login 401 neutral; Aufhebung über `PATCH status=pending`.

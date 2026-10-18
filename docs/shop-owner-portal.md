@@ -194,6 +194,22 @@ editiert**: jede inhaltliche Änderung braucht eine neue Version hier UND in `CA
 
 ---
 
+## Shop-Claim und Dispute (F5970)
+
+| Was | Wo |
+|---|---|
+| Claim-Seite (oeffentlich, `PUBLIC_SHOP_ADMIN_PATHS`) | `src/app/(shop-admin)/shop-admin/claim/page.tsx`, Status unter `claim/status/page.tsx` |
+| Komponenten | `src/components/shop-admin/claim/*` |
+| Browser-Client (Proxy `/api/shop-admin/claim/...`, Header `X-Claim-Token`) | `src/lib/shop-admin-claim-client.ts` |
+| CTA auf der Shop-Seite | `src/components/shop/ShopClaimCta.tsx` (Strings `src/lib/i18n/shop.ts`) |
+| Onboarding-Treffer-Hinweis | `src/components/shop-admin/onboarding/OnboardingExistingShopHint.tsx` |
+| "Zu pruefen"-Banner und Filter fuer Angebote nach Eigentuemerwechsel | `UnverifiedOffersBanner.tsx`, `OfferList.tsx` |
+| System-Admin | `/admin/claims` (`src/components/system-admin/claims/*`), `AssignOwnerDialog.tsx`, `ShopOwnerSection.tsx` |
+
+Der Status-Token liegt im `sessionStorage`; der Admin-Proxy (`src/app/api/admin/[...path]/route.ts`) reicht fuer den Dokument-Viewer nur eine Allowlist an Response-Headern durch. Texte: Shop-Admin in 6 Sprachen, System-Admin nur en+el.
+
+---
+
 ## Clean Boundary — Architekturprinzip
 
 Der gesamte Shop-Admin-Code ist **isoliert** vom Customer-Frontend:

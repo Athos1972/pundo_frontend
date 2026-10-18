@@ -304,6 +304,10 @@ Stand 2026-10-15: 710 Tests (39 `smoke`, 671 `full`; 703 passed, 7 bedingte Skip
 
 Vollständiger Katalog und Messwerte: `e2e/TESTSET.md`
 
+### Claim-Journeys (F5970)
+
+`shop-claim-self-service` und `shop-claim-dispute` (Status `proposed`, Schritte teils `test.fixme`). Verifikations-Token und Codes kommen per `psql` (`shop_owners.email_verification_token`; Code-Hash `sha256("claim:{id}:{purpose}:{code}")`), nie per Mail-Warten. Hochgeladene Nachweisdokumente landen im Upload-Pfad der Testinstanz (`SHOP_CLAIM_UPLOAD_PATH`, `/tmp/pundo-claim-docs-test`).
+
 ### Bot-User-Agents und Activity-Events (F6998)
 
 Das Backend loggt keine Activity-Events fuer Bot-UAs, und der Playwright-Default-UA `HeadlessChrome` gilt als Bot. Tests, die ein Event erwarten (`price_comparison_viewed`, `shop_discovered`, `search_performed`), muessen einen Browser-UA setzen (`browser.newContext({ userAgent })`, Konstante `BROWSER_UA` in `e2e/journeys/activity-feed-bot-filter.spec.ts`). Bisher prueft kein anderer Spec Events.

@@ -115,3 +115,69 @@ describe('customer catch-all: X-Forwarded-User-Agent (F6998)', () => {
 })
 
 // Statischer Guard (jede api-Route mit BACKEND_URL nutzt den Helper): tests/unit/guards/api-routes-client-ip.test.ts
+
+// F5970 K9: the shop-admin proxy forwards the claim access token (and only that custom header)
+describe('shop-admin catch-all: X-Claim-Token (F5970)', () => {
+  const run = async (headers: Record<string, string>) => {
+    const mod = (await import('@/app/api/shop-admin/[...path]/route')) as unknown as {
+      GET: (r: NextRequest, c: unknown) => Promise<Response>
+    }
+    await mod.GET(req('/api/shop-admin/claim/requests/7', headers, 'GET'), { params: Promise.resolve({ path: ['claim', 'requests', '7'] }) })
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:8500/api/v1/shop-owner/claim/requests/7')
+    return backendHeaders()
+  }
+
+  it('forwards the access token header', async () => {
+    expect((await run({ 'x-claim-token': 'tok-abc' })).get('x-claim-token')).toBe('tok-abc')
+  })
+
+  it('sends no token header when the client sent none', async () => {
+    expect((await run({})).get('x-claim-token')).toBeNull()
+  })
+
+  it('does not forward arbitrary client headers', async () => {
+    const h = await run({ 'x-claim-token': 'tok', 'x-evil': '1', authorization: 'Bearer forged' })
+    expect(h.get('x-evil')).toBeNull()
+    expect(h.get('authorization')).toBe('Bearer tok-shop_owner_token') // from the cookie, never from the request
+  })
+})
+
+// F5970 K10: the admin proxy lets only the document-viewer hardening headers through
+describe('admin catch-all: response header allowlist (F5970)', () => {
+  const callWith = async (backendHeaders: Record<string, string>) => {
+    fetchMock.mockImplementationOnce(async () => new Response('%PDF', { status: 200, headers: backendHeaders }))
+    const mod = (await import('@/app/api/admin/[...path]/route')) as unknown as {
+      GET: (r: NextRequest, c: unknown) => Promise<Response>
+    }
+    return mod.GET(req('/api/admin/claim-requests/1/documents/2', {}, 'GET'), {
+      params: Promise.resolve({ path: ['claim-requests', '1', 'documents', '2'] }),
+    })
+  }
+
+  it('passes cache-control, content-disposition, nosniff and CSP back to the browser', async () => {
+    const res = await callWith({
+      'content-type': 'application/pdf',
+      'cache-control': 'no-store',
+      'content-disposition': "inline; filename*=UTF-8''a.pdf",
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "sandbox; default-src 'none'",
+    })
+    expect(res.headers.get('content-type')).toBe('application/pdf')
+    expect(res.headers.get('cache-control')).toBe('no-store')
+    expect(res.headers.get('content-disposition')).toBe("inline; filename*=UTF-8''a.pdf")
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(res.headers.get('content-security-policy')).toBe("sandbox; default-src 'none'")
+  })
+
+  it('does not pass anything else (server banner, internal headers)', async () => {
+    const res = await callWith({
+      'content-type': 'application/json',
+      server: 'uvicorn',
+      'x-internal-debug': 'secret',
+      'access-control-allow-origin': '*',
+    })
+    expect(res.headers.get('server')).toBeNull()
+    expect(res.headers.get('x-internal-debug')).toBeNull()
+    expect(res.headers.get('access-control-allow-origin')).toBeNull()
+  })
+})

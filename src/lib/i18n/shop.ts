@@ -49,6 +49,11 @@ const shopTranslations = {
     price_no_change_yet: "No price change observed yet — we'll track this price from now on.",
     price_history_scope_cheapest: 'Cheapest price across all shops',
     shop_about_heading: 'About this shop',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'Is this your shop?',
+    shop_claim_cta_text: 'Take over this free listing, keep your details up to date and be found by customers nearby.',
+    shop_claim_cta_button: 'This is my shop',
+    shop_claim_report_link: 'Are you the owner and someone else manages this shop? Tell us.',
     // F5300 / F3800 Phase 1a — Self-service attributes
     shop_delivers_radius: (km: number) => `Delivers up to ${km} km`,
     shop_delivers_island_wide: 'Delivers island-wide',
@@ -120,6 +125,11 @@ const shopTranslations = {
     price_no_change_yet: 'Noch keine Preisänderung beobachtet — wir verfolgen diesen Preis ab jetzt.',
     price_history_scope_cheapest: 'Günstigster Preis über alle Shops',
     shop_about_heading: 'Über diesen Shop',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'Ist das dein Shop?',
+    shop_claim_cta_text: 'Übernimm diesen kostenlosen Eintrag, halte deine Angaben aktuell und werde von Kund:innen in deiner Nähe gefunden.',
+    shop_claim_cta_button: 'Das ist mein Shop',
+    shop_claim_report_link: 'Du bist Inhaber:in und jemand anderes verwaltet diesen Shop? Melde es uns.',
     // F5300 / F3800 Phase 1a — Self-service attributes
     shop_delivers_radius: (km: number) => `Liefert bis ${km} km`,
     shop_delivers_island_wide: 'Liefert inselweit',
@@ -191,6 +201,11 @@ const shopTranslations = {
     price_no_change_yet: 'Изменений цены пока не наблюдалось — мы следим за этой ценой.',
     price_history_scope_cheapest: 'Минимальная цена среди всех магазинов',
     shop_about_heading: 'Об этом магазине',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'Это ваш магазин?',
+    shop_claim_cta_text: 'Возьмите эту бесплатную карточку под своё управление, поддерживайте данные в актуальном состоянии, и клиенты поблизости найдут вас.',
+    shop_claim_cta_button: 'Это мой магазин',
+    shop_claim_report_link: 'Вы владелец, а этим магазином управляет кто-то другой? Сообщите нам.',
     // F5300 / F3800 Phase 1a — Self-service attributes
     shop_delivers_radius: (km: number) => `Доставка до ${km} км`,
     shop_delivers_island_wide: 'Доставка по всему острову',
@@ -262,6 +277,11 @@ const shopTranslations = {
     price_no_change_yet: 'Δεν παρατηρήθηκε αλλαγή τιμής ακόμα — παρακολουθούμε αυτή την τιμή.',
     price_history_scope_cheapest: 'Φθηνότερη τιμή σε όλα τα καταστήματα',
     shop_about_heading: 'Σχετικά με αυτό το κατάστημα',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'Είναι δικό σου το κατάστημα;',
+    shop_claim_cta_text: 'Ανάλαβε αυτή τη δωρεάν καταχώρηση, κράτα τα στοιχεία σου ενημερωμένα και βρες πελάτες κοντά σου.',
+    shop_claim_cta_button: 'Αυτό είναι το κατάστημά μου',
+    shop_claim_report_link: 'Είσαι ο ιδιοκτήτης και κάποιος άλλος διαχειρίζεται αυτό το κατάστημα; Πες μας.',
     // F5300 / F3800 Phase 1a — Self-service attributes
     shop_delivers_radius: (km: number) => `Παραδίδει έως ${km} χλμ`,
     shop_delivers_island_wide: 'Παραδίδει σε όλο το νησί',
@@ -333,6 +353,11 @@ const shopTranslations = {
     price_no_change_yet: 'لم يُلاحظ أي تغيير في السعر حتى الآن — سنتابع هذا السعر من الآن.',
     price_history_scope_cheapest: 'أرخص سعر عبر جميع المتاجر',
     shop_about_heading: 'حول هذا المتجر',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'هل هذا متجرك؟',
+    shop_claim_cta_text: 'استلم إدارة هذا الإدراج المجاني، وحافظ على تحديث بياناتك ليجدك العملاء القريبون منك.',
+    shop_claim_cta_button: 'هذا متجري',
+    shop_claim_report_link: 'هل أنت المالك ويدير متجرك شخص آخر؟ أخبرنا.',
     // F5300 / F3800 Phase 1a — Self-service attributes (RTL: ar)
     shop_delivers_radius: (km: number) => `يوصّل حتى ${km} كم`,
     shop_delivers_island_wide: 'يوصّل في جميع أنحاء الجزيرة',
@@ -404,6 +429,11 @@ const shopTranslations = {
     price_no_change_yet: 'לא נצפה שינוי מחיר עדיין — אנו עוקבים אחר מחיר זה מעכשיו.',
     price_history_scope_cheapest: 'המחיר הזול ביותר בכל החנויות',
     shop_about_heading: 'אודות חנות זו',
+    // F5970 — claim call-to-action on the shop page
+    shop_claim_cta_title: 'זו החנות שלך?',
+    shop_claim_cta_text: 'קח/י בעלות על הרישום החינמי הזה, שמור/י על פרטים מעודכנים כדי שלקוחות באזור ימצאו אותך.',
+    shop_claim_cta_button: 'זו החנות שלי',
+    shop_claim_report_link: 'את/ה הבעלים ומישהו אחר מנהל את החנות? ספרו לנו.',
     // F5300 / F3800 Phase 1a — Self-service attributes (RTL: he)
     shop_delivers_radius: (km: number) => `מוסר עד ${km} ק"מ`,
     shop_delivers_island_wide: 'מוסר בכל רחבי האי',

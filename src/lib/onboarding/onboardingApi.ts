@@ -1,6 +1,7 @@
 'use client'
 
-import type { OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/shop-admin'
+import type { ClaimCandidate, OnboardingSubmitPayload, OnboardingSubmitResponse } from '@/types/shop-admin'
+import { matchClaimCandidates } from '@/lib/shop-admin-claim-client'
 import { OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
 import { CATALOG_CONSENT_TEXT_VERSION } from '@/lib/onboarding/catalogConsent'
 
@@ -127,4 +128,23 @@ export async function startGoogleOAuth(provider: 'google' | 'facebook' | 'apple'
   const url = data.auth_url ?? data.google_auth_url
   if (!url) throw Object.assign(new Error('OAUTH_NO_URL'), { code: 'OAUTH_NO_URL' })
   window.location.href = url
+}
+
+
+/**
+ * F5970 (AR5): does the shop the user is describing already exist? Domain of the website, or the exact name within
+ * 500 m of the chosen location (wizard shops have no city). Never throws: no answer = no hint, the wizard goes on.
+ */
+export async function matchExistingShops(
+  params: { website?: string; name?: string; lat?: number; lng?: number },
+  lang: string,
+): Promise<ClaimCandidate[]> {
+  const body = {
+    ...(params.website?.trim() ? { website: params.website.trim() } : {}),
+    ...(params.name?.trim() && params.lat != null && params.lng != null
+      ? { name: params.name.trim(), lat: params.lat, lng: params.lng }
+      : {}),
+  }
+  if (Object.keys(body).length === 0) return []
+  return matchClaimCandidates(body, lang)
 }

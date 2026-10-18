@@ -18,7 +18,10 @@
 
 import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
-import { RUN_ID, TestDataTracker, adminApi } from './_helpers/test-data'
+import { RUN_ID, TestDataTracker, adminApi, e2eName, e2eSlug, psql } from './_helpers/test-data'
+import { buildAdminShopPayload } from './_helpers/admin-shop-payload'
+import { tAdmin } from '../../src/lib/shop-admin-translations'
+import { tShopAdminClaim } from '../../src/lib/i18n/shop-admin-claim'
 import { waitForPageHydrated } from './_helpers/hydration'
 import { BASE_URL, BACKEND_URL } from '../env'
 
@@ -583,5 +586,100 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const body = await res.json() as { detail?: Array<{ code?: string }> }
     expect(body.detail?.[0]?.code).toBe('specialty_required')
   })
+
+  // ── T13-T15 (F5970 AC 34/35): "Diesen Shop gibt es schon" im Wizard ──────────────────────────
+
+  /** Draft direkt vor dem Kontakt-Schritt (Standort gesetzt), Wizard fortsetzen, Website eintragen, "Weiter". */
+  async function goToContactAndEnterWebsite(page: import('@playwright/test').Page, website: string, businessEmail?: string) {
+    const en = tAdmin('en')
+    await page.addInitScript((value: string) => {
+      window.localStorage.setItem('pundo.onboarding.draft.v2', value)
+    }, JSON.stringify({
+      version: 2, expiresAt: Date.now() + 86_400_000, providerType: 'dienstleister', domainSlugs: [], specialtySlugs: [],
+      location: { lat: 34.917, lng: 33.636, address: 'E2E Street 1', isB2cStorefront: true },
+      contact: {}, shopName: '',
+    }))
+    await page.goto(BASE_URL + '/shop-admin/onboarding')
+    const resume = page.getByRole('button', { name: en.onboarding_draft_resume })
+    await expect(resume).toBeVisible({ timeout: 15_000 })
+    await resume.click()
+    const field = page.getByPlaceholder(en.onboarding_contact_website)
+    await expect(field).toBeVisible({ timeout: 10_000 })
+    await field.fill(website)
+    if (businessEmail) await page.getByPlaceholder(en.onboarding_contact_email).fill(businessEmail)
+    await page.getByRole('button', { name: en.onboarding_next }).last().click()
+  }
+
+  const hintShop = { id: 0, slug: '', host: '' }
+
+  test('T13 — F5970 AC34: Website eines bestehenden Shops -> Hinweis "Diesen Shop gibt es schon"; "Nein, anderer Shop" setzt den Wizard unveraendert fort', async ({ page }) => {
+    test.setTimeout(90_000)
+    hintShop.host = `${PREFIX}-hint.pundo-e2e.io`
+    hintShop.slug = e2eSlug('QUICK-HINT', 'shop')
+    const created = await adminApi<{ id: number }>('POST', '/shops', buildAdminShopPayload({
+      slug: hintShop.slug, names: { en: e2eName('QUICK-HINT', 'Shop') }, address_line1: 'Hint St 1', city: 'Larnaca', lat: 34.9, lng: 33.6,
+      website_url: `https://${hintShop.host}`,
+    }))
+    expect(created.status, created.text).toBe(201)
+    hintShop.id = created.json.id
+    const tracker = new TestDataTracker()
+    tracker.shop(hintShop.id)
+    try {
+      const tr = tShopAdminClaim('en')
+      await goToContactAndEnterWebsite(page, hintShop.host)
+      const hint = page.getByTestId('onboarding-existing-shop-hint')
+      await expect(hint, 'T13: Hinweis erscheint').toBeVisible({ timeout: 15_000 })
+      await expect(hint.getByRole('heading')).toHaveText(tr.claim_hint_title_one)
+      await expect(hint).toContainText(hintShop.host)
+      // der Wizard-Inhalt (Schritt 5) ist waehrenddessen nicht sichtbar
+      await expect(page.locator('input#shop-name')).toHaveCount(0)
+      await hint.getByRole('button', { name: tr.claim_hint_other_one }).click()
+      await expect(hint).toHaveCount(0)
+      await expect(page.locator('input#shop-name'), 'T13: Wizard laeuft unveraendert weiter (Name-Schritt)').toBeVisible({ timeout: 10_000 })
+      // dieselbe Seite meldet den abgelehnten Shop nicht erneut
+      expect(psql(`select count(*) from claim_requests where shop_id=${hintShop.id}`)).toBe('0')
+    } finally {
+      await tracker.cleanup()
+    }
+  })
+
+  test('T14 — F5970 AC35 Regression: Website ohne Treffer -> kein Hinweis, direkt weiter wie bisher', async ({ page }) => {
+    await goToContactAndEnterWebsite(page, `${PREFIX}-nomatch.example`)
+    await expect(page.locator('input#shop-name'), 'T14: direkt der Name-Schritt').toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('onboarding-existing-shop-hint')).toHaveCount(0)
+  })
+
+  test('T15 — F5970 AC34: "Das ist mein Shop" fuehrt auf die Claim-Seite (E-Mail aus dem Entwurf vorbelegt) und legt keinen neuen Shop/Owner an', async ({ page }) => {
+    test.setTimeout(90_000)
+    const host = `${PREFIX}-hint2.pundo-e2e.io`
+    const slug = e2eSlug('QUICK-HINT2', 'shop')
+    const created = await adminApi<{ id: number }>('POST', '/shops', buildAdminShopPayload({
+      slug, names: { en: e2eName('QUICK-HINT2', 'Shop') }, address_line1: 'Hint St 2', city: 'Larnaca', lat: 34.9, lng: 33.6,
+      website_url: `https://${host}`,
+    }))
+    expect(created.status, created.text).toBe(201)
+    const tracker = new TestDataTracker()
+    tracker.shop(created.json.id)
+    const draftMail = `${PREFIX}-draft@pundo-e2e.io`
+    try {
+      const tr = tShopAdminClaim('en')
+      const shopsBefore = psql(`select count(*) from shops where slug like 'e2e-${RUN_ID}-%'`)
+      await goToContactAndEnterWebsite(page, host, draftMail)
+      const hint = page.getByTestId('onboarding-existing-shop-hint')
+      await expect(hint).toBeVisible({ timeout: 15_000 })
+      await hint.getByRole('button', { name: tr.claim_hint_mine }).click()
+      await page.waitForURL(new RegExp(`/shop-admin/claim\\?shop=${slug}&from=onboarding`), { timeout: 20_000 })
+      const confirm = page.getByTestId('claim-owner-confirm')
+      await expect(confirm).toBeVisible()
+      await confirm.check()
+      await page.getByRole('button', { name: tr.claim_continue }).click()
+      await expect(page.locator('input[name="email"]'), 'T15: E-Mail aus dem Entwurf vorbelegt').toHaveValue(draftMail)
+      expect(psql(`select count(*) from shops where slug like 'e2e-${RUN_ID}-%'`), 'T15: kein neuer Shop').toBe(shopsBefore)
+      expect(psql(`select count(*) from shop_owners where email='${draftMail}'`)).toBe('0')
+    } finally {
+      await tracker.cleanup()
+    }
+  })
+
 
 })

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
+import { getClaimSummary } from '@/lib/system-admin-api'
 
 const ENTITIES = [
   { href: '/admin/shops', icon: '🏪', key: 'nav_shops' as const },
@@ -19,6 +20,8 @@ const ENTITIES = [
 export default async function AdminDashboardPage() {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
+  // F5970: open claims tile; a failed lookup just shows no counters
+  const claims = await Promise.resolve(getClaimSummary?.()).catch(() => null)
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,6 +29,19 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-semibold text-gray-900">{tr.dashboard_title}</h1>
         <p className="text-sm text-gray-500 mt-1">{tr.dashboard_subtitle}</p>
       </div>
+
+      <Link
+        href="/admin/claims"
+        data-testid="dashboard-claims-tile"
+        className="flex items-center justify-between gap-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 hover:border-amber-500"
+      >
+        <span className="text-sm font-semibold text-amber-900">🧾 {tr.dashboard_claims_title}</span>
+        {claims && (
+          <span className="text-sm text-amber-900">
+            {tr.claims_summary_line.replace('{open}', String(claims.open)).replace('{verified}', String(claims.verified)).replace('{disputes}', String(claims.disputes_open))}
+          </span>
+        )}
+      </Link>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {ENTITIES.map((entity) => (

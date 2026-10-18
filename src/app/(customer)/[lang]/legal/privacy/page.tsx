@@ -37,7 +37,7 @@ export default async function PrivacyPage({ params }: Props) {
       <h1 className="text-2xl font-bold mb-4 sm:mb-8">{tr.page_title_privacy}</h1>
       <div className="space-y-6">
         {content.sections.map((section, i) => (
-          <section key={i}>
+          <section key={i} id={section.id}>
             {section.heading && (
               <h2 className="text-lg font-semibold mb-2">{section.heading}</h2>
             )}

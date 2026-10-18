@@ -9,6 +9,8 @@
 export type LegalPage = 'imprint' | 'privacy' | 'terms' | 'about' | 'contact'
 
 export type LegalSection = {
+  /** Optional anchor (`#id`): rendered as the section's DOM id so other pages can deep-link (e.g. #shop-claim). */
+  id?: string
   heading?: string
   body: string
 }

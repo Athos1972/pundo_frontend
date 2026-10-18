@@ -22,7 +22,8 @@ touches-states:
   - ShopOwner.status:rejected
   - ShopListing.source:auto_seeded
   - ShopListing.available
-last-run: 2026-10-14T00:00:00Z
+  - Offer.unverified:true
+last-run: 2026-10-18T08:45:00Z
 last-result: PASS
 last-run-sha: —
 status-changed-at: 2026-10-14T00:00:00Z
@@ -42,3 +43,7 @@ Ergänzend: `service-catalog-auto-assign` Schritt S3b (vor/nach Freigabe).
 
 ## Fixtures
 Zwei Marker-Shops (Bäckerei+Metzgerei bzw. Bäckerei, Limassol), Cleanup per Admin-Shop-Delete. Nur 3500/8500, `pundo_test`.
+
+### P6 (F5970, 2026-10-18)
+
+Listings mit `ownership_review_since` (Owner-Wechsel) sind in Suche, Produktseite, Shop-Detail, Produktliste und Sitemap unsichtbar; Shop in Detail/Liste/UI sichtbar; Marker entfernt → Angebote wieder da. Fixture-Eingriff nur an den Listings des eigenen Test-Shops A.

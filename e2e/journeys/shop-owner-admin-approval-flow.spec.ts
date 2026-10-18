@@ -200,6 +200,35 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     logStep(4, 'Filter pre_signup', 'Fixture B sichtbar', ctx.presignupEmail, 'PASS')
   })
 
+  // AC-4b (F5970 AC 40): Filter "suspended" zeigt ein gesperrtes Konto mit Badge; Login ist dicht, Aufheben ueber PATCH
+  test('AC-4b: Filter "suspended" zeigt Fixture B nach manueller Sperre (F5970), Login 401, Aufhebung -> pending', async ({ adminPage: page }) => {
+    test.setTimeout(30_000)
+    const lock = await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.presignupOwnerId}`, { status: 'suspended' }, adminHeaders())
+    expect(lock.ok, 'PATCH suspended').toBe(true)
+
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=suspended&q=${encodeURIComponent(ctx.presignupEmail)}`)
+    await waitForPageHydrated(page)
+    const row = page.locator('tr').filter({ hasText: ctx.presignupEmail })
+    await expect(row, 'gesperrtes Konto im suspended-Filter').toHaveCount(1)
+    await expect(row.locator('span', { hasText: /^suspended$/ }), 'Badge suspended (rot)').toHaveClass(/bg-red-200/)
+    // im pre_signup-Filter ist es nicht mehr
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=pre_signup&q=${encodeURIComponent(ctx.presignupEmail)}`)
+    await waitForPageHydrated(page)
+    await expect(page.locator('tr').filter({ hasText: ctx.presignupEmail })).toHaveCount(0)
+
+    // Login: neutrales 401 (kein Hinweis auf die Sperre)
+    const login = await apiFetch('POST', '/api/v1/shop-owner/login', { email: ctx.presignupEmail, password: PASSWORD })
+    expect(login.status).toBe(401)
+
+    // Aufheben: zurueck auf pending, Filter folgt
+    const unlock = await apiFetch('PATCH', `/api/v1/admin/shop-owners/${ctx.presignupOwnerId}`, { status: 'pending' }, adminHeaders())
+    expect(unlock.ok).toBe(true)
+    await page.goto(`${BASE_URL}/admin/shop-owners?status=suspended&q=${encodeURIComponent(ctx.presignupEmail)}`)
+    await waitForPageHydrated(page)
+    await expect(page.locator('tr').filter({ hasText: ctx.presignupEmail })).toHaveCount(0)
+    logStep('4b', 'Filter suspended + Badge + Login 401 + Aufhebung', 'Fixture B gefunden, Login gesperrt', 'ok', 'PASS')
+  })
+
   // AC-5+6: Approve via Edit-Seite
   test('AC-5+6: Approve Fixture A via Browser-UI', async ({ adminPage: page }) => {
     test.setTimeout(30_000)

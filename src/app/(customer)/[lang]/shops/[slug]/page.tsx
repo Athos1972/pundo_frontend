@@ -27,6 +27,7 @@ import { LanguageChips } from '@/components/ui/LanguageChips'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
 import { PhoneIcon } from '@/components/ui/PhoneIcon'
 import { ShopWebsiteLink } from '@/components/shop/ShopWebsiteLink'
+import { ShopClaimCta } from '@/components/shop/ShopClaimCta'
 import { buildWhatsAppUrl } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ReviewSection } from '@/components/reviews/ReviewSection'
@@ -419,6 +420,9 @@ export default async function ShopPage({ params }: Props) {
             )}
           </div>
         )}
+
+        {/* F5970 — claim entry: card for unclaimed shops, quiet report link for claimed ones */}
+        <ShopClaimCta slug={slug} isClaimed={shop.is_claimed === true} lang={lang} />
 
         {/* Active shop offers — only offers with currently active promotion */}
         {offers.length > 0 && (

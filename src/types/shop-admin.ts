@@ -12,7 +12,7 @@ export interface ShopOwner {
   id: number
   email: string
   name: string
-  status: 'pre_signup' | 'pending' | 'approved' | 'rejected' | 'inactive'
+  status: 'pre_signup' | 'pending' | 'approved' | 'rejected' | 'inactive' | 'suspended'
   shop_id: number | null
 }
 
@@ -191,6 +191,8 @@ export interface AdminOffer {
   /** F5920: article number of the shop listing and whether it is available (import "not available") */
   listing_sku?: string | null
   listing_available?: boolean | null
+  /** F5970 A9: the shop changed hands; this active offer is hidden publicly until confirmed or archived ("Zu prüfen"). */
+  ownership_review?: boolean
 }
 
 // Keep backward-compat alias so any remaining usage of `offer.title` (non-null) still works
@@ -688,4 +690,113 @@ export type CategorySuggestionSource = 'name' | 'recent' | 'domain'
 export interface CategorySuggestion extends PickerCategory {
   source: CategorySuggestionSource
   score: number
+}
+
+// ─── Offers to review after an owner change (F5970 A9) ───────────────────────
+// Mirrors pundo_main_backend/ingestor/schemas/shop_owner.py (OwnershipReview*).
+
+export interface OwnershipReviewSummary {
+  count: number
+}
+
+export type OwnershipReviewSelection = { offer_ids: number[] } | { all: true }
+
+export interface OwnershipReviewConfirmResponse {
+  confirmed: number
+  remaining: number
+}
+
+export interface OwnershipReviewArchiveResponse {
+  archived: number
+  remaining: number
+}
+
+// ─── Shop claim (F5970) ──────────────────────────────────────────────────────
+// Mirrors pundo_main_backend/ingestor/schemas/shop_claim.py (/api/v1/shop-owner/claim/*).
+
+export type ClaimMode = 'claim' | 'dispute' | 'document_only'
+export type ClaimProofMethod = 'email_domain' | 'shop_email_code' | 'phone_callback' | 'document'
+export type ClaimStatusValue = 'open' | 'verified' | 'accepted' | 'rejected'
+export type ClaimRejectionReason =
+  | 'superseded' | 'expired' | 'withdrawn' | 'not_reachable' | 'insufficient_proof' | 'other'
+export type ClaimSubState =
+  | 'awaiting_email_verification' | 'awaiting_code' | 'awaiting_callback' | 'callback_done_enter_code'
+  | 'awaiting_review' | 'decided'
+
+export type ClaimMethod =
+  | { method: 'email_domain'; requires_domain: string }
+  | { method: 'shop_email_code'; masked_email: string }
+  | { method: 'phone_callback'; masked_phone: string }
+  | { method: 'document' }
+
+export interface ClaimShopInfo {
+  shop: {
+    slug: string
+    name: string
+    address: string | null
+    city: string | null
+    website_host: string | null
+    logo_url: string | null
+  }
+  is_claimed: boolean
+  mode: ClaimMode
+  methods: ClaimMethod[]
+  document_upload_available: boolean
+  limits: { max_files: number; max_file_bytes: number; message_max_chars: number }
+  /** Only when the visitor is logged in as a shop owner. */
+  viewer: { has_shop: boolean; status: string; email: string } | null
+}
+
+export interface ClaimCandidate {
+  slug: string
+  name: string
+  city: string | null
+  website_host: string | null
+  is_claimed: boolean
+}
+
+export interface ClaimMatchRequest {
+  website?: string
+  name?: string
+  lat?: number
+  lng?: number
+  city?: string
+}
+
+export interface ClaimCreateResponse {
+  claim_request_id: number
+  /** Shown only here and in the mail link -- keep in sessionStorage, never log. */
+  access_token: string
+  status: 'open' | 'verified'
+  existing: boolean
+  next_step: 'verify_email' | 'request_code' | 'await_callback' | 'await_review'
+}
+
+export interface ClaimStatusCode {
+  purpose: 'shop_email' | 'callback'
+  expires_at: string | null
+  attempts_left: number
+  resends_left_24h: number
+  next_resend_at: string | null
+}
+
+export interface ClaimStatusResponse {
+  id: number
+  shop: { slug: string; name: string }
+  kind: 'claim' | 'dispute'
+  status: ClaimStatusValue
+  rejection_reason: ClaimRejectionReason | null
+  proof_method: ClaimProofMethod | null
+  sub_state: ClaimSubState
+  code: ClaimStatusCode | null
+  documents: Array<{ filename: string; size_bytes: number; deleted: boolean }>
+  created_at: string
+  decided_at: string | null
+  login_url: string | null
+}
+
+/** Body of POST /shop-owner/verify-email (extended by F5970). */
+export interface VerifyEmailResponse {
+  status: string
+  claim_request_status?: 'open' | 'verified'
 }

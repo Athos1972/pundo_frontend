@@ -9,13 +9,15 @@ import type { Lang } from '@/lib/lang'
 import {
   loadDraft, saveDraft, clearDraft, draftAgeMs,
 } from '@/lib/onboarding/draftStorage'
-import { submitOnboarding, uploadOnboardingPhoto } from '@/lib/onboarding/onboardingApi'
+import { matchExistingShops, submitOnboarding, uploadOnboardingPhoto } from '@/lib/onboarding/onboardingApi'
+import { tShopAdminClaim } from '@/lib/i18n/shop-admin-claim'
 import type {
-  OnboardingProviderType, OnboardingContact, OnboardingLocation, OnboardingDraft,
+  ClaimCandidate, OnboardingProviderType, OnboardingContact, OnboardingLocation, OnboardingDraft,
 } from '@/types/shop-admin'
 
 import { OnboardingProgress } from './OnboardingProgress'
 import { OnboardingDraftBanner } from './OnboardingDraftBanner'
+import { OnboardingExistingShopHint } from './OnboardingExistingShopHint'
 import { StepProviderType } from './StepProviderType'
 import { StepDomains } from './StepDomains'
 // B5910-001: StepLocation pulls Leaflet (module-level window.requestAnimationFrame) → must not be SSR'd
@@ -58,6 +60,9 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [consentError, setConsentError] = useState<string | null>(null)
+  // F5970: existing shops that may be the user's; the wizard waits for the decision (nextStep = where it goes on)
+  const [existingHint, setExistingHint] = useState<{ candidates: ClaimCandidate[]; nextStep: number } | null>(null)
+  const [dismissedSlugs, setDismissedSlugs] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -148,17 +153,45 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     setStep(3)
   }
 
+  /**
+   * F5970 (AR5): before the wizard goes on, ask whether the shop already exists. A hint is only shown for shops the
+   * user has not already declined; a failed lookup never blocks (matchExistingShops does not throw).
+   */
+  async function continueOrAskExisting(
+    params: { website?: string; name?: string; lat?: number; lng?: number },
+    nextStep: number,
+  ) {
+    const found = (await matchExistingShops(params, lang)).filter((c) => !dismissedSlugs.includes(c.slug))
+    if (found.length > 0) setExistingHint({ candidates: found, nextStep })
+    else setStep(nextStep)
+  }
+
+  function handleClaimExisting(slug: string) {
+    // the draft is already saved (persistDraft ran before the lookup): it survives the detour
+    router.push(`/shop-admin/claim?shop=${encodeURIComponent(slug)}&from=onboarding`)
+  }
+
+  function handleOtherShop() {
+    if (!existingHint) return
+    setDismissedSlugs((d) => [...d, ...existingHint.candidates.map((c) => c.slug)])
+    setStep(existingHint.nextStep)
+    setExistingHint(null)
+  }
+
   function handleStep4Next(contact: OnboardingContact, catalogConsent: boolean) {
     setWebsiteError(null)
     setConsentError(null)
     persistDraft({ contact, catalogConsent })
-    setStep(4)
+    if (contact.website) void continueOrAskExisting({ website: contact.website }, 4)
+    else setStep(4)
   }
 
   function handleStep5Next(file: File | null, shopName: string) {
     persistDraft({ shopName })
     setPhotoFile(file)
-    setStep(5)
+    const loc = draft.location
+    if (loc && shopName.trim()) void continueOrAskExisting({ name: shopName, lat: loc.lat, lng: loc.lng }, 5)
+    else setStep(5)
   }
 
   function handleFinalSubmit(email: string, password: string, turnstileToken: string) {
@@ -304,14 +337,22 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       </div>
 
       <div className="px-1">
-        {step === 0 && (
+        {existingHint && (
+          <OnboardingExistingShopHint
+            tr={tShopAdminClaim(lang)}
+            candidates={existingHint.candidates}
+            onClaim={handleClaimExisting}
+            onOther={handleOtherShop}
+          />
+        )}
+        {!existingHint && step === 0 && (
           <StepProviderType
             tr={tr}
             selected={draft.providerType}
             onAutoSelect={handleStep1Next}
           />
         )}
-        {step === 1 && draft.providerType && (
+        {!existingHint && step === 1 && draft.providerType && (
           <StepDomains
             tr={tr}
             lang={lang}
@@ -323,7 +364,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             onBack={() => setStep(0)}
           />
         )}
-        {step === 2 && (
+        {!existingHint && step === 2 && (
           <StepLocation
             tr={tr}
             initialLocation={draft.location}
@@ -331,7 +372,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             onBack={() => setStep(1)}
           />
         )}
-        {step === 3 && (
+        {!existingHint && step === 3 && (
           <StepContact
             tr={tr}
             lang={lang}
@@ -343,7 +384,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             onBack={() => setStep(2)}
           />
         )}
-        {step === 4 && (
+        {!existingHint && step === 4 && (
           <StepPhoto
             tr={tr}
             initialFile={photoFile}
@@ -352,7 +393,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             onBack={() => setStep(3)}
           />
         )}
-        {step === 5 && (
+        {!existingHint && step === 5 && (
           <StepCredentials
             tr={tr}
             emailTakenError={emailTakenError}

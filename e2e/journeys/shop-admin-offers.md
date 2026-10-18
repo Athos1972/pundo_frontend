@@ -27,9 +27,11 @@ touches-states:
   - Offer.promo:absent
   - ShopListing.sku:set
   - ShopListing.sku:conflict
+  - Offer.unverified:true
+  - Offer.unverified:false
 status-changed-at: 2026-05-19T14:00:00Z
 status-changed-by-spec: 2026-05-19-offer-list-item-details
-last-run: 2026-10-16T01:08:00Z
+last-run: 2026-10-18T08:45:00Z
 last-result: PASS
 last-run-sha: 62efc7e
 ---
@@ -234,3 +236,7 @@ Implementierte Änderungen: Dashboard ohne Produkte-Kachel (AC-1), OfferList mit
 - Offer erscheint im Block „Produkte" mit Standardpreis, kein Badge.
 **Backend-Abhängigkeit:** BE-3.
 **Test-ID:** F5
+
+#### RV1-RV3 (F5970 AC 25, AR12, 2026-10-18)
+
+Worker-Shop mit drei markierten Listings: Banner „3" im Portal → Tab „Zu prüfen" mit Badge je Angebot; Bestätigen entfernt Marker; Archivieren archiviert (nicht gelöscht); PATCH eines markierten Angebots gilt als Bestätigung, Banner und Tab verschwinden bei 0. Einstieg über das Dashboard. RV1b (Re-Test F3, 2026-10-18): Banner-Link auf `/shop-admin/offers` öffnet „Zu prüfen" auch dann, wenn die URL schon `?review=1` hat (Tab vorher manuell auf „Aktiv" gestellt).

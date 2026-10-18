@@ -40,9 +40,13 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
         approved: 'bg-green-100 text-green-700',
         pending: 'bg-yellow-100 text-yellow-700',
         rejected: 'bg-red-100 text-red-700',
+        suspended: 'bg-red-200 text-red-900',
+        inactive: 'bg-gray-100 text-gray-500',
       },
     },
     { key: 'shop_id', label: 'Shop ID' },
+    // F5970: applicant accounts with an open claim must be decided in the claim queue, not approved here
+    { key: 'claim_badge', label: tr.nav_claims },
   ]
 
   return (
@@ -70,6 +74,8 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
           <option value="pending">{tr.pending}</option>
           <option value="approved">{tr.approved}</option>
           <option value="rejected">{tr.rejected}</option>
+          <option value="suspended">{tr.owner_status_suspended}</option>
+          <option value="inactive">{tr.owner_status_inactive}</option>
         </select>
         <button
           type="submit"
@@ -81,7 +87,10 @@ export default async function ShopOwnersPage({ searchParams }: PageProps) {
 
       <EntityTable
         columns={columns}
-        rows={data.items as unknown as Array<Record<string, unknown> & { id: number }>}
+        rows={data.items.map((o) => ({
+          ...o,
+          claim_badge: o.open_claim_request_id ? tr.owner_open_claim_badge.replace('{id}', String(o.open_claim_request_id)) : '',
+        })) as unknown as Array<Record<string, unknown> & { id: number }>}
         editHref="/admin/shop-owners/{id}/edit"
         deleteLabel={tr.delete}
         editLabel={tr.edit}

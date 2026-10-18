@@ -23,6 +23,7 @@ function applyBrandSubstitutions(
   return {
     title: sub(content.title),
     sections: content.sections.map((s) => ({
+      ...s, // keeps the optional anchor id (e.g. #shop-claim)
       heading: s.heading ? sub(s.heading) : s.heading,
       body: sub(s.body),
     })),

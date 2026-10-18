@@ -13,6 +13,7 @@ vi.mock('@/lib/onboarding/onboardingApi', () => ({
   submitOnboarding: vi.fn(),
   uploadOnboardingPhoto: vi.fn(),
   startGoogleOAuth: vi.fn(),
+  matchExistingShops: vi.fn().mockResolvedValue([]), // F5970: no existing-shop hint in these tests
 }))
 
 // Mock draftStorage

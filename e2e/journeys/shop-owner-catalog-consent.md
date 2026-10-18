@@ -19,9 +19,11 @@ touches-states:
   - CatalogConsent:none
   - CatalogConsent:given
   - CatalogCase.status:consent_given
+  - CatalogConsent:withdrawn
+  - CatalogCase.status:cancelled
 status-changed-at: 2026-10-16T19:40:00Z
 status-changed-by-spec: 2026-10-16-consent-capture-sla
-last-run: 2026-10-16T19:34:00Z
+last-run: 2026-10-18T08:45:00Z
 last-result: PASS
 ---
 
@@ -50,5 +52,7 @@ F5980 AC1: explizite Consent-Checkbox zum Katalog-Onboarding im Registrierungs-W
 | E1 | Onboarding-API (E-Mail-Pfad, `…@pundo.com`) mit `catalog_consent` | Status `approved`, Consent + Case, Portal zeigt "Consent received" und die Zustimmungszeile |
 | P1 | Portal: Shop ohne Website → Hinweis; mit Website → Formular → Zustimmen | Karte wird zur Zeile, 1 Case; zweiter POST `200 created=false`, weiter 1 Case; unbekannte Version 422 |
 | A1 | Portal mit `app_lang=ar` | Karte `dir=rtl`, arabischer Button |
+
+| E3 | assign-owner mit Ersetzen (F5970) | alter Consent `owner_reassigned`, alter Case `cancelled`, neuer Owner `none`, sein Consent → genau ein neuer Case |
 
 Aufräumen: `TestDataTracker` (Owner → Shop) und `shop.destroy()`.

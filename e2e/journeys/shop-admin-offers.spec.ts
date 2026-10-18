@@ -28,6 +28,8 @@ import {
   apiGet, apiPatch, apiCreateOffer, waitHydrated, selectItemViaModal, setPriceType, addPriceTierStep,
 } from './_helpers/offers-api'
 import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
+import { psql } from './_helpers/test-data'
+import { tAdmin } from '../../src/lib/shop-admin-translations'
 
 // ─── Worker-Shop (B8950-012) ─────────────────────────────────────────────────
 
@@ -428,5 +430,104 @@ test.describe.serial('Shop-Admin Offers — Create + Edit (v2)', () => {
     const items = (data as { items: Array<{ id: number; title: string }> }).items
     const created = items.find(o => o.title === 'REGRESSION Test Offer')
     if (created) ctx.createdOfferIds.push(created.id)
+  })
+})
+
+
+// ─── F5970 (AC 25, AR12): Angebote zur Pruefung nach Owner-Wechsel ────────────────────────────
+
+test.describe.serial('Shop-Admin Offers — "Zu pruefen" nach Owner-Wechsel (F5970)', () => {
+  const sa = tAdmin('en')
+  const listings: number[] = []
+  const offerIds: number[] = []
+  const names: string[] = []
+  let shop: WorkerShop
+
+  test.beforeAll(async ({ workerShop }) => {
+    test.setTimeout(120_000)
+    shop = workerShop
+    for (const label of ['review-a', 'review-b', 'review-c']) {
+      const it = await shop.createItem('OFFERS', label, { listing: true })
+      const created = await apiCreateOffer(shop.ownerToken, it.listingId as number)
+      expect(created.status, JSON.stringify(created.data)).toBe(201)
+      listings.push(it.listingId as number)
+      offerIds.push(created.data.id)
+      names.push(it.name)
+    }
+    // Zustand "Shop hat den Besitzer gewechselt": die drei Listings tragen den Pruef-Marker (eigene Testzeilen)
+    psql(`update shop_listings set ownership_review_since = now() where id in (${listings.join(',')}) and shop_id = ${shop.id}`)
+  })
+
+  test.afterAll(async () => {
+    test.setTimeout(120_000)
+    await shop.cleanupSpecData()
+  })
+
+  const flagged = () => psql(`select count(*) from shop_listings where id in (${listings.join(',')}) and ownership_review_since is not null`)
+
+  test('RV1: Banner, Tab "Zu pruefen" mit Badge je Angebot; Bestaetigen entfernt Marker und Badge', async ({ page }) => {
+    test.setTimeout(90_000)
+    // Einstieg ueber das Dashboard: das Banner steht im Portal-Layout auf jeder Seite (Befund F3: auf /shop-admin/offers
+    // selbst oeffnet der Banner-Link den Tab "Zu pruefen" nicht, weil OfferList den Tab nur beim Mounten liest)
+    await page.goto(`${FRONTEND_URL}/shop-admin/dashboard`)
+    await waitHydrated(page)
+    const banner = page.getByTestId('unverified-offers-banner')
+    await expect(banner).toContainText(sa.offer_review_banner.replace('{n}', '3'))
+    await banner.getByRole('link').click()
+    await expect(page.getByTestId('offer-review-panel')).toBeVisible()
+    await expect(page.getByTestId('offer-row')).toHaveCount(3)
+    await expect(page.getByTestId('offer-review-badge')).toHaveCount(3)
+    // die Rest-Tabs bleiben nutzbar: aktiv zeigt dieselben Angebote mit Badge
+    await page.getByTestId('offer-tab-active').click()
+    await expect(page.getByTestId('offer-review-badge')).toHaveCount(3)
+    await page.getByTestId('offer-tab-review').click()
+
+    await page.getByTestId('offer-row').filter({ hasText: names[0] }).getByTestId('offer-review-confirm').click()
+    await expect(banner).toContainText(sa.offer_review_banner.replace('{n}', '2'))
+    await expect(page.getByTestId('offer-row')).toHaveCount(2)
+    expect(flagged()).toBe('2')
+  })
+
+  test('RV1b (Re-Test F3): Banner-Link auf /shop-admin/offers oeffnet "Zu pruefen" - auch wenn die URL schon ?review=1 hat', async ({ page }) => {
+    test.setTimeout(90_000)
+    // Fall 1: Seite ohne ?review=1 (Tab "Aktiv"), Klick auf den Banner-Link
+    await page.goto(`${FRONTEND_URL}/shop-admin/offers`)
+    await waitHydrated(page)
+    const banner = page.getByTestId('unverified-offers-banner')
+    await expect(banner).toBeVisible()
+    await expect(page.getByTestId('offer-review-panel')).toHaveCount(0)
+    await banner.getByRole('link').click()
+    await expect(page.getByTestId('offer-review-panel')).toBeVisible()
+    // Fall 2: URL hat bereits ?review=1, der Nutzer wechselt manuell auf "Aktiv" und klickt den Banner-Link erneut
+    await expect(page).toHaveURL(/review=1/)
+    await page.getByTestId('offer-tab-active').click()
+    await expect(page.getByTestId('offer-review-panel')).toHaveCount(0)
+    await banner.getByRole('link').click()
+    await expect(page.getByTestId('offer-review-panel')).toBeVisible()
+    expect(flagged()).toBe('2')
+  })
+
+  test('RV2: Archivieren archiviert das Angebot (nichts wird geloescht) und nimmt es aus der Pruefung', async ({ page }) => {
+    test.setTimeout(90_000)
+    await page.goto(`${FRONTEND_URL}/shop-admin/offers?review=1`)
+    await waitHydrated(page)
+    await page.getByTestId('offer-row').filter({ hasText: names[1] }).getByTestId('offer-review-archive').click()
+    await expect(page.getByTestId('unverified-offers-banner')).toContainText(sa.offer_review_banner.replace('{n}', '1'))
+    expect(psql(`select archived::text from offers where id = ${offerIds[1]}`)).toBe('true')
+    expect(psql(`select count(*) from offers where id = ${offerIds[1]}`), 'nicht geloescht').toBe('1')
+    expect(flagged()).toBe('1')
+  })
+
+  test('RV3 (AR12): Eine Owner-Schreibaktion (PATCH) auf das markierte Angebot gilt als Bestaetigung; Banner verschwindet bei 0', async ({ page }) => {
+    test.setTimeout(90_000)
+    const patched = await apiPatch(`/api/v1/shop-owner/offers/${offerIds[2]}`, { title: 'E2E bestaetigt durch Bearbeitung' }, shop.ownerToken)
+    expect(patched.status).toBe(200)
+    expect(flagged()).toBe('0')
+    await page.goto(`${FRONTEND_URL}/shop-admin/offers`)
+    await waitHydrated(page)
+    await expect(page.getByTestId('offer-row').first()).toBeVisible()
+    await expect(page.getByTestId('unverified-offers-banner')).toHaveCount(0)
+    await expect(page.getByTestId('offer-review-badge')).toHaveCount(0)
+    await expect(page.getByTestId('offer-tab-review')).toHaveCount(0)
   })
 })

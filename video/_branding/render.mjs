@@ -47,7 +47,7 @@ const sx = Math.round(LY.phone_center_x - sw / 2), sy = Math.round(LY.phone_cent
 const geom = { sx, sy, sw, sh }
 
 // ---- desktop format: browser window (transparent hole = recording area; bar above it with dots + address) ----
-function windowFrame(addr) {
+function windowFrame(addr, hl = false) {
   const bar = LY.browser_bar_h, r = 18, x = sx, y = sy - bar, w = sw, h = sh + bar
   const hole = `M${x},${sy} H${x + w} V${sy + sh - r} A${r},${r} 0 0 1 ${x + w - r},${sy + sh} H${x + r} A${r},${r} 0 0 1 ${x},${sy + sh - r} Z`
   const dots = ['#FF5F57', '#FEBC2E', '#28C840'].map((c, i) => `<circle cx="${x + 26 + i * 24}" cy="${y + bar / 2}" r="7" fill="${c}"/>`).join('')
@@ -55,7 +55,7 @@ function windowFrame(addr) {
     <path fill="#E9E5DF" fill-rule="evenodd" d="${rrect(x, y, w, h, r)} ${hole}"/>
     <rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" rx="${r}" fill="none" stroke="#CFC9C0" stroke-width="2"/>
     ${dots}
-    <rect x="${x + 130}" y="${y + 8}" width="${w - 260}" height="${bar - 16}" rx="${(bar - 16) / 2}" fill="#FFFFFF" stroke="#D9D3CA" stroke-width="1.5"/>
+    <rect x="${x + 130}" y="${y + 8}" width="${w - 260}" height="${bar - 16}" rx="${(bar - 16) / 2}" fill="#FFFFFF" stroke="${hl ? C.accent : '#D9D3CA'}" stroke-width="${hl ? 4 : 1.5}"/>
     <text x="${x + 130 + 22}" y="${y + bar / 2 + 7}" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20" fill="#7A736B">${esc(addr)}</text>
   </svg>`
 }
@@ -88,7 +88,7 @@ async function layers() {
     let bezelFile
     if (desk && sc.window_path) {                    // address bar shows the path of this scene
       bezelFile = `bezel-${sc.id}.png`
-      await page.setContent(html(windowFrame(sc.window_path))); await page.screenshot({ path: path.join(dir, bezelFile), omitBackground: true })
+      await page.setContent(html(windowFrame(sc.window_path, !!sc.window_highlight))); await page.screenshot({ path: path.join(dir, bezelFile), omitBackground: true })
     }
     const band = LY.callout_band
     const bandFs = title.length > 40 ? 38 : title.length > 30 ? 44 : LY.callout_font_px

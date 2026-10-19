@@ -58,7 +58,7 @@ video/
 | `short-catalog-import` | Short (9:16) zu Teil 9: Vorschau, Upload, Übernehmen, Kundensicht; nutzt `../catalog-import/prepare_catalog_import.py` | Test-Instanz 3500/8500 |
 | `reviews` | Teil 10: Bewertungen beantworten (Dashboard „3 neu“, Liste, Danke-Antwort, Antwort auf Kritik, Spam melden, „Meine Produkte“, Kundensicht); `prepare_reviews.py` (Backend-venv) legt 4 Demo-Bewertungen in den Niko-Shops aus Teil 9 an (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
 | `short-reviews` | Short (9:16) zu Teil 10: Dashboard, Antwort auf Kritik, Kundensicht; nutzt `../reviews/prepare_reviews.py` | Test-Instanz 3500/8500 |
-| `team-*` (geplant, F8960) | Team-Videos fuer die Admin-Hilfe (`meta.format: desktop`, EN-Stimme + EL-Untertitel, streng 3500/8500, Admin-Login per API). Kanal „pundo Team“, **nicht gelistet**; Details F8960 im Vault (nicht N7900) | Test-Instanz 3500/8500, **streng** |
+| `team-admin-tour` (F8960, Thema 1) | Team-Video „Admin-Rundgang“ (`meta.format: desktop`, EN-Stimme + EL-Untertitel, streng 3500/8500, Admin-Login per API); `../team-common/prepare_team.py` (Backend-venv) legt die synthetischen Demo-Daten an (siehe `PROD-NOTES.md`). Weitere `team-*`-Videos folgen. Kanal „pundo Team“, **nicht gelistet**; Details F8960 im Vault (nicht N7900) | Test-Instanz 3500/8500, **streng** |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen
@@ -85,7 +85,7 @@ Aufnahme: Viewport 1440x810 @2x (kein `isMobile`/`hasTouch`), sichtbarer Mauszei
 `record.mjs`: `startSession({ lang, outDir, device: 'desktop', strict: true })`, dann `adminLogin(sess, account)`; Bedienung mit
 `click(page, locator)` / `moveTo(...)` statt `tap`. `compose.py` bricht ab, wenn das Seitenverhaeltnis der Aufnahme nicht zur
 Bildschirmflaeche (`screen_w/screen_h`) passt. Ohne `meta.format` bleibt alles wie bisher (Handy 390x844).
-Szenenfelder: `window_path` (Pfad in der Adressleiste, je Szene), `chapter` (Kapitelstart fuer YouTube; sind keine gesetzt, ist jede Szene ein Kapitel).
+Szenenfelder: `window_path` (Text in der Adressleiste, je Szene; Host darf enthalten sein, z. B. `localhost:3500/admin/shops`), `window_highlight` (Rahmen um die Adresszeile), `chapter` (Kapitelstart fuer YouTube; sind keine gesetzt, ist jede Szene ein Kapitel).
 
 ## Untertitel-Sprachen (EL nur als `.srt`)
 ```yaml

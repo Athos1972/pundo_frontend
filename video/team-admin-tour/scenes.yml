@@ -1,0 +1,174 @@
+# Team video 1 "Admin tour" (F8960, topic 1, pilot). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-admin-tour.el.srt).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
+# ../team-common/prepare_team.py (marker "Team Demo"); real rows are filtered/masked, see record.mjs and PROD-NOTES.md.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+
+meta:
+  slug: team-admin-tour
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "pundo admin tour"
+    el: "Ξενάγηση στο admin του pundo"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: claims and shop owners"
+    el: "Επόμενο: αιτήσεις ιδιοκτησίας και ιδιοκτήτες"
+  thumbnail_scene: dashboard
+  target_duration_s: 170
+  window_path:
+    en: "localhost:3500/admin/dashboard"
+    el: "localhost:3500/admin/dashboard"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: dashboard
+    shot: 'dashboard: claims tile (highlight), pointer over the area tiles'
+    chapter: { en: "Dashboard" }
+    window_path: { en: "localhost:3500/admin/dashboard" }
+    callout: { en: "Admin · Dashboard" }
+    narration:
+      en: >-
+        Welcome to the pundo admin area. This short tour shows you where everything lives.
+        You sign in with your own admin account, and then you land here, on the dashboard.
+        At the top you see the shop claims that are waiting for a decision.
+        Below that, one tile per area takes you straight to it.
+    subtitle:
+      el:
+        - "Καλώς ήρθατε στο admin του pundo."
+        - "Αυτή η σύντομη ξενάγηση δείχνει πού βρίσκεται το καθετί."
+        - "Συνδέεστε με τον δικό σας λογαριασμό διαχειριστή και μετά βρίσκεστε εδώ, στον πίνακα ελέγχου."
+        - "Στην κορυφή βλέπετε τις αιτήσεις ιδιοκτησίας που περιμένουν απόφαση."
+        - "Από κάτω, ένα πλακίδιο για κάθε ενότητα σας οδηγεί απευθείας εκεί."
+
+  - id: sidebar
+    shot: 'sidebar: pointer glides down the menu, current entry highlighted'
+    chapter: { en: "Sidebar" }
+    window_path: { en: "localhost:3500/admin/dashboard" }
+    callout: { en: "Admin · The sidebar" }
+    narration:
+      en: >-
+        The sidebar on the left is your map. It looks the same on every page,
+        and the area you are in is highlighted.
+        Shops, shop owners and claims come first, then products, categories and brands,
+        and further down reviews, API keys and the CRM.
+    subtitle:
+      el:
+        - "Η πλευρική στήλη αριστερά είναι ο χάρτης σας."
+        - "Είναι ίδια σε κάθε σελίδα και η ενότητα όπου βρίσκεστε τονίζεται."
+        - "Πρώτα έρχονται τα καταστήματα, οι ιδιοκτήτες και οι αιτήσεις, μετά τα προϊόντα, οι κατηγορίες και οι μάρκες, και πιο κάτω οι αξιολογήσεις, τα κλειδιά API και το CRM."
+
+  - id: shops
+    shot: 'click Shops -> list (blurred) -> search "Team Demo" -> two demo shops'
+    chapter: { en: "Shops" }
+    window_path: { en: "localhost:3500/admin/shops" }
+    callout: { en: "Admin · Shops" }
+    narration:
+      en: >-
+        Under Shops you find every shop on the platform.
+        There are thousands of them, so use the search field first.
+        Here we look for our demo shops. A row opens with Edit.
+        Please only change data when a task asks you to.
+    subtitle:
+      el:
+        - "Στα Καταστήματα βρίσκετε όλα τα καταστήματα της πλατφόρμας."
+        - "Είναι χιλιάδες, γι' αυτό χρησιμοποιήστε πρώτα το πεδίο αναζήτησης."
+        - "Εδώ ψάχνουμε τα δοκιμαστικά μας καταστήματα."
+        - "Μια γραμμή ανοίγει με το Edit."
+        - "Αλλάζετε στοιχεία μόνο όταν το ζητά μια εργασία."
+
+  - id: catalog
+    shot: 'Products -> search "Team Demo" -> demo product; Categories -> search "Team Demo" -> demo category'
+    chapter: { en: "Products and categories" }
+    window_path: { en: "localhost:3500/admin/products" }
+    callout: { en: "Admin · Products and categories" }
+    narration:
+      en: >-
+        Products and categories work the same way: search first, then open an entry.
+        Our demo loaf sits in the demo category, and it has a brand of its own.
+        Brands, offers and reviews have their own entries in the sidebar.
+    subtitle:
+      el:
+        - "Τα προϊόντα και οι κατηγορίες λειτουργούν με τον ίδιο τρόπο: πρώτα αναζήτηση, μετά άνοιγμα της καταχώρισης."
+        - "Το δοκιμαστικό μας ψωμί βρίσκεται στη δοκιμαστική κατηγορία και έχει δική του μάρκα."
+        - "Οι μάρκες, οι προσφορές και οι αξιολογήσεις έχουν δικές τους καταχωρίσεις στην πλευρική στήλη."
+
+  - id: claims
+    shot: 'Claims: demo application; Reviews: moderation tab "Reported"'
+    chapter: { en: "Claims and reviews" }
+    window_path: { en: "localhost:3500/admin/claims" }
+    callout: { en: "Admin · Claims and reviews" }
+    narration:
+      en: >-
+        Claims is where shop owners ask to manage a shop page.
+        Each application shows the shop, the applicant and its state, and the dashboard counts the open ones.
+        Reviews is the moderation queue: reported reviews wait there until someone decides.
+    subtitle:
+      el:
+        - "Στις Αιτήσεις οι ιδιοκτήτες ζητούν να διαχειρίζονται τη σελίδα ενός καταστήματος."
+        - "Κάθε αίτηση δείχνει το κατάστημα, τον αιτούντα και την κατάστασή της, και ο πίνακας ελέγχου μετρά τις ανοιχτές."
+        - "Οι Αξιολογήσεις είναι η ουρά διαχείρισης: οι αναφερμένες αξιολογήσεις περιμένουν εκεί μέχρι να αποφασίσει κάποιος."
+
+  - id: crm
+    shot: 'CRM -> search "Team Demo" -> demo contact with state Needs review'
+    chapter: { en: "CRM" }
+    window_path: { en: "localhost:3500/admin/crm/contacts" }
+    callout: { en: "Admin · CRM" }
+    narration:
+      en: >-
+        The CRM holds our business contacts. Search by name, organisation or email.
+        The state badge shows where a contact stands, for example Needs review.
+        Contacts include real people, so open them only when your work requires it.
+    subtitle:
+      el:
+        - "Το CRM περιέχει τις επαγγελματικές μας επαφές."
+        - "Αναζητήστε με όνομα, οργανισμό ή email."
+        - "Το σήμα κατάστασης δείχνει σε ποιο στάδιο βρίσκεται μια επαφή, για παράδειγμα Needs review."
+        - "Οι επαφές περιλαμβάνουν πραγματικά πρόσωπα, γι' αυτό ανοίξτε τις μόνο όταν το απαιτεί η δουλειά σας."
+
+  - id: environment
+    shot: 'dashboard; pointer rests; callout asks to check the address bar (host visible in the window bar)'
+    chapter: { en: "Test or live?" }
+    window_path: { en: "localhost:3500/admin/dashboard" }
+    window_highlight: true
+    callout: { en: "Check · Test or live?" }
+    narration:
+      en: >-
+        One thing to check before you change anything: which system are you in?
+        Look at the address bar. This recording was made on the test system, which runs on localhost, port 3500.
+        The live system runs on the real pundo domain.
+        Practise on the test system, and double-check before you save on the live one.
+    subtitle:
+      el:
+        - "Ένα πράγμα να ελέγχετε πριν αλλάξετε οτιδήποτε: σε ποιο σύστημα βρίσκεστε;"
+        - "Κοιτάξτε τη γραμμή διεύθυνσης."
+        - "Αυτή η εγγραφή έγινε στο δοκιμαστικό σύστημα, που τρέχει στο localhost, θύρα 3500."
+        - "Το πραγματικό σύστημα τρέχει στο κανονικό domain του pundo."
+        - "Εξασκηθείτε στο δοκιμαστικό και ελέγξτε ξανά πριν αποθηκεύσετε στο πραγματικό."
+
+  - id: help
+    shot: 'Help in the sidebar -> list of topics -> open topic "Admin tour"'
+    chapter: { en: "Help" }
+    window_path: { en: "localhost:3500/admin/help" }
+    callout: { en: "Admin · Help" }
+    narration:
+      en: >-
+        When you need a step-by-step guide, open Help in the sidebar.
+        Every topic has a short written procedure and a link to the matching video.
+        Start with the admin tour, and then pick the task you need. Thanks for watching.
+    subtitle:
+      el:
+        - "Όταν χρειάζεστε οδηγό βήμα προς βήμα, ανοίξτε τη Βοήθεια στην πλευρική στήλη."
+        - "Κάθε θέμα έχει μια σύντομη γραπτή διαδικασία και έναν σύνδεσμο προς το αντίστοιχο βίντεο."
+        - "Ξεκινήστε με την ξενάγηση στο admin και μετά διαλέξτε την εργασία που χρειάζεστε."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

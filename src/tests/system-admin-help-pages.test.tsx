@@ -84,7 +84,8 @@ describe('HelpVideoButton', () => {
 describe('HelpTopicCard', () => {
   it('shows the title, one-liner and the "coming soon" badge without a video', () => {
     const c = HELP_CONTENT['admin-tour'].en
-    const { container } = render(<HelpTopicCard topic={HELP_TOPICS[0]} content={c} tr={en} />)
+    const noVideo = { ...HELP_TOPICS[0], videoId: undefined, durationSec: undefined }
+    const { container } = render(<HelpTopicCard topic={noVideo} content={c} tr={en} />)
     expect(screen.getByText(c.title)).toBeTruthy()
     expect(screen.getByText(c.summary)).toBeTruthy()
     expect(screen.getByTestId('help-topic-badge').textContent).toBe(en.help_video_coming_soon)
@@ -124,7 +125,7 @@ describe('help list page', () => {
     expect(cards.map((c) => c.getAttribute('data-topic'))).toEqual(HELP_TOPICS.map((t) => t.id))
     expect(screen.getAllByRole('heading', { level: 1 }).length).toBe(1)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(en.help_title)
-    expect(screen.getAllByText(en.help_video_coming_soon).length).toBe(6)
+    expect(screen.getAllByText(en.help_video_coming_soon).length).toBe(HELP_TOPICS.filter((t) => !t.videoId).length)
     HELP_TOPICS.forEach((t) => expect(screen.getByText(HELP_CONTENT[t.id].en.title)).toBeTruthy())
   })
 
@@ -156,7 +157,7 @@ describe('help topic page', () => {
     await expect((TopicPage as unknown as Page)(par('crm') as never)).rejects.toMatchObject({ to: '/admin/login' })
   })
 
-  it.each(HELP_TOPICS.map((t) => t.id))('%s: one h1, all steps, all admin links, no video link', async (id) => {
+  it.each(HELP_TOPICS.map((t) => t.id))('%s: one h1, all steps, all admin links, video link only with a videoId', async (id) => {
     const topic = HELP_TOPICS.find((t) => t.id === id)!
     const { container } = await show(TopicPage, par(id))
     const c = HELP_CONTENT[id].en
@@ -166,9 +167,15 @@ describe('help topic page', () => {
     const links = screen.getAllByTestId('help-admin-link')
     expect(links.map((a) => a.getAttribute('href'))).toEqual(topic.adminLinks.map((l) => l.href))
     links.forEach((a, i) => expect(a.textContent).toContain(`${en.help_open_in_admin}: ${en[topic.adminLinks[i].navKey]}`))
-    expect(container.querySelectorAll('a[href*="youtube.com"]').length).toBe(0)
-    expect(screen.getByText(en.help_video_coming_soon)).toBeTruthy()
-    expect(container.textContent).not.toContain(en.help_subtitles_hint)
+    if (topic.videoId) {
+      expect(screen.getByTestId('help-video-link').getAttribute('href')).toBe(`https://www.youtube.com/watch?v=${topic.videoId}`)
+      expect(screen.getByText(en.help_subtitles_hint)).toBeTruthy()
+      expect(screen.queryByText(en.help_video_coming_soon)).toBeNull()
+    } else {
+      expect(container.querySelectorAll('a[href*="youtube.com"]').length).toBe(0)
+      expect(screen.getByText(en.help_video_coming_soon)).toBeTruthy()
+      expect(container.textContent).not.toContain(en.help_subtitles_hint)
+    }
   })
 
   it('with a video: link out plus the subtitle hint', async () => {

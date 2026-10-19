@@ -96,23 +96,23 @@ formats:
 
   desktop:                # Team/admin screencasts: 16:9, browser window (not a phone), EL = subtitles only
     record: { viewport: { width: 1440, height: 810 }, dsf: 2 }
-    layout:
+    layout:                 # F8960 T17 (tuned on the pilot): window ends above the subtitle so it never covers the sidebar bottom
       device: browser
-      screen_w: 1536        # 1440x810 * 1.0667 -> 16:9, same aspect as the recording (compose.py checks it)
-      screen_h: 864
+      screen_w: 1344        # 1440x810 * 0.9333 -> 16:9, same aspect as the recording (compose.py checks it)
+      screen_h: 756
       phone_center_x: 960   # centre of the screen area (key name kept for compose.py compatibility)
-      phone_center_y: 606
+      phone_center_y: 534   # screen top 156 .. bottom 912
       phone_bezel: 0
-      browser_bar_h: 44     # window bar above the screen (3 dots + address field with the path, without host)
-      callout_band: { x: 192, y: 34, h: 96 }    # callout as a band above the window: label pill + one-line title
-      right_x: 192          # subtitles across the window width, bottom of the picture
-      right_w: 1536
-      subtitle_y: 860
+      browser_bar_h: 44     # window bar above the screen (3 dots + address field with host + path)
+      callout_band: { x: 288, y: 20, h: 84 }    # callout as a band above the window: label pill + one-line title
+      right_x: 288          # subtitles across the window width, bottom edge at y 1050 (one line 84 px, two lines 136 px)
+      right_w: 1344
+      subtitle_y: 900
       subtitle_h: 150
       subtitle_font_px: 40
-      subtitle_max_chars: 48
+      subtitle_max_chars: 60   # window is wide: 2 lines x 60 chars (~1160 px) keep whole sentences in one cue (no orphan words)
       callout_font_px: 52
-      logo_corner: { x: 1560, y: 40, w: 170 }
+      logo_corner: { x: 1462, y: 24, w: 170 }
 
 # Background music. Picked up automatically: put an mp3/wav/m4a into video/_branding/music/
 # (first file alphabetically), or set `file` explicitly. Looped/trimmed to video length, fade in/out,

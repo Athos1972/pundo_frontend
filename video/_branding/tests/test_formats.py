@@ -31,7 +31,7 @@ class MergeFormat(unittest.TestCase):
         b = merge_format(BRAND, {"format": "desktop"})
         self.assertEqual((b["video"]["width"], b["video"]["height"]), (1920, 1080))
         self.assertEqual(b["layout"]["device"], "browser")
-        self.assertEqual((b["layout"]["screen_w"], b["layout"]["screen_h"]), (1536, 864))
+        self.assertEqual((b["layout"]["screen_w"], b["layout"]["screen_h"]), (1344, 756))
         self.assertNotIn("phone_screen_h", b["layout"])
         self.assertEqual(b["record"]["viewport"], {"width": 1440, "height": 810})
         self.assertFalse(b["layout"].get("vertical"))
@@ -47,6 +47,10 @@ class MergeFormat(unittest.TestCase):
         self.assertGreaterEqual(left, 0); self.assertLessEqual(left + ly["screen_w"], 1920)
         self.assertGreaterEqual(top, ly["callout_band"]["y"] + ly["callout_band"]["h"])   # band above the window
         self.assertLessEqual(ly["phone_center_y"] + ly["screen_h"] / 2, 1080)
+        # tuned on the pilot (T17): even a two-line subtitle (2 x 52 px + 32 px padding = 136 px, bottom-aligned at
+        # subtitle_y + subtitle_h) must not cover the window (it hid the sidebar bottom: "CRM"/"Help")
+        two_line_top = ly["subtitle_y"] + ly["subtitle_h"] - 136
+        self.assertLessEqual(ly["phone_center_y"] + ly["screen_h"] / 2, two_line_top)
 
     def test_meta_timing_wins_and_input_is_not_mutated(self):
         before = copy.deepcopy(BRAND)

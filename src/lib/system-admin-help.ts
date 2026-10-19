@@ -28,6 +28,7 @@ export interface HelpTopic {
 export const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: 'admin-tour', number: '1', order: 1,
+    videoId: 'fAgsmmvzEIQ', durationSec: 164,
     adminLinks: [{ href: '/admin/dashboard', navKey: 'nav_dashboard' }],
   },
   {

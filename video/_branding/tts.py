@@ -131,6 +131,8 @@ async def main():
             entry["chapter"] = sc["chapter"].get(lang)
         if sc.get("window_path"):                                         # desktop format: path shown in the window's address bar
             entry["window_path"] = sc["window_path"].get(lang) if isinstance(sc["window_path"], dict) else sc["window_path"]
+        if sc.get("window_highlight"):                                    # desktop format: accent outline around the address field
+            entry["window_highlight"] = True
         if sc.get("narration"):
             text = norm(sc["narration"][lang])
             out = cache / "audio" / f"{sc['id']}.mp3"

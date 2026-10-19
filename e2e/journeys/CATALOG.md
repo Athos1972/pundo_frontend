@@ -47,7 +47,7 @@
 | [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
-| [admin-catalog-review](admin-catalog-review.md) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (6/6, re-verified 2026-07-16 nach Test-Infra-Fix + Selector-Fix, siehe 04-test-report.md Re-Verifikation) |
+| [admin-catalog-review](admin-catalog-review.md) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (47/47 inkl. smoke, 2026-10-19; T1b Wirkung + T6 Teilfehler, F5982; Gateway :8600 nötig, sonst sichtbarer Skip) |
 | [b5900-009-item-photo-upload](b5900-009-item-photo-upload.md) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |
 | [b5900-010-offer-form-labels](b5900-010-offer-form-labels.md) | Shop-Admin Angebotsformular Beschriftungen/Sprachen (B5900-010) | implemented | P2 | PASS (2026-10-12) |
 | [b5900-011-category-picker](b5900-011-category-picker.md) | Shop-Admin Kategorie-Picker: Vorschläge, Typfilter, RTL, 390 px, Kunden-Kategorie (B5900-011) | implemented | P1 | PASS (10/10, 2026-10-12) |

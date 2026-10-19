@@ -47,6 +47,13 @@
  * afterAll: Listings/Offers des Worker-Shops weg, Marker-Items (scraper-Quelle, auch ohne Listing) per
  * Admin-API gelöscht; der Reporter ist das Sicherheitsnetz.
  *
+ * F5982 T10: Die Canned-Antworten kommen aus den Golden-Fixtures des Workers
+ * (`pundo_llm_workers/tests/contracts/golden/<job_type>.json`, exakt die Hülle `{output, raw}`, die der echte Worker
+ * schickt) und werden nur um Werte aus dem Task-Payload ergänzt; fehlt das Worker-Repo, werden die Kettenschritte
+ * mit Begründung übersprungen. Wirkungs-Assertions (T1b) prüfen nach dem Durchlauf, dass die Ergebnisse wirklich
+ * in der Datenbank angekommen sind: alle 6 Sprachen, Kategorie, Attributwert mit Quelle `ai_extracted`, Embedding.
+ * T6 prüft die Fehlerpropagierung: ein fehlgeschlagener translate-Task blockiert den Fall nicht.
+ *
  * Ports: Frontend 3500, Backend 8500, Gateway 8600, DB: pundo_test — NEVER 3000/8000/8100.
  */
 
@@ -63,6 +70,8 @@ import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
 const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
+const WORKERS_REPO = process.env.WORKERS_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_llm_workers'
+const GOLDEN_DIR = path.join(WORKERS_REPO, 'tests', 'contracts', 'golden')
 // Muss zu pundo_llm_workers/restart_test_worker.sh passen (`pkill -f "workers.main $CONFIG"`) und darf den
 // Prod-Worker (`workers.main worker.prod.yml`, läuft am Studio) NICHT treffen.
 const TEST_WORKER_PATTERN = 'workers.main worker.test.yml'
@@ -217,37 +226,93 @@ async function gatewaySubmitResult(taskId: string, result: unknown, model: strin
   return res.status
 }
 
-function buildCannedResult(jobType: string, payload: Record<string, unknown>): unknown | null {
-  const langs = ['en', 'de', 'el', 'ru', 'ar', 'he']
+async function gatewayFail(taskId: string, error: string) {
+  const res = await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/fail`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Internal-API-Key': GATEWAY_API_KEY },
+    body: JSON.stringify({ worker_id: 'playwright-e2e', error, retryable: false }),
+  })
+  return res.status
+}
+
+// ─── Canned results from the worker's golden fixtures (F5982 T10) ────────────
+
+type WorkerResult = { output: Record<string, unknown>; raw: string }
+
+/** The exact `result` object the worker posts for `jobType` (golden fixture of pundo_llm_workers). */
+function goldenResult(jobType: string): WorkerResult {
+  const doc = JSON.parse(fs.readFileSync(path.join(GOLDEN_DIR, `${jobType}.json`), 'utf8')) as {
+    submit_result: { result: WorkerResult }
+  }
+  return doc.submit_result.result
+}
+
+/** Golden envelope with some output fields replaced by values derived from the task payload. */
+function cannedFromGolden(jobType: string, overrides: Record<string, unknown>): WorkerResult {
+  const output = { ...goldenResult(jobType).output, ...overrides }
+  return { output, raw: JSON.stringify(output) }
+}
+
+/** What the canned worker decided, for the Wirkungs-Assertions after the chain (keyed by what the payload identifies). */
+const canned = {
+  category: new Map<string, number>(),                              // product_name -> chosen candidate id
+  attribute: new Map<number, { key: string; value: unknown }>(),    // item_id -> chosen attribute
+  failedTranslate: new Set<string>(),                               // task ids failed on purpose (T6)
+}
+const PARTIAL_FAIL = 'PARTIAL-FAIL'
+
+// E2E-Tester (F5982): pundo_test enthaelt KEINE category_attribute_definitions. Ohne Slot gibt es keinen
+// enrich.product_attributes-Task, und die ai_extracted-Wirkung waere nie bewiesen (T1b hat sie vorher nur
+// "sichtbar uebersprungen"). Fuer die vom Canned-Worker gewaehlte Kategorie wird deshalb ein Test-Slot angelegt
+// und im afterAll wieder entfernt (Schluessel eindeutig, idempotent).
+const E2E_ATTR_KEY = 'e2e_f5982_slot'
+function ensureE2eAttributeSlot(categoryId: number) {
+  psql(
+    `insert into category_attribute_definitions (category_id, attribute_key, attribute_type, is_filterable, display_order, override_mode, labels) ` +
+      `values (${categoryId}, '${E2E_ATTR_KEY}', 'text', false, 0, 'inherit', '{"en":"E2E slot (F5982)"}'::jsonb) on conflict do nothing`,
+  )
+}
+
+function cannedAttributeValue(schema: { attribute_type?: string; allowed_values?: unknown[] | null }): unknown {
+  if (Array.isArray(schema.allowed_values) && schema.allowed_values.length > 0) return schema.allowed_values[0]
+  if (schema.attribute_type === 'number') return 1
+  if (schema.attribute_type === 'boolean') return true
+  return 'e2e-value'
+}
+
+function buildCannedResult(jobType: string, payload: Record<string, unknown>): WorkerResult | null {
   if (jobType === 'describe.item') {
-    return {
-      output: {
-        canonical_name: `${(payload.raw_name as string) ?? 'Item'} (Canonical)`,
-        canonical_description: `Canonical desc from: ${(payload.raw_description as string) ?? ''}`,
-      },
-    }
+    return cannedFromGolden(jobType, {
+      canonical_name: `${(payload.raw_name as string) ?? 'Item'} (Canonical)`,
+      canonical_description: `Canonical desc from: ${(payload.raw_description as string) ?? ''}`,
+    })
   }
   if (jobType === 'translate.item') {
-    return {
-      output: {
-        names: Object.fromEntries(langs.map(l => [l, `${payload.name}-${l}`])),
-        descriptions: Object.fromEntries(langs.map(l => [l, `desc-${l}`])),
-      },
-    }
+    const targets = (payload.translate_to as string[] | undefined) ?? ['de', 'el', 'ru', 'ar', 'he']
+    return cannedFromGolden(jobType, {
+      names: Object.fromEntries(targets.map(l => [l, `${payload.name}-${l}`])),
+      descriptions: Object.fromEntries(targets.map(l => [l, `description-${l}`])),
+    })
   }
   if (jobType === 'categorize.item') {
     const candidates = (payload.candidates as Array<{ id: number }>) ?? []
-    return { output: { category_id: candidates[0]?.id ?? null, confidence: 0.95 } }
+    const id = candidates[0]?.id ?? null
+    if (id !== null) {
+      canned.category.set(String(payload.product_name), id)
+      ensureE2eAttributeSlot(id)
+    }
+    return cannedFromGolden(jobType, { category_id: id, confidence: 0.95 })
   }
   if (jobType === 'enrich.product_attributes') {
-    return { output: { attributes: { color: 'blue' } } }
+    // valid for ANY category: the first slot of the task's own schema, a value that fits its type
+    const schemas = (payload.attribute_schemas as Array<{ attribute_key: string; attribute_type?: string; allowed_values?: unknown[] | null }>) ?? []
+    const first = schemas[0]
+    if (!first) return cannedFromGolden(jobType, { attributes: {} })
+    const value = cannedAttributeValue(first)
+    canned.attribute.set(Number(payload.item_id), { key: first.attribute_key, value })
+    return cannedFromGolden(jobType, { attributes: { [first.attribute_key]: { value, confidence: 0.95 } } })
   }
-  if (jobType === 'embed.text') {
-    return {
-      output: { vectors: [Array(1024).fill(0.01)], model: 'bge-m3:latest' },
-      idempotency_key: payload.idempotency_key,
-    }
-  }
+  if (jobType === 'embed.text') return goldenResult(jobType)
   return null
 }
 
@@ -267,6 +332,12 @@ async function driveChain(windowMs = 8000): Promise<number> {
       continue
     }
     for (const task of tasks) {
+      if (task.job_type === 'translate.item' && String(task.payload.name ?? '').includes(PARTIAL_FAIL)) {
+        // T6: the Gateway reports a failed translate task for this one item; everything else is answered normally
+        if (await gatewayFail(task.task_id, 'e2e: canned translate failure') < 300) canned.failedTranslate.add(task.task_id)
+        processed++
+        continue
+      }
       const result = buildCannedResult(task.job_type, task.payload)
       if (result === null) continue // kann durch den jobTypes-Filter nicht vorkommen
       const model = task.job_type === 'embed.text' ? 'bge-m3:latest' : 'gemma4:26b'
@@ -305,6 +376,12 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     W = workerShop
     ensureShopWebshopUrl(SHOP_URL)
 
+    // Vorbedingung 0 (F5982 T10): Golden-Fixtures des Workers vorhanden (Quelle der Canned-Antworten)
+    if (!fs.existsSync(path.join(GOLDEN_DIR, 'translate.item.json'))) {
+      chainSkipReason = `SKIP (F5982 T10): Golden-Fixtures des Workers fehlen (${GOLDEN_DIR}); WORKERS_REPO setzen`
+      console.warn(`[admin-catalog-review] ${chainSkipReason} — Kettenschritte werden übersprungen.`)
+      return
+    }
     // Vorbedingung 1: Gateway erreichbar (/healthz konsumiert keinen Task)
     try {
       const hz = await fetch(`${GATEWAY_URL}/healthz`, { signal: AbortSignal.timeout(3000) })
@@ -363,6 +440,7 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
   })
 
   test.afterAll(async () => {
+    psql(`delete from category_attribute_definitions where attribute_key = '${E2E_ATTR_KEY}'`)
     // Marker-Items dieses Laufs (scraper-Quelle → nicht vom Shop-Delete erfasst), auch ohne Listing
     const ids = psql(`select id || ':' || slug from items where slug ~ '^e2e-${RUN_ID}-catalog-review-'`)
     for (const row of ids.split('\n').filter(Boolean)) {
@@ -406,6 +484,45 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     await expect(page.getByRole('button', { name: /reject|ablehnen/i })).toBeVisible()
     const body = await page.locator('body').innerText()
     expect(body).toContain(GOLDEN_NAME)
+  })
+
+  test('T1b — Wirkung: alle 6 Sprachen, Kategorie, Attributwert (ai_extracted) und Embedding sind in der DB angekommen', async () => {
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
+
+    const canonical = `${GOLDEN_NAME} (Canonical)`
+    const row = psql(`select id || '|' || coalesce(category_id::text, '') from items where names->>'en' = '${canonical.replace(/'/g, "''")}'`)
+    expect(row, 'item with the canned canonical name must exist (describe.item reached the Item)').not.toBe('')
+    const [itemIdText, categoryIdText] = row.split('|')
+    const itemId = Number(itemIdText)
+
+    // translate: every language carries the canned value (proves the merge, not just "the task ran")
+    const names = JSON.parse(psql(`select names::text from items where id = ${itemId}`)) as Record<string, string>
+    const descriptions = JSON.parse(psql(`select descriptions::text from items where id = ${itemId}`)) as Record<string, string>
+    for (const lang of ['de', 'el', 'ru', 'ar', 'he']) {
+      expect(names[lang], `names.${lang}`).toBe(`${canonical}-${lang}`)
+      expect(descriptions[lang], `descriptions.${lang}`).toBe(`description-${lang}`)
+    }
+    expect(names.en).toBe(canonical)
+    expect(descriptions.en).toBe(`Canonical desc from: raw scraped description for golden path test`)
+
+    // categorize: the candidate the canned worker chose
+    const chosen = canned.category.get(GOLDEN_NAME)
+    expect(chosen, 'categorize.item was answered by the canned worker').toBeDefined()
+    expect(Number(categoryIdText)).toBe(chosen)
+
+    // attribute: the test slot (ensureE2eAttributeSlot) guarantees an enrich.product_attributes task -> the value
+    // must be in item_attributes with source ai_extracted (B6984-002 proof; never skipped silently)
+    const choice = canned.attribute.get(itemId)
+    expect(choice, `enrich.product_attributes was answered for item ${itemId} (category ${categoryIdText} has the E2E slot)`).toBeDefined()
+    const written = psql(`select attribute_value::text || '|' || source from item_attributes where item_id = ${itemId} and attribute_key = '${choice!.key}'`)
+    expect(written).toBe(`${JSON.stringify(choice!.value)}|ai_extracted`)
+
+    // embed: exactly one embedding row for the item
+    expect(psql(`select count(*) from catalog_case_item_embeddings where item_id = ${itemId}`)).toBe('1')
+
+    // the case really is complete: item is ready_for_review, step results are all done
+    expect(psql(`select status || '|' || coalesce(translate_status,'') || coalesce(categorize_status,'') || coalesce(attribute_status,'') || coalesce(embed_status,'') from catalog_case_items where item_id = ${itemId} and catalog_case_id = ${goldenCaseId}`))
+      .toBe('ready_for_review|donedonedonedone')
   })
 
   test('T2 — Approve publishes the case and item becomes visible in product search (Publish-Gate)', async ({ page }) => {
@@ -498,6 +615,55 @@ test.describe.serial('Admin Catalog-Review — F5980 Content-Review UI', () => {
     await expect(page.getByRole('button', { name: /reject|ablehnen/i })).toHaveCount(0)
     const body = await page.locator('body').innerText()
     expect(body.length).toBeGreaterThan(0)
+  })
+
+  test('T6 — Teilfehler: ein fehlgeschlagener translate-Task blockiert den Fall nicht', async ({ page }) => {
+    test.skip(chainSkipReason !== null, chainSkipReason ?? '')
+    test.setTimeout(360_000)
+
+    const partialCaseId = createCatalogCase()
+    const okName = e2eName('CATALOG-REVIEW', 'Partial OK Widget')
+    const failName = e2eName('CATALOG-REVIEW', `${PARTIAL_FAIL} Widget`)
+    const intake = await intakeBatch(partialCaseId, [
+      { name: okName, description: 'raw desc partial ok' },
+      { name: failName, description: 'raw desc partial fail' },
+    ])
+    expect(intake.status).toBe(200)
+
+    const cookie = await ownerLoginCookie()
+    await expect.poll(async () => { await driveChain(); return caseStatus(partialCaseId, cookie) }, {
+      message: 'case with a failed item did not reach awaiting_owner_review', timeout: 240_000, intervals: [1000, 2000, 3000],
+    }).toBe('awaiting_owner_review')
+
+    if (canned.failedTranslate.size === 0) {
+      // the real test worker answered the translate task before the canned one could fail it: nothing to assert
+      test.info().annotations.push({ type: 'skipped-assertion', description: 'translate task was answered by the test worker before it could be failed' })
+      test.skip(true, 'translate.item of the failing item was answered by the test worker first')
+    }
+
+    const res = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases/${partialCaseId}/sample?n=10`, {
+      headers: { Cookie: `shop_owner_token=${cookie}` },
+    })
+    const sample = await res.json() as { sample: Array<{ raw_name: string; status: string; last_error: string | null }> }
+    const failed = sample.sample.find(i => i.raw_name?.includes(PARTIAL_FAIL))
+    const fine = sample.sample.find(i => i.raw_name === okName)
+    expect(fine?.status).toBe('ready_for_review')
+    expect(failed?.status).toBe('translate_failed')
+    expect(failed?.last_error, 'the owner sees why').toBeTruthy()
+
+    const list = await fetch(`${BACKEND_URL}/api/v1/shop-owner/catalog-cases`, { headers: { Cookie: `shop_owner_token=${cookie}` } })
+    const cases = (await list.json() as { cases: Array<{ id: number; item_count: number; completed_item_count: number }> }).cases
+    const mine = cases.find(c => c.id === partialCaseId)
+    expect(mine?.item_count).toBe(2)
+    expect(mine?.completed_item_count).toBe(1)
+    // the other fan-out steps of the failed item still ran (categorize/embed are independent of translate)
+    expect(psql(`select categorize_status || '|' || embed_status from catalog_case_items where catalog_case_id = ${partialCaseId} and raw_name like '%${PARTIAL_FAIL}%'`))
+      .toMatch(/^(done|failed)\|done$/)
+
+    // the owner sees the hint on the failed product (F5980 amber notice), not only the API field
+    await page.goto(FRONTEND_URL + `/shop-admin/catalog-review/${partialCaseId}`)
+    await waitHydrated(page)
+    await expect(page.getByText(/A step failed for this product|Bei diesem Produkt ist ein Schritt fehlgeschlagen/)).toHaveCount(1, { timeout: 10_000 })
   })
 
   test('T5 — RTL: ar language renders the overview with dir="rtl"', async ({ page, context }) => {

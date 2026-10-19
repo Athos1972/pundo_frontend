@@ -18,7 +18,7 @@ touches-states:
 status-changed-at: 2026-10-19T00:00:00Z
 status-changed-by-spec: 2026-10-19-vertragsinventur
 last-run: 2026-10-19T00:00:00Z
-last-result: UNKNOWN
+last-result: PASS
 ---
 
 ### Journey: CRM-Outreach-Mail → Opt-out

@@ -17,7 +17,8 @@
  */
 
 import { test, expect } from '../fixtures'
-import { TestDataTracker, e2eEmail, e2eName } from './_helpers/test-data'
+import { TestDataTracker, e2eEmail, e2eName, psql } from './_helpers/test-data'
+import { waitForMail } from './_helpers/mail-sink'
 import { adminLogin, shopOwnerLogin, adminHeaders, apiFetch } from './_helpers'
 import fs from 'fs'
 import path from 'path'
@@ -258,6 +259,14 @@ test.describe.serial('Shop-Owner Admin-Approval via Browser-UI', () => {
     const verifyData = verify.data as { status: string }
     expect(verifyData.status, 'API muss status=approved bestätigen').toBe('approved')
     logStep(6, 'API-Verifikation status=approved', 'approved', verifyData.status, 'PASS')
+
+    // Wirkung statt Badge (B8950-016 T22): die Datenbank sagt approved, und der Owner bekommt die Willkommensmail
+    // (ueber den lokalen Mail-Sink der Testinstanz, echte SMTP-Zustellung).
+    expect(psql(`select status from shop_owners where id=${ctx.approvalOwnerId}`)).toBe('approved')
+    const welcome = await waitForMail(ctx.approvalEmail)
+    expect(welcome.subject, 'welcome mail subject').toBeTruthy()
+    expect(welcome.html ?? '', 'welcome mail links to the portal').toMatch(/shop-admin/)
+    logStep(6, 'Willkommensmail im Mail-Sink', 'Mail an den Owner', welcome.subject, 'PASS')
 
     // In approved-Liste sichtbar
     await page.goto(`${BASE_URL}/admin/shop-owners?status=approved&q=${encodeURIComponent(ctx.approvalEmail)}`)

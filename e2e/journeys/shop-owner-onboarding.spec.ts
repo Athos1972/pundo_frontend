@@ -18,6 +18,7 @@ import { adminLogin, apiFetch } from './_helpers'
 import { TestDataTracker, RUN_ID } from './_helpers/test-data'
 import { BASE_URL, BACKEND_URL } from '../env'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { waitForMail } from './_helpers/mail-sink'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ const ctx = {
   shopAddress: 'Finikoudes Beach, Larnaca, Cyprus',
   ownerId: null as number | null,
   verificationToken: null as string | null,
+  verificationPath: null as string | null,
   adminToken: null as string | null,
 }
 
@@ -120,12 +122,21 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
   // ── Test 3: Fetch verification token from DB ───────────────────────────────
 
   test('T3 — Verification-Token aus Test-DB lesen', async () => {
-    // The backend writes the token to the shop_owners table when SMTP_HOST is not set
-    // (it logs it instead of sending an email). We query it directly via Python + SQLAlchemy.
+    // The token is stored in shop_owners; we read it directly via Python + SQLAlchemy and compare it with the mail below.
     const token = await getVerificationToken(ctx.email)
     expect(token, 'email_verification_token must be non-empty').toBeTruthy()
     expect(token.length, 'email_verification_token must have reasonable length').toBeGreaterThan(8)
     ctx.verificationToken = token
+
+    // Wirkung (B8950-016 T22): die Mail ist wirklich angekommen (Mail-Sink der Testinstanz) und ihr Link traegt genau
+    // den Token aus der Datenbank. Host/Port des Links sind Sache von APP_BASE_URL; der Pfad ist der Vertrag.
+    const mail = await waitForMail(ctx.email)
+    const href = (mail.html ?? '').match(/href="([^"]*verify-email\?token=[^"]+)"/)?.[1]
+    expect(href, 'verification mail contains the verify-email link').toBeTruthy()
+    const link = new URL(href!.replace(/&amp;/g, '&'))
+    expect(link.pathname).toBe('/shop-admin/verify-email')
+    expect(link.searchParams.get('token'), 'mail token == database token').toBe(token)
+    ctx.verificationPath = link.pathname + link.search
   })
 
   // ── Test 4: Verify email UI ────────────────────────────────────────────────
@@ -133,7 +144,8 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
   test('T4 — /verify-email?token=... → Zeigt Success + Link zu /pending-approval', async ({ page }) => {
     if (!ctx.verificationToken) throw new Error('PREREQUISITE BROKEN: verificationToken not set — T3 failed')
 
-    await page.goto(BASE_URL + `/shop-admin/verify-email?token=${ctx.verificationToken}`)
+    // the link the owner really got by mail (path + query), not one rebuilt from the database token
+    await page.goto(BASE_URL + (ctx.verificationPath ?? `/shop-admin/verify-email?token=${ctx.verificationToken}`))
     await waitForPageHydrated(page)
 
     const url = page.url()

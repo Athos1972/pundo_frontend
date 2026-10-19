@@ -17,11 +17,13 @@ import { test, expect } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
 import { shopOwnerLogin, shopOwnerOnboardWithRetry } from './_helpers'
-import { TestDataTracker, adminApi, e2eEmail, e2eName } from './_helpers/test-data'
+import { TestDataTracker, adminApi, e2eEmail, e2eName, psql } from './_helpers/test-data'
+import { waitForMail } from './_helpers/mail-sink'
 import { BASE_URL as BASE } from '../env'
 
 const OWNER_EMAIL = e2eEmail('SELF-DEACT', 'pundo.com')
 const OWNER_PASSWORD = 'E2eSelfDeact!99'
+const SHOP_NAME = e2eName('SELF-DEACT', 'Shop')
 const tracker = new TestDataTracker()
 
 const REPORT_DIR = path.join(__dirname, 'reports')
@@ -39,7 +41,7 @@ test.describe('shop-owner-self-deactivate', () => {
       password: OWNER_PASSWORD,
       provider_type: 'haendler',
       domain_slugs: ['kleidung-mode'],
-      shop_name: e2eName('SELF-DEACT', 'Shop'),
+      shop_name: SHOP_NAME,
       location: { lat: 34.917, lng: 33.636 },
       contact: { phone: '+35799000002' },
       credentials: { type: 'email', email: OWNER_EMAIL, password: OWNER_PASSWORD, name: 'E2E Self Deactivate' },
@@ -132,6 +134,14 @@ test.describe('shop-owner-self-deactivate', () => {
     await page.waitForURL(/deactivated=1/, { timeout: 10000 })
     // Info banner visible
     await expect(page.getByRole('status')).toBeVisible()
+
+    // Wirkung statt Weiterleitung (B8950-016 T22): Shop und Owner sind in der Datenbank deaktiviert, die Owner-Adresse
+    // ist anonymisiert (frei fuer eine neue Registrierung), und die DSGVO-Mail ging an die ORIGINALE Adresse.
+    expect(psql(`select status from shops where slug='${shopSlug}'`)).toBe('inactive')
+    expect(psql(`select status || '|' || (email like 'deleted-%@inactive.pundo.internal') from shop_owners where shop_id=(select id from shops where slug='${shopSlug}')`)).toBe('inactive|true')
+    const mail = await waitForMail(OWNER_EMAIL)
+    expect(mail.subject).toBe('Your Pundo shop has been closed')
+    expect(mail.text, 'DSGVO mail names the closed shop').toContain(SHOP_NAME)
   })
 
   test('S5: Customer cannot access deactivated shop', async ({ page }) => {

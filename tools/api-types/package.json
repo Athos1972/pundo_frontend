@@ -1,0 +1,9 @@
+{
+  "name": "pundo-api-types-tool",
+  "private": true,
+  "description": "Isolated generator for src/types/generated/backend.ts (B8950-016 T17). openapi-typescript needs TypeScript 5, the app uses 6, so it lives in its own package.",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "^5.9.0"
+  }
+}

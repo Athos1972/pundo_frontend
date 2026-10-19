@@ -38,10 +38,12 @@ run_tsc() { npx tsc --noEmit; }
 run_eslint() { npm run lint; }
 run_i18n() { npm run lint:i18n; }
 run_vitest() { npx vitest run; }
+run_api_types() { node scripts/api-types.cjs check; }  # B8950-016 T17: Backend-OpenAPI-Kopie und generierte Typen aktuell
 run_audit() { npm audit --omit=dev --audit-level=high; }  # wie .github/workflows/security.yml (Job npm-audit)
 run_gitleaks() { gitleaks detect --no-banner --redact; }   # wie der CI-Job gitleaks (Verlauf)
 
 step_static() {
+  gate_step api-types 300 run_api_types || return 1
   gate_step tsc 300 run_tsc || return 1
   gate_step eslint 600 run_eslint || return 1
   gate_step lint-i18n 120 run_i18n || return 1

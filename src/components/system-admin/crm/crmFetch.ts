@@ -14,28 +14,39 @@ export interface CrmFetchResult<T> {
 }
 
 /**
+ * Backend 422 `detail` codes → translation key (B8950-016 T18). One table instead of two if-chains; the drift guard
+ * `tests/unit/guards/error-code-drift.test.ts` compares it with `docs/error_codes.json` of the backend: a new 422 code there
+ * without an entry here fails the gate (it would otherwise show the generic message).
+ */
+export const CRM_ERROR_KEYS = {
+  suppressed: 'crm_err_suppressed',
+  illegal_transition: 'crm_err_illegal_transition',
+  shop_id_required: 'crm_err_shop_id_required',
+  no_email_channel: 'crm_err_no_email',
+  last_channel: 'crm_err_last_channel',
+  duplicate_channel: 'crm_err_duplicate_channel',
+  org_name_required: 'crm_err_org_name_required',
+  occurred_at_in_future: 'crm_err_future',
+} as const satisfies Record<string, keyof SysAdminTranslations>
+
+/** Statuses handled by status alone (the `detail` code does not change the message). */
+export const CRM_STATUS_KEYS = {
+  403: 'crm_err_forbidden',
+  404: 'crm_err_not_found',
+  409: 'crm_err_conflict',
+  423: 'crm_err_paused',
+  429: 'crm_err_cap',
+  502: 'crm_err_send_failed',
+} as const satisfies Record<number, keyof SysAdminTranslations>
+
+/**
  * Parse a 422 response detail and return a user-friendly toast message.
  * Handles both string detail ("illegal_transition") and object detail ({detail: "suppressed", ...}).
  */
 function parse422Message(detail: CrmErrorDetail, tr: SysAdminTranslations): string {
-  if (typeof detail === 'string') {
-    if (detail === 'suppressed') return tr.crm_err_suppressed
-    if (detail === 'illegal_transition') return tr.crm_err_illegal_transition
-    if (detail === 'shop_id_required') return tr.crm_err_shop_id_required
-    if (detail === 'no_email_channel') return tr.crm_err_no_email
-    if (detail === 'last_channel') return tr.crm_err_last_channel
-    if (detail === 'duplicate_channel') return tr.crm_err_duplicate_channel
-    return tr.crm_err_generic
-  }
-  // Object detail
-  const d = detail.detail
-  if (d === 'suppressed') return tr.crm_err_suppressed
-  if (d === 'illegal_transition') return tr.crm_err_illegal_transition
-  if (d === 'shop_id_required') return tr.crm_err_shop_id_required
-  if (d === 'no_email_channel') return tr.crm_err_no_email
-  if (d === 'last_channel') return tr.crm_err_last_channel
-  if (d === 'duplicate_channel') return tr.crm_err_duplicate_channel
-  return tr.crm_err_generic
+  const code = typeof detail === 'string' ? detail : detail.detail
+  const key = (CRM_ERROR_KEYS as Record<string, keyof SysAdminTranslations>)[code]
+  return key ? (tr[key] as string) : tr.crm_err_generic
 }
 
 /**
@@ -78,17 +89,17 @@ export async function crmRequest<T>(
   }
 
   if (res.status === 403) {
-    showToast(tr.crm_err_forbidden, 'error')
+    showToast(tr[CRM_STATUS_KEYS[403]], 'error')
     return { ok: false, status: 403 }
   }
 
   if (res.status === 404) {
-    showToast(tr.crm_err_not_found, 'error')
+    showToast(tr[CRM_STATUS_KEYS[404]], 'error')
     return { ok: false, status: 404 }
   }
 
   if (res.status === 409) {
-    showToast(tr.crm_err_conflict, 'error')
+    showToast(tr[CRM_STATUS_KEYS[409]], 'error')
     return { ok: false, status: 409 }
   }
 
@@ -103,17 +114,17 @@ export async function crmRequest<T>(
   }
 
   if (res.status === 423) {
-    showToast(tr.crm_err_paused, 'error')
+    showToast(tr[CRM_STATUS_KEYS[423]], 'error')
     return { ok: false, status: 423 }
   }
 
   if (res.status === 429) {
-    showToast(tr.crm_err_cap, 'error')
+    showToast(tr[CRM_STATUS_KEYS[429]], 'error')
     return { ok: false, status: 429 }
   }
 
   if (res.status === 502) {
-    showToast(tr.crm_err_send_failed, 'error')
+    showToast(tr[CRM_STATUS_KEYS[502]], 'error')
     return { ok: false, status: 502 }
   }
 

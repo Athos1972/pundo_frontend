@@ -100,3 +100,4 @@ video/_branding/pronunciation-test/
 # Journey-Reports sind lokale Laufartefakte (jeder Playwright-Lauf schreibt sie neu), nicht versionieren (BB 2026-10-16)
 e2e/journeys/reports/*
 !e2e/journeys/reports/.gitkeep
+/tools/api-types/node_modules

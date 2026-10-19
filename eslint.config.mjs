@@ -165,6 +165,7 @@ const eslintConfig = defineConfig([
   testFilesRule,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    "src/types/generated/**", // openapi-typescript output (B8950-016 T17)
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",

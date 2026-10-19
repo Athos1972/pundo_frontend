@@ -69,7 +69,13 @@ async function expectShopPageHealthy(page: Page, slug: string) {
   const consoleErrors: string[] = []
   const pageErrors: string[] = []
   page.on('console', (msg) => {
-    if (msg.type() === 'error') consoleErrors.push(msg.text())
+    if (msg.type() !== 'error') return
+    // A static media file that is missing in the test environment (the prod-copy DB points at logo/photo files that are
+    // not on this machine) logs "Failed to load resource ... 404". That says nothing about the shop page itself
+    // (the component falls back to the letter avatar); it made the gate depend on which shops the sitemap sample hit.
+    const url = msg.location().url
+    if (/status of 404/.test(msg.text()) && /\/(shop_logos|product_images|brand_logos|avatars|review_photos|spotted_photos)\//.test(url)) return
+    consoleErrors.push(msg.text())
   })
   page.on('pageerror', (err) => {
     pageErrors.push(err.message)

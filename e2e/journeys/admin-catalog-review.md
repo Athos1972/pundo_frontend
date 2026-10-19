@@ -22,8 +22,8 @@ touches-states:
 status-changed-at: 2026-10-13T00:00:00Z
 status-changed-by-spec: 2026-10-13-e2e-isolation-hygiene
 last-run: 2026-10-19T08:57:00Z
-last-result: PASS (47/47 inkl. smoke-Projekt; 55/55 mit --workers=1 --repeat-each=2)
-last-run-sha: c798bba+uncommitted
+last-result: PASS
+last-run-sha: a898967
 ---
 
 # Journey: admin-catalog-review

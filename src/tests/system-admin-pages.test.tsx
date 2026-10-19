@@ -44,6 +44,7 @@ vi.mock('@/app/(system-admin)/admin/(portal)/category-attribute-definitions/[cat
 
 import * as api from '@/lib/system-admin-api'
 import { getLangServer } from '@/lib/lang'
+import type { SysAdminApiKey } from '@/types/system-admin'
 
 const tr = tSysAdmin('en')
 const trEl = tSysAdmin('el')
@@ -339,13 +340,19 @@ describe('shop types / owners / offers / api keys lists', () => {
 
   it('api keys: formats dates and shows "never" for unused keys', async () => {
     vi.mocked(api.getApiKeys).mockResolvedValue(paged([
-      { id: 1, shop_owner_id: 2, name: 'ci', scope: 'read', created_at: '2026-03-04T10:00:00Z', last_used_at: null },
+      // the shape the backend really sends (AdminApiKeyResponse): `scopes` list and `owner_id`; type-checked on purpose
+      {
+        id: 1, key_prefix: 'pk_ab12', name: 'ci', key_type: 'internal', owner_id: 2, scopes: ['internal:write', 'read'],
+        is_active: true, expires_at: null, created_at: '2026-03-04T10:00:00Z', created_by: null, last_used_at: null,
+      } satisfies SysAdminApiKey,
     ]) as never)
     const { default: Page } = await import(`${A}/api-keys/page`)
     await show(Page, sp())
     const row = bodyRows()[0]
     expect(within(row).getByText(tr.never)).toBeTruthy()
     expect(within(row).getByText(new Date('2026-03-04T10:00:00Z').toLocaleDateString())).toBeTruthy()
+    expect(within(row).getByText('internal:write, read'), 'scopes column (was always empty)').toBeTruthy()
+    expect(within(row).getByText('2'), 'owner id column (was always empty)').toBeTruthy()
     expect(within(row).getByRole('button', { name: tr.revoke })).toBeTruthy()
   })
 

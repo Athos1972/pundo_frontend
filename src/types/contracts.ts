@@ -72,14 +72,13 @@ export type SysAdminContracts = [
   Contract<Assignable<Schemas['ContactListItem'], SysAdmin.CrmContactListItem>>,
   // @ts-expect-error -- drift: opening_hours[].open:nullable, opening_hours[].close:nullable, opening_hours[].second_open:nullable, opening_hours[].second_close:nullable, social_links.*:type
   Contract<Assignable<Schemas['AdminShopResponse'], SysAdmin.SysAdminShop>>,
-  // @ts-expect-error -- drift: brand_id:missing, ean:missing
-  Contract<Assignable<Schemas['AdminItemResponse'], SysAdmin.SysAdminItem>>,
+  // `/products` (the only endpoint the admin UI reads items from) answers with AdminProductResponse, not AdminItemResponse
+  Contract<Assignable<Schemas['AdminProductResponse'], SysAdmin.SysAdminItem>>,
   // @ts-expect-error -- drift: social_links.*:type, social_links.*:notobject, social_links.*:notarray
   Contract<Assignable<Schemas['AdminBrandResponse'], SysAdmin.SysAdminBrand>>,
   Contract<Assignable<Schemas['AdminCategoryResponse'], SysAdmin.SysAdminCategory>>,
   Contract<Assignable<Schemas['AdminShopOwnerResponse'], SysAdmin.SysAdminShopOwner>>,
   Contract<Assignable<Schemas['AdminOfferResponse'], SysAdmin.SysAdminOffer>>,
-  // @ts-expect-error -- drift: shop_owner_id:missing, scope:missing
   Contract<Assignable<Schemas['AdminApiKeyResponse'], SysAdmin.SysAdminApiKey>>,
   Contract<Assignable<Schemas['AdminShopTypeResponse'], SysAdmin.SysAdminShopType>>,
   // @ts-expect-error -- drift: external_batch_id:missing
@@ -95,9 +94,7 @@ export type ApiContracts = [
   Contract<Assignable<Schemas['ProductListResponse'], Api.ProductListResponse>>,
   // @ts-expect-error -- drift: offers[].shop_type:missing, offers[].delivery_available:missing
   Contract<Assignable<Schemas['ProductDetailResponse'], Api.ProductDetailResponse>>,
-  // @ts-expect-error -- drift: language_votes:nullable
   Contract<Assignable<Schemas['ShopListItem'], Api.ShopListItem>>,
-  // @ts-expect-error -- drift: language_votes:nullable
   Contract<Assignable<Schemas['ShopDetailResponse'], Api.ShopDetailResponse>>,
   Contract<Assignable<Schemas['CategoryItem'], Api.CategoryItem>>,
   // @ts-expect-error -- drift: items[].best_offer.shop_type:missing, items[].best_offer.delivery_available:missing, items[].category_id:nullable, items[].brand:missing

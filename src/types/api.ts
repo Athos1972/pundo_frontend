@@ -90,7 +90,7 @@ export interface ShopListItem {
   review_stats?: { average_stars: number; total_count: number } | null;
   shop_type?: ShopTypeRead | null;
   spoken_languages?: string[] | null;
-  language_votes?: VoteAggregateItem[];
+  language_votes?: LanguageVoteAggregate[] | null;
   is_open_now?: boolean | null;
   has_parking?: boolean | null;
   has_own_delivery?: boolean | null;
@@ -302,6 +302,9 @@ export type AttributeType =
   | 'parking' | 'price_level' | 'delivery'
   | 'click_collect' | 'reservation_required' | 'terrace'
   | 'charity'
+
+/** Vote summary in shop lists/details: the backend sends it without the viewer's own vote (`my_value` only exists on the votes endpoint). */
+export type LanguageVoteAggregate = Omit<VoteAggregateItem, 'my_value'> & { my_value?: number | null }
 
 export interface VoteAggregateItem {
   attribute_type: AttributeType

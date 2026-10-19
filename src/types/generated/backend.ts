@@ -279,7 +279,10 @@ export interface paths {
         get: operations["get_category_translations_by_category_api_v1_admin_categories__category_id__translations_get"];
         /**
          * Put Category Translations
-         * @description Bulk upsert translations for a category. RTL is auto-set from lang.
+         * @description Upsert translations per language (B5900-032). RTL is auto-set from lang.
+         *
+         *     A language that is not in the body is left alone (before, the body replaced ALL translations: a client that sent
+         *     only ``en`` silently deleted the other five). A body entry with an empty name deletes that language.
          */
         put: operations["put_category_translations_api_v1_admin_categories__category_id__translations_put"];
         post?: never;

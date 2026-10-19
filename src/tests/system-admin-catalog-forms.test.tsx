@@ -301,19 +301,27 @@ describe('CategoryForm', () => {
     is_filterable: true, display_order: 0, override_mode: 'inherit', labels: { en: 'Size' }, created_at: '', updated_at: '',
   }]
 
-  it('create: requires taxonomy type, omits edit-only sections and posts nulls for no parent', async () => {
+  it('create: requires taxonomy type and an English name, offers translations, posts nulls for no parent (B5900-032)', async () => {
     const user = userEvent.setup()
-    mockFetch.mockResolvedValue(ok())
+    mockFetch.mockResolvedValueOnce({ ...ok(), json: async () => ({ id: 9 }) }).mockResolvedValueOnce(ok())
     render(<CategoryForm category={null} allCategories={cats} translations={[]} attrDefs={[]} tr={tr} />)
-    expect(screen.queryByText(tr.translations_tab)).toBeNull()
+    expect(screen.getByText(tr.translations_tab)).toBeTruthy()  // a new category can be named right away
     await user.type(screen.getByLabelText(new RegExp(tr.external_id)), ' new-cat ')
     // native `required` on the select prevents submit; choose then save
     await user.selectOptions(screen.getByLabelText(new RegExp(tr.taxonomy_type)), 'unspsc')
     await user.click(screen.getByRole('button', { name: tr.save }))
+    expect(await screen.findByText(`EN: ${tr.error_required}`)).toBeTruthy()  // no English name -> nothing is sent
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    const rows = screen.getAllByRole('row').slice(1, 7)
+    await user.type(within(rows[0]).getByRole('textbox'), 'New category')  // en
+    await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/categories'))
-    expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/categories')
     expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ external_id: 'new-cat', parent_id: null, taxonomy_type: 'unspsc' })
+    const [url, init] = mockFetch.mock.calls[1]
+    expect(url).toBe('/api/admin/categories/9/translations')  // id of the new category from the POST answer
+    expect(JSON.parse(init.body)[0]).toEqual({ lang: 'en', name: 'New category', rtl: false })
   })
 
   it('validates a whitespace-only external id', async () => {
@@ -334,14 +342,14 @@ describe('CategoryForm', () => {
     expect(screen.getByRole('option', { name: `old ${tr.legacy_suffix}` })).toBeTruthy()
   })
 
-  it('edit: saves category then PUTs only non-empty translations with rtl flag', async () => {
+  it('edit: saves category then PUTs all six languages (an emptied field deletes that language) with rtl flag', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue(ok())
     render(<CategoryForm category={cats[1]} allCategories={cats} translations={translations} attrDefs={[]} tr={tr} />)
     const rows = screen.getAllByRole('row').slice(1, 7)
     expect(rows).toHaveLength(6)
     await user.type(within(rows[4]).getByRole('textbox'), 'فرعي')   // ar
-    await user.type(within(rows[1]).getByRole('textbox'), '   ')     // de, blank -> dropped
+    await user.type(within(rows[1]).getByRole('textbox'), '   ')     // de, blank -> empty name = delete that language
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/categories'))
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/categories/2')
@@ -351,17 +359,22 @@ describe('CategoryForm', () => {
     expect(init.method).toBe('PUT')
     expect(JSON.parse(init.body)).toEqual([
       { lang: 'en', name: 'Kid', rtl: false },
+      { lang: 'de', name: '', rtl: false },
+      { lang: 'el', name: '', rtl: false },
+      { lang: 'ru', name: '', rtl: false },
       { lang: 'ar', name: 'فرعي', rtl: true },
+      { lang: 'he', name: '', rtl: true },
     ])
   })
 
-  it('edit: still succeeds when saving translations fails', async () => {
+  it('edit: a failed translation save is reported, not swallowed (B5900-032)', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValueOnce(ok()).mockRejectedValueOnce(new Error('down'))
     render(<CategoryForm category={cats[1]} allCategories={cats} translations={translations} attrDefs={[]} tr={tr} />)
     await user.click(screen.getByRole('button', { name: tr.save }))
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/categories'))
-    expect(showToast).toHaveBeenCalledWith(tr.saved, 'success')
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith(tr.error_generic, 'error'))
+    expect(push).not.toHaveBeenCalled()  // the user stays on the form and can retry
+    expect(showToast).not.toHaveBeenCalledWith(tr.saved, 'success')
   })
 
   it('does not touch translations when the category save is rejected', async () => {

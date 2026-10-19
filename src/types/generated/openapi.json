@@ -23076,7 +23076,7 @@
     ]
    },
    "put": {
-    "description": "Bulk upsert translations for a category. RTL is auto-set from lang.",
+    "description": "Upsert translations per language (B5900-032). RTL is auto-set from lang.\n\nA language that is not in the body is left alone (before, the body replaced ALL translations: a client that sent\nonly ``en`` silently deleted the other five). A body entry with an empty name deletes that language.",
     "operationId": "put_category_translations_api_v1_admin_categories__category_id__translations_put",
     "parameters": [
      {

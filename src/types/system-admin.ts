@@ -319,10 +319,15 @@ export interface MappingGapEntry {
 // ─── API Keys ─────────────────────────────────────────────────────────────────
 export interface SysAdminApiKey {
   id: number
-  shop_owner_id: number
+  key_prefix: string
   name: string
-  scope: 'read' | 'write' | 'read_write'
+  key_type: string
+  owner_id: number | null
+  scopes: string[]
+  is_active: boolean
+  expires_at: string | null
   created_at: string
+  created_by: string | null
   last_used_at: string | null
 }
 

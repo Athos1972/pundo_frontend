@@ -255,9 +255,9 @@ test.describe('E2E-S6: Favicons in Shop-Listen und Detail-Seite', () => {
     await firstShopLink.click()
     await expect(page).toHaveURL(/\/shops\/[^/]+$/)
 
-    // Avatar auf Detail-Seite: sollte größer sein
-    // Prüfe dass ein img oder role="img" Div mit großer Größe vorhanden ist
-    const detailAvatar = page.locator('[role="img"]').first()
+    // Logo/Avatar im Shop-Header (B8950-016): per Test-ID, nicht "erstes role=img der Seite" - das war je nach Shop
+    // ein anderes Element (Logo und Favicon haben kein role=img, nur der Buchstaben-Fallback), daher flaky
+    const detailAvatar = page.getByTestId('shop-logo')
     await expect(detailAvatar).toBeVisible()
 
     const box = await detailAvatar.boundingBox()

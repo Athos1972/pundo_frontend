@@ -44,6 +44,8 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
     const e: Record<string, string> = {}
     if (!externalId.trim()) e.external_id = tr.error_external_id_required
     if (!taxonomyType.trim()) e.taxonomy_type = tr.error_required
+    // B5900-032: a new category without an English name would show up nowhere (picker, search)
+    if (!isEdit && !translations.find((t) => t.lang === 'en')?.name.trim()) e.translation_en = `EN: ${tr.error_required}`
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -88,18 +90,27 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
           return
         }
 
-        // Save translations if editing
-        if (isEdit) {
+        // Save translations (create and edit). The category id of a new category comes from the POST answer.
+        const categoryId = isEdit ? category.id : ((await res.json().catch(() => null)) as { id?: number } | null)?.id
+        if (categoryId != null) {
           const RTL_LANGS = new Set(['ar', 'he'])
-          const trPayload = translations
-            .filter((t) => t.name.trim())
-            .map(({ lang, name: tName }) => ({ lang, name: tName, rtl: RTL_LANGS.has(lang) }))
-
-          await fetch(`/api/admin/categories/${category.id}/translations`, {
+          // all languages are sent: an emptied field deletes that language, the others are upserted
+          const trPayload = LANGUAGES.map((lang) => ({
+            lang,
+            name: translations.find((x) => x.lang === lang)?.name.trim() ?? '',
+            rtl: RTL_LANGS.has(lang),
+          }))
+          const trRes = await fetch(`/api/admin/categories/${categoryId}/translations`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(trPayload),
-          }).catch(() => {})
+          }).catch(() => null)
+          if (!trRes || !trRes.ok) {
+            // the category itself is saved; the translations are not: say so instead of swallowing it
+            showToast(tr.error_generic, 'error')
+            if (!isEdit) router.replace(`/admin/categories/${categoryId}/edit`)
+            return
+          }
         }
 
         showToast(tr.saved, 'success')
@@ -159,8 +170,7 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
         </FormField>
       </div>
 
-      {isEdit && (
-        <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+      <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700">{tr.translations_tab}</h3>
 
           <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
@@ -193,8 +203,8 @@ export function CategoryForm({ category, allCategories, translations: initTr, at
               </tbody>
             </table>
           </div>
+          {errors.translation_en && <p className="text-xs text-red-600">{errors.translation_en}</p>}
         </div>
-      )}
 
       {isEdit && (
         <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">

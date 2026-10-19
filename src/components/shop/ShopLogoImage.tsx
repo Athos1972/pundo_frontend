@@ -68,7 +68,7 @@ export function ShopLogoImage({ url, name, size, shopId }: ShopLogoImageProps) {
 
   if (url && !urlError) {
     return (
-      <div className={`shrink-0 ${sizeClass}`}>
+      <div data-testid="shop-logo" className={`shrink-0 ${sizeClass}`}>
         <Image
           src={url}
           alt={name ?? ''}
@@ -85,7 +85,7 @@ export function ShopLogoImage({ url, name, size, shopId }: ShopLogoImageProps) {
   if (shopId !== undefined && !faviconError) {
     const faviconUrl = `/api/v1/shops/${shopId}/favicon?size=${SIZE_TO_API[size]}`
     return (
-      <div className={`shrink-0 ${sizeClass} rounded-xl overflow-hidden`}>
+      <div data-testid="shop-logo" className={`shrink-0 ${sizeClass} rounded-xl overflow-hidden`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={faviconUrl}
@@ -101,6 +101,7 @@ export function ShopLogoImage({ url, name, size, shopId }: ShopLogoImageProps) {
   const textSize = size === 'lg' ? 'text-2xl font-bold' : 'text-lg font-semibold'
   return (
     <div
+      data-testid="shop-logo"
       className={`shrink-0 ${sizeClass} rounded-xl flex items-center justify-center select-none ${colourClass(name)} ${textSize}`}
       aria-label={name ?? undefined}
       role="img"

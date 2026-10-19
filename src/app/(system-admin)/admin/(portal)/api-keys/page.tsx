@@ -26,6 +26,10 @@ export default async function ApiKeysPage({ searchParams }: PageProps) {
   // Pre-format dates on server to avoid render functions crossing SC→CC boundary
   const rows = rawItems.map((item) => ({
     ...item,
+    // the backend sends `scopes` (list) and `owner_id`; the table used the field names `scope`/`shop_owner_id`, which
+    // the backend never sent, so both columns were always empty (found by the type contract, B8950-016 T17)
+    scope: item.scopes.join(', ') || '—',
+    shop_owner_id: item.owner_id ?? '—',
     created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : '—',
     last_used_at: item.last_used_at ? new Date(item.last_used_at).toLocaleDateString() : tr.never,
   }))

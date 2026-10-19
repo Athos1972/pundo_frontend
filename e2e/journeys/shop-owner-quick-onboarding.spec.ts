@@ -663,7 +663,6 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const draftMail = `${PREFIX}-draft@pundo-e2e.io`
     try {
       const tr = tShopAdminClaim('en')
-      const shopsBefore = psql(`select count(*) from shops where slug like 'e2e-${RUN_ID}-%'`)
       await goToContactAndEnterWebsite(page, host, draftMail)
       const hint = page.getByTestId('onboarding-existing-shop-hint')
       await expect(hint).toBeVisible({ timeout: 15_000 })
@@ -674,7 +673,8 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
       await confirm.check()
       await page.getByRole('button', { name: tr.claim_continue }).click()
       await expect(page.locator('input[name="email"]'), 'T15: E-Mail aus dem Entwurf vorbelegt').toHaveValue(draftMail)
-      expect(psql(`select count(*) from shops where slug like 'e2e-${RUN_ID}-%'`), 'T15: kein neuer Shop').toBe(shopsBefore)
+      // only the seeded shop owns this host; other parallel specs create e2e shops with the same RUN_ID, so a global count is racy
+      expect(psql(`select count(*) from shops where website_url ilike '%${host}%'`), 'T15: kein neuer Shop (nur der vorbereitete)').toBe('1')
       expect(psql(`select count(*) from shop_owners where email='${draftMail}'`)).toBe('0')
     } finally {
       await tracker.cleanup()

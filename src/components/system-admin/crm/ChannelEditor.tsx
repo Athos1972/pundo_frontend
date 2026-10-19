@@ -147,7 +147,7 @@ export function ChannelEditor({ contact, tr, canWrite }: ChannelEditorProps) {
               + {tr.crm_channel_add}
             </button>
           ) : (
-            <form onSubmit={handleAdd} className="flex items-end gap-2 flex-wrap">
+            <form onSubmit={handleAdd} data-testid="channel-add-form" className="flex items-end gap-2 flex-wrap">
               <div className="flex flex-col gap-1">
                 <label htmlFor={kindId} className="text-xs font-medium text-gray-600">{tr.crm_channel_kind}</label>
                 <select

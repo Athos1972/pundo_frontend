@@ -202,7 +202,8 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     // The inline add-form is a <form> element inside ChannelEditor
     // It contains a <select> (kind) and a plain <input type="text"> (value)
     // Scope all interactions to the form to avoid matching unrelated elements
-    const addForm = page.locator('form').last()  // the add-form is the last form in the DOM
+    // (own test id: the page also hosts the manual-documentation form, so "last form" is not unique)
+    const addForm = page.getByTestId('channel-add-form')
     await expect(addForm).toBeVisible({ timeout: 5_000 })
 
     // Kind select — choose phone

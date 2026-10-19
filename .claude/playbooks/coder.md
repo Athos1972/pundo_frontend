@@ -330,6 +330,14 @@ bis er grün wird — Abschwächen wäre der klassische Schöntestfall.
 
 ---
 
+## 3.6 Verträge und Wirkungsnachweis
+
+Kanonische Regeln R1–R9: Conventions § Verträge und Wirkungsnachweis. Ergänzt „Pflicht: Transformationsfunktionen mit realistischen Backend-Daten testen“ (§2) und den Regression-Schutz.
+- **Fixtures aus der echten Antwort:** Für jede API-Antwortform, die du parst oder anzeigst, liegt eine aufgezeichnete Backend-Antwort (8500) bzw. eine aus dem Schema erzeugte Fixture vor. Vitest-Mocks (`fetch`/`api.ts`) und `page.route`-Antworten in Playwright-Specs verwenden dieselbe Datei.
+- **Wirkung assertieren:** Komponententests prüfen den gerenderten Inhalt (Text, Attribut, Anzahl) und Journeys den sichtbaren Wert, nicht nur `toBeVisible()` eines Containers. Ein leeres Ergebnis (`[]`, `null`, 0 Treffer) ist ein eigener Testfall mit definierter Darstellung.
+- **Red-Green-Beleg:** Die Regel aus §2/§3.5 (Test erst rot) wird belegt: Testname und Fehlermeldung des roten Laufs stehen in 03-implementation.md. Kein `git stash`/`checkout` im geteilten Working Tree; Änderung temporär zurücknehmen.
+- **03-implementation.md** und Commit-Vorschlag nennen die Vertragstests der berührten Schnittstellen.
+
 ## 4. Frontend-Zusatzangaben in 03-implementation.md
 
 Format und Pflichtteile von `03-implementation.md` und Handoff-Zeile: siehe Agent. Zusätzlich für dieses Repo:

@@ -210,6 +210,13 @@ Siehe `ls src/app/(customer)/[lang]` und `docs/architecture.md` („Route-Gruppe
 
 ---
 
+## Verträge und Wirkungsnachweis
+
+Kanonische Regeln R1–R9: Conventions § Verträge und Wirkungsnachweis. Die Pflichtabschnitte „Schnittstellen & Verträge“ und „Evidenzplan“ in `02-architecture.md` füllst du für dieses Repo so:
+- **Grenzen im Frontend:** Browser/Server Component → Proxy (`/api/v1/` Rewrite in `next.config.ts`, `src/proxy.ts`) → Backend; Typen in `src/types/api.ts` bzw. `src/types/shop-admin.ts` spiegeln das Backend-Schema. Jede neue oder geänderte Antwortform ist eine Grenze mit Fixture.
+- **Fixture-Quelle:** echte Backend-Antwort von 8500 (aufgezeichnet) oder das Backend-Schema, nie handgebaut. Der Backend-Architect liefert bei `⚠️ CROSS-REPO` die Antwortform; das Frontend testet gegen dieselbe Fixture.
+- **Beobachtungspunkt im Evidenzplan:** sichtbarer Text/Selektor oder Network-Response mit konkretem Inhalt. „Seite lädt“ oder „Container sichtbar“ beweist keine Wirkung. Die Journey-Deltas verweisen auf die Evidenz-ACs.
+
 ## Journey-Deltas (Katalog-Validierung)
 
 **Dieser Abschnitt ist bei JEDEM Architektur-Spec verpflichtend.** Er kommt nach dem normalen Architekturabschnitt, vor der Task-Liste.

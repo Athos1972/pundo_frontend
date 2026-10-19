@@ -31,7 +31,7 @@ test.describe('E2E-02: Suche', () => {
     await page.goto('/')
     // F8950 T22: statt networkidle - Enter vor der Hydration hat keinen Handler
     await waitForPageHydrated(page)
-    const input = page.locator('input').first()
+    const input = page.getByRole('searchbox').first()
     await input.click()
     await input.fill('cat food')
     await input.press('Enter')
@@ -209,7 +209,7 @@ test.describe('E2E-06: Responsive Mobile', () => {
 
   test('search input is present and usable on mobile', async ({ page }) => {
     await page.goto('/')
-    const input = page.locator('input').first()
+    const input = page.getByRole('searchbox').first()
     await expect(input).toBeVisible()
     const box = await input.boundingBox()
     expect(box?.height).toBeGreaterThanOrEqual(36) // touch-friendly

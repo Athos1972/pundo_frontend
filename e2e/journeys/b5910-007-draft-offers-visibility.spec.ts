@@ -233,6 +233,7 @@ test('P2: Owner (vor Freigabe) — Knopf „Übernehmen/Keep" in 6 Sprachen, üb
   // Sprachcheck: Knopftext + Tooltip je Sprache, alter Text („Aktivieren") darf nirgends vorkommen
   for (const [lang, [label, tooltip]] of Object.entries(KEEP_LABELS)) {
     await ownerPage(page, lang)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const btn = page.locator('button', { hasText: new RegExp(`^${label}$`) }).first()
     await expect(btn, `Knopf ${lang}`).toBeVisible()
     await expect(btn).toHaveAttribute('title', tooltip)

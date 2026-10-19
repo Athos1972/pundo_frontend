@@ -86,6 +86,7 @@ async function createItemInLang(page: Page, context: import('@playwright/test').
 
 /** Schritt 2: Festpreis 5,00 eintragen und speichern. */
 async function savePrice(page: Page) {
+  // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
   await page.locator('select').first().selectOption('fixed')
   await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen|προσθήκη μονάδας τιμής/i }).first().click()
   await page.locator('input[inputmode="decimal"]').first().fill('5.00')
@@ -160,10 +161,12 @@ test.describe('Kundensicht + Sprachen (e2e-tester)', () => {
 
     const expected = ['Festpreis', 'Auf Anfrage', 'Kostenlos', 'Variabler Preis']
     await expect(page.getByText('Preisart', { exact: true }).first()).toBeVisible()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const std = page.locator('select').first()
     expect(await std.locator('option').allTextContents()).toEqual(expected)
     // Aktionspreis-Accordion öffnen
     await page.getByRole('button', { name: /Aktion/i }).first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const promo = page.locator('select').nth(1)
     expect(await promo.locator('option').allTextContents()).toEqual(expected)
     // Kein englisches Literal mehr

@@ -7,6 +7,7 @@ const require = createRequire(import.meta.url);
 const requirePageMetadata = require("./eslint-rules/require-page-metadata.js");
 const noInlineStyle = require("./eslint-rules/no-inline-style.js");
 const noHardcodedJsxText = require("./eslint-rules/no-hardcoded-jsx-text.js");
+const noPositionalTagLocator = require("./eslint-rules/no-positional-tag-locator.js");
 
 // ─── Shop-Admin Clean Boundary ────────────────────────────────────────────────
 // shop-admin code must not import from customer-facing modules.
@@ -109,6 +110,22 @@ const i18nHardcodedTextRule = {
   },
 };
 
+// ─── E2E guardrail (B8950-016 T4): no page-level `locator('<tag>').first()/.last()/.nth()` ───
+// Position in the DOM is not an identity; a second form/button on the page re-targets the test.
+const e2ePositionalLocatorRule = {
+  files: ["e2e/**/*.ts"],
+  plugins: {
+    "local-e2e": {
+      rules: {
+        "no-positional-tag-locator": noPositionalTagLocator,
+      },
+    },
+  },
+  rules: {
+    "local-e2e/no-positional-tag-locator": "error",
+  },
+};
+
 // ─── Unused vars: ignore _-prefixed identifiers (standard TS convention) ──────
 // Preserve rule defaults: vars/args/ignoreRestSiblings are kept at defaults;
 // only add _-ignore patterns so prefixed identifiers stop being flagged.
@@ -143,6 +160,7 @@ const eslintConfig = defineConfig([
   seoMetadataRule,
   cspInlineStyleRule,
   i18nHardcodedTextRule,
+  e2ePositionalLocatorRule,
   unusedVarsRule,
   testFilesRule,
   // Override default ignores of eslint-config-next.

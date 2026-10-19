@@ -131,6 +131,7 @@ export async function selectItemViaModal(page: Page, searchQuery: string) {
 
 /** Select price type in Step 2. */
 export async function setPriceType(page: Page, priceType: string) {
+  // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
   await page.locator('select').first().selectOption(priceType)
 }
 

@@ -85,6 +85,7 @@ test('AK1: Neuanlage -> Schritt 2 zeigt Foto-Upload, Upload funktioniert, Angebo
   await expect(upload.locator('li[data-testid^="item-photo-"]')).toHaveCount(1)
 
   // Preis 5,00
+  // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
   await page.locator('select').first().selectOption('fixed')
   await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first().click()
   await page.locator('input[inputmode="decimal"]').first().fill('5.00')

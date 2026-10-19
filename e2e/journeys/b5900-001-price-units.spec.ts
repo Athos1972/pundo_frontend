@@ -53,6 +53,7 @@ test('AC-2 UI: Neue Offer-Seite lädt, PriceTierEditor hat Einheiten-Optionen', 
   console.log('[AC-2] Form sichtbar')
 
   // Price-Type auf fixed setzen
+  // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
   const priceTypeSelect = page.locator('select').first()
   await expect(priceTypeSelect).toBeVisible({ timeout: 5_000 })
   await priceTypeSelect.selectOption('fixed')

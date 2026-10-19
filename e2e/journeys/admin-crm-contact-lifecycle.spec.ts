@@ -145,6 +145,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await waitForPageHydrated(page)
 
     // ContactEditForm renders a button with tr.edit = "Edit"
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const editBtn = page.locator('button', { hasText: /^Edit$|^Bearbeiten$/ }).first()
     await expect(editBtn).toBeVisible({ timeout: 10_000 })
     await editBtn.click()
@@ -195,6 +196,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await waitForPageHydrated(page)
 
     // ChannelEditor: "+ Add channel" button
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const addBtn = page.locator('button', { hasText: /Add channel|Kanal hinzufügen/ }).first()
     await expect(addBtn).toBeVisible({ timeout: 10_000 })
     await addBtn.click()
@@ -283,6 +285,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await waitForPageHydrated(page)
 
     // "Confirm business" Button (tr.crm_action_confirm_business = "Confirm business")
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const confirmBtn = page.locator('button', { hasText: /Confirm business|Business bestätigen/ }).first()
     await expect(confirmBtn).toBeVisible({ timeout: 10_000 })
     await confirmBtn.click()
@@ -315,6 +318,7 @@ test.describe.serial('CRM Contact Lifecycle — Stufe 0+1', () => {
     await waitForPageHydrated(page)
 
     // "Suppress / Opt-out" Button (tr.crm_action_suppress = "Suppress / Opt-out")
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const suppressBtn = page.locator('button', { hasText: /Suppress|Opt-out|Unterdrücken/ }).first()
     await expect(suppressBtn).toBeVisible({ timeout: 10_000 })
     await suppressBtn.click()

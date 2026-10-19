@@ -111,6 +111,7 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
 
     // Lifecycle-Transition-Button MUSS vorhanden sein (NEEDS_REVIEW hat gültige Transitions)
     // NEEDS_REVIEW → SOURCED, QUEUED, UNREACHABLE etc. → "Set state" / "Status setzen" Button
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const setStateBtn = page.locator('button', { hasText: /Set state|Status setzen/i }).first()
     await expect(setStateBtn).toBeVisible({ timeout: 5_000 })
   })
@@ -125,6 +126,7 @@ test.describe.serial('CRM NEEDS_REVIEW Flow — Stufe 2', () => {
     await waitForPageHydrated(page)
 
     // "Set state" / "Status setzen" Button klicken
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const setStateBtn = page.locator('button', { hasText: /Set state|Status setzen/i }).first()
     await expect(setStateBtn).toBeVisible({ timeout: 10_000 })
     await setStateBtn.click()

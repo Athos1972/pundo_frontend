@@ -196,6 +196,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Banner must be gone
     await expect(
+      // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
       page.locator('button', { hasText: /start over|neu beginnen/i }).first(),
       'T3: Discard button must disappear'
     ).toBeHidden({ timeout: 5_000 })
@@ -235,6 +236,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     await elektrikerChip.first().click()
 
     // Click Next — should trigger sub-step (specialties)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
     // Specialties sub-step must appear (solar systems / solaranlagen chip)
@@ -246,6 +248,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Select specialty and click Next → should go to Step 3 (Location)
     await specialtyChip.first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
     // Step 3 (Location) title must be visible
@@ -278,6 +281,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const malerChip = page.locator('button', { hasText: /painter|maler/i })
     await expect(malerChip.first()).toBeVisible({ timeout: 10_000 })
     await malerChip.first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
     // If specialties sub-step appeared instead of Step 3, click through it
@@ -285,6 +289,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     try {
       await expect(locationTitle.first()).toBeVisible({ timeout: 2_000 })
     } catch {
+      // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
       await page.locator('button', { hasText: /next|weiter/i }).last().click()
     }
 
@@ -308,6 +313,7 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Click Next on Location step — may need coords set; if Next is still disabled,
     // use JS to click it anyway (component validates lat/lng existence)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const locationNextBtn = page.locator('button', { hasText: /next|weiter/i }).last()
     // F8950 T22: statt waitForTimeout(500) bis zu 2 s auf "Next aktiv" warten (Adress-/Pin-Aufloesung);
     // bleibt der Button deaktiviert, greift der Fallback unten (Draft per localStorage).
@@ -348,12 +354,14 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
       await expect(contactH2.first()).toBeVisible({ timeout: 5_000 })
     } catch {
       // Still on location? Try clicking next
+      // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
       await page.locator('button', { hasText: /next|weiter/i }).last().click({ force: true })
       await expect(contactH2.first()).toBeVisible({ timeout: 8_000 })
     }
 
     const phoneInput = page.locator('input[type="tel"]').first()
     await phoneInput.fill('+35799000011')
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
     // Step 5: Name (required) + Photo — enter name then click Skip (photo optional)
@@ -460,12 +468,14 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const malerChip = page.locator('button', { hasText: /painter|maler/i })
     await expect(malerChip.first()).toBeVisible({ timeout: 10_000 })
     await malerChip.first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /next|weiter/i }).last().click()
 
     // Skip sub-step if it appears
     try {
       await expect(page.locator('h2', { hasText: /located|wo bist/i }).first()).toBeVisible({ timeout: 2_000 })
     } catch {
+      // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
       await page.locator('button', { hasText: /next|weiter/i }).last().click()
     }
 
@@ -496,7 +506,9 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     })
 
     // Next and Skip must be disabled when name is empty
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const nextBtn = page.locator('button', { hasText: /next|weiter/i }).last()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const skipBtn = page.locator('button', { hasText: /skip|überspringen/i }).first()
     await expect(nextBtn, 'T8: Next must be disabled without name').toBeDisabled()
     await expect(skipBtn, 'T8: Skip must be disabled without name').toBeDisabled()
@@ -524,20 +536,27 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
 
     // Friseur waehlen -> Weiter -> Spezialitaeten enthalten Barber-/Herren-Variante, Kinder, Hausbesuch
     await friseurChip.first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /^weiter$/i }).last().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await expect(page.locator('button', { hasText: /^Herren$/ }).first(), 'T10: Spezialitaet Herren').toBeVisible({ timeout: 10_000 })
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await expect(page.locator('button', { hasText: /^Kinder$/ }).first(), 'T10: neue Spezialitaet Kinder').toBeVisible()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await expect(page.locator('button', { hasText: /^Hausbesuch$/ }).first(), 'T10: neue Spezialitaet Hausbesuch').toBeVisible()
 
     // zurueck -> "Sonstiges" zeigt das optionale Freitextfeld (max. 120 Zeichen)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /^zurück$/i }).last().click()
     await friseurChip.first().click() // abwaehlen
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /^Sonstiges$/ }).first().click()
     const other = page.locator('input#onboarding-other-offer')
     await expect(other, 'T10: Freitextfeld bei "Sonstiges"').toBeVisible()
     expect(await other.getAttribute('maxlength')).toBe('120')
     await other.fill('Hufschmied')
     // nur "Sonstiges" + Text: Weiter ist aktiv (Backend akzeptiert domain_slugs=[] seit F2970)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await expect(page.locator('button', { hasText: /^weiter$/i }).last()).toBeEnabled()
   })
 
@@ -553,15 +572,18 @@ test.describe('F5910 Schnell-Onboarding Wizard', () => {
     const tattooChip = page.locator('button', { hasText: /^Tattoo & Piercing$/ })
     await expect(tattooChip.first(), 'T11: Tattoo & Piercing Chip').toBeVisible({ timeout: 15_000 })
     await tattooChip.first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /^weiter$/i }).last().click()
 
     // Spezialitäten-Schritt: Hinweis sichtbar, Weiter gesperrt
     const hint = page.getByTestId('specialty-required-hint')
     await expect(hint, 'T11: Pflicht-Hinweis').toBeVisible({ timeout: 10_000 })
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const next = page.locator('button', { hasText: /^weiter$/i }).last()
     await expect(next, 'T11: Weiter ohne Spezialität gesperrt').toBeDisabled()
 
     // Spezialität wählen -> Weiter frei
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('button', { hasText: /^Piercing$/ }).first().click()
     await expect(hint).toBeHidden()
     await expect(next, 'T11: Weiter mit Spezialität aktiv').toBeEnabled()

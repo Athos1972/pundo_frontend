@@ -250,10 +250,13 @@ test.describe('Angebote CRUD', () => {
 
     // Schritt 2: Preis-Typ on_request; Aktionszeitraum liegt im aufklappbaren Aktionsblock
     // (Felder heißen seit c32a61c/2026-05-20 promo_valid_from / promo_valid_until, vorher valid_from/valid_until)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('select').first().selectOption('on_request')
     await page.getByRole('button', { name: /promotion|aktionspreis|promo/i }).click()
     await page.getByRole('button', { name: /add pricing unit|preiseinheit hinzufügen/i }).first().click()
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('select').last().selectOption('per_piece')
     await page.locator('input[inputmode="decimal"]').first().fill('9.99')
     await page.locator('input[name="promo_valid_from"]').fill('2026-06-01')

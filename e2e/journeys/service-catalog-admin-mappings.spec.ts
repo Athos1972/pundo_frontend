@@ -434,6 +434,7 @@ test.describe('IDM-4: Delete — Mapping löschen mit Confirm-Dialog', () => {
       logStep('IDM-4c', 'Confirm-Dialog erscheint', 'Dialog sichtbar nach Delete-Click', 'Dialog sichtbar', 'PASS')
 
       // Confirm-Button klicken
+      // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
       const confirmBtn = page.locator('button', { hasText: /delete|löschen|confirm|bestätigen/i }).last()
       await confirmBtn.click()
       // F8950 T22: statt networkidle - Bestaetigungs-Button verschwindet, sobald geloescht ist

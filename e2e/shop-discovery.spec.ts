@@ -601,7 +601,9 @@ shopTest.describe('Shop-Produkt via Admin anlegen', () => {
     // Modal schließt sich, Step 2 erscheint automatisch (das select unten wartet darauf)
 
     // Step 2: Preis-Typ auf "on_request" setzen
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('select').first().waitFor({ state: 'visible', timeout: 8_000 })
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     await page.locator('select').first().selectOption('on_request')
 
     // Angebots-Titel setzen (für API-Verifikation)

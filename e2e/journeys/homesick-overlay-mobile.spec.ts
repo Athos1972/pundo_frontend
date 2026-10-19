@@ -25,6 +25,7 @@ test.describe('Homesick-Overlay Mobile — Bug-Fix homesick-overlay-verlauf-over
     await expect(nav).toBeHidden()
 
     // AC1: Submit-Button ist sichtbar und klickbar (nicht von Leiste überdeckt)
+    // eslint-disable-next-line local-e2e/no-positional-tag-locator -- legacy (B8950-016 T4): replace by getByTestId/getByRole
     const submitBtn = page.locator('button', { hasText: 'Anmelden' }).last()
     await expect(submitBtn).toBeVisible()
 

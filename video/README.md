@@ -15,7 +15,13 @@ video/
     tts.py                 scenes.yml -> Audio je Szene + Wort-/Satz-Timings (edge-tts)
     render.mjs             Branding-Layer: Szenen-Basis, Geraeterahmen, Untertitel-PNGs, Intro, Outro, Thumbnail
     compose.py             generisch: Intro + Szenen + Outro, Crossfades, Musik-Ducking, Loudnorm, SRT
-    lib/record-lib.mjs     Playwright-Screencast-Helfer (scharfe Frames, Tap-Ripple, Scroll, Tippen, pause/resume)
+    lib/record-lib.mjs     Playwright-Screencast-Helfer (scharfe Frames, Tap-Ripple, Scroll, Tippen, pause/resume;
+                           Desktop: Mauszeiger, click/moveTo, adminLogin, mask; strenger Modus)
+    lib/guard.mjs          Schranke 3500/8500, Lock-Pruefung, Datenschutz-Mailfilter, Admin-Login (reine Funktionen, Vitest)
+    formats.py             meta.format-Merge (default/vertical/desktop), voice_langs/subtitle_langs
+    subtitles.py           Untertitel-Sprachen: Text auf die Zeitspanne der gesprochenen Spur verteilen
+    verify_output.py       Ausgabepruefung fuer Desktop-Videos (Aufloesung, SRT, Frames, Kapitel >= 10 s) + Kapitelliste
+    tests/                 Python-Tests (unittest) + regression.py (Regressionsvergleich, Baselines in tests/baseline/)
     music/                 Hintergrundmusik (+ CREDITS.md)
     youtube-channel/       Kanal-Branding: render.mjs (Banner, Profilbild, Wasserzeichen) + README (Kanaltexte)
   <slug>/
@@ -52,6 +58,7 @@ video/
 | `short-catalog-import` | Short (9:16) zu Teil 9: Vorschau, Upload, Übernehmen, Kundensicht; nutzt `../catalog-import/prepare_catalog_import.py` | Test-Instanz 3500/8500 |
 | `reviews` | Teil 10: Bewertungen beantworten (Dashboard „3 neu“, Liste, Danke-Antwort, Antwort auf Kritik, Spam melden, „Meine Produkte“, Kundensicht); `prepare_reviews.py` (Backend-venv) legt 4 Demo-Bewertungen in den Niko-Shops aus Teil 9 an (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
 | `short-reviews` | Short (9:16) zu Teil 10: Dashboard, Antwort auf Kritik, Kundensicht; nutzt `../reviews/prepare_reviews.py` | Test-Instanz 3500/8500 |
+| `team-*` (geplant, F8960) | Team-Videos fuer die Admin-Hilfe (`meta.format: desktop`, EN-Stimme + EL-Untertitel, streng 3500/8500, Admin-Login per API). Kanal „pundo Team“, **nicht gelistet**; Details F8960 im Vault (nicht N7900) | Test-Instanz 3500/8500, **streng** |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen
@@ -71,6 +78,54 @@ node video/_branding/youtube-channel/render.mjs   # Kanal-Banner/Profilbild/Wass
 ```
 Nach Textaenderung in `scenes.yml`: `--rerecord` (Szenenlaengen haengen an der Audiodauer).
 
+## Format `desktop` (Team-/Admin-Videos, F8960)
+`meta.format: desktop` (`brand.yml -> formats.desktop`): 16:9-Canvas mit **Browserfenster** statt Handy (Leiste mit Adresse, Schatten),
+Callout als Band ueber dem Fenster, Untertitel ueber die Fensterbreite, Thumbnail mit Fensterausschnitt + Pille „Team“.
+Aufnahme: Viewport 1440x810 @2x (kein `isMobile`/`hasTouch`), sichtbarer Mauszeiger + Klick-Ripple.
+`record.mjs`: `startSession({ lang, outDir, device: 'desktop', strict: true })`, dann `adminLogin(sess, account)`; Bedienung mit
+`click(page, locator)` / `moveTo(...)` statt `tap`. `compose.py` bricht ab, wenn das Seitenverhaeltnis der Aufnahme nicht zur
+Bildschirmflaeche (`screen_w/screen_h`) passt. Ohne `meta.format` bleibt alles wie bisher (Handy 390x844).
+Szenenfelder: `window_path` (Pfad in der Adressleiste, je Szene), `chapter` (Kapitelstart fuer YouTube; sind keine gesetzt, ist jede Szene ein Kapitel).
+
+## Untertitel-Sprachen (EL nur als `.srt`)
+```yaml
+meta: { format: desktop, voice_langs: [en], subtitle_langs: [el] }
+scenes:
+  - id: tour
+    narration: { en: "..." }                       # nur die Stimme-Sprache
+    subtitle:  { el: ["Satz 1.", "Satz 2."] }      # String oder Liste; gleiche Satzanzahl wie EN -> satzgenau, sonst proportional
+```
+`build.sh <slug>` baut ohne Sprachangabe nur `voice_langs`; `tts.py <slug> el` bricht mit Exit 2 ab („subtitle-only“).
+`compose.py` schreibt neben `<slug>.en.srt` auch `<slug>.el.srt` (Timing aus dem EN-Audio, max. 2 Zeilen x 42 Zeichen, nicht eingebrannt).
+Fehlt `subtitle.el` in einer vertonten Szene, bricht `tts.py` ab (kein stilles Weglassen). Greek-Timing vor dem Upload in YouTube sichten.
+
+## Strenger Modus (`strict: true`) und Datenschutz
+- Schranke **vor** jedem Loeschen/Browserstart: Frontend nur `http://localhost|127.0.0.1:3500`, Backend nur `:8500` mit `/health` = 200,
+  kein laufender E2E-Lauf (`os.tmpdir()/pundo-e2e-run.lock`). Sonst Abbruch, `.cache/<lang>/rec/` bleibt unveraendert.
+  Bestehende Videos laufen ohne `strict` weiter (z. B. `channel-trailer` liest pundo.cy); alte Pflichtschranke 3000/8000 gilt immer.
+- `adminLogin`: POST `:8500/api/v1/admin/auth/login`, Cookie `admin_token`; landet `/admin/dashboard` auf dem Login, bricht es ab (3500 nutzt nicht 8500).
+  Zugangsdaten nur in `video/<slug>/.recording-accounts.json` bzw. `team-common/.recording-accounts.json` (gitignored), nie im Bild (keine Login-Szene).
+- `runScene` prueft zu Szenenbeginn und -ende Text + Eingabefelder: **E-Mail ausserhalb `@pundo-e2e.io` oder sichtbares Passwortfeld = Abbruch**.
+  Listen mit Echtdaten (`pundo_test` ist eine Prod-Kopie!): filtern, Demo-Datensaetze nutzen oder `sess.mask(zeilenSelektor, demoMarker)` (nach jeder Navigation neu aufrufen).
+  Log je Szene: `privacy ok (0 foreign emails, 0 password fields)`.
+
+## Ausgabepruefung `verify_output.py`
+`build.sh` ruft sie fuer `format: desktop` automatisch (manuell: `video/.venv/bin/python video/_branding/verify_output.py <slug> en`).
+Prueft 1920x1080/30 fps/Audio, Dauer (Warnung ausserhalb 120-240 s bzw. +-25 % von `target_duration_s`), alle SRTs (parsebar, nicht leer, monoton, ohne Ueberlappung,
+Cue-Anzahl = Timeline), Cues je vertonter Szene (EN und EL), Frames je Szene, `actual <= planned + 3 s`, **Kapitel >= 10 s**. Gibt die Kapitelliste fuer YouTube aus; Exit != 0 = nicht hochladbar.
+
+## Tests und Regressionsvergleich (manuell, nicht im Pre-Push-Gate)
+```
+video/.venv/bin/python -m unittest discover video/_branding/tests          # Formate, Untertitel, verify_output, Regressions-Vergleichslogik
+npx vitest run src/tests/video-record-guard.test.ts                         # Schranke/Lock/Mailfilter/Login (laeuft im Gate)
+# Vor einer Pipeline-Aenderung Baseline (einmalig je Video; liegt schon fuer shop-signup/short-pricing in tests/baseline/):
+video/.venv/bin/python video/_branding/tests/regression.py snapshot shop-signup en
+# Nach der Aenderung: bestehende Mobil-Videos duerfen sich nicht aendern (Aufloesung, Dauer, Geometrie, Layer-Pixel, SRT):
+video/.venv/bin/python video/_branding/tests/regression.py compare shop-signup en      # 16:9
+video/.venv/bin/python video/_branding/tests/regression.py compare short-pricing en    # 9:16
+```
+`regression.py` baut mit `--no-record` neu (Stimme aus dem Cache, kein Netz), misst und stellt `out/` danach wieder her (veroeffentlichte Dateien bleiben unveraendert).
+
 ## Neues Video anlegen
 1. Deutsches Skript `video/<slug>/01-skript.de.md` von Bernhard freigeben lassen.
 2. `video/<slug>/scenes.yml` nach dem Muster von `product-create-new/scenes.yml` (meta: title/url/next_video je Sprache; scenes: `intro`, Szenen mit `callout` + `narration`, `outro`).
@@ -87,6 +142,7 @@ Neue Sprache: Stimme in `brand.yml -> voices`, Texte in `scenes.yml`, ggf. UI-La
 - Aussprache neuer Begriffe nach Gehoer pruefen, ggf. `brand.yml -> pronunciation`.
 
 ## Upload auf YouTube (Einstellungen siehe N7900)
+- **Team-Videos (`team-*`, F8960):** Kanal „pundo Team“, Sichtbarkeit **nicht gelistet** (kein Zugriffsschutz: keine Geheimnisse im Video), Kapitel aus `verify_output.py`, SRT EN + EL; Ablauf und Video-Tabelle stehen in der F8960-Feature-Datei im Vault.
 - Titel/Beschreibung je Sprache, Kapitelmarken aus den Szenenstarts (`.cache/<lang>/compose.json -> starts`), Thumbnail `out/thumbnail.<lang>.png`,
   SRT `out/<slug>.<lang>.srt` (Studio -> Sprachen -> Untertitel bearbeiten -> Datei hochladen), Videosprache, Tags,
   Kategorie "Praktische Tipps & Styling", nicht fuer Kinder, KI-Verwendung "Ja".

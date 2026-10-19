@@ -7,18 +7,22 @@ Writes video/<slug>/.cache/<lang>/audio/<scene>.mp3 and video/<slug>/.cache/<lan
 import asyncio, hashlib, json, re, subprocess, sys
 from pathlib import Path
 import yaml, edge_tts
+from formats import merge_format, voice_langs, subtitle_langs
+from subtitles import distribute_cues, sentence_spans
 
 ROOT = Path(__file__).resolve().parents[1]
 slug, lang = sys.argv[1], sys.argv[2]
 brand = yaml.safe_load((ROOT / "_branding/brand.yml").read_text())
 scenes = yaml.safe_load((ROOT / slug / "scenes.yml").read_text())
 cache = ROOT / slug / ".cache" / lang
+META = scenes.get("meta") or {}
+_vl = voice_langs(META)
+if _vl and lang not in _vl:                                               # e.g. desktop team videos: EL = subtitles only
+    print(f"{lang} is subtitle-only for {slug}; build {_vl[0]}, the .{lang}.srt is produced with it", file=sys.stderr)
+    sys.exit(2)
+brand = merge_format(brand, META)                                         # meta.format (vertical/desktop) + meta.timing
+SUB_LANGS = subtitle_langs(META)
 (cache / "audio").mkdir(parents=True, exist_ok=True)
-_fmt = (scenes.get("meta") or {}).get("format")                           # e.g. "vertical" (Shorts 9:16)
-if _fmt:
-    _f = brand["formats"][_fmt]
-    brand["video"].update(_f.get("video") or {}); brand["layout"] = _f["layout"]; brand["timing"].update(_f.get("timing") or {})
-brand["timing"].update((scenes.get("meta") or {}).get("timing") or {})   # per-video override (e.g. short trailer)
 T = brand["timing"]
 V = brand["voices"][lang]
 MAXC = brand["layout"]["subtitle_max_chars"]
@@ -123,6 +127,10 @@ async def main():
     for sc in scenes["scenes"]:
         entry = {"id": sc["id"], "branding": sc.get("branding"), "audio": None, "audio_s": 0.0, "cues": [],
                  "callout": sc.get("callout", {}).get(lang) if sc.get("callout") else None}
+        if sc.get("chapter"):
+            entry["chapter"] = sc["chapter"].get(lang)
+        if sc.get("window_path"):                                         # desktop format: path shown in the window's address bar
+            entry["window_path"] = sc["window_path"].get(lang) if isinstance(sc["window_path"], dict) else sc["window_path"]
         if sc.get("narration"):
             text = norm(sc["narration"][lang])
             out = cache / "audio" / f"{sc['id']}.mp3"
@@ -148,6 +156,15 @@ async def main():
                     d = dur * (len(t) + 1) / tot
                     words.append((t0, t0 + d, t)); t0 += d
             entry.update(audio=str(out.relative_to(ROOT)), audio_s=dur, cues=chunk_words(words, dur), words=len(words))
+            if SUB_LANGS:                                                 # subtitle-only languages: timing from this (spoken) track
+                entry["subtitle_cues"] = {}
+                spans = sentence_spans(words)
+                for sl in SUB_LANGS:
+                    sub = (sc.get("subtitle") or {}).get(sl)
+                    if not sub:
+                        sys.exit(f"scene '{sc['id']}' is narrated but has no subtitle.{sl} (no silent omission)")
+                    t0, t1 = words[0][0], min(dur, words[-1][1] + 0.15)
+                    entry["subtitle_cues"][sl] = distribute_cues(sub, t0, t1, 42, spans)
             print(f"{lang} {sc['id']:<18} audio {dur:5.1f}s  cues {len(entry['cues'])}")
         timeline.append(entry)
     (cache / "timeline.json").write_text(json.dumps({"meta": scenes["meta"], "brand": brand, "scenes": timeline}, ensure_ascii=False, indent=1))

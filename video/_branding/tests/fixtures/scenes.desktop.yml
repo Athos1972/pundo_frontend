@@ -1,0 +1,21 @@
+# Test fixture (F8960): shape of a desktop team video - EN voice, EL subtitles only.
+meta:
+  slug: fixture-desktop
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title: { en: "Fixture" }
+  url: { en: "pundo.cy/admin/help" }
+  next_video: { en: "Next" }
+  target_duration_s: 60
+scenes:
+  - id: intro
+    branding: intro
+  - id: tour
+    callout: { en: "Admin · Dashboard" }
+    chapter: { en: "Dashboard" }
+    window_path: { en: "/admin/dashboard" }
+    narration: { en: "This is the dashboard. It shows the open tasks." }
+    subtitle: { el: ["Αυτός είναι ο πίνακας ελέγχου.", "Δείχνει τις ανοιχτές εργασίες."] }
+  - id: outro
+    branding: outro

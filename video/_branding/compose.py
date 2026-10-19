@@ -7,6 +7,7 @@ layers/ + intro/ + outro/ (render.mjs).  Output: video/<slug>/out/<slug>.<lang>.
 """
 import json, subprocess, sys, shutil
 from pathlib import Path
+from subtitles import srt_lines
 
 ROOT = Path(__file__).resolve().parents[1]
 slug, lang = sys.argv[1], sys.argv[2]
@@ -18,6 +19,10 @@ B = tl["brand"]; T = B["timing"]; V = B["video"]; LY = B["layout"]
 rec = json.loads((cache / "rec" / "frames.json").read_text())
 layers = json.loads((cache / "layers" / "layers.json").read_text())
 g = layers["geom"]
+if LY.get("device") == "browser":                      # desktop format: recording aspect must equal the screen area (no stretching)
+    vw, vh = rec["viewport"]["width"], rec["viewport"]["height"]
+    if abs((vw / vh) / (LY["screen_w"] / LY["screen_h"]) - 1) > 0.01:
+        sys.exit(f"recording viewport {vw}x{vh} does not match layout screen {LY['screen_w']}x{LY['screen_h']} (aspect differs > 1 %)")
 FPS, CF, LEAD = V["fps"], T["crossfade_s"], T["lead_in_s"]
 work = cache / "work"
 shutil.rmtree(work, ignore_errors=True); work.mkdir()
@@ -72,7 +77,7 @@ for sc in tl["scenes"]:
     ly = layers["scenes"][sid]
     lyd = cache / "layers"
     inputs = ["-loop", "1", "-framerate", str(FPS), "-i", lyd / ly["base"], "-i", clip,
-              "-loop", "1", "-framerate", str(FPS), "-i", lyd / "bezel.png"]
+              "-loop", "1", "-framerate", str(FPS), "-i", lyd / ly.get("bezel", "bezel.png")]
     fc = [f"[0:v][1:v]overlay={g['sx']}:{g['sy']}:eof_action=pass[a]", "[a][2:v]overlay=0:0[v0]"]
     last = "v0"
     for i, sub in enumerate(ly["subs"]):
@@ -85,7 +90,7 @@ for sc in tl["scenes"]:
     run(["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{last}]",
          "-t", f"{dur:.3f}", *enc(), scene_mp4])
     segments.append({"clip": scene_mp4, "dur": dur, "audio": ROOT / sc["audio"] if sc.get("audio") else None,
-                     "cues": sc["cues"], "id": sid})
+                     "cues": sc["cues"], "id": sid, "sub_cues": sc.get("subtitle_cues") or {}})
     print(f"  scene {sid}: {dur:.1f}s")
 
 outro_png = cache / "outro" / "f%04d.png"
@@ -110,6 +115,13 @@ for st, s in zip(starts, segments):
         srt.append(f"{n}\n{ts(st + LEAD + c['start'])} --> {ts(st + LEAD + c['end'])}\n{c['text']}\n"); n += 1
 srt_path = out_dir / f"{slug}.{lang}.srt"
 srt_path.write_text("\n".join(srt), encoding="utf-8")
+# subtitle-only languages (meta.subtitle_langs): <slug>.<sl>.srt with the timing of the spoken track (not burned in)
+for sl in tl["meta"].get("subtitle_langs") or []:
+    blocks = []
+    for st, s in zip(starts, segments):
+        blocks += srt_lines(s.get("sub_cues", {}).get(sl, []), offset=st + LEAD, first_index=len(blocks) + 1)
+    (out_dir / f"{slug}.{sl}.srt").write_text("\n".join(blocks), encoding="utf-8")
+    print(f"  subtitles {sl}: {len(blocks)} cues")
 
 # ---- audio: narration + optional music (loop w/ crossfade, ducking) -> two-pass loudnorm -> wav ----
 import numpy as np, json as _json

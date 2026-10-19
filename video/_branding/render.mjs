@@ -39,9 +39,26 @@ html,body{width:${w}px;height:${h}px}${css}</style></head><body>${body}</body></
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 // phone geometry (shared with compose.py through layers.json)
-const sh = LY.phone_screen_h, sw = Math.round(sh * 390 / 844 / 2) * 2, bz = LY.phone_bezel
+const desk = LY.device === 'browser'     // desktop format (F8960): browser window instead of a phone
+const sh = desk ? LY.screen_h : LY.phone_screen_h
+const sw = desk ? LY.screen_w : Math.round(sh * 390 / 844 / 2) * 2
+const bz = LY.phone_bezel
 const sx = Math.round(LY.phone_center_x - sw / 2), sy = Math.round(LY.phone_center_y - sh / 2)
 const geom = { sx, sy, sw, sh }
+
+// ---- desktop format: browser window (transparent hole = recording area; bar above it with dots + address) ----
+function windowFrame(addr) {
+  const bar = LY.browser_bar_h, r = 18, x = sx, y = sy - bar, w = sw, h = sh + bar
+  const hole = `M${x},${sy} H${x + w} V${sy + sh - r} A${r},${r} 0 0 1 ${x + w - r},${sy + sh} H${x + r} A${r},${r} 0 0 1 ${x},${sy + sh - r} Z`
+  const dots = ['#FF5F57', '#FEBC2E', '#28C840'].map((c, i) => `<circle cx="${x + 26 + i * 24}" cy="${y + bar / 2}" r="7" fill="${c}"/>`).join('')
+  return `<svg width="${VW}" height="${VH}" viewBox="0 0 ${VW} ${VH}" style="position:absolute;left:0;top:0">
+    <path fill="#E9E5DF" fill-rule="evenodd" d="${rrect(x, y, w, h, r)} ${hole}"/>
+    <rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" rx="${r}" fill="none" stroke="#CFC9C0" stroke-width="2"/>
+    ${dots}
+    <rect x="${x + 130}" y="${y + 8}" width="${w - 260}" height="${bar - 16}" rx="${(bar - 16) / 2}" fill="#FFFFFF" stroke="#D9D3CA" stroke-width="1.5"/>
+    <text x="${x + 130 + 22}" y="${y + bar / 2 + 7}" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20" fill="#7A736B">${esc(addr)}</text>
+  </svg>`
+}
 
 async function layers() {
   const dir = path.join(cache, 'layers'); fs.mkdirSync(dir, { recursive: true })
@@ -54,8 +71,10 @@ async function layers() {
     <path fill="#1A1714" fill-rule="evenodd" d="${rrect(sx - bz, sy - bz, sw + 2 * bz, sh + 2 * bz, Ro)} ${rrect(sx, sy, sw, sh, R)}"/>
     <rect x="${sx - bz + 1.5}" y="${sy - bz + 1.5}" width="${sw + 2 * bz - 3}" height="${sh + 2 * bz - 3}" rx="${Ro}" fill="none" stroke="#4a443d" stroke-width="3"/>
   </svg>`
-  await page.setContent(html(bezel)); await page.screenshot({ path: path.join(dir, 'bezel.png'), omitBackground: true })
-  const shadow = `<svg width="${VW}" height="${VH}" style="position:absolute;left:0;top:0"><defs><filter id="sh" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#1A1714" flood-opacity=".28"/></filter></defs>
+  const defaultAddr = (tl.meta.window_path && tl.meta.window_path[lang]) || 'admin'
+  await page.setContent(html(desk ? windowFrame(defaultAddr) : bezel)); await page.screenshot({ path: path.join(dir, 'bezel.png'), omitBackground: true })
+  const shadow = desk ? `<svg width="${VW}" height="${VH}" style="position:absolute;left:0;top:0"><defs><filter id="sh" x="-20%" y="-10%" width="140%" height="130%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#1A1714" flood-opacity=".28"/></filter></defs>
+    <rect x="${sx}" y="${sy - LY.browser_bar_h}" width="${sw}" height="${sh + LY.browser_bar_h}" rx="18" fill="#E9E5DF" filter="url(#sh)"/></svg>` : `<svg width="${VW}" height="${VH}" style="position:absolute;left:0;top:0"><defs><filter id="sh" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#1A1714" flood-opacity=".28"/></filter></defs>
     <rect x="${sx - bz}" y="${sy - bz}" width="${sw + 2 * bz}" height="${sh + 2 * bz}" rx="${Ro}" fill="#1A1714" filter="url(#sh)"/></svg>`
   for (const sc of tl.scenes) {
     if (sc.branding) continue
@@ -66,11 +85,21 @@ async function layers() {
     const fs_ = LY.vertical
       ? (title.length > 26 ? 52 : title.length > 18 ? 60 : LY.callout_font_px)
       : (title.length > 30 ? 72 : title.length > 20 ? 80 : LY.callout_font_px) * (isUrl ? 0.8 : 1)
+    let bezelFile
+    if (desk && sc.window_path) {                    // address bar shows the path of this scene
+      bezelFile = `bezel-${sc.id}.png`
+      await page.setContent(html(windowFrame(sc.window_path))); await page.screenshot({ path: path.join(dir, bezelFile), omitBackground: true })
+    }
+    const band = LY.callout_band
+    const bandFs = title.length > 40 ? 38 : title.length > 30 ? 44 : LY.callout_font_px
+    const deskCallout = desk ? `<div style="position:absolute;left:${band.x}px;top:${band.y}px;width:${LY.logo_corner.x - band.x - 30}px;height:${band.h}px;display:flex;align-items:center;gap:28px">
+        ${label ? `<div class="h" style="flex:none;background:${C.accent};color:#fff;font-size:32px;padding:8px 24px;border-radius:999px">${esc(label)}</div>` : ''}
+        <div class="h" style="font-size:${bandFs}px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${C.text}">${esc(title)}</div></div>` : ''
     const body = `${shadow}
-      <div style="position:absolute;left:${LY.right_x}px;top:${LY.callout_y || 230}px;width:${LY.right_w}px;${LY.vertical ? 'text-align:center;' : rtl ? 'text-align:right;' : ''}">
+      ${desk ? deskCallout : `<div style="position:absolute;left:${LY.right_x}px;top:${LY.callout_y || 230}px;width:${LY.right_w}px;${LY.vertical ? 'text-align:center;' : rtl ? 'text-align:right;' : ''}">
         ${label ? `<div class="h" style="display:inline-block;background:${C.accent};color:#fff;font-size:38px;padding:10px 28px;border-radius:999px;margin-bottom:34px">${esc(label)}</div>` : '<div style="width:96px;height:10px;border-radius:5px;background:' + C.accent + ';margin:' + (LY.vertical ? '0 auto 28px' : '0 0 40px') + '"></div>'}
         <div class="h" style="font-size:${fs_}px;line-height:1.08;color:${isUrl ? C.accent_dark : C.text}">${esc(title)}</div>
-      </div>
+      </div>`}
       <div style="position:absolute;left:${LY.logo_corner.x}px;top:${LY.logo_corner.y}px">${logoSvg(LY.logo_corner.w)}</div>`
     await page.setContent(html(body, `body{${bgCss}}`))
     await page.screenshot({ path: path.join(dir, `base-${sc.id}.png`) })
@@ -86,6 +115,7 @@ async function layers() {
       subs.push({ file: f, start: c.start, end: c.end })
     }
     out.scenes[sc.id] = { base: `base-${sc.id}.png`, subs }
+    if (bezelFile) out.scenes[sc.id].bezel = bezelFile
   }
   fs.writeFileSync(path.join(dir, 'layers.json'), JSON.stringify(out, null, 1))
   console.log('layers:', Object.keys(out.scenes).length, 'scenes')
@@ -187,7 +217,26 @@ async function outro() {
   }`)
 }
 
+async function thumbDesktop() {
+  const shot = 'data:image/jpeg;base64,' + fs.readFileSync(path.resolve(extra)).toString('base64')
+  const title = tl.meta.title[lang]
+  const W = 1280, H = 720
+  const body = `<div style="position:absolute;inset:0;${bgCss.replace('1200px 800px', '900px 600px')}"></div>
+    <div style="position:absolute;left:70px;top:56px">${logoSvg(230)}</div>
+    <div class="h" style="position:absolute;left:70px;top:170px;width:520px;font-size:${title.length > 40 ? 62 : 74}px;line-height:1.05;text-wrap:balance;color:${C.text}">${esc(title)}</div>
+    <div class="h" style="position:absolute;left:70px;bottom:70px;background:${C.accent};color:#fff;font-size:44px;padding:14px 40px;border-radius:999px">Team</div>
+    <div style="position:absolute;left:640px;top:150px;width:600px;border-radius:16px;background:#E9E5DF;overflow:hidden;transform:rotate(-2deg);box-shadow:0 30px 60px rgba(26,23,20,.35)">
+      <div style="height:34px;display:flex;align-items:center;gap:8px;padding-left:16px"><i style="width:11px;height:11px;border-radius:50%;background:#FF5F57"></i><i style="width:11px;height:11px;border-radius:50%;background:#FEBC2E"></i><i style="width:11px;height:11px;border-radius:50%;background:#28C840"></i></div>
+      <img src="${shot}" style="width:600px;height:${Math.round(600 * LY.screen_h / LY.screen_w)}px;object-fit:cover;object-position:top;display:block"></div>`
+  await page.setContent(html(body, `body{overflow:hidden}`, W, H)); await page.setViewportSize({ width: W, height: H })
+  await page.waitForTimeout(400)
+  const outDir = path.join(videoRoot, slug, 'out'); fs.mkdirSync(outDir, { recursive: true })
+  await page.screenshot({ path: path.join(outDir, `thumbnail.${lang}.png`) })
+  console.log('thumbnail written')
+}
+
 async function thumb() {
+  if (desk) return thumbDesktop()
   const phone = 'data:image/jpeg;base64,' + fs.readFileSync(path.resolve(extra)).toString('base64')
   const title = tl.meta.title[lang]
   const W = 1280, H = 720

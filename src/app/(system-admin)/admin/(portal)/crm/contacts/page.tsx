@@ -36,12 +36,17 @@ export default async function CrmContactsPage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-gray-900">{tr.crm_title}</h1>
-        <Link
-          href="/admin/crm/contacts/new"
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          + {tr.crm_new}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/crm/settings" className="text-sm text-gray-500 hover:text-gray-700">
+            {tr.crm_safety_link}
+          </Link>
+          <Link
+            href="/admin/crm/contacts/new"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            + {tr.crm_new}
+          </Link>
+        </div>
       </div>
 
       <form method="GET" className="flex gap-2 flex-wrap items-end">

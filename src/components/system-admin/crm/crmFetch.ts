@@ -42,12 +42,12 @@ function parse422Message(detail: CrmErrorDetail, tr: SysAdminTranslations): stri
  * Generic CRM request to /api/admin/crm/<path>.
  * Handles all standard CRM error codes:
  *   401 → redirect to /admin/login
- *   403/409/422/502 → Toast
+ *   403/409/422/423/429/502 → Toast
  *   404 → crm_err_not_found Toast
  *   200/201 → ok with data
  */
 export async function crmRequest<T>(
-  method: 'POST' | 'PATCH' | 'DELETE',
+  method: 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   path: string,
   body: unknown,
   tr: SysAdminTranslations,
@@ -102,6 +102,16 @@ export async function crmRequest<T>(
     return { ok: false, status: 422 }
   }
 
+  if (res.status === 423) {
+    showToast(tr.crm_err_paused, 'error')
+    return { ok: false, status: 423 }
+  }
+
+  if (res.status === 429) {
+    showToast(tr.crm_err_cap, 'error')
+    return { ok: false, status: 429 }
+  }
+
   if (res.status === 502) {
     showToast(tr.crm_err_send_failed, 'error')
     return { ok: false, status: 502 }
@@ -151,4 +161,15 @@ export async function crmDelete<T>(
   tr: SysAdminTranslations,
 ): Promise<CrmFetchResult<T>> {
   return crmRequest<T>('DELETE', path, undefined, tr)
+}
+
+/**
+ * PUT to /api/admin/crm/<path>.
+ */
+export async function crmPut<T>(
+  path: string,
+  body: unknown,
+  tr: SysAdminTranslations,
+): Promise<CrmFetchResult<T>> {
+  return crmRequest<T>('PUT', path, body, tr)
 }

@@ -10,6 +10,7 @@ import { ContactEditForm } from '@/components/system-admin/crm/ContactEditForm'
 import { InteractionTimeline } from '@/components/system-admin/crm/InteractionTimeline'
 import { ContactDetailActions } from '@/components/system-admin/crm/ContactDetailActions'
 import { OutreachComposer } from '@/components/system-admin/crm/OutreachComposer'
+import { ManualInteractionForm } from '@/components/system-admin/crm/ManualInteractionForm'
 import { CardImageViewer } from '@/components/system-admin/crm/CardImageViewer'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
@@ -193,6 +194,14 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
             <h2 className="text-sm font-semibold text-gray-800 mb-4">{tr.crm_outreach_title}</h2>
             <OutreachComposer contact={contact} tr={tr} />
           </section>
+
+          {/* Manual contact documentation (N7600) */}
+          {canWrite && (
+            <section className="bg-white rounded-xl border border-gray-200 p-5">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_doc_title}</h2>
+              <ManualInteractionForm contactId={contact.id} tr={tr} />
+            </section>
+          )}
 
           {/* Interaction Timeline */}
           <section className="bg-white rounded-xl border border-gray-200 p-5">

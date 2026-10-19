@@ -28,6 +28,7 @@ import type {
   MappingGapEntry,
   CrmContactListItem,
   CrmContactDetail,
+  CrmConfigOut,
   SysAdminReview,
   SysAdminReviewAuditEntry,
   SysAdminClaimListItem,
@@ -292,6 +293,10 @@ export async function getCrmContacts(
   params: { q?: string; lifecycle_state?: string; limit?: number; offset?: number } = {},
 ): Promise<PaginatedResponse<CrmContactListItem>> {
   return apiFetch<PaginatedResponse<CrmContactListItem>>(`/crm/contacts${buildQs(params)}`)
+}
+
+export async function getCrmConfig(): Promise<CrmConfigOut> {
+  return apiFetch<CrmConfigOut>('/crm/config')
 }
 
 export async function getCrmContact(id: number): Promise<CrmContactDetail> {

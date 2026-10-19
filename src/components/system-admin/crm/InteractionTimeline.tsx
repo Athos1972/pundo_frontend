@@ -42,6 +42,11 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
               <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${kindBadgeColor(ia.kind)}`}>
                 {ia.kind}
               </span>
+              {ia.payload?.manual === true && (
+                <span className="inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700">
+                  {tr.crm_doc_manual_badge}
+                </span>
+              )}
               {ia.state_from && ia.state_to && (
                 <span className="text-xs text-gray-500">
                   {ia.state_from} → {ia.state_to}
@@ -52,7 +57,12 @@ export function InteractionTimeline({ interactions, messages, tr }: InteractionT
               </span>
             </div>
             {ia.outcome && (
-              <p className="text-xs text-gray-600">{ia.outcome}</p>
+              <p className="text-xs text-gray-600 whitespace-pre-wrap">{ia.outcome}</p>
+            )}
+            {ia.payload?.manual === true && (!!ia.payload.our_party || !!ia.payload.their_party) && (
+              <p className="text-xs text-gray-500">
+                {String(ia.payload.our_party ?? '—')} ↔ {String(ia.payload.their_party ?? '—')}
+              </p>
             )}
             {ia.kind === 'contact_updated' && Array.isArray(ia.payload?.fields) && (
               <p className="text-xs text-gray-600">

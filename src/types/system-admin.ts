@@ -414,6 +414,28 @@ export interface CrmContactDetail {
   created_at: string; updated_at: string
 }
 
+// Safety net (N7600): kill switch + send caps
+export interface CrmSendCapOut { limit: number; sent_24h: number }
+export interface CrmConfigOut {
+  outbound_kill_switch: boolean
+  send_caps: Record<string, CrmSendCapOut>
+  updated_at: string | null
+  updated_by: string | null
+}
+
+// Manual contact documentation (N7600)
+export type CrmManualKind = 'inbound_msg' | 'outbound_msg' | 'call' | 'note'
+export type CrmManualChannel = 'whatsapp' | 'phone' | 'email' | 'telegram' | 'sms'
+export interface CrmManualInteractionRequest {
+  kind: CrmManualKind
+  channel: CrmManualChannel
+  direction?: 'in' | 'out'
+  content: string
+  occurred_at?: string
+  our_party?: string
+  their_party?: string
+}
+
 // Backend error detail (for Toast evaluation)
 export type CrmErrorDetail =
   | string                                              // e.g. "illegal_transition", "shop_id_required"

@@ -34,7 +34,7 @@ src/app/
 ├── (shop-admin)/        # Shop-Owner-Portal — Clean Boundary!
 │   └── shop-admin/      # login, register, onboarding, claim (F5970, oeffentlich), (portal)/…
 ├── (system-admin)/      # System-Admin-Portal
-│   └── admin/           # login, (portal)/…
+│   └── admin/           # login, (portal)/… (u. a. help, help/[topic]: Team-SOPs, F8960; Seiten prüfen die Session selbst via requireAdminSession())
 ├── (oauth)/             # OAuth 2.0 Authorization Server (F6600)
 │   └── oauth/authorize/
 ├── crm/opt-out/         # CRM-Opt-out (Bypass-Pfad)
@@ -66,7 +66,7 @@ src/
 │   ├── search/          # SearchBar, FilterChips, CategoryChips, ServiceResultCard, SearchSimilarButton
 │   ├── shop/            # ShopCard, ShopOfferCard, NearbyShops, RelatedShopsWidget
 │   ├── shop-admin/      # Isolierte Admin-Komponenten (nur ui/ importieren — Clean Boundary!); u. a. CategoryPicker (Kategorie-Auswahl, B5900-011)
-│   ├── system-admin/    # System-Admin-Komponenten
+│   ├── system-admin/    # System-Admin-Komponenten (help/: Hilfe-Karten, SOP, Video-Button; F8960)
 │   ├── layout/          # Header, Footer, BottomTabBar
 │   ├── activity-feed/   # ActivityFeed, LiveFeed
 │   ├── recently-viewed/ # RecentlyViewed-Drawer
@@ -82,6 +82,7 @@ src/
 │   ├── translations.ts          # Barrel über src/lib/i18n/*.ts (6 Sprachen, kein i18n-Framework)
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
 │   ├── system-admin-translations.ts
+│   ├── system-admin-help.ts / -help-content.ts / -session.ts  # F8960: Hilfe-Themen (Daten), SOP-Texte EN+EL, strenge Seiten-Session-Prüfung (nur Server, nie in Client Components importieren)
 │   ├── price-tiers.ts           # F5200: Staffelpreis-View-Model (Hauptpreis/Suffix/Zeilen) + JSON-LD priceSpecification
 │   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
 │   ├── seo/                     # metadata-defaults, og-defaults, static-page-metadata, …

@@ -22,7 +22,7 @@ describe('system-admin translations', () => {
   })
 
   it('every F5970 key is translated, not copied (Greek script present)', () => {
-    const claimKeys = Object.keys(en).filter((k) => /^(claims_|assign_|matching_|owner_section_|owner_status_suspended|owner_suspend|owner_unsuspend|owner_confirm_suspend|owner_suspended_|owner_open_claim_|dashboard_claims_|nav_claims)/.test(k))
+    const claimKeys = Object.keys(en).filter((k) => /^(claims_|assign_|matching_|owner_section_|owner_status_suspended|owner_suspend|owner_unsuspend|owner_confirm_suspend|owner_suspended_|owner_open_claim_|dashboard_claims_|nav_claims|nav_help|help_)/.test(k))
     expect(claimKeys.length).toBeGreaterThan(150)
     // loan words / abbreviations that are identical in Greek on purpose
     const SAME = new Set(['claims_source_onboarding', 'claims_col_id', 'claims_method_email_domain', 'claims_field_email', 'claims_proof_by_admin'])

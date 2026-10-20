@@ -132,21 +132,8 @@ test.describe('E2E-04b: Related Products Carousel', () => {
     expect(href).toMatch(/\/products\//)
   })
 
-  test('page loads without crash when /related returns 500 (graceful fallback)', async ({ page }) => {
-    const errors: string[] = []
-    page.on('pageerror', (err) => errors.push(err.message))
-
-    // Intercept /related endpoint and return 500
-    await page.route(`**/api/v1/products/${TEST_SLUG}/related**`, (route) =>
-      route.fulfill({ status: 500, body: 'Internal Server Error' })
-    )
-    await page.goto(`/products/${TEST_SLUG}`)
-    await waitForPageHydrated(page)
-
-    // Page must render (offers section visible), carousel absent
-    await expect(page.getByRole('heading', { name: /all offers/i })).toBeVisible()
-    expect(errors).toHaveLength(0)
-  })
+  // 'page loads without crash when /related returns 500' lives in src/tests/product-page-related-fallback.test.tsx: the page
+  // fetches /related on the server, a browser-side page.route() never saw that request (B8950-016 T19, B14).
 
   test('RTL: carousel renders correctly in Arabic', async ({ page }) => {
     await page.context().addCookies([{

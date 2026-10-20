@@ -6428,16 +6428,12 @@
      "shop_location": {
       "anyOf": [
        {
-        "additionalProperties": {
-         "type": "number"
-        },
-        "type": "object"
+        "$ref": "#/components/schemas/ShopLocation"
        },
        {
         "type": "null"
        }
-      ],
-      "title": "Shop Location"
+      ]
      },
      "shop_name": {
       "title": "Shop Name",
@@ -12821,16 +12817,12 @@
      "shop_location": {
       "anyOf": [
        {
-        "additionalProperties": {
-         "type": "number"
-        },
-        "type": "object"
+        "$ref": "#/components/schemas/ShopLocation"
        },
        {
         "type": "null"
        }
-      ],
-      "title": "Shop Location"
+      ]
      },
      "shop_name": {
       "title": "Shop Name",

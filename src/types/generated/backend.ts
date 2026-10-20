@@ -7065,10 +7065,7 @@ export interface components {
             price_type: string;
             /** Shop Id */
             shop_id: number;
-            /** Shop Location */
-            shop_location?: {
-                [key: string]: number;
-            } | null;
+            shop_location?: components["schemas"]["ShopLocation"] | null;
             /** Shop Name */
             shop_name: string;
             /** Shop Slug */
@@ -9292,10 +9289,7 @@ export interface components {
             shop_address: string | null;
             /** Shop Id */
             shop_id: number;
-            /** Shop Location */
-            shop_location: {
-                [key: string]: number;
-            } | null;
+            shop_location: components["schemas"]["ShopLocation"] | null;
             /** Shop Name */
             shop_name: string;
             /** Shop Phone */

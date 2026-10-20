@@ -88,16 +88,12 @@ export type SysAdminContracts = [
 
 // ── Customer-facing (src/types/api.ts) ──────────────────────────────────────────────────────────────────
 export type ApiContracts = [
-  // @ts-expect-error -- drift: best_offer.shop_location:type (backend dict[str, float], frontend {lat,lng}; was hidden behind the shop_type/delivery_available marker, B8950-017)
   Contract<Assignable<Schemas['ProductListItem'], Api.ProductListItem>>,
-  // @ts-expect-error -- drift: items[].best_offer.shop_location:type (backend dict[str, float], frontend {lat,lng}; was hidden behind the shop_type/delivery_available marker, B8950-017)
   Contract<Assignable<Schemas['ProductListResponse'], Api.ProductListResponse>>,
-  // @ts-expect-error -- drift: offers[].shop_location:type (backend dict[str, float], frontend {lat,lng}; was hidden behind the shop_type/delivery_available marker, B8950-017)
   Contract<Assignable<Schemas['ProductDetailResponse'], Api.ProductDetailResponse>>,
   Contract<Assignable<Schemas['ShopListItem'], Api.ShopListItem>>,
   Contract<Assignable<Schemas['ShopDetailResponse'], Api.ShopDetailResponse>>,
   Contract<Assignable<Schemas['CategoryItem'], Api.CategoryItem>>,
-  // @ts-expect-error -- drift: items[].best_offer.shop_location:type, items[].category_id:nullable, items[].brand:missing
   Contract<Assignable<Schemas['SearchResponse'], Api.SearchResponse>>,
 ]
 

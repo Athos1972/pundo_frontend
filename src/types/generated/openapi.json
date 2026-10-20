@@ -8579,6 +8579,32 @@
     "title": "ClaimViewer",
     "type": "object"
    },
+   "ConfigCandidate": {
+    "properties": {
+     "format": {
+      "const": "shopframe_plan/v1",
+      "title": "Format",
+      "type": "string"
+     },
+     "plan": {
+      "additionalProperties": true,
+      "title": "Plan",
+      "type": "object"
+     },
+     "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+     }
+    },
+    "required": [
+     "format",
+     "sha256",
+     "plan"
+    ],
+    "title": "ConfigCandidate",
+    "type": "object"
+   },
    "ConfirmBusinessRequest": {
     "properties": {
      "legal_basis": {
@@ -12097,6 +12123,24 @@
     "title": "KnownSourcesResponse",
     "type": "object"
    },
+   "LeaseEventsRequest": {
+    "properties": {
+     "events": {
+      "items": {
+       "$ref": "#/components/schemas/WorkEvent"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Events",
+      "type": "array"
+     }
+    },
+    "required": [
+     "events"
+    ],
+    "title": "LeaseEventsRequest",
+    "type": "object"
+   },
    "LifecycleRequest": {
     "properties": {
      "reason": {
@@ -12179,6 +12223,106 @@
      "can_unlink"
     ],
     "title": "LinkedProvider",
+    "type": "object"
+   },
+   "LlmCall": {
+    "properties": {
+     "actual_model": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actual Model"
+     },
+     "duration_ms": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration Ms"
+     },
+     "error_class": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Class"
+     },
+     "gateway_task_id": {
+      "format": "uuid",
+      "title": "Gateway Task Id",
+      "type": "string"
+     },
+     "job_type": {
+      "enum": [
+       "scrape.describe_navigation",
+       "scrape.describe_product_extraction"
+      ],
+      "title": "Job Type",
+      "type": "string"
+     },
+     "prompt_profile": {
+      "maxLength": 64,
+      "title": "Prompt Profile",
+      "type": "string"
+     },
+     "security_flagged": {
+      "title": "Security Flagged",
+      "type": "boolean"
+     },
+     "status": {
+      "maxLength": 32,
+      "title": "Status",
+      "type": "string"
+     },
+     "tokens_in": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tokens In"
+     },
+     "tokens_out": {
+      "anyOf": [
+       {
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tokens Out"
+     }
+    },
+    "required": [
+     "job_type",
+     "gateway_task_id",
+     "prompt_profile",
+     "status",
+     "security_flagged"
+    ],
+    "title": "LlmCall",
     "type": "object"
    },
    "LocationSchema": {
@@ -17316,6 +17460,345 @@
     "title": "ScrapeRunStartRequest",
     "type": "object"
    },
+   "ScrapeWorkFailure": {
+    "description": "Technical stop reported by a master for an active lease.",
+    "properties": {
+     "attempt": {
+      "minimum": 1.0,
+      "title": "Attempt",
+      "type": "integer"
+     },
+     "blocked_target_host": {
+      "anyOf": [
+       {
+        "maxLength": 253,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Blocked Target Host"
+     },
+     "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+     },
+     "error_class": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Error Class",
+      "type": "string"
+     },
+     "lease_id": {
+      "format": "uuid",
+      "title": "Lease Id",
+      "type": "string"
+     },
+     "llm_gateway_task_id": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Llm Gateway Task Id"
+     },
+     "retryable_hint": {
+      "default": false,
+      "title": "Retryable Hint",
+      "type": "boolean"
+     },
+     "sanitized_error": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Sanitized Error",
+      "type": "string"
+     },
+     "scrape_run_id": {
+      "format": "uuid",
+      "title": "Scrape Run Id",
+      "type": "string"
+     },
+     "stage": {
+      "enum": [
+       "fetch",
+       "llm_nav",
+       "render_product",
+       "llm_product",
+       "probe",
+       "config",
+       "deliver"
+      ],
+      "title": "Stage",
+      "type": "string"
+     },
+     "workflow_id": {
+      "format": "uuid",
+      "title": "Workflow Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "contract_version",
+     "lease_id",
+     "workflow_id",
+     "scrape_run_id",
+     "attempt",
+     "stage",
+     "error_class",
+     "sanitized_error"
+    ],
+    "title": "ScrapeWorkFailure",
+    "type": "object"
+   },
+   "ScrapeWorkResult": {
+    "description": "Tolerant result parser: unknown producer fields are intentionally ignored.",
+    "properties": {
+     "attempt": {
+      "minimum": 1.0,
+      "title": "Attempt",
+      "type": "integer"
+     },
+     "base_config_version": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Base Config Version"
+     },
+     "classification": {
+      "anyOf": [
+       {
+        "enum": [
+         "shop",
+         "non_shop",
+         "unclear"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Classification"
+     },
+     "code_commit": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Code Commit",
+      "type": "string"
+     },
+     "comparison": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comparison"
+     },
+     "confidence": {
+      "anyOf": [
+       {
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Confidence"
+     },
+     "config_artifact_ref": {
+      "anyOf": [
+       {
+        "maxLength": 512,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Config Artifact Ref"
+     },
+     "config_candidate": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ConfigCandidate"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "config_version": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Config Version"
+     },
+     "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+     },
+     "error_class": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Class"
+     },
+     "final_url": {
+      "maxLength": 2048,
+      "title": "Final Url",
+      "type": "string"
+     },
+     "lease_id": {
+      "format": "uuid",
+      "title": "Lease Id",
+      "type": "string"
+     },
+     "llm_calls": {
+      "items": {
+       "$ref": "#/components/schemas/LlmCall"
+      },
+      "maxItems": 6,
+      "title": "Llm Calls",
+      "type": "array"
+     },
+     "master_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Master Id",
+      "type": "string"
+     },
+     "metrics": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "title": "Metrics",
+      "type": "object"
+     },
+     "outcome": {
+      "enum": [
+       "succeeded",
+       "needs_review",
+       "failed"
+      ],
+      "title": "Outcome",
+      "type": "string"
+     },
+     "platform": {
+      "anyOf": [
+       {
+        "maxLength": 32,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Platform"
+     },
+     "release_ref": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Release Ref",
+      "type": "string"
+     },
+     "requested_action": {
+      "enum": [
+       "bootstrap",
+       "rebootstrap"
+      ],
+      "title": "Requested Action",
+      "type": "string"
+     },
+     "sanitized_error": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sanitized Error"
+     },
+     "scrape_lifecycle_id": {
+      "exclusiveMinimum": 0.0,
+      "title": "Scrape Lifecycle Id",
+      "type": "integer"
+     },
+     "scrape_run_id": {
+      "format": "uuid",
+      "title": "Scrape Run Id",
+      "type": "string"
+     },
+     "security": {
+      "$ref": "#/components/schemas/SecurityEvidence"
+     },
+     "shop_id": {
+      "exclusiveMinimum": 0.0,
+      "title": "Shop Id",
+      "type": "integer"
+     },
+     "validation_summary": {
+      "$ref": "#/components/schemas/ValidationSummary"
+     },
+     "workflow_id": {
+      "format": "uuid",
+      "title": "Workflow Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "contract_version",
+     "lease_id",
+     "workflow_id",
+     "scrape_run_id",
+     "shop_id",
+     "scrape_lifecycle_id",
+     "attempt",
+     "requested_action",
+     "outcome",
+     "final_url",
+     "validation_summary",
+     "security",
+     "master_id",
+     "code_commit",
+     "release_ref"
+    ],
+    "title": "ScrapeWorkResult",
+    "type": "object"
+   },
    "SearchProductItem": {
     "description": "A product result in the unified search response.\n\nSubset of ProductListItem fields, extended with ``result_type`` and ``score``.\nBackwards-compatible: all fields present in the existing ProductListItem are\ncarried over so that consumers can render the same ProductCard component.",
     "properties": {
@@ -17506,6 +17989,33 @@
      "name"
     ],
     "title": "SearchServiceItem",
+    "type": "object"
+   },
+   "SecurityEvidence": {
+    "properties": {
+     "blocked_requests": {
+      "minimum": 0.0,
+      "title": "Blocked Requests",
+      "type": "integer"
+     },
+     "egress_blocked_hosts": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Egress Blocked Hosts",
+      "type": "array"
+     },
+     "prompt_injection_detected": {
+      "title": "Prompt Injection Detected",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "prompt_injection_detected",
+     "blocked_requests"
+    ],
+    "title": "SecurityEvidence",
     "type": "object"
    },
    "SendCapOut": {
@@ -21212,6 +21722,43 @@
     "title": "UserInfoResponse",
     "type": "object"
    },
+   "ValidationCheck": {
+    "properties": {
+     "detail": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "name": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "passed",
+       "warnings",
+       "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "status"
+    ],
+    "title": "ValidationCheck",
+    "type": "object"
+   },
    "ValidationError": {
     "properties": {
      "ctx": {
@@ -21250,6 +21797,32 @@
      "type"
     ],
     "title": "ValidationError",
+    "type": "object"
+   },
+   "ValidationSummary": {
+    "properties": {
+     "checks": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationCheck"
+      },
+      "maxItems": 50,
+      "title": "Checks",
+      "type": "array"
+     },
+     "status": {
+      "enum": [
+       "passed",
+       "warnings",
+       "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "ValidationSummary",
     "type": "object"
    },
    "VerifyEmailRequest": {
@@ -21425,6 +21998,32 @@
      "consecutive_failures"
     ],
     "title": "WebsiteStatusResponse",
+    "type": "object"
+   },
+   "WorkEvent": {
+    "properties": {
+     "event_type": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Event Type",
+      "type": "string"
+     },
+     "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+     },
+     "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+     }
+    },
+    "required": [
+     "event_type",
+     "occurred_at"
+    ],
+    "title": "WorkEvent",
     "type": "object"
    },
    "core__types__OpeningHoursSlot": {
@@ -38534,6 +39133,150 @@
     ]
    }
   },
+  "/api/v1/scrape-work/leases/{lease_id}/events": {
+   "post": {
+    "operationId": "post_events_api_v1_scrape_work_leases__lease_id__events_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lease_id",
+      "required": true,
+      "schema": {
+       "title": "Lease Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LeaseEventsRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "integer"
+         },
+         "title": "Response Post Events Api V1 Scrape Work Leases  Lease Id  Events Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Events",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/leases/{lease_id}/fail": {
+   "post": {
+    "operationId": "post_fail_api_v1_scrape_work_leases__lease_id__fail_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lease_id",
+      "required": true,
+      "schema": {
+       "title": "Lease Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapeWorkFailure"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Fail Api V1 Scrape Work Leases  Lease Id  Fail Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Fail",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
   "/api/v1/scrape-work/leases/{lease_id}/heartbeat": {
    "post": {
     "operationId": "post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post",
@@ -38635,9 +39378,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": {
-          "type": "boolean"
-         },
+         "additionalProperties": true,
          "title": "Response Post Release Api V1 Scrape Work Leases  Lease Id  Release Post",
          "type": "object"
         }
@@ -38657,6 +39398,85 @@
      }
     },
     "summary": "Post Release",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/leases/{lease_id}/result": {
+   "post": {
+    "operationId": "post_result_api_v1_scrape_work_leases__lease_id__result_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lease_id",
+      "required": true,
+      "schema": {
+       "title": "Lease Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "Idempotency-Key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapeWorkResult"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Result Api V1 Scrape Work Leases  Lease Id  Result Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Result",
     "tags": [
      "scrape-work"
     ]

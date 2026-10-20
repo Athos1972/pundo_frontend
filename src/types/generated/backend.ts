@@ -3067,6 +3067,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scrape-work/leases/{lease_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Events */
+        post: operations["post_events_api_v1_scrape_work_leases__lease_id__events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scrape-work/leases/{lease_id}/fail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Fail */
+        post: operations["post_fail_api_v1_scrape_work_leases__lease_id__fail_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scrape-work/leases/{lease_id}/heartbeat": {
         parameters: {
             query?: never;
@@ -3095,6 +3129,23 @@ export interface paths {
         put?: never;
         /** Post Release */
         post: operations["post_release_api_v1_scrape_work_leases__lease_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scrape-work/leases/{lease_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Result */
+        post: operations["post_result_api_v1_scrape_work_leases__lease_id__result_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7806,6 +7857,20 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** ConfigCandidate */
+        ConfigCandidate: {
+            /**
+             * Format
+             * @constant
+             */
+            format: "shopframe_plan/v1";
+            /** Plan */
+            plan: {
+                [key: string]: unknown;
+            };
+            /** Sha256 */
+            sha256: string;
+        };
         /** ConfirmBusinessRequest */
         ConfirmBusinessRequest: {
             /** Legal Basis */
@@ -9047,6 +9112,11 @@ export interface components {
             /** Source Urls */
             source_urls: string[];
         };
+        /** LeaseEventsRequest */
+        LeaseEventsRequest: {
+            /** Events */
+            events: components["schemas"]["WorkEvent"][];
+        };
         /** LifecycleRequest */
         LifecycleRequest: {
             /** Reason */
@@ -9073,6 +9143,35 @@ export interface components {
             linked: boolean;
             /** Provider */
             provider: string;
+        };
+        /** LlmCall */
+        LlmCall: {
+            /** Actual Model */
+            actual_model?: string | null;
+            /** Duration Ms */
+            duration_ms?: number | null;
+            /** Error Class */
+            error_class?: string | null;
+            /**
+             * Gateway Task Id
+             * Format: uuid
+             */
+            gateway_task_id: string;
+            /**
+             * Job Type
+             * @enum {string}
+             */
+            job_type: "scrape.describe_navigation" | "scrape.describe_product_extraction";
+            /** Prompt Profile */
+            prompt_profile: string;
+            /** Security Flagged */
+            security_flagged: boolean;
+            /** Status */
+            status: string;
+            /** Tokens In */
+            tokens_in?: number | null;
+            /** Tokens Out */
+            tokens_out?: number | null;
         };
         /** LocationSchema */
         LocationSchema: {
@@ -10813,6 +10912,131 @@ export interface components {
             trigger: string;
         };
         /**
+         * ScrapeWorkFailure
+         * @description Technical stop reported by a master for an active lease.
+         */
+        ScrapeWorkFailure: {
+            /** Attempt */
+            attempt: number;
+            /** Blocked Target Host */
+            blocked_target_host?: string | null;
+            /**
+             * Contract Version
+             * @constant
+             */
+            contract_version: 2;
+            /** Error Class */
+            error_class: string;
+            /**
+             * Lease Id
+             * Format: uuid
+             */
+            lease_id: string;
+            /** Llm Gateway Task Id */
+            llm_gateway_task_id?: string | null;
+            /**
+             * Retryable Hint
+             * @default false
+             */
+            retryable_hint: boolean;
+            /** Sanitized Error */
+            sanitized_error: string;
+            /**
+             * Scrape Run Id
+             * Format: uuid
+             */
+            scrape_run_id: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "fetch" | "llm_nav" | "render_product" | "llm_product" | "probe" | "config" | "deliver";
+            /**
+             * Workflow Id
+             * Format: uuid
+             */
+            workflow_id: string;
+        };
+        /**
+         * ScrapeWorkResult
+         * @description Tolerant result parser: unknown producer fields are intentionally ignored.
+         */
+        ScrapeWorkResult: {
+            /** Attempt */
+            attempt: number;
+            /** Base Config Version */
+            base_config_version?: string | null;
+            /** Classification */
+            classification?: ("shop" | "non_shop" | "unclear") | null;
+            /** Code Commit */
+            code_commit: string;
+            /** Comparison */
+            comparison?: {
+                [key: string]: unknown;
+            } | null;
+            /** Confidence */
+            confidence?: number | null;
+            /** Config Artifact Ref */
+            config_artifact_ref?: string | null;
+            config_candidate?: components["schemas"]["ConfigCandidate"] | null;
+            /** Config Version */
+            config_version?: string | null;
+            /**
+             * Contract Version
+             * @constant
+             */
+            contract_version: 2;
+            /** Error Class */
+            error_class?: string | null;
+            /** Final Url */
+            final_url: string;
+            /**
+             * Lease Id
+             * Format: uuid
+             */
+            lease_id: string;
+            /** Llm Calls */
+            llm_calls?: components["schemas"]["LlmCall"][];
+            /** Master Id */
+            master_id: string;
+            /** Metrics */
+            metrics?: {
+                [key: string]: number;
+            };
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "succeeded" | "needs_review" | "failed";
+            /** Platform */
+            platform?: string | null;
+            /** Release Ref */
+            release_ref: string;
+            /**
+             * Requested Action
+             * @enum {string}
+             */
+            requested_action: "bootstrap" | "rebootstrap";
+            /** Sanitized Error */
+            sanitized_error?: string | null;
+            /** Scrape Lifecycle Id */
+            scrape_lifecycle_id: number;
+            /**
+             * Scrape Run Id
+             * Format: uuid
+             */
+            scrape_run_id: string;
+            security: components["schemas"]["SecurityEvidence"];
+            /** Shop Id */
+            shop_id: number;
+            validation_summary: components["schemas"]["ValidationSummary"];
+            /**
+             * Workflow Id
+             * Format: uuid
+             */
+            workflow_id: string;
+        };
+        /**
          * SearchProductItem
          * @description A product result in the unified search response.
          *
@@ -10894,6 +11118,15 @@ export interface components {
              * @default 0.85
              */
             score: number;
+        };
+        /** SecurityEvidence */
+        SecurityEvidence: {
+            /** Blocked Requests */
+            blocked_requests: number;
+            /** Egress Blocked Hosts */
+            egress_blocked_hosts?: string[];
+            /** Prompt Injection Detected */
+            prompt_injection_detected: boolean;
         };
         /** SendCapOut */
         SendCapOut: {
@@ -12027,6 +12260,18 @@ export interface components {
             /** Sub */
             sub: string;
         };
+        /** ValidationCheck */
+        ValidationCheck: {
+            /** Detail */
+            detail?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "passed" | "warnings" | "failed";
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -12039,6 +12284,16 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** ValidationSummary */
+        ValidationSummary: {
+            /** Checks */
+            checks?: components["schemas"]["ValidationCheck"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "passed" | "warnings" | "failed";
         };
         /** VerifyEmailRequest */
         VerifyEmailRequest: {
@@ -12104,6 +12359,20 @@ export interface components {
             last_status: number | null;
             /** Url */
             url: string;
+        };
+        /** WorkEvent */
+        WorkEvent: {
+            /** Event Type */
+            event_type: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * OpeningHoursSlot
@@ -19814,6 +20083,85 @@ export interface operations {
             };
         };
     };
+    post_events_api_v1_scrape_work_leases__lease_id__events_post: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaseEventsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_fail_api_v1_scrape_work_leases__lease_id__fail_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key"?: string | null;
+                authorization: string;
+            };
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeWorkFailure"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post: {
         parameters: {
             query?: never;
@@ -19877,7 +20225,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: boolean;
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_result_api_v1_scrape_work_leases__lease_id__result_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key"?: string | null;
+                authorization: string;
+            };
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeWorkResult"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
                     };
                 };
             };

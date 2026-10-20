@@ -18,18 +18,18 @@ export type ActivityEventType =
 export type BrandSlug = 'pundo' | 'naidivse'
 
 export interface ActivityEventPayload {
-  product_id?: number
-  product_slug?: string
-  product_name?: string
-  shop_id?: number
-  shop_slug?: string
-  shop_name?: string
-  category_id?: number
-  category_slug?: string
-  category_name?: string
-  city?: string
-  term?: string
-  language_code?: string
+  product_id?: number | null
+  product_slug?: string | null
+  product_name?: string | null
+  shop_id?: number | null
+  shop_slug?: string | null
+  shop_name?: string | null
+  category_id?: number | null
+  category_slug?: string | null
+  category_name?: string | null
+  city?: string | null
+  term?: string | null
+  language_code?: string | null
 }
 
 export interface ActivityEvent {

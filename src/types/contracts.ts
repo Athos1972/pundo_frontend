@@ -12,6 +12,7 @@ import type { components } from './generated/backend'
 import type * as SysAdmin from './system-admin'
 import type * as Api from './api'
 import type * as ShopAdmin from './shop-admin'
+import type * as Activity from './activity'
 
 type Schemas = components['schemas']
 
@@ -120,4 +121,11 @@ export type ShopAdminContracts = [
   Contract<Assignable<Schemas['ClaimCandidateOut'], ShopAdmin.ClaimCandidate>>,
   Contract<Assignable<Schemas['ClaimCreateResponse'], ShopAdmin.ClaimCreateResponse>>,
   Contract<Assignable<Schemas['ClaimStatusResponse'], ShopAdmin.ClaimStatusResponse>>,
+]
+
+// ── Activity feed and community votes (src/types/activity.ts, api.ts; B8950-016 Aktivität/Community) ───────────────────
+export type ActivityCommunityContracts = [
+  Contract<Assignable<Schemas['ActivityResponse'], Activity.ActivityResponse>>,
+  Contract<Assignable<Schemas['ShopVotesResponse'], Api.ShopVotesResponse>>,
+  Contract<Assignable<Schemas['VoteUpsertResponse'], Api.VoteUpsertResponse>>,
 ]

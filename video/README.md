@@ -126,6 +126,20 @@ video/.venv/bin/python video/_branding/tests/regression.py compare short-pricing
 ```
 `regression.py` baut mit `--no-record` neu (Stimme aus dem Cache, kein Netz), misst und stellt `out/` danach wieder her (veroeffentlichte Dateien bleiben unveraendert).
 
+## Videos aktuell halten
+`video/registry.json` listet je Team-Video `slug`, `topic` (Hilfe-Thema-ID aus `src/lib/system-admin-help.ts`), `youtubeId`, `recordedAtCommit`, `recordedAt` und `touches` (Quelldateien/Verzeichnisse der Admin-Oberflaeche, deren Aenderung das Video veralten lassen kann; bewusst ohne `system-admin-translations.ts` und `video/**`).
+`npm run videos:stale` zeigt je Video die Commits auf `touches` seit der Aufnahme (Status "aktuell"/"pruefen"); `-- --strict` liefert Exit 1 bei "pruefen". "pruefen" heisst nur: ansehen, nicht neu aufnehmen.
+
+Prinzipien:
+- Die schriftliche SOP (`src/lib/system-admin-help-content.ts`) ist die Wahrheit und wird sofort angepasst.
+- Videos zeigen Konzepte und Ablaeufe, kurz und modular (max. 3-4 min), ohne UI-Detailangaben im Sprechtext.
+- Neuaufnahme nur, wenn sich der **Ablauf** aendert, nicht bei kosmetischen Aenderungen.
+- Vor jedem Release/Feature an Admin-Seiten `npm run videos:stale` ansehen.
+- Neue Videos tragen sich in `registry.json` ein (`recordedAtCommit` = Commit der Aufnahme/des Builds).
+- Nach einer Neuaufnahme `recordedAtCommit`/`recordedAt`/`youtubeId` aktualisieren.
+
+Backfill (2026-10-20): `recordedAtCommit` der 6 vorhandenen Videos ist eine Naeherung (`git log -1 --format=%H -- video/<slug>`, letzter Commit am Video-Ordner), nicht der exakte Aufnahmezeitpunkt; `touches` sind aus den in `record.mjs` besuchten Admin-Routen abgeleitet.
+
 ## Neues Video anlegen
 1. Deutsches Skript `video/<slug>/01-skript.de.md` von Bernhard freigeben lassen.
 2. `video/<slug>/scenes.yml` nach dem Muster von `product-create-new/scenes.yml` (meta: title/url/next_video je Sprache; scenes: `intro`, Szenen mit `callout` + `narration`, `outro`).

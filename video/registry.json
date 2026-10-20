@@ -1,0 +1,90 @@
+[
+  {
+    "slug": "team-admin-tour",
+    "topic": "admin-tour",
+    "youtubeId": "fAgsmmvzEIQ",
+    "recordedAtCommit": "b5b4a5e1729811bc30f1707061db42708966ee0e",
+    "recordedAt": "2026-10-19",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/dashboard",
+      "src/components/system-admin/AdminNav.tsx",
+      "src/components/system-admin/AdminShell.tsx"
+    ]
+  },
+  {
+    "slug": "team-claims-owners",
+    "topic": "claims-owners",
+    "youtubeId": "S2bt0GO6zKQ",
+    "recordedAtCommit": "a08fa971fc2a16d251497ca8da6b06038587873d",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/claims",
+      "src/app/(system-admin)/admin/(portal)/shop-owners",
+      "src/components/system-admin/claims",
+      "src/components/system-admin/AssignOwnerDialog.tsx",
+      "src/components/system-admin/ShopOwnerSection.tsx"
+    ]
+  },
+  {
+    "slug": "team-shops",
+    "topic": "shops",
+    "youtubeId": "xYCinlqnnIk",
+    "recordedAtCommit": "2a34cdad3cc2d83748605ae458e63569ed2a3f63",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/shops",
+      "src/app/(system-admin)/admin/(portal)/shop-types",
+      "src/components/system-admin/ShopForm.tsx",
+      "src/components/system-admin/LocationEditor.tsx",
+      "src/components/system-admin/LocationEditorMap.tsx",
+      "src/components/system-admin/OpeningHoursEditor.tsx",
+      "src/components/system-admin/opening-hours.ts",
+      "src/components/system-admin/ShopOwnerSection.tsx",
+      "src/components/system-admin/ShopHardDeleteSection.tsx"
+    ]
+  },
+  {
+    "slug": "team-products",
+    "topic": "products",
+    "youtubeId": "KdVJzmdxA5Q",
+    "recordedAtCommit": "f98603fe40095ed9bc2c936b804ed3ec5d8b7a2a",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/products",
+      "src/app/(system-admin)/admin/(portal)/brands",
+      "src/app/(system-admin)/admin/(portal)/categories",
+      "src/components/system-admin/ProductForm.tsx",
+      "src/components/system-admin/ProductAttributesTable.tsx",
+      "src/components/system-admin/BrandForm.tsx",
+      "src/components/system-admin/BrandLogoInput.tsx",
+      "src/components/system-admin/CategoryForm.tsx",
+      "src/components/system-admin/CategoryTreeView.tsx",
+      "src/components/system-admin/Combobox.tsx"
+    ]
+  },
+  {
+    "slug": "team-translations",
+    "topic": "translations",
+    "youtubeId": "sw0l_oaN73M",
+    "recordedAtCommit": "f98603fe40095ed9bc2c936b804ed3ec5d8b7a2a",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/products",
+      "src/app/(system-admin)/admin/(portal)/categories",
+      "src/components/system-admin/ProductForm.tsx",
+      "src/components/system-admin/CategoryForm.tsx",
+      "src/components/system-admin/CategoryTreeView.tsx"
+    ]
+  },
+  {
+    "slug": "team-crm",
+    "topic": "crm",
+    "youtubeId": "0gdPz5DOLsk",
+    "recordedAtCommit": "a08fa971fc2a16d251497ca8da6b06038587873d",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/crm",
+      "src/components/system-admin/crm"
+    ]
+  }
+]

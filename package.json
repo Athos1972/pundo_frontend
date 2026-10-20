@@ -9,6 +9,7 @@
     "build:prod": "next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "next start",
     "lint": "eslint",
+    "videos:stale": "node scripts/video-staleness.mjs",
     "test:e2e:coverage": "node scripts/e2e-coverage.mjs",
     "test:e2e:coverage:report": "node scripts/e2e-coverage.mjs report",
     "lint:i18n": "tsx scripts/check-i18n-parity.ts",

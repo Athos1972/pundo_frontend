@@ -92,6 +92,9 @@ Lese mindestens:
 
 ---
 
+### Admin-Seiten geaendert (F8960 Team-Videos)
+Bei Aenderungen an `src/app/(system-admin)/admin/(portal)/**` oder `src/components/system-admin/**`: `npm run videos:stale` ausfuehren, die SOP-Texte in `src/lib/system-admin-help-content.ts` sofort anpassen und im Handoff nennen, welche Videos auf "pruefen" stehen. Neuaufnahme nur bei geaendertem Ablauf (siehe `video/README.md`, "Videos aktuell halten").
+
 ## 1.5 Journey-Implementierung
 
 **Nach** Typen-Ergänzung (`src/types/`), **vor** Unit-Tests: Katalog prüfen und ggf. Journey-Spec-Files anlegen.

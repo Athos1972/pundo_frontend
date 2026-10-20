@@ -125,7 +125,7 @@ describe('help list page', () => {
     expect(cards.map((c) => c.getAttribute('data-topic'))).toEqual(HELP_TOPICS.map((t) => t.id))
     expect(screen.getAllByRole('heading', { level: 1 }).length).toBe(1)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(en.help_title)
-    expect(screen.getAllByText(en.help_video_coming_soon).length).toBe(HELP_TOPICS.filter((t) => !t.videoId).length)
+    expect(screen.queryAllByText(en.help_video_coming_soon).length).toBe(HELP_TOPICS.filter((t) => !t.videoId).length)
     HELP_TOPICS.forEach((t) => expect(screen.getByText(HELP_CONTENT[t.id].en.title)).toBeTruthy())
   })
 

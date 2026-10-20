@@ -112,7 +112,8 @@ describe('help content (EN + EL)', () => {
     const en = HELP_CONTENT.translations.en
     const text = [...en.steps, ...(en.notes ?? []).map((n) => n.text)].join(' ')
     expect(text).toMatch(/6 languages/)
-    expect(text).toMatch(/source text/)
+    expect(text).toMatch(/never overwrites a language version/)
+    expect(text).toMatch(/edit every language version/)
     expect(text).toMatch(/seed_taxonomy\.py/)
     expect(en.notes?.some((n) => n.kind === 'warning')).toBe(true)
   })

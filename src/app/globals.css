@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Leaflet stylesheet lives here (B8300-005): imported from a component, the Next dev server ran it through
+   @tailwindcss/postcss and served Tailwind output instead of the Leaflet rules (broken map tiles). */
+@import "leaflet/dist/leaflet.css";
 @source "../**/*.{ts,tsx}";
 @source "../../e2e/**/*.{ts,tsx}";
 

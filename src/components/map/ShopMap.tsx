@@ -1,7 +1,6 @@
 'use client'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { t } from '@/lib/translations'
 import { isRTL, Lang, DEFAULT_LANG } from '@/lib/lang'

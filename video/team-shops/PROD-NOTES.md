@@ -28,7 +28,7 @@ Status: **Entwurf** (EN-Text nicht von Bernhard freigegeben, EL nicht von Mutter
 
 ## Layout-/Qualitätsbefunde (ehrlich)
 - Adresszeile: pro Szene genau eine Seite, jetzt korrekt (außer Suchparameter `?q=` in „find“/„saved“, die Leiste zeigt `/admin/shops`). Möglich, weil der Klick am Szenenende vor dem Seitenwechsel einfriert; die Folgeszene setzt fort. Preis: Das Klicken auf „Shops“ in der Seitenleiste und auf „Edit“ nach dem Speichern ist nur am Szenenrand zu sehen.
-- **Leaflet-Karte:** Ursache der kaputten Kacheln im Claims-Video: im Next-Dev-Server wird `leaflet.css` durch Tailwind-Output ersetzt (kein einziges `leaflet-container`-Regel), Tiles/Netz sind in Ordnung. Lösung nur im Recorder: echtes `leaflet.css` per Init-Script injizieren, kein `route()`. In einem Prod-Build sind die Leaflet-Regeln vorhanden (`.next/static`-Stichprobe); nicht live geprüft. Karte rendert jetzt sauber (Kacheln, Pin, Attribution). Braucht Internet (OSM-Tiles, Marker von unpkg).
+- **Leaflet-Karte:** Früher kaputte Kacheln im Dev-Server (Tailwind-Output statt `leaflet.css`); behoben in der App (B8300-005, `leaflet.css` über `globals.css`), der Recorder braucht keinen Workaround mehr. Braucht Internet (OSM-Tiles, Marker von unpkg).
 - Formularseiten scrollen die ganze Seite; die Seitenleiste scrollt mit raus (links weiße Fläche). Schrift klein (ca. 12–13 px im 1080p-Bild).
 - Shop-Types-Liste zeigt in der Spalte „Name“ deutsche Bezeichnungen, obwohl die UI auf Englisch steht; nicht untersucht (mögliches Auflösungsproblem).
 - Letzte Szenen-Sekunden stehen eingefroren auf dem Klick (Freeze), danach Überblendung.

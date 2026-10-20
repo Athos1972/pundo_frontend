@@ -12,9 +12,12 @@ What it creates / updates:
     team-common/.recording-accounts.json {"admin": {email, password}} (gitignored, never printed).
  2. Shops "Team Demo Bakery" (owner@pundo-e2e.io, approved) and "Team Demo Pet Corner" (fictional Limassol addresses).
  3. An open claim on Pet Corner by claimant@pundo-e2e.io (pending shop owner without shop) + created-event.
- 4. Brand "Team Demo Brand" (id 1) and demo category (id -1; ids chosen so that they fall into the first-1000 window the admin
-    product form / list loads, see _move_brand_to_reachable_id), demo category "Team Demo Category" (EN/EL names, below px-cooking) and the product
-    "Team Demo Sourdough Loaf" with brand + category.
+ 4. Brand "Team Demo Brand", demo category "Team Demo Category" (EN/EL names, below px-cooking) and the product
+    "Team Demo Sourdough Loaf" with brand + category, names + descriptions in all six languages and a fictional barcode.
+    Earlier versions parked brand and category at the ids 1 / -1 (the admin forms loaded only the first 1000 rows, B8200-004);
+    since the forms page through everything they live at NORMAL ids again: an existing row at the old id is moved once
+    (copy to a new id, repoint items, delete; refuses when anything else references it) - see _ensure_normal_ids. The ids are
+    printed in the JSON line (brand_id / category_id) and the recorders compare them with the address bars of scenes.yml.
  5. CRM: org + contact "Team Demo Contact" (NEEDS_REVIEW) with channels contact@pundo-e2e.io / WhatsApp +35790000000.
     Claims video (team-claims-owners): a third shop "Team Demo Flower Corner" and a second applicant
     (claimant2@pundo-e2e.io) with a second claim; BOTH demo claims are RESET to "open" on every run (the video
@@ -25,11 +28,11 @@ Shops video (team-shops): the video CREATES the shop "Team Demo Taverna" through
     video also edits "Team Demo Bakery" (address); the upsert above puts the address back.
 Products video (team-products): the video CREATES the product "Team Demo Rye Bread" through the admin form (brand + category of the
     demo set above). prepare_team.py DELETES it again at the start of every run (only slug team-demo-rye-bread AND English
-    name "Team Demo Rye Bread" AND source admin). The video also edits "Team Demo Sourdough Loaf" (name gets a size; the admin
-    form PATCH replaces `names` with the English text only) - the upsert above puts both languages back.
-Translations video (team-translations): the video types a German name into the translation table of "Team Demo Category" and saves it
-    (PUT /admin/categories/{id}/translations). prepare_team.py therefore deletes every translation of the demo category except
-    en + el at the start of every run (only that one demo category) and re-sets the en/el names.
+    name "Team Demo Rye Bread" AND source admin). The video also edits "Team Demo Sourdough Loaf" (English name gets a size; since B8000-003/004
+    the PATCH merges per language, so the other five stay) - the upsert above puts all six names back.
+Translations video (team-translations) and products video: both type a name into the translation table of "Team Demo Category" and
+    save it (PUT /admin/categories/{id}/translations; products: Russian, translations: German). prepare_team.py therefore deletes every
+    translation of the demo category except en + el at the start of every run (only that one demo category) and re-sets the en/el names.
 CRM video (team-crm): the video edits the demo contact "Team Demo Contact" (adds a phone channel, moves it NEEDS_REVIEW -> SOURCED via
     "Set state") and CREATES the contact "Team Demo Maria" (organisation "Team Demo Cafe") through the admin form. prepare_team.py
     therefore (a) puts the demo contact back at the start of every run: state NEEDS_REVIEW, needs_human, version 1, only the two
@@ -82,13 +85,16 @@ CLAIM_MESSAGES = {
     "flower": "Hi, I would like to manage this shop page. (demo)",
 }
 BRAND_SLUG = "team-demo-brand"
-DEMO_BRAND_ID = 1        # inside the first-1000 window of the admin forms (see _move_brand_to_reachable_id)
-DEMO_CATEGORY_ID = -1
+LEGACY_BRAND_ID = 1       # earlier parking ids (first-1000 window of the old admin forms); moved to normal ids by _ensure_normal_ids
+LEGACY_CATEGORY_ID = -1
 CATEGORY_EXTERNAL_ID = "px-team-demo"
 CATEGORY_PARENT = "px-cooking"
 CATEGORY_NAMES = {"en": "Team Demo Category", "el": "Team Demo Κατηγορία"}
 ITEM_SLUG = "team-demo-sourdough-loaf"
-ITEM_NAMES = {"en": "Team Demo Sourdough Loaf", "el": "Team Demo Προζυμένιο ψωμί"}
+ITEM_NAMES = {"en": "Team Demo Sourdough Loaf", "de": "Team Demo Sauerteigbrot", "el": "Team Demo Προζυμένιο ψωμί",
+              "ru": "Team Demo Хлеб на закваске", "ar": "Team Demo خبز العجين المخمر", "he": "Team Demo לחם מחמצת"}
+ITEM_DESCRIPTIONS = {"en": "Fictional demo product for the team videos.", "de": "Fiktives Demo-Produkt für die Team-Videos."}
+ITEM_EAN = "2099900000015"   # fictional (restricted-circulation prefix 2), no real product
 CRM_ORG = "Team Demo Bakery"
 CRM_CONTACT = "Team Demo Contact"
 CRM_EMAIL = "contact" + DEMO_DOMAIN
@@ -206,57 +212,61 @@ def upsert_claim(cur, shop_id: int, applicant_id: int, domain_match: bool, messa
     return claim_id
 
 
-def _move_brand_to_reachable_id(cur) -> int:
-    """Admin lists/forms only load the first 1000 brands / categories ordered by id (getAllBrands / getAllCategories in
-    system-admin-api.ts; pundo_test has 2074 brands, 8508 categories). A demo row with a high id is therefore neither selectable in
-    the product form nor named in the product list (raw id shown). The demo rows live at ids inside that window (brand id 1,
-    category id -1; both unused in pundo_test) so the videos can show the real flow. Rows are moved once (copy, repoint, delete)."""
+def _ensure_normal_ids(cur) -> tuple[int, int]:
+    """Brand + demo category at NORMAL ids (sequence). A row left at the legacy parking id (brand 1 / category -1) is moved once:
+    copy to a fresh id, repoint items, delete the old row. Refuses when another table references the old row (nothing but items and
+    the category's own translations do in pundo_test). Returns (brand_id, category_id)."""
     cur.execute("select id, source from brands where slug=%s", (BRAND_SLUG,))
     row = cur.fetchone()
-    if row and row[0] == DEMO_BRAND_ID:
-        return DEMO_BRAND_ID
     if row and row[1] != "manual":
         sys.exit(f"refusing: brand {BRAND_SLUG} exists and is not ours")
-    cur.execute("select 1 from brands where id=%s", (DEMO_BRAND_ID,))
-    if cur.fetchone():
-        sys.exit(f"refusing: brand id {DEMO_BRAND_ID} is taken by another row")
-    if row:
-        cur.execute("update brands set slug=%s where id=%s", (BRAND_SLUG + "-moving", row[0]))
-    cur.execute("insert into brands (id, slug, names, country_code, source) values (%s,%s,%s,'CY','manual')",
-                (DEMO_BRAND_ID, BRAND_SLUG, Jsonb({"en": "Team Demo Brand"})))
-    if row:
-        cur.execute("update items set brand_id=%s where brand_id=%s", (DEMO_BRAND_ID, row[0]))
-        cur.execute("delete from brands where id=%s", (row[0],))
-    return DEMO_BRAND_ID
-
-
-def _move_category_to_reachable_id(cur, parent) -> int:
-    cur.execute("select id from categories where taxonomy_type='unspsc' and external_id=%s", (CATEGORY_EXTERNAL_ID,))
-    row = cur.fetchone()
-    if row and row[0] == DEMO_CATEGORY_ID:
-        return DEMO_CATEGORY_ID
-    cur.execute("select 1 from categories where id=%s", (DEMO_CATEGORY_ID,))
-    if cur.fetchone():
-        sys.exit(f"refusing: category id {DEMO_CATEGORY_ID} is taken by another row")
-    if row:
-        cur.execute("update categories set external_id=%s where id=%s", (CATEGORY_EXTERNAL_ID + "-moving", row[0]))
-    cur.execute("insert into categories (id, parent_id, taxonomy_type, external_id, level, path) values (%s,%s,'unspsc',%s,'class',%s)",
-                (DEMO_CATEGORY_ID, parent[0], CATEGORY_EXTERNAL_ID, f"{parent[1]} > {CATEGORY_EXTERNAL_ID}"))
-    if row:
-        cur.execute("update items set category_id=%s where category_id=%s", (DEMO_CATEGORY_ID, row[0]))
-        cur.execute("delete from category_translations where category_id=%s", (row[0],))
-        cur.execute("delete from categories where id=%s", (row[0],))
-    return DEMO_CATEGORY_ID
-
-
-def upsert_brand_category_item(cur) -> dict:
-    brand_id = _move_brand_to_reachable_id(cur)
+    if row and row[0] == LEGACY_BRAND_ID:
+        cur.execute("select count(*) from products_deprecated where brand_id=%s", (LEGACY_BRAND_ID,))
+        if cur.fetchone()[0]:
+            sys.exit("refusing: legacy products reference the demo brand")
+        cur.execute("update brands set slug=%s where id=%s", (BRAND_SLUG + "-moving", LEGACY_BRAND_ID))
+        cur.execute("insert into brands (slug, names, country_code, source) values (%s,%s,'CY','manual') returning id",
+                    (BRAND_SLUG, Jsonb({"en": "Team Demo Brand"})))
+        brand_id = cur.fetchone()[0]
+        cur.execute("update items set brand_id=%s where brand_id=%s", (brand_id, LEGACY_BRAND_ID))
+        cur.execute("delete from brands where id=%s", (LEGACY_BRAND_ID,))
+    elif row:
+        brand_id = row[0]
+    else:
+        cur.execute("insert into brands (slug, names, country_code, source) values (%s,%s,'CY','manual') returning id",
+                    (BRAND_SLUG, Jsonb({"en": "Team Demo Brand"})))
+        brand_id = cur.fetchone()[0]
 
     cur.execute("select id, path from categories where taxonomy_type='unspsc' and external_id=%s", (CATEGORY_PARENT,))
     parent = cur.fetchone()
     if not parent:
         sys.exit(f"refusing: parent category {CATEGORY_PARENT} missing in pundo_test")
-    cat_id = _move_category_to_reachable_id(cur, parent)
+    cur.execute("select id from categories where taxonomy_type='unspsc' and external_id=%s", (CATEGORY_EXTERNAL_ID,))
+    row = cur.fetchone()
+    if row and row[0] != LEGACY_CATEGORY_ID:
+        return brand_id, row[0]
+    path = f"{parent[1]} > {CATEGORY_EXTERNAL_ID}"
+    if row:   # legacy id -1: nothing else may hang on it
+        for table, col in (("products_deprecated", "category_id"), ("category_attribute_definitions", "category_id"),
+                           ("service_place_type_mappings", "category_id"), ("category_synonyms", "category_id"),
+                           ("category_embeddings", "category_id"), ("category_path_aliases", "category_id"),
+                           ("onboarding_domain_category_mapping", "category_id"), ("categories", "parent_id")):
+            cur.execute(f"select count(*) from {table} where {col}=%s", (LEGACY_CATEGORY_ID,))
+            if cur.fetchone()[0]:
+                sys.exit(f"refusing: {table}.{col} references the legacy demo category")
+        cur.execute("update categories set external_id=%s where id=%s", (CATEGORY_EXTERNAL_ID + "-moving", LEGACY_CATEGORY_ID))
+    cur.execute("insert into categories (parent_id, taxonomy_type, external_id, level, path) values (%s,'unspsc',%s,'class',%s) returning id",
+                (parent[0], CATEGORY_EXTERNAL_ID, path))
+    cat_id = cur.fetchone()[0]
+    if row:
+        cur.execute("update items set category_id=%s where category_id=%s", (cat_id, LEGACY_CATEGORY_ID))
+        cur.execute("delete from category_translations where category_id=%s", (LEGACY_CATEGORY_ID,))
+        cur.execute("delete from categories where id=%s", (LEGACY_CATEGORY_ID,))
+    return brand_id, cat_id
+
+
+def upsert_brand_category_item(cur) -> dict:
+    brand_id, cat_id = _ensure_normal_ids(cur)
     for lang, name in CATEGORY_NAMES.items():
         cur.execute("insert into category_translations (category_id, lang, name, rtl) values (%s,%s,%s,false) "
                     "on conflict (category_id, lang) do update set name=excluded.name", (cat_id, lang, name))
@@ -269,12 +279,15 @@ def upsert_brand_category_item(cur) -> dict:
         if row[1] != "admin":
             sys.exit(f"refusing: item slug {ITEM_SLUG} exists and is not ours")
         item_id = row[0]
-        cur.execute("update items set status='active', item_type='product', names=%s, category_id=%s, brand_id=%s "
-                    "where id=%s and (names<>%s or category_id is distinct from %s or brand_id is distinct from %s or status<>'active')",
-                    (Jsonb(ITEM_NAMES), cat_id, brand_id, item_id, Jsonb(ITEM_NAMES), cat_id, brand_id))
+        cur.execute("update items set status='active', item_type='product', names=%s, descriptions=%s, ean=%s, category_id=%s, brand_id=%s "
+                    "where id=%s and (names<>%s or descriptions is distinct from %s or ean is distinct from %s or category_id is distinct from %s "
+                    "or brand_id is distinct from %s or status<>'active')",
+                    (Jsonb(ITEM_NAMES), Jsonb(ITEM_DESCRIPTIONS), ITEM_EAN, cat_id, brand_id, item_id, Jsonb(ITEM_NAMES),
+                     Jsonb(ITEM_DESCRIPTIONS), ITEM_EAN, cat_id, brand_id))
     else:
-        cur.execute("insert into items (slug, item_type, status, names, category_id, brand_id, source) values (%s,'product','active',%s,%s,%s,'admin') returning id",
-                    (ITEM_SLUG, Jsonb(ITEM_NAMES), cat_id, brand_id))
+        cur.execute("insert into items (slug, item_type, status, names, descriptions, ean, category_id, brand_id, source) "
+                    "values (%s,'product','active',%s,%s,%s,%s,%s,'admin') returning id",
+                    (ITEM_SLUG, Jsonb(ITEM_NAMES), Jsonb(ITEM_DESCRIPTIONS), ITEM_EAN, cat_id, brand_id))
         item_id = cur.fetchone()[0]
     return {"brand_id": brand_id, "category_id": cat_id, "item_id": item_id}
 
@@ -349,7 +362,7 @@ def main() -> None:
         catalog = upsert_brand_category_item(cur)
         crm = upsert_crm(cur, shops["bakery"])
         out = {"shops": {k: {"id": shops[k], "slug": SHOPS[k]["slug"]} for k in shops}, "owner_id": owner, "claimant_id": claimant, "claimant2_id": claimant2,
-               "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "crm": crm, "marker": "Team Demo",
+               "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "item_ean": ITEM_EAN, "crm": crm, "marker": "Team Demo",
                "new_shop": {**NEW_SHOP, "removed_from_last_run": removed},
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
                "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact}, "dry_run": DRY}

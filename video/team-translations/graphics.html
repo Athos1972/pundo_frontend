@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- Explainer graphics for team video 4b "How translations come about" (F8960 T21). Static, local, no network, no real data.
-     Opened by record.mjs as file://.../graphics.html?s=<chain|steer|warning|marker>; record.mjs calls window.__step(n) to reveal
+     Opened by record.mjs as file://.../graphics.html?s=<chain|merge|marker>; record.mjs calls window.__step(n) to reveal
      the steps in sync with the narration. Colors/fonts = ../_branding/brand.yml. All product names are fictional demo values. -->
 <html lang="en">
 <head>
@@ -80,63 +80,45 @@
   <h1>How a product gets its translations</h1>
   <p class="sub">One source text in, six language versions out.</p>
   <div class="chain">
-    <div class="box you step" data-s="1"><div class="n">1</div><b>Your source text</b><span>Name (and description) typed in the admin form</span></div>
+    <div class="box you step" data-s="1"><div class="n">1</div><b>Your source text</b><span>Name (and description) in the admin form, in one or more languages</span></div>
     <div class="arrow step" data-s="2">&rarr;</div>
-    <div class="box step" data-s="2"><div class="n">2</div><b>Translation job</b><span>Runs in the background, separately from Save</span></div>
+    <div class="box step" data-s="2"><div class="n">2</div><b>Translation run</b><span>Started by the team or after a shop catalog import, separate from Save</span></div>
     <div class="arrow step" data-s="3">&rarr;</div>
     <div class="box step" data-s="3"><div class="n">3</div><b>LLM gateway</b><span>A queue that hands out the work</span></div>
     <div class="arrow step" data-s="4">&rarr;</div>
     <div class="box step" data-s="4"><div class="n">4</div><b>Worker</b><span>Runs the language model and returns the texts</span></div>
     <div class="arrow step" data-s="5">&rarr;</div>
-    <div class="box step" data-s="5"><div class="n">5</div><b>Database</b><span>Names saved per language</span></div>
+    <div class="box step" data-s="5"><div class="n">5</div><b>Database</b><span>Only missing languages added</span></div>
   </div>
   <div class="langs step" data-s="5"><div class="chip">EN</div><div class="chip">DE</div><div class="chip">EL</div><div class="chip">RU</div><div class="chip">AR</div><div class="chip">HE</div></div>
-  <div class="note step" data-s="6"><b>Save does not start the job.</b> Products from a shop's catalog import are queued automatically.
-    Products created in the admin wait until the team starts the next translation run.</div>
+  <div class="note step" data-s="6"><b>Save does not start the run.</b> The team starts it (translation script), and it also starts by itself after a shop's catalog import.
+    It adds only the languages that are still missing.</div>
 </section>
 
-<section id="steer">
-  <h1>What you can steer, and what not</h1>
-  <p class="sub">Products: there is no translation screen in the admin.</p>
-  <div class="cols">
-    <div class="col yes step" data-s="1"><h2>You control</h2><ul>
-      <li>The source text: name and description</li>
-      <li>Plain wording: brand, product, size</li>
-      <li>Category names, one per language</li>
-    </ul></div>
-    <div class="col no step" data-s="2"><h2>You do not control</h2><ul>
-      <li>The wording of a single language of a product</li>
-      <li>When the translation job runs</li>
-      <li>A re-translation of an existing language</li>
-    </ul></div>
-  </div>
-  <div class="help step" data-s="3">A translation looks wrong? Note the product and tell the team lead. Retyping the name does not fix it.</div>
-</section>
-
-<section id="warning">
-  <h1>Watch out: Save changes only the shown name</h1>
+<section id="merge">
+  <h1>What a translation run does</h1>
   <p class="sub">Example with a fictional demo product (illustration).</p>
   <div class="pair">
-    <div class="card step" data-s="1"><h3>Before Save</h3>
-      <div class="row"><i>EN</i>Team Demo Sourdough Loaf</div>
-      <div class="row"><i>DE</i>Team Demo Sauerteigbrot</div>
-      <div class="row"><i>EL</i>Team Demo Προζυμένιο ψωμί</div>
-      <div class="row"><i>RU</i>Team Demo Хлеб на закваске</div>
-      <div class="row"><i>AR</i><span dir="rtl">Team Demo خبز العجين المخمر</span></div>
-      <div class="row"><i>HE</i><span dir="rtl">Team Demo לחם מחמצת</span></div>
+    <div class="card step" data-s="1"><h3>Before the run</h3>
+      <div class="row"><i>EN</i>Team Demo Sourdough Loaf<span class="badge b-you">typed by you</span></div>
+      <div class="row"><i>DE</i>Team Demo Sauerteigbrot<span class="badge b-you">typed by you</span></div>
+      <div class="row"><i>RU</i><span style="color:var(--muted)">missing</span></div>
+      <div class="row"><i>EL</i><span style="color:var(--muted)">missing</span></div>
+      <div class="row"><i>AR</i><span style="color:var(--muted)">missing</span></div>
+      <div class="row"><i>HE</i><span style="color:var(--muted)">missing</span></div>
     </div>
-    <div class="mid step" data-s="2"><big>&rarr;</big>Save in the admin form<br>changes only EN</div>
-    <div class="card step" data-s="3"><h3>After Save</h3>
-      <div class="row"><i>EN</i>Team Demo Sourdough Loaf 500 g</div>
-      <div class="row kept"><i>DE</i>Team Demo Sauerteigbrot<em>kept, not updated</em></div>
-      <div class="row kept"><i>EL</i>Team Demo Προζυμένιο ψωμί<em>kept, not updated</em></div>
-      <div class="row kept"><i>RU</i>Team Demo Хлеб на закваске<em>kept, not updated</em></div>
-      <div class="row kept"><i>AR</i><span dir="rtl">Team Demo خبز العجين المخمر</span><em>kept, not updated</em></div>
-      <div class="row kept"><i>HE</i><span dir="rtl">Team Demo לחם מחמצת</span><em>kept, not updated</em></div>
+    <div class="mid step" data-s="2"><big>&rarr;</big>Translation run<br>fills the gaps</div>
+    <div class="card step" data-s="3"><h3>After the run</h3>
+      <div class="row kept step4"><i>EN</i>Team Demo Sourdough Loaf<span class="badge b-you">kept</span></div>
+      <div class="row kept step4"><i>DE</i>Team Demo Sauerteigbrot<span class="badge b-you">kept</span></div>
+      <div class="row"><i>RU</i>Team Demo Хлеб на закваске<span class="badge b-llm">added</span></div>
+      <div class="row"><i>EL</i>Team Demo Προζυμένιο ψωμί<span class="badge b-llm">added</span></div>
+      <div class="row"><i>AR</i><span dir="rtl">Team Demo خبز العجين المخمر</span><span class="badge b-llm">added</span></div>
+      <div class="row"><i>HE</i><span dir="rtl">Team Demo לחם מחמצת</span><span class="badge b-llm">added</span></div>
     </div>
   </div>
-  <div class="alert step" data-s="4"><b>Other languages stay, but they are not updated.</b> Changed the English text? Tell the team lead, so the other languages can be checked.
-    The translation job never overwrites an existing language version. Translation wrong? Tell the team: they decide about a re-translation.</div>
+  <div class="note step" data-s="4"><b>The job never overwrites an existing language version.</b>
+    A translation is wrong? Correct that language in the product form, or tell the team lead.</div>
 </section>
 
 <section id="marker">
@@ -155,8 +137,8 @@
     </div>
   </div>
   <div class="q step" data-s="3">Nothing in the data tells these apart.</div>
-  <div class="note step" data-s="4"><b>Today</b> the translation job never overwrites a language that already exists.
-    <b>A later automatic re-translation</b> could not tell careful manual work from machine text. That idea is not built.</div>
+  <div class="note step" data-s="4"><b>Today</b> the translation job never overwrites a language that already exists, so nothing is lost.
+    <b>A later automatic re-translation</b> could not tell careful manual work from machine text. That is only an idea for later (low priority).</div>
 </section>
 
 <script>

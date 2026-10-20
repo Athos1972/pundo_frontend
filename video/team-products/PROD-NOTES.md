@@ -1,47 +1,35 @@
-# team-products: Produktionsnotizen (Stand 2026-10-20, neu aufgenommen nach B8000-003/B8200-004)
+# team-products: Produktionsnotizen (Stand 2026-10-20, neu strukturiert nach B8000-003/-004)
 
-Team-Video 4 „Maintaining products“ (F8960 T20, Thema 4). EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, nicht hochgeladen.**
-Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht von Muttersprachler:in gelesen, F8960 O3). Reihenfolge/Begriffe folgen der SOP `products` in `src/lib/system-admin-help-content.ts`. Übersetzungen (Thema 4b) sind nur kurz erwähnt, am Ende Hinweis „Next: how translations come about“.
+Team-Video 4 „Maintaining categories, brands and products“ (F8960 T20, Thema 4). EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, nicht hochgeladen.** Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht von Muttersprachler:in gelesen, F8960 O3).
+Struktur (Entscheidung BB, Abhängigkeitsfluss): Kategorien (Baum, Demo-Kategorie öffnen, Russisch eintragen, Verweis auf 4b) → Marken (suchen, „Add new“ nur überfahren) → Produkte (Suche Name/Marke/Barcode, anlegen mit Namensfeldern je Sprache + Barcode + Marke + Kategorie, Speichern prüfen, bearbeiten: andere Sprachen bleiben, Team-Lead bei Bedeutungsänderung) → Ausblick auf 4b.
 
 ## Ergebnis
 | Größe | Wert |
 |---|---|
-| Dateien | `out/team-products.en.mp4` (1920×1080, 30 fps, 12,6 MB), `out/upload.en.mp4` (7,0 MB, libx264 crf 27), `.en.srt` (40 Cues), `.el.srt` (60 Cues), `thumbnail.en.png` |
-| Dauer | 213,4 s (3:33) |
+| Dateien | `out/team-products.en.mp4` (1920×1080, 30 fps, 15,3 MB), `out/upload.en.mp4` (8,3 MB, libx264 crf 27 preset slow, aac 128k, faststart), `.en.srt` (44 Cues), `.el.srt` (70 Cues, satzgenau: Satzzahl je Szene = gesprochene Sätze, per `subtitles.sentence_spans` geprüft), `thumbnail.en.png` |
+| Dauer | 237,3 s (3:57) |
 | verify_output.py | OK |
-| Kapitel (alle ≥ 10 s) | 0:00 Search first · 0:36 Create a product · 1:16 Save and check · 1:44 Edit a product · 2:21 Brands · 2:43 Categories |
+| Kapitel (alle ≥ 10 s) | 0:00 Categories · 0:53 Brands · 1:15 Find products · 1:42 Create a product · 2:26 Save and check · 2:55 Edit a product |
 
 ## Bauen
-`npm run dev:test` (:3500), Backend :8500, dann `video/build.sh team-products en [--rerecord]`; danach Dev-Server beenden. Kein Gate/E2E parallel.
+`npm run dev:test` (:3500), Backend :8500, dann `video/build.sh team-products en --rerecord`; danach Dev-Server beenden. Kein Gate/E2E parallel. Narrations-Anker in `record.mjs` über `when(szene, "Satzanfang")` (Wortzeiten aus `.cache/en/audio`). **Kein `;` im Sprechtext** (der Satzteiler von `subtitles.py` trennt daran, sonst stimmt die EL-Satzzahl nicht).
 
-## Testdaten
-- Das Video legt „Team Demo Rye Bread“ an (Name, Slug, Marke, Kategorie); `prepare_team.py` löscht es zu Beginn jedes Laufs (Slug + EN-Name + source admin).
-- Bearbeitet wird „Team Demo Sourdough Loaf“ (Name + „ 500 g“); der Upsert in `prepare_team.py` setzt Namen (EN+EL) zurück.
-- **Demo-Marke id 1, Demo-Kategorie id -1 bleiben bewusst** (einmalig verschoben, idempotent). Nach B8200-004 nicht mehr nötig, aber ein Zurückziehen würde die gemeinsame `prepare_team.py` und die Adresszeile `/admin/categories/-1/edit` von team-translations ändern: kein Nutzen, also belassen. Löschen wird nie ausgeführt (kein Klick auf „Delete“); „Add new“ in Marken wird nur überfahren.
+## Testdaten / Demo-IDs
+- **Demo-IDs zurückgenommen:** Marke und Kategorie liegen wieder auf normalen IDs (Marke 5532, Kategorie 53789, Item 329578; `prepare_team.py::_ensure_normal_ids` verschiebt einmalig von 1 / -1 und bricht ab, wenn irgendeine andere Tabelle auf die alte ID zeigt; vor dem Umzug geprüft: nur Item + 3 Übersetzungen). Die IDs stehen im JSON von `prepare_team.py`; `record.mjs` bricht ab, wenn die Adresszeilen in `scenes.yml` (`/admin/categories/53789/edit`, `/admin/products/329578/edit`) nicht dazu passen. Bei einem `sync_prod_to_test.sh` (Demo-Daten weg, neue IDs) die IDs in beiden `scenes.yml` nachziehen.
+- Demo-Produkt „Team Demo Sourdough Loaf“ hat jetzt Namen in allen 6 Sprachen, Beschreibung EN/DE und den fiktiven Barcode `2099900000015`; das Video legt „Team Demo Rye Bread“ (Barcode `2099900000023`) an; `prepare_team.py` löscht es zu Beginn jedes Laufs. Bearbeitet wird der EN-Name des Brots (+ „ 500 g“) und die RU-Fassung der Demo-Kategorie; der Upsert setzt alles zurück. Gelöscht wird nie.
+- Belege nach dem Speichern (im Lauf per API geprüft, nicht im Bild): Brot hat danach `ar,de,el,en,he,ru`, EN endet auf „500 g“ (andere Sprachen blieben).
 
-## Befunde im Produkt (Stand 2026-10-19; 1 und 3 sind inzwischen behoben)
-**Behoben (lokal, uncommittet/unveröffentlicht je nach Stand):** Befund 1 durch Frontend `e28545e` (`getAll*` blättert durch alle Seiten), Befund 3 durch `e28545e` + Backend `4fc3f44` (Merge-PATCH). Das Video zeigt jetzt Verhalten, das mit echten Marken/Kategorien funktioniert; das Marken-Dropdown wird weiter nie geöffnet.
-
-1. **Admin-Produktformular/-liste laden nur die ersten 1000 Marken/Kategorien (nach id):** `getAllBrands()`/`getAllCategories()` in `src/lib/system-admin-api.ts` mit `limit: 1000`; `pundo_test` hat 2074 Marken und 8508 Kategorien. Folgen: Marken mit Rang > 1000 sind im Formular nicht wählbar; die ersten 1000 Kategorien sind laut Stichprobe nur Dienstleistungs-Kategorien (Landwirtschaft, Business …), Produktkategorien fehlen; in der Produktliste erscheinen für alle anderen Zeilen rohe Zahlen statt Marken-/Kategoriename. Die Demo-Daten wurden deshalb in das Fenster gelegt, damit das Video den Ablauf zeigen kann. **Das Video zeigt also etwas, das mit echten Marken/Kategorien aktuell nicht funktioniert.** Vor Veröffentlichung Bug klären (Pagination/Suche per API im Formular). Kategoriebaum zeigt zusätzlich die Warnung „truncated“ (1000 von 8508), im Video nicht sichtbar, weil gescrollt/gefiltert.
-2. **Kein Quellsprachen-Auswahlfeld:** `ProductForm` speichert den Namen immer als `names: { en: … }` (SOP sagt „in der Sprache, die Sie am besten kennen“). Narration sagt daher nur „keine Sprachauswahl, der Name ist der Quelltext“. ⚠️ ANNAHME: gewollt.
-3. **Speichern überschreibt `names` komplett:** `PATCH` setzt `names` auf `{en}` (Backend `setattr`), vorhandene EL/DE/… Namen gehen verloren, bis die Übersetzung neu läuft. Beim Demo-Brot wird das durch den Upsert zurückgesetzt. Für echte Produkte relevant (Datenverlust-Risiko), mit Thema 4b klären.
-4. Attribute gibt es erst auf der Bearbeiten-Seite (nicht beim Anlegen); Barcode/EAN ist im Formular nicht vorhanden, Suche im Video deshalb nur nach Name/ID.
+## Befunde im Produkt
+1. **Marke anlegen schlägt fehl (nicht behoben, außerhalb des Auftrags):** `BrandForm.tsx` sendet `{names, logos, homepages}` ohne `slug`; `POST /api/v1/admin/brands` verlangt `slug` (`AdminBrandCreate`, `ingestor/schemas/admin.py:551`) und antwortet 422 (per API belegt: `Field required, loc body.slug`). Das Video überfährt „Add new“ nur und sagt „create it with its name“. **Vor Veröffentlichung klären** (Bug-Datei fehlt noch).
+2. Attribute gibt es erst auf der Bearbeiten-Seite (nicht beim Anlegen).
 
 ## Datenschutz-QA (AK 13)
-- Strikte Schranke 3500/8500; Privacy-Check je Szene: **6 von 6 `privacy ok`** (0 fremde E-Mails, 0 Passwortfelder; sichtbar nur e2e-admin@pundo-e2e.io in der Seitenleiste). 0 Seitenfehler.
-- Alle Tabellenzeilen ohne „Team Demo“ (Produkte, Marken) per MutationObserver-Init-Script vor dem ersten Paint unscharf. Kategoriebaum = Taxonomie, lesbar (keine Personen-/Produkt-/Markennamen). Das native Marken-`<select>` wird nie geöffnet (würde echte Marken listen); gewählt wird per `selectOption`.
-- Sichtprüfung: 3-s-Kontaktbogen über das ganze Video; 6-fps-Bögen an Start Produktliste (find), Save → Liste (saved), edit → Marken, Start Marken: keine lesbare Echtzeile, nur unscharfe Zeilen und Logo-Flecken. Zwischenzustände < 1/6 s nicht einzeln gesichtet; Kategorie-Combobox nicht in 6-fps gesichtet (nur Taxonomie).
+- Strikte Schranke 3500/8500; Privacy-Check je Szene: **8 von 8 `privacy ok`** (0 fremde E-Mails, 0 Passwortfelder; sichtbar nur e2e-admin@pundo-e2e.io in der Seitenleiste). 0 Seitenfehler.
+- Alle Tabellenzeilen ohne „Team Demo“ **auf den Listenseiten /admin/products und /admin/brands** (inkl. Barcode-Spalte, Logos) per MutationObserver-Init-Script vor dem ersten Paint unscharf. **Korrektur während der Aufnahme:** die erste Fassung maskierte jede `tbody tr`, also auch die Übersetzungstabelle der Kategorie (Szene unlesbar); die Maske gilt jetzt nur auf den beiden Listen-Pfaden. Kategoriebaum = Taxonomie, lesbar. Das Marken-`<select>` und die Eltern-Kategorie-`<select>` werden nie geöffnet (Auswahl per `selectOption`).
+- Sichtprüfung: 3-s-Kontaktbogen über das ganze Video; **6-fps-Bögen** (ca. 14–16 s je Szenenanfang) für find, brands, saved, wrap und catname: bis zur Suche nur unscharfe Zeilen, danach nur Demo-Zeilen; keine lesbare Echtzeile, kein lesbarer echter Barcode. Tree-Szene (Suche im Baum) und create/edit (Formulare ohne Listen) nur im Kontaktbogen und per Szenenmitte-Frame gesichtet; Zwischenzustände < 1/6 s nicht einzeln.
 
 ## Layout (ehrlich)
-- Adresszeile je Szene eine Seite, korrekt (Suchparameter fehlen in der Leiste). Schrift im Fenster klein (ca. 12–13 px). Szenenende friert auf dem Klick ein, danach Überblendung. Aussprache nicht gehört. Die Szene „categories“ dauert 38,6 s (mit Ausblick auf 4b); Kategoriebaum zeigt im Moment der Suche die Standardansicht (Dienstleistungs-Kategorien).
-- Brands-Szene: Überleitung zu „Categories“ per Seitenleistenklick am Szenenende.
+Adresszeile je Szene eine Seite, korrekt (Suchparameter fehlen in der Leiste). Schrift im Fenster klein (ca. 12–13 px). Das Formular ist lang (6 × Name + Beschreibung): die Szenen create/edit scrollen mit Zeiger, in der Szenenmitte sind die Felder lesbar, Slug/Barcode/Marke/Kategorie erscheinen erst nach dem Scrollen. Szenenende friert auf dem Klick ein, danach Überblendung. Szene create ist mit 44 s die längste. Dauer 3:57, knapp unter der 4-Minuten-Grenze. Aussprache nicht gehört; EL ungeprüft.
 
 ## Pipeline
-Keine Pipeline-Dateien geändert, daher kein Regressionsvergleich.
-
-## Neuaufnahme 2026-10-20
-- Sprechtext an SOP `products` (EN/EL) angeglichen: „Save“ erzeugt keine anderen Sprachen sofort, Übersetzungslauf später; Name auf Englisch; alle Marken/Kategorien wählbar; Warnung „bei geänderter EN-Fassung Team-Lead informieren“ (andere Sprachen bleiben, werden nicht aktualisiert). Entfernt: „appear after a short time“, „reword this source text and save again“.
-- Edit-Szene umgebaut: Warnsätze vor „Then click Save“, Zeiger auf dem Namensfeld; Save-Klick am Szenenende.
-- Backend 8500 war vor der Aufnahme veraltet (Start 03:23, Commit `4fc3f44` 08:19): Test-PATCH verlor `el` (Beleg), nach Neustart (`start_test_server.sh`, nur 8500) blieb `el` erhalten. Nach der Aufnahme per API geprüft: Demo-Brot hat `{el, en: "… 500 g"}`.
-- Datenschutz: je Szene 6/6 `privacy ok`, 0 Seitenfehler. 6-fps-Bögen (find 0–32 s, saved, brands) gesichtet: nur Demo-Zeilen lesbar (Brands-Liste: Demo-Marke id 1 lesbar, übrige unscharf), keine Echtzeile. Kategoriebaum = Taxonomie. Edit-Szene und Kategorie-Combobox nicht in 6 fps gesichtet.
-- Layout: unverändert wie oben; Aussprache nicht gehört; EL ungeprüft (Cues satzgenau, 60).
+Keine Pipeline-Dateien geändert (nur `team-common/prepare_team.py`, `team-products/*`), kein Regressionsvergleich.

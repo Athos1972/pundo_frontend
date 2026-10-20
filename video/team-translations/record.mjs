@@ -3,10 +3,10 @@
 // privacy check per scene: e-mail outside @pundo-e2e.io or visible password field = abort), admin login via API, demo data from
 // ../team-common/prepare_team.py (marker "Team Demo").
 // Picture = mix of 2 real admin pages and 4 local explainer graphics (graphics.html, file://, no network, no real data):
-//   product    real: edit page of "Team Demo Sourdough Loaf" - looked at only, NOTHING is saved (Save is hovered, not clicked)
+//   product    real: edit page of "Team Demo Sourdough Loaf" with one name/description field per language - looked at only, NOTHING is saved (Save is hovered)
 //   categories real: translation table of "Team Demo Category": a German name is typed and saved (PUT translations);
 //              prepare_team.py deletes every language except en + el of this one demo category at the start of the next run
-//   chain / steer / warning / marker: graphics.html?s=<id>; steps are revealed with window.__step(n) in sync with the narration
+//   chain / merge / marker: graphics.html?s=<id>; steps are revealed with window.__step(n) in sync with the narration
 //              (word times from .cache/en/audio/<id>.json written by tts.py).
 // Privacy: the admin pages shown contain only demo data (no list of real rows: no table masking needed), the native <select>
 // elements are never opened. Strict privacy check before and after every scene.
@@ -71,6 +71,21 @@ page.on('dialog', (d) => d.dismiss().catch(() => {}))
 
 const highlight = (loc, on = true) => loc.evaluate((el, on) => el.classList.toggle('vid-highlight', on), on).catch(() => {})
 const settle = async () => { await page.waitForLoadState('networkidle').catch(() => {}); await sleep(300) }
+/** Smooth scroll of the scrolling ancestor of <main> so that `loc` sits `offset` px below the top edge. */
+const scrollToEl = (loc, offset = 160, ms = 800) => loc.evaluate((el, [offset, ms]) => new Promise((res) => {
+  let sc = document.querySelector('main')
+  while (sc && !(sc.scrollHeight > sc.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement
+  sc = sc || document.scrollingElement
+  const from = sc.scrollTop
+  const to = Math.max(0, from + el.getBoundingClientRect().top - (sc === document.scrollingElement ? 0 : sc.getBoundingClientRect().top) - offset)
+  const t0 = performance.now()
+  const stepFn = (t) => {
+    const k = Math.min(1, (t - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2
+    sc.scrollTop = from + (to - from) * e
+    k < 1 ? requestAnimationFrame(stepFn) : res()
+  }
+  requestAnimationFrame(stepFn)
+}), [offset, ms])
 const field = (name) => page.locator(`[name="${name}"]`).first()
 const step = (n) => page.evaluate((n) => window.__step(n), n)
 let frozen = false
@@ -105,53 +120,51 @@ for (const p of [EDIT_PATH, CAT_PATH]) {
 // 1 chain ---------------------------------------------------------------------------------------------------------------
 await runScene(sess, 'chain', dur('chain'), () => graphic('chain'), async (at) => {
   await step(0)
-  await at(when('chain', 'You type')); await step(1)
-  await at(when('chain', 'A translation')); await step(2)
-  await at(when('chain', 'LLM gateway')); await step(3)
+  await at(when('chain', 'You enter')); await step(1)
+  await at(when('chain', 'Later')); await step(2)
+  await at(when('chain', 'The run sends')); await step(3)
   await at(when('chain', 'A worker')); await step(4)
-  await at(when('chain', 'saved in')); await step(5)
-  await at(when('chain', 'Note that')); await step(6)
+  await at(when('chain', 'Only the')); await step(5)
+  await at(when('chain', 'Clicking')); await step(6)
 })
 
-// 2 product: real edit page, looked at only ---------------------------------------------------------------------------
+// 2 product: real edit page with a field per language, looked at only (nothing is saved) ----------------------------------
 await runScene(sess, 'product', dur('product'), () => visit(EDIT_PATH, async () => {
-  if (!(await field('name').inputValue()).startsWith('Team Demo Sourdough Loaf')) throw new Error('edit page does not show the demo loaf')
+  if (!(await field('name_en').inputValue()).startsWith('Team Demo Sourdough Loaf')) throw new Error('edit page does not show the demo loaf')
+  for (const l of ['de', 'ru', 'el', 'ar', 'he']) if (!(await field(`name_${l}`).inputValue())) throw new Error(`demo loaf has no ${l} name - run prepare_team.py`)
 }), async (at) => {
-  const name = field('name')
+  const fieldset = page.locator('form fieldset').first()
   await at(when('product', 'This is'))
-  await moveTo(page, name, 800)
-  await at(when('product', 'There is one'))
-  await highlight(name)
-  await at(when('product', 'What you type'))
-  await at(when('product', 'There is also'))
-  await highlight(name, false)
-  const form = page.locator('form').first()
-  await moveTo(page, form, 900)
-  await at(when('product', 'So you cannot'))
+  await moveTo(page, field('name_en'), 800)
+  await at(when('product', 'It has'))
+  await highlight(fieldset)
+  await at(when('product', 'You can'))
+  await highlight(fieldset, false)
+  await scrollToEl(field('name_de'), 170, 800)
+  await moveTo(page, field('name_de'), 600)
+  await highlight(field('name_de'))
+  await at(when('product', 'Clear'))
+  await highlight(field('name_de'), false)
+  await scrollToEl(field('name_ar'), 200, 1200)
+  await moveTo(page, field('name_ar'), 600)
+  await highlight(field('name_ar'))
+  await at(when('product', 'Saving'))
+  await highlight(field('name_ar'), false)
   const save = page.getByRole('button', { name: 'Save', exact: true })
+  await scrollToEl(save, 330, 900)
   await moveTo(page, save, 800)                       // hover only: NOTHING is saved here
-  await at(when('product', 'Your one'))
-  await highlight(name)
-  await moveTo(page, name, 800)
-  await at(when('product', 'Write it'))
-  await highlight(name, false)
+  await highlight(save)
+  await at(dur('product') - 0.8)
+  await highlight(save, false)
 })
 
-// 3 steer ---------------------------------------------------------------------------------------------------------------
-await runScene(sess, 'steer', dur('steer'), () => graphic('steer'), async (at) => {
+// 3 merge: graphic ----------------------------------------------------------------------------------------------------------
+await runScene(sess, 'merge', dur('merge'), () => graphic('merge'), async (at) => {
   await step(0)
-  await at(when('steer', 'You control')); await step(1)
-  await at(when('steer', 'You do not')); await step(2)
-  await at(when('steer', 'If a')); await step(3)
-})
-
-// 4 warning ---------------------------------------------------------------------------------------------------------------
-await runScene(sess, 'warning', dur('warning'), () => graphic('warning'), async (at) => {
-  await step(0)
-  await at(when('warning', 'When you')); await step(1)
-  await at(when('warning', 'The other')); await step(2)
-  await at(when('warning', 'But they')); await step(3)
-  await at(when('warning', 'Change the')); await step(4)
+  await at(when('merge', 'You typed')); await step(1)
+  await at(when('merge', 'The run finds')); await step(2)
+  await at(when('merge', 'and adds')); await step(3)
+  await at(when('merge', 'The job never')); await step(4)
 })
 
 // 5 categories: real translation table, German name typed and saved (leave = freeze before the click, as in the other recorders) --
@@ -191,7 +204,7 @@ await runScene(sess, 'categories', dur('categories'), () => visit(CAT_PATH, asyn
   await at(when('categories', 'No automatic'))
   await highlight(de2, false)
   await moveTo(page, table, 800)
-  await at(when('categories', 'So in'))
+  await at(when('categories', 'Only a'))
 })
 
 // 6 marker ---------------------------------------------------------------------------------------------------------------

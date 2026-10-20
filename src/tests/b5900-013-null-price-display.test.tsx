@@ -120,7 +120,7 @@ describe('OfferList', () => {
   const mk = (o: Partial<OfferDetail>): OfferDetail => ({
     shop_id: 1, shop_slug: 'a', shop_name: 'A', shop_address: null, shop_location: null, price: null,
     currency: 'EUR', price_type: 'fixed', price_note: null, shop_phone: null, is_available: true,
-    sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z', ...o,
+    sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z', shop_type: 'local', delivery_available: false, ...o,
   })
   it('valid price sorted before missing price; label visible', () => {
     const { container } = render(
@@ -164,7 +164,7 @@ describe('F5200 Staffelpreise — nie null/undefined/NaN (AK12)', () => {
     const offer: OfferDetail = {
       shop_id: 1, shop_slug: 'a', shop_name: 'A', shop_address: null, shop_location: null, price: '5.00',
       currency: 'EUR', price_type: 'fixed', price_note: null, shop_phone: null, is_available: true,
-      sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z', price_tiers: dirty, promo_price_tiers: null,
+      sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z', shop_type: 'local', delivery_available: false, price_tiers: dirty, promo_price_tiers: null,
     }
     const a = render(<OfferList lang={lang} productName="p" offers={[offer]} />)
     expect(a.container.textContent).not.toMatch(BAD)

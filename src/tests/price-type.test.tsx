@@ -101,6 +101,7 @@ describe('OfferList sorting', () => {
     shop_location: null, price: null, currency: 'EUR',
     price_type: 'on_request', price_note: null, shop_phone: null,
     is_available: true, sku: null, url: null, crawled_at: '2026-01-01T00:00:00Z',
+    shop_type: 'local', delivery_available: false,
     ...overrides,
   })
 

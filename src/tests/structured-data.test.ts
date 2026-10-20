@@ -59,6 +59,8 @@ describe('buildProductSchema', () => {
         sku: null,
         url: null,
         crawled_at: '2026-04-01T10:00:00Z',
+        shop_type: 'local',
+        delivery_available: false,
       },
     ],
     price_history: [],

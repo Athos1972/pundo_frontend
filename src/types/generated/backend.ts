@@ -7048,6 +7048,11 @@ export interface components {
             crawled_at?: string | null;
             /** Currency */
             currency: string;
+            /**
+             * Delivery Available
+             * @default false
+             */
+            delivery_available: boolean;
             /** Dist Km */
             dist_km?: number | null;
             /** Is Available */
@@ -7068,6 +7073,12 @@ export interface components {
             shop_name: string;
             /** Shop Slug */
             shop_slug?: string | null;
+            /**
+             * Shop Type
+             * @default local
+             * @enum {string}
+             */
+            shop_type: "local" | "online_only";
             /** Url */
             url?: string | null;
         };
@@ -9247,6 +9258,11 @@ export interface components {
             crawled_at?: string | null;
             /** Currency */
             currency: string;
+            /**
+             * Delivery Available
+             * @default false
+             */
+            delivery_available: boolean;
             /** Image Url */
             image_url?: string | null;
             /** Is Available */
@@ -9286,6 +9302,12 @@ export interface components {
             shop_phone?: string | null;
             /** Shop Slug */
             shop_slug: string;
+            /**
+             * Shop Type
+             * @default local
+             * @enum {string}
+             */
+            shop_type: "local" | "online_only";
             /** Shop Whatsapp Number */
             shop_whatsapp_number?: string | null;
             /** Sku */

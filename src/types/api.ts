@@ -16,8 +16,8 @@ export interface BestOffer {
   // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   url: string | null;
   shop_location: { lat: number; lng: number } | null;
-  shop_type?: 'local' | 'online_only';
-  delivery_available?: boolean;
+  shop_type: 'local' | 'online_only';
+  delivery_available: boolean;
 }
 export interface ProductListItem {
   id: number; slug: string;
@@ -44,8 +44,8 @@ export interface OfferDetail {
   // Immer mit sanitizeExternalUrl() prüfen — Backend kann ungültige Werte liefern
   /** B4900-003: null for shop-admin offers (never crawled) — backend `datetime | None`. */
   sku: string | null; url: string | null; crawled_at: string | null;
-  shop_type?: 'local' | 'online_only';
-  delivery_available?: boolean;
+  shop_type: 'local' | 'online_only';
+  delivery_available: boolean;
   standard_price?: string | null;
   standard_currency?: string | null;
   promo_price?: string | null;

@@ -225,6 +225,7 @@ describe('SearchContent — category mode', () => {
       url: 'https://example.com',
       shop_location: { lat: 34.6784574, lng: 33.0242077 },
       shop_type: 'local',
+      delivery_available: false,
     }
     mockSearchProducts.mockResolvedValue({ total: 1, items: [distantProduct] })
 

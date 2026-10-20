@@ -151,6 +151,7 @@ describe('ProductCard — delivery_available badge', () => {
         price_note: null, shop_id: 1, shop_slug: 'petshop', shop_name: 'Pet Shop',
         dist_km: 0.5, is_available: true, crawled_at: new Date().toISOString(),
         url: null, shop_location: { lat: 34.9, lng: 33.6 },
+        shop_type: 'local' as const,
         delivery_available: true,
       },
     }
@@ -167,6 +168,7 @@ describe('ProductCard — delivery_available badge', () => {
         price_note: null, shop_id: 1, shop_slug: 'petshop', shop_name: 'Pet Shop',
         dist_km: 0.5, is_available: true, crawled_at: new Date().toISOString(),
         url: null, shop_location: { lat: 34.9, lng: 33.6 },
+        shop_type: 'local' as const,
         delivery_available: false,
       },
     }
@@ -183,6 +185,7 @@ describe('ProductCard — delivery_available badge', () => {
         price_note: null, shop_id: 1, shop_slug: 'petshop', shop_name: 'Pet Shop',
         dist_km: 0.5, is_available: true, crawled_at: new Date().toISOString(),
         url: null, shop_location: { lat: 34.9, lng: 33.6 },
+        shop_type: 'local' as const,
         delivery_available: true,
       },
     }

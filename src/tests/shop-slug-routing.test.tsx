@@ -80,6 +80,8 @@ const makeOffer = (overrides?: Partial<OfferDetail>): OfferDetail => ({
   sku: null,
   url: null,
   crawled_at: new Date().toISOString(),
+  shop_type: 'local',
+  delivery_available: false,
   ...overrides,
 })
 
@@ -104,6 +106,8 @@ const makeProduct = (overrides?: Partial<ProductListItem>): ProductListItem => (
     crawled_at: new Date().toISOString(),
     url: null,
     shop_location: null,
+    shop_type: 'local',
+    delivery_available: false,
   },
   ...overrides,
 })

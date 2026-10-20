@@ -22,6 +22,8 @@ const baseOffer: OfferDetail = {
   sku: null,
   url: null,
   crawled_at: '2026-05-01T10:00:00Z',
+  shop_type: 'local',
+  delivery_available: false,
 }
 
 describe('OfferList — Aktionspreis-Regression (Bug: 3€ statt 39,99€)', () => {

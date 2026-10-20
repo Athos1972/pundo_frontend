@@ -6375,6 +6375,11 @@
       "title": "Currency",
       "type": "string"
      },
+     "delivery_available": {
+      "default": false,
+      "title": "Delivery Available",
+      "type": "boolean"
+     },
      "dist_km": {
       "anyOf": [
        {
@@ -6448,6 +6453,15 @@
        }
       ],
       "title": "Shop Slug"
+     },
+     "shop_type": {
+      "default": "local",
+      "enum": [
+       "local",
+       "online_only"
+      ],
+      "title": "Shop Type",
+      "type": "string"
      },
      "url": {
       "anyOf": [
@@ -12675,6 +12689,11 @@
       "title": "Currency",
       "type": "string"
      },
+     "delivery_available": {
+      "default": false,
+      "title": "Delivery Available",
+      "type": "boolean"
+     },
      "image_url": {
       "anyOf": [
        {
@@ -12830,6 +12849,15 @@
      },
      "shop_slug": {
       "title": "Shop Slug",
+      "type": "string"
+     },
+     "shop_type": {
+      "default": "local",
+      "enum": [
+       "local",
+       "online_only"
+      ],
+      "title": "Shop Type",
       "type": "string"
      },
      "shop_whatsapp_number": {

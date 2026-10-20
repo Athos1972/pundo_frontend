@@ -63,18 +63,12 @@
     "slug": "team-products",
     "topic": "products",
     "youtubeId": "KdVJzmdxA5Q",
-    "recordedAtCommit": "f98603fe40095ed9bc2c936b804ed3ec5d8b7a2a",
+    "recordedAtCommit": "fd303d1c826e34d141b1190a95aaf8f1bdb971b3",
     "recordedAt": "2026-10-20",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/products",
-      "src/app/(system-admin)/admin/(portal)/brands",
-      "src/app/(system-admin)/admin/(portal)/categories",
       "src/components/system-admin/ProductForm.tsx",
       "src/components/system-admin/ProductAttributesTable.tsx",
-      "src/components/system-admin/BrandForm.tsx",
-      "src/components/system-admin/BrandLogoInput.tsx",
-      "src/components/system-admin/CategoryForm.tsx",
-      "src/components/system-admin/CategoryTreeView.tsx",
       "src/components/system-admin/Combobox.tsx"
     ]
   },

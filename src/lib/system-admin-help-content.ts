@@ -173,7 +173,7 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
       intro: 'Products are shared by all shops. A clean product record means correct search results and price comparison.',
       steps: [
         'Open "Products" and search by name, brand or barcode first. If the product already exists, edit it instead of creating a new one.',
-        'To add a product, create a new one. There is one name field per language (English, German, Russian, Greek, Arabic, Hebrew). Fill in at least one, normally in the language of your source, and add a description per language if you have one.',
+        'To add a product, create a new one. There is one name field per language (English, German, Russian, Greek, Arabic, Hebrew). Fill in at least one, normally in the language of your source, and add a description per language if you have one. The slug is required: a short, lowercase, unique web name with hyphens, for example brand-product-size.',
         'Pick the brand from "Brands" (create the brand first if it is missing) and the right entry in "Categories". All brands and categories can be selected, not only the first few. Categories and brands are explained in topic 3b.',
         'Enter the barcode (EAN / GTIN, 8 to 14 digits) if you have it, and fill in the attributes that the category asks for.',
         'Save. Languages you left empty are not created at once; a separate translation run adds them later.',
@@ -190,7 +190,7 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
       intro: 'Τα προϊόντα είναι κοινά για όλα τα καταστήματα. Μια καθαρή εγγραφή προϊόντος σημαίνει σωστά αποτελέσματα αναζήτησης και σύγκρισης τιμών.',
       steps: [
         'Ανοίξτε τα «Προϊόντα» και αναζητήστε πρώτα με όνομα, μάρκα ή barcode. Αν το προϊόν υπάρχει ήδη, επεξεργαστείτε το αντί να δημιουργήσετε νέο.',
-        'Για να προσθέσετε προϊόν, δημιουργήστε νέο. Υπάρχει ένα πεδίο ονόματος ανά γλώσσα (αγγλικά, γερμανικά, ρωσικά, ελληνικά, αραβικά, εβραϊκά). Συμπληρώστε τουλάχιστον ένα, κανονικά στη γλώσσα της πηγής σας, και προσθέστε περιγραφή ανά γλώσσα αν έχετε.',
+        'Για να προσθέσετε προϊόν, δημιουργήστε νέο. Υπάρχει ένα πεδίο ονόματος ανά γλώσσα (αγγλικά, γερμανικά, ρωσικά, ελληνικά, αραβικά, εβραϊκά). Συμπληρώστε τουλάχιστον ένα, κανονικά στη γλώσσα της πηγής σας, και προσθέστε περιγραφή ανά γλώσσα αν έχετε. Το slug είναι υποχρεωτικό: ένα σύντομο, μοναδικό όνομα για τη διεύθυνση, με πεζά γράμματα και παύλες, π.χ. brand-product-size.',
         'Επιλέξτε τη μάρκα από τις «Μάρκες» (δημιουργήστε πρώτα τη μάρκα αν λείπει) και τη σωστή καταχώριση στις «Κατηγορίες». Μπορείτε να επιλέξετε όλες τις μάρκες και κατηγορίες, όχι μόνο τις πρώτες. Οι κατηγορίες και οι μάρκες εξηγούνται στο θέμα 3b.',
         'Καταχωρίστε το barcode (EAN / GTIN, 8 έως 14 ψηφία) αν το έχετε, και συμπληρώστε τα χαρακτηριστικά που ζητά η κατηγορία.',
         'Αποθηκεύστε. Οι γλώσσες που αφήσατε κενές δεν δημιουργούνται αμέσως· μια ξεχωριστή εκτέλεση μετάφρασης τις προσθέτει αργότερα.',

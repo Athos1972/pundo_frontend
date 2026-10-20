@@ -1,16 +1,18 @@
-# Team video 4 "Maintaining categories, brands and products" (F8960 T20, topic 4). Internal: channel "pundo Team", unlisted.
+# Team video 4 "Maintaining products" (F8960 T20, topic 4). Internal: channel "pundo Team", unlisted.
 # EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-products.el.srt).
-# RE-STRUCTURED 2026-10-20 (decision BB, dependency flow): 1 categories (tree, rename one language -> hint to 4b), 2 brands (search, "Add new"),
-# 3 products (search by name/brand/barcode, create with a name field per language + barcode, edit keeps the other languages).
-# Basis: product form since B8000-004 (commit 7c0e82c: name_<lang>/description_<lang>, ean, barcode column), B8000-003 (merge-PATCH, backend 4fc3f44),
-# e28545e (all brands/categories selectable). Wording follows the SOP "products" in src/lib/system-admin-help-content.ts.
+# RE-CUT 2026-10-20 (decision BB): products ONLY. Categories and brands moved to video 3b (team-catalog-basics, topic catalog-basics) so that a change
+# to categories/brands only touches the short video. MAINTAINABILITY (BB: "we must be able to cope with news"): the narration explains concepts and flow,
+# names only stable UI words ("Add new", "Edit", "Save"), no field lists, no positions. The written SOP (src/lib/system-admin-help-content.ts, topic
+# products) is the truth.
+# Basis (code): product form (src/components/system-admin/ProductForm.tsx): name_<lang>/description_<lang> per language, at least one name (validate(),
+# collect(): an emptied language goes out as '' = removed by the backend, the last name stays), slug required, barcode ean 8-14 digits (regex in validate()),
+# brand and category = Combobox with debounced server-side search (6e9a1c1, B8200-004, Combobox loadItems), PATCH keeps the other languages (B8000-003).
 # DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
 # Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from ../team-common/prepare_team.py
-# (marker "Team Demo"; brand / category / item ids are normal ids again: the ids in the address bars below must match the prepare_team.py output,
-# record.mjs checks that). The video CREATES the product "Team Demo Rye Bread" (prepare_team.py deletes it on the next run), renames ONE language of the
-# demo category (ru) and edits the English name of "Team Demo Sourdough Loaf" (the upsert resets both). Deleting is never done; "Add new" (brand) is only hovered.
+# (marker "Team Demo"; the ids in the address bars below must match the prepare_team.py output, record.mjs checks that). The video CREATES the product
+# "Team Demo Rye Bread" (prepare_team.py deletes it on the next run) and edits the English name of "Team Demo Sourdough Loaf" (the upsert resets it).
+# Deleting is never done. Real brands/categories are never readable: list rows AND dropdown entries without "Team Demo" are blurred by an init script.
 # Address bar: every scene shows exactly one page (window_path is static per scene); page switches happen at the scene borders.
-# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
 
 meta:
   slug: team-products
@@ -18,8 +20,8 @@ meta:
   voice_langs: [en]
   subtitle_langs: [el]
   title:
-    en: "Maintaining categories, brands and products"
-    el: "Συντήρηση κατηγοριών, μαρκών και προϊόντων"
+    en: "Maintaining products"
+    el: "Συντήρηση προϊόντων"
   url:
     en: "pundo team · admin help"
     el: "pundo team · βοήθεια admin"
@@ -27,7 +29,7 @@ meta:
     en: "Next: how translations come about"
     el: "Επόμενο: πώς δημιουργούνται οι μεταφράσεις"
   thumbnail_scene: create
-  target_duration_s: 210
+  target_duration_s: 150
   window_path:
     en: "localhost:3500/admin/products"
     el: "localhost:3500/admin/products"
@@ -36,125 +38,56 @@ scenes:
   - id: intro
     branding: intro
 
-  - id: tree
-    shot: 'Categories as a tree (taxonomy, readable) -> search "Team Demo" -> demo category in the tree -> hover "Edit", click'
-    chapter: { en: "Categories" }
-    window_path: { en: "localhost:3500/admin/categories" }
-    callout: { en: "Admin · Categories" }
-    narration:
-      en: >-
-        Welcome back.
-        In this video you maintain categories, brands and products, in the order in which they depend on each other.
-        A product needs a brand and a category, so these come first.
-        Start with "Categories", which form a tree.
-        Open the branches, or search for part of a name.
-        Here is our demo category.
-        Click "Edit" to open it.
-    subtitle:
-      el:
-        - "Καλωσορίσατε ξανά."
-        - "Σε αυτό το βίντεο συντηρείτε κατηγορίες, μάρκες και προϊόντα, με τη σειρά με την οποία εξαρτώνται το ένα από το άλλο."
-        - "Ένα προϊόν χρειάζεται μάρκα και κατηγορία, γι' αυτό αυτές έρχονται πρώτες."
-        - "Ξεκινήστε με τις «Κατηγορίες», που σχηματίζουν δέντρο."
-        - "Ανοίξτε τους κλάδους ή αναζητήστε μέρος ενός ονόματος."
-        - "Εδώ είναι η demo κατηγορία μας."
-        - "Πατήστε «Επεξεργασία» για να την ανοίξετε."
-
-  - id: catname
-    shot: 'category edit page of "Team Demo Category": translation table (six languages) -> type a Russian name -> hover "Save", click'
-    window_path: { en: "localhost:3500/admin/categories/53789/edit" }
-    callout: { en: "Categories · Names per language" }
-    narration:
-      en: >-
-        A category has one name for every language.
-        To rename it, type the new name into the right row and click "Save".
-        Here we add a Russian name.
-        The name is stored directly, and no automatic translation job overwrites it.
-        How translations come about is explained in the next video.
-    subtitle:
-      el:
-        - "Μια κατηγορία έχει ένα όνομα για κάθε γλώσσα."
-        - "Για να την μετονομάσετε, πληκτρολογήστε το νέο όνομα στη σωστή γραμμή και πατήστε «Αποθήκευση»."
-        - "Εδώ προσθέτουμε ένα ρωσικό όνομα."
-        - "Το όνομα αποθηκεύεται απευθείας και καμία αυτόματη εργασία μετάφρασης δεν το αντικαθιστά."
-        - "Πώς δημιουργούνται οι μεταφράσεις εξηγείται στο επόμενο βίντεο."
-
-  - id: brands
-    shot: 'Brands list (non-demo rows blurred) -> search "Team Demo" -> demo brand -> hover "Add new" (not clicked) -> click "Products" in the sidebar'
-    chapter: { en: "Brands" }
-    window_path: { en: "localhost:3500/admin/brands" }
-    callout: { en: "Admin · Brands" }
-    narration:
-      en: >-
-        Next come the brands.
-        Open "Brands" and search by name first.
-        Every product points to one brand.
-        If the brand already exists, use it.
-        Only if it is really missing, click "Add new" and create it with its name.
-        Never create a second brand for a name that already exists.
-    subtitle:
-      el:
-        - "Στη συνέχεια οι μάρκες."
-        - "Ανοίξτε τις «Μάρκες» και αναζητήστε πρώτα με το όνομα."
-        - "Κάθε προϊόν δείχνει σε μία μάρκα."
-        - "Αν η μάρκα υπάρχει ήδη, χρησιμοποιήστε την."
-        - "Μόνο αν λείπει πραγματικά, πατήστε «Προσθήκη νέου» και δημιουργήστε την με το όνομά της."
-        - "Μη δημιουργείτε ποτέ δεύτερη μάρκα για ένα όνομα που υπάρχει ήδη."
-
   - id: find
-    shot: 'list of products (non-demo rows blurred) -> search the demo barcode -> demo loaf with its barcode -> ID field -> hover "Add new", click'
+    shot: 'list of products (non-demo rows blurred) -> search the demo barcode -> demo loaf with its barcode -> hover "Add new", click'
     chapter: { en: "Find products" }
     window_path: { en: "localhost:3500/admin/products" }
     callout: { en: "Admin · Products" }
     narration:
       en: >-
-        Now the products.
-        The platform holds thousands of them, so always search first.
-        Search by name or brand, or by barcode.
-        The list has its own column for the barcode.
+        Welcome back.
+        This video covers products.
+        Brand and category must exist beforehand, see video 3b.
+        The platform holds thousands of products, so always search first.
+        Search by name, brand or barcode.
         Here the barcode finds our demo loaf.
-        If you know the ID, enter it instead.
         If the product exists, edit it.
         Only when it is really missing, click "Add new".
     subtitle:
       el:
-        - "Τώρα τα προϊόντα."
-        - "Η πλατφόρμα έχει χιλιάδες, γι' αυτό αναζητάτε πάντα πρώτα."
-        - "Αναζητήστε με όνομα ή μάρκα, ή με barcode."
-        - "Η λίστα έχει ξεχωριστή στήλη για το barcode."
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το βίντεο αφορά τα προϊόντα."
+        - "Η μάρκα και η κατηγορία πρέπει να υπάρχουν από πριν, δείτε το βίντεο 3b."
+        - "Η πλατφόρμα έχει χιλιάδες προϊόντα, γι' αυτό αναζητάτε πάντα πρώτα."
+        - "Αναζητήστε με όνομα, μάρκα ή barcode."
         - "Εδώ το barcode βρίσκει το demo ψωμί μας."
-        - "Αν γνωρίζετε το ID, εισαγάγετε αυτό."
         - "Αν το προϊόν υπάρχει, επεξεργαστείτε το."
         - "Μόνο όταν πραγματικά λείπει, πατήστε «Προσθήκη νέου»."
 
   - id: create
-    shot: 'new product form: name EN + DE + AR, slug, barcode, brand (Team Demo Brand), category (search "Team Demo", pick) -> hover "Save", click'
+    shot: 'new product form: name EN + DE, slug, barcode, brand and category via the search list (real entries blurred, "Team Demo" typed) -> hover "Save", click'
     chapter: { en: "Create a product" }
     window_path: { en: "localhost:3500/admin/products/new" }
     callout: { en: "Products · Add new" }
     narration:
       en: >-
-        The form has a name and a description for every language: English, German, Russian, Greek, Arabic and Hebrew.
-        Fill in at least one name.
-        It does not have to be English.
+        Every language has its own name and description.
+        Fill in at least one name, in any language.
         Write it plainly, like the existing names: brand, product, size.
-        Here we type English, German and Arabic, which runs from right to left.
-        Then the slug, a short URL-safe identifier that you type yourself.
+        The slug is a short URL-safe identifier that you type yourself.
         Enter the barcode if you have it, 8 to 14 digits.
-        Choose the brand from the list, and the category by typing part of its name.
-        All brands and categories can be selected.
+        For brand and category, type part of the name and pick the entry from the list.
+        The list searches the whole catalog, so a few letters are enough.
         Then click "Save".
     subtitle:
       el:
-        - "Η φόρμα έχει όνομα και περιγραφή για κάθε γλώσσα: αγγλικά, γερμανικά, ρωσικά, ελληνικά, αραβικά και εβραϊκά."
-        - "Συμπληρώστε τουλάχιστον ένα όνομα."
-        - "Δεν χρειάζεται να είναι αγγλικό."
+        - "Κάθε γλώσσα έχει δικό της όνομα και περιγραφή."
+        - "Συμπληρώστε τουλάχιστον ένα όνομα, σε οποιαδήποτε γλώσσα."
         - "Γράψτε το απλά, όπως τα υπάρχοντα ονόματα: μάρκα, προϊόν, μέγεθος."
-        - "Εδώ πληκτρολογούμε αγγλικά, γερμανικά και αραβικά, που γράφονται από δεξιά προς αριστερά."
-        - "Έπειτα το slug, ένα σύντομο αναγνωριστικό κατάλληλο για URL, που πληκτρολογείτε μόνοι σας."
+        - "Το slug είναι ένα σύντομο αναγνωριστικό κατάλληλο για URL, που πληκτρολογείτε μόνοι σας."
         - "Καταχωρίστε το barcode αν το έχετε, 8 έως 14 ψηφία."
-        - "Επιλέξτε τη μάρκα από τη λίστα και την κατηγορία πληκτρολογώντας μέρος του ονόματός της."
-        - "Μπορείτε να επιλέξετε όλες τις μάρκες και κατηγορίες."
+        - "Για τη μάρκα και την κατηγορία, πληκτρολογήστε μέρος του ονόματος και επιλέξτε την καταχώριση από τη λίστα."
+        - "Η λίστα ψάχνει σε ολόκληρο τον κατάλογο, οπότε αρκούν λίγα γράμματα."
         - "Έπειτα πατήστε «Αποθήκευση»."
 
   - id: saved
@@ -165,7 +98,7 @@ scenes:
     narration:
       en: >-
         After saving you are back in the list.
-        Search for the product to check it: name, barcode, brand and category are there.
+        Search for the product to check that it is stored correctly.
         Saving does not translate anything.
         The languages you left empty are added later by a separate translation run.
         If two records describe the same product, keep the better one and tell the team lead.
@@ -174,7 +107,7 @@ scenes:
     subtitle:
       el:
         - "Μετά την αποθήκευση επιστρέφετε στη λίστα."
-        - "Αναζητήστε το προϊόν για να το ελέγξετε: το όνομα, το barcode, η μάρκα και η κατηγορία είναι εκεί."
+        - "Αναζητήστε το προϊόν για να ελέγξετε ότι αποθηκεύτηκε σωστά."
         - "Η αποθήκευση δεν μεταφράζει τίποτα."
         - "Οι γλώσσες που αφήσατε κενές προστίθενται αργότερα από μια ξεχωριστή εκτέλεση μετάφρασης."
         - "Αν δύο εγγραφές περιγράφουν το ίδιο προϊόν, κρατήστε την καλύτερη και ενημερώστε τον υπεύθυνο της ομάδας."
@@ -182,7 +115,7 @@ scenes:
         - "Για να αλλάξετε ένα προϊόν, πατήστε «Επεξεργασία»."
 
   - id: edit
-    shot: 'edit page of the demo sourdough loaf: all six language versions, add a size to the English name, scroll through the other languages and to the attributes, back to "Save", click'
+    shot: 'edit page of the demo sourdough loaf: all language versions, add a size to the English name, scroll through the other languages and to the attributes, back to "Save", click'
     chapter: { en: "Edit a product" }
     window_path: { en: "localhost:3500/admin/products/329578/edit" }
     callout: { en: "Products · Edit" }
@@ -190,21 +123,19 @@ scenes:
       en: >-
         The edit page shows every language version.
         Change only what is wrong or incomplete, for example a missing size in the English name.
-        Scroll down: the other languages are kept as they are.
-        If you empty a field, that language is removed.
-        The last name always stays.
-        Below the form are the attributes that the category asks for.
-        Add or correct them.
+        The other languages are kept as they are.
+        If you empty a field, that language is removed, but the last name always stays.
+        The category also asks for attributes.
+        Add or correct them here.
         Then click "Save".
     subtitle:
       el:
         - "Η σελίδα επεξεργασίας δείχνει κάθε γλωσσική εκδοχή."
         - "Αλλάξτε μόνο ό,τι είναι λάθος ή ελλιπές, για παράδειγμα ένα μέγεθος που λείπει από το αγγλικό όνομα."
-        - "Κατεβείτε προς τα κάτω: οι άλλες γλώσσες διατηρούνται ως έχουν."
-        - "Αν αδειάσετε ένα πεδίο, η γλώσσα αυτή αφαιρείται."
-        - "Το τελευταίο όνομα μένει πάντα."
-        - "Κάτω από τη φόρμα είναι τα χαρακτηριστικά που ζητά η κατηγορία."
-        - "Προσθέστε ή διορθώστε τα."
+        - "Οι άλλες γλώσσες διατηρούνται ως έχουν."
+        - "Αν αδειάσετε ένα πεδίο, η γλώσσα αυτή αφαιρείται, αλλά το τελευταίο όνομα μένει πάντα."
+        - "Η κατηγορία ζητά και χαρακτηριστικά."
+        - "Προσθέστε ή διορθώστε τα εδώ."
         - "Έπειτα πατήστε «Αποθήκευση»."
 
   - id: wrap
@@ -215,17 +146,15 @@ scenes:
       en: >-
         Back in the list, you see the saved product.
         Important: the other languages are not updated automatically.
-        If the meaning of a text changes, tell the team lead, so that the other languages can be checked.
-        That is all for products.
-        Next in this series: how translations come about.
+        If the meaning of a text changes, tell the team lead.
+        How translations come about is covered in video 4b.
         Thanks for watching.
     subtitle:
       el:
         - "Πίσω στη λίστα βλέπετε το αποθηκευμένο προϊόν."
         - "Σημαντικό: οι άλλες γλώσσες δεν ενημερώνονται αυτόματα."
-        - "Αν αλλάξει το νόημα ενός κειμένου, ενημερώστε τον υπεύθυνο της ομάδας, ώστε να ελεγχθούν οι άλλες γλώσσες."
-        - "Αυτά ήταν όλα για τα προϊόντα."
-        - "Στη συνέχεια της σειράς: πώς δημιουργούνται οι μεταφράσεις."
+        - "Αν αλλάξει το νόημα ενός κειμένου, ενημερώστε τον υπεύθυνο της ομάδας."
+        - "Πώς δημιουργούνται οι μεταφράσεις, το εξηγεί το βίντεο 4b."
         - "Ευχαριστούμε που παρακολουθήσατε."
 
   - id: outro

@@ -1,0 +1,172 @@
+# Team video 3b "Catalog basics: categories and brands" (F8960, topic catalog-basics). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-catalog-basics.el.srt).
+# Added 2026-10-20 (decision BB): video 4 is split; categories and brands get their own short video (<= 3 min), video 4 then covers products only.
+# MAINTAINABILITY (BB: "we must be able to cope with news"): the narration explains concepts and the flow, names only stable UI words
+# ("Categories", "Brands", "Edit", "Add new", "Save"), no field lists, no counts, no positions. The written SOP (src/lib/system-admin-help-content.ts,
+# topic catalog-basics) is the truth.
+# Basis (code): category names per language = PUT /admin/categories/{id}/translations (CategoryForm.tsx); no job overwrites them, only a hand-started seed with
+# --overwrite-names (ingestor/taxonomy/seed_taxonomy.py:15-18, 47-54, 265-268), prod state open (F8960 O4) -> "still being checked";
+# brand form: slug field on create only, prefilled from the name via toSlug (a-z, 0-9, hyphen), editable; PATCH without slug (BrandForm.tsx, B8100-001,
+# commit 91cfb9b, test src/tests/brand-form-slug.test.tsx); slug unique (backend ingestor/models/brand.py:21-24).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker "Team Demo").
+# The video CREATES the brand "Team Demo Brand Two" (prepare_team.py deletes it on the next run) and types ONE German category name into the demo category
+# (prepare_team.py puts the language rows back). The brand edit page is only looked at (Save is hovered, nothing saved). Nothing is ever deleted by the video.
+# Real categories and brands are never readable (rows blurred by an init script, parent-category select blurred).
+# Address bar: every scene shows exactly one page (ids must match the prepare_team.py output, record.mjs checks that).
+
+meta:
+  slug: team-catalog-basics
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Catalog basics: categories and brands"
+    el: "Βασικά καταλόγου: κατηγορίες και μάρκες"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: products"
+    el: "Επόμενο: προϊόντα"
+  thumbnail_scene: newbrand
+  target_duration_s: 150
+  window_path:
+    en: "localhost:3500/admin/categories"
+    el: "localhost:3500/admin/categories"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: tree
+    shot: 'Categories as a tree (real entries blurred) -> search "Team Demo" -> demo category -> hover "Edit", click'
+    chapter: { en: "Categories" }
+    window_path: { en: "localhost:3500/admin/categories" }
+    callout: { en: "Admin · Categories" }
+    narration:
+      en: >-
+        Welcome back.
+        A product needs a category and a brand, so this short video covers both.
+        Start with "Categories".
+        They form a tree, and every category sits below a broader one.
+        In this recording, the real entries are blurred.
+        Instead of walking through all branches, search for part of a name.
+        Here is our demo category.
+        Click "Edit" to open it.
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Ένα προϊόν χρειάζεται κατηγορία και μάρκα, γι' αυτό αυτό το σύντομο βίντεο καλύπτει και τα δύο."
+        - "Ξεκινήστε με τις «Κατηγορίες»."
+        - "Σχηματίζουν δέντρο και κάθε κατηγορία βρίσκεται κάτω από μια ευρύτερη."
+        - "Σε αυτή την εγγραφή, οι πραγματικές καταχωρίσεις είναι θολωμένες."
+        - "Αντί να διατρέχετε όλους τους κλάδους, αναζητήστε μέρος ενός ονόματος."
+        - "Εδώ είναι η demo κατηγορία μας."
+        - "Πατήστε «Επεξεργασία» για να την ανοίξετε."
+
+  - id: catname
+    shot: 'category edit page of "Team Demo Category": translation table -> type a German name -> hover "Save", click (frozen)'
+    window_path: { en: "localhost:3500/admin/categories/53789/edit" }
+    callout: { en: "Categories · Names per language" }
+    narration:
+      en: >-
+        A category has one name for every language.
+        To rename it, type the new name into the row of that language and click "Save".
+        Here we add a German name.
+        The name is stored directly, and no automatic job overwrites it.
+        Only a taxonomy seed that someone starts by hand with the overwrite option replaces existing names.
+        Whether production already has this safer behavior is still being checked, so never run a seed without asking.
+        Categories are rarely created from scratch. Most of the time, you simply rename one.
+    subtitle:
+      el:
+        - "Μια κατηγορία έχει ένα όνομα για κάθε γλώσσα."
+        - "Για να την μετονομάσετε, πληκτρολογήστε το νέο όνομα στη γραμμή της γλώσσας και πατήστε «Αποθήκευση»."
+        - "Εδώ προσθέτουμε ένα γερμανικό όνομα."
+        - "Το όνομα αποθηκεύεται απευθείας και καμία αυτόματη εργασία δεν το αντικαθιστά."
+        - "Μόνο μια εισαγωγή ταξινομίας που κάποιος ξεκινά με το χέρι με την επιλογή αντικατάστασης αντικαθιστά τα υπάρχοντα ονόματα."
+        - "Αν το production έχει ήδη αυτή την ασφαλέστερη συμπεριφορά, ελέγχεται ακόμη, γι' αυτό μην εκτελείτε ποτέ εισαγωγή χωρίς να ρωτήσετε."
+        - "Οι κατηγορίες σπάνια δημιουργούνται από την αρχή."
+        - "Τις περισσότερες φορές απλώς μετονομάζετε μία."
+
+  - id: brands
+    shot: 'Brands list (real rows blurred) -> search "Team Demo" -> demo brand -> hover "Add new", click (frozen)'
+    chapter: { en: "Brands" }
+    window_path: { en: "localhost:3500/admin/brands" }
+    callout: { en: "Admin · Brands" }
+    narration:
+      en: >-
+        Now the brands.
+        Open "Brands" and always search first.
+        A brand may already exist, maybe with a slightly different spelling, so try a part of the name.
+        Every product points to one brand.
+        If the brand exists, use it.
+        Only if it is really missing, click "Add new".
+    subtitle:
+      el:
+        - "Τώρα οι μάρκες."
+        - "Ανοίξτε τις «Μάρκες» και αναζητήστε πάντα πρώτα."
+        - "Μια μάρκα μπορεί να υπάρχει ήδη, ίσως με ελαφρώς διαφορετική γραφή, γι' αυτό δοκιμάστε μέρος του ονόματος."
+        - "Κάθε προϊόν δείχνει σε μία μάρκα."
+        - "Αν η μάρκα υπάρχει, χρησιμοποιήστε την."
+        - "Μόνο αν λείπει πραγματικά, πατήστε «Προσθήκη νέου»."
+
+  - id: newbrand
+    shot: 'new brand form: type the name "Team Demo Brand Two" -> the slug fills in by itself (highlighted) -> hover "Save", click (frozen)'
+    chapter: { en: "A new brand" }
+    window_path: { en: "localhost:3500/admin/brands/new" }
+    callout: { en: "Brands · Add new" }
+    narration:
+      en: >-
+        Type the name of the brand.
+        The slug is its short technical name, made of lowercase letters, digits and hyphens.
+        It is filled in from the name, and you can still change it.
+        Check it before you save, because it must be unique, and the form does not offer it again for an existing brand.
+        Then click "Save".
+    subtitle:
+      el:
+        - "Πληκτρολογήστε το όνομα της μάρκας."
+        - "Το slug είναι το σύντομο τεχνικό της όνομα, από πεζά γράμματα, ψηφία και παύλες."
+        - "Συμπληρώνεται από το όνομα και μπορείτε ακόμη να το αλλάξετε."
+        - "Ελέγξτε το πριν αποθηκεύσετε, γιατί πρέπει να είναι μοναδικό και η φόρμα δεν το προσφέρει ξανά για υπάρχουσα μάρκα."
+        - "Έπειτα πατήστε «Αποθήκευση»."
+
+  - id: brandlist
+    shot: 'back in the brands list (real rows blurred) -> search "Team Demo" -> both demo brands -> hover "Edit" of the older demo brand, click (frozen)'
+    chapter: { en: "Edit a brand" }
+    window_path: { en: "localhost:3500/admin/brands" }
+    callout: { en: "Brands · Result" }
+    narration:
+      en: >-
+        After saving, you are back in the list.
+        Search again, and the new brand appears next to the demo one.
+        To change a brand, click "Edit".
+    subtitle:
+      el:
+        - "Μετά την αποθήκευση επιστρέφετε στη λίστα."
+        - "Αναζητήστε ξανά και η νέα μάρκα εμφανίζεται δίπλα στη demo μάρκα."
+        - "Για να αλλάξετε μια μάρκα, πατήστε «Επεξεργασία»."
+
+  - id: brandedit
+    shot: 'brand edit page of "Team Demo Brand": name field, no slug field; Save only hovered (nothing saved)'
+    window_path: { en: "localhost:3500/admin/brands/5532/edit" }
+    callout: { en: "Brands · Edit" }
+    narration:
+      en: >-
+        The form is the same, but the slug is gone.
+        It stays as it was.
+        Changes apply to every product of this brand, so check them twice before you save.
+        That is all for categories and brands.
+        Next comes the video about products, which use the category and the brand you just saw.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Η φόρμα είναι η ίδια, αλλά το slug λείπει."
+        - "Μένει όπως ήταν."
+        - "Οι αλλαγές ισχύουν για κάθε προϊόν αυτής της μάρκας, γι' αυτό ελέγξτε τες δύο φορές πριν αποθηκεύσετε."
+        - "Αυτά ήταν όλα για τις κατηγορίες και τις μάρκες."
+        - "Στη συνέχεια έρχεται το βίντεο για τα προϊόντα, που χρησιμοποιούν την κατηγορία και τη μάρκα που μόλις είδατε."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

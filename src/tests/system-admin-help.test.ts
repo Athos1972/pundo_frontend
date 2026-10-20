@@ -12,10 +12,9 @@ const GREEK = /[Ͱ-Ͽ]/
 const SAME_ALLOWED = new Set(['CRM'])
 
 describe('help topics (data source)', () => {
-  it('has the six P1 topics in the agreed order', () => {
-    expect(HELP_TOPICS.length).toBe(6)
-    expect(HELP_TOPICS.map((t) => t.id)).toEqual(['admin-tour', 'claims-owners', 'shops', 'products', 'translations', 'crm'])
-    expect(HELP_TOPICS.map((t) => t.number)).toEqual(['1', '2', '3', '4', '4b', '5'])
+  it('has the topics in the agreed order (3b between shops and products)', () => {
+    expect(HELP_TOPICS.map((t) => t.id)).toEqual(['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm'])
+    expect(HELP_TOPICS.map((t) => t.number)).toEqual(['1', '2', '3', '3b', '4', '4b', '5'])
     expect(HELP_TOPICS.map((t) => t.id)).toEqual([...HELP_TOPIC_IDS])
   })
 
@@ -116,6 +115,19 @@ describe('help content (EN + EL)', () => {
     expect(text).toMatch(/edit every language version/)
     expect(text).toMatch(/seed_taxonomy\.py/)
     expect(en.notes?.some((n) => n.kind === 'warning')).toBe(true)
+  })
+
+  it('topic 3b covers categories and brands with the slug, the duplicate check and the seed warning', () => {
+    const en = HELP_CONTENT['catalog-basics'].en
+    const text = [...en.steps, ...(en.notes ?? []).map((n) => n.text)].join(' ')
+    expect(text).toMatch(/slug/)
+    expect(text).toMatch(/duplicate/i)
+    expect(text).toMatch(/seed_taxonomy\.py/)
+    expect(en.notes?.filter((n) => n.kind === 'warning').length).toBeGreaterThanOrEqual(1)
+    expect(HELP_CONTENT.products.en.steps.join(' ')).toMatch(/Categories and brands/)
+    const topic = getHelpTopic('catalog-basics')!
+    expect(topic.videoId).toBeUndefined()
+    expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/categories', '/admin/brands'])
   })
 
   it('helpLang maps everything but el to en', () => {

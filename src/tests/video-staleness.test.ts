@@ -51,7 +51,7 @@ describe('video/registry.json', () => {
     for (const e of registry) {
       const topic = HELP_TOPICS.find((t) => t.id === e.topic)
       expect(topic, e.topic).toBeDefined()
-      expect(e.youtubeId).toBe(topic!.videoId)
+      expect(e.youtubeId).toBe(topic!.videoId ?? '')   // empty until the upload (no videoId in the help topic either)
       expect(e.slug).toBe(`team-${e.topic}`)
       expect(e.recordedAtCommit).toMatch(/^[0-9a-f]{40}$/)
       expect(e.recordedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/)

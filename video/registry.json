@@ -44,6 +44,22 @@
     ]
   },
   {
+    "slug": "team-catalog-basics",
+    "topic": "catalog-basics",
+    "youtubeId": "",
+    "recordedAtCommit": "cc606cfa410010db0aa39ee730772f78427aacd5",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/categories",
+      "src/app/(system-admin)/admin/(portal)/brands",
+      "src/components/system-admin/BrandForm.tsx",
+      "src/components/system-admin/BrandLogoInput.tsx",
+      "src/components/system-admin/CategoryForm.tsx",
+      "src/components/system-admin/CategoryTreeView.tsx",
+      "src/components/system-admin/EntityTable.tsx"
+    ]
+  },
+  {
     "slug": "team-products",
     "topic": "products",
     "youtubeId": "KdVJzmdxA5Q",

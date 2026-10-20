@@ -1,7 +1,7 @@
 // F8960 — Admin help topics (data only, no UI text). Texts live in system-admin-help-content.ts.
 // Server-side only: SOP content and video IDs must never be shipped to a client bundle (see guard test).
 
-export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'products', 'translations', 'crm'] as const
+export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm'] as const
 export type HelpTopicId = (typeof HELP_TOPIC_IDS)[number]
 
 export interface HelpAdminLink {
@@ -14,7 +14,7 @@ export interface HelpAdminLink {
 
 export interface HelpTopic {
   id: HelpTopicId
-  /** Display number: '1', '2', '3', '4', '4b', '5'. */
+  /** Display number: '1', '2', '3', '3b', '4', '4b', '5'. */
   number: string
   /** Unique, ascending = display order. */
   order: number
@@ -48,7 +48,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'products', number: '4', order: 4,
+    id: 'catalog-basics', number: '3b', order: 4,
+    adminLinks: [
+      { href: '/admin/categories', navKey: 'nav_categories' },
+      { href: '/admin/brands', navKey: 'nav_brands' },
+    ],
+  },
+  {
+    id: 'products', number: '4', order: 5,
     videoId: 'KdVJzmdxA5Q', durationSec: 238,
     adminLinks: [
       { href: '/admin/products', navKey: 'nav_products' },
@@ -57,7 +64,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'translations', number: '4b', order: 5,
+    id: 'translations', number: '4b', order: 6,
     videoId: 'sw0l_oaN73M', durationSec: 181,
     adminLinks: [
       { href: '/admin/categories', navKey: 'nav_categories' },
@@ -65,7 +72,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'crm', number: '5', order: 6,
+    id: 'crm', number: '5', order: 7,
     videoId: '0gdPz5DOLsk', durationSec: 226,
     adminLinks: [
       { href: '/admin/crm/contacts', navKey: 'nav_crm' },

@@ -129,6 +129,43 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
     },
   },
 
+  'catalog-basics': {
+    en: {
+      title: 'Categories and brands',
+      summary: 'Rename categories per language and create or edit brands without duplicates.',
+      intro: 'Every product needs a category and a brand, so maintain these two first. Categories are rarely created from scratch, most of the time you rename one. Brands are created when a brand is really missing.',
+      steps: [
+        'Open "Categories". Categories form a tree: every category sits below a broader one. Search for part of the name instead of walking through all branches.',
+        'Open the category with "Edit". It has one name per language. Type the new name into the row of that language and save. The name is stored directly, and no automatic job overwrites it.',
+        'Open "Brands" and search by name first. Try a part of the name and other spellings, because the brand may already exist.',
+        'Only if the brand is really missing, create a new one with "Add new". Enter the name. The slug (the short web-address name of the brand) is filled in from the name and you can still change it before you save. Check it, because the form does not offer it again on an existing brand.',
+        'To change an existing brand, open it with "Edit". Changes apply to every product of this brand.',
+        'Products come next: they use the category and the brand. See topic 4.',
+      ],
+      notes: [
+        { kind: 'warning', text: 'Never create a second brand for a name that already exists. Duplicate brands split the products of one brand. If you find duplicates, tell the team lead and do not delete on your own.' },
+        { kind: 'warning', text: 'Renaming categories by hand is safe in daily work. Only a deliberately re-run taxonomy seed (seed_taxonomy.py) with the overwrite option would reset the names of seeded categories. Whether production already has this safer behavior is still being checked, so never run a seed without asking.' },
+      ],
+    },
+    el: {
+      title: 'Κατηγορίες και μάρκες',
+      summary: 'Μετονομάστε κατηγορίες ανά γλώσσα και δημιουργήστε ή επεξεργαστείτε μάρκες χωρίς διπλότυπα.',
+      intro: 'Κάθε προϊόν χρειάζεται κατηγορία και μάρκα, γι\' αυτό συντηρήστε πρώτα αυτά τα δύο. Οι κατηγορίες σπάνια δημιουργούνται από την αρχή, τις περισσότερες φορές μετονομάζετε μία. Οι μάρκες δημιουργούνται όταν μια μάρκα λείπει πραγματικά.',
+      steps: [
+        'Ανοίξτε τις «Κατηγορίες». Οι κατηγορίες σχηματίζουν δέντρο: κάθε κατηγορία βρίσκεται κάτω από μια ευρύτερη. Αναζητήστε μέρος του ονόματος αντί να διατρέχετε όλους τους κλάδους.',
+        'Ανοίξτε την κατηγορία με «Επεξεργασία». Έχει ένα όνομα ανά γλώσσα. Πληκτρολογήστε το νέο όνομα στη γραμμή της γλώσσας και αποθηκεύστε. Το όνομα αποθηκεύεται απευθείας και καμία αυτόματη εργασία δεν το αντικαθιστά.',
+        'Ανοίξτε τις «Μάρκες» και αναζητήστε πρώτα με το όνομα. Δοκιμάστε μέρος του ονόματος και άλλες γραφές, γιατί η μάρκα μπορεί να υπάρχει ήδη.',
+        'Μόνο αν η μάρκα λείπει πραγματικά, δημιουργήστε νέα με «Προσθήκη νέου». Πληκτρολογήστε το όνομα. Το slug (το σύντομο όνομα διεύθυνσης της μάρκας) συμπληρώνεται από το όνομα και μπορείτε να το αλλάξετε πριν αποθηκεύσετε. Ελέγξτε το, γιατί η φόρμα δεν το προσφέρει ξανά σε υπάρχουσα μάρκα.',
+        'Για να αλλάξετε μια υπάρχουσα μάρκα, ανοίξτε την με «Επεξεργασία». Οι αλλαγές ισχύουν για κάθε προϊόν αυτής της μάρκας.',
+        'Ακολουθούν τα προϊόντα: χρησιμοποιούν την κατηγορία και τη μάρκα. Δείτε το θέμα 4.',
+      ],
+      notes: [
+        { kind: 'warning', text: 'Μη δημιουργείτε ποτέ δεύτερη μάρκα για ένα όνομα που υπάρχει ήδη. Οι διπλές μάρκες χωρίζουν τα προϊόντα μιας μάρκας. Αν βρείτε διπλότυπα, ενημερώστε τον υπεύθυνο της ομάδας και μη διαγράφετε μόνοι σας.' },
+        { kind: 'warning', text: 'Η χειροκίνητη μετονομασία κατηγοριών είναι ασφαλής στην καθημερινή δουλειά. Μόνο μια σκόπιμη επανεκτέλεση του seed ταξινομίας (seed_taxonomy.py) με την επιλογή αντικατάστασης θα επανέφερε τα ονόματα των κατηγοριών του seed. Αν το production έχει ήδη αυτή την ασφαλέστερη συμπεριφορά, ελέγχεται ακόμη, γι\' αυτό μην εκτελείτε ποτέ seed χωρίς να ρωτήσετε.' },
+      ],
+    },
+  },
+
   products: {
     en: {
       title: 'Products',
@@ -137,7 +174,7 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
       steps: [
         'Open "Products" and search by name, brand or barcode first. If the product already exists, edit it instead of creating a new one.',
         'To add a product, create a new one. There is one name field per language (English, German, Russian, Greek, Arabic, Hebrew). Fill in at least one, normally in the language of your source, and add a description per language if you have one.',
-        'Pick the brand from "Brands" (create the brand first if it is missing) and the right entry in "Categories". All brands and categories can be selected, not only the first few.',
+        'Pick the brand from "Brands" (create the brand first if it is missing) and the right entry in "Categories". All brands and categories can be selected, not only the first few. Categories and brands are explained in topic 3b.',
         'Enter the barcode (EAN / GTIN, 8 to 14 digits) if you have it, and fill in the attributes that the category asks for.',
         'Save. Languages you left empty are not created at once; a separate translation run adds them later.',
         'If two records describe the same product, keep the better one and tell the team lead; do not delete on your own.',
@@ -154,7 +191,7 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
       steps: [
         'Ανοίξτε τα «Προϊόντα» και αναζητήστε πρώτα με όνομα, μάρκα ή barcode. Αν το προϊόν υπάρχει ήδη, επεξεργαστείτε το αντί να δημιουργήσετε νέο.',
         'Για να προσθέσετε προϊόν, δημιουργήστε νέο. Υπάρχει ένα πεδίο ονόματος ανά γλώσσα (αγγλικά, γερμανικά, ρωσικά, ελληνικά, αραβικά, εβραϊκά). Συμπληρώστε τουλάχιστον ένα, κανονικά στη γλώσσα της πηγής σας, και προσθέστε περιγραφή ανά γλώσσα αν έχετε.',
-        'Επιλέξτε τη μάρκα από τις «Μάρκες» (δημιουργήστε πρώτα τη μάρκα αν λείπει) και τη σωστή καταχώριση στις «Κατηγορίες». Μπορείτε να επιλέξετε όλες τις μάρκες και κατηγορίες, όχι μόνο τις πρώτες.',
+        'Επιλέξτε τη μάρκα από τις «Μάρκες» (δημιουργήστε πρώτα τη μάρκα αν λείπει) και τη σωστή καταχώριση στις «Κατηγορίες». Μπορείτε να επιλέξετε όλες τις μάρκες και κατηγορίες, όχι μόνο τις πρώτες. Οι κατηγορίες και οι μάρκες εξηγούνται στο θέμα 3b.',
         'Καταχωρίστε το barcode (EAN / GTIN, 8 έως 14 ψηφία) αν το έχετε, και συμπληρώστε τα χαρακτηριστικά που ζητά η κατηγορία.',
         'Αποθηκεύστε. Οι γλώσσες που αφήσατε κενές δεν δημιουργούνται αμέσως· μια ξεχωριστή εκτέλεση μετάφρασης τις προσθέτει αργότερα.',
         'Αν δύο εγγραφές περιγράφουν το ίδιο προϊόν, κρατήστε την καλύτερη και ενημερώστε τον υπεύθυνο της ομάδας· μη διαγράφετε μόνοι σας.',

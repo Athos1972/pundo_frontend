@@ -26,10 +26,10 @@ test.describe('F8960 admin help', () => {
     await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1)
   })
 
-  test('AK2 + AK4: six cards in order, titles and one-liners, no video link yet', async ({ adminPage: page }) => {
+  test('AK2 + AK4: one card per topic in order, titles and one-liners, no video link yet', async ({ adminPage: page }) => {
     await page.goto('/admin/help')
     const cards = page.getByTestId('help-topic-card')
-    await expect(cards).toHaveCount(6)
+    await expect(cards).toHaveCount(HELP_TOPICS.length)
     expect(await cards.evaluateAll((els) => els.map((e) => e.getAttribute('data-topic')))).toEqual(ids)
     for (const t of HELP_TOPICS) {
       const card = page.locator(`[data-testid="help-topic-card"][data-topic="${t.id}"]`)

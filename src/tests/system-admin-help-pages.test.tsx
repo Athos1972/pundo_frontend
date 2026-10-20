@@ -118,7 +118,7 @@ describe('HelpSop', () => {
 })
 
 describe('help list page', () => {
-  it('checks the session first, shows 6 cards in order, one h1, EN texts', async () => {
+  it('checks the session first, shows one card per topic in order, one h1, EN texts', async () => {
     await show(ListPage)
     expect(requireAdminSession).toHaveBeenCalledTimes(1)
     const cards = screen.getAllByTestId('help-topic-card')

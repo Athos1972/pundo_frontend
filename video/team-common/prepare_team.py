@@ -33,6 +33,10 @@ Products video (team-products): the video CREATES the product "Team Demo Rye Bre
 Translations video (team-translations) and products video: both type a name into the translation table of "Team Demo Category" and
     save it (PUT /admin/categories/{id}/translations; products: Russian, translations: German). prepare_team.py therefore deletes every
     translation of the demo category except en + el at the start of every run (only that one demo category) and re-sets the en/el names.
+Catalog basics video (team-catalog-basics): the video CREATES the brand "Team Demo Brand Two" through the admin form (slug team-demo-brand-two,
+    prefilled from the name) and renames nothing else but the German name of "Team Demo Category" (the language reset above puts it back).
+    prepare_team.py DELETES the created brand again at the start of every run (only slug team-demo-brand-two AND English name
+    "Team Demo Brand Two" AND source NULL, as the admin form writes it, AND no item points to it).
 CRM video (team-crm): the video edits the demo contact "Team Demo Contact" (adds a phone channel, moves it NEEDS_REVIEW -> SOURCED via
     "Set state") and CREATES the contact "Team Demo Maria" (organisation "Team Demo Cafe") through the admin form. prepare_team.py
     therefore (a) puts the demo contact back at the start of every run: state NEEDS_REVIEW, needs_human, version 1, only the two
@@ -76,6 +80,7 @@ SHOPS = {
             "descriptions": {"en": "Fictional demo shop for the team videos."}, "address": "2 Demo Street", "type": "Pet Shop"},
 }
 NEW_SHOP = {"slug": "team-demo-taverna", "name": "Team Demo Taverna"}   # created by the shops video, removed again here
+NEW_BRAND = {"slug": "team-demo-brand-two", "name": "Team Demo Brand Two"}   # created by the catalog-basics video, removed again here
 NEW_ITEM = {"slug": "team-demo-rye-bread", "name": "Team Demo Rye Bread"}   # created by the products video, removed again here
 OWNER_EMAIL = "owner" + DEMO_DOMAIN
 CLAIMANT_EMAIL = "claimant" + DEMO_DOMAIN
@@ -163,6 +168,13 @@ def remove_created_demo_shop(cur) -> int:
 def remove_created_demo_item(cur) -> int:
     """Delete the product the products video created (exact slug + exact English name + source admin). Returns the count."""
     cur.execute("delete from items where slug=%s and names->>'en'=%s and source='admin'", (NEW_ITEM["slug"], NEW_ITEM["name"]))
+    return cur.rowcount
+
+
+def remove_created_demo_brand(cur) -> int:
+    """Delete the brand the catalog-basics video created (exact slug + exact English name + source NULL, only when no item uses it)."""
+    cur.execute("delete from brands b where b.slug=%s and b.names->>'en'=%s and b.source is null "
+                "and not exists (select 1 from items i where i.brand_id=b.id)", (NEW_BRAND["slug"], NEW_BRAND["name"]))
     return cur.rowcount
 
 
@@ -352,6 +364,7 @@ def main() -> None:
         ensure_admin(cur, admin)
         removed = remove_created_demo_shop(cur)
         removed_item = remove_created_demo_item(cur)
+        removed_brand = remove_created_demo_brand(cur)
         removed_contact = remove_created_demo_contact(cur)
         shops = {k: upsert_shop(cur, s) for k, s in SHOPS.items()}
         owner = upsert_owner(cur, OWNER_EMAIL, "Team Demo Owner", "approved", shops["bakery"])
@@ -365,6 +378,7 @@ def main() -> None:
                "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "item_ean": ITEM_EAN, "crm": crm, "marker": "Team Demo",
                "new_shop": {**NEW_SHOP, "removed_from_last_run": removed},
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
+               "new_brand": {**NEW_BRAND, "removed_from_last_run": removed_brand},
                "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact}, "dry_run": DRY}
         if DRY:
             conn.rollback()

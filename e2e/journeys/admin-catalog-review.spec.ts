@@ -64,14 +64,14 @@ import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
 import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
+import {
+  GATEWAY_API_KEY, GATEWAY_URL, GOLDEN_DIR, cannedFromGolden, failTask as gatewayFail, goldenResult,
+  submitResult as gatewaySubmitResult, type GatewayTask, type WorkerResult,
+} from './_helpers/gateway-worker'
 
 // ─── Port safety ──────────────────────────────────────────────────────────────
 
-const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
-const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
-const WORKERS_REPO = process.env.WORKERS_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_llm_workers'
-const GOLDEN_DIR = path.join(WORKERS_REPO, 'tests', 'contracts', 'golden')
 // Muss zu pundo_llm_workers/restart_test_worker.sh passen (`pkill -f "workers.main $CONFIG"`) und darf den
 // Prod-Worker (`workers.main worker.prod.yml`, läuft am Studio) NICHT treffen.
 const TEST_WORKER_PATTERN = 'workers.main worker.test.yml'
@@ -182,8 +182,6 @@ async function intakeBatch(caseId: number, items: Array<{ name: string; descript
   return { status: res.status, data: await res.json() }
 }
 
-type GatewayTask = { task_id: string; job_type: string; payload: Record<string, unknown> }
-
 const OWN_JOB_TYPES = ['describe.item', 'translate.item', 'categorize.item', 'enrich.product_attributes', 'embed.text']
 
 /**
@@ -214,44 +212,7 @@ async function leaseOwnTasks(): Promise<GatewayTask[]> {
   return tasks
 }
 
-async function gatewaySubmitResult(taskId: string, result: unknown, model: string) {
-  const res = await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/result`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Internal-API-Key': GATEWAY_API_KEY },
-    body: JSON.stringify({
-      worker_id: 'playwright-e2e', result, tokens_in: 10, tokens_out: 10,
-      actual_model: model, cache_hit: false, is_batch: false,
-    }),
-  })
-  return res.status
-}
-
-async function gatewayFail(taskId: string, error: string) {
-  const res = await fetch(`${GATEWAY_URL}/v1/tasks/${taskId}/fail`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Internal-API-Key': GATEWAY_API_KEY },
-    body: JSON.stringify({ worker_id: 'playwright-e2e', error, retryable: false }),
-  })
-  return res.status
-}
-
 // ─── Canned results from the worker's golden fixtures (F5982 T10) ────────────
-
-type WorkerResult = { output: Record<string, unknown>; raw: string }
-
-/** The exact `result` object the worker posts for `jobType` (golden fixture of pundo_llm_workers). */
-function goldenResult(jobType: string): WorkerResult {
-  const doc = JSON.parse(fs.readFileSync(path.join(GOLDEN_DIR, `${jobType}.json`), 'utf8')) as {
-    submit_result: { result: WorkerResult }
-  }
-  return doc.submit_result.result
-}
-
-/** Golden envelope with some output fields replaced by values derived from the task payload. */
-function cannedFromGolden(jobType: string, overrides: Record<string, unknown>): WorkerResult {
-  const output = { ...goldenResult(jobType).output, ...overrides }
-  return { output, raw: JSON.stringify(output) }
-}
 
 /** What the canned worker decided, for the Wirkungs-Assertions after the chain (keyed by what the payload identifies). */
 const canned = {

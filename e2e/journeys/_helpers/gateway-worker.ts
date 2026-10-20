@@ -8,9 +8,9 @@ import fs from 'fs'
 import path from 'path'
 
 export const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:8600'
-const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
+export const GATEWAY_API_KEY = process.env.GATEWAY_INTERNAL_API_KEY ?? 'test-key'
 const WORKERS_REPO = process.env.WORKERS_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_llm_workers'
-const GOLDEN_DIR = path.join(WORKERS_REPO, 'tests', 'contracts', 'golden')
+export const GOLDEN_DIR = path.join(WORKERS_REPO, 'tests', 'contracts', 'golden')
 
 if (GATEWAY_URL.includes(':8100')) throw new Error('Safety: never answer tasks of the PRODUCTION gateway (8100)')
 

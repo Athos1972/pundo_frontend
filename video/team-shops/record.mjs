@@ -9,8 +9,7 @@
 // next run), the address of "Team Demo Bakery" is edited (prepare_team.py puts it back). The hard delete is only SHOWN: the dialog
 // is opened, the name is never typed, the confirm button must be disabled, then Cancel. Impersonation is never touched.
 // Every scene shows ONE page (address bar of scenes.yml): page switches happen at scene borders (click, frozen picture, next scene resumes).
-// Recording-only fix: in the Next dev server the Leaflet stylesheet is replaced by Tailwind output (map tiles unstyled, broken
-// in the screencast) -> the real leaflet.css from node_modules is injected on every page. Needs .cache/en/timeline.json (tts.py).
+// Needs .cache/en/timeline.json (tts.py).
 // Env: SKIP_PREPARE=1 (prepare_team.py --dry-run), BACKEND_DIR (default ~/dev/github/pundo_main_backend).
 import fs from 'node:fs'
 import os from 'node:os'
@@ -80,14 +79,6 @@ await sess.ctx.addInitScript((keep) => {
   setInterval(run, 25)
   document.addEventListener('DOMContentLoaded', run)
 }, MARK)
-// init script 2: real Leaflet CSS (dev server ships Tailwind output instead); marker/layer images from the same CDN as the app
-const leafletCss = fs.readFileSync(path.join(here, '../../node_modules/leaflet/dist/leaflet.css'), 'utf8')
-  .replaceAll('url(images/', 'url(https://unpkg.com/leaflet@1.9.4/dist/images/')
-await sess.ctx.addInitScript((css) => {
-  const add = () => { const s = document.createElement('style'); s.setAttribute('data-vid-leaflet', '1'); s.textContent = css; document.head.appendChild(s) }
-  if (document.head) add(); else document.addEventListener('DOMContentLoaded', add)
-}, leafletCss)
-
 const side = (href) => page.locator(`aside nav a[href="${href}"]`).first()
 const highlight = (loc, on = true) => loc.evaluate((el, on) => el.classList.toggle('vid-highlight', on), on).catch(() => {})
 const unhighlightAll = () => page.evaluate(() => document.querySelectorAll('.vid-highlight').forEach((e) => e.classList.remove('vid-highlight'))).catch(() => {})

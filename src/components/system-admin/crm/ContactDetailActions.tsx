@@ -164,7 +164,7 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
       {/* Confirm-business dialog */}
       <ConfirmDialog
         open={showConfirmBusiness}
-        message={`${tr.crm_action_confirm_business}?`}
+        message={`${tr.crm_action_confirm_business}? ${tr.crm_action_confirm_business_hint}`}
         confirmLabel={tr.crm_action_confirm_business}
         cancelLabel={tr.cancel}
         isPending={isPending}
@@ -335,6 +335,7 @@ export function ContactDetailActions({ contact, tr, me }: ContactDetailActionsPr
               type="button"
               onClick={() => setShowConfirmBusiness(true)}
               disabled={isPending}
+              title={tr.crm_action_confirm_business_hint}
               className="px-4 py-2 text-sm font-medium bg-slate-700 text-white rounded-lg hover:bg-slate-800
                 transition-colors disabled:opacity-50"
             >

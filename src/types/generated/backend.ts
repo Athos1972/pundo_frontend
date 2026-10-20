@@ -7857,6 +7857,18 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * ComparisonEvidence
+         * @description Bounded re-bootstrap evidence; never pass untyped producer data to policy.
+         */
+        ComparisonEvidence: {
+            /** Fields Changed */
+            fields_changed?: string[];
+            /** Products Delta Pct */
+            products_delta_pct?: number | null;
+            /** Sample Cap */
+            sample_cap?: number | null;
+        };
         /** ConfigCandidate */
         ConfigCandidate: {
             /**
@@ -10970,10 +10982,7 @@ export interface components {
             classification?: ("shop" | "non_shop" | "unclear") | null;
             /** Code Commit */
             code_commit: string;
-            /** Comparison */
-            comparison?: {
-                [key: string]: unknown;
-            } | null;
+            comparison?: components["schemas"]["ComparisonEvidence"] | null;
             /** Confidence */
             confidence?: number | null;
             /** Config Artifact Ref */
@@ -19733,8 +19742,8 @@ export interface operations {
     upload_product_image_api_v1_products_images__post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -19768,8 +19777,8 @@ export interface operations {
     intake_product_api_v1_products_intake_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -19803,8 +19812,8 @@ export interface operations {
     intake_products_batch_api_v1_products_intake_batch_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -19840,8 +19849,8 @@ export interface operations {
             query?: {
                 limit?: number;
             };
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -19942,9 +19951,9 @@ export interface operations {
             query?: {
                 dry_run?: boolean;
             };
-            header: {
+            header?: {
                 "Idempotency-Key"?: string | null;
-                authorization: string;
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -19979,8 +19988,8 @@ export interface operations {
                 source_run: string;
                 source?: string | null;
             };
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -20012,8 +20021,8 @@ export interface operations {
     post_claim_api_v1_scrape_work_claim_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -20049,8 +20058,8 @@ export interface operations {
     post_hello_api_v1_scrape_work_hello_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -20086,8 +20095,8 @@ export interface operations {
     post_events_api_v1_scrape_work_leases__lease_id__events_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 lease_id: string;
@@ -20125,9 +20134,9 @@ export interface operations {
     post_fail_api_v1_scrape_work_leases__lease_id__fail_post: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 "Idempotency-Key"?: string | null;
-                authorization: string;
+                authorization?: string | null;
             };
             path: {
                 lease_id: string;
@@ -20165,8 +20174,8 @@ export interface operations {
     post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 lease_id: string;
@@ -20204,8 +20213,8 @@ export interface operations {
     post_release_api_v1_scrape_work_leases__lease_id__release_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 lease_id: string;
@@ -20243,9 +20252,9 @@ export interface operations {
     post_result_api_v1_scrape_work_leases__lease_id__result_post: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 "Idempotency-Key"?: string | null;
-                authorization: string;
+                authorization?: string | null;
             };
             path: {
                 lease_id: string;
@@ -20283,8 +20292,8 @@ export interface operations {
     start_run_api_v1_scraper_runs_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -20318,8 +20327,8 @@ export interface operations {
     finish_run_api_v1_scraper_runs__run_id__patch: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 run_id: string;
@@ -20355,8 +20364,8 @@ export interface operations {
     append_event_api_v1_scraper_runs__run_id__events_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 run_id: string;
@@ -23020,8 +23029,8 @@ export interface operations {
     create_shop_type_api_v1_shop_types_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -23086,8 +23095,8 @@ export interface operations {
     update_shop_type_api_v1_shop_types__shop_type_id__put: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 shop_type_id: number;
@@ -23318,8 +23327,8 @@ export interface operations {
     intake_shop_api_v1_shops_intake_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -23355,8 +23364,8 @@ export interface operations {
             query?: {
                 source?: string;
             };
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -23386,8 +23395,8 @@ export interface operations {
     osm_intake_batch_api_v1_shops_osm_intake_batch_post: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -23526,8 +23535,8 @@ export interface operations {
     update_shop_status_api_v1_shops__shop_id__status_patch: {
         parameters: {
             query?: never;
-            header: {
-                authorization: string;
+            header?: {
+                authorization?: string | null;
             };
             path: {
                 shop_id: number;

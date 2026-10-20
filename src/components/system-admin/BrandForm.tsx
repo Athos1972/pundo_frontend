@@ -21,6 +21,8 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
   const isEdit = brand != null
 
   const [name, setName] = useState(pickName(brand?.names, ''))
+  const [slug, setSlug] = useState(brand?.slug ?? '')
+  const [slugTouched, setSlugTouched] = useState(false)
   const firstLogo = brand?.logos?.[0]
   const firstLogoUrl = (firstLogo as Record<string, unknown> | undefined)?.['url'] as string | undefined
   const [logoUrl, setLogoUrl] = useState(firstLogoUrl ?? '')
@@ -29,9 +31,20 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  function toSlug(value: string) {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    setName(value)
+    if (!isEdit && !slugTouched) setSlug(toSlug(value))
+  }
+
   function validate() {
     const e: Record<string, string> = {}
     if (!name.trim()) e.name = tr.error_name_required
+    if (!isEdit && !slug.trim()) e.slug = tr.error_slug_required
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -41,6 +54,8 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
     if (!validate()) return
 
     const payload = {
+      // B8100-001: the backend requires the slug on create (AdminBrandCreate); an existing brand keeps its slug
+      ...(isEdit ? {} : { slug: slug.trim() }),
       names: { en: name.trim() },
       logos: logoUrl.trim() ? [{ url: logoUrl.trim() }] : null,
       homepages: website.trim() ? { en: website.trim() } : null,
@@ -74,10 +89,22 @@ export function BrandForm({ brand, tr }: BrandFormProps) {
         name="name"
         required
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={handleNameChange}
         error={errors.name}
         disabled={isPending}
       />
+
+      {!isEdit && (
+        <FormField
+          label={tr.slug}
+          name="slug"
+          required
+          value={slug}
+          onChange={(e) => { setSlugTouched(true); setSlug(e.target.value) }}
+          error={errors.slug}
+          disabled={isPending}
+        />
+      )}
 
       <FormField
         label={tr.website}

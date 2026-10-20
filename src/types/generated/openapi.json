@@ -8226,6 +8226,32 @@
     "title": "ClaimMatchResponse",
     "type": "object"
    },
+   "ClaimRequest": {
+    "properties": {
+     "actions": {
+      "anyOf": [
+       {
+        "items": {
+         "enum": [
+          "bootstrap",
+          "rebootstrap"
+         ],
+         "type": "string"
+        },
+        "maxItems": 2,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actions"
+     }
+    },
+    "title": "ClaimRequest",
+    "type": "object"
+   },
    "ClaimShopInfo": {
     "properties": {
      "document_upload_available": {
@@ -9964,6 +9990,122 @@
      }
     },
     "title": "HTTPValidationError",
+    "type": "object"
+   },
+   "HeartbeatRequest": {
+    "properties": {
+     "detail": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "phase": {
+      "enum": [
+       "fetch",
+       "llm_nav",
+       "render_product",
+       "llm_product",
+       "probe",
+       "deliver"
+      ],
+      "title": "Phase",
+      "type": "string"
+     }
+    },
+    "required": [
+     "phase"
+    ],
+    "title": "HeartbeatRequest",
+    "type": "object"
+   },
+   "HelloRequest": {
+    "properties": {
+     "actions": {
+      "items": {
+       "enum": [
+        "bootstrap",
+        "rebootstrap"
+       ],
+       "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Actions",
+      "type": "array"
+     },
+     "code_commit": {
+      "pattern": "^[0-9a-f]{7,64}$",
+      "title": "Code Commit",
+      "type": "string"
+     },
+     "contract_version": {
+      "const": 2,
+      "title": "Contract Version",
+      "type": "integer"
+     },
+     "environment": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Environment",
+      "type": "string"
+     },
+     "max_parallel": {
+      "maximum": 16.0,
+      "minimum": 1.0,
+      "title": "Max Parallel",
+      "type": "integer"
+     },
+     "os": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Os",
+      "type": "string"
+     },
+     "prompt_profiles": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "propertyNames": {
+       "enum": [
+        "nav",
+        "product"
+       ]
+      },
+      "title": "Prompt Profiles",
+      "type": "object"
+     },
+     "python": {
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "Python",
+      "type": "string"
+     },
+     "release_ref": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Release Ref",
+      "type": "string"
+     }
+    },
+    "required": [
+     "contract_version",
+     "code_commit",
+     "release_ref",
+     "os",
+     "python",
+     "max_parallel",
+     "actions",
+     "prompt_profiles",
+     "environment"
+    ],
+    "title": "HelloRequest",
     "type": "object"
    },
    "HideReplyRequest": {
@@ -16028,6 +16170,24 @@
      "items"
     ],
     "title": "RelatedShopsResponse",
+    "type": "object"
+   },
+   "ReleaseRequest": {
+    "properties": {
+     "reason": {
+      "enum": [
+       "shutdown",
+       "master_overloaded",
+       "llm_unavailable_before_start"
+      ],
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "reason"
+    ],
+    "title": "ReleaseRequest",
     "type": "object"
    },
    "ReplyRequest": {
@@ -38207,6 +38367,249 @@
     "summary": "Classification Report",
     "tags": [
      "scrape-classifications"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/claim": {
+   "post": {
+    "operationId": "post_claim_api_v1_scrape_work_claim_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ClaimRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "anyOf": [
+          {
+           "additionalProperties": true,
+           "type": "object"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "title": "Response Post Claim Api V1 Scrape Work Claim Post"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Claim",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/hello": {
+   "post": {
+    "operationId": "post_hello_api_v1_scrape_work_hello_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HelloRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Hello Api V1 Scrape Work Hello Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Hello",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/leases/{lease_id}/heartbeat": {
+   "post": {
+    "operationId": "post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lease_id",
+      "required": true,
+      "schema": {
+       "title": "Lease Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HeartbeatRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Heartbeat Api V1 Scrape Work Leases  Lease Id  Heartbeat Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Heartbeat",
+    "tags": [
+     "scrape-work"
+    ]
+   }
+  },
+  "/api/v1/scrape-work/leases/{lease_id}/release": {
+   "post": {
+    "operationId": "post_release_api_v1_scrape_work_leases__lease_id__release_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lease_id",
+      "required": true,
+      "schema": {
+       "title": "Lease Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": true,
+      "schema": {
+       "title": "Authorization",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReleaseRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "boolean"
+         },
+         "title": "Response Post Release Api V1 Scrape Work Leases  Lease Id  Release Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Release",
+    "tags": [
+     "scrape-work"
     ]
    }
   },

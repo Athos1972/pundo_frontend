@@ -3033,6 +3033,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scrape-work/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Claim */
+        post: operations["post_claim_api_v1_scrape_work_claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scrape-work/hello": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Hello */
+        post: operations["post_hello_api_v1_scrape_work_hello_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scrape-work/leases/{lease_id}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Heartbeat */
+        post: operations["post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scrape-work/leases/{lease_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Release */
+        post: operations["post_release_api_v1_scrape_work_leases__lease_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scraper-runs": {
         parameters: {
             query?: never;
@@ -7632,6 +7700,11 @@ export interface components {
             /** Candidates */
             candidates: components["schemas"]["ClaimCandidateOut"][];
         };
+        /** ClaimRequest */
+        ClaimRequest: {
+            /** Actions */
+            actions?: ("bootstrap" | "rebootstrap")[] | null;
+        };
         /** ClaimShopInfo */
         ClaimShopInfo: {
             /** Document Upload Available */
@@ -8223,6 +8296,42 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HeartbeatRequest */
+        HeartbeatRequest: {
+            /** Detail */
+            detail?: string | null;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "fetch" | "llm_nav" | "render_product" | "llm_product" | "probe" | "deliver";
+        };
+        /** HelloRequest */
+        HelloRequest: {
+            /** Actions */
+            actions: ("bootstrap" | "rebootstrap")[];
+            /** Code Commit */
+            code_commit: string;
+            /**
+             * Contract Version
+             * @constant
+             */
+            contract_version: 2;
+            /** Environment */
+            environment: string;
+            /** Max Parallel */
+            max_parallel: number;
+            /** Os */
+            os: string;
+            /** Prompt Profiles */
+            prompt_profiles: {
+                [key: string]: string;
+            };
+            /** Python */
+            python: string;
+            /** Release Ref */
+            release_ref: string;
         };
         /** HideReplyRequest */
         HideReplyRequest: {
@@ -10295,6 +10404,14 @@ export interface components {
         RelatedShopsResponse: {
             /** Items */
             items: components["schemas"]["RelatedShopItem"][];
+        };
+        /** ReleaseRequest */
+        ReleaseRequest: {
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "shutdown" | "master_overloaded" | "llm_unavailable_before_start";
         };
         /** ReplyRequest */
         ReplyRequest: {
@@ -19579,6 +19696,158 @@ export interface operations {
                 content: {
                     "application/json": {
                         [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_claim_api_v1_scrape_work_claim_post: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    } | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_hello_api_v1_scrape_work_hello_post: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelloRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_heartbeat_api_v1_scrape_work_leases__lease_id__heartbeat_post: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_release_api_v1_scrape_work_leases__lease_id__release_post: {
+        parameters: {
+            query?: never;
+            header: {
+                authorization: string;
+            };
+            path: {
+                lease_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
                     };
                 };
             };

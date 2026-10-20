@@ -21,6 +21,7 @@ export interface CrmFetchResult<T> {
 export const CRM_ERROR_KEYS = {
   suppressed: 'crm_err_suppressed',
   illegal_transition: 'crm_err_illegal_transition',
+  outreach_not_allowed_state: 'crm_err_outreach_state',
   shop_id_required: 'crm_err_shop_id_required',
   no_email_channel: 'crm_err_no_email',
   last_channel: 'crm_err_last_channel',

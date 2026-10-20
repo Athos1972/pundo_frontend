@@ -103,6 +103,7 @@
    "last_channel",
    "no_email_channel",
    "org_name_required",
+   "outreach_not_allowed_state",
    "shop_id_required",
    "suppressed"
   ],

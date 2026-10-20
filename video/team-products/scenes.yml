@@ -1,0 +1,185 @@
+# Team video 4 "Maintaining products" (F8960 T20, topic 4). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-products.el.srt).
+# Re-recorded 2026-10-20 after B8000-003 (names merge), B8200-004 (getAll* paging). Demo ids brand 1 / category -1 kept (harmless now).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Order and wording follow the SOP "products" in src/lib/system-admin-help-content.ts. Translations (topic 4b) are only hinted at.
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
+# ../team-common/prepare_team.py (marker "Team Demo"). The video CREATES the product "Team Demo Rye Bread" (prepare_team.py
+# deletes it again on the next run) and edits "Team Demo Sourdough Loaf" (name; the upsert resets it). Deleting is never done.
+# Address bar: every scene shows exactly one page (window_path is static per scene); page switches happen at the scene borders.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+
+meta:
+  slug: team-products
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Maintaining products"
+    el: "Συντήρηση προϊόντων"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: how translations come about"
+    el: "Επόμενο: πώς δημιουργούνται οι μεταφράσεις"
+  thumbnail_scene: create
+  target_duration_s: 200
+  window_path:
+    en: "localhost:3500/admin/products"
+    el: "localhost:3500/admin/products"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: find
+    shot: 'list of products (non-demo rows blurred) -> search "Team Demo Sourdough" -> existing demo product -> ID field -> hover "Add new", click'
+    chapter: { en: "Search first" }
+    window_path: { en: "localhost:3500/admin/products" }
+    callout: { en: "Admin · Products" }
+    narration:
+      en: >-
+        Welcome back.
+        In this video you create and edit products.
+        Products are shared by all shops, so a clean record means correct search results and price comparison.
+        The platform holds thousands of products, so always search first.
+        Type part of the name into the search box, or enter the ID if you know it.
+        If the product already exists, edit it instead of creating a new one.
+        Only when it really is missing, click "Add new".
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Σε αυτό το βίντεο δημιουργείτε και επεξεργάζεστε προϊόντα."
+        - "Τα προϊόντα είναι κοινά για όλα τα καταστήματα, γι' αυτό μια καθαρή εγγραφή σημαίνει σωστά αποτελέσματα αναζήτησης και σύγκρισης τιμών."
+        - "Η πλατφόρμα έχει χιλιάδες προϊόντα, γι' αυτό αναζητάτε πάντα πρώτα."
+        - "Πληκτρολογήστε μέρος του ονόματος στο πεδίο αναζήτησης ή εισαγάγετε το ID αν το γνωρίζετε."
+        - "Αν το προϊόν υπάρχει ήδη, επεξεργαστείτε το αντί να δημιουργήσετε νέο."
+        - "Μόνο όταν πραγματικά λείπει, πατήστε «Προσθήκη νέου»."
+
+  - id: create
+    shot: 'new product form: name, slug, brand (Team Demo Brand), category (search "Team Demo", pick) -> hover "Save", click'
+    chapter: { en: "Create a product" }
+    window_path: { en: "localhost:3500/admin/products/new" }
+    callout: { en: "Products · Add new" }
+    narration:
+      en: >-
+        Start with the product name.
+        There is no language picker: write the name in English. The form stores this one name, and it is the source text for all other languages.
+        Write it plainly, in the same style as the existing names: brand, product, size.
+        Then the slug, a short URL-safe identifier that you type yourself.
+        Choose the brand from the list; if it is missing, create the brand first.
+        For the category, type part of its name and pick the right entry.
+        All brands and categories can be selected, not only the first few.
+        Then click "Save".
+    subtitle:
+      el:
+        - "Ξεκινήστε με το όνομα του προϊόντος."
+        - "Δεν υπάρχει επιλογή γλώσσας: γράψτε το όνομα στα αγγλικά. Η φόρμα αποθηκεύει αυτό το ένα όνομα και είναι το αρχικό κείμενο για όλες τις άλλες γλώσσες."
+        - "Γράψτε το απλά, με το ίδιο στυλ με τα υπάρχοντα ονόματα: μάρκα, προϊόν, μέγεθος."
+        - "Έπειτα το slug, ένα σύντομο αναγνωριστικό κατάλληλο για URL, που πληκτρολογείτε μόνοι σας."
+        - "Επιλέξτε τη μάρκα από τη λίστα· αν λείπει, δημιουργήστε πρώτα τη μάρκα."
+        - "Για την κατηγορία, πληκτρολογήστε μέρος του ονόματός της και επιλέξτε τη σωστή καταχώριση."
+        - "Μπορείτε να επιλέξετε όλες τις μάρκες και κατηγορίες, όχι μόνο τις πρώτες."
+        - "Έπειτα πατήστε «Αποθήκευση»."
+
+  - id: saved
+    shot: 'back in the list with the toast -> search "Team Demo" -> new product with brand and category -> pointer on the row, hover "Edit" of the sourdough loaf, click'
+    chapter: { en: "Save and check" }
+    window_path: { en: "localhost:3500/admin/products" }
+    callout: { en: "Products · Save and check" }
+    narration:
+      en: >-
+        After saving you are back in the list.
+        Search for the product to see that it is there, with its brand and category.
+        The other language versions of the name are not created at once; a separate translation run adds them later.
+        To change an existing product, search for it and click "Edit".
+        If two records describe the same product, keep the better one and tell the team lead.
+        Do not delete on your own.
+    subtitle:
+      el:
+        - "Μετά την αποθήκευση επιστρέφετε στη λίστα."
+        - "Αναζητήστε το προϊόν για να δείτε ότι υπάρχει, με τη μάρκα και την κατηγορία του."
+        - "Οι άλλες γλωσσικές εκδοχές του ονόματος δεν δημιουργούνται αμέσως· μια ξεχωριστή εκτέλεση μετάφρασης τις προσθέτει αργότερα."
+        - "Για να αλλάξετε ένα υπάρχον προϊόν, αναζητήστε το και πατήστε «Επεξεργασία»."
+        - "Αν δύο εγγραφές περιγράφουν το ίδιο προϊόν, κρατήστε την καλύτερη και ενημερώστε τον υπεύθυνο της ομάδας."
+        - "Μη διαγράφετε μόνοι σας."
+
+  - id: edit
+    shot: 'edit page of the demo sourdough loaf: add a size to the name, scroll down to the attributes, back up, "Save"'
+    chapter: { en: "Edit a product" }
+    window_path: { en: "localhost:3500/admin/products/329578/edit" }
+    callout: { en: "Products · Edit" }
+    narration:
+      en: >-
+        The edit page is the same form, filled in with the current data.
+        Change only what is wrong or incomplete, for example a missing size in the name.
+        Below the form you see the attributes of the product.
+        Add or correct the ones that the category asks for.
+        Important: saving an existing product changes only the name shown in the form, usually the English one.
+        The other language versions stay as they are, but they are not updated.
+        So if you change the English text, tell the team lead, so that the other languages can be checked.
+        Then click "Save".
+    subtitle:
+      el:
+        - "Η σελίδα επεξεργασίας είναι η ίδια φόρμα, συμπληρωμένη με τα τρέχοντα στοιχεία."
+        - "Αλλάξτε μόνο ό,τι είναι λάθος ή ελλιπές, για παράδειγμα ένα μέγεθος που λείπει από το όνομα."
+        - "Κάτω από τη φόρμα βλέπετε τα χαρακτηριστικά του προϊόντος."
+        - "Προσθέστε ή διορθώστε αυτά που ζητά η κατηγορία."
+        - "Σημαντικό: η αποθήκευση ενός υπάρχοντος προϊόντος αλλάζει μόνο το όνομα που εμφανίζεται στη φόρμα, συνήθως το αγγλικό."
+        - "Οι άλλες γλωσσικές εκδοχές μένουν ως έχουν, αλλά δεν ενημερώνονται."
+        - "Αν λοιπόν αλλάξετε το αγγλικό κείμενο, ενημερώστε τον υπεύθυνο της ομάδας, ώστε να ελεγχθούν οι άλλες γλώσσες."
+        - "Έπειτα πατήστε «Αποθήκευση»."
+
+  - id: brands
+    shot: 'Brands list (non-demo rows blurred) -> search "Team Demo" -> demo brand -> hover "Add new" (not clicked) -> click "Categories" in the sidebar'
+    chapter: { en: "Brands" }
+    window_path: { en: "localhost:3500/admin/brands" }
+    callout: { en: "Admin · Brands" }
+    narration:
+      en: >-
+        Now the brands.
+        Open "Brands" and search first, exactly as with products.
+        Every product points to one brand.
+        If a brand is missing, click "Add new", enter its name and save.
+        Then go back to the product and choose the new brand.
+        Never create a second brand for a name that already exists.
+    subtitle:
+      el:
+        - "Τώρα οι μάρκες."
+        - "Ανοίξτε τις «Μάρκες» και αναζητήστε πρώτα, ακριβώς όπως με τα προϊόντα."
+        - "Κάθε προϊόν δείχνει σε μία μάρκα."
+        - "Αν λείπει μια μάρκα, πατήστε «Προσθήκη νέου», εισαγάγετε το όνομά της και αποθηκεύστε."
+        - "Έπειτα επιστρέψτε στο προϊόν και επιλέξτε τη νέα μάρκα."
+        - "Μη δημιουργείτε ποτέ δεύτερη μάρκα για ένα όνομα που υπάρχει ήδη."
+
+  - id: categories
+    shot: 'Categories as a tree (taxonomy, readable) -> search "Team Demo" -> demo category in the tree; pointer on the entry'
+    chapter: { en: "Categories" }
+    window_path: { en: "localhost:3500/admin/categories" }
+    callout: { en: "Admin · Categories" }
+    narration:
+      en: >-
+        Categories form a tree.
+        Open "Categories" and browse the branches, or search for part of the name.
+        Choose the most specific entry that fits, because the category decides which attributes a product gets.
+        We do not delete products here, because deleting is permanent and not part of daily work.
+        The translations of a product are made by a separate translation run, not by saving.
+        A separate video explains how, under "How translations come about".
+        That is all for products.
+        Next in this series: how translations come about.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Οι κατηγορίες σχηματίζουν δέντρο."
+        - "Ανοίξτε τις «Κατηγορίες» και περιηγηθείτε στους κλάδους ή αναζητήστε μέρος του ονόματος."
+        - "Επιλέξτε την πιο συγκεκριμένη καταχώριση που ταιριάζει, επειδή η κατηγορία καθορίζει ποια χαρακτηριστικά παίρνει ένα προϊόν."
+        - "Εδώ δεν διαγράφουμε προϊόντα, επειδή η διαγραφή είναι οριστική και δεν αποτελεί μέρος της καθημερινής δουλειάς."
+        - "Οι μεταφράσεις ενός προϊόντος γίνονται από μια ξεχωριστή εκτέλεση μετάφρασης και όχι με την αποθήκευση."
+        - "Ένα ξεχωριστό βίντεο εξηγεί πώς, με τίτλο «Πώς δημιουργούνται οι μεταφράσεις»."
+        - "Αυτά ήταν όλα για τα προϊόντα."
+        - "Στη συνέχεια της σειράς: πώς δημιουργούνται οι μεταφράσεις."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

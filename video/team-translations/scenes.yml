@@ -1,0 +1,196 @@
+# Team video 4b "How translations come about" (F8960 T21, topic 4b). Explainer, NOT a click-through SOP. Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-translations.el.srt).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Picture: mix of real admin recordings (product edit page, category translations table) and local explainer graphics
+# (graphics.html, shown in the browser-window frame; address bar says "pundo team · explainer"). No real data anywhere.
+# Facts (checked in code 2026-10-19, see PROD-NOTES.md): admin product create/patch does not start a translation; the pipeline is
+# translate_products.py -> LLM gateway (translate.item) -> worker -> webhook (translation_handler, never overwrites an existing
+# language); since B8000-003 (2026-10-20) ProductForm sends {...existing, [shown language]: name} and the backend PATCH merges names per language; categories: PUT /admin/categories/{id}/translations,
+# seed_taxonomy.py keeps existing names unless --overwrite-names; no origin marker per language version (F5983 idea).
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py.
+
+meta:
+  slug: team-translations
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "How translations come about"
+    el: "Πώς δημιουργούνται οι μεταφράσεις"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: CRM, contacts and safety settings"
+    el: "Επόμενο: CRM, επαφές και ρυθμίσεις ασφαλείας"
+  thumbnail_scene: chain
+  target_duration_s: 220
+  window_path:
+    en: "pundo team · explainer"
+    el: "pundo team · επεξήγηση"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: chain
+    shot: 'explainer graphic: source text -> translation job -> LLM gateway -> worker -> database, six language chips, note "Save does not start the job"'
+    chapter: { en: "How it works" }
+    window_path: { en: "pundo team · explainer", el: "pundo team · επεξήγηση" }
+    callout: { en: "Translations · Overview" }
+    narration:
+      en: >-
+        Welcome back.
+        This video is not a click-through.
+        It explains how the translations of a product come about, so you know what you can and cannot do.
+        You type a product name once, in one language.
+        That is the source text.
+        A translation job sends it to the LLM gateway, a queue that hands the work to a language model.
+        A worker runs the model, and the result is saved in the database in six languages: English, German, Greek, Russian, Arabic and Hebrew.
+        Note that clicking "Save" does not start this job.
+        Products from a shop's catalog import are queued automatically.
+        Products created here wait until the team starts the next translation run.
+        So a new product can show only its source language for a while.
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το βίντεο δεν είναι οδηγός με κλικ."
+        - "Εξηγεί πώς δημιουργούνται οι μεταφράσεις ενός προϊόντος, ώστε να ξέρετε τι μπορείτε και τι δεν μπορείτε να κάνετε."
+        - "Πληκτρολογείτε το όνομα του προϊόντος μία φορά, σε μία γλώσσα."
+        - "Αυτό είναι το αρχικό κείμενο."
+        - "Μια εργασία μετάφρασης το στέλνει στην πύλη LLM, μια ουρά που δίνει τη δουλειά σε ένα γλωσσικό μοντέλο."
+        - "Ένας εκτελεστής τρέχει το μοντέλο και το αποτέλεσμα αποθηκεύεται στη βάση δεδομένων σε έξι γλώσσες: αγγλικά, γερμανικά, ελληνικά, ρωσικά, αραβικά και εβραϊκά."
+        - "Προσέξτε ότι το πάτημα του «Αποθήκευση» δεν ξεκινά αυτή την εργασία."
+        - "Τα προϊόντα από την εισαγωγή καταλόγου ενός καταστήματος μπαίνουν αυτόματα στην ουρά."
+        - "Τα προϊόντα που δημιουργούνται εδώ περιμένουν μέχρι η ομάδα να ξεκινήσει την επόμενη εκτέλεση μετάφρασης."
+        - "Έτσι ένα νέο προϊόν μπορεί για λίγο να εμφανίζεται μόνο στην αρχική του γλώσσα."
+
+  - id: product
+    shot: 'real admin: edit page of the demo loaf; pointer on the name field (one field, no language picker), then over the form up to Save (hover only)'
+    chapter: { en: "What you can steer" }
+    window_path: { en: "localhost:3500/admin/products/329578/edit" }
+    callout: { en: "Products · Source text" }
+    narration:
+      en: >-
+        Now look at a product in the admin.
+        This is the edit page of our demo loaf.
+        There is one name field and no language picker.
+        What you type here is the source text.
+        There is also no button to translate, or to edit a single language.
+        So you cannot steer a translation directly.
+        Your one lever is the source text.
+        Write it plainly: brand, product, size.
+    subtitle:
+      el:
+        - "Δείτε τώρα ένα προϊόν στο admin."
+        - "Αυτή είναι η σελίδα επεξεργασίας του demo ψωμιού μας."
+        - "Υπάρχει ένα πεδίο ονόματος και καμία επιλογή γλώσσας."
+        - "Ό,τι πληκτρολογείτε εδώ είναι το αρχικό κείμενο."
+        - "Δεν υπάρχει επίσης κουμπί για μετάφραση ή για επεξεργασία μίας γλώσσας."
+        - "Άρα δεν μπορείτε να κατευθύνετε άμεσα μια μετάφραση."
+        - "Ο μοναδικός σας μοχλός είναι το αρχικό κείμενο."
+        - "Γράψτε το απλά: μάρκα, προϊόν, μέγεθος."
+
+  - id: steer
+    shot: 'explainer graphic: box "You control" / "You do not control", hint "tell the team lead"'
+    window_path: { en: "pundo team · explainer", el: "pundo team · επεξήγηση" }
+    callout: { en: "Translations · Summary" }
+    narration:
+      en: >-
+        To sum up.
+        You control the source text and the category names.
+        You do not control the wording of one language of a product, the time when the job runs, or a re-translation of a language that already exists.
+        If a translation looks wrong, note the product and tell the team lead.
+        Retyping the name does not fix it, as the next part shows.
+    subtitle:
+      el:
+        - "Συνοψίζοντας."
+        - "Ελέγχετε το αρχικό κείμενο και τα ονόματα των κατηγοριών."
+        - "Δεν ελέγχετε τη διατύπωση μίας γλώσσας ενός προϊόντος, τον χρόνο που τρέχει η εργασία ούτε τη νέα μετάφραση μιας γλώσσας που υπάρχει ήδη."
+        - "Αν μια μετάφραση φαίνεται λάθος, σημειώστε το προϊόν και ενημερώστε τον υπεύθυνο της ομάδας."
+        - "Η νέα πληκτρολόγηση του ονόματος δεν το διορθώνει, όπως δείχνει το επόμενο μέρος."
+
+  - id: warning
+    shot: 'explainer graphic: names in 6 languages before Save, after Save only EN changed, the others kept but not updated (Achtung)'
+    chapter: { en: "Watch out when saving" }
+    window_path: { en: "pundo team · explainer", el: "pundo team · επεξήγηση" }
+    callout: { en: "Translations · Watch out" }
+    narration:
+      en: >-
+        Now a warning about saving.
+        When you save an existing product, the form changes only the one name you see, usually the English one.
+        The other language versions are kept, because the server merges the names per language.
+        But they are not updated.
+        Change the English text, and the German or Greek version still shows the old meaning.
+        So tell the team lead, so that the other languages can be checked.
+        The translation job never overwrites a language version that already exists.
+        So if a translation is wrong, tell the team.
+        They decide whether and how it is redone.
+    subtitle:
+      el:
+        - "Τώρα μια προειδοποίηση για την αποθήκευση."
+        - "Όταν αποθηκεύετε ένα υπάρχον προϊόν, η φόρμα αλλάζει μόνο το ένα όνομα που βλέπετε, συνήθως το αγγλικό."
+        - "Οι άλλες γλωσσικές εκδοχές διατηρούνται, επειδή ο διακομιστής συγχωνεύει τα ονόματα ανά γλώσσα."
+        - "Όμως δεν ενημερώνονται."
+        - "Αν αλλάξετε το αγγλικό κείμενο, η γερμανική ή η ελληνική εκδοχή εξακολουθεί να δείχνει την παλιά σημασία."
+        - "Γι' αυτό ενημερώστε τον υπεύθυνο της ομάδας, ώστε να ελεγχθούν οι άλλες γλώσσες."
+        - "Η εργασία μετάφρασης δεν αντικαθιστά ποτέ μια γλωσσική εκδοχή που υπάρχει ήδη."
+        - "Αν λοιπόν μια μετάφραση είναι λάθος, ενημερώστε την ομάδα."
+        - "Εκείνη αποφασίζει αν και πώς θα γίνει ξανά."
+
+  - id: categories
+    shot: 'real admin: category edit page of "Team Demo Category", translation table with six languages; type a German name, click Save (PUT translations)'
+    chapter: { en: "Category names" }
+    window_path: { en: "localhost:3500/admin/categories/-1/edit" }
+    callout: { en: "Categories · Translations" }
+    narration:
+      en: >-
+        Categories work differently.
+        Open a category and you see a table with all six languages.
+        You can rename the category in any of them.
+        Let us type a German name and click "Save".
+        The name is stored directly, without a translation job.
+        No automatic job overwrites it.
+        Only a deliberate, repeated taxonomy seed with the overwrite option, started by hand, would reset renamed categories.
+        So in daily work, renaming is safe.
+    subtitle:
+      el:
+        - "Οι κατηγορίες λειτουργούν διαφορετικά."
+        - "Ανοίξτε μια κατηγορία και βλέπετε έναν πίνακα με και τις έξι γλώσσες."
+        - "Μπορείτε να μετονομάσετε την κατηγορία σε οποιαδήποτε από αυτές."
+        - "Ας πληκτρολογήσουμε ένα γερμανικό όνομα και ας πατήσουμε «Αποθήκευση»."
+        - "Το όνομα αποθηκεύεται απευθείας, χωρίς εργασία μετάφρασης."
+        - "Καμία αυτόματη εργασία δεν το αντικαθιστά."
+        - "Μόνο μια σκόπιμη, επαναλαμβανόμενη εισαγωγή ταξινομίας με την επιλογή αντικατάστασης, που ξεκινά με το χέρι, θα επανέφερε μετονομασμένες κατηγορίες."
+        - "Άρα στην καθημερινή δουλειά η μετονομασία είναι ασφαλής."
+
+  - id: marker
+    shot: 'explainer graphic: three language versions look the same, but typed by you / language model / edited by hand; "nothing tells these apart"'
+    chapter: { en: "No marker" }
+    window_path: { en: "pundo team · explainer", el: "pundo team · επεξήγηση" }
+    callout: { en: "Translations · Good to know" }
+    narration:
+      en: >-
+        One last point.
+        The data does not say which language version was written by the model and which by a person.
+        Everything looks the same.
+        Today the translation job never overwrites a language that already exists.
+        But a later automatic re-translation could not tell careful manual work from machine text.
+        That idea is not built, and this is why it has low priority.
+        That is all for translations.
+        Next in this series: the CRM, with contacts, outreach and the safety settings.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Ένα τελευταίο σημείο."
+        - "Τα δεδομένα δεν λένε ποια γλωσσική εκδοχή γράφτηκε από το μοντέλο και ποια από άνθρωπο."
+        - "Όλα φαίνονται ίδια."
+        - "Σήμερα η εργασία μετάφρασης δεν αντικαθιστά ποτέ μια γλώσσα που υπάρχει ήδη."
+        - "Μια μελλοντική αυτόματη νέα μετάφραση όμως δεν θα μπορούσε να ξεχωρίσει την προσεκτική χειροκίνητη δουλειά από το κείμενο του μηχανήματος."
+        - "Αυτή η ιδέα δεν έχει υλοποιηθεί και γι' αυτό έχει χαμηλή προτεραιότητα."
+        - "Αυτά ήταν όλα για τις μεταφράσεις."
+        - "Στη συνέχεια της σειράς: το CRM, με επαφές, επικοινωνία και ρυθμίσεις ασφαλείας."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

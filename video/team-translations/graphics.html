@@ -1,0 +1,170 @@
+<!doctype html>
+<!-- Explainer graphics for team video 4b "How translations come about" (F8960 T21). Static, local, no network, no real data.
+     Opened by record.mjs as file://.../graphics.html?s=<chain|steer|warning|marker>; record.mjs calls window.__step(n) to reveal
+     the steps in sync with the narration. Colors/fonts = ../_branding/brand.yml. All product names are fictional demo values. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Explainer</title>
+<style>
+  @font-face { font-family: "Space Grotesk"; src: url("../_branding/fonts/SpaceGrotesk-latin.woff2") format("woff2"); font-weight: 300 700; }
+  @font-face { font-family: "DM Sans"; src: url("../_branding/fonts/DMSans-latin.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "DM Sans"; src: url("../_branding/fonts/DMSans-latinext.woff2") format("woff2"); font-weight: 100 900; }
+  :root { --accent:#D4622A; --accent-light:#FAE8DF; --accent-dark:#A04515; --bg:#F7F5F2; --surface:#fff; --alt:#F0EDE8;
+          --border:#E5E0D9; --text:#1A1714; --muted:#7A736B; --ok:#2A8C5A; --bad:#B3261E; }
+  * { box-sizing:border-box; margin:0; padding:0 }
+  html, body { width:1440px; height:810px; overflow:hidden; background:var(--bg); color:var(--text);
+               font-family:"DM Sans","Helvetica Neue",Helvetica,Arial,sans-serif; }
+  .vid-cursor { display:none !important }
+  section { display:none; position:absolute; inset:0; padding:84px 64px 0 64px }
+  section.on { display:block }
+  h1 { font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif; font-size:40px; font-weight:700; letter-spacing:-.5px; line-height:1.15 }
+  .sub { margin-top:10px; font-size:22px; color:var(--muted); line-height:1.35 }
+  .step { opacity:0; transform:translateY(10px); transition:opacity .55s ease, transform .55s ease }
+  .step.show { opacity:1; transform:none }
+  .tag { position:absolute; right:40px; bottom:22px; font-size:15px; color:var(--muted) }
+
+  /* chain */
+  .chain { display:flex; align-items:stretch; gap:0; margin-top:46px }
+  .box { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:18px; padding:20px 16px 18px; text-align:center;
+         min-height:218px; display:flex; flex-direction:column; align-items:center }
+  .box .n { width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; font-size:20px; line-height:36px;
+            font-family:"Space Grotesk",Arial,sans-serif; margin-bottom:12px }
+  .box b { font-family:"Space Grotesk",Arial,sans-serif; font-size:24px; line-height:1.15; margin-bottom:8px }
+  .box span { font-size:19px; color:var(--muted); line-height:1.3 }
+  .box.you { border-color:var(--accent); background:var(--accent-light) }
+  .arrow { width:44px; display:flex; align-items:center; justify-content:center; font-size:34px; color:var(--accent); font-weight:700 }
+  .langs { display:flex; gap:12px; justify-content:center; margin-top:34px }
+  .chip { min-width:78px; text-align:center; padding:9px 16px; border-radius:999px; background:var(--surface); border:2px solid var(--border);
+          font-weight:700; font-size:22px; font-family:"Space Grotesk",Arial,sans-serif }
+  .note { margin-top:30px; background:var(--surface); border-left:8px solid var(--accent); border-radius:12px; padding:18px 24px; font-size:23px; line-height:1.35 }
+  .note b { color:var(--accent-dark) }
+
+  /* steer */
+  .cols { display:flex; gap:32px; margin-top:38px }
+  .col { flex:1; background:var(--surface); border-radius:20px; border:3px solid var(--border); padding:26px 30px 20px }
+  .col h2 { font-family:"Space Grotesk",Arial,sans-serif; font-size:32px; margin-bottom:16px }
+  .col.yes { border-color:var(--ok) } .col.yes h2 { color:var(--ok) }
+  .col.no { border-color:var(--bad) } .col.no h2 { color:var(--bad) }
+  .col li { list-style:none; font-size:25px; line-height:1.3; padding:11px 0 11px 46px; position:relative; border-top:1px solid var(--alt) }
+  .col li:first-of-type { border-top:0 }
+  .col li::before { position:absolute; left:0; top:8px; font-size:30px; font-weight:700 }
+  .col.yes li::before { content:"\2713"; color:var(--ok) }
+  .col.no li::before { content:"\2717"; color:var(--bad) }
+  .help { margin-top:26px; font-size:24px; background:var(--accent-light); border-radius:14px; padding:16px 24px }
+
+  /* warning + marker: rows of language versions */
+  .pair { display:flex; align-items:center; gap:22px; margin-top:34px }
+  .card { flex:1; background:var(--surface); border:2px solid var(--border); border-radius:18px; padding:20px 24px }
+  .card h3 { font-family:"Space Grotesk",Arial,sans-serif; font-size:25px; margin-bottom:10px }
+  .row { display:flex; align-items:center; gap:14px; padding:6px 0; font-size:23px; border-top:1px solid var(--alt); min-height:44px }
+  .row:first-of-type { border-top:0 }
+  .row i { font-style:normal; width:50px; font-family:"Space Grotesk",Arial,sans-serif; font-weight:700; color:var(--accent-dark); font-size:20px }
+  .row.gone { color:var(--bad); border-top-style:dashed }
+  .row.gone s { opacity:.75 }
+  .row.kept { color:#8A5A00 }
+  .row.kept em { font-style:normal; font-size:17px; font-weight:700; margin-inline-start:auto; white-space:nowrap }
+  .row.gone em { font-style:normal; font-size:19px; font-weight:700; margin-inline-start:auto }
+  .mid { width:150px; text-align:center; font-size:20px; color:var(--accent-dark); font-weight:700; line-height:1.25 }
+  .mid big { display:block; font-size:44px; line-height:1 }
+  .alert { margin-top:24px; background:#FDECEA; border-left:8px solid var(--bad); border-radius:12px; padding:16px 24px; font-size:23px; line-height:1.35 }
+  .alert b { color:var(--bad) }
+  .badge { margin-inline-start:auto; font-size:17px; font-weight:700; padding:3px 12px; border-radius:999px; white-space:nowrap }
+  .b-you { background:var(--accent-light); color:var(--accent-dark) } .b-llm { background:#E6EEF8; color:#1F4E8C } .b-hand { background:#E3F3EA; color:var(--ok) }
+  .q { margin-top:26px; text-align:center; font-family:"Space Grotesk",Arial,sans-serif; font-size:34px; font-weight:700; color:var(--accent-dark) }
+</style>
+</head>
+<body>
+
+<section id="chain">
+  <h1>How a product gets its translations</h1>
+  <p class="sub">One source text in, six language versions out.</p>
+  <div class="chain">
+    <div class="box you step" data-s="1"><div class="n">1</div><b>Your source text</b><span>Name (and description) typed in the admin form</span></div>
+    <div class="arrow step" data-s="2">&rarr;</div>
+    <div class="box step" data-s="2"><div class="n">2</div><b>Translation job</b><span>Runs in the background, separately from Save</span></div>
+    <div class="arrow step" data-s="3">&rarr;</div>
+    <div class="box step" data-s="3"><div class="n">3</div><b>LLM gateway</b><span>A queue that hands out the work</span></div>
+    <div class="arrow step" data-s="4">&rarr;</div>
+    <div class="box step" data-s="4"><div class="n">4</div><b>Worker</b><span>Runs the language model and returns the texts</span></div>
+    <div class="arrow step" data-s="5">&rarr;</div>
+    <div class="box step" data-s="5"><div class="n">5</div><b>Database</b><span>Names saved per language</span></div>
+  </div>
+  <div class="langs step" data-s="5"><div class="chip">EN</div><div class="chip">DE</div><div class="chip">EL</div><div class="chip">RU</div><div class="chip">AR</div><div class="chip">HE</div></div>
+  <div class="note step" data-s="6"><b>Save does not start the job.</b> Products from a shop's catalog import are queued automatically.
+    Products created in the admin wait until the team starts the next translation run.</div>
+</section>
+
+<section id="steer">
+  <h1>What you can steer, and what not</h1>
+  <p class="sub">Products: there is no translation screen in the admin.</p>
+  <div class="cols">
+    <div class="col yes step" data-s="1"><h2>You control</h2><ul>
+      <li>The source text: name and description</li>
+      <li>Plain wording: brand, product, size</li>
+      <li>Category names, one per language</li>
+    </ul></div>
+    <div class="col no step" data-s="2"><h2>You do not control</h2><ul>
+      <li>The wording of a single language of a product</li>
+      <li>When the translation job runs</li>
+      <li>A re-translation of an existing language</li>
+    </ul></div>
+  </div>
+  <div class="help step" data-s="3">A translation looks wrong? Note the product and tell the team lead. Retyping the name does not fix it.</div>
+</section>
+
+<section id="warning">
+  <h1>Watch out: Save changes only the shown name</h1>
+  <p class="sub">Example with a fictional demo product (illustration).</p>
+  <div class="pair">
+    <div class="card step" data-s="1"><h3>Before Save</h3>
+      <div class="row"><i>EN</i>Team Demo Sourdough Loaf</div>
+      <div class="row"><i>DE</i>Team Demo Sauerteigbrot</div>
+      <div class="row"><i>EL</i>Team Demo Προζυμένιο ψωμί</div>
+      <div class="row"><i>RU</i>Team Demo Хлеб на закваске</div>
+      <div class="row"><i>AR</i><span dir="rtl">Team Demo خبز العجين المخمر</span></div>
+      <div class="row"><i>HE</i><span dir="rtl">Team Demo לחם מחמצת</span></div>
+    </div>
+    <div class="mid step" data-s="2"><big>&rarr;</big>Save in the admin form<br>changes only EN</div>
+    <div class="card step" data-s="3"><h3>After Save</h3>
+      <div class="row"><i>EN</i>Team Demo Sourdough Loaf 500 g</div>
+      <div class="row kept"><i>DE</i>Team Demo Sauerteigbrot<em>kept, not updated</em></div>
+      <div class="row kept"><i>EL</i>Team Demo Προζυμένιο ψωμί<em>kept, not updated</em></div>
+      <div class="row kept"><i>RU</i>Team Demo Хлеб на закваске<em>kept, not updated</em></div>
+      <div class="row kept"><i>AR</i><span dir="rtl">Team Demo خبز العجين المخمر</span><em>kept, not updated</em></div>
+      <div class="row kept"><i>HE</i><span dir="rtl">Team Demo לחם מחמצת</span><em>kept, not updated</em></div>
+    </div>
+  </div>
+  <div class="alert step" data-s="4"><b>Other languages stay, but they are not updated.</b> Changed the English text? Tell the team lead, so the other languages can be checked.
+    The translation job never overwrites an existing language version. Translation wrong? Tell the team: they decide about a re-translation.</div>
+</section>
+
+<section id="marker">
+  <h1>No marker: machine or human?</h1>
+  <p class="sub">Example with a fictional demo product (illustration).</p>
+  <div class="pair">
+    <div class="card step" data-s="1"><h3>What the data shows</h3>
+      <div class="row"><i>EN</i>Team Demo Sourdough Loaf</div>
+      <div class="row"><i>DE</i>Team Demo Sauerteigbrot</div>
+      <div class="row"><i>EL</i>Team Demo Προζυμένιο ψωμί</div>
+    </div>
+    <div class="card step" data-s="2"><h3>What really happened</h3>
+      <div class="row"><i>EN</i>Team Demo Sourdough Loaf<span class="badge b-you">typed by you</span></div>
+      <div class="row"><i>DE</i>Team Demo Sauerteigbrot<span class="badge b-llm">language model</span></div>
+      <div class="row"><i>EL</i>Team Demo Προζυμένιο ψωμί<span class="badge b-hand">edited by hand</span></div>
+    </div>
+  </div>
+  <div class="q step" data-s="3">Nothing in the data tells these apart.</div>
+  <div class="note step" data-s="4"><b>Today</b> the translation job never overwrites a language that already exists.
+    <b>A later automatic re-translation</b> could not tell careful manual work from machine text. That idea is not built.</div>
+</section>
+
+<script>
+  const s = new URLSearchParams(location.search).get('s') || 'chain'
+  const sec = document.getElementById(s)
+  sec.classList.add('on')
+  window.__step = (n) => sec.querySelectorAll('.step').forEach((el) => el.classList.toggle('show', Number(el.dataset.s) <= n))
+  window.__ready = true
+</script>
+</body>
+</html>

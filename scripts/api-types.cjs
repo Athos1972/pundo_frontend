@@ -9,8 +9,10 @@
  *   node scripts/api-types.cjs check   prueft (1) Kopie == Backend-Snapshot (sichtbarer Skip, wenn das Backend-Repo fehlt),
  *                                      (2) backend.ts == Ausgabe des Generators fuer die Kopie. Exit 1 = veraltet.
  *
- * Quelle der Wahrheit ist das Backend (`scripts/export_openapi.py`). Aenderung am Backend-Schema -> Backend-Snapshot
- * neu erzeugen und committen, hier `sync`, committen. Der Typecheck (`tsc`) zeigt dann, wo das Frontend abweicht
+ * Quelle der Wahrheit ist das Backend (`scripts/export_openapi.py`), und zwar sein COMMITTETER Stand (`git show HEAD:docs/...`):
+ * uncommittete Arbeit einer anderen Session am Backend macht dieses Gate nicht rot und fliesst nicht in die Typen ein.
+ * Ohne Git-Checkout wird die Datei selbst gelesen; `PUNDO_BACKEND_WORKTREE=1` erzwingt die Arbeitsdatei.
+ * Aenderung am Backend-Schema -> Backend-Snapshot neu erzeugen und committen, hier `sync`, committen. Der Typecheck (`tsc`) zeigt dann, wo das Frontend abweicht
  * (`src/types/contracts.ts`).
  *
  * openapi-typescript braucht TypeScript 5, die App nutzt 6: der Generator lebt in einem eigenen Paket (tools/api-types).
@@ -27,6 +29,20 @@ const OUT = path.join(ROOT, 'src', 'types', 'generated', 'backend.ts')
 const CODES_SIBLING = path.join(path.dirname(SIBLING), 'error_codes.json')
 const CODES_LOCAL = path.join(ROOT, 'src', 'types', 'generated', 'error_codes.json')
 const TOOL = path.join(ROOT, 'tools', 'api-types')
+
+/** Inhalt von `<backend>/docs/<name>`: committeter Stand (HEAD), sonst die Datei; null, wenn es sie nicht gibt. */
+function backendFile(file) {
+  if (!fs.existsSync(file)) return null
+  if (process.env.PUNDO_BACKEND_WORKTREE !== '1') {
+    const dir = path.dirname(path.dirname(file))
+    try {
+      return execFileSync('git', ['-C', dir, 'show', `HEAD:docs/${path.basename(file)}`], { maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] })
+    } catch {
+      /* kein Git-Checkout oder Datei nicht committet: Arbeitsdatei */
+    }
+  }
+  return fs.readFileSync(file)
+}
 
 function generator() {
   const bin = path.join(TOOL, 'node_modules', '.bin', 'openapi-typescript')
@@ -50,19 +66,19 @@ if (cmd === 'sync') {
     process.exit(1)
   }
   fs.mkdirSync(path.dirname(LOCAL), { recursive: true })
-  fs.copyFileSync(SIBLING, LOCAL)
-  if (fs.existsSync(CODES_SIBLING)) fs.copyFileSync(CODES_SIBLING, CODES_LOCAL)
+  fs.writeFileSync(LOCAL, backendFile(SIBLING))
+  if (fs.existsSync(CODES_SIBLING)) fs.writeFileSync(CODES_LOCAL, backendFile(CODES_SIBLING))
   generate(LOCAL, OUT)
   console.log(`api-types: synchronisiert (${fs.statSync(OUT).size >> 10} KB backend.ts)`)
 } else if (cmd === 'check') {
   let failed = false
   if (!fs.existsSync(SIBLING)) {
     console.error(`api-types: SKIPPED - ${SIBLING} nicht vorhanden (Backend-Repo fehlt); Snapshot-Vergleich uebersprungen`)
-  } else if (!fs.readFileSync(SIBLING).equals(fs.readFileSync(LOCAL))) {
+  } else if (!backendFile(SIBLING).equals(fs.readFileSync(LOCAL))) {
     console.error('api-types: FEHLER - src/types/generated/openapi.json ist veraltet gegenueber dem Backend. Fix: node scripts/api-types.cjs sync')
     failed = true
   }
-  if (fs.existsSync(CODES_SIBLING) && !fs.readFileSync(CODES_SIBLING).equals(fs.readFileSync(CODES_LOCAL))) {
+  if (fs.existsSync(CODES_SIBLING) && !backendFile(CODES_SIBLING).equals(fs.readFileSync(CODES_LOCAL))) {
     console.error('api-types: FEHLER - src/types/generated/error_codes.json ist veraltet gegenueber dem Backend. Fix: node scripts/api-types.cjs sync')
     failed = true
   }

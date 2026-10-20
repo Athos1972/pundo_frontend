@@ -152,12 +152,13 @@ describe('BrandForm', () => {
     const user = userEvent.setup()
     render(<BrandForm brand={null} tr={tr} />)
     await user.type(screen.getByLabelText(new RegExp(tr.name)), '   ')
-    await user.click(screen.getByRole('button', { name: tr.save }))
+    // the empty slug field is natively required too (B8100-001): submit the form directly to reach our own validation
+    fireEvent.submit(screen.getByRole('button', { name: tr.save }).closest('form') as HTMLFormElement)
     expect(await screen.findByText('Name is required')).toBeTruthy()
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('create: POSTs names/logos/homepages, null for empty optional fields', async () => {
+  it('create: POSTs slug (derived from the name), names/logos/homepages, null for empty optional fields', async () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue({ ok: true })
     render(<BrandForm brand={null} tr={tr} />)
@@ -167,7 +168,7 @@ describe('BrandForm', () => {
     const [url, init] = mockFetch.mock.calls[0]
     expect(url).toBe('/api/admin/brands')
     expect(init.method).toBe('POST')
-    expect(JSON.parse(init.body)).toEqual({ names: { en: 'Zed' }, logos: null, homepages: null })
+    expect(JSON.parse(init.body)).toEqual({ slug: 'zed', names: { en: 'Zed' }, logos: null, homepages: null })
     expect(showToast).toHaveBeenCalledWith(tr.saved, 'success')
   })
 

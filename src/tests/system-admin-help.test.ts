@@ -132,7 +132,7 @@ describe('help content (EN + EL)', () => {
     expect(en.notes?.filter((n) => n.kind === 'warning').length).toBeGreaterThanOrEqual(1)
     expect(HELP_CONTENT.products.en.steps.join(' ')).toMatch(/Categories and brands/)
     const topic = getHelpTopic('catalog-basics')!
-    expect(topic.videoId).toBeUndefined()
+    expect(topic.videoId).toBeTruthy()
     expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/categories', '/admin/brands'])
   })
 
@@ -148,7 +148,7 @@ describe('help content (EN + EL)', () => {
     const tr = tSysAdmin('en') as unknown as Record<string, string>
     for (const key of ['rev_filter_reported', 'rev_action_hide', 'rev_action_restore', 'rev_audit_link', 'nav_social_link_rules', 'slr_new']) expect(text).toContain(tr[key])
     const topic = getHelpTopic('moderation')!
-    expect(topic.videoId).toBeUndefined()
+    expect(topic.videoId).toBeTruthy()
     expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/reviews', '/admin/social-link-rules'])
   })
 
@@ -166,8 +166,8 @@ describe('help content (EN + EL)', () => {
     for (const key of ['nav_cat_attr_defs', 'add_new', 'options', 'nav_item_domain_mappings', 'idm_title', 'idm_new', 'idm_item_id', 'idm_auto_assign']) expect(text).toContain(tr[key])
     expect(text).toContain(tr.idm_gaps_title)
     const topic = getHelpTopic('catalog-quality')!
-    expect(topic.videoId).toBeUndefined()
-    expect(topic.noVideo).toBeUndefined() // a video is planned: this topic keeps the "coming soon" state
+    expect(topic.videoId).toBeTruthy()
+    expect(topic.noVideo).toBeUndefined() // has a video, so no "written guide only" flag
     expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/category-attribute-definitions', '/admin/item-domain-mappings'])
   })
 

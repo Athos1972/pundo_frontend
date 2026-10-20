@@ -46,7 +46,7 @@
   {
     "slug": "team-catalog-basics",
     "topic": "catalog-basics",
-    "youtubeId": "",
+    "youtubeId": "A1XM83OTa88",
     "recordedAtCommit": "cc606cfa410010db0aa39ee730772f78427aacd5",
     "recordedAt": "2026-10-20",
     "touches": [
@@ -62,7 +62,7 @@
   {
     "slug": "team-products",
     "topic": "products",
-    "youtubeId": "KdVJzmdxA5Q",
+    "youtubeId": "iAZbwukJxtY",
     "recordedAtCommit": "fd303d1c826e34d141b1190a95aaf8f1bdb971b3",
     "recordedAt": "2026-10-20",
     "touches": [
@@ -100,7 +100,7 @@
   {
     "slug": "team-moderation",
     "topic": "moderation",
-    "youtubeId": "",
+    "youtubeId": "AUA2FiK-F8Y",
     "recordedAtCommit": "1cedc70d07dbf355121d268566a33c136495269a",
     "recordedAt": "2026-10-20",
     "touches": [
@@ -113,7 +113,7 @@
   {
     "slug": "team-catalog-quality",
     "topic": "catalog-quality",
-    "youtubeId": "",
+    "youtubeId": "nQWqQ1xgvVI",
     "recordedAtCommit": "f6d3ad326d2045c86e5447327f23c256fbf79976",
     "recordedAt": "2026-10-20",
     "touches": [

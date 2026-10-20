@@ -52,6 +52,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'catalog-basics', number: '3b', order: 4,
+    videoId: 'A1XM83OTa88', durationSec: 158,
     adminLinks: [
       { href: '/admin/categories', navKey: 'nav_categories' },
       { href: '/admin/brands', navKey: 'nav_brands' },
@@ -59,7 +60,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'products', number: '4', order: 5,
-    videoId: 'KdVJzmdxA5Q', durationSec: 238,
+    videoId: 'iAZbwukJxtY', durationSec: 148,
     adminLinks: [
       { href: '/admin/products', navKey: 'nav_products' },
       { href: '/admin/brands', navKey: 'nav_brands' },
@@ -84,6 +85,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'moderation', number: '6', order: 8,
+    videoId: 'AUA2FiK-F8Y', durationSec: 164,
     adminLinks: [
       { href: '/admin/reviews', navKey: 'nav_reviews' },
       { href: '/admin/social-link-rules', navKey: 'nav_social_link_rules' },
@@ -91,6 +93,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'catalog-quality', number: '7', order: 9,
+    videoId: 'nQWqQ1xgvVI', durationSec: 173,
     adminLinks: [
       { href: '/admin/category-attribute-definitions', navKey: 'nav_cat_attr_defs' },
       { href: '/admin/item-domain-mappings', navKey: 'nav_item_domain_mappings' },

@@ -51,6 +51,13 @@ Moderation video (team-moderation): synthetic review + social-link rule (marker 
     restores it. The video also CREATES the social-link rule team-demo-blocked.com (source admin, note "Team Demo ..."):
     prepare_team.py DELETES it again at the start of every run (exact host + source admin + note starting with "Team Demo").
     Hiding / restoring a review sends no e-mail (ingestor/api/admin/customer_reviews.py), the demo users have no real mailbox anyway.
+Catalog quality video (team-catalog-quality): the video CREATES one attribute definition on the demo category (key team_demo_size, English
+    label "Team Demo Size") through the admin form and ONE item-domain mapping of the demo service "Team Demo Service" (item type service, slug
+    team-demo-service, source admin; upserted here) with auto_assign OFF, so no onboarding of a real shop in pundo_test can pick the demo service up.
+    prepare_team.py DELETES both again at the start of every run: the definition (exact demo category id + exact key + English label starting
+    "Team Demo"; nothing references category_attribute_definitions, no FK, and creating/deleting a definition never touches item_attributes, see
+    ingestor/api/admin/category_attribute_defs.py:77-117) and every mapping of the demo service item (item_id = the demo service; the table has no
+    other dependants, auto_assign_skips are keyed per shop and item and the demo service is never in a shop).
 Prints one JSON line (ids/slugs) on stdout.
 """
 from __future__ import annotations
@@ -90,6 +97,8 @@ NEW_SHOP = {"slug": "team-demo-taverna", "name": "Team Demo Taverna"}   # create
 NEW_BRAND = {"slug": "team-demo-brand-two", "name": "Team Demo Brand Two"}   # created by the catalog-basics video, removed again here
 NEW_ITEM = {"slug": "team-demo-rye-bread", "name": "Team Demo Rye Bread"}   # created by the products video, removed again here
 NEW_RULE = {"host": "team-demo-blocked.com"}   # created by the moderation video, removed again here (.example would be refused: no public suffix)
+DEMO_SERVICE = {"slug": "team-demo-service", "names": {"en": "Team Demo Service", "el": "Team Demo Υπηρεσία"}}   # mapped by the catalog-quality video
+NEW_ATTR_DEF = {"key": "team_demo_size"}   # created by the catalog-quality video on the demo category, removed again here
 REVIEWER = {"email": "reviewer" + DEMO_DOMAIN, "name": "Team Demo Reviewer"}
 REVIEW_REPORTER = {"email": "reporter" + DEMO_DOMAIN, "name": "Team Demo Reporter"}
 REVIEW_COMMENT = "Team Demo review: great prices! Visit my page for free vouchers (demo text, no real person)."
@@ -192,6 +201,34 @@ def remove_created_demo_brand(cur) -> int:
 def remove_created_demo_rule(cur) -> int:
     """Delete the social-link rule the moderation video created (exact host + source admin + note "Team Demo..."). Returns the count."""
     cur.execute("delete from social_link_blocklist where host=%s and source='admin' and note like 'Team Demo%%'", (NEW_RULE["host"],))
+    return cur.rowcount
+
+
+def remove_created_demo_attr_def(cur, category_id: int) -> int:
+    """Delete the attribute definition the catalog-quality video created (demo category id + exact key + English label "Team Demo..."). Returns the count."""
+    cur.execute("delete from category_attribute_definitions where category_id=%s and attribute_key=%s and labels->>'en' like 'Team Demo%%'",
+                (category_id, NEW_ATTR_DEF["key"]))
+    return cur.rowcount
+
+
+def upsert_demo_service(cur) -> int:
+    """The demo service item (type service) the catalog-quality video maps to a profession. Fixed slug, refuses a foreign row. Returns the item id."""
+    cur.execute("select id, source, item_type from items where slug=%s", (DEMO_SERVICE["slug"],))
+    row = cur.fetchone()
+    if row:
+        if row[1] != "admin" or row[2] != "service":
+            sys.exit(f"refusing: item slug {DEMO_SERVICE['slug']} exists and is not ours")
+        cur.execute("update items set status='active', names=%s where id=%s and (names<>%s or status<>'active')",
+                    (Jsonb(DEMO_SERVICE["names"]), row[0], Jsonb(DEMO_SERVICE["names"])))
+        return row[0]
+    cur.execute("insert into items (slug, item_type, status, names, source) values (%s,'service','active',%s,'admin') returning id",
+                (DEMO_SERVICE["slug"], Jsonb(DEMO_SERVICE["names"])))
+    return cur.fetchone()[0]
+
+
+def remove_created_demo_mappings(cur, service_item_id: int) -> int:
+    """Delete the item-domain mappings the catalog-quality video created (every mapping of the demo service item). Returns the count."""
+    cur.execute("delete from item_domain_mappings where item_id=%s", (service_item_id,))
     return cur.rowcount
 
 
@@ -434,6 +471,9 @@ def main() -> None:
         claim = upsert_claim(cur, shops["pet"], claimant, True, CLAIM_MESSAGES["pet"])
         claim2 = upsert_claim(cur, shops["flower"], claimant2, False, CLAIM_MESSAGES["flower"])
         catalog = upsert_brand_category_item(cur)
+        removed_attr_def = remove_created_demo_attr_def(cur, catalog["category_id"])
+        service_item_id = upsert_demo_service(cur)
+        removed_mappings = remove_created_demo_mappings(cur, service_item_id)
         crm = upsert_crm(cur, shops["bakery"])
         review = upsert_demo_review(cur, shops["bakery"], owner)
         out = {"shops": {k: {"id": shops[k], "slug": SHOPS[k]["slug"]} for k in shops}, "owner_id": owner, "claimant_id": claimant, "claimant2_id": claimant2,
@@ -442,6 +482,9 @@ def main() -> None:
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
                "new_brand": {**NEW_BRAND, "removed_from_last_run": removed_brand},
                "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact},
+               "service_item_id": service_item_id,
+               "new_attr_def": {**NEW_ATTR_DEF, "removed_from_last_run": removed_attr_def},
+               "new_mapping": {"service_item_id": service_item_id, "removed_from_last_run": removed_mappings},
                "review": review, "new_rule": {**NEW_RULE, "removed_from_last_run": removed_rule}, "dry_run": DRY}
         if DRY:
             conn.rollback()

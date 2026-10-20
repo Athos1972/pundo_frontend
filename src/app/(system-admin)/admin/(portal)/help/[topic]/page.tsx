@@ -44,13 +44,15 @@ export default async function AdminHelpTopicPage({ params }: PageProps) {
         {content.intro && <p className="text-sm text-gray-600">{content.intro}</p>}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <HelpVideoButton videoId={topic.videoId} tr={tr} />
-        {topic.durationSec !== undefined && (
-          <span className="text-xs text-gray-500">{tr.help_duration.replace('{t}', formatDuration(topic.durationSec))}</span>
-        )}
-        {topic.videoId && <span className="text-xs text-gray-500">{tr.help_subtitles_hint}</span>}
-      </div>
+      {!topic.noVideo && (
+        <div className="flex flex-wrap items-center gap-3">
+          <HelpVideoButton videoId={topic.videoId} tr={tr} />
+          {topic.durationSec !== undefined && (
+            <span className="text-xs text-gray-500">{tr.help_duration.replace('{t}', formatDuration(topic.durationSec))}</span>
+          )}
+          {topic.videoId && <span className="text-xs text-gray-500">{tr.help_subtitles_hint}</span>}
+        </div>
+      )}
 
       <HelpSop content={content} tr={tr} />
 

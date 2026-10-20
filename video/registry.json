@@ -109,5 +109,20 @@
       "src/components/system-admin/ReviewModerationList.tsx",
       "src/components/system-admin/ConfirmDialog.tsx"
     ]
+  },
+  {
+    "slug": "team-catalog-quality",
+    "topic": "catalog-quality",
+    "youtubeId": "",
+    "recordedAtCommit": "f6d3ad326d2045c86e5447327f23c256fbf79976",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/dashboard/page.tsx",
+      "src/app/(system-admin)/admin/(portal)/category-attribute-definitions",
+      "src/app/(system-admin)/admin/(portal)/item-domain-mappings",
+      "src/components/system-admin/AttributeDefinitionEditor.tsx",
+      "src/components/system-admin/EntityTable.tsx",
+      "src/components/system-admin/ConfirmDialog.tsx"
+    ]
   }
 ]

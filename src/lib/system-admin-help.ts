@@ -1,7 +1,7 @@
 // F8960 — Admin help topics (data only, no UI text). Texts live in system-admin-help-content.ts.
 // Server-side only: SOP content and video IDs must never be shipped to a client bundle (see guard test).
 
-export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'moderation'] as const
+export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'moderation', 'catalog-quality', 'api-keys'] as const
 export type HelpTopicId = (typeof HELP_TOPIC_IDS)[number]
 
 export interface HelpAdminLink {
@@ -10,12 +10,12 @@ export interface HelpAdminLink {
   navKey:
     | 'nav_dashboard' | 'nav_claims' | 'nav_shop_owners' | 'nav_shops' | 'nav_shop_types'
     | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings'
-    | 'nav_reviews' | 'nav_social_link_rules'
+    | 'nav_reviews' | 'nav_social_link_rules' | 'nav_cat_attr_defs' | 'nav_item_domain_mappings' | 'nav_api_keys'
 }
 
 export interface HelpTopic {
   id: HelpTopicId
-  /** Display number: '1', '2', '3', '3b', '4', '4b', '5', '6'. */
+  /** Display number: '1', '2', '3', '3b', '4', '4b', '5', '6', '7', '8'. */
   number: string
   /** Unique, ascending = display order. */
   order: number
@@ -24,6 +24,8 @@ export interface HelpTopic {
   /** YouTube video ID (11 chars). Set only after the upload; empty = "Video coming soon". */
   videoId?: string
   durationSec?: number
+  /** Written guide only, by decision (no video planned): no video badge, no "Video coming soon" hint. */
+  noVideo?: boolean
 }
 
 export const HELP_TOPICS: readonly HelpTopic[] = [
@@ -86,6 +88,17 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
       { href: '/admin/reviews', navKey: 'nav_reviews' },
       { href: '/admin/social-link-rules', navKey: 'nav_social_link_rules' },
     ],
+  },
+  {
+    id: 'catalog-quality', number: '7', order: 9,
+    adminLinks: [
+      { href: '/admin/category-attribute-definitions', navKey: 'nav_cat_attr_defs' },
+      { href: '/admin/item-domain-mappings', navKey: 'nav_item_domain_mappings' },
+    ],
+  },
+  {
+    id: 'api-keys', number: '8', order: 10, noVideo: true,
+    adminLinks: [{ href: '/admin/api-keys', navKey: 'nav_api_keys' }],
   },
 ]
 

@@ -25,13 +25,15 @@ export function HelpTopicCard({ topic, content, tr }: HelpTopicCardProps) {
       <h2 className="text-base font-semibold text-gray-900">{content.title}</h2>
       <p className="text-sm text-gray-600">{content.summary}</p>
       <span className="mt-auto flex flex-wrap items-center gap-2 text-xs text-gray-500">
-        <span
-          data-testid="help-topic-badge"
-          data-has-video={hasVideo ? 'true' : 'false'}
-          className={`rounded-full px-2 py-0.5 ${hasVideo ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}
-        >
-          {hasVideo ? tr.help_badge_video : tr.help_video_coming_soon}
-        </span>
+        {!topic.noVideo && (
+          <span
+            data-testid="help-topic-badge"
+            data-has-video={hasVideo ? 'true' : 'false'}
+            className={`rounded-full px-2 py-0.5 ${hasVideo ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}
+          >
+            {hasVideo ? tr.help_badge_video : tr.help_video_coming_soon}
+          </span>
+        )}
         {topic.durationSec !== undefined && (
           <span>{tr.help_duration.replace('{t}', formatDuration(topic.durationSec))}</span>
         )}

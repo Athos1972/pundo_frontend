@@ -100,6 +100,19 @@ describe('HelpTopicCard', () => {
   })
 })
 
+describe('HelpTopicCard (written guide without video)', () => {
+  it('noVideo: no video badge and no "coming soon", the link still opens the topic', () => {
+    const topic = HELP_TOPICS.find((t) => t.noVideo)!
+    const c = HELP_CONTENT[topic.id].en
+    const { container } = render(<HelpTopicCard topic={topic} content={c} tr={en} />)
+    expect(screen.getByText(c.title)).toBeTruthy()
+    expect(screen.queryByTestId('help-topic-badge')).toBeNull()
+    expect(container.textContent).not.toContain(en.help_video_coming_soon)
+    expect(container.textContent).not.toContain(en.help_badge_video)
+    expect(container.querySelector('a')!.getAttribute('href')).toBe(`/admin/help/${topic.id}`)
+  })
+})
+
 describe('HelpSop', () => {
   it('renders one list item per step and a labelled note per note', () => {
     const c = HELP_CONTENT.shops.en
@@ -125,7 +138,9 @@ describe('help list page', () => {
     expect(cards.map((c) => c.getAttribute('data-topic'))).toEqual(HELP_TOPICS.map((t) => t.id))
     expect(screen.getAllByRole('heading', { level: 1 }).length).toBe(1)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(en.help_title)
-    expect(screen.queryAllByText(en.help_video_coming_soon).length).toBe(HELP_TOPICS.filter((t) => !t.videoId).length)
+    // "coming soon" only for topics that still await a video; written guides (noVideo) show no badge at all
+    expect(screen.queryAllByText(en.help_video_coming_soon).length).toBe(HELP_TOPICS.filter((t) => !t.videoId && !t.noVideo).length)
+    expect(screen.getAllByTestId('help-topic-badge').length).toBe(HELP_TOPICS.filter((t) => !t.noVideo).length)
     HELP_TOPICS.forEach((t) => expect(screen.getByText(HELP_CONTENT[t.id].en.title)).toBeTruthy())
   })
 
@@ -171,6 +186,13 @@ describe('help topic page', () => {
       expect(screen.getByTestId('help-video-link').getAttribute('href')).toBe(`https://www.youtube.com/watch?v=${topic.videoId}`)
       expect(screen.getByText(en.help_subtitles_hint)).toBeTruthy()
       expect(screen.queryByText(en.help_video_coming_soon)).toBeNull()
+    } else if (topic.noVideo) {
+      // written guide by decision: no video button, no "coming soon", no subtitle hint
+      expect(container.querySelectorAll('a[href*="youtube.com"]').length).toBe(0)
+      expect(screen.queryByTestId('help-video-soon')).toBeNull()
+      expect(screen.queryByTestId('help-video-link')).toBeNull()
+      expect(container.textContent).not.toContain(en.help_video_coming_soon)
+      expect(container.textContent).not.toContain(en.help_subtitles_hint)
     } else {
       expect(container.querySelectorAll('a[href*="youtube.com"]').length).toBe(0)
       expect(screen.getByText(en.help_video_coming_soon)).toBeTruthy()

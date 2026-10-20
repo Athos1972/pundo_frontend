@@ -46,8 +46,11 @@ describe('evaluateEntry', () => {
 })
 
 describe('video/registry.json', () => {
-  it('has one entry per help topic with matching topic and YouTube id', () => {
-    expect(registry.map((e) => e.topic).sort()).toEqual([...HELP_TOPIC_IDS].sort())
+  it('has one entry per help topic that has a video, with matching topic and YouTube id', () => {
+    // written guides (noVideo, e.g. api-keys) have no video and therefore no registry entry
+    const withVideo = HELP_TOPICS.filter((t) => !t.noVideo).map((t) => t.id)
+    expect(registry.map((e) => e.topic).sort()).toEqual([...withVideo].sort())
+    expect(HELP_TOPIC_IDS.length).toBeGreaterThanOrEqual(withVideo.length)
     for (const e of registry) {
       const topic = HELP_TOPICS.find((t) => t.id === e.topic)
       expect(topic, e.topic).toBeDefined()

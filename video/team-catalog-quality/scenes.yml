@@ -1,0 +1,218 @@
+# Team video 7 "Catalog quality: attributes and service mappings" (F8960, topic catalog-quality). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-catalog-quality.el.srt).
+# Added 2026-10-20 (decision BB): last video of phase 2 (8 and 10 dropped, 9 has no video); topic 8 "API keys" is a written guide only.
+# MAINTAINABILITY (BB: "we must be able to cope with news"): the narration explains concepts and decision questions, names only stable UI words
+# ("Attribute Defs", "Manage defs", "Add new", "Save", "Delete", "Service Catalog", "Add mapping", "Auto-assign"), no field lists, no counts, no positions.
+# The written SOP (src/lib/system-admin-help-content.ts, topic catalog-quality) is the truth and has the criteria and the details.
+# Basis (code, details in 03-implementation.md):
+#  attribute definitions: per category, key unique per category (ingestor/models/category_attribute.py:38-41), created/changed/deleted by plain row operations,
+#  no slots are created for existing products and nothing references the table (api/admin/category_attribute_defs.py:77-117; attribute_slots.py:90-165
+#  create_slots_retroactive has no caller); children inherit (taxonomy/attribute_inheritance.py:7-23,112-150); a product gets empty slots + automatic extraction
+#  when it runs through the catalog chain after its category is set (catalog_case/chain.py:354-426, attribute_slots.py:41-87, lib/attribute_enrich_handler.py:36-38,
+#  128-157: confidence >= 0.7, values only into existing slots, attribute_slots.py:168-205: no allowed_values check); stored values stay under the key
+#  (models/item_attribute.py:33-43, no link to the definitions). Frontend: dashboard tile (dashboard/page.tsx:13; no sidebar entry, AdminNav.tsx:67-83), list of
+#  categories with "Manage defs" (category-attribute-definitions/page.tsx:41-62), definitions of one category with confirmed "Delete"
+#  ([categoryId]/page.tsx:54-77), form types text/number/bool/select (AttributeDefinitionEditor.tsx:83-90).
+#  service mappings: api/admin/item_domain_mappings.py:84-146 (create/patch/delete; patch changes priority + auto_assign only, schemas/admin_item_domain_mappings.py:24-26),
+#  gap report 240-306 (active domains/specialties without an auto_assign mapping); use: draft listings at onboarding submit (lib/auto_assign_services.py:226-340,
+#  api/shop_owner/shop_owner_onboarding.py:260,345,554-566), live at approval (auto_assign_services.py:86-100,126-194, shop_claim/ownership.py:393-395); only
+#  auto_assign mappings count (auto_assign_services.py:129,261); skip list for services the owner removed/changed (auto_assign_services.py:158-171).
+#  Priority is not used there (no ORDER BY / priority in the assignment code).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker "Team Demo").
+# The video CREATES one attribute definition on the demo category (key team_demo_size) and ONE mapping of the demo service "Team Demo Service" to a profession
+# with Auto-assign OFF (prepare_team.py deletes both on the next run). The video NEVER deletes or edits existing data: "Delete" is only hovered.
+# Real categories, mappings and gap entries are never readable (every row blurred by an init script except the demo rows).
+# Address bar: every scene shows exactly one page (ids / page number must match the prepare_team.py output and the list size, record.mjs checks that).
+
+meta:
+  slug: team-catalog-quality
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Catalog quality: attributes and service mappings"
+    el: "Ποιότητα καταλόγου: χαρακτηριστικά και αντιστοιχίσεις υπηρεσιών"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "More help: Help in the admin sidebar"
+    el: "Περισσότερη βοήθεια: «Βοήθεια» στο admin"
+  thumbnail_scene: newdef
+  target_duration_s: 170
+  window_path:
+    en: "localhost:3500/admin/dashboard"
+    el: "localhost:3500/admin/dashboard"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: dash
+    shot: 'Dashboard -> hover the tile "Attribute Defs", click (frozen)'
+    chapter: { en: "Two tools" }
+    window_path: { en: "localhost:3500/admin/dashboard" }
+    callout: { en: "Admin · Dashboard" }
+    narration:
+      en: >-
+        Welcome back.
+        This video covers two tools that shape the catalog.
+        Attribute definitions say which facts we collect about products.
+        Service mappings say which services a new shop starts with.
+        Both act on many records at once, so decide first, then change.
+        Start with the tile "Attribute Defs".
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το βίντεο καλύπτει δύο εργαλεία που διαμορφώνουν τον κατάλογο."
+        - "Οι ορισμοί χαρακτηριστικών λένε ποια στοιχεία συλλέγουμε για τα προϊόντα."
+        - "Οι αντιστοιχίσεις υπηρεσιών λένε με ποιες υπηρεσίες ξεκινά ένα νέο κατάστημα."
+        - "Και τα δύο επηρεάζουν πολλές εγγραφές ταυτόχρονα, οπότε πρώτα αποφασίστε και μετά αλλάξτε."
+        - "Ξεκινήστε με το πλακίδιο «Ορισμοί χαρακτηριστικών»."
+
+  - id: cats
+    shot: 'list of categories (real rows blurred) -> search "Team Demo" -> hover "Manage defs" in the demo row, click (frozen)'
+    chapter: { en: "Attribute definitions" }
+    window_path: { en: "localhost:3500/admin/category-attribute-definitions" }
+    callout: { en: "Attribute Defs · Categories" }
+    narration:
+      en: >-
+        Every definition belongs to one category.
+        The real categories are blurred here, so search for a name, and click "Manage defs".
+    subtitle:
+      el:
+        - "Κάθε ορισμός ανήκει σε μία κατηγορία."
+        - "Οι πραγματικές κατηγορίες είναι θολές εδώ, οπότε αναζητήστε ένα όνομα και πατήστε «Manage defs»."
+
+  - id: defs
+    shot: 'definitions of the demo category (none yet) -> hover "Add new", click (frozen)'
+    window_path: { en: "localhost:3500/admin/category-attribute-definitions/53789" }
+    callout: { en: "Attribute Defs · Demo category" }
+    narration:
+      en: >-
+        Sub-categories inherit definitions, so choose the category where the fact is true for every product below.
+        Before you add one, ask three questions.
+        Does nearly every product here have this fact?
+        Can it be read from the name or description?
+        Will anybody use it?
+        If not, leave it out.
+        Otherwise, click "Add new".
+    subtitle:
+      el:
+        - "Οι υποκατηγορίες κληρονομούν τους ορισμούς, οπότε επιλέξτε την κατηγορία όπου το στοιχείο ισχύει για κάθε προϊόν από κάτω."
+        - "Πριν προσθέσετε έναν, κάντε τρεις ερωτήσεις."
+        - "Έχει σχεδόν κάθε προϊόν εδώ αυτό το στοιχείο;"
+        - "Μπορεί να διαβαστεί από το όνομα ή την περιγραφή;"
+        - "Θα το χρησιμοποιήσει κάποιος;"
+        - "Αν όχι, αφήστε το έξω."
+        - "Αλλιώς, πατήστε «Προσθήκη νέου»."
+
+  - id: newdef
+    shot: 'form: key, label, type "select", options -> hover "Save", click (frozen)'
+    window_path: { en: "localhost:3500/admin/category-attribute-definitions/53789/new" }
+    callout: { en: "Attribute Defs · Add new" }
+    narration:
+      en: >-
+        Give the fact a short key, a readable label and a type.
+        For fixed answers, choose select, and list the options.
+        Then click "Save".
+    subtitle:
+      el:
+        - "Δώστε στο στοιχείο ένα σύντομο κλειδί, μια ευανάγνωστη ετικέτα και έναν τύπο."
+        - "Για σταθερές απαντήσεις, επιλέξτε select και γράψτε τις επιλογές."
+        - "Έπειτα πατήστε «Αποθήκευση»."
+
+  - id: defresult
+    shot: 'list of definitions with the new demo definition -> hover "Delete" (not clicked) -> hover sidebar "Service Catalog", click (frozen)'
+    window_path: { en: "localhost:3500/admin/category-attribute-definitions/53789" }
+    callout: { en: "Attribute Defs · Result" }
+    narration:
+      en: >-
+        From now on, the system looks for this fact when products of this category are processed, but existing products are not filled in at once.
+        Be careful: a definition on a high-level category reaches every product below it.
+        Deleting or renaming one cleans up nothing, and Delete cannot be undone.
+        Ask the team lead first.
+        Next, the service catalog.
+    subtitle:
+      el:
+        - "Από εδώ και πέρα, το σύστημα αναζητά αυτό το στοιχείο όταν επεξεργάζονται προϊόντα αυτής της κατηγορίας, αλλά τα υπάρχοντα προϊόντα δεν συμπληρώνονται αμέσως."
+        - "Προσοχή: ένας ορισμός σε κατηγορία ψηλά στο δέντρο φτάνει σε κάθε προϊόν από κάτω."
+        - "Η διαγραφή ή η μετονομασία ενός δεν καθαρίζει τίποτα και η «Διαγραφή» δεν αναιρείται."
+        - "Ρωτήστε πρώτα τον υπεύθυνο της ομάδας."
+        - "Στη συνέχεια, ο κατάλογος υπηρεσιών."
+
+  - id: maps
+    shot: 'Service Catalog list (all real rows blurred) -> hover "Add mapping", click (frozen)'
+    chapter: { en: "Service mappings" }
+    window_path: { en: "localhost:3500/admin/item-domain-mappings" }
+    callout: { en: "Admin · Service Catalog" }
+    narration:
+      en: >-
+        A mapping connects a ready-made service to a profession.
+        When a new shop signs up, it gets these services as drafts, and they go live when the shop is approved.
+        Click "Add mapping".
+    subtitle:
+      el:
+        - "Μια αντιστοίχιση συνδέει μια έτοιμη υπηρεσία με ένα επάγγελμα."
+        - "Όταν εγγράφεται ένα νέο κατάστημα, παίρνει αυτές τις υπηρεσίες ως προσχέδια και γίνονται ορατές όταν εγκριθεί το κατάστημα."
+        - "Πατήστε «Προσθήκη αντιστοίχισης»."
+
+  - id: newmap
+    shot: 'form: item ID of the demo service, domain ID, Auto-assign switched off -> hover "Save", click (frozen)'
+    window_path: { en: "localhost:3500/admin/item-domain-mappings/new" }
+    callout: { en: "Service Catalog · Add mapping" }
+    narration:
+      en: >-
+        Enter the numbers of the service and the profession.
+        For a safe start, switch Auto-assign off.
+        The mapping then does nothing, until you switch it on.
+        Click "Save".
+    subtitle:
+      el:
+        - "Γράψτε τους αριθμούς της υπηρεσίας και του επαγγέλματος."
+        - "Για ασφαλή αρχή, απενεργοποιήστε την «Αυτόματη ανάθεση»."
+        - "Τότε η αντιστοίχιση δεν κάνει τίποτα, μέχρι να την ενεργοποιήσετε."
+        - "Πατήστε «Αποθήκευση»."
+
+  - id: mapresult
+    shot: 'last page of the list (real rows blurred): the new demo mapping at the end, Auto-assign off -> hover "Delete" (not clicked) -> hover "Mapping Gaps", click (frozen)'
+    window_path: { en: "localhost:3500/admin/item-domain-mappings?page=4" }
+    callout: { en: "Service Catalog · Result" }
+    narration:
+      en: >-
+        The new mapping sits at the end of the list.
+        Changes act on future sign-ups only.
+        Shops that already have the service keep it, even if you delete the mapping.
+        This video deletes nothing.
+        Last, the gap list.
+    subtitle:
+      el:
+        - "Η νέα αντιστοίχιση βρίσκεται στο τέλος της λίστας."
+        - "Οι αλλαγές επηρεάζουν μόνο μελλοντικές εγγραφές."
+        - "Τα καταστήματα που έχουν ήδη την υπηρεσία την κρατούν, ακόμη κι αν διαγράψετε την αντιστοίχιση."
+        - "Αυτό το βίντεο δεν διαγράφει τίποτα."
+        - "Τέλος, η λίστα κενών."
+
+  - id: gaps
+    shot: 'gap list (all rows blurred)'
+    chapter: { en: "Gap list" }
+    window_path: { en: "localhost:3500/admin/item-domain-mappings/gaps" }
+    callout: { en: "Service Catalog · Mapping Gaps" }
+    narration:
+      en: >-
+        The gap list shows professions and specialties without a service that has Auto-assign switched on.
+        New shops there start with nothing pre-filled.
+        Look here first when you plan mappings.
+        That is all for catalog quality.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Η λίστα κενών δείχνει επαγγέλματα και ειδικότητες χωρίς υπηρεσία με ενεργή την «Αυτόματη ανάθεση»."
+        - "Τα νέα καταστήματα εκεί ξεκινούν χωρίς τίποτα προσυμπληρωμένο."
+        - "Κοιτάξτε πρώτα εδώ όταν σχεδιάζετε αντιστοιχίσεις."
+        - "Αυτά ήταν όλα για την ποιότητα του καταλόγου."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

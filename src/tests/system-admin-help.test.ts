@@ -17,8 +17,10 @@ describe('help topics (data source)', () => {
     const core = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm']
     expect(HELP_TOPICS.map((t) => t.id).slice(0, core.length)).toEqual(core)
     expect(HELP_TOPICS.map((t) => t.number).slice(0, core.length)).toEqual(['1', '2', '3', '3b', '4', '4b', '5'])
-    expect(HELP_TOPICS.at(-1)?.id).toBe('moderation')
-    expect(HELP_TOPICS.at(-1)?.number).toBe('6')
+    // topics 6-8 follow, appended in this order (later topics go to the end; the total is deliberately not hard-coded)
+    const later = HELP_TOPICS.slice(core.length)
+    expect(later.slice(0, 3).map((t) => t.id)).toEqual(['moderation', 'catalog-quality', 'api-keys'])
+    expect(later.slice(0, 3).map((t) => t.number)).toEqual(['6', '7', '8'])
     expect(HELP_TOPICS.map((t) => t.id)).toEqual([...HELP_TOPIC_IDS])
   })
 
@@ -148,6 +150,52 @@ describe('help content (EN + EL)', () => {
     const topic = getHelpTopic('moderation')!
     expect(topic.videoId).toBeUndefined()
     expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/reviews', '/admin/social-link-rules'])
+  })
+
+  it('topic 7 covers attribute definitions and service mappings with the delete/rename and auto-assign warnings', () => {
+    const en = HELP_CONTENT['catalog-quality'].en
+    const text = [...en.steps, ...(en.notes ?? []).map((n) => n.text)].join(' ')
+    for (const word of ['Attribute Defs', 'Manage defs', 'Add new', 'Options (comma-separated)', 'Service Catalog', 'Mapping Gaps', 'Add mapping', 'Item ID', 'Auto-assign']) expect(text).toContain(word)
+    expect(text).toMatch(/inherit/)
+    expect(text).toMatch(/stay in the database under the old key/)
+    expect(text).toMatch(/does not create empty values for products that are already in the category/)
+    expect(text).toMatch(/removes nothing from shops that already received the service/)
+    expect(en.notes?.filter((n) => n.kind === 'warning').length).toBeGreaterThanOrEqual(2)
+    // UI words used in the SOP are the real labels
+    const tr = tSysAdmin('en') as unknown as Record<string, string>
+    for (const key of ['nav_cat_attr_defs', 'add_new', 'options', 'nav_item_domain_mappings', 'idm_title', 'idm_new', 'idm_item_id', 'idm_auto_assign']) expect(text).toContain(tr[key])
+    expect(text).toContain(tr.idm_gaps_title)
+    const topic = getHelpTopic('catalog-quality')!
+    expect(topic.videoId).toBeUndefined()
+    expect(topic.noVideo).toBeUndefined() // a video is planned: this topic keeps the "coming soon" state
+    expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/category-attribute-definitions', '/admin/item-domain-mappings'])
+  })
+
+  it('topic 8 is a written guide without a video and states the key rules (no secrets in chat, revoke only, who creates)', () => {
+    const en = HELP_CONTENT['api-keys'].en
+    const text = [...en.steps, ...(en.notes ?? []).map((n) => n.text)].join(' ')
+    expect(text).toMatch(/Never put an API key into a chat, a ticket, an e-mail or a screenshot/)
+    expect(text).toMatch(/admins can only look and revoke/)
+    expect(text).toMatch(/shop owners create their own keys/)
+    expect(text).toMatch(/Developers create system keys/)
+    expect(text).toMatch(/no "rotate" button/)
+    expect(text).toMatch(/never expire/)
+    expect(text).toMatch(/admin:\*/)
+    expect(en.notes?.filter((n) => n.kind === 'warning').length).toBeGreaterThanOrEqual(2)
+    const tr = tSysAdmin('en') as unknown as Record<string, string>
+    for (const key of ['nav_api_keys', 'revoke', 'last_used', 'scope']) expect(text).toContain(tr[key])
+    const topic = getHelpTopic('api-keys')!
+    expect(topic.noVideo).toBe(true)
+    expect(topic.videoId).toBeUndefined()
+    expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/api-keys'])
+  })
+
+  it('no secret-looking key material in the SOP texts', () => {
+    for (const id of HELP_TOPIC_IDS) for (const l of ['en', 'el'] as const) {
+      const c = HELP_CONTENT[id][l]
+      const all = [c.title, c.summary, c.intro ?? '', ...c.steps, ...(c.notes ?? []).map((n) => n.text)].join(' ')
+      expect(all, `${id}.${l}`).not.toMatch(/pundo_(int|shp|sho|usr|prt)_[A-Za-z0-9_-]{8,}/)
+    }
   })
 
   it('helpLang maps everything but el to en', () => {

@@ -59,6 +59,7 @@ video/
 | `reviews` | Teil 10: Bewertungen beantworten (Dashboard „3 neu“, Liste, Danke-Antwort, Antwort auf Kritik, Spam melden, „Meine Produkte“, Kundensicht); `prepare_reviews.py` (Backend-venv) legt 4 Demo-Bewertungen in den Niko-Shops aus Teil 9 an (siehe `PROD-NOTES.md`) | Test-Instanz 3500 (Standalone)/8500 |
 | `short-reviews` | Short (9:16) zu Teil 10: Dashboard, Antwort auf Kritik, Kundensicht; nutzt `../reviews/prepare_reviews.py` | Test-Instanz 3500/8500 |
 | `team-admin-tour` (F8960, Thema 1) | Team-Video „Admin-Rundgang“ (`meta.format: desktop`, EN-Stimme + EL-Untertitel, streng 3500/8500, Admin-Login per API); `../team-common/prepare_team.py` (Backend-venv) legt die synthetischen Demo-Daten an (siehe `PROD-NOTES.md`). Weitere `team-*`-Videos folgen. Kanal „pundo Team“, **nicht gelistet**; Details F8960 im Vault (nicht N7900) | Test-Instanz 3500/8500, **streng** |
+| `team-catalog-quality` (F8960, Thema 7) | Team-Video „Katalog-Qualität“: Attribut-Definitionen je Kategorie + Service-Mappings inkl. Lückenliste (desktop, EN-Stimme + EL-Untertitel, streng 3500/8500); `../team-common/prepare_team.py` legt „Team Demo Service“ an und räumt Demo-Definition/-Mapping beim nächsten Lauf ab (siehe `PROD-NOTES.md`). Kanal „pundo Team“, **nicht gelistet** | Test-Instanz 3500/8500, **streng** |
 | `channel-trailer` | Kanaltrailer ~48 s (Kundenseite + Shops + Abo) | **pundo.cy nur lesend** (Testdaten haben keine Produktbilder); `VIDEO_BASE_URL` ueberschreibbar |
 
 ## Voraussetzungen

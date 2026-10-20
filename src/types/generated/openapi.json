@@ -21191,6 +21191,35 @@
     "title": "UpdateReviewRequest",
     "type": "object"
    },
+   "UserInfoResponse": {
+    "description": "Token metadata for the MCP server (``pundo_mcp_server/src/auth/token-validator.ts::UserInfo`` reads exactly these).",
+    "properties": {
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "expires_at": {
+      "title": "Expires At",
+      "type": "string"
+     },
+     "scope": {
+      "title": "Scope",
+      "type": "string"
+     },
+     "sub": {
+      "title": "Sub",
+      "type": "string"
+     }
+    },
+    "required": [
+     "sub",
+     "scope",
+     "client_id",
+     "expires_at"
+    ],
+    "title": "UserInfoResponse",
+    "type": "object"
+   },
    "ValidationError": {
     "properties": {
      "ctx": {
@@ -46844,9 +46873,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Userinfo Oauth Userinfo Get",
-         "type": "object"
+         "$ref": "#/components/schemas/UserInfoResponse"
         }
        }
       },

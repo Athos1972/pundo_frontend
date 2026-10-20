@@ -12019,6 +12019,20 @@ export interface components {
             /** Stars */
             stars?: number | null;
         };
+        /**
+         * UserInfoResponse
+         * @description Token metadata for the MCP server (``pundo_mcp_server/src/auth/token-validator.ts::UserInfo`` reads exactly these).
+         */
+        UserInfoResponse: {
+            /** Client Id */
+            client_id: string;
+            /** Expires At */
+            expires_at: string;
+            /** Scope */
+            scope: string;
+            /** Sub */
+            sub: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -23690,9 +23704,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["UserInfoResponse"];
                 };
             };
             /** @description Validation Error */

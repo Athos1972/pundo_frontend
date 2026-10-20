@@ -30,6 +30,11 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
   const [isPending, startTransition] = useTransition()
   const isEdit = product != null
 
+  // Language key the name field edits: the one pickName() displays (en → de → first)
+  const existingNames = product?.names ?? {}
+  const nameKey = isEdit
+    ? ('en' in existingNames ? 'en' : 'de' in existingNames ? 'de' : (Object.keys(existingNames)[0] ?? 'en'))
+    : 'en'
   const [name, setName] = useState(pickName(product?.names, ''))
   const [slug, setSlug] = useState(product?.slug ?? '')
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ''))
@@ -50,7 +55,8 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
     if (!validate()) return
 
     const payload = {
-      names: { en: name.trim() },
+      // Merge: keep the other language versions (B8000-003)
+      names: { ...(product?.names ?? {}), [nameKey]: name.trim() },
       slug: slug.trim(),
       category_id: categoryId ? Number(categoryId) : null,
       brand_id: brandId ? Number(brandId) : null,

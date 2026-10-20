@@ -206,29 +206,40 @@ export async function getApiKeys(
 }
 
 // ─── Helper lists for form selects ────────────────────────────────────────────
-export async function getAllShopTypes(): Promise<SysAdminShopType[]> {
-  const res = await getShopTypes({ limit: 1000 })
-  return res.items
+const ALL_PAGE_SIZE = 1000
+const ALL_MAX_PAGES = 50
+
+/** Offset-loop over a paginated list endpoint until `total` is reached (B8200-004). */
+async function fetchAllPages<T>(
+  fetchPage: (p: { limit: number; offset: number }) => Promise<PaginatedResponse<T>>,
+): Promise<T[]> {
+  const out: T[] = []
+  for (let page = 0; page < ALL_MAX_PAGES; page++) {
+    const res = await fetchPage({ limit: ALL_PAGE_SIZE, offset: page * ALL_PAGE_SIZE })
+    out.push(...res.items)
+    if (res.items.length < ALL_PAGE_SIZE || out.length >= res.total) break
+  }
+  return out
 }
 
-export async function getAllCategories(): Promise<SysAdminCategory[]> {
-  const res = await getCategories({ limit: 1000 })
-  return res.items
+export function getAllShopTypes(): Promise<SysAdminShopType[]> {
+  return fetchAllPages((p) => getShopTypes(p))
 }
 
-export async function getAllBrands(): Promise<SysAdminBrand[]> {
-  const res = await getBrands({ limit: 1000 })
-  return res.items
+export function getAllCategories(): Promise<SysAdminCategory[]> {
+  return fetchAllPages((p) => getCategories(p))
 }
 
-export async function getAllShops(): Promise<SysAdminShop[]> {
-  const res = await getShops({ limit: 1000 })
-  return res.items
+export function getAllBrands(): Promise<SysAdminBrand[]> {
+  return fetchAllPages((p) => getBrands(p))
 }
 
-export async function getAllProducts(): Promise<SysAdminProduct[]> {
-  const res = await getProducts({ limit: 1000 })
-  return res.items
+export function getAllShops(): Promise<SysAdminShop[]> {
+  return fetchAllPages((p) => getShops(p))
+}
+
+export function getAllProducts(): Promise<SysAdminProduct[]> {
+  return fetchAllPages((p) => getProducts(p))
 }
 
 // ─── Social-Link Rules ────────────────────────────────────────────────────────

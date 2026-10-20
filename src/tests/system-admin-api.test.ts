@@ -90,12 +90,22 @@ describe('system-admin server API client', () => {
     }
   })
 
-  it('"get all" helpers request 1000 rows and unwrap the items', async () => {
+  it('"get all" helpers request pages of 1000 rows and unwrap the items', async () => {
     mockFetch.mockResolvedValue(res(200, page([{ id: 1 }])))
     for (const fn of [api.getAllShopTypes, api.getAllCategories, api.getAllBrands, api.getAllShops, api.getAllProducts]) {
       await expect(fn()).resolves.toEqual([{ id: 1 }])
       expect(new URL(call().url).searchParams.get('limit')).toBe('1000')
     }
+  })
+
+  it('"get all" helpers keep paging until total is reached (B8200-004)', async () => {
+    const rows = (n: number, from: number) => Array.from({ length: n }, (_, i) => ({ id: from + i }))
+    mockFetch
+      .mockResolvedValueOnce(res(200, { items: rows(1000, 0), total: 1500, limit: 1000, offset: 0 }))
+      .mockResolvedValueOnce(res(200, { items: rows(500, 1000), total: 1500, limit: 1000, offset: 1000 }))
+    const all = await api.getAllBrands()
+    expect(all).toHaveLength(1500)
+    expect(new URL(call().url).searchParams.get('offset')).toBe('1000')
   })
 
   it('item-domain-mapping mutations use the right verbs and bodies', async () => {

@@ -25,7 +25,8 @@ export default async function ShopTypesPage({ searchParams }: PageProps) {
   const rows = data.items.map((st) => ({
     id: st.id,
     canonical: st.canonical,
-    name: st.name ?? st.canonical,
+    // Admin UI is en/el: prefer the UI language, then en, then backend-computed name (B8300-004)
+    name: st.translations?.[lang] ?? st.translations?.en ?? st.name ?? st.canonical,
   }))
 
   return (

@@ -49,7 +49,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'products', number: '4', order: 4,
-    videoId: 'ZbOaYgYydRE', durationSec: 214,
+    videoId: 'KdVJzmdxA5Q', durationSec: 238,
     adminLinks: [
       { href: '/admin/products', navKey: 'nav_products' },
       { href: '/admin/brands', navKey: 'nav_brands' },
@@ -58,7 +58,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'translations', number: '4b', order: 5,
-    videoId: 'd9sKexlCOyo', durationSec: 226,
+    videoId: 'sw0l_oaN73M', durationSec: 181,
     adminLinks: [
       { href: '/admin/categories', navKey: 'nav_categories' },
       { href: '/admin/products', navKey: 'nav_products' },

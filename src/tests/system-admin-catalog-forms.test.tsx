@@ -222,7 +222,7 @@ describe('ProductForm', () => {
   it('create: validates name and slug (blank after trim), no request', async () => {
     const user = userEvent.setup()
     render(<ProductForm product={null} attributes={[]} categories={categories} brands={brands} tr={tr} />)
-    await user.type(screen.getByLabelText(new RegExp(tr.product_name)), '  ')
+    await user.type(screen.getByLabelText(new RegExp(`${tr.product_name} — English`)), '  ')
     await user.type(screen.getByLabelText(new RegExp(`^${tr.slug}`)), '  ')
     await user.click(screen.getByRole('button', { name: tr.save }))
     expect(await screen.findByText('Name is required')).toBeTruthy()
@@ -234,7 +234,7 @@ describe('ProductForm', () => {
     const user = userEvent.setup()
     mockFetch.mockResolvedValue(ok())
     render(<ProductForm product={null} attributes={[]} categories={categories} brands={brands} tr={tr} />)
-    await user.type(screen.getByLabelText(new RegExp(tr.product_name)), 'Kibble')
+    await user.type(screen.getByLabelText(new RegExp(`${tr.product_name} — English`)), 'Kibble')
     await user.type(screen.getByLabelText(new RegExp(`^${tr.slug}`)), 'kibble')
     await user.selectOptions(screen.getByLabelText(tr.brand), '3')
     await user.click(screen.getByText(tr.category, { selector: 'label' }).parentElement!.querySelector('button')!)
@@ -256,6 +256,47 @@ describe('ProductForm', () => {
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/products/11')
     expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
     expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toMatchObject({ category_id: null, brand_id: null })
+  })
+
+  it('edit: keeps other languages, sends "" for a cleared one, edits descriptions and barcode (B8000-004)', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok())
+    render(
+      <ProductForm
+        product={{ ...product, names: { en: 'RC Adult', de: 'RC Erwachsen' }, descriptions: { de: 'Alt' }, ean: '4006381333931' }}
+        attributes={[]} categories={categories} brands={brands} tr={tr}
+      />,
+    )
+    expect((screen.getByLabelText(new RegExp(`${tr.product_name} — Deutsch`)) as HTMLInputElement).value).toBe('RC Erwachsen')
+    await user.clear(screen.getByLabelText(new RegExp(`${tr.product_name} — Deutsch`)))
+    await user.type(screen.getByLabelText(new RegExp(`${tr.product_name} — Ελληνικά`)), 'RC Ενήλικες')
+    await user.clear(screen.getByLabelText(new RegExp(`${tr.description} — Deutsch`)))
+    await user.clear(screen.getByLabelText(tr.barcode))
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+    expect(body.names).toEqual({ en: 'RC Adult', de: '', el: 'RC Ενήλικες' })
+    expect(body.descriptions).toEqual({ de: '' })
+    expect(body.ean).toBeNull()
+  })
+
+  it('accepts a name in any language and rejects an invalid barcode', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue(ok())
+    render(<ProductForm product={null} attributes={[]} categories={categories} brands={brands} tr={tr} />)
+    await user.type(screen.getByLabelText(new RegExp(`${tr.product_name} — Deutsch`)), 'Futter')
+    await user.type(screen.getByLabelText(new RegExp(`^${tr.slug}`)), 'futter')
+    await user.type(screen.getByLabelText(tr.barcode), '12ab')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    expect(await screen.findByText(tr.error_barcode_invalid)).toBeTruthy()
+    expect(mockFetch).not.toHaveBeenCalled()
+    await user.clear(screen.getByLabelText(tr.barcode))
+    await user.type(screen.getByLabelText(tr.barcode), '4006381333931')
+    await user.click(screen.getByRole('button', { name: tr.save }))
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      names: { de: 'Futter' }, slug: 'futter', category_id: null, brand_id: null, ean: '4006381333931',
+    })
   })
 
   it('does not render the attribute section when creating', () => {

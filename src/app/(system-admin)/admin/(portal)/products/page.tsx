@@ -38,6 +38,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     id: p.id,
     name: pickName(p.names),
     slug: p.slug,
+    ean: p.ean ?? '—',
     category: p.category_id ? (catMap.get(p.category_id) ?? String(p.category_id)) : '—',
     brand: p.brand_id ? (brandMap.get(p.brand_id) ?? String(p.brand_id)) : '—',
   }))
@@ -79,6 +80,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           { key: 'id', label: tr.id },
           { key: 'name', label: tr.name },
           { key: 'slug', label: tr.slug },
+          { key: 'ean', label: tr.barcode },
           { key: 'category', label: tr.category },
           { key: 'brand', label: tr.brand },
         ]}

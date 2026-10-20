@@ -169,6 +169,10 @@ const sysAdminTranslations = {
     remove_second_slot: 'Remove second slot',
     // Products
     product_name: 'Product name',
+    product_translations: 'Names and descriptions in all languages. Fill in at least one name; clear a field to remove that language.',
+    barcode: 'Barcode (EAN / GTIN)',
+    barcode_hint: '8 to 14 digits, e.g. 4006381333931. Also searchable in the product list.',
+    error_barcode_invalid: 'The barcode must consist of 8 to 14 digits.',
     slug: 'Slug',
     brand: 'Brand',
     category: 'Category',
@@ -880,6 +884,10 @@ const sysAdminTranslations = {
     remove_second_slot: 'Αφαίρεση δεύτερου διαστήματος',
     // Products
     product_name: 'Όνομα προϊόντος',
+    product_translations: 'Ονόματα και περιγραφές σε όλες τις γλώσσες. Συμπληρώστε τουλάχιστον ένα όνομα· αδειάστε ένα πεδίο για να αφαιρεθεί η γλώσσα.',
+    barcode: 'Barcode (EAN / GTIN)',
+    barcode_hint: '8 έως 14 ψηφία, π.χ. 4006381333931. Αναζητείται και στη λίστα προϊόντων.',
+    error_barcode_invalid: 'Το barcode πρέπει να αποτελείται από 8 έως 14 ψηφία.',
     slug: 'Slug',
     brand: 'Μάρκα',
     category: 'Κατηγορία',

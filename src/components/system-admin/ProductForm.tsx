@@ -10,6 +10,8 @@ import type {
   SysAdminBrand,
 } from '@/types/system-admin'
 import { pickName } from '@/types/system-admin'
+import { LANGS, LANG_NATIVE_NAMES, isRTL } from '@/lib/lang'
+import type { Lang } from '@/lib/lang'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { FormField } from './FormField'
 import { ProductAttributesTable } from './ProductAttributesTable'
@@ -25,17 +27,27 @@ interface ProductFormProps {
   tr: SysAdminTranslations
 }
 
+/** Trimmed non-empty values; languages that existed before but are now empty go out as '' (backend removes them). */
+function collect(current: Record<string, string>, original?: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const l of LANGS) {
+    const v = current[l]?.trim() ?? ''
+    if (v) out[l] = v
+    else if (original?.[l]) out[l] = ''
+  }
+  return out
+}
+
 export function ProductForm({ product, attributes, categories, brands, tr }: ProductFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const isEdit = product != null
 
-  // Language key the name field edits: the one pickName() displays (en → de → first)
-  const existingNames = product?.names ?? {}
-  const nameKey = isEdit
-    ? ('en' in existingNames ? 'en' : 'de' in existingNames ? 'de' : (Object.keys(existingNames)[0] ?? 'en'))
-    : 'en'
-  const [name, setName] = useState(pickName(product?.names, ''))
+  // One name + description per language (B8000-004). Saving merges per language in the backend (B8000-003);
+  // an empty value of a language that existed before removes it.
+  const [names, setNames] = useState<Record<string, string>>(() => ({ ...(product?.names ?? {}) }))
+  const [descriptions, setDescriptions] = useState<Record<string, string>>(() => ({ ...(product?.descriptions ?? {}) }))
+  const [ean, setEan] = useState(product?.ean ?? '')
   const [slug, setSlug] = useState(product?.slug ?? '')
   const [categoryId, setCategoryId] = useState(String(product?.category_id ?? ''))
   const [brandId, setBrandId] = useState(String(product?.brand_id ?? ''))
@@ -44,7 +56,8 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
 
   function validate() {
     const e: Record<string, string> = {}
-    if (!name.trim()) e.name = tr.error_name_required
+    if (!LANGS.some((l) => names[l]?.trim())) e.name = tr.error_name_required
+    if (ean.trim() && !/^\d{8,14}$/.test(ean.replace(/\s/g, ''))) e.ean = tr.error_barcode_invalid
     if (!slug.trim()) e.slug = tr.error_slug_required
     setErrors(e)
     return Object.keys(e).length === 0
@@ -54,13 +67,17 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
     e.preventDefault()
     if (!validate()) return
 
-    const payload = {
-      // Merge: keep the other language versions (B8000-003)
-      names: { ...(product?.names ?? {}), [nameKey]: name.trim() },
+    const payload: Record<string, unknown> = {
+      names: collect(names, product?.names),
       slug: slug.trim(),
       category_id: categoryId ? Number(categoryId) : null,
       brand_id: brandId ? Number(brandId) : null,
     }
+    const descs = collect(descriptions, product?.descriptions ?? undefined)
+    if (Object.keys(descs).length > 0) payload.descriptions = descs
+    const eanValue = ean.replace(/\s/g, '')
+    if (eanValue) payload.ean = eanValue
+    else if (isEdit) payload.ean = null
 
     startTransition(async () => {
       try {
@@ -85,15 +102,31 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
-      <FormField
-        label={tr.product_name}
-        name="name"
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={errors.name}
-        disabled={isPending}
-      />
+      <fieldset className="flex flex-col gap-4" disabled={isPending}>
+        <legend className="text-xs text-gray-500 mb-1">{tr.product_translations}</legend>
+        {LANGS.map((l: Lang) => (
+          <div key={l} className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+            <FormField
+              label={`${tr.product_name} — ${LANG_NATIVE_NAMES[l]}`}
+              name={`name_${l}`}
+              dir={isRTL(l) ? 'rtl' : 'ltr'}
+              value={names[l] ?? ''}
+              onChange={(e) => setNames((n) => ({ ...n, [l]: e.target.value }))}
+              error={l === 'en' ? errors.name : undefined}
+              disabled={isPending}
+            />
+            <FormField
+              as="textarea"
+              rows={2}
+              label={`${tr.description} — ${LANG_NATIVE_NAMES[l]}`}
+              name={`description_${l}`}
+              value={descriptions[l] ?? ''}
+              onChange={(e) => setDescriptions((d) => ({ ...d, [l]: e.target.value }))}
+              disabled={isPending}
+            />
+          </div>
+        ))}
+      </fieldset>
 
       <FormField
         label={tr.slug}
@@ -104,6 +137,17 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
         error={errors.slug}
         disabled={isPending}
         hint="URL-safe identifier, e.g. royal-canin-adult"
+      />
+
+      <FormField
+        label={tr.barcode}
+        name="ean"
+        inputMode="numeric"
+        value={ean}
+        onChange={(e) => setEan(e.target.value)}
+        error={errors.ean}
+        disabled={isPending}
+        hint={tr.barcode_hint}
       />
 
       <div className="grid grid-cols-2 gap-4">

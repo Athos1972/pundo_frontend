@@ -170,7 +170,7 @@ describe('products list', () => {
     expect(within(rows[0]).getByText('g9')).toBeTruthy()
     expect(within(rows[1]).getByText('99')).toBeTruthy()
     expect(within(rows[1]).getByText('98')).toBeTruthy()
-    expect(within(rows[2]).getAllByText('—')).toHaveLength(2)
+    expect(within(rows[2]).getAllByText('—')).toHaveLength(3) // brand, category, barcode
   })
 
   it('still lists products when the lookup calls fail', async () => {

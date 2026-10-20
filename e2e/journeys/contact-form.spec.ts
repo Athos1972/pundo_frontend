@@ -10,6 +10,7 @@
 import { test, expect } from '@playwright/test'
 import { t } from '../../src/lib/translations'
 import { BASE_URL, BACKEND_URL } from '../env'
+import { fulfillFrom } from './_helpers/contracts'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
@@ -69,9 +70,7 @@ test.describe('contact-form journey (B6220-003)', () => {
   }
 
   test('C2: Captcha-Fehler zeigt turnstile_failed', async ({ page }) => {
-    await page.route('**/api/contact', (route) =>
-      route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'captcha_failed' }) }),
-    )
+    await page.route('**/api/contact', (route) => route.fulfill(fulfillFrom('contact-captcha-failed')))
     await openAndFill(page, `${BASE_URL}/en/contact`)
     await visibleForm(page).evaluate((f) => (f as HTMLFormElement).requestSubmit())
     await expect(page.getByText(t('en').turnstile_failed)).toBeVisible()
@@ -79,9 +78,7 @@ test.describe('contact-form journey (B6220-003)', () => {
 
   for (const lang of ['en', 'he'] as const) {
     test(`C3 ${lang}: 429 zeigt contact_rate_limited`, async ({ page }) => {
-      await page.route('**/api/contact', (route) =>
-        route.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ error: 'rate_limited' }) }),
-      )
+      await page.route('**/api/contact', (route) => route.fulfill(fulfillFrom('contact-rate-limited')))
       await openAndFill(page, `${BASE_URL}/${lang}/contact`)
       await visibleForm(page).evaluate((f) => (f as HTMLFormElement).requestSubmit())
       await expect(page.getByText(t(lang).contact_rate_limited)).toBeVisible()
@@ -106,10 +103,11 @@ test.describe('contact-form journey (B6220-003)', () => {
         headers: { 'X-Forwarded-For': ip },
       })
       codes.push(r.status())
-      if (r.status() === 200) test.skip(true, 'SMTP konfiguriert: Abbruch, damit keine Mails entstehen')
+      // 200 = die Testinstanz stellt ueber den lokalen Mail-Sink zu (B8950-016 T29), es entsteht keine echte Mail; frueher
+      // brach der Test hier ab und lief seit dem Sink nie mehr
       if (r.status() === 429) break
     }
     expect(codes).toContain(429)
-    expect(codes.filter((c) => c !== 429 && c !== 503)).toEqual([])
+    expect(codes.filter((c) => c !== 429 && c !== 503 && c !== 200)).toEqual([])
   })
 })

@@ -23,6 +23,7 @@ import { randomUUID } from 'crypto'
 import { specShop, type WorkerShop } from './_helpers/worker-shop'
 import { getAdminToken } from './_helpers/test-data'
 import { waitForPageHydrated } from './_helpers/hydration'
+import { expectRealMatchesContract, fulfillFrom } from './_helpers/contracts'
 import type { Page } from '@playwright/test'
 import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
 
@@ -133,17 +134,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     // This validates that ProfileForm correctly maps the error onto SocialLinksEditor.
     await page.route('**/api/shop-admin/shop', async (route) => {
       if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            error: 'social_link_blocked',
-            key: 'onlyfans',
-            category: 'adult',
-            resolved_host: null,
-            via_shortener: false,
-          }),
-        })
+        await route.fulfill(fulfillFrom('shop-admin-social-link-blocked-adult'))
       } else {
         await route.continue()
       }
@@ -198,6 +189,8 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
     const errorPayload = body.detail ?? body
     expect(errorPayload.error).toBe('social_link_blocked')
     expect(errorPayload.category).toBe('adult')
+    // B8950-016 T19: the mocked AC1/AC8 tests use exactly this body
+    expectRealMatchesContract('shop-admin-social-link-blocked-adult', res.status, errorPayload)
   })
 
   // ─── AC2 — Zulässiger Link: xing.com ───────────────────────────────────────
@@ -222,17 +215,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   test('AC3 — Shortener resolving to NSFW: frontend shows shortener error from mocked 422', async ({ page }) => {
     await page.route('**/api/shop-admin/shop', async (route) => {
       if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            error: 'social_link_blocked',
-            key: 'mylink',
-            category: 'adult',
-            resolved_host: 'pornhub.com',
-            via_shortener: true,
-          }),
-        })
+        await route.fulfill(fulfillFrom('shop-admin-social-link-blocked-adult', { resolved_host: 'pornhub.com', via_shortener: true }))
       } else {
         await route.continue()
       }
@@ -285,17 +268,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   test('AC4 — Unresolvable shortener: frontend shows unresolvable error from mocked 422', async ({ page }) => {
     await page.route('**/api/shop-admin/shop', async (route) => {
       if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            error: 'social_link_blocked',
-            key: 'mylink',
-            category: 'shortener_unresolvable',
-            resolved_host: null,
-            via_shortener: true,
-          }),
-        })
+        await route.fulfill(fulfillFrom('shop-admin-social-link-shortener-unresolvable'))
       } else {
         await route.continue()
       }
@@ -331,6 +304,9 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
       body: JSON.stringify({ social_links: { mylink: 'https://bit.ly/thislinkdoesnotexist99999e2e' } }),
     })
     expect(res.status).toBe(422)
+    const body = await res.json()
+    // B8950-016 T19: the mocked AC4 test uses exactly this body
+    expectRealMatchesContract('shop-admin-social-link-shortener-unresolvable', res.status, body.detail ?? body)
   })
 
   // ─── AC5 — Subdomain-Normalisierung ────────────────────────────────────────
@@ -457,17 +433,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
 
     await page.route('**/api/shop-admin/shop', async (route) => {
       if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            error: 'social_link_blocked',
-            key: 'mylink',
-            category: 'adult',
-            resolved_host: null,
-            via_shortener: false,
-          }),
-        })
+        await route.fulfill(fulfillFrom('shop-admin-social-link-blocked-adult'))
       } else {
         await route.continue()
       }
@@ -496,17 +462,7 @@ test.describe.serial('Social-Link-Moderation AC1–AC10', () => {
   test('AC8 — Shortener via_shortener message contains resolved host', async ({ page }) => {
     await page.route('**/api/shop-admin/shop', async (route) => {
       if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            error: 'social_link_blocked',
-            key: 'mylink',
-            category: 'adult',
-            resolved_host: 'pornhub.com',
-            via_shortener: true,
-          }),
-        })
+        await route.fulfill(fulfillFrom('shop-admin-social-link-blocked-adult', { resolved_host: 'pornhub.com', via_shortener: true }))
       } else {
         await route.continue()
       }

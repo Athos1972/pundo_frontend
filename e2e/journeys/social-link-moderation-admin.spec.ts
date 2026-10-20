@@ -10,7 +10,9 @@
 
 import { test, expect } from '../fixtures'
 import type { Page } from '@playwright/test'
-import { BASE_URL as FRONTEND_URL } from '../env'
+import { BASE_URL as FRONTEND_URL, BACKEND_URL } from '../env'
+import { expectRealMatchesContract, fulfillFrom } from './_helpers/contracts'
+import { getAdminToken } from './_helpers/test-data'
 
 /** Wartet, bis der Body-Text das Muster zeigt (statt waitForTimeout); gibt den Text zurueck. */
 async function bodyTextMatching(page: Page, re: RegExp, message: string, timeout = 10_000): Promise<string> {
@@ -73,15 +75,21 @@ test.describe('Social-Link-Moderation AC6 — Admin-UI', () => {
     expect(await submitBtn.isVisible(), 'AC6: Submit button must be visible').toBe(true)
   })
 
+  test('AC6 — Real backend: an invalid host is rejected with the body the mocked test uses', async () => {
+    // B8950-016 T19: the mocked test below answers with exactly this recorded response
+    const res = await fetch(`${BACKEND_URL}/api/v1/admin/social-link-rules`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: `admin_token=${await getAdminToken()}` },
+      body: JSON.stringify({ host: 'https://invalid.com/path', category: 'adult', note: 'E2E invalid host probe' }),
+    })
+    expectRealMatchesContract('admin-social-link-rule-invalid-host', res.status, await res.json())
+  })
+
   test('AC6 — Host validation: invalid host shows error inline', async ({ adminPage: page }) => {
     // Mock the POST to return 422 invalid host
     await page.route('**/api/admin/social-link-rules', async (route) => {
       if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({ detail: 'Invalid host format' }),
-        })
+        await route.fulfill(fulfillFrom('admin-social-link-rule-invalid-host'))
       } else {
         await route.continue()
       }

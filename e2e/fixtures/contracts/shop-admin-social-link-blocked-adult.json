@@ -1,0 +1,10 @@
+{
+  "status": 422,
+  "body": {
+    "error": "social_link_blocked",
+    "key": "mylink",
+    "category": "adult",
+    "resolved_host": "onlyfans.com",
+    "via_shortener": false
+  }
+}

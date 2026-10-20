@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getProducts, getAllBrands, getAllCategories } from '@/lib/system-admin-api'
+import { getProducts, getBrandsByIds, getCategoriesByIds } from '@/lib/system-admin-api'
 import { pickName } from '@/types/system-admin'
 import { EntityTable } from '@/components/system-admin/EntityTable'
 
@@ -19,15 +19,18 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const q = sp.q ?? ''
   const idQ = sp.id ?? ''
 
-  const [data, brands, categories] = await Promise.all([
-    getProducts({ q: q || undefined, id: idQ ? Number(idQ) : undefined, limit: LIMIT, offset: (page - 1) * LIMIT }).catch(() => ({
-      items: [] as Awaited<ReturnType<typeof getProducts>>['items'],
-      total: 0,
-      limit: LIMIT,
-      offset: 0,
-    })),
-    getAllBrands().catch(() => []),
-    getAllCategories().catch(() => []),
+  const data = await getProducts({
+    q: q || undefined, id: idQ ? Number(idQ) : undefined, limit: LIMIT, offset: (page - 1) * LIMIT,
+  }).catch(() => ({
+    items: [] as Awaited<ReturnType<typeof getProducts>>['items'],
+    total: 0,
+    limit: LIMIT,
+    offset: 0,
+  }))
+  // names only for the brands/categories on this page (B8200-004)
+  const [brands, categories] = await Promise.all([
+    getBrandsByIds(data.items.map((p) => p.brand_id)),
+    getCategoriesByIds(data.items.map((p) => p.category_id)),
   ])
 
   // Build lookup maps for human-readable names

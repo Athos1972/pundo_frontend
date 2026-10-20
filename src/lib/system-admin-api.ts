@@ -222,6 +222,19 @@ async function fetchAllPages<T>(
   return out
 }
 
+/** Name lookups for the ids on one page (B8200-004): a few requests by id instead of loading thousands of rows. */
+export async function getBrandsByIds(ids: Array<number | null | undefined>): Promise<SysAdminBrand[]> {
+  const unique = [...new Set(ids.filter((i): i is number => typeof i === 'number'))]
+  const found = await Promise.all(unique.map((id) => getBrands({ id, limit: 1 }).then((r) => r.items[0]).catch(() => undefined)))
+  return found.filter((b): b is SysAdminBrand => !!b)
+}
+
+export async function getCategoriesByIds(ids: Array<number | null | undefined>): Promise<SysAdminCategory[]> {
+  const unique = [...new Set(ids.filter((i): i is number => typeof i === 'number'))]
+  const found = await Promise.all(unique.map((id) => getCategories({ id, limit: 1 }).then((r) => r.items[0]).catch(() => undefined)))
+  return found.filter((c): c is SysAdminCategory => !!c)
+}
+
 export function getAllShopTypes(): Promise<SysAdminShopType[]> {
   return fetchAllPages((p) => getShopTypes(p))
 }

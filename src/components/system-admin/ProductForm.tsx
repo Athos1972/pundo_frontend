@@ -1,7 +1,7 @@
 'use client'
 // Only imports from src/components/ui/ and system-admin/ allowed (Clean Boundary)
 
-import { useState, useTransition } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type {
   SysAdminProduct,
@@ -22,9 +22,31 @@ import type { ComboboxItem } from './Combobox'
 interface ProductFormProps {
   product: SysAdminProduct | null
   attributes: SysAdminProductAttribute[]
+  /** Only the currently selected category / brand (to show its label); the choices are searched on the server. */
   categories: SysAdminCategory[]
   brands: SysAdminBrand[]
   tr: SysAdminTranslations
+}
+
+const SEARCH_LIMIT = 50
+
+function categoryItem(c: SysAdminCategory): ComboboxItem {
+  return { value: String(c.id), label: c.name ?? c.external_id, subLabel: c.path ?? c.external_id }
+}
+
+function brandItem(b: SysAdminBrand): ComboboxItem {
+  return { value: String(b.id), label: pickName(b.names) }
+}
+
+/** Server-side search of an admin list endpoint (B8200-004): no list of thousands is loaded into the page. */
+async function searchAdmin<T extends { id: number }>(path: string, query: string): Promise<T[]> {
+  const qs = new URLSearchParams({ limit: String(SEARCH_LIMIT) })
+  if (query) qs.set('q', query)
+  const res = await fetch(`/api/admin/${path}?${qs}`)
+  if (!res.ok) return []
+  const data = (await res.json()) as { items?: T[] }
+  const seen = new Set<number>() // the category search joins translations: one row per matching translation
+  return (data.items ?? []).filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
 }
 
 /** Trimmed non-empty values; languages that existed before but are now empty go out as '' (backend removes them). */
@@ -40,6 +62,20 @@ function collect(current: Record<string, string>, original?: Record<string, stri
 
 export function ProductForm({ product, attributes, categories, brands, tr }: ProductFormProps) {
   const router = useRouter()
+  const loadCategories = useCallback(
+    async (q: string) => [
+      { value: '', label: tr.none } as ComboboxItem,
+      ...(await searchAdmin<SysAdminCategory>('categories', q)).map(categoryItem),
+    ],
+    [tr.none],
+  )
+  const loadBrands = useCallback(
+    async (q: string) => [
+      { value: '', label: tr.none } as ComboboxItem,
+      ...(await searchAdmin<SysAdminBrand>('brands', q)).map(brandItem),
+    ],
+    [tr.none],
+  )
   const [isPending, startTransition] = useTransition()
   const isEdit = product != null
 
@@ -156,12 +192,9 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
           <Combobox
             items={[
               { value: '', label: tr.none },
-              ...categories.map((c): ComboboxItem => ({
-                value: String(c.id),
-                label: c.name ?? c.external_id,
-                subLabel: c.path ?? c.external_id,
-              })),
+              ...categories.map((c): ComboboxItem => categoryItem(c)),
             ]}
+            loadItems={loadCategories}
             value={categoryId}
             onChange={setCategoryId}
             placeholder={tr.category}
@@ -170,19 +203,22 @@ export function ProductForm({ product, attributes, categories, brands, tr }: Pro
           />
         </div>
 
-        <FormField
-          as="select"
-          label={tr.brand}
-          name="brand_id"
-          value={brandId}
-          onChange={(e) => setBrandId(e.target.value)}
-          disabled={isPending}
-        >
-          <option value="">{tr.none}</option>
-          {brands.map((b) => (
-            <option key={b.id} value={b.id}>{pickName(b.names)}</option>
-          ))}
-        </FormField>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="brand_id" className="text-sm font-medium text-gray-700">{tr.brand}</label>
+          <Combobox
+            id="brand_id"
+            items={[
+              { value: '', label: tr.none },
+              ...brands.map((b): ComboboxItem => brandItem(b)),
+            ]}
+            loadItems={loadBrands}
+            value={brandId}
+            onChange={setBrandId}
+            placeholder={tr.brand}
+            noResultsLabel={tr.no_results}
+            disabled={isPending}
+          />
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

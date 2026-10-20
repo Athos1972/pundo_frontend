@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getProduct, getProductAttributes, getAllCategories, getAllBrands } from '@/lib/system-admin-api'
+import { getProduct, getProductAttributes, getCategoriesByIds, getBrandsByIds } from '@/lib/system-admin-api'
 import { ProductForm } from '@/components/system-admin/ProductForm'
 
 interface PageProps {
@@ -13,14 +13,17 @@ export default async function EditProductPage({ params }: PageProps) {
   const lang = await getLangServer()
   const tr = tSysAdmin(lang)
 
-  const [product, attributes, categories, brands] = await Promise.all([
+  const [product, attributes] = await Promise.all([
     getProduct(Number(id)).catch(() => null),
     getProductAttributes(Number(id)).catch(() => []),
-    getAllCategories().catch(() => []),
-    getAllBrands().catch(() => []),
   ])
 
   if (!product) notFound()
+  // only the selected entries: the form searches the rest on the server (B8200-004)
+  const [categories, brands] = await Promise.all([
+    getCategoriesByIds([product.category_id]),
+    getBrandsByIds([product.brand_id]),
+  ])
 
   return (
     <div className="flex flex-col gap-5">

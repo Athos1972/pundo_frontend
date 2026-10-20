@@ -230,21 +230,54 @@ describe('ProductForm', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('create: posts with numeric brand/category ids picked via the combobox', async () => {
+  // brand/category choices are searched on the server (B8200-004)
+  function mockSearchAndSave() {
+    mockFetch.mockImplementation(async (url: string, init?: { method?: string }) => {
+      if (init?.method) return ok()
+      if (url.startsWith('/api/admin/brands')) return ok({ items: [{ id: 3, names: { en: 'Royal Canin' } }] })
+      if (url.startsWith('/api/admin/categories')) {
+        // two translation rows of the same category: the form shows it once
+        const row = { id: 2, name: null, external_id: 'g2', path: 'Food > Dog' }
+        return ok({ items: [row, row] })
+      }
+      return ok({ items: [] })
+    })
+  }
+
+  it('create: posts with numeric brand/category ids picked via the server-side search', async () => {
     const user = userEvent.setup()
-    mockFetch.mockResolvedValue(ok())
-    render(<ProductForm product={null} attributes={[]} categories={categories} brands={brands} tr={tr} />)
+    mockSearchAndSave()
+    render(<ProductForm product={null} attributes={[]} categories={[]} brands={[]} tr={tr} />)
     await user.type(screen.getByLabelText(new RegExp(`${tr.product_name} — English`)), 'Kibble')
     await user.type(screen.getByLabelText(new RegExp(`^${tr.slug}`)), 'kibble')
-    await user.selectOptions(screen.getByLabelText(tr.brand), '3')
+    await user.click(screen.getByText(tr.brand, { selector: 'label' }).parentElement!.querySelector('button')!)
+    await user.click(await screen.findByRole('option', { name: /Royal Canin/ }))
     await user.click(screen.getByText(tr.category, { selector: 'label' }).parentElement!.querySelector('button')!)
-    await user.click(screen.getByRole('option', { name: /Food > Dog/ }))
+    const options = await screen.findAllByRole('option', { name: /Food > Dog/ })
+    expect(options).toHaveLength(1)
+    await user.click(options[0])
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/products'))
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toBe('/api/admin/products')
-    expect(init.method).toBe('POST')
-    expect(JSON.parse(init.body)).toEqual({ names: { en: 'Kibble' }, slug: 'kibble', category_id: 2, brand_id: 3 })
+    const save = mockFetch.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(save[0]).toBe('/api/admin/products')
+    expect(JSON.parse(save[1].body)).toEqual({ names: { en: 'Kibble' }, slug: 'kibble', category_id: 2, brand_id: 3 })
+  })
+
+  it('typing in the category dropdown searches on the server with q and a page limit', async () => {
+    const user = userEvent.setup()
+    mockSearchAndSave()
+    render(<ProductForm product={null} attributes={[]} categories={[]} brands={[]} tr={tr} />)
+    await user.click(screen.getByText(tr.category, { selector: 'label' }).parentElement!.querySelector('button')!)
+    await user.type(screen.getByPlaceholderText(tr.category), 'dog')
+    await waitFor(() => expect(mockFetch.mock.calls.some(([u]) => String(u).includes('categories?') && String(u).includes('q=dog'))).toBe(true))
+    expect(String(mockFetch.mock.calls.at(-1)![0])).toContain('limit=50')
+  })
+
+  it('edit: shows the label of the selected category and brand without loading any list', () => {
+    mockFetch.mockResolvedValue(ok({ items: [] }))
+    render(<ProductForm product={product} attributes={[]} categories={[categories[0]]} brands={brands} tr={tr} />)
+    expect(screen.getByText('Royal Canin')).toBeTruthy()
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 
   it('edit: PATCHes, sends null ids when unset and shows no attribute section on create', async () => {

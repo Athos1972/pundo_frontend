@@ -161,8 +161,8 @@ describe('products list', () => {
       { id: 2, slug: 'b', names: { en: 'Toy' }, brand_id: 99, category_id: 98 },
       { id: 3, slug: 'c', names: { en: 'Bone' }, brand_id: null, category_id: null },
     ]) as never)
-    vi.mocked(api.getAllBrands).mockResolvedValue([{ id: 3, names: { en: 'Royal Canin' } }] as never)
-    vi.mocked(api.getAllCategories).mockResolvedValue([{ id: 9, name: null, external_id: 'g9' }] as never)
+    vi.mocked(api.getBrandsByIds).mockResolvedValue([{ id: 3, names: { en: 'Royal Canin' } }] as never)
+    vi.mocked(api.getCategoriesByIds).mockResolvedValue([{ id: 9, name: null, external_id: 'g9' }] as never)
     const { default: Page } = await import(`${A}/products/page`)
     await show(Page, sp())
     const rows = bodyRows()
@@ -175,17 +175,20 @@ describe('products list', () => {
 
   it('still lists products when the lookup calls fail', async () => {
     vi.mocked(api.getProducts).mockResolvedValue(paged([{ id: 1, slug: 'a', names: { en: 'Kibble' }, brand_id: 3, category_id: 9 }]) as never)
-    vi.mocked(api.getAllBrands).mockRejectedValue(new Error('x'))
-    vi.mocked(api.getAllCategories).mockRejectedValue(new Error('x'))
+    vi.mocked(api.getBrandsByIds).mockResolvedValue([])
+    vi.mocked(api.getCategoriesByIds).mockResolvedValue([])
     const { default: Page } = await import(`${A}/products/page`)
     await show(Page, sp())
     expect(within(bodyRows()[0]).getByText('3')).toBeTruthy()
+    // only the ids of this page are looked up (B8200-004)
+    expect(api.getBrandsByIds).toHaveBeenCalledWith([3])
+    expect(api.getCategoriesByIds).toHaveBeenCalledWith([9])
   })
 
   it('shows the empty state when the product call fails', async () => {
     vi.mocked(api.getProducts).mockRejectedValue(new Error('x'))
-    vi.mocked(api.getAllBrands).mockResolvedValue([])
-    vi.mocked(api.getAllCategories).mockResolvedValue([])
+    vi.mocked(api.getBrandsByIds).mockResolvedValue([])
+    vi.mocked(api.getCategoriesByIds).mockResolvedValue([])
     const { default: Page } = await import(`${A}/products/page`)
     await show(Page, sp({ page: '2' }))
     expect(api.getProducts).toHaveBeenCalledWith({ q: undefined, id: undefined, limit: 20, offset: 20 })
@@ -450,7 +453,7 @@ describe('edit pages: 404 when the record cannot be loaded, otherwise hand the r
     ['item-domain-mappings/[id]/edit/page', 'getItemDomainMapping', 'MappingForm', 'mapping'],
   ] as const)('%s', async (file, getter, stubName, prop) => {
     // Siblings of the main record: tolerate failures
-    for (const k of ['getAllShopTypes', 'getAllCategories', 'getAllBrands', 'getProductAttributes', 'getCategoryTranslations', 'getCategoryAttributeDefs'] as const) {
+    for (const k of ['getAllShopTypes', 'getAllCategories', 'getAllBrands', 'getCategoriesByIds', 'getBrandsByIds', 'getProductAttributes', 'getCategoryTranslations', 'getCategoryAttributeDefs'] as const) {
       asMock(api[k]).mockResolvedValue([])
     }
     const { default: Page } = await import(`${A}/${file}`)
@@ -484,13 +487,15 @@ describe('edit pages: 404 when the record cannot be loaded, otherwise hand the r
     expect(stubProps('ShopForm').shopTypes).toEqual([])
   })
 
-  it('product edit passes attributes, categories and brands; failures of those degrade to empty lists', async () => {
-    vi.mocked(api.getProduct).mockResolvedValue({ id: 5, slug: 'p', names: { en: 'P' } } as never)
+  it('product edit passes the attributes and only the selected category and brand (B8200-004)', async () => {
+    vi.mocked(api.getProduct).mockResolvedValue({ id: 5, slug: 'p', names: { en: 'P' }, category_id: 1, brand_id: 7 } as never)
     vi.mocked(api.getProductAttributes).mockRejectedValue(new Error('x'))
-    vi.mocked(api.getAllCategories).mockResolvedValue([{ id: 1 }] as never)
-    vi.mocked(api.getAllBrands).mockRejectedValue(new Error('x'))
+    vi.mocked(api.getCategoriesByIds).mockResolvedValue([{ id: 1 }] as never)
+    vi.mocked(api.getBrandsByIds).mockResolvedValue([])
     const { default: Page } = await import(`${A}/products/[id]/edit/page`)
     await show(Page, par({ id: '5' }))
+    expect(api.getCategoriesByIds).toHaveBeenCalledWith([1])
+    expect(api.getBrandsByIds).toHaveBeenCalledWith([7])
     expect(stubProps('ProductForm')).toMatchObject({ attributes: [], brands: [], categories: [{ id: 1 }] })
   })
 

@@ -108,6 +108,20 @@ describe('system-admin server API client', () => {
     expect(new URL(call().url).searchParams.get('offset')).toBe('1000')
   })
 
+  it('getBrandsByIds / getCategoriesByIds look up each distinct id once and skip missing ones', async () => {
+    mockFetch.mockImplementation(async (url: string) => {
+      const id = Number(new URL(url).searchParams.get('id'))
+      return res(200, page(id === 99 ? [] : [{ id }]))
+    })
+    await expect(api.getBrandsByIds([3, 3, null, undefined, 99, 4])).resolves.toEqual([{ id: 3 }, { id: 4 }])
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+    mockFetch.mockClear()
+    await expect(api.getCategoriesByIds([8])).resolves.toEqual([{ id: 8 }])
+    expect(call().url).toMatch(/\/categories\?/)
+    mockFetch.mockRejectedValueOnce(new Error('down'))
+    await expect(api.getCategoriesByIds([1])).resolves.toEqual([])
+  })
+
   it('item-domain-mapping mutations use the right verbs and bodies', async () => {
     mockFetch.mockResolvedValue(res(200, {}))
     await api.createItemDomainMapping({ item_id: 1, domain_id: 2 } as never)

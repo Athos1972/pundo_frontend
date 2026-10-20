@@ -18,6 +18,11 @@ interface ComboboxProps {
   name?: string
   id?: string
   noResultsLabel?: string
+  /**
+   * Server-side search (B8200-004): when set, the list shows what this returns for the typed query (debounced) instead
+   * of filtering `items`. `items` then only has to contain the currently selected entry, so its label is shown.
+   */
+  loadItems?: (query: string) => Promise<ComboboxItem[]>
 }
 
 /**
@@ -51,10 +56,10 @@ export function Combobox({
   name,
   id: idProp,
   noResultsLabel = 'No results',
+  loadItems,
 }: ComboboxProps) {
   const generatedId = useId()
   const fieldId = idProp ?? generatedId
-  const selected = items.find((i) => i.value === value)
 
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -63,7 +68,26 @@ export function Combobox({
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const filtered = filterItems(items, query)
+  const [remote, setRemote] = useState<ComboboxItem[] | null>(null)
+  const [picked, setPicked] = useState<ComboboxItem | null>(null)
+  const selected =
+    items.find((i) => i.value === value) ??
+    remote?.find((i) => i.value === value) ??
+    (picked?.value === value ? picked : undefined)
+
+  // Remote mode: debounced server search while the dropdown is open
+  useEffect(() => {
+    if (!loadItems || !open) return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      loadItems(query.trim())
+        .then((res) => { if (!cancelled) setRemote(res) })
+        .catch(() => { if (!cancelled) setRemote([]) })
+    }, query ? 250 : 0)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [loadItems, open, query])
+
+  const filtered = loadItems ? (remote ?? []) : filterItems(items, query)
 
   // Close on click outside
   useEffect(() => {
@@ -86,6 +110,7 @@ export function Combobox({
   }, [activeIndex])
 
   function selectItem(item: ComboboxItem) {
+    setPicked(item)
     onChange(item.value)
     setOpen(false)
     setQuery('')

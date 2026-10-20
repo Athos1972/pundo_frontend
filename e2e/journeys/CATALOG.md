@@ -45,6 +45,7 @@
 | [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id; Schritt E: best_offer nur vom eigenen Shop (B5900-016) | implemented | P2 | PASS (11/11, 2026-10-14) |
 | [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | PASS |
 | [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
+| [llm-effects-homesick-spotted](llm-effects-homesick-spotted.md) | LLM-Wirkung Homesick und Spotted ueber Gateway und Golden-Worker bis DB und Mail (B8950-016 T14) | implemented | P1 | PASS |
 | [crm-opt-out](crm-opt-out.md) | CRM-Outreach-Mail im Mail-Sink und Opt-out-Link wirkt (B8950-016 T31/T32) | implemented | P1 | PASS |
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
@@ -97,6 +98,7 @@
 | customer-shop-all-products-flow | **Yes** | `shop-all-products-link` (vorschlagen) |
 | shop-owner-self-deactivate | No — writes + account-deactivation | — |
 | admin-crm-contact-lifecycle | No — admin area, writes CRM contacts | — |
+| llm-effects-homesick-spotted | No — writes customer, spotted item/offer in pundo_test, mail goes to the local sink | — |
 | crm-opt-out | No — writes CRM contacts in pundo_test, mail goes to the local sink | — |
 | admin-crm-needs-review | No — admin area, writes CRM contacts | — |
 

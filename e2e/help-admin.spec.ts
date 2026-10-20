@@ -26,7 +26,7 @@ test.describe('F8960 admin help', () => {
     await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1)
   })
 
-  test('AK2 + AK4: one card per topic in order, titles and one-liners, no video link yet', async ({ adminPage: page }) => {
+  test('AK2 + AK4: one card per topic in order, titles and one-liners, badge matches the video state', async ({ adminPage: page }) => {
     await page.goto('/admin/help')
     const cards = page.getByTestId('help-topic-card')
     await expect(cards).toHaveCount(HELP_TOPICS.length)
@@ -35,18 +35,27 @@ test.describe('F8960 admin help', () => {
       const card = page.locator(`[data-testid="help-topic-card"][data-topic="${t.id}"]`)
       await expect(card).toContainText(HELP_CONTENT[t.id].en.title)
       await expect(card).toContainText(HELP_CONTENT[t.id].en.summary)
-      await expect(card.getByTestId('help-topic-badge')).toHaveText(t.videoId ? en.help_badge_video : en.help_video_coming_soon)
+      const badge = card.getByTestId('help-topic-badge')
+      if (t.noVideo) await expect(badge).toHaveCount(0)
+      else await expect(badge).toHaveText(t.videoId ? en.help_badge_video : en.help_video_coming_soon)
     }
+    // the list only links to the topic pages, never directly to YouTube
     await expect(page.locator('main a[href*="youtube.com"]')).toHaveCount(0)
   })
 
-  test('AK4 + AK6: every topic page has its steps, no dead video link, working admin links', async ({ adminPage: page }) => {
+  test('AK4 + AK6: every topic page has its steps, a video link only with a videoId, working admin links', async ({ adminPage: page }) => {
     for (const t of HELP_TOPICS) {
       await page.goto(`/admin/help/${t.id}`)
       const c = HELP_CONTENT[t.id].en
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(c.title)
       await expect(page.locator('main ol > li')).toHaveCount(c.steps.length)
-      if (!t.videoId) {
+      if (t.noVideo) {
+        await expect(page.locator('main a[href*="youtube.com"]')).toHaveCount(0)
+        await expect(page.getByText(en.help_video_coming_soon)).toHaveCount(0)
+      } else if (t.videoId) {
+        await expect(page.getByTestId('help-video-link')).toHaveAttribute('href', `https://www.youtube.com/watch?v=${t.videoId}`)
+        await expect(page.getByText(en.help_video_coming_soon)).toHaveCount(0)
+      } else {
         await expect(page.locator('main a[href*="youtube.com"]')).toHaveCount(0)
         await expect(page.getByText(en.help_video_coming_soon)).toBeVisible()
       }

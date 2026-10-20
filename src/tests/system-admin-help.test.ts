@@ -13,8 +13,12 @@ const SAME_ALLOWED = new Set(['CRM'])
 
 describe('help topics (data source)', () => {
   it('has the topics in the agreed order (3b between shops and products)', () => {
-    expect(HELP_TOPICS.map((t) => t.id)).toEqual(['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm'])
-    expect(HELP_TOPICS.map((t) => t.number)).toEqual(['1', '2', '3', '3b', '4', '4b', '5'])
+    // the agreed core order; later topics are appended at the end, so the topic count is deliberately not hard-coded
+    const core = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm']
+    expect(HELP_TOPICS.map((t) => t.id).slice(0, core.length)).toEqual(core)
+    expect(HELP_TOPICS.map((t) => t.number).slice(0, core.length)).toEqual(['1', '2', '3', '3b', '4', '4b', '5'])
+    expect(HELP_TOPICS.at(-1)?.id).toBe('moderation')
+    expect(HELP_TOPICS.at(-1)?.number).toBe('6')
     expect(HELP_TOPICS.map((t) => t.id)).toEqual([...HELP_TOPIC_IDS])
   })
 
@@ -128,6 +132,22 @@ describe('help content (EN + EL)', () => {
     const topic = getHelpTopic('catalog-basics')!
     expect(topic.videoId).toBeUndefined()
     expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/categories', '/admin/brands'])
+  })
+
+  it('topic 6 covers review moderation and social-link rules with the delete-free and domain-wide warnings', () => {
+    const en = HELP_CONTENT.moderation.en
+    const text = [...en.steps, ...(en.notes ?? []).map((n) => n.text)].join(' ')
+    for (const word of ['Reported', 'Hide review', 'Restore review', 'Audit log', 'Social-Link Rules', 'Add rule', 'Delete']) expect(text).toContain(word)
+    expect(text).toMatch(/never delete/)
+    expect(text).toMatch(/whole main domain/)
+    expect(text).toMatch(/blog\.example\.com is stored as example\.com/)
+    expect(en.notes?.filter((n) => n.kind === 'warning').length).toBeGreaterThanOrEqual(1)
+    // UI words used in the SOP are the real labels
+    const tr = tSysAdmin('en') as unknown as Record<string, string>
+    for (const key of ['rev_filter_reported', 'rev_action_hide', 'rev_action_restore', 'rev_audit_link', 'nav_social_link_rules', 'slr_new']) expect(text).toContain(tr[key])
+    const topic = getHelpTopic('moderation')!
+    expect(topic.videoId).toBeUndefined()
+    expect(topic.adminLinks.map((l) => l.href)).toEqual(['/admin/reviews', '/admin/social-link-rules'])
   })
 
   it('helpLang maps everything but el to en', () => {

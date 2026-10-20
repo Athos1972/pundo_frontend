@@ -1,7 +1,7 @@
 // F8960 — Admin help topics (data only, no UI text). Texts live in system-admin-help-content.ts.
 // Server-side only: SOP content and video IDs must never be shipped to a client bundle (see guard test).
 
-export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm'] as const
+export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'moderation'] as const
 export type HelpTopicId = (typeof HELP_TOPIC_IDS)[number]
 
 export interface HelpAdminLink {
@@ -10,11 +10,12 @@ export interface HelpAdminLink {
   navKey:
     | 'nav_dashboard' | 'nav_claims' | 'nav_shop_owners' | 'nav_shops' | 'nav_shop_types'
     | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings'
+    | 'nav_reviews' | 'nav_social_link_rules'
 }
 
 export interface HelpTopic {
   id: HelpTopicId
-  /** Display number: '1', '2', '3', '3b', '4', '4b', '5'. */
+  /** Display number: '1', '2', '3', '3b', '4', '4b', '5', '6'. */
   number: string
   /** Unique, ascending = display order. */
   order: number
@@ -77,6 +78,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     adminLinks: [
       { href: '/admin/crm/contacts', navKey: 'nav_crm' },
       { href: '/admin/crm/settings', navKey: 'help_link_crm_settings' },
+    ],
+  },
+  {
+    id: 'moderation', number: '6', order: 8,
+    adminLinks: [
+      { href: '/admin/reviews', navKey: 'nav_reviews' },
+      { href: '/admin/social-link-rules', navKey: 'nav_social_link_rules' },
     ],
   },
 ]

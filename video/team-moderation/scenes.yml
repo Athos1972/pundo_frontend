@@ -1,0 +1,177 @@
+# Team video 6 "Moderation: reviews and social links" (F8960, topic moderation). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-moderation.el.srt).
+# Added 2026-10-20 (decision BB): phase 2 = moderation (this video) + catalog quality (video 7, later).
+# MAINTAINABILITY (BB: "we must be able to cope with news"): the narration explains concepts and decision questions, names only stable UI words
+# ("Reviews", "Reported", "Hide review", "Hidden", "Restore review", "Audit log", "Social-Link Rules", "Add rule", "Admin"), no field lists, no counts,
+# no positions. The written SOP (src/lib/system-admin-help-content.ts, topic moderation) is the truth and has the criteria in more detail.
+# Basis (code, details in 03-implementation.md): reviews page tabs + filters = reviews/page.tsx:9-21 (default "Reported"); hide/restore = ReviewModerationList.tsx:46-83,
+# ingestor/api/admin/customer_reviews.py:177-243 (reason -> audit log, no e-mail); hidden reviews are left out of the public lists and stats
+# (api/customer/customer_reviews.py:125,141); audit log page = reviews/[id]/audit-log/page.tsx:55-77; social-link check on save = api/shop_owner/shop_owner_shop.py:221-232,
+# lib/social_link_moderation.py:136-154,296-300; rule host is stored as the main domain (social_link_rules.py:126-149, normalize_host);
+# imported rows read-only (social_link_rules.py:213-216, RuleList.tsx:136-146); link health check = F8810 (no blocking).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker "Team Demo").
+# The video HIDES and RESTORES the demo review of "Team Demo Reviewer" (prepare_team.py resets it) and CREATES the social-link rule team-demo-blocked.com
+# (prepare_team.py deletes it on the next run). Hiding sends no e-mail. Real reviews, authors, reporters and rule hosts are never readable (blurred by an init script).
+# Address bar: every scene shows exactly one page (ids must match the prepare_team.py output, record.mjs checks that).
+
+meta:
+  slug: team-moderation
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Moderation: reviews and social links"
+    el: "Έλεγχος περιεχομένου: αξιολογήσεις και κοινωνικοί σύνδεσμοι"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "More help: Help in the admin sidebar"
+    el: "Περισσότερη βοήθεια: «Βοήθεια» στο admin"
+  thumbnail_scene: hide
+  target_duration_s: 170
+  window_path:
+    en: "localhost:3500/admin/reviews"
+    el: "localhost:3500/admin/reviews"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: queue
+    shot: 'Reviews page, tab "Reported" (demo review only, real cards blurred) -> hover the tab "Reported by shop owner"'
+    chapter: { en: "Reported reviews" }
+    window_path: { en: "localhost:3500/admin/reviews" }
+    callout: { en: "Admin · Reviews" }
+    narration:
+      en: >-
+        Welcome back.
+        This video is about moderation, which means deciding what stays public.
+        Start with "Reviews".
+        Customers and shop owners can report a review, and the tab "Reported" is your queue.
+        A report only asks you to look. It is not a verdict.
+        Reports from shop owners have their own tab.
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το βίντεο αφορά τον έλεγχο περιεχομένου, δηλαδή το να αποφασίζετε τι μένει δημόσιο."
+        - "Ξεκινήστε με τις «Αξιολογήσεις»."
+        - "Πελάτες και ιδιοκτήτες καταστημάτων μπορούν να αναφέρουν μια αξιολόγηση και η καρτέλα «Αναφερθείσες» είναι η ουρά σας."
+        - "Μια αναφορά σας ζητά μόνο να κοιτάξετε. Δεν είναι απόφαση."
+        - "Οι αναφορές από ιδιοκτήτες καταστημάτων έχουν τη δική τους καρτέλα."
+
+  - id: hide
+    shot: 'demo review: reason select highlighted -> hover "Hide review", click -> confirm dialog -> "Confirm" -> badge "Hidden"'
+    chapter: { en: "Hide a review" }
+    window_path: { en: "localhost:3500/admin/reviews" }
+    callout: { en: "Reviews · Hide" }
+    narration:
+      en: >-
+        Read the review and its reports.
+        Then ask one question: does it break a rule, such as spam, abuse or a legal problem?
+        If so, choose the reason and click "Hide review".
+        Confirm, and the reason goes into the audit log.
+        Hiding is not deleting. The review leaves the public pages, but it stays here, marked "Hidden".
+        If you are unsure, do not hide it. Ask the team lead.
+    subtitle:
+      el:
+        - "Διαβάστε την αξιολόγηση και τις αναφορές της."
+        - "Έπειτα κάντε μία ερώτηση: παραβιάζει κάποιον κανόνα, όπως spam, προσβολή ή νομικό πρόβλημα;"
+        - "Αν ναι, επιλέξτε τον λόγο και πατήστε «Απόκρυψη αξιολόγησης»."
+        - "Επιβεβαιώστε και ο λόγος γράφεται στο αρχείο ελέγχου."
+        - "Η απόκρυψη δεν είναι διαγραφή. Η αξιολόγηση φεύγει από τις δημόσιες σελίδες, αλλά μένει εδώ, με την ένδειξη «Κρυμμένη»."
+        - "Αν διστάζετε, μην την κρύψετε. Ρωτήστε τον υπεύθυνο της ομάδας."
+
+  - id: hidden
+    shot: 'tab "Hidden" (real cards blurred): demo review -> hover "Restore review", click -> confirm -> back to "Hide review"; then hover "Audit log", click (frozen)'
+    chapter: { en: "Restore and audit log" }
+    window_path: { en: "localhost:3500/admin/reviews?filter=hidden" }
+    callout: { en: "Reviews · Hidden" }
+    narration:
+      en: >-
+        Hidden reviews wait under the tab "Hidden".
+        If you hid one by mistake, or things changed, click "Restore review", and confirm.
+        It is public again. Nothing is lost.
+    subtitle:
+      el:
+        - "Οι κρυμμένες αξιολογήσεις περιμένουν στην καρτέλα «Κρυμμένες»."
+        - "Αν κρύψατε μία κατά λάθος ή τα πράγματα άλλαξαν, πατήστε «Επαναφορά αξιολόγησης» και επιβεβαιώστε."
+        - "Γίνεται ξανά δημόσια. Τίποτα δεν χάνεται."
+
+  - id: audit
+    shot: 'audit log of the demo review: created, reported, reported, hidden, restored -> hover the sidebar entry "Social-Link Rules", click (frozen)'
+    window_path: { en: "localhost:3500/admin/reviews/4415/audit-log" }
+    callout: { en: "Reviews · Audit log" }
+    narration:
+      en: >-
+        Every action is written to the audit log: what happened, when, who did it and why.
+        Check it before you reverse a colleague's decision.
+        Next, the links. Open "Social-Link Rules".
+    subtitle:
+      el:
+        - "Κάθε ενέργεια γράφεται στο αρχείο ελέγχου: τι έγινε, πότε, ποιος το έκανε και γιατί."
+        - "Ελέγξτε το πριν αναιρέσετε την απόφαση ενός συναδέλφου."
+        - "Στη συνέχεια οι σύνδεσμοι. Ανοίξτε τους «Κανόνες κοινωνικών συνδέσμων»."
+
+  - id: rules
+    shot: 'Social-Link Rules list (all real rows blurred) -> search "team-demo" (no hit) -> hover "Add rule", click (frozen)'
+    chapter: { en: "Social-link rules" }
+    window_path: { en: "localhost:3500/admin/social-link-rules" }
+    callout: { en: "Admin · Social-Link Rules" }
+    narration:
+      en: >-
+        When a shop owner saves social media links, pundo checks each link against this list, and a link to a listed domain is refused.
+        Most rows are imported automatically from public block lists, so they are read-only.
+        Your own rows are marked "Admin".
+        Search for the domain first.
+        If nothing comes up, click "Add rule".
+    subtitle:
+      el:
+        - "Όταν ένας ιδιοκτήτης καταστήματος αποθηκεύει συνδέσμους κοινωνικών δικτύων, το pundo ελέγχει κάθε σύνδεσμο με αυτή τη λίστα και ένας σύνδεσμος προς τομέα της λίστας απορρίπτεται."
+        - "Οι περισσότερες γραμμές εισάγονται αυτόματα από δημόσιες λίστες αποκλεισμού, γι' αυτό είναι μόνο για ανάγνωση."
+        - "Οι δικές σας γραμμές έχουν την ένδειξη «Admin»."
+        - "Αναζητήστε πρώτα τον τομέα."
+        - "Αν δεν βρεθεί τίποτα, πατήστε «Προσθήκη κανόνα»."
+
+  - id: newrule
+    shot: 'new rule form: type the demo domain -> category (Gambling) -> note -> hover "Add rule", click (frozen)'
+    chapter: { en: "Add a rule" }
+    window_path: { en: "localhost:3500/admin/social-link-rules/new" }
+    callout: { en: "Social-Link Rules · Add rule" }
+    narration:
+      en: >-
+        Type only the domain, without https and without a path.
+        The rule covers the main domain, so a rule for a subdomain blocks the whole domain.
+        Choose the category, and write a short note on why.
+        Then click "Add rule".
+    subtitle:
+      el:
+        - "Γράψτε μόνο τον τομέα, χωρίς https και χωρίς διαδρομή."
+        - "Ο κανόνας καλύπτει τον κύριο τομέα, άρα ένας κανόνας για υποτομέα μπλοκάρει ολόκληρο τον τομέα."
+        - "Επιλέξτε την κατηγορία και γράψτε μια σύντομη σημείωση για τον λόγο."
+        - "Έπειτα πατήστε «Προσθήκη κανόνα»."
+
+  - id: result
+    shot: 'list after saving (real rows blurred): the new demo rule at the top, source "Admin" -> hover "Delete" (not clicked)'
+    window_path: { en: "localhost:3500/admin/social-link-rules" }
+    callout: { en: "Social-Link Rules · Result" }
+    narration:
+      en: >-
+        The rule appears in the list, marked "Admin", and works at once.
+        Be careful: never block a domain just because you dislike it, and ask the team lead if it looks like a normal website.
+        Only your own rules can be deleted, and a deleted rule can be added again.
+        Link health checks are a different tool. They only report dead links.
+        That is all for moderation.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Ο κανόνας εμφανίζεται στη λίστα, με την ένδειξη «Admin», και ισχύει αμέσως."
+        - "Προσοχή: μη μπλοκάρετε ποτέ έναν τομέα απλώς επειδή δεν σας αρέσει και ρωτήστε τον υπεύθυνο της ομάδας αν μοιάζει με κανονική ιστοσελίδα."
+        - "Μόνο οι δικοί σας κανόνες μπορούν να διαγραφούν και ένας κανόνας που διαγράφηκε μπορεί να προστεθεί ξανά."
+        - "Ο έλεγχος υγείας συνδέσμων είναι άλλο εργαλείο. Αναφέρει μόνο νεκρούς συνδέσμους."
+        - "Αυτά ήταν όλα για τον έλεγχο περιεχομένου."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

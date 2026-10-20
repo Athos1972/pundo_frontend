@@ -96,5 +96,18 @@
       "src/app/(system-admin)/admin/(portal)/crm",
       "src/components/system-admin/crm"
     ]
+  },
+  {
+    "slug": "team-moderation",
+    "topic": "moderation",
+    "youtubeId": "",
+    "recordedAtCommit": "1cedc70d07dbf355121d268566a33c136495269a",
+    "recordedAt": "2026-10-20",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/reviews",
+      "src/app/(system-admin)/admin/(portal)/social-link-rules",
+      "src/components/system-admin/ReviewModerationList.tsx",
+      "src/components/system-admin/ConfirmDialog.tsx"
+    ]
   }
 ]

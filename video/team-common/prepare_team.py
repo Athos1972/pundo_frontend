@@ -44,6 +44,13 @@ CRM video (team-crm): the video edits the demo contact "Team Demo Contact" (adds
     (exact display name + exact organisation name + source `manual`, with its channels/sources/interactions/messages and its
     organisation when nothing else hangs on it). The video never suppresses a contact (suppression cannot be undone) and never
     sends a message.
+Moderation video (team-moderation): synthetic review + social-link rule (marker "Team Demo", authors only @pundo-e2e.io):
+    review by "Team Demo Reviewer" on the demo shop "Team Demo Bakery" (spam-like demo text), reported by a second demo customer
+    (reporter@pundo-e2e.io) AND by the demo shop (shop-owner report), plus the audit entries "created" / "reported" / "reported".
+    It is RESET on every run (visible again, newest review, audit log = the three seeded entries, no reply); the video hides and
+    restores it. The video also CREATES the social-link rule team-demo-blocked.com (source admin, note "Team Demo ..."):
+    prepare_team.py DELETES it again at the start of every run (exact host + source admin + note starting with "Team Demo").
+    Hiding / restoring a review sends no e-mail (ingestor/api/admin/customer_reviews.py), the demo users have no real mailbox anyway.
 Prints one JSON line (ids/slugs) on stdout.
 """
 from __future__ import annotations
@@ -82,6 +89,10 @@ SHOPS = {
 NEW_SHOP = {"slug": "team-demo-taverna", "name": "Team Demo Taverna"}   # created by the shops video, removed again here
 NEW_BRAND = {"slug": "team-demo-brand-two", "name": "Team Demo Brand Two"}   # created by the catalog-basics video, removed again here
 NEW_ITEM = {"slug": "team-demo-rye-bread", "name": "Team Demo Rye Bread"}   # created by the products video, removed again here
+NEW_RULE = {"host": "team-demo-blocked.com"}   # created by the moderation video, removed again here (.example would be refused: no public suffix)
+REVIEWER = {"email": "reviewer" + DEMO_DOMAIN, "name": "Team Demo Reviewer"}
+REVIEW_REPORTER = {"email": "reporter" + DEMO_DOMAIN, "name": "Team Demo Reporter"}
+REVIEW_COMMENT = "Team Demo review: great prices! Visit my page for free vouchers (demo text, no real person)."
 OWNER_EMAIL = "owner" + DEMO_DOMAIN
 CLAIMANT_EMAIL = "claimant" + DEMO_DOMAIN
 CLAIMANT2_EMAIL = "claimant2" + DEMO_DOMAIN
@@ -176,6 +187,55 @@ def remove_created_demo_brand(cur) -> int:
     cur.execute("delete from brands b where b.slug=%s and b.names->>'en'=%s and b.source is null "
                 "and not exists (select 1 from items i where i.brand_id=b.id)", (NEW_BRAND["slug"], NEW_BRAND["name"]))
     return cur.rowcount
+
+
+def remove_created_demo_rule(cur) -> int:
+    """Delete the social-link rule the moderation video created (exact host + source admin + note "Team Demo..."). Returns the count."""
+    cur.execute("delete from social_link_blocklist where host=%s and source='admin' and note like 'Team Demo%%'", (NEW_RULE["host"],))
+    return cur.rowcount
+
+
+def _upsert_customer(cur, who: dict) -> int:
+    assert who["email"].endswith(DEMO_DOMAIN)
+    cur.execute("select id from customer_users where email=%s", (who["email"],))
+    row = cur.fetchone()
+    if row:
+        cur.execute("update customer_users set display_name=%s where id=%s and display_name<>%s", (who["name"], row[0], who["name"]))
+        return row[0]
+    # no password, never logged in as; verified so the account looks normal
+    cur.execute("insert into customer_users (email, display_name, provider, is_verified, status) values (%s,%s,'email',true,'active') returning id",
+                (who["email"], who["name"]))
+    return cur.fetchone()[0]
+
+
+def upsert_demo_review(cur, shop_id: int, owner_id: int) -> dict:
+    """One demo review on the demo shop, RESET to the initial state on every run (visible, newest, reported twice, audit = created + 2 x reported)."""
+    author = _upsert_customer(cur, REVIEWER)
+    reporter = _upsert_customer(cur, REVIEW_REPORTER)
+    cur.execute("select id, comment from reviews where user_id=%s and entity_type='shop' and entity_id=%s", (author, shop_id))
+    row = cur.fetchone()
+    if row:
+        if not (row[1] or "").startswith("Team Demo"):
+            sys.exit("refusing: the demo reviewer's review on the demo shop is not ours")
+        review_id = row[0]
+        cur.execute("update reviews set stars=1, comment=%s, is_visible=true, invalidated_at=null, invalidated_by=null, created_at=now(), updated_at=now() where id=%s",
+                    (REVIEW_COMMENT, review_id))
+    else:
+        cur.execute("insert into reviews (user_id, entity_type, entity_id, stars, comment, is_visible) values (%s,'shop',%s,1,%s,true) returning id",
+                    (author, shop_id, REVIEW_COMMENT))
+        review_id = cur.fetchone()[0]
+    cur.execute("delete from review_replies where review_id=%s", (review_id,))
+    cur.execute("delete from review_reports where review_id=%s", (review_id,))
+    cur.execute("delete from review_audit_log where review_id=%s", (review_id,))
+    cur.execute("insert into review_reports (review_id, reporter_id, reason, reporter_type) values (%s,%s,%s,'customer')",
+                (review_id, reporter, "Looks like spam (demo)"))
+    cur.execute("insert into review_reports (review_id, reporter_type, reporter_shop_id, reporter_owner_id, reason, comment) "
+                "values (%s,'shop_owner',%s,%s,'spam','Team Demo: advertising, not a real experience.')", (review_id, shop_id, owner_id))
+    for action, actor_type, actor_id, reason, ago in (("created", "customer", author, None, 30), ("reported", "customer", reporter, "Looks like spam (demo)", 20),
+                                                      ("reported", "shop_owner", owner_id, "spam", 10)):
+        cur.execute("insert into review_audit_log (review_id, action, actor_type, actor_id, reason, timestamp) "
+                    "values (%s,%s,%s,%s,%s, now() - make_interval(mins => %s))", (review_id, action, actor_type, actor_id, reason, ago))
+    return {"id": review_id, "author_id": author, "reporter_id": reporter, "shop_id": shop_id}
 
 
 def upsert_owner(cur, email: str, name: str, status: str, shop_id: int | None) -> int:
@@ -366,6 +426,7 @@ def main() -> None:
         removed_item = remove_created_demo_item(cur)
         removed_brand = remove_created_demo_brand(cur)
         removed_contact = remove_created_demo_contact(cur)
+        removed_rule = remove_created_demo_rule(cur)
         shops = {k: upsert_shop(cur, s) for k, s in SHOPS.items()}
         owner = upsert_owner(cur, OWNER_EMAIL, "Team Demo Owner", "approved", shops["bakery"])
         claimant = upsert_owner(cur, CLAIMANT_EMAIL, "Team Demo Claimant", "pending", None)
@@ -374,12 +435,14 @@ def main() -> None:
         claim2 = upsert_claim(cur, shops["flower"], claimant2, False, CLAIM_MESSAGES["flower"])
         catalog = upsert_brand_category_item(cur)
         crm = upsert_crm(cur, shops["bakery"])
+        review = upsert_demo_review(cur, shops["bakery"], owner)
         out = {"shops": {k: {"id": shops[k], "slug": SHOPS[k]["slug"]} for k in shops}, "owner_id": owner, "claimant_id": claimant, "claimant2_id": claimant2,
                "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "item_ean": ITEM_EAN, "crm": crm, "marker": "Team Demo",
                "new_shop": {**NEW_SHOP, "removed_from_last_run": removed},
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
                "new_brand": {**NEW_BRAND, "removed_from_last_run": removed_brand},
-               "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact}, "dry_run": DRY}
+               "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact},
+               "review": review, "new_rule": {**NEW_RULE, "removed_from_last_run": removed_rule}, "dry_run": DRY}
         if DRY:
             conn.rollback()
         else:

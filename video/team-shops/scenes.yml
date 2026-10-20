@@ -1,0 +1,202 @@
+# Team video 3 "Maintaining shops" (F8960 T19, topic 3). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-shops.el.srt).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Order and wording follow the SOP "shops" in src/lib/system-admin-help-content.ts.
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
+# ../team-common/prepare_team.py (marker "Team Demo"). The video CREATES the shop "Team Demo Taverna" (prepare_team.py deletes
+# it again on the next run) and edits "Team Demo Bakery" (address; the upsert resets it). The hard delete is only SHOWN
+# (dialog opened, name never typed, Cancel) - never executed.
+# Address bar: every scene shows exactly one page (window_path is static per scene); the page switches happen at the scene
+# borders (click + frozen picture), so the address always matches the picture.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+
+meta:
+  slug: team-shops
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Maintaining shops"
+    el: "Συντήρηση καταστημάτων"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: products"
+    el: "Επόμενο: προϊόντα"
+  thumbnail_scene: create
+  target_duration_s: 200
+  window_path:
+    en: "localhost:3500/admin/shops"
+    el: "localhost:3500/admin/shops"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: find
+    shot: 'list of shops (non-demo rows blurred) -> search "Team Demo" -> demo rows -> status filter -> hover "Add new"'
+    chapter: { en: "Search first" }
+    window_path: { en: "localhost:3500/admin/shops" }
+    callout: { en: "Admin · Shops" }
+    narration:
+      en: >-
+        Welcome back.
+        In this video you create and maintain shops.
+        The platform holds thousands of shops, so always search first, to avoid a duplicate.
+        Type a name into the search box, or enter the ID if you know it.
+        The status filter narrows the list further.
+        Only when the shop really does not exist, click "Add new".
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Σε αυτό το βίντεο δημιουργείτε και συντηρείτε καταστήματα."
+        - "Η πλατφόρμα έχει χιλιάδες καταστήματα, γι' αυτό αναζητάτε πάντα πρώτα, για να αποφύγετε διπλότυπο."
+        - "Πληκτρολογήστε ένα όνομα στο πεδίο αναζήτησης ή εισαγάγετε το ID αν το γνωρίζετε."
+        - "Το φίλτρο κατάστασης περιορίζει ακόμη περισσότερο τη λίστα."
+        - "Μόνο όταν το κατάστημα πραγματικά δεν υπάρχει, πατήστε «Προσθήκη νέου»."
+
+  - id: create
+    shot: 'new shop form: name (slug fills in), address, city, postal code, shop type'
+    chapter: { en: "Create a shop" }
+    window_path: { en: "localhost:3500/admin/shops/new" }
+    callout: { en: "Shops · Add new" }
+    narration:
+      en: >-
+        The form starts with the shop name.
+        It is required, and the slug is filled in for you.
+        Add the address, the city and the postal code.
+        Then choose the shop type, here "Restaurant & Bar", because customers use it to find the shop.
+        The status is "Active" by default.
+    subtitle:
+      el:
+        - "Η φόρμα ξεκινά με το όνομα του καταστήματος."
+        - "Είναι υποχρεωτικό και το slug συμπληρώνεται αυτόματα."
+        - "Προσθέστε τη διεύθυνση, την πόλη και τον ταχυδρομικό κώδικα."
+        - "Έπειτα επιλέξτε τον τύπο καταστήματος, εδώ «Εστιατόριο & Μπαρ», επειδή οι πελάτες τον χρησιμοποιούν για να βρουν το κατάστημα."
+        - "Η κατάσταση είναι από προεπιλογή «Ενεργό»."
+
+  - id: location
+    shot: 'Location block: address search, pin on the map, latitude / longitude fields'
+    chapter: { en: "Location on the map" }
+    window_path: { en: "localhost:3500/admin/shops/new" }
+    callout: { en: "Shops · Location" }
+    narration:
+      en: >-
+        Next comes the location.
+        Search for the address, or move the pin on the map.
+        You can also type the latitude and the longitude.
+        Always check that the pin matches the address, because customers see the shop on the map.
+    subtitle:
+      el:
+        - "Ακολουθεί η τοποθεσία."
+        - "Αναζητήστε τη διεύθυνση ή μετακινήστε την καρφίτσα στον χάρτη."
+        - "Μπορείτε επίσης να πληκτρολογήσετε το γεωγραφικό πλάτος και μήκος."
+        - "Ελέγχετε πάντα ότι η καρφίτσα ταιριάζει με τη διεύθυνση, επειδή οι πελάτες βλέπουν το κατάστημα στον χάρτη."
+
+  - id: hours
+    shot: 'Opening hours: one row per day, Sunday ticked "Closed", Saturday shortened; then "Save"'
+    chapter: { en: "Opening hours" }
+    window_path: { en: "localhost:3500/admin/shops/new" }
+    callout: { en: "Shops · Opening hours" }
+    narration:
+      en: >-
+        Then the opening hours.
+        Every day has its own row.
+        Set the times, and tick "Closed" for days without opening, instead of leaving them empty.
+        A second time slot is useful for a lunch break.
+        When everything is filled in, click "Save".
+    subtitle:
+      el:
+        - "Έπειτα το ωράριο λειτουργίας."
+        - "Κάθε ημέρα έχει τη δική της γραμμή."
+        - "Ορίστε τις ώρες και τσεκάρετε «Κλειστό» για τις ημέρες χωρίς λειτουργία, αντί να τις αφήνετε κενές."
+        - "Ένα δεύτερο χρονικό διάστημα είναι χρήσιμο για διάλειμμα το μεσημέρι."
+        - "Όταν όλα είναι συμπληρωμένα, πατήστε «Αποθήκευση»."
+
+  - id: saved
+    shot: 'back in the list with the toast -> search "Taverna" -> new shop shown -> hover "Edit" of the demo bakery, click'
+    chapter: { en: "Save and check" }
+    window_path: { en: "localhost:3500/admin/shops" }
+    callout: { en: "Shops · Save and check" }
+    narration:
+      en: >-
+        After saving you are back in the list.
+        Search for the new shop to see that it is there.
+        Then open its public page and check that it looks right, because that is what customers see.
+        To change an existing shop, search for it and click "Edit".
+    subtitle:
+      el:
+        - "Μετά την αποθήκευση επιστρέφετε στη λίστα."
+        - "Αναζητήστε το νέο κατάστημα για να δείτε ότι υπάρχει."
+        - "Έπειτα ανοίξτε τη δημόσια σελίδα του και ελέγξτε ότι φαίνεται σωστά, επειδή αυτό βλέπουν οι πελάτες."
+        - "Για να αλλάξετε ένα υπάρχον κατάστημα, αναζητήστε το και πατήστε «Επεξεργασία»."
+
+  - id: edit
+    shot: 'edit page of the demo bakery: change the address, scroll down to the owner block, back up, "Save"'
+    chapter: { en: "Edit a shop" }
+    window_path: { en: "localhost:3500/admin/shops/96279/edit" }
+    callout: { en: "Shops · Edit" }
+    narration:
+      en: >-
+        The edit page is the same form, filled in with the current data.
+        Change only what is wrong or outdated, for example the address.
+        Further down you see the owner of the shop and the history of the data runs.
+        Then click "Save".
+        If a shop is only wrong or outdated, editing is almost always the right answer.
+    subtitle:
+      el:
+        - "Η σελίδα επεξεργασίας είναι η ίδια φόρμα, συμπληρωμένη με τα τρέχοντα στοιχεία."
+        - "Αλλάξτε μόνο ό,τι είναι λάθος ή παλιό, για παράδειγμα τη διεύθυνση."
+        - "Πιο κάτω βλέπετε τον ιδιοκτήτη του καταστήματος και το ιστορικό των εκτελέσεων δεδομένων."
+        - "Έπειτα πατήστε «Αποθήκευση»."
+        - "Αν ένα κατάστημα είναι απλώς λάθος ή παλιό, η επεξεργασία είναι σχεδόν πάντα η σωστή λύση."
+
+  - id: delete
+    shot: 'bottom of the edit page: red area "Delete shop permanently" -> button -> dialog with counts (name NOT typed) -> Cancel -> pointer on the status field'
+    chapter: { en: "Deleting is permanent" }
+    window_path: { en: "localhost:3500/admin/shops/96279/edit" }
+    callout: { en: "Shops · Delete shop" }
+    narration:
+      en: >-
+        At the very bottom is the red area "Delete shop permanently".
+        It removes the shop for good, together with its offers, exclusive products and reviews, and it also deletes the owner account.
+        This cannot be undone.
+        The window shows how many offers, products and reviews would disappear, and you must type the shop name to confirm.
+        We do not do that here, so we cancel.
+        If a shop is only outdated, set its status to "Inactive" instead.
+    subtitle:
+      el:
+        - "Στο τέλος της σελίδας υπάρχει η κόκκινη περιοχή «Οριστική διαγραφή καταστήματος»."
+        - "Αφαιρεί το κατάστημα οριστικά, μαζί με τις προσφορές, τα αποκλειστικά προϊόντα και τις κριτικές του, και διαγράφει επίσης τον λογαριασμό του ιδιοκτήτη."
+        - "Δεν αναιρείται."
+        - "Το παράθυρο δείχνει πόσες προσφορές, προϊόντα και κριτικές θα χαθούν, και για επιβεβαίωση πρέπει να πληκτρολογήσετε το όνομα του καταστήματος."
+        - "Εδώ δεν το κάνουμε, γι' αυτό ακυρώνουμε."
+        - "Αν ένα κατάστημα είναι απλώς παλιό, ορίστε αντί γι' αυτό την κατάστασή του σε «Ανενεργό»."
+
+  - id: shoptypes
+    shot: 'Shop Types in the sidebar -> list of types (taxonomy, not personal data); pointer on the table and on an Edit link (never opened)'
+    chapter: { en: "Shop types" }
+    window_path: { en: "localhost:3500/admin/shop-types" }
+    callout: { en: "Admin · Shop Types" }
+    narration:
+      en: >-
+        Finally, "Shop Types".
+        This list holds the types themselves, with their names in all supported languages.
+        Open it only to maintain the list, for example to fix a name or a translation.
+        A change here affects every shop of that type, so be careful.
+        That is all for shops.
+        Next in this series: products.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Τέλος, οι «Τύποι καταστημάτων»."
+        - "Αυτή η λίστα περιέχει τους ίδιους τους τύπους, με τα ονόματά τους σε όλες τις υποστηριζόμενες γλώσσες."
+        - "Ανοίξτε την μόνο για να συντηρήσετε τη λίστα, για παράδειγμα για να διορθώσετε ένα όνομα ή μια μετάφραση."
+        - "Μια αλλαγή εδώ επηρεάζει κάθε κατάστημα αυτού του τύπου, γι' αυτό προσέξτε."
+        - "Αυτά ήταν όλα για τα καταστήματα."
+        - "Στη συνέχεια της σειράς: προϊόντα."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

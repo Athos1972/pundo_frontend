@@ -1,0 +1,180 @@
+# Team video 2 "Claims and shop owners" (F8960 T18, topic 2). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-claims-owners.el.srt).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Order and wording follow the SOP "claims-owners" in src/lib/system-admin-help-content.ts.
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
+# ../team-common/prepare_team.py (marker "Team Demo"; two demo claims that are reset to "open" on every run).
+# Nothing real is decided: the video accepts the demo claim on "Team Demo Pet Corner" and rejects the one on
+# "Team Demo Flower Corner". Impersonation ("Manage shop operations") is only mentioned and hovered, never clicked.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+
+meta:
+  slug: team-claims-owners
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "Claims and shop owners"
+    el: "Αιτήσεις ιδιοκτησίας και ιδιοκτήτες"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "Next: maintaining shops"
+    el: "Επόμενο: συντήρηση καταστημάτων"
+  thumbnail_scene: accept
+  target_duration_s: 200
+  window_path:
+    en: "localhost:3500/admin/claims"
+    el: "localhost:3500/admin/claims"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: queue
+    shot: 'Claims in the sidebar -> list of applications (non-demo rows blurred) -> hover tab "Matching checks"'
+    chapter: { en: "The claims queue" }
+    window_path: { en: "localhost:3500/admin/claims" }
+    callout: { en: "Admin · Claims" }
+    narration:
+      en: >-
+        Welcome back.
+        In this video you decide on shop claims and look after shop owners.
+        A claim is an application from someone who says a shop belongs to them.
+        Open Claims in the sidebar and stay on the tab "Applications".
+        By default you see the open and checked ones, and you can filter by status.
+        The tab "Matching checks" gives you automatic hints.
+        Nobody gets control of a shop before you have checked the proof.
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Σε αυτό το βίντεο αποφασίζετε για αιτήσεις ιδιοκτησίας και φροντίζετε τους ιδιοκτήτες καταστημάτων."
+        - "Μια αίτηση είναι αίτημα κάποιου που δηλώνει ότι ένα κατάστημα του ανήκει."
+        - "Ανοίξτε τις «Αιτήσεις ιδιοκτησίας» στην πλευρική στήλη και μείνετε στην καρτέλα «Αιτήσεις»."
+        - "Από προεπιλογή βλέπετε τις ανοιχτές και τις ελεγμένες, και μπορείτε να φιλτράρετε ανά κατάσταση."
+        - "Η καρτέλα «Έλεγχοι αντιστοίχισης» δίνει αυτόματες ενδείξεις."
+        - "Κανείς δεν αποκτά έλεγχο ενός καταστήματος πριν ελέγξετε τα αποδεικτικά."
+
+  - id: check
+    shot: 'click the number of the demo application -> detail page: shop, applicant, proof, documents, audit trail (scroll)'
+    chapter: { en: "Checking the proof" }
+    window_path: { en: "localhost:3500/admin/claims/659" }
+    callout: { en: "Claims · Check the proof" }
+    narration:
+      en: >-
+        Click the number to open an application.
+        The top left shows the public data of the shop, the top right the applicant.
+        Below, compare the proof with the shop: here it is the e-mail domain, and the page tells you whether it matches.
+        Documents would appear in the box further down, and every view of a document is logged.
+        The audit trail at the bottom lists everything that has happened so far.
+    subtitle:
+      el:
+        - "Πατήστε τον αριθμό για να ανοίξετε μια αίτηση."
+        - "Πάνω αριστερά βλέπετε τα δημόσια στοιχεία του καταστήματος και πάνω δεξιά τον αιτούντα."
+        - "Από κάτω συγκρίνετε τα αποδεικτικά με το κατάστημα: εδώ είναι ο τομέας email, και η σελίδα δείχνει αν ταιριάζει."
+        - "Τα έγγραφα θα εμφανίζονταν στο πλαίσιο πιο κάτω, και κάθε προβολή εγγράφου καταγράφεται."
+        - "Το ιστορικό ελέγχου στο τέλος δείχνει ό,τι έχει γίνει μέχρι τώρα."
+
+  - id: verify
+    shot: '"Mark as verified" -> dialog, reason typed -> Confirm -> state Checked'
+    chapter: { en: "Mark as verified" }
+    window_path: { en: "localhost:3500/admin/claims/659" }
+    callout: { en: "Claims · Mark as verified" }
+    narration:
+      en: >-
+        If the proof is convincing, click "Mark as verified" first.
+        A window asks for a reason; it is required and stays internal.
+        Confirm, and the state changes to "Checked".
+        This documents that a person has looked at the proof.
+    subtitle:
+      el:
+        - "Αν τα αποδεικτικά πείθουν, πατήστε πρώτα «Σήμανση ως ελεγμένη»."
+        - "Ένα παράθυρο ζητά αιτιολόγηση· είναι υποχρεωτική και παραμένει εσωτερική."
+        - "Επιβεβαιώστε και η κατάσταση γίνεται «Ελεγμένη»."
+        - "Έτσι καταγράφεται ότι κάποιος έλεγξε τα αποδεικτικά."
+
+  - id: accept
+    shot: '"Accept" -> dialog with consequences, reason -> Confirm -> state Accepted, panel Decision'
+    chapter: { en: "Accept" }
+    window_path: { en: "localhost:3500/admin/claims/659" }
+    callout: { en: "Claims · Accept" }
+    narration:
+      en: >-
+        Now click "Accept".
+        The window lists the consequences: the applicant becomes the owner of the shop and is approved.
+        Enter a reason and confirm.
+        The owner then gets access, and an e-mail that the application was accepted.
+        If the shop already has an owner, use "Accept and change owner", but only when you are sure.
+    subtitle:
+      el:
+        - "Τώρα πατήστε «Έγκριση»."
+        - "Το παράθυρο απαριθμεί τις συνέπειες: ο αιτών γίνεται ιδιοκτήτης του καταστήματος και εγκρίνεται."
+        - "Γράψτε μια αιτιολόγηση και επιβεβαιώστε."
+        - "Ο ιδιοκτήτης αποκτά τότε πρόσβαση και λαμβάνει email ότι η αίτηση εγκρίθηκε."
+        - "Αν το κατάστημα έχει ήδη ιδιοκτήτη, χρησιμοποιήστε το «Έγκριση και αλλαγή ιδιοκτήτη», αλλά μόνο όταν είστε βέβαιοι."
+
+  - id: reject
+    shot: 'back to the list -> second demo application (domain does not match) -> "Reject" -> reason class + reason -> Confirm'
+    chapter: { en: "Reject" }
+    window_path: { en: "localhost:3500/admin/claims" }
+    callout: { en: "Claims · Reject" }
+    narration:
+      en: >-
+        The second application has a problem: the e-mail domain does not match the shop.
+        Open it and click "Reject".
+        Pick a reason class, here "Insufficient proof", and write down why, because the applicant may ask.
+        If you leave the box ticked, the applicant gets an e-mail with the reason class, but never your note.
+    subtitle:
+      el:
+        - "Η δεύτερη αίτηση έχει πρόβλημα: ο τομέας email δεν ταιριάζει με το κατάστημα."
+        - "Ανοίξτε την και πατήστε «Απόρριψη»."
+        - "Επιλέξτε κατηγορία λόγου, εδώ «Ανεπαρκής απόδειξη», και σημειώστε γιατί, επειδή ο αιτών μπορεί να ρωτήσει."
+        - "Αν αφήσετε το πλαίσιο επιλεγμένο, ο αιτών λαμβάνει email με την κατηγορία λόγου, ποτέ με τη σημείωσή σας."
+
+  - id: owners
+    shot: 'Shop Owners in the sidebar -> list (blurred) -> search "Team Demo" -> demo owners -> open the pending applicant (buttons only hovered)'
+    chapter: { en: "Shop owners" }
+    window_path: { en: "localhost:3500/admin/shop-owners" }
+    callout: { en: "Admin · Shop Owners" }
+    narration:
+      en: >-
+        Open "Shop Owners" in the sidebar to look at the accounts.
+        Search by name, filter by status, and see which shop each owner manages.
+        The applicant we just accepted is now approved and linked to the Pet Corner.
+        Open an owner to approve, reject or suspend the account.
+        An applicant with an open claim is decided in the claims queue, not here.
+    subtitle:
+      el:
+        - "Ανοίξτε τους «Ιδιοκτήτες καταστημάτων» στην πλευρική στήλη για να δείτε τους λογαριασμούς."
+        - "Αναζητήστε με όνομα, φιλτράρετε ανά κατάσταση και δείτε ποιο κατάστημα διαχειρίζεται κάθε ιδιοκτήτης."
+        - "Ο αιτών που μόλις εγκρίναμε είναι τώρα εγκεκριμένος και συνδεδεμένος με το Pet Corner."
+        - "Ανοίξτε έναν ιδιοκτήτη για να εγκρίνετε, να απορρίψετε ή να αναστείλετε τον λογαριασμό."
+        - "Έναν αιτούντα με ανοιχτή αίτηση τον αποφασίζετε στην ουρά αιτήσεων, όχι εδώ."
+
+  - id: support
+    shot: 'edit page of the demo shop: pointer rests on "Manage shop operations" (hover only, never clicked)'
+    chapter: { en: "Support only" }
+    window_path: { en: "localhost:3500/admin/shops" }
+    callout: { en: "Shop · Manage shop operations" }
+    narration:
+      en: >-
+        One more button sits on the edit page of every shop: "Manage shop operations".
+        It lets you act as the shop owner.
+        Use it for support purposes only, for example when the owner asks you to help.
+        Never change an owner's data without a reason.
+        We do not click it here.
+        Next in this series: maintaining shops.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Ένα ακόμη κουμπί υπάρχει στη σελίδα επεξεργασίας κάθε καταστήματος: «Διαχείριση λειτουργιών καταστήματος»."
+        - "Σας επιτρέπει να ενεργείτε ως ο ιδιοκτήτης του καταστήματος."
+        - "Χρησιμοποιήστε το μόνο για λόγους υποστήριξης, για παράδειγμα όταν ο ιδιοκτήτης ζητά βοήθεια."
+        - "Μην αλλάζετε ποτέ στοιχεία ιδιοκτήτη χωρίς λόγο."
+        - "Εδώ δεν το πατάμε."
+        - "Στη συνέχεια της σειράς: συντήρηση καταστημάτων."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

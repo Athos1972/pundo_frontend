@@ -33,6 +33,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'claims-owners', number: '2', order: 2,
+    videoId: 'S2bt0GO6zKQ', durationSec: 183,
     adminLinks: [
       { href: '/admin/claims', navKey: 'nav_claims' },
       { href: '/admin/shop-owners', navKey: 'nav_shop_owners' },
@@ -40,6 +41,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'shops', number: '3', order: 3,
+    videoId: 'xYCinlqnnIk', durationSec: 189,
     adminLinks: [
       { href: '/admin/shops', navKey: 'nav_shops' },
       { href: '/admin/shop-types', navKey: 'nav_shop_types' },
@@ -55,6 +57,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'translations', number: '4b', order: 5,
+    videoId: 't1Nk06Utc5U', durationSec: 218,
     adminLinks: [
       { href: '/admin/categories', navKey: 'nav_categories' },
       { href: '/admin/products', navKey: 'nav_products' },
@@ -62,6 +65,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'crm', number: '5', order: 6,
+    videoId: '0gdPz5DOLsk', durationSec: 226,
     adminLinks: [
       { href: '/admin/crm/contacts', navKey: 'nav_crm' },
       { href: '/admin/crm/settings', navKey: 'help_link_crm_settings' },

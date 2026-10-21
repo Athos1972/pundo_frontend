@@ -27247,6 +27247,42 @@
       }
      },
      {
+      "description": "Domain slug (what the admin list filter sends)",
+      "in": "query",
+      "name": "domain",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Domain slug (what the admin list filter sends)",
+       "title": "Domain"
+      }
+     },
+     {
+      "description": "Specialty slug (what the admin list filter sends)",
+      "in": "query",
+      "name": "specialty",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Specialty slug (what the admin list filter sends)",
+       "title": "Specialty"
+      }
+     },
+     {
       "in": "query",
       "name": "auto_assign",
       "required": false,

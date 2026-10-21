@@ -377,9 +377,20 @@ describe('MappingForm', () => {
     await waitFor(() => expect(push).toHaveBeenCalled())
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/item-domain-mappings/9')
     expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
-      item_id: 70, auto_assign: false, priority: 2, domain_id: 4, specialty_id: 6,
-    })
+    // B8820-003: the references are fixed after creation (the backend PATCH ignores them), so only priority/auto_assign are sent
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ auto_assign: false, priority: 2 })
+  })
+
+  it('edit: item, domain and specialty are read-only and explained; create leaves them editable', () => {
+    const { unmount } = render(<MappingForm tr={tr} mode="edit" mapping={mapping} />)
+    for (const label of [new RegExp(`^${tr.idm_item_id}`), tr.idm_domain_id, tr.idm_specialty_id]) {
+      expect((screen.getByLabelText(label) as HTMLInputElement).readOnly).toBe(true)
+    }
+    expect(screen.getByText(tr.idm_edit_readonly_hint)).toBeTruthy()
+    unmount()
+    render(<MappingForm tr={tr} mode="create" />)
+    expect((screen.getByLabelText(tr.idm_domain_id) as HTMLInputElement).readOnly).toBe(false)
+    expect(screen.queryByText(tr.idm_edit_readonly_hint)).toBeNull()
   })
 
   it('shows a generic error when the backend refuses or is unreachable', async () => {

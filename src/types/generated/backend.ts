@@ -14644,6 +14644,10 @@ export interface operations {
             query?: {
                 domain_id?: number | null;
                 specialty_id?: number | null;
+                /** @description Domain slug (what the admin list filter sends) */
+                domain?: string | null;
+                /** @description Specialty slug (what the admin list filter sends) */
+                specialty?: string | null;
                 auto_assign?: boolean | null;
                 limit?: number;
                 offset?: number;

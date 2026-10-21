@@ -35,12 +35,15 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
     }
 
     const payload: Record<string, unknown> = {
-      item_id: itemId,
       auto_assign: autoAssign,
       priority: priorityRaw ? Number(priorityRaw) : 0,
     }
-    if (domainIdRaw) payload.domain_id = Number(domainIdRaw)
-    if (specialtyIdRaw) payload.specialty_id = Number(specialtyIdRaw)
+    // The references are fixed once created (the backend PATCH ignores them): only a new mapping sends them.
+    if (mode === 'create') {
+      payload.item_id = itemId
+      if (domainIdRaw) payload.domain_id = Number(domainIdRaw)
+      if (specialtyIdRaw) payload.specialty_id = Number(specialtyIdRaw)
+    }
 
     startTransition(async () => {
       try {
@@ -69,6 +72,8 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-white rounded-xl border border-gray-200 p-6 max-w-lg">
+      {mode === 'edit' && <p className="text-xs text-gray-500">{tr.idm_edit_readonly_hint}</p>}
+
       {/* Item ID */}
       <div className="flex flex-col gap-1">
         <label htmlFor="idm-item-id" className="text-sm font-medium text-gray-700">
@@ -81,7 +86,8 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
           min={1}
           defaultValue={mapping?.item_id ?? ''}
           required
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+          readOnly={mode === 'edit'}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 read-only:bg-gray-100 read-only:text-gray-500"
         />
         {mapping?.item_name && (
           <p className="text-xs text-gray-500">{mapping.item_name}</p>
@@ -99,7 +105,8 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
           type="number"
           min={1}
           defaultValue={mapping?.domain_id ?? mapping?.onboarding_domain_id ?? ''}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+          readOnly={mode === 'edit'}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 read-only:bg-gray-100 read-only:text-gray-500"
         />
         {mapping?.onboarding_domain_slug && (
           <p className="text-xs text-gray-500 font-mono">{mapping.onboarding_domain_slug}</p>
@@ -117,7 +124,8 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
           type="number"
           min={1}
           defaultValue={mapping?.specialty_id ?? ''}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+          readOnly={mode === 'edit'}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 read-only:bg-gray-100 read-only:text-gray-500"
         />
         {mapping?.specialty_slug && (
           <p className="text-xs text-gray-500 font-mono">{mapping.specialty_slug}</p>

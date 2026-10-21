@@ -224,6 +224,11 @@ const sysAdminTranslations = {
     created_at: 'Created',
     last_used: 'Last used',
     never: 'Never',
+    api_key_prefix: 'Prefix',
+    api_key_active: 'Active',
+    api_key_revoked: 'Revoked',
+    api_key_expired: 'Expired',
+    api_key_expires: 'Expires',
     // Shop owner offers
     offer_title: 'Title',
     offer_desc: 'Description',
@@ -940,6 +945,11 @@ const sysAdminTranslations = {
     created_at: 'Δημιουργήθηκε',
     last_used: 'Τελευταία χρήση',
     never: 'Ποτέ',
+    api_key_prefix: 'Πρόθεμα',
+    api_key_active: 'Ενεργό',
+    api_key_revoked: 'Ανακλήθηκε',
+    api_key_expired: 'Έληξε',
+    api_key_expires: 'Λήγει',
     // Shop owner offers
     offer_title: 'Τίτλος',
     offer_desc: 'Περιγραφή',

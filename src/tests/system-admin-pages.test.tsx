@@ -359,6 +359,28 @@ describe('shop types / owners / offers / api keys lists', () => {
     expect(within(row).getByRole('button', { name: tr.revoke })).toBeTruthy()
   })
 
+  it('api keys: shows prefix, status (active / revoked / expired) and expiry', async () => {
+    const key = (id: number, over: Partial<SysAdminApiKey>): SysAdminApiKey => ({
+      id, key_prefix: `pk_${id}`, name: `k${id}`, key_type: 'internal', owner_id: null, scopes: [], is_active: true, expires_at: null,
+      created_at: '2026-03-04T10:00:00Z', created_by: null, last_used_at: null, ...over,
+    })
+    vi.mocked(api.getApiKeys).mockResolvedValue(paged([
+      key(1, {}),
+      key(2, { is_active: false }),
+      key(3, { expires_at: '2020-01-01T00:00:00Z' }),
+      key(4, { is_active: false, expires_at: '2020-01-01T00:00:00Z' }),
+    ]) as never)
+    const { default: Page } = await import(`${A}/api-keys/page`)
+    await show(Page, sp())
+    const rows = bodyRows()
+    expect(within(rows[0]).getByText('pk_1')).toBeTruthy()
+    expect(within(rows[0]).getByText(tr.api_key_active)).toBeTruthy()
+    expect(within(rows[1]).getByText(tr.api_key_revoked)).toBeTruthy()
+    expect(within(rows[2]).getByText(tr.api_key_expired)).toBeTruthy()
+    expect(within(rows[2]).getByText(new Date('2020-01-01T00:00:00Z').toLocaleDateString())).toBeTruthy()
+    expect(within(rows[3]).getByText(tr.api_key_revoked), 'revoked wins over expired').toBeTruthy()
+  })
+
   it('api keys: empty state on failure', async () => {
     vi.mocked(api.getApiKeys).mockRejectedValue(new Error('x'))
     const { default: Page } = await import(`${A}/api-keys/page`)

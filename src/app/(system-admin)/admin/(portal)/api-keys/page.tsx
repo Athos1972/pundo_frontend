@@ -5,6 +5,13 @@ import { EntityTable } from '@/components/system-admin/EntityTable'
 
 const LIMIT = 20
 
+// Outside the component on purpose: "expired" depends on the current time (impure), the table is rendered per request.
+function keyStatus(key: { is_active: boolean; expires_at: string | null }, tr: ReturnType<typeof tSysAdmin>): string {
+  if (!key.is_active) return tr.api_key_revoked
+  if (key.expires_at && new Date(key.expires_at).getTime() < Date.now()) return tr.api_key_expired
+  return tr.api_key_active
+}
+
 interface PageProps {
   searchParams: Promise<{ page?: string }>
 }
@@ -31,6 +38,9 @@ export default async function ApiKeysPage({ searchParams }: PageProps) {
     scope: item.scopes.join(', ') || '—',
     shop_owner_id: item.owner_id ?? '—',
     created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : '—',
+    // B6210-002: a revoked key was not recognisable in the table; revoked wins over expired
+    status: keyStatus(item, tr),
+    expires_at: item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '—',
     last_used_at: item.last_used_at ? new Date(item.last_used_at).toLocaleDateString() : tr.never,
   }))
 
@@ -43,6 +53,9 @@ export default async function ApiKeysPage({ searchParams }: PageProps) {
         columns={[
           { key: 'id', label: tr.id },
           { key: 'name', label: tr.name },
+          { key: 'key_prefix', label: tr.api_key_prefix },
+          { key: 'status', label: tr.status },
+          { key: 'expires_at', label: tr.api_key_expires },
           { key: 'scope', label: tr.scope },
           { key: 'shop_owner_id', label: 'Owner ID' },
           { key: 'created_at', label: tr.created_at },

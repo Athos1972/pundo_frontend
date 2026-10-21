@@ -859,6 +859,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/item-domain-mappings/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lookup
+         * @description Search items, domains or specialties by name or slug, so the mapping form needs no numeric IDs (B8820-003).
+         */
+        get: operations["lookup_api_v1_admin_item_domain_mappings_lookup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/item-domain-mappings/{mapping_id}": {
         parameters: {
             query?: never;
@@ -9295,6 +9315,20 @@ export interface components {
             /** Their Party */
             their_party?: string | null;
         };
+        /**
+         * MappingLookupOption
+         * @description One selectable entry for the mapping form: an item, a domain or a specialty, with a readable name.
+         */
+        MappingLookupOption: {
+            /** Id */
+            id: number;
+            /** Label */
+            label: string;
+            /** Parent Slug */
+            parent_slug?: string | null;
+            /** Slug */
+            slug: string;
+        };
         /** MarkSeenRequest */
         MarkSeenRequest: {
             /** Seen Until */
@@ -14908,6 +14942,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GapReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_api_v1_admin_item_domain_mappings_lookup_get: {
+        parameters: {
+            query: {
+                kind: "item" | "domain" | "specialty";
+                q?: string;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MappingLookupOption"][];
                 };
             };
             /** @description Validation Error */

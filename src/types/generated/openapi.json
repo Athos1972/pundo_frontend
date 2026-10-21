@@ -12561,6 +12561,41 @@
     "title": "ManualInteractionRequest",
     "type": "object"
    },
+   "MappingLookupOption": {
+    "description": "One selectable entry for the mapping form: an item, a domain or a specialty, with a readable name.",
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "parent_slug": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parent Slug"
+     },
+     "slug": {
+      "title": "Slug",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "slug",
+     "label"
+    ],
+    "title": "MappingLookupOption",
+    "type": "object"
+   },
    "MarkSeenRequest": {
     "properties": {
      "seen_until": {
@@ -27824,6 +27859,114 @@
      }
     },
     "summary": "Gap Report",
+    "tags": [
+     "admin",
+     "admin-item-domain-mappings"
+    ]
+   }
+  },
+  "/api/v1/admin/item-domain-mappings/lookup": {
+   "get": {
+    "description": "Search items, domains or specialties by name or slug, so the mapping form needs no numeric IDs (B8820-003).",
+    "operationId": "lookup_api_v1_admin_item_domain_mappings_lookup_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "enum": [
+        "item",
+        "domain",
+        "specialty"
+       ],
+       "title": "Kind",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 100,
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 20,
+       "maximum": 50,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/MappingLookupOption"
+         },
+         "title": "Response Lookup Api V1 Admin Item Domain Mappings Lookup Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Lookup",
     "tags": [
      "admin",
      "admin-item-domain-mappings"

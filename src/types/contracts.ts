@@ -147,3 +147,6 @@ export type OAuthRequestContracts = [
 
 // ── Admin product form: attribute values of one item (B8200-005, route GET /products/{id}/attributes) ───────────────
 export type ProductAttributeContracts = [Contract<Assignable<Schemas['AdminItemAttributeResponse'], SysAdmin.SysAdminItemAttribute>>]
+
+// ── Admin mapping form: search hits (B8820-003, route GET /item-domain-mappings/lookup) ──────────────────────────
+export type MappingLookupContracts = [Contract<Assignable<Schemas['MappingLookupOption'], SysAdmin.SysAdminMappingLookupOption>>]

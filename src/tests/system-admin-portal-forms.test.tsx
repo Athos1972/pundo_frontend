@@ -350,18 +350,32 @@ describe('MappingForm', () => {
     void user
   })
 
-  it('create: posts numbers, includes optional ids only when given, defaults auto_assign=true', async () => {
+  it('create: picks item and domain by name (server search), posts their ids, defaults auto_assign=true', async () => {
     const user = userEvent.setup()
-    mockFetch.mockResolvedValue(ok(201))
+    const rowsFor = (url: string) => (url.includes('kind=item')
+      ? [{ id: 70, slug: 'dog-food', label: 'Dog food' }]
+      : [{ id: 4, slug: 'pets', label: 'Pet services' }])
+    mockFetch.mockImplementation(async (url: string, init?: { method?: string }) =>
+      init?.method === 'POST' ? ok(201) : ok(200, rowsFor(url)))
     render(<MappingForm tr={tr} mode="create" />)
-    await user.type(screen.getByLabelText(new RegExp(`^${tr.idm_item_id}`)), '70')
-    await user.type(screen.getByLabelText(tr.idm_domain_id), '4')
+    await user.click(screen.getByRole('button', { name: new RegExp(`^${tr.idm_item}`) }))
+    await user.click(await screen.findByRole('option', { name: /Dog food/ }))
+    await user.click(screen.getByRole('button', { name: tr.idm_domain }))
+    await user.click(await screen.findByRole('option', { name: /Pet services/ }))
     await user.click(screen.getByRole('button', { name: tr.save }))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin/item-domain-mappings'))
+    const lookups = mockFetch.mock.calls.map((c) => String(c[0])).filter((u) => u.includes('/lookup?'))
+    expect(lookups.some((u) => u.startsWith('/api/admin/item-domain-mappings/lookup?') && u.includes('kind=item'))).toBe(true)
+    const post = mockFetch.mock.calls.find((c) => c[1]?.method === 'POST')!
+    expect(post[0]).toBe('/api/admin/item-domain-mappings')
+    expect(JSON.parse(post[1].body)).toEqual({ item_id: 70, auto_assign: true, priority: 0, domain_id: 4 })
     expect(refresh).toHaveBeenCalled()
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/item-domain-mappings')
-    expect(mockFetch.mock.calls[0][1].method).toBe('POST')
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ item_id: 70, auto_assign: true, priority: 0, domain_id: 4 })
+  })
+
+  it('create: offers no free numeric id fields any more', () => {
+    render(<MappingForm tr={tr} mode="create" />)
+    expect(screen.queryByLabelText(tr.idm_domain_id)).toBeNull()
+    expect(screen.queryByLabelText(new RegExp(`^${tr.idm_item_id}`))).toBeNull()
   })
 
   it('edit: prefills (including legacy onboarding_domain_id and slugs) and PATCHes', async () => {
@@ -389,7 +403,7 @@ describe('MappingForm', () => {
     expect(screen.getByText(tr.idm_edit_readonly_hint)).toBeTruthy()
     unmount()
     render(<MappingForm tr={tr} mode="create" />)
-    expect((screen.getByLabelText(tr.idm_domain_id) as HTMLInputElement).readOnly).toBe(false)
+    expect((screen.getByRole('button', { name: new RegExp(`^${tr.idm_domain}`) }) as HTMLButtonElement).disabled).toBe(false)
     expect(screen.queryByText(tr.idm_edit_readonly_hint)).toBeNull()
   })
 

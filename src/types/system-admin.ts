@@ -667,3 +667,11 @@ export interface SysAdminAssignOwnerResult {
   offers_flagged_count: number
   deactivated_shop_id: number | null
 }
+
+/** One hit of the mapping form's search (GET /item-domain-mappings/lookup). */
+export interface SysAdminMappingLookupOption {
+  id: number
+  slug: string
+  label: string
+  parent_slug: string | null
+}

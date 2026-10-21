@@ -39663,6 +39663,38 @@
        ],
        "title": "Accept-Language"
       }
+     },
+     {
+      "in": "header",
+      "name": "X-MCP-Tool",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Mcp-Tool"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
      }
     ],
     "responses": {
@@ -39685,6 +39717,16 @@
        }
       },
       "description": "Validation Error"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/McpAdmissionErrorResponse"
+        }
+       }
+      },
+      "description": "MCP wallet or daily-admission denial"
      }
     },
     "summary": "Get Product By Id",
@@ -46465,6 +46507,40 @@
    "get": {
     "description": "Return all shop-type vocabulary entries.",
     "operationId": "list_shop_types_api_v1_shop_types_get",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "X-MCP-Tool",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Mcp-Tool"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
     "responses": {
      "200": {
       "content": {
@@ -46479,6 +46555,26 @@
        }
       },
       "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/McpAdmissionErrorResponse"
+        }
+       }
+      },
+      "description": "MCP wallet or daily-admission denial"
      }
     },
     "summary": "List Shop Types",
@@ -47716,6 +47812,38 @@
        ],
        "title": "Accept-Language"
       }
+     },
+     {
+      "in": "header",
+      "name": "X-MCP-Tool",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Mcp-Tool"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
      }
     ],
     "responses": {
@@ -47738,6 +47866,16 @@
        }
       },
       "description": "Validation Error"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/McpAdmissionErrorResponse"
+        }
+       }
+      },
+      "description": "MCP wallet or daily-admission denial"
      }
     },
     "summary": "Get Shop",

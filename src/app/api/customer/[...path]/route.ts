@@ -62,6 +62,10 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   const responseContentType = backendRes.headers.get('content-type')
   if (responseContentType) responseHeaders.set('content-type', responseContentType)
+  // F3900: admission limits are actionable only when the browser also receives
+  // the producer's Retry-After value. Keep this a narrow allowlist.
+  const retryAfter = backendRes.headers.get('retry-after')
+  if (retryAfter) responseHeaders.set('retry-after', retryAfter)
 
   // 204 No Content must not have a body
   if (backendRes.status === 204) {

@@ -51,6 +51,7 @@ export default async function AccountPage() {
           reviews={reviews}
           trustProfile={trustProfile}
           lang={lang}
+          brandSlug={brand.slug}
           showMcpTab={brand.features.mcp}
         />
       </div>

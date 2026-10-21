@@ -1,0 +1,21 @@
+{
+  "backend_commit": "987a56e4baeaf3671bfe52fe337ee254f3d14e34",
+  "backend_worktree_dirty": false,
+  "body": {
+    "message": "Wir sind auf der Suche für Dich! Du erhältst eine E-Mail sobald wir Ergebnisse haben.",
+    "search_id": 2092,
+    "status": "submitted",
+    "task_id": "1d5ad985-c5cc-4711-adf3-0a361917ea4a"
+  },
+  "flag": "false",
+  "headers": {
+    "content-length": "188",
+    "content-type": "application/json",
+    "date": "Wed, 21 Oct 2026 17:14:14 GMT",
+    "server": "uvicorn",
+    "x-request-id": "addb92b1c065cc33"
+  },
+  "recorded_at": "2026-10-21T17:14:15.546975Z",
+  "state": "homesick_submit_free",
+  "status": 202
+}

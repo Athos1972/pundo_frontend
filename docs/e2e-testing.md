@@ -424,6 +424,10 @@ Meta-Tests, Checkliste): `pundo_main_backend/docs/testing.md`, gleichnamiger Abs
 | Proxy-Vertragstabelle | `src/tests/proxy-catchall-contract.test.ts` | Cookie→Bearer, Header-Allowlist, Fehlerformen der Catch-all-Routen |
 | Betriebswege | `src/tests/ops-routes-contract.test.ts` | Sitemap-Revalidierung (`x-revalidate-secret`) und Nominatim-Proxy |
 
+### F3900: Progression-Aufnahmen und Journeys
+
+Die Fixtures `progression-*.json` werden ausschließlich von der abgestimmten Backend-Probe auf **8500** übernommen: zuerst Status, Header (insbesondere `Retry-After`) und Body unter dem Spec-Ordner `fixtures-8500/<flag-aus|flag-an>/` aufnehmen, dann unverändert nach `e2e/fixtures/contracts/` kopieren. Handgeschriebene Bodies in `route.fulfill` sind verboten. `src/tests/e2e-contract-fixtures.test.ts` und `src/tests/progression-api.test.ts` prüfen Form und fail-closed Decoder; der nachfolgende Journey `e2e/journeys/homesick-wallet.spec.ts` verwendet dieselben Dateien für Gratis-, Paid-, Guthaben- und Limit-Zustände. Fehlt die vom Backend markierte `READY.md`, bleiben diese aufnahmebasierten Journeys bewusst ausstehend; es wird keine Ersatzfixture erfunden.
+
 Regeln, die sich aus den Funden ergeben haben:
 
 1. **`page.route()` sieht nur Browser-Anfragen.** Server-Komponenten holen ihre Daten serverseitig (z. B. `/related` der Produktseite); ein Mock im
@@ -436,4 +440,3 @@ Regeln, die sich aus den Funden ergeben haben:
 4. **Gate-Zeitüberschreitungen unter Last.** Läuft der Mac heiß (Time Machine, Spotlight, hängender `fseventsd`/`SystemUIServer`, IDE-Indexierung),
    scheitern im vollen Lauf wahllos 1 bis 4 Tests mit `page.goto … 30000ms`; einzeln laufen sie durch. Vor einem Push `uptime` prüfen (Last unter etwa 4),
    die Ursache beheben und regulär neu pushen, nicht `--no-verify`.
-

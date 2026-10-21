@@ -145,26 +145,46 @@ describe('SearchSimilarModal', () => {
 
   it('shows success state (inbox message) after successful submit', async () => {
     mockFetch
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ used_today: 2, limit_daily: 10 }) })
-      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        allowed: true, charge: { kind: 'free', credits: 0 }, wallet_credits: 12,
+        allowance: { kind: 'homesick', period: 'utc_month', used: 2, free_limit: 20, unit_price: 3 }, message_code: 'free_allowance_available',
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ search_id: 123, status: 'submitted', message: 'ok' }), { status: 202 }))
 
     render(<SearchSimilarModal lang="en" isOpen={true} onClose={onClose} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'rote Turnschuhe' } })
     fireEvent.click(screen.getByRole('button', { name: /submit|send|search/i }))
+    await waitFor(() => expect(screen.getByText(/cost preview/i)).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /continue for free/i }))
 
     await waitFor(() => expect(screen.getByText(/inbox/i)).toBeInTheDocument(), { timeout: 2000 })
   })
 
   it('shows rate limit error on HTTP 429', async () => {
     mockFetch
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ used_today: 10, limit_daily: 10 }) })
-      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        code: 'progression_admission_limit', limit_kind: 'homesick_daily_attempt_cap',
+        reset_at: '2026-10-22T00:00:00Z', retry_after: 3600,
+      }), { status: 429, headers: { 'Retry-After': '3600' } }))
 
     render(<SearchSimilarModal lang="en" isOpen={true} onClose={onClose} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'etwas suchen' } })
     fireEvent.click(screen.getByRole('button', { name: /submit|send|search/i }))
 
     await waitFor(() => expect(screen.getByText(/limit|rate|quota/i)).toBeInTheDocument(), { timeout: 2000 })
+  })
+
+  it('does not submit a paid Homesick search before the explicit confirmation', async () => {
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      allowed: true, charge: { kind: 'credits', credits: 3 }, wallet_credits: 8,
+      allowance: { kind: 'homesick', period: 'utc_month', used: 20, free_limit: 20, unit_price: 3 }, message_code: 'credit_charge_required',
+    }), { status: 200 }))
+    render(<SearchSimilarModal lang="en" isOpen={true} onClose={onClose} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'paid search' } })
+    fireEvent.click(screen.getByRole('button', { name: /search/i }))
+    await waitFor(() => expect(screen.getByText(/costs 3 credits/i)).toBeInTheDocument())
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockFetch.mock.calls[0][0]).toBe('/api/customer/customer/progression/preflight')
   })
 
   it('calls onClose when backdrop is clicked', () => {

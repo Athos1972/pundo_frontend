@@ -128,4 +128,15 @@ describe('customer proxy specifics', () => {
     const res = await call(p, 'POST', ['customer', 'auth', 'login'], { body: {} })
     expect(res.headers.get('set-cookie')).not.toMatch(/domain=/i)
   })
+
+  it('forwards Retry-After together with the unchanged 429 body', async () => {
+    const p = PROXIES[1]
+    currentCookie = p.cookie
+    const body = { code: 'progression_admission_limit', limit_kind: 'homesick_daily_attempt_cap', reset_at: '2026-10-22T00:00:00Z', retry_after: 3600 }
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify(body), { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '3600' } }))
+    const res = await call(p, 'POST', ['customer', 'progression', 'preflight'], { body: { action: 'homesick', brand: 'pundo', reference: '' } })
+    expect(res.status).toBe(429)
+    expect(res.headers.get('retry-after')).toBe('3600')
+    expect(await res.json()).toEqual(body)
+  })
 })

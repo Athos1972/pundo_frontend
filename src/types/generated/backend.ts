@@ -20282,6 +20282,8 @@ export interface operations {
             query?: never;
             header?: {
                 "accept-language"?: string | null;
+                "X-MCP-Tool"?: string | null;
+                authorization?: string | null;
             };
             path: {
                 product_id: number;
@@ -20306,6 +20308,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description MCP wallet or daily-admission denial */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpAdmissionErrorResponse"];
                 };
             };
         };
@@ -23429,7 +23440,10 @@ export interface operations {
     list_shop_types_api_v1_shop_types_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-MCP-Tool"?: string | null;
+                authorization?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -23442,6 +23456,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShopTypeRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description MCP wallet or daily-admission denial */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpAdmissionErrorResponse"];
                 };
             };
         };
@@ -23905,6 +23937,8 @@ export interface operations {
             };
             header?: {
                 "accept-language"?: string | null;
+                "X-MCP-Tool"?: string | null;
+                authorization?: string | null;
             };
             path: {
                 shop_id: number;
@@ -23929,6 +23963,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description MCP wallet or daily-admission denial */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpAdmissionErrorResponse"];
                 };
             };
         };

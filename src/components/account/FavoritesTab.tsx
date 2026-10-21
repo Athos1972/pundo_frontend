@@ -2,21 +2,27 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { t } from '@/lib/translations'
 import { formatAmount } from '@/lib/utils'
 import { ProductCardImage } from '@/components/product/ProductCardImage'
+import { WalletChargeConfirmDialog } from '@/components/wallet/WalletChargeConfirmDialog'
+import { progressionAdmissionErrorText } from '@/lib/progression-error-text'
+import { patchFavoriteInterval, requestProgressionPreflight } from '@/lib/progression-api'
 import type { Lang } from '@/lib/lang'
 import { localePath } from '@/lib/routing'
-import type { FavoriteListItem, AlertInterval, NotificationSettings } from '@/types/api'
+import type { FavoriteListItem, AlertInterval, NotificationSettings, ProgressionAdmissionError, ProgressionPreflightResponse } from '@/types/api'
 
 interface Props {
   lang: string
+  brandSlug?: string
 }
 
 const INTERVAL_ORDER: AlertInterval[] = ['sofort', 'täglich', 'wöchentlich', 'nie']
 
-export function FavoritesTab({ lang }: Props) {
+export function FavoritesTab({ lang, brandSlug = 'pundo' }: Props) {
   const tr = t(lang)
+  const router = useRouter()
   const [favorites, setFavorites] = useState<FavoriteListItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -25,6 +31,8 @@ export function FavoritesTab({ lang }: Props) {
   const [isSavingGlobal, setIsSavingGlobal] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [pendingActivation, setPendingActivation] = useState<{ favoriteId: number; interval: AlertInterval; preview: ProgressionPreflightResponse } | null>(null)
+  const [intervalError, setIntervalError] = useState<ProgressionAdmissionError | null>(null)
 
   const loadFavorites = useCallback(async (p = 1) => {
     setIsLoading(true)
@@ -65,6 +73,26 @@ export function FavoritesTab({ lang }: Props) {
     }
   }
 
+  function handleAdmissionError(error: ProgressionAdmissionError) {
+    if (error.kind === 'auth') {
+      router.push('/auth/login')
+      return
+    }
+    setIntervalError(error)
+  }
+
+  async function persistFavoriteInterval(favoriteId: number, newInterval: AlertInterval) {
+    setIntervalError(null)
+    const result = await patchFavoriteInterval(favoriteId, newInterval)
+    if (!result.ok) {
+      handleAdmissionError(result.error)
+      return
+    }
+    // The select changes only after the backend confirms the final admission/mutation.
+    setFavorites((prev) => prev.map((f) => f.id === favoriteId ? { ...f, alert_interval: result.data.interval as AlertInterval } : f))
+    setPendingActivation(null)
+  }
+
   async function updateFavoriteInterval(favoriteId: number, newInterval: AlertInterval) {
     const globalIdx = INTERVAL_ORDER.indexOf(globalInterval)
     const newIdx = INTERVAL_ORDER.indexOf(newInterval)
@@ -72,14 +100,21 @@ export function FavoritesTab({ lang }: Props) {
       alert(tr.favorites_interval_error)
       return
     }
-    setFavorites((prev) =>
-      prev.map((f) => (f.id === favoriteId ? { ...f, alert_interval: newInterval } : f))
-    )
-    await fetch(`/api/customer/customer/favorites/${favoriteId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ interval: newInterval }),
-    })
+    const favorite = favorites.find((f) => f.id === favoriteId)
+    if (!favorite) return
+    const currentInterval = favorite.alert_interval ?? globalInterval
+    // Only "never → active" starts a Product-Mail subscription and needs K3 admission.
+    if (currentInterval !== 'nie' || newInterval === 'nie') {
+      await persistFavoriteInterval(favoriteId, newInterval)
+      return
+    }
+    setIntervalError(null)
+    const result = await requestProgressionPreflight({ action: 'product_mail', brand: brandSlug, reference: `${favoriteId}:${newInterval}` })
+    if (!result.ok) {
+      handleAdmissionError(result.error)
+      return
+    }
+    setPendingActivation({ favoriteId, interval: newInterval, preview: result.data })
   }
 
   async function deleteFavorite(favoriteId: number) {
@@ -96,6 +131,8 @@ export function FavoritesTab({ lang }: Props) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-text">{tr.favorites_tab}</h2>
+
+      {intervalError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{progressionAdmissionErrorText(tr, intervalError, tr.favorites_activation_error, lang)}</p>}
 
       {/* Global notification settings */}
       <div className="bg-surface-alt rounded-xl p-4 border border-border">
@@ -233,6 +270,19 @@ export function FavoritesTab({ lang }: Props) {
               {isLoading ? '…' : tr.load_more}
             </button>
           )}
+        </div>
+      )}
+
+      {pendingActivation && (
+        <div role="dialog" aria-modal="true" aria-label={tr.progression_preview_title} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl">
+            <WalletChargeConfirmDialog
+              lang={lang}
+              preview={pendingActivation.preview}
+              onConfirm={() => persistFavoriteInterval(pendingActivation.favoriteId, pendingActivation.interval)}
+              onCancel={() => setPendingActivation(null)}
+            />
+          </div>
         </div>
       )}
     </div>

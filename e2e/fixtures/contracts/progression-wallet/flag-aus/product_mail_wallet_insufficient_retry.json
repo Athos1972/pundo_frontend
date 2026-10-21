@@ -1,0 +1,22 @@
+{
+  "backend_commit": "987a56e4baeaf3671bfe52fe337ee254f3d14e34",
+  "backend_worktree_dirty": false,
+  "body": {
+    "code": "progression_admission_limit",
+    "limit_kind": "product_mail_free_monthly",
+    "reset_at": "2026-11-01T00:00:00Z",
+    "retry_after": 888345
+  },
+  "flag": "false",
+  "headers": {
+    "content-length": "134",
+    "content-type": "application/json",
+    "date": "Wed, 21 Oct 2026 17:14:14 GMT",
+    "retry-after": "888345",
+    "server": "uvicorn",
+    "x-request-id": "48c1dae3d9099b7e"
+  },
+  "recorded_at": "2026-10-21T17:14:15.546975Z",
+  "state": "product_mail_wallet_insufficient_retry",
+  "status": 429
+}

@@ -56,6 +56,10 @@ Next 16 nennt die Middleware „Proxy“. `src/proxy.ts` erledigt pro Request:
 
 Der `matcher` am Dateiende schließt u. a. `/_next`, `/api` und Prefetch-Requests aus.
 
+### Customer-Admission und Header-Allowlist (F3900 K3)
+
+Kostenpflichtige Homesick-Suchen und das erstmalige Aktivieren eines Produkt-Mail-Abos rufen im Browser ausschließlich den Customer-Catch-all unter `/api/customer/customer/...` auf. Vor der finalen Mutation liest `src/lib/progression-api.ts` den schreibfreien Preflight; der finale Submit/PATCH prüft die Zulassung erneut und bleibt maßgeblich. Der Catch-all gibt Status und Body unverändert weiter und erlaubt zusätzlich zu `Content-Type` ausschließlich `Retry-After`. Damit kann das UI einen 429-Reset korrekt anzeigen, ohne interne Backend-Header sichtbar zu machen. Der Contract-Test `src/tests/proxy-catchall-contract.test.ts` pinnt Header, Status und JSON-Body.
+
 ## Modulstruktur
 
 ```

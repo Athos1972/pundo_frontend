@@ -97,6 +97,9 @@ export type ApiContracts = [
   Contract<Assignable<Schemas['ShopDetailResponse'], Api.ShopDetailResponse>>,
   Contract<Assignable<Schemas['CategoryItem'], Api.CategoryItem>>,
   Contract<Assignable<Schemas['SearchResponse'], Api.SearchResponse>>,
+  Contract<Assignable<Schemas['ProgressionPreflightResponse'], Api.ProgressionPreflightResponse>>,
+  Contract<Assignable<Schemas['WalletInsufficientResponse'], Omit<Extract<Api.ProgressionAdmissionError, { kind: 'wallet_insufficient' }>, 'kind' | 'status'>>>,
+  Contract<Assignable<Schemas['ProgressionAdmissionLimitResponse'], Omit<Extract<Api.ProgressionAdmissionError, { kind: 'admission_limit' }>, 'kind' | 'status' | 'retry_after_header'>>>,
 ]
 
 // ── Shop admin (src/types/shop-admin.ts) ────────────────────────────────────────────────────────────────

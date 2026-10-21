@@ -1,0 +1,31 @@
+{
+  "backend_commit": "987a56e4baeaf3671bfe52fe337ee254f3d14e34",
+  "backend_worktree_dirty": false,
+  "body": {
+    "allowance": {
+      "free_limit": 20,
+      "kind": "homesick",
+      "period": "utc_month",
+      "unit_price": 3,
+      "used": 5
+    },
+    "allowed": true,
+    "charge": {
+      "credits": 3,
+      "kind": "credits"
+    },
+    "message_code": "wallet_charge_required",
+    "wallet_credits": 3
+  },
+  "flag": "true",
+  "headers": {
+    "content-length": "208",
+    "content-type": "application/json",
+    "date": "Wed, 21 Oct 2026 17:14:26 GMT",
+    "server": "uvicorn",
+    "x-request-id": "342a8d26790034c9"
+  },
+  "recorded_at": "2026-10-21T17:14:27.246073Z",
+  "state": "homesick_preflight_paid",
+  "status": 200
+}

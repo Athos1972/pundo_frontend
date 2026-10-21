@@ -12,7 +12,7 @@ interface HomesickTeaserProps {
   variant?: 'section' | 'page'
 }
 
-export function HomesickTeaser({ brand: _brand, lang, variant = 'section' }: HomesickTeaserProps) {
+export function HomesickTeaser({ brand, lang, variant = 'section' }: HomesickTeaserProps) {
   const [open, setOpen] = useState(false)
   const tr = t(lang)
 
@@ -43,7 +43,7 @@ export function HomesickTeaser({ brand: _brand, lang, variant = 'section' }: Hom
         </button>
       </section>
 
-      <SearchSimilarModal lang={lang} isOpen={open} onClose={() => setOpen(false)} />
+      <SearchSimilarModal lang={lang} brandSlug={brand.slug} isOpen={open} onClose={() => setOpen(false)} />
     </>
   )
 }

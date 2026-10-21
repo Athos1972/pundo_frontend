@@ -1,0 +1,21 @@
+{
+  "backend_commit": "987a56e4baeaf3671bfe52fe337ee254f3d14e34",
+  "backend_worktree_dirty": false,
+  "body": {
+    "code": "wallet_insufficient",
+    "earn_credits_hint": "contribute",
+    "required_credits": 1,
+    "wallet_credits": 0
+  },
+  "flag": "true",
+  "headers": {
+    "content-length": "103",
+    "content-type": "application/json",
+    "date": "Wed, 21 Oct 2026 17:14:26 GMT",
+    "server": "uvicorn",
+    "x-request-id": "6b03690de7b120f5"
+  },
+  "recorded_at": "2026-10-21T17:14:27.246073Z",
+  "state": "mcp_wallet_insufficient",
+  "status": 429
+}

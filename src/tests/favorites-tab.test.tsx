@@ -7,6 +7,10 @@ vi.mock('next/link', () => ({
     <a href={href} className={className}>{children}</a>,
 }))
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}))
+
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
@@ -207,5 +211,48 @@ describe('FavoritesTab', () => {
 
     expect(alertMock).toHaveBeenCalled()
     alertMock.mockRestore()
+  })
+
+  it('keeps a never-alert unchanged until paid product-mail activation is confirmed', async () => {
+    mockFetch.mockReset()
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ default_alert_interval: 'täglich' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [makeFav({ id: 9, alert_interval: 'nie' })], total: 1, page: 1, limit: 20 }) })
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        allowed: true, charge: { kind: 'credits', credits: 2 }, wallet_credits: 7,
+        allowance: { kind: 'product_mail', period: 'utc_month', used: 5, free_limit: 5, unit_price: 2 }, message_code: 'credit_charge_required',
+      }), { status: 200 }))
+
+    render(<FavoritesTab lang="en" />)
+    await waitFor(() => expect(screen.getByText('Test Produkt')).toBeInTheDocument())
+    const select = screen.getAllByRole('combobox').at(-1)!
+    fireEvent.change(select, { target: { value: 'täglich' } })
+    await waitFor(() => expect(screen.getByText(/costs 2 credits/i)).toBeInTheDocument())
+    expect(select).toHaveValue('nie')
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+    expect(mockFetch.mock.calls[2][0]).toBe('/api/customer/customer/progression/preflight')
+  })
+
+  it('does not change the alert after a final wallet denial race', async () => {
+    mockFetch.mockReset()
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ default_alert_interval: 'täglich' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [makeFav({ id: 10, alert_interval: 'nie' })], total: 1, page: 1, limit: 20 }) })
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        allowed: true, charge: { kind: 'credits', credits: 2 }, wallet_credits: 2,
+        allowance: { kind: 'product_mail', period: 'utc_month', used: 5, free_limit: 5, unit_price: 2 }, message_code: 'credit_charge_required',
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        code: 'wallet_insufficient', required_credits: 2, wallet_credits: 0, earn_credits_hint: 'contribute',
+      }), { status: 402 }))
+
+    render(<FavoritesTab lang="en" />)
+    await waitFor(() => expect(screen.getByText('Test Produkt')).toBeInTheDocument())
+    const select = screen.getAllByRole('combobox').at(-1)!
+    fireEvent.change(select, { target: { value: 'täglich' } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /confirm and spend/i })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /confirm and spend/i }))
+    await waitFor(() => expect(screen.getByText(/need 2 credits.*have 0/i)).toBeInTheDocument())
+    expect(select).toHaveValue('nie')
   })
 })

@@ -51,6 +51,7 @@ export default async function AccountFavoritesPage() {
           reviews={reviews}
           trustProfile={trustProfile}
           lang={lang}
+          brandSlug={brand.slug}
           showMcpTab={brand.features.mcp}
           initialTab="favorites"
         />

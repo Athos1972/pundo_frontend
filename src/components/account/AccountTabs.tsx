@@ -21,11 +21,12 @@ interface Props {
   reviews: MyReview[]
   trustProfile: TrustProfileResponse | null
   lang: string
+  brandSlug?: string
   showMcpTab: boolean
   initialTab?: Tab
 }
 
-export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, showMcpTab, initialTab }: Props) {
+export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, brandSlug = 'pundo', showMcpTab, initialTab }: Props) {
   const tr = t(lang)
   const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? 'profile')
   const [user, setUser] = useState<AuthUser>(initialUser)
@@ -132,7 +133,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
           aria-labelledby="tab-favorites"
           hidden={activeTab !== 'favorites'}
         >
-          {activeTab === 'favorites' && <FavoritesTab lang={lang} />}
+          {activeTab === 'favorites' && <FavoritesTab lang={lang} brandSlug={brandSlug} />}
         </div>
 
         <div

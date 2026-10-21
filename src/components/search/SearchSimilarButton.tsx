@@ -93,7 +93,7 @@ export function SearchSimilarButton({ lang, brandSlug, hasBottomBar = false, onO
         </button>
       </div>
 
-      <SearchSimilarModal lang={currentLang} isOpen={open} onClose={handleClose} />
+      <SearchSimilarModal lang={currentLang} brandSlug={brandSlug} isOpen={open} onClose={handleClose} />
     </div>
   )
 }

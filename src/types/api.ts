@@ -386,6 +386,43 @@ export interface SimilaritySearchQuota {
   limit_monthly: number
 }
 
+// ─── Progression admission / wallet preview (F3900 K3) ──────────────────────
+
+export type ProgressionAction = 'homesick' | 'product_mail'
+
+export interface ProgressionAllowance {
+  kind: string
+  period: string
+  used: number
+  free_limit: number
+  unit_price: number
+}
+
+export type ProgressionCharge =
+  | { kind: 'free'; credits: 0 }
+  | { kind: 'credits'; credits: number }
+
+/** Read-only price preview. It never reserves credits; the final request remains authoritative. */
+export interface ProgressionPreflightResponse {
+  allowed: true
+  charge: ProgressionCharge
+  wallet_credits: number
+  allowance: ProgressionAllowance
+  message_code: string
+}
+
+export type ProgressionAdmissionError =
+  | { kind: 'wallet_insufficient'; status: 402; required_credits: number; wallet_credits: number; earn_credits_hint: string }
+  | { kind: 'admission_limit'; status: 429; limit_kind: string; reset_at: string; retry_after: number; retry_after_header: number | null }
+  | { kind: 'conflict'; status: 409 }
+  | { kind: 'auth'; status: 401 | 403 }
+  | { kind: 'not_found'; status: 404 }
+  | { kind: 'validation'; status: 422; detail: string | null }
+  | { kind: 'server'; status: number }
+  | { kind: 'network'; status: 0 }
+  | { kind: 'contract_invalid'; status: number }
+  | { kind: 'generic'; status: number }
+
 // ─── Unified Search (F5910 Service-Discovery-Bridge) ─────────────────────────
 
 export interface SearchProductItem extends ProductListItem {

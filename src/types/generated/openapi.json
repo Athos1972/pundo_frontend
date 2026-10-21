@@ -7027,11 +7027,6 @@
       "title": "Item Slug",
       "type": "string"
      },
-     "priority": {
-      "default": 0,
-      "title": "Priority",
-      "type": "integer"
-     },
      "specialty_slug": {
       "anyOf": [
        {
@@ -11793,11 +11788,6 @@
       "title": "Item Id",
       "type": "integer"
      },
-     "priority": {
-      "default": 0,
-      "title": "Priority",
-      "type": "integer"
-     },
      "specialty_id": {
       "anyOf": [
        {
@@ -11828,17 +11818,6 @@
        }
       ],
       "title": "Auto Assign"
-     },
-     "priority": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Priority"
      }
     },
     "title": "ItemDomainMappingPatch",
@@ -11874,10 +11853,6 @@
       "title": "Item Id",
       "type": "integer"
      },
-     "priority": {
-      "title": "Priority",
-      "type": "integer"
-     },
      "specialty_id": {
       "anyOf": [
        {
@@ -11893,7 +11868,6 @@
     "required": [
      "id",
      "item_id",
-     "priority",
      "auto_assign",
      "created_at"
     ],

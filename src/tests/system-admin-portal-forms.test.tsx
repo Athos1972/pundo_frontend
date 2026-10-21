@@ -337,7 +337,7 @@ describe('ShopOwnerOfferEditForm', () => {
 describe('MappingForm', () => {
   const mapping: SysAdminItemDomainMapping = {
     id: 9, item_id: 70, item_name: 'Dog food', domain_id: null, onboarding_domain_id: 4, onboarding_domain_slug: 'pets',
-    specialty_id: 6, specialty_slug: 'vet', priority: 2, auto_assign: false, created_at: '',
+    specialty_id: 6, specialty_slug: 'vet', auto_assign: false, created_at: '',
   }
 
   it('create: rejects a missing item id without calling the API', async () => {
@@ -368,7 +368,7 @@ describe('MappingForm', () => {
     expect(lookups.some((u) => u.startsWith('/api/admin/item-domain-mappings/lookup?') && u.includes('kind=item'))).toBe(true)
     const post = mockFetch.mock.calls.find((c) => c[1]?.method === 'POST')!
     expect(post[0]).toBe('/api/admin/item-domain-mappings')
-    expect(JSON.parse(post[1].body)).toEqual({ item_id: 70, auto_assign: true, priority: 0, domain_id: 4 })
+    expect(JSON.parse(post[1].body)).toEqual({ item_id: 70, auto_assign: true, domain_id: 4 })
     expect(refresh).toHaveBeenCalled()
   })
 
@@ -391,8 +391,8 @@ describe('MappingForm', () => {
     await waitFor(() => expect(push).toHaveBeenCalled())
     expect(mockFetch.mock.calls[0][0]).toBe('/api/admin/item-domain-mappings/9')
     expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
-    // B8820-003: the references are fixed after creation (the backend PATCH ignores them), so only priority/auto_assign are sent
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ auto_assign: false, priority: 2 })
+    // B8820-003: the references are fixed after creation (the backend PATCH ignores them), so only auto_assign is sent (B8820-003: priority was removed, it was never evaluated)
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ auto_assign: false })
   })
 
   it('edit: item, domain and specialty are read-only and explained; create leaves them editable', () => {
@@ -401,6 +401,7 @@ describe('MappingForm', () => {
       expect((screen.getByLabelText(label) as HTMLInputElement).readOnly).toBe(true)
     }
     expect(screen.getByText(tr.idm_edit_readonly_hint)).toBeTruthy()
+    expect(document.querySelector('[name="priority"]'), 'priority was never evaluated and is gone').toBeNull()
     unmount()
     render(<MappingForm tr={tr} mode="create" />)
     expect((screen.getByRole('button', { name: new RegExp(`^${tr.idm_domain}`) }) as HTMLButtonElement).disabled).toBe(false)
@@ -423,9 +424,9 @@ describe('MappingForm', () => {
 
 describe('MappingList', () => {
   const rows: SysAdminItemDomainMapping[] = [
-    { id: 1, item_id: 10, item_name: 'Food', domain_id: 2, onboarding_domain_slug: 'pets', specialty_id: null, priority: 1, auto_assign: true, created_at: '' },
-    { id: 2, item_id: 11, item_name: null, domain_id: 3, specialty_id: 5, priority: 0, auto_assign: false, created_at: '' },
-    { id: 3, item_id: 12, item_name: 'Toy', domain_id: null, specialty_id: null, priority: 0, auto_assign: true, created_at: '' },
+    { id: 1, item_id: 10, item_name: 'Food', domain_id: 2, onboarding_domain_slug: 'pets', specialty_id: null, auto_assign: true, created_at: '' },
+    { id: 2, item_id: 11, item_name: null, domain_id: 3, specialty_id: 5, auto_assign: false, created_at: '' },
+    { id: 3, item_id: 12, item_name: 'Toy', domain_id: null, specialty_id: null, auto_assign: true, created_at: '' },
   ]
   const base = { mappings: rows, total: 3, page: 1, limit: 50, tr, domain: '', specialty: '' }
 

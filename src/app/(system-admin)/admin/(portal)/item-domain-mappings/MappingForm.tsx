@@ -45,7 +45,6 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
     const itemIdRaw = mode === 'create' ? pickedItem : (fd.get('item_id') as string).trim()
     const domainIdRaw = mode === 'create' ? pickedDomain : (fd.get('domain_id') as string).trim()
     const specialtyIdRaw = mode === 'create' ? pickedSpecialty : (fd.get('specialty_id') as string).trim()
-    const priorityRaw = (fd.get('priority') as string).trim()
     const autoAssign = (fd.get('auto_assign') as string) === 'true'
 
     const itemId = Number(itemIdRaw)
@@ -56,7 +55,6 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
 
     const payload: Record<string, unknown> = {
       auto_assign: autoAssign,
-      priority: priorityRaw ? Number(priorityRaw) : 0,
     }
     // The references are fixed once created (the backend PATCH ignores them): only a new mapping sends them.
     if (mode === 'create') {
@@ -201,22 +199,6 @@ export function MappingForm({ tr, mode, mapping }: MappingFormProps) {
 
         </>
       )}
-
-      {/* Priority */}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="idm-priority" className="text-sm font-medium text-gray-700">
-          {tr.idm_priority}
-        </label>
-        <input
-          id="idm-priority"
-          name="priority"
-          type="number"
-          min={0}
-          defaultValue={mapping?.priority ?? 0}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 w-32"
-        />
-        <p className="text-xs text-gray-400">{tr.idm_priority_hint}</p>
-      </div>
 
       {/* Auto-assign toggle */}
       <div className="flex flex-col gap-1">

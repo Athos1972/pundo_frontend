@@ -7371,11 +7371,6 @@ export interface components {
             domain_slug?: string | null;
             /** Item Slug */
             item_slug: string;
-            /**
-             * Priority
-             * @default 0
-             */
-            priority: number;
             /** Specialty Slug */
             specialty_slug?: string | null;
         };
@@ -9085,11 +9080,6 @@ export interface components {
             domain_id?: number | null;
             /** Item Id */
             item_id: number;
-            /**
-             * Priority
-             * @default 0
-             */
-            priority: number;
             /** Specialty Id */
             specialty_id?: number | null;
         };
@@ -9097,8 +9087,6 @@ export interface components {
         ItemDomainMappingPatch: {
             /** Auto Assign */
             auto_assign?: boolean | null;
-            /** Priority */
-            priority?: number | null;
         };
         /** ItemDomainMappingResponse */
         ItemDomainMappingResponse: {
@@ -9115,8 +9103,6 @@ export interface components {
             id: number;
             /** Item Id */
             item_id: number;
-            /** Priority */
-            priority: number;
             /** Specialty Id */
             specialty_id?: number | null;
         };

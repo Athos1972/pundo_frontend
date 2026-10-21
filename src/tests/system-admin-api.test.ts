@@ -127,7 +127,7 @@ describe('system-admin server API client', () => {
     await api.createItemDomainMapping({ item_id: 1, domain_id: 2 } as never)
     expect(call().init.method).toBe('POST')
     expect(JSON.parse(call().init.body as string)).toEqual({ item_id: 1, domain_id: 2 })
-    await api.updateItemDomainMapping(5, { priority: 3 })
+    await api.updateItemDomainMapping(5, { auto_assign: false })
     expect(call().url).toMatch(/\/item-domain-mappings\/5$/)
     expect(call().init.method).toBe('PATCH')
     await api.deleteItemDomainMapping(5)

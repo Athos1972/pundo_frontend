@@ -573,7 +573,7 @@ describe('new pages', () => {
 describe('item-domain-mappings pages', () => {
   it('list forwards filters; failures show the empty state', async () => {
     vi.mocked(api.getItemDomainMappings).mockResolvedValueOnce({ items: [
-      { id: 1, item_id: 10, item_name: 'Food', domain_id: 1, onboarding_domain_slug: 'pets', specialty_id: null, priority: 0, auto_assign: true, created_at: '' },
+      { id: 1, item_id: 10, item_name: 'Food', domain_id: 1, onboarding_domain_slug: 'pets', specialty_id: null, auto_assign: true, created_at: '' },
     ], total: 1, limit: 50, offset: 0 } as never)
     const { default: Page } = await import(`${A}/item-domain-mappings/page`)
     const { unmount } = await show(Page, sp({ domain: 'pets', specialty: 'vet', page: '2' }))

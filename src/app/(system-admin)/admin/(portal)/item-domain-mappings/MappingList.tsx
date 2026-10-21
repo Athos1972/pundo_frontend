@@ -91,7 +91,6 @@ export function MappingList({ mappings, total, page, limit, tr, domain, specialt
               <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.idm_item}</th>
               <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.idm_domain}</th>
               <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.idm_specialty}</th>
-              <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.idm_priority}</th>
               <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.idm_auto_assign}</th>
               <th className="px-4 py-3 text-start font-medium text-gray-600">{tr.actions}</th>
             </tr>
@@ -99,7 +98,7 @@ export function MappingList({ mappings, total, page, limit, tr, domain, specialt
           <tbody>
             {mappings.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-400 text-sm">
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-400 text-sm">
                   {tr.idm_no_mappings}
                 </td>
               </tr>
@@ -117,7 +116,6 @@ export function MappingList({ mappings, total, page, limit, tr, domain, specialt
                 <td className="px-4 py-3 text-gray-600 font-mono text-xs">
                   {m.specialty_slug ?? (m.specialty_id != null ? `#${m.specialty_id}` : '—')}
                 </td>
-                <td className="px-4 py-3 text-gray-600">{m.priority}</td>
                 <td className="px-4 py-3">
                   {m.auto_assign ? (
                     <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">✓</span>

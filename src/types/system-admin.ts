@@ -286,7 +286,6 @@ export interface SysAdminItemDomainMapping {
   onboarding_domain_slug?: string | null
   specialty_id: number | null
   specialty_slug?: string | null
-  priority: number
   auto_assign: boolean
   created_at: string
 }
@@ -296,7 +295,6 @@ export interface SysAdminItemDomainMappingCreate {
   /** Backend field name is `domain_id` (not `onboarding_domain_id`). */
   domain_id?: number | null
   specialty_id?: number | null
-  priority?: number
   auto_assign: boolean
 }
 

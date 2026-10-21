@@ -326,12 +326,13 @@ test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
     }
     logStep('IDM-3a', '/admin/item-domain-mappings/29/edit erreichbar', 'URL enthält 29/edit', url, 'PASS')
 
-    // Priority ändern
-    const priorityInput = page.locator('input[name="priority"]')
-    if (await priorityInput.count() > 0) {
-      const currentValue = await priorityInput.inputValue()
-      await priorityInput.fill('99')
-      logStep('IDM-3b', 'Priority-Feld bearbeitbar', 'Wert änderbar', `${currentValue} → 99`, 'PASS')
+    // Auto-Zuweisung umschalten (die Priorität gibt es nicht mehr, B8820-003)
+    const autoAssignSelect = page.locator('select[name="auto_assign"]')
+    if (await autoAssignSelect.count() > 0) {
+      const currentValue = await autoAssignSelect.inputValue()
+      const toggled = currentValue === 'true' ? 'false' : 'true'
+      await autoAssignSelect.selectOption(toggled)
+      logStep('IDM-3b', 'Auto-Zuweisung bearbeitbar', 'Wert änderbar', `${currentValue} → ${toggled}`, 'PASS')
 
       // Submit
       await page.locator('button[type="submit"]').click()
@@ -346,7 +347,7 @@ test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
         try {
           await apiPatch(
             `${BACKEND_URL}/api/v1/admin/item-domain-mappings/29`,
-            { priority: 1 },
+            { auto_assign: currentValue === 'true' },
             { Cookie: `admin_token=${ctx.adminCookie!}` }
           )
         } catch { /* non-critical */ }
@@ -355,8 +356,8 @@ test.describe('IDM-3: Edit — bestehendes Mapping bearbeiten', () => {
         findings.push(`IDM-3c: Edit-Submit navigierte nicht zurück. URL="${afterUrl}"`)
       }
     } else {
-      logStep('IDM-3b', 'Priority-Feld bearbeitbar', 'input[name=priority] sichtbar', 'nicht gefunden', 'FAIL')
-      findings.push('IDM-3b: priority-Input nicht gefunden auf Edit-Seite')
+      logStep('IDM-3b', 'Auto-Zuweisung bearbeitbar', 'select[name=auto_assign] sichtbar', 'nicht gefunden', 'FAIL')
+      findings.push('IDM-3b: auto_assign-Select nicht gefunden auf Edit-Seite')
     }
 
     await ctx2.close()
@@ -380,7 +381,7 @@ test.describe('IDM-4: Delete — Mapping löschen mit Confirm-Dialog', () => {
     try {
       const newMapping = await apiPost(
         `${BACKEND_URL}/api/v1/admin/item-domain-mappings`,
-        { item_id: 18, onboarding_domain_id: 3, auto_assign: false, priority: 99 },
+        { item_id: 18, onboarding_domain_id: 3, auto_assign: false },
         { Cookie: `admin_token=${ctx.adminCookie!}` }
       ) as { id: number }
       testMappingId = newMapping.id

@@ -138,7 +138,6 @@ describe('SysAdminItemDomainMapping — type shape', () => {
       onboarding_domain_slug: 'elektriker',
       specialty_id: 12,
       specialty_slug: 'pv-anlagen',
-      priority: 10,
       auto_assign: true,
       created_at: '2026-05-02T00:00:00Z',
     }
@@ -153,7 +152,6 @@ describe('SysAdminItemDomainMapping — type shape', () => {
       item_name: null,
       domain_id: null,
       specialty_id: null,
-      priority: 0,
       auto_assign: false,
       created_at: '2026-05-02T00:00:00Z',
     }
@@ -175,10 +173,9 @@ describe('SysAdminItemDomainMapping — type shape', () => {
       item_id: 99,
       domain_id: 1,
       specialty_id: 2,
-      priority: 5,
       auto_assign: true,
     }
-    expect(create.priority).toBe(5)
+    expect(create.auto_assign).toBe(true)
   })
 
   it('MappingGapEntry shape includes auto_assign_item_count', () => {

@@ -53,6 +53,9 @@
  "api/customer/customer_progression": {
   "422": [
    "invalid_brand",
+   "invalid_homesick_reference",
+   "invalid_product_mail_interval",
+   "invalid_product_mail_reference",
    "invalid_progression_action"
   ]
  },

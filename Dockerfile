@@ -34,6 +34,10 @@ RUN apk -U upgrade && \
 WORKDIR /app
 ENV NODE_ENV=production
 
+# eMudhra-Intermediate-CA-Kompromittierung: Node bringt einen eigenen CA-Store mit und ignoriert das Alpine-Bundle.
+# --use-openssl-ca erzwingt den System-Store (nach "apk -U upgrade" ohne die distrusteten Intermediates).
+ENV NODE_OPTIONS=--use-openssl-ca
+
 # Non-root user (Next.js standard pattern)
 RUN addgroup --system --gid 1001 nodejs && \
     adduser  --system --uid 1001 --ingroup nodejs nextjs

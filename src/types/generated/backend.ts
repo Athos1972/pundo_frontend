@@ -1203,6 +1203,26 @@ export interface paths {
         patch: operations["update_product_api_v1_admin_products__product_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/products/{product_id}/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Product Attributes
+         * @description Attribute values of one item (B8200-005: the product form called this route, the backend answered 404).
+         */
+        get: operations["get_product_attributes_api_v1_admin_products__product_id__attributes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/reviews": {
         parameters: {
             query?: never;
@@ -5913,6 +5933,33 @@ export interface components {
             open: number;
             /** Verified */
             verified: number;
+        };
+        /**
+         * AdminItemAttributeResponse
+         * @description One attribute value of one item, as the admin product form reads it (``GET /products/{id}/attributes``).
+         */
+        AdminItemAttributeResponse: {
+            /** Attribute Key */
+            attribute_key: string;
+            attribute_value?: components["schemas"]["JsonValue-Output"] | null;
+            /** Confidence */
+            confidence?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Item Id */
+            item_id: number;
+            /** Source */
+            source?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** AdminItemCreate */
         AdminItemCreate: {
@@ -16179,6 +16226,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminProductResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_product_attributes_api_v1_admin_products__product_id__attributes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                product_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminItemAttributeResponse"][];
                 };
             };
             /** @description Validation Error */

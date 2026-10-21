@@ -2333,6 +2333,74 @@
     "title": "AdminClaimSummary",
     "type": "object"
    },
+   "AdminItemAttributeResponse": {
+    "description": "One attribute value of one item, as the admin product form reads it (``GET /products/{id}/attributes``).",
+    "properties": {
+     "attribute_key": {
+      "title": "Attribute Key",
+      "type": "string"
+     },
+     "attribute_value": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/JsonValue-Output"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "confidence": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Confidence"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "item_id": {
+      "title": "Item Id",
+      "type": "integer"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "item_id",
+     "attribute_key",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "AdminItemAttributeResponse",
+    "type": "object"
+   },
    "AdminItemCreate": {
     "properties": {
      "category_id": {
@@ -30783,6 +30851,85 @@
      }
     },
     "summary": "Update Product",
+    "tags": [
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/products/{product_id}/attributes": {
+   "get": {
+    "description": "Attribute values of one item (B8200-005: the product form called this route, the backend answered 404).",
+    "operationId": "get_product_attributes_api_v1_admin_products__product_id__attributes_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "product_id",
+      "required": true,
+      "schema": {
+       "title": "Product Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AdminItemAttributeResponse"
+         },
+         "title": "Response Get Product Attributes Api V1 Admin Products  Product Id  Attributes Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Product Attributes",
     "tags": [
      "admin"
     ]

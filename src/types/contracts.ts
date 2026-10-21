@@ -144,3 +144,6 @@ export type OAuthContracts = [
 export type OAuthRequestContracts = [
   Contract<Assignable<Customer.OAuthDecisionRequest, Schemas['AuthDecisionRequest']>>,
 ]
+
+// ── Admin product form: attribute values of one item (B8200-005, route GET /products/{id}/attributes) ───────────────
+export type ProductAttributeContracts = [Contract<Assignable<Schemas['AdminItemAttributeResponse'], SysAdmin.SysAdminItemAttribute>>]

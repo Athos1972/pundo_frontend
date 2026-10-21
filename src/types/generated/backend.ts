@@ -1382,6 +1382,161 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/scrape-backlog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Backlog */
+        get: operations["list_backlog_api_v1_admin_scrape_backlog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-backlog/{backlog_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Backlog Endpoint */
+        post: operations["cancel_backlog_endpoint_api_v1_admin_scrape_backlog__backlog_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-lifecycles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lifecycles */
+        get: operations["list_lifecycles_api_v1_admin_scrape_lifecycles_get"];
+        put?: never;
+        /** Create Lifecycle Endpoint */
+        post: operations["create_lifecycle_endpoint_api_v1_admin_scrape_lifecycles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-lifecycles/{lifecycle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lifecycle */
+        get: operations["get_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-lifecycles/{lifecycle_id}/backlog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enqueue Lifecycle Backlog */
+        post: operations["enqueue_lifecycle_backlog_api_v1_admin_scrape_lifecycles__lifecycle_id__backlog_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-lifecycles/{lifecycle_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Lifecycle */
+        post: operations["decide_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-masters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Masters */
+        get: operations["list_masters_api_v1_admin_scrape_masters_get"];
+        put?: never;
+        /** Create Master */
+        post: operations["create_master_api_v1_admin_scrape_masters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-masters/{master_id}/auto-activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Master Auto Activate */
+        post: operations["set_master_auto_activate_api_v1_admin_scrape_masters__master_id__auto_activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scrape-masters/{master_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Master Status */
+        post: operations["set_master_status_api_v1_admin_scrape_masters__master_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/scrape-runs": {
         parameters: {
             query?: never;
@@ -1806,6 +1961,23 @@ export interface paths {
          * @description Current owner account (any status, incl. suspended / system) and active applications of a shop.
          */
         get: operations["shop_owner_overview_api_v1_admin_shops__shop_id__owner_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shops/{shop_id}/scrape-lifecycles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Shop Lifecycles */
+        get: operations["list_shop_lifecycles_api_v1_admin_shops__shop_id__scrape_lifecycles_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7148,6 +7320,100 @@ export interface components {
             /** Redirect To */
             redirect_to: string;
         };
+        /** BacklogCancelRequest */
+        BacklogCancelRequest: {
+            /** Reason */
+            reason: string;
+        };
+        /** BacklogEnqueueRequest */
+        BacklogEnqueueRequest: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "bootstrap" | "rebootstrap";
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
+            /**
+             * Priority
+             * @default 50
+             */
+            priority: number;
+            /** Reason */
+            reason?: string | null;
+            /** Trigger Detail */
+            trigger_detail?: string | null;
+        };
+        /** BacklogResponse */
+        BacklogResponse: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "bootstrap" | "rebootstrap";
+            /** Attempt */
+            attempt: number;
+            /** Cancel Requested */
+            cancel_requested: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error Class */
+            error_class: string | null;
+            /** Id */
+            id: number;
+            /** Last Heartbeat At */
+            last_heartbeat_at: string | null;
+            /** Last Phase */
+            last_phase: string | null;
+            /** Lease Claimed At */
+            lease_claimed_at: string | null;
+            /** Lease Expires At */
+            lease_expires_at: string | null;
+            /** Lease Id */
+            lease_id: string | null;
+            /** Lease Master Id */
+            lease_master_id: number | null;
+            /**
+             * Not Before
+             * Format: date-time
+             */
+            not_before: string;
+            /** Outcome */
+            outcome: string | null;
+            /** Priority */
+            priority: number;
+            /** Release Count */
+            release_count: number;
+            /** Requested By Admin Id */
+            requested_by_admin_id: number | null;
+            /** Result Summary */
+            result_summary: {
+                [key: string]: unknown;
+            };
+            /** Scrape Lifecycle Id */
+            scrape_lifecycle_id: number;
+            /** Status */
+            status: string;
+            /** Target Host */
+            target_host: string;
+            /** Trigger Detail */
+            trigger_detail: string | null;
+            /** Trigger Reason */
+            trigger_reason: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Workflow Id */
+            workflow_id: string;
+        };
         /** BadgeOut */
         BadgeOut: {
             /**
@@ -9202,6 +9468,130 @@ export interface components {
             /** Events */
             events: components["schemas"]["WorkEvent"][];
         };
+        /** LifecycleCreateRequest */
+        LifecycleCreateRequest: {
+            /** Shop Id */
+            shop_id: number;
+            /** Url */
+            url: string;
+        };
+        /** LifecycleDecisionRequest */
+        LifecycleDecisionRequest: {
+            /**
+             * Activate Candidate
+             * @default false
+             */
+            activate_candidate: boolean;
+            /** Reason */
+            reason: string;
+            /**
+             * To Status
+             * @enum {string}
+             */
+            to_status: "active" | "degraded" | "labor_review" | "rejected" | "retired";
+        };
+        /** LifecycleDetailResponse */
+        LifecycleDetailResponse: {
+            /** Active Config Ref */
+            active_config_ref: string | null;
+            /** Active Config Version */
+            active_config_version: string | null;
+            /** Attempt Count */
+            attempt_count: number;
+            /** Backlog */
+            backlog: components["schemas"]["BacklogResponse"][];
+            /** Candidate Config Ref */
+            candidate_config_ref: string | null;
+            /** Candidate Config Version */
+            candidate_config_version: string | null;
+            /** Canonical Url */
+            canonical_url: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current Workflow Id */
+            current_workflow_id: string | null;
+            /** Events */
+            events: components["schemas"]["LifecycleEventResponse"][];
+            /** Id */
+            id: number;
+            /** Last Classification */
+            last_classification: string | null;
+            /** Last Confidence */
+            last_confidence: number | null;
+            /** Last Error Class */
+            last_error_class: string | null;
+            /** Last Outcome */
+            last_outcome: string | null;
+            /** Last Outcome At */
+            last_outcome_at: string | null;
+            /** Last Trigger Reason */
+            last_trigger_reason: string | null;
+            /** Last Workflow Id */
+            last_workflow_id: string | null;
+            /** Platform */
+            platform: string | null;
+            /** Policy Version */
+            policy_version: string | null;
+            /** Scrape Run Ids */
+            scrape_run_ids: string[];
+            /** Shop Id */
+            shop_id: number;
+            /** Status */
+            status: string;
+            /**
+             * Status Changed At
+             * Format: date-time
+             */
+            status_changed_at: string;
+            /** Status Reason */
+            status_reason: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LifecycleEventResponse */
+        LifecycleEventResponse: {
+            /** Actor Id */
+            actor_id: number | null;
+            /** Actor Type */
+            actor_type: string;
+            /** Attempt */
+            attempt: number | null;
+            /** Backlog Id */
+            backlog_id: number | null;
+            /** Event Type */
+            event_type: string;
+            /** From Status */
+            from_status: string | null;
+            /** Id */
+            id: number;
+            /** Lease Id */
+            lease_id: string | null;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Policy Version */
+            policy_version: string | null;
+            /** Scrape Lifecycle Id */
+            scrape_lifecycle_id: number;
+            /** Scrape Run Id */
+            scrape_run_id: string | null;
+            /** To Status */
+            to_status: string | null;
+            /** Workflow Id */
+            workflow_id: string | null;
+        };
         /** LifecycleRequest */
         LifecycleRequest: {
             /** Reason */
@@ -9212,6 +9602,64 @@ export interface components {
             to_state: string;
             /** Version */
             version: number;
+        };
+        /** LifecycleResponse */
+        LifecycleResponse: {
+            /** Active Config Ref */
+            active_config_ref: string | null;
+            /** Active Config Version */
+            active_config_version: string | null;
+            /** Attempt Count */
+            attempt_count: number;
+            /** Candidate Config Ref */
+            candidate_config_ref: string | null;
+            /** Candidate Config Version */
+            candidate_config_version: string | null;
+            /** Canonical Url */
+            canonical_url: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current Workflow Id */
+            current_workflow_id: string | null;
+            /** Id */
+            id: number;
+            /** Last Classification */
+            last_classification: string | null;
+            /** Last Confidence */
+            last_confidence: number | null;
+            /** Last Error Class */
+            last_error_class: string | null;
+            /** Last Outcome */
+            last_outcome: string | null;
+            /** Last Outcome At */
+            last_outcome_at: string | null;
+            /** Last Trigger Reason */
+            last_trigger_reason: string | null;
+            /** Last Workflow Id */
+            last_workflow_id: string | null;
+            /** Platform */
+            platform: string | null;
+            /** Policy Version */
+            policy_version: string | null;
+            /** Shop Id */
+            shop_id: number;
+            /** Status */
+            status: string;
+            /**
+             * Status Changed At
+             * Format: date-time
+             */
+            status_changed_at: string;
+            /** Status Reason */
+            status_reason: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** LinkedAccountsResponse */
         LinkedAccountsResponse: {
@@ -10124,6 +10572,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** PaginatedResponse[BacklogResponse] */
+        PaginatedResponse_BacklogResponse_: {
+            /** Items */
+            items: components["schemas"]["BacklogResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** PaginatedResponse[ContactListItem] */
         PaginatedResponse_ContactListItem_: {
             /** Items */
@@ -10139,6 +10598,17 @@ export interface components {
         PaginatedResponse_ItemDomainMappingResponse_: {
             /** Items */
             items: components["schemas"]["ItemDomainMappingResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** PaginatedResponse[LifecycleResponse] */
+        PaginatedResponse_LifecycleResponse_: {
+            /** Items */
+            items: components["schemas"]["LifecycleResponse"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -10874,6 +11344,85 @@ export interface components {
             heartbeat: components["schemas"]["SchedulerHeartbeatResponse"] | null;
             /** Jobs */
             jobs: components["schemas"]["SchedulerJobResponse"][];
+        };
+        /** ScrapeMasterAutoActivateRequest */
+        ScrapeMasterAutoActivateRequest: {
+            /** Allowed */
+            allowed: boolean;
+            /** Reason */
+            reason: string;
+        };
+        /** ScrapeMasterCreateRequest */
+        ScrapeMasterCreateRequest: {
+            /**
+             * Auto Activate Allowed
+             * @default false
+             */
+            auto_activate_allowed: boolean;
+            /** Environment */
+            environment: string;
+            /** Name */
+            name: string;
+        };
+        /** ScrapeMasterCreateResponse */
+        ScrapeMasterCreateResponse: {
+            /** Api Key */
+            api_key: string;
+            /** Auto Activate Allowed */
+            auto_activate_allowed: boolean;
+            /** Environment */
+            environment: string;
+            /** Id */
+            id: number;
+            /** Key Prefix */
+            key_prefix: string;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+        };
+        /** ScrapeMasterResponse */
+        ScrapeMasterResponse: {
+            /** Auto Activate Allowed */
+            auto_activate_allowed: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Environment */
+            environment: string | null;
+            /** Id */
+            id: number;
+            /** Key Prefix */
+            key_prefix: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Hello At */
+            last_hello_at: string | null;
+            /** Name */
+            name: string;
+            /** Open Leases */
+            open_leases: number;
+            /** Release Ref */
+            release_ref: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ScrapeMasterStatusRequest */
+        ScrapeMasterStatusRequest: {
+            /** Reason */
+            reason: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "paused" | "disabled";
         };
         /** ScrapeRunDetailResponse */
         ScrapeRunDetailResponse: {
@@ -16597,6 +17146,418 @@ export interface operations {
             };
         };
     };
+    list_backlog_api_v1_admin_scrape_backlog_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_BacklogResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_backlog_endpoint_api_v1_admin_scrape_backlog__backlog_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                backlog_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacklogCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacklogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lifecycles_api_v1_admin_scrape_lifecycles_get: {
+        parameters: {
+            query?: {
+                shop_id?: number | null;
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_LifecycleResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lifecycle_endpoint_api_v1_admin_scrape_lifecycles_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LifecycleCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                lifecycle_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enqueue_lifecycle_backlog_api_v1_admin_scrape_lifecycles__lifecycle_id__backlog_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                lifecycle_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BacklogEnqueueRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BacklogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                lifecycle_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LifecycleDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_masters_api_v1_admin_scrape_masters_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeMasterResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_master_api_v1_admin_scrape_masters_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeMasterCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeMasterCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_master_auto_activate_api_v1_admin_scrape_masters__master_id__auto_activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                master_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeMasterAutoActivateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeMasterResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_master_status_api_v1_admin_scrape_masters__master_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                master_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeMasterStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeMasterResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_scrape_runs_api_v1_admin_scrape_runs_get: {
         parameters: {
             query?: {
@@ -17864,6 +18825,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminShopOwnerOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_shop_lifecycles_api_v1_admin_shops__shop_id__scrape_lifecycles_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                shop_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_LifecycleResponse_"];
                 };
             };
             /** @description Validation Error */

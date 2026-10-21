@@ -6337,6 +6337,288 @@
     "title": "AuthDecisionResponse",
     "type": "object"
    },
+   "BacklogCancelRequest": {
+    "properties": {
+     "reason": {
+      "maxLength": 500,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "reason"
+    ],
+    "title": "BacklogCancelRequest",
+    "type": "object"
+   },
+   "BacklogEnqueueRequest": {
+    "properties": {
+     "action": {
+      "enum": [
+       "bootstrap",
+       "rebootstrap"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "force": {
+      "default": false,
+      "title": "Force",
+      "type": "boolean"
+     },
+     "priority": {
+      "default": 50,
+      "maximum": 32767.0,
+      "minimum": 0.0,
+      "title": "Priority",
+      "type": "integer"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "trigger_detail": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Trigger Detail"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "title": "BacklogEnqueueRequest",
+    "type": "object"
+   },
+   "BacklogResponse": {
+    "properties": {
+     "action": {
+      "enum": [
+       "bootstrap",
+       "rebootstrap"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "attempt": {
+      "title": "Attempt",
+      "type": "integer"
+     },
+     "cancel_requested": {
+      "title": "Cancel Requested",
+      "type": "boolean"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "error_class": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Class"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "last_heartbeat_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Heartbeat At"
+     },
+     "last_phase": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Phase"
+     },
+     "lease_claimed_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lease Claimed At"
+     },
+     "lease_expires_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lease Expires At"
+     },
+     "lease_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lease Id"
+     },
+     "lease_master_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lease Master Id"
+     },
+     "not_before": {
+      "format": "date-time",
+      "title": "Not Before",
+      "type": "string"
+     },
+     "outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome"
+     },
+     "priority": {
+      "title": "Priority",
+      "type": "integer"
+     },
+     "release_count": {
+      "title": "Release Count",
+      "type": "integer"
+     },
+     "requested_by_admin_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Requested By Admin Id"
+     },
+     "result_summary": {
+      "additionalProperties": true,
+      "title": "Result Summary",
+      "type": "object"
+     },
+     "scrape_lifecycle_id": {
+      "title": "Scrape Lifecycle Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "target_host": {
+      "title": "Target Host",
+      "type": "string"
+     },
+     "trigger_detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Trigger Detail"
+     },
+     "trigger_reason": {
+      "title": "Trigger Reason",
+      "type": "string"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     },
+     "workflow_id": {
+      "title": "Workflow Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "scrape_lifecycle_id",
+     "action",
+     "trigger_reason",
+     "trigger_detail",
+     "priority",
+     "status",
+     "workflow_id",
+     "attempt",
+     "not_before",
+     "target_host",
+     "lease_id",
+     "lease_master_id",
+     "lease_claimed_at",
+     "lease_expires_at",
+     "last_heartbeat_at",
+     "last_phase",
+     "release_count",
+     "cancel_requested",
+     "outcome",
+     "error_class",
+     "result_summary",
+     "requested_by_admin_id",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "BacklogResponse",
+    "type": "object"
+   },
    "BadgeOut": {
     "properties": {
      "awarded_at": {
@@ -12224,6 +12506,463 @@
     "title": "LeaseEventsRequest",
     "type": "object"
    },
+   "LifecycleCreateRequest": {
+    "properties": {
+     "shop_id": {
+      "exclusiveMinimum": 0.0,
+      "title": "Shop Id",
+      "type": "integer"
+     },
+     "url": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "shop_id",
+     "url"
+    ],
+    "title": "LifecycleCreateRequest",
+    "type": "object"
+   },
+   "LifecycleDecisionRequest": {
+    "properties": {
+     "activate_candidate": {
+      "default": false,
+      "title": "Activate Candidate",
+      "type": "boolean"
+     },
+     "reason": {
+      "maxLength": 500,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+     },
+     "to_status": {
+      "enum": [
+       "active",
+       "degraded",
+       "labor_review",
+       "rejected",
+       "retired"
+      ],
+      "title": "To Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "to_status",
+     "reason"
+    ],
+    "title": "LifecycleDecisionRequest",
+    "type": "object"
+   },
+   "LifecycleDetailResponse": {
+    "properties": {
+     "active_config_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Config Ref"
+     },
+     "active_config_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Config Version"
+     },
+     "attempt_count": {
+      "title": "Attempt Count",
+      "type": "integer"
+     },
+     "backlog": {
+      "items": {
+       "$ref": "#/components/schemas/BacklogResponse"
+      },
+      "title": "Backlog",
+      "type": "array"
+     },
+     "candidate_config_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Candidate Config Ref"
+     },
+     "candidate_config_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Candidate Config Version"
+     },
+     "canonical_url": {
+      "title": "Canonical Url",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "current_workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Workflow Id"
+     },
+     "events": {
+      "items": {
+       "$ref": "#/components/schemas/LifecycleEventResponse"
+      },
+      "title": "Events",
+      "type": "array"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "last_classification": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Classification"
+     },
+     "last_confidence": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Confidence"
+     },
+     "last_error_class": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Error Class"
+     },
+     "last_outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Outcome"
+     },
+     "last_outcome_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Outcome At"
+     },
+     "last_trigger_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Trigger Reason"
+     },
+     "last_workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Workflow Id"
+     },
+     "platform": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Platform"
+     },
+     "policy_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Policy Version"
+     },
+     "scrape_run_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Scrape Run Ids",
+      "type": "array"
+     },
+     "shop_id": {
+      "title": "Shop Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "status_changed_at": {
+      "format": "date-time",
+      "title": "Status Changed At",
+      "type": "string"
+     },
+     "status_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status Reason"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "shop_id",
+     "canonical_url",
+     "status",
+     "status_reason",
+     "active_config_version",
+     "active_config_ref",
+     "candidate_config_version",
+     "candidate_config_ref",
+     "platform",
+     "last_classification",
+     "last_confidence",
+     "current_workflow_id",
+     "last_workflow_id",
+     "attempt_count",
+     "last_trigger_reason",
+     "last_outcome",
+     "last_error_class",
+     "last_outcome_at",
+     "policy_version",
+     "status_changed_at",
+     "created_at",
+     "updated_at",
+     "backlog",
+     "events",
+     "scrape_run_ids"
+    ],
+    "title": "LifecycleDetailResponse",
+    "type": "object"
+   },
+   "LifecycleEventResponse": {
+    "properties": {
+     "actor_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actor Id"
+     },
+     "actor_type": {
+      "title": "Actor Type",
+      "type": "string"
+     },
+     "attempt": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attempt"
+     },
+     "backlog_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Backlog Id"
+     },
+     "event_type": {
+      "title": "Event Type",
+      "type": "string"
+     },
+     "from_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "From Status"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "lease_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lease Id"
+     },
+     "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+     },
+     "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+     },
+     "policy_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Policy Version"
+     },
+     "scrape_lifecycle_id": {
+      "title": "Scrape Lifecycle Id",
+      "type": "integer"
+     },
+     "scrape_run_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scrape Run Id"
+     },
+     "to_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "To Status"
+     },
+     "workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Workflow Id"
+     }
+    },
+    "required": [
+     "id",
+     "scrape_lifecycle_id",
+     "backlog_id",
+     "event_type",
+     "from_status",
+     "to_status",
+     "workflow_id",
+     "lease_id",
+     "scrape_run_id",
+     "attempt",
+     "policy_version",
+     "actor_type",
+     "actor_id",
+     "payload",
+     "occurred_at"
+    ],
+    "title": "LifecycleEventResponse",
+    "type": "object"
+   },
    "LifecycleRequest": {
     "properties": {
      "reason": {
@@ -12262,6 +13001,238 @@
      "version"
     ],
     "title": "LifecycleRequest",
+    "type": "object"
+   },
+   "LifecycleResponse": {
+    "properties": {
+     "active_config_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Config Ref"
+     },
+     "active_config_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Config Version"
+     },
+     "attempt_count": {
+      "title": "Attempt Count",
+      "type": "integer"
+     },
+     "candidate_config_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Candidate Config Ref"
+     },
+     "candidate_config_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Candidate Config Version"
+     },
+     "canonical_url": {
+      "title": "Canonical Url",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "current_workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Workflow Id"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "last_classification": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Classification"
+     },
+     "last_confidence": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Confidence"
+     },
+     "last_error_class": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Error Class"
+     },
+     "last_outcome": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Outcome"
+     },
+     "last_outcome_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Outcome At"
+     },
+     "last_trigger_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Trigger Reason"
+     },
+     "last_workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Workflow Id"
+     },
+     "platform": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Platform"
+     },
+     "policy_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Policy Version"
+     },
+     "shop_id": {
+      "title": "Shop Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "status_changed_at": {
+      "format": "date-time",
+      "title": "Status Changed At",
+      "type": "string"
+     },
+     "status_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status Reason"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "shop_id",
+     "canonical_url",
+     "status",
+     "status_reason",
+     "active_config_version",
+     "active_config_ref",
+     "candidate_config_version",
+     "candidate_config_ref",
+     "platform",
+     "last_classification",
+     "last_confidence",
+     "current_workflow_id",
+     "last_workflow_id",
+     "attempt_count",
+     "last_trigger_reason",
+     "last_outcome",
+     "last_error_class",
+     "last_outcome_at",
+     "policy_version",
+     "status_changed_at",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "LifecycleResponse",
     "type": "object"
    },
    "LinkedAccountsResponse": {
@@ -14960,6 +15931,37 @@
     "title": "PaginatedResponse[AdminShopTypeResponse]",
     "type": "object"
    },
+   "PaginatedResponse_BacklogResponse_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/BacklogResponse"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[BacklogResponse]",
+    "type": "object"
+   },
    "PaginatedResponse_ContactListItem_": {
     "properties": {
      "items": {
@@ -15020,6 +16022,37 @@
      "offset"
     ],
     "title": "PaginatedResponse[ItemDomainMappingResponse]",
+    "type": "object"
+   },
+   "PaginatedResponse_LifecycleResponse_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/LifecycleResponse"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[LifecycleResponse]",
     "type": "object"
    },
    "PaginatedResponse_ScrapeRunResponse_": {
@@ -17205,6 +18238,220 @@
      "jobs"
     ],
     "title": "SchedulerStatusResponse",
+    "type": "object"
+   },
+   "ScrapeMasterAutoActivateRequest": {
+    "properties": {
+     "allowed": {
+      "title": "Allowed",
+      "type": "boolean"
+     },
+     "reason": {
+      "maxLength": 500,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "allowed",
+     "reason"
+    ],
+    "title": "ScrapeMasterAutoActivateRequest",
+    "type": "object"
+   },
+   "ScrapeMasterCreateRequest": {
+    "properties": {
+     "auto_activate_allowed": {
+      "default": false,
+      "title": "Auto Activate Allowed",
+      "type": "boolean"
+     },
+     "environment": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Environment",
+      "type": "string"
+     },
+     "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "environment"
+    ],
+    "title": "ScrapeMasterCreateRequest",
+    "type": "object"
+   },
+   "ScrapeMasterCreateResponse": {
+    "properties": {
+     "api_key": {
+      "title": "Api Key",
+      "type": "string"
+     },
+     "auto_activate_allowed": {
+      "title": "Auto Activate Allowed",
+      "type": "boolean"
+     },
+     "environment": {
+      "title": "Environment",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "key_prefix": {
+      "title": "Key Prefix",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "status",
+     "environment",
+     "auto_activate_allowed",
+     "api_key",
+     "key_prefix"
+    ],
+    "title": "ScrapeMasterCreateResponse",
+    "type": "object"
+   },
+   "ScrapeMasterResponse": {
+    "properties": {
+     "auto_activate_allowed": {
+      "title": "Auto Activate Allowed",
+      "type": "boolean"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "environment": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Environment"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "key_prefix": {
+      "title": "Key Prefix",
+      "type": "string"
+     },
+     "last_error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Error"
+     },
+     "last_hello_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Hello At"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "open_leases": {
+      "title": "Open Leases",
+      "type": "integer"
+     },
+     "release_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Release Ref"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "status",
+     "environment",
+     "auto_activate_allowed",
+     "key_prefix",
+     "last_hello_at",
+     "release_ref",
+     "open_leases",
+     "last_error",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "ScrapeMasterResponse",
+    "type": "object"
+   },
+   "ScrapeMasterStatusRequest": {
+    "properties": {
+     "reason": {
+      "maxLength": 500,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "active",
+       "paused",
+       "disabled"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status",
+     "reason"
+    ],
+    "title": "ScrapeMasterStatusRequest",
     "type": "object"
    },
    "ScrapeRunDetailResponse": {
@@ -31723,6 +32970,950 @@
     ]
    }
   },
+  "/api/v1/admin/scrape-backlog": {
+   "get": {
+    "operationId": "list_backlog_api_v1_admin_scrape_backlog_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_BacklogResponse_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Backlog",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-backlog/{backlog_id}/cancel": {
+   "post": {
+    "operationId": "cancel_backlog_endpoint_api_v1_admin_scrape_backlog__backlog_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "backlog_id",
+      "required": true,
+      "schema": {
+       "title": "Backlog Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BacklogCancelRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BacklogResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel Backlog Endpoint",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-lifecycles": {
+   "get": {
+    "operationId": "list_lifecycles_api_v1_admin_scrape_lifecycles_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "shop_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Shop Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_LifecycleResponse_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Lifecycles",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   },
+   "post": {
+    "operationId": "create_lifecycle_endpoint_api_v1_admin_scrape_lifecycles_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LifecycleCreateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LifecycleResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Lifecycle Endpoint",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-lifecycles/{lifecycle_id}": {
+   "get": {
+    "operationId": "get_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lifecycle_id",
+      "required": true,
+      "schema": {
+       "title": "Lifecycle Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LifecycleDetailResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Lifecycle",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-lifecycles/{lifecycle_id}/backlog": {
+   "post": {
+    "operationId": "enqueue_lifecycle_backlog_api_v1_admin_scrape_lifecycles__lifecycle_id__backlog_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lifecycle_id",
+      "required": true,
+      "schema": {
+       "title": "Lifecycle Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BacklogEnqueueRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BacklogResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Enqueue Lifecycle Backlog",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-lifecycles/{lifecycle_id}/decision": {
+   "post": {
+    "operationId": "decide_lifecycle_api_v1_admin_scrape_lifecycles__lifecycle_id__decision_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lifecycle_id",
+      "required": true,
+      "schema": {
+       "title": "Lifecycle Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LifecycleDecisionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LifecycleResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Decide Lifecycle",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-masters": {
+   "get": {
+    "operationId": "list_masters_api_v1_admin_scrape_masters_get",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ScrapeMasterResponse"
+         },
+         "title": "Response List Masters Api V1 Admin Scrape Masters Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Masters",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   },
+   "post": {
+    "operationId": "create_master_api_v1_admin_scrape_masters_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapeMasterCreateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScrapeMasterCreateResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Master",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-masters/{master_id}/auto-activate": {
+   "post": {
+    "operationId": "set_master_auto_activate_api_v1_admin_scrape_masters__master_id__auto_activate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "master_id",
+      "required": true,
+      "schema": {
+       "title": "Master Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapeMasterAutoActivateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScrapeMasterResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Master Auto Activate",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/scrape-masters/{master_id}/status": {
+   "post": {
+    "operationId": "set_master_status_api_v1_admin_scrape_masters__master_id__status_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "master_id",
+      "required": true,
+      "schema": {
+       "title": "Master Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapeMasterStatusRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScrapeMasterResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Master Status",
+    "tags": [
+     "admin",
+     "admin"
+    ]
+   }
+  },
   "/api/v1/admin/scrape-runs": {
    "get": {
     "operationId": "list_scrape_runs_api_v1_admin_scrape_runs_get",
@@ -34665,6 +36856,120 @@
     "tags": [
      "admin",
      "admin-claims"
+    ]
+   }
+  },
+  "/api/v1/admin/shops/{shop_id}/scrape-lifecycles": {
+   "get": {
+    "operationId": "list_shop_lifecycles_api_v1_admin_shops__shop_id__scrape_lifecycles_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "shop_id",
+      "required": true,
+      "schema": {
+       "title": "Shop Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_LifecycleResponse_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Shop Lifecycles",
+    "tags": [
+     "admin",
+     "admin"
     ]
    }
   },

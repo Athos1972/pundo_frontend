@@ -12852,6 +12852,62 @@
     "title": "NotificationSettingsResponse",
     "type": "object"
    },
+   "OAuthConnectionOut": {
+    "description": "One connected OAuth client (``src/types/customer.ts::OAuthConnection`` in the frontend reads exactly these).",
+    "properties": {
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_name": {
+      "title": "Client Name",
+      "type": "string"
+     },
+     "first_authorized_at": {
+      "title": "First Authorized At",
+      "type": "string"
+     },
+     "last_used_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Used At"
+     },
+     "scope": {
+      "title": "Scope",
+      "type": "string"
+     }
+    },
+    "required": [
+     "client_id",
+     "client_name",
+     "scope",
+     "first_authorized_at"
+    ],
+    "title": "OAuthConnectionOut",
+    "type": "object"
+   },
+   "OAuthConnectionsResponse": {
+    "properties": {
+     "connections": {
+      "items": {
+       "$ref": "#/components/schemas/OAuthConnectionOut"
+      },
+      "title": "Connections",
+      "type": "array"
+     }
+    },
+    "required": [
+     "connections"
+    ],
+    "title": "OAuthConnectionsResponse",
+    "type": "object"
+   },
    "OfferDetail": {
     "properties": {
      "crawled_at": {
@@ -47626,9 +47682,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response List Oauth Connections Oauth Clients Me Get",
-         "type": "object"
+         "$ref": "#/components/schemas/OAuthConnectionsResponse"
         }
        }
       },

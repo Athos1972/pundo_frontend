@@ -13,6 +13,7 @@ import type * as SysAdmin from './system-admin'
 import type * as Api from './api'
 import type * as ShopAdmin from './shop-admin'
 import type * as Activity from './activity'
+import type * as Customer from './customer'
 
 type Schemas = components['schemas']
 
@@ -128,4 +129,18 @@ export type ActivityCommunityContracts = [
   Contract<Assignable<Schemas['ActivityResponse'], Activity.ActivityResponse>>,
   Contract<Assignable<Schemas['ShopVotesResponse'], Api.ShopVotesResponse>>,
   Contract<Assignable<Schemas['VoteUpsertResponse'], Api.VoteUpsertResponse>>,
+]
+
+// ── OAuth consent and connections (src/types/customer.ts; B8950-016 OAuth-Server-API) ───────────────────────────
+// Responses: what the backend sends must fit what the consent screen and the connection list read.
+export type OAuthContracts = [
+  // @ts-expect-error -- drift: client:type, scope_descriptions[]:type (the backend declares both as free dict[str, str]; the frontend reads fixed keys client_id/client_name and scope/description_de/description_en). Fix: typed models in oauth_as.py.
+  Contract<Assignable<Schemas['AuthContextResponse'], Customer.OAuthAuthorizationContext>>,
+  Contract<Assignable<Schemas['AuthDecisionResponse'], Customer.OAuthDecisionResponse>>,
+  Contract<Assignable<Schemas['OAuthConnectionsResponse'], Customer.OAuthConnectionsResponse>>,
+]
+
+// Request: the opposite direction - what the frontend sends must satisfy what the backend requires.
+export type OAuthRequestContracts = [
+  Contract<Assignable<Customer.OAuthDecisionRequest, Schemas['AuthDecisionRequest']>>,
 ]

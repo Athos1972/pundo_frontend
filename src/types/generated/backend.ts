@@ -9360,6 +9360,27 @@ export interface components {
             /** Default Alert Interval */
             default_alert_interval: string;
         };
+        /**
+         * OAuthConnectionOut
+         * @description One connected OAuth client (``src/types/customer.ts::OAuthConnection`` in the frontend reads exactly these).
+         */
+        OAuthConnectionOut: {
+            /** Client Id */
+            client_id: string;
+            /** Client Name */
+            client_name: string;
+            /** First Authorized At */
+            first_authorized_at: string;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Scope */
+            scope: string;
+        };
+        /** OAuthConnectionsResponse */
+        OAuthConnectionsResponse: {
+            /** Connections */
+            connections: components["schemas"]["OAuthConnectionOut"][];
+        };
         /** OfferDetail */
         OfferDetail: {
             /** Crawled At */
@@ -23922,9 +23943,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["OAuthConnectionsResponse"];
                 };
             };
             /** @description Validation Error */

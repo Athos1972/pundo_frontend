@@ -74,9 +74,10 @@ export interface OAuthAuthorizationContext {
   scope: string
   scope_descriptions: OAuthScopeDescription[]
   redirect_uri: string
-  state: string
-  code_challenge: string
-  code_challenge_method: string
+  // The backend echoes these only when the request carried them (nullable in the schema); the consent screen reads them from the URL.
+  state: string | null
+  code_challenge: string | null
+  code_challenge_method: string | null
 }
 
 export interface OAuthDecisionRequest {

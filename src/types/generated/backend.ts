@@ -2489,6 +2489,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/progression/preflight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Progression Preflight
+         * @description Inform the client about Homesick pricing without reservation or a write.
+         */
+        post: operations["progression_preflight_api_v1_customer_progression_preflight_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/reviews": {
         parameters: {
             query?: never;
@@ -10336,6 +10356,60 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ProgressionAdmissionLimitResponse */
+        ProgressionAdmissionLimitResponse: {
+            /** Code */
+            code: string;
+            /** Limit Kind */
+            limit_kind: string;
+            /** Reset At */
+            reset_at: string;
+            /** Retry After */
+            retry_after: number;
+        };
+        /** ProgressionPreflightAllowance */
+        ProgressionPreflightAllowance: {
+            /** Free Limit */
+            free_limit: number;
+            /** Kind */
+            kind: string;
+            /** Period */
+            period: string;
+            /** Unit Price */
+            unit_price: number;
+            /** Used */
+            used: number;
+        };
+        /** ProgressionPreflightCharge */
+        ProgressionPreflightCharge: {
+            /** Credits */
+            credits: number;
+            /** Kind */
+            kind: string;
+        };
+        /** ProgressionPreflightRequest */
+        ProgressionPreflightRequest: {
+            /** Action */
+            action: string;
+            /** Brand */
+            brand: string;
+            /**
+             * Reference
+             * @default
+             */
+            reference: string;
+        };
+        /** ProgressionPreflightResponse */
+        ProgressionPreflightResponse: {
+            allowance: components["schemas"]["ProgressionPreflightAllowance"];
+            /** Allowed */
+            allowed: boolean;
+            charge: components["schemas"]["ProgressionPreflightCharge"];
+            /** Message Code */
+            message_code: string;
+            /** Wallet Credits */
+            wallet_credits: number;
+        };
         /**
          * PublicOfferItem
          * @description Public offer item with item embed — only returned for active promotions.
@@ -12373,6 +12447,17 @@ export interface components {
             value: number;
             /** Vote Id */
             vote_id: number;
+        };
+        /** WalletInsufficientResponse */
+        WalletInsufficientResponse: {
+            /** Code */
+            code: string;
+            /** Earn Credits Hint */
+            earn_credits_hint: string;
+            /** Required Credits */
+            required_credits: number;
+            /** Wallet Credits */
+            wallet_credits: number;
         };
         /**
          * WebsiteStatusResponse
@@ -19037,6 +19122,61 @@ export interface operations {
             };
         };
     };
+    progression_preflight_api_v1_customer_progression_preflight_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressionPreflightRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionPreflightResponse"];
+                };
+            };
+            /** @description Wallet insufficient */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletInsufficientResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Admission limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionAdmissionLimitResponse"];
+                };
+            };
+        };
+    };
     list_reviews_api_v1_customer_reviews_get: {
         parameters: {
             query: {
@@ -19535,6 +19675,15 @@ export interface operations {
                     "application/json": components["schemas"]["SimilaritySearchResponse"];
                 };
             };
+            /** @description Wallet insufficient */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletInsufficientResponse"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -19542,6 +19691,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Admission limit reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionAdmissionLimitResponse"];
                 };
             };
         };

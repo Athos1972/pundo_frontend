@@ -50,6 +50,12 @@
    "rate_limited"
   ]
  },
+ "api/customer/customer_progression": {
+  "422": [
+   "invalid_brand",
+   "invalid_progression_action"
+  ]
+ },
  "api/internal/llm_webhook": {
   "503": [
    "correlation_not_ready"
@@ -109,6 +115,14 @@
   ],
   "502": [
    "smtp_failed"
+  ]
+ },
+ "lib/progression/service": {
+  "402": [
+   "wallet_insufficient"
+  ],
+  "429": [
+   "progression_admission_limit"
   ]
  }
 }

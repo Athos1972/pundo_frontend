@@ -408,3 +408,32 @@ Specs bleiben unter ca. 600 Zeilen, damit die 4 Worker sie parallel abarbeiten. 
 - `waitForHydrated(locator)` / `clickHydrated(locator)` — einzelne Elemente.
 
 Fallen, die dabei auftauchten: (1) Während des Streamings liegt kurz eine **versteckte Kopie** (`<div hidden id="S:0">`) im DOM, deshalb `getByRole(...)` oder `:visible` statt blanker Selektoren. (2) Such- und Shop-Seiten rendern Desktop- **und** Mobile-Liste; der erste Treffer kann `display:none` sein (`:visible`). (3) Karten- und Shop-Links tragen den Sprachpräfix (`/en/shops/<slug>`), `a[href^="/shops/"]` trifft nie. (4) Sprache per URL-Präfix wählen (`/ar/…`); Cookie-Wechsel plus `reload` ändert den Präfix nicht.
+
+## Wirkung statt Durchlauf: Verträge und Helfer (Bug „Fehlende Verträge zwischen Sender und Empfänger“, Stand 2026-10-21)
+
+Regeln R1–R9: Vault `Pundo-Plattform/00 Überblick/Conventions.md`, Abschnitt „Verträge und Wirkungsnachweis“. Backend-Seite (Golden-Fixtures,
+Meta-Tests, Checkliste): `pundo_main_backend/docs/testing.md`, gleichnamiger Abschnitt. Hier die Frontend-Werkzeuge:
+
+| Werkzeug | Ort | Zweck |
+|---|---|---|
+| Mail-Sink-Helfer | `e2e/journeys/_helpers/mail-sink.ts` | liest die `.eml`-Dateien, die die Testinstanz über den lokalen SMTP-Sink (Port 1025, gestartet von `start_test_server.sh`) empfangen hat: `waitForMail(adresse)`, Teile, Links, Bild-URLs. Fehlt der Sink, schlägt der Test fehl statt zu überspringen. Journeys: `crm-opt-out`, `shop-owner-onboarding`, `shop-owner-admin-approval-flow`, `shop-owner-self-deactivate` |
+| Golden-Worker für LLM-Ketten | `e2e/journeys/_helpers/gateway-worker.ts` | beantwortet **genau den eigenen** Gateway-Task (Filter `payload_contains`) mit der Golden-Fixture des Workers (`pundo_llm_workers/tests/contracts/golden/`), das Gateway sendet den signierten Webhook. Braucht den Gateway-Testserver auf 8600; fehlt er, wird sichtbar übersprungen. Journeys: `llm-effects-homesick-spotted`, `admin-catalog-review` |
+| Aufgezeichnete Mock-Antworten | `e2e/journeys/_helpers/contracts.ts`, `e2e/fixtures/contracts/*.json` | Mocks (`page.route`) lesen `{status, body}`-Dateien statt Handtexte. Ein „Real backend“-Test derselben Journey vergleicht die echte Antwort mit der Datei und wird rot, wenn das Backend die Form ändert. Neu aufzeichnen: `E2E_RECORD_CONTRACTS=1 npx playwright test <spec>`, Dateien committen. Wächter: `src/tests/e2e-contract-fixtures.test.ts` |
+| Typ-Verträge zum Backend | `src/types/contracts.ts`, `src/types/generated/{openapi.json,backend.ts}` | `node scripts/api-types.cjs sync` kopiert den **committeten** Stand von `pundo_main_backend/docs/openapi.json` (`git show HEAD:…`) und erzeugt die Typen; `check` läuft im Gate. `PUNDO_BACKEND_WORKTREE=1` erzwingt die Arbeitsdatei. `contracts.ts` prüft per `tsc`, dass die Backend-Antwort zum Frontend-Typ passt; bewusste Abweichungen stehen mit Grund als `@ts-expect-error` |
+| Selektor-Regel | `eslint-rules/no-positional-tag-locator.js` | verbietet `.first()/.last()/.nth()` auf Tag-Locatoren (`form`, `button` …) in Journeys; `data-testid`/`getByRole` nutzen |
+| Proxy-Vertragstabelle | `src/tests/proxy-catchall-contract.test.ts` | Cookie→Bearer, Header-Allowlist, Fehlerformen der Catch-all-Routen |
+| Betriebswege | `src/tests/ops-routes-contract.test.ts` | Sitemap-Revalidierung (`x-revalidate-secret`) und Nominatim-Proxy |
+
+Regeln, die sich aus den Funden ergeben haben:
+
+1. **`page.route()` sieht nur Browser-Anfragen.** Server-Komponenten holen ihre Daten serverseitig (z. B. `/related` der Produktseite); ein Mock im
+   Browser kann diese Anfrage nie abfangen, der Test wäre grün, ohne etwas zu prüfen. Server-Fälle testet ein Vitest, der die Seiten-Funktion
+   direkt aufruft (`src/tests/product-page-related-fallback.test.tsx`).
+2. **Ein Mock ist erst gültig, wenn ein Real-Test denselben Body bestätigt** (Fund: Mock mit `category: shortener_unresolvable`, das Backend sendet
+   `error: shortener_unresolvable`).
+3. **Übersprungene Tests sind Lücken.** Der Rate-Limit-Test des Kontaktformulars lief monatelang nie, weil er bei konfiguriertem SMTP abbrach;
+   `test.skip` mit Bedingung nur mit sichtbarem Grund und nur, wenn die Bedingung wirklich ein Sonderfall ist.
+4. **Gate-Zeitüberschreitungen unter Last.** Läuft der Mac heiß (Time Machine, Spotlight, hängender `fseventsd`/`SystemUIServer`, IDE-Indexierung),
+   scheitern im vollen Lauf wahllos 1 bis 4 Tests mit `page.goto … 30000ms`; einzeln laufen sie durch. Vor einem Push `uptime` prüfen (Last unter etwa 4),
+   die Ursache beheben und regulär neu pushen, nicht `--no-verify`.
+

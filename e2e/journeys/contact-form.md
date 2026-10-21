@@ -30,11 +30,11 @@ last-result: PASS
 **Expected:** `POST /api/contact` enthält ein nicht-leeres `turnstile_token`; Status `200` oder `503` (nie `400 captcha_failed`, nie `429`). AR/HE: `dir="rtl"`.
 
 ### C2: Captcha-Fehler
-**Steps:** Antwort von `/api/contact` auf `400 {error:'captcha_failed'}` mocken, absenden.
+**Steps:** Antwort von `/api/contact` auf `400 {error:'captcha_failed'}` mocken (Body aus `e2e/fixtures/contracts/contact-captcha-failed.json`, den die Route erzeugt, geprüft von `src/tests/e2e-contract-fixtures.test.ts`), absenden.
 **Expected:** Text `turnstile_failed` sichtbar, Button erst nach neuem Token wieder aktiv.
 
 ### C3: Rate-Limit (429) in en und he
-**Steps:** Antwort auf `429 {error:'rate_limited'}` mocken, absenden.
+**Steps:** Antwort auf `429 {error:'rate_limited'}` mocken (`e2e/fixtures/contracts/contact-rate-limited.json`), absenden.
 **Expected:** Text `contact_rate_limited` der jeweiligen Sprache, kein generischer Fehlertext.
 
 ### C4: Backend-Endpoint direkt (API)

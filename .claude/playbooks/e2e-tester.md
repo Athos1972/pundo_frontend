@@ -547,7 +547,7 @@ Nicht-blocking. Ablauf, Heuristik-Befehle, Patch-Format und Verdict→Issue-Stat
 
 Kanonische Regeln R1–R9: Conventions § Verträge und Wirkungsnachweis (ergänzt „Observable-Outcome-Prinzip“ in `reference/e2e-tester-scenarios.md`).
 - **Evidenz-Zeile pro AC** im Report (Beobachtungspunkt, Ergebnis); ein AC, das eine Journey nur durchläuft (Seite erreicht, Container sichtbar, Status 200), ist eine **Beweislücke** und wird als eigenes Finding gemeldet. Bei MVP-Kriterien ist SHIP dann nicht erlaubt.
-- **Canned-Antworten** (`page.route`, Mocks in Journeys) gegen die Backend-Schemas/aufgezeichneten Antworten abgleichen: Hülle und Eintragsformat müssen stimmen. Abweichung = Finding, auch bei grüner Journey.
+- **Canned-Antworten** (`page.route`, Mocks in Journeys) gegen die Backend-Schemas/aufgezeichneten Antworten abgleichen: Hülle und Eintragsformat müssen stimmen. Abweichung = Finding, auch bei grüner Journey. Mocks sollen aus `e2e/fixtures/contracts/*.json` kommen (`fulfillFrom`) und einen „Real backend“-Test haben (`expectRealMatchesContract`). Prüfen, ob ein Mock eine **serverseitige** Anfrage ersetzen will (wirkungslos). Übersprungene Tests (`test.skip`) im Report mit Grund nennen.
 - **Realweg:** Mindestens ein Lauf ohne Mock gegen das echte Backend (8500) pro Kette; bei LLM-Ketten mit Test-Worker (`worker.test.yml`, LLM gemockt). Fehlt das, steht der Grund im Report.
 - **„Grün aber leer“:** Leerer Zustand und „Erfolg mit 0 Ergebnissen“ werden für Listen, Suche und Admin-Ketten einmal ausgelöst und auf die erwartete Darstellung/den Alarm geprüft.
 - Findings dieser Art bekommen eine Bug-Datei mit dem Pflichtabschnitt „Warum nicht aufgefallen? / Maßnahme gegen die Klasse dieses Fehlers“.

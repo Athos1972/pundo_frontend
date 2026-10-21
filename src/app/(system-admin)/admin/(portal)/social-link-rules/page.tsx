@@ -31,7 +31,7 @@ export default async function SocialLinkRulesPage({ searchParams }: PageProps) {
     offset: 0,
   }))
 
-  const CATEGORIES: SocialLinkRuleCategory[] = ['adult', 'gambling', 'hate', 'illegal', 'malware', 'custom']
+  const CATEGORIES: SocialLinkRuleCategory[] = ['adult', 'gambling', 'hate', 'illegal', 'malware'] // the backend validator knows no 'custom' (B8500-003)
 
   const categoryLabel: Record<SocialLinkRuleCategory, string> = {
     adult: tr.slr_cat_adult,

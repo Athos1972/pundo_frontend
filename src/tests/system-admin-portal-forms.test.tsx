@@ -484,6 +484,12 @@ describe('RuleForm', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
+  it('does not offer the category "custom", which the backend rejects with 422 (B8500-003)', () => {
+    render(<RuleForm tr={tr} />)
+    const options = within(screen.getByRole('combobox')).getAllByRole('option').map((o) => (o as HTMLOptionElement).value)
+    expect(options).toEqual(['adult', 'gambling', 'hate', 'illegal', 'malware'])
+  })
+
   // Regression: hosts that merely START with "http" (httpbin.org, http-tools.net)
   // were rejected by a leftover startsWith('http') check.
   it.each(['httpbin.org', 'http-tools.net'])('accepts legitimate host %s', async (host) => {

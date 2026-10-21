@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import type { SocialLinkRuleCategory } from '@/types/system-admin'
 
-const CATEGORIES: SocialLinkRuleCategory[] = ['adult', 'gambling', 'hate', 'illegal', 'malware', 'custom']
+const CATEGORIES: SocialLinkRuleCategory[] = ['adult', 'gambling', 'hate', 'illegal', 'malware'] // the backend validator knows no 'custom' (B8500-003)
 
 interface RuleFormProps {
   tr: SysAdminTranslations

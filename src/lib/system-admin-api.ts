@@ -30,6 +30,7 @@ import type {
   CrmContactDetail,
   CrmConfigOut,
   SysAdminReview,
+  SysAdminCategoryReviewItem,
   SysAdminReviewAuditEntry,
   SysAdminClaimListItem,
   SysAdminClaimSummary,
@@ -418,4 +419,14 @@ export async function getMatchingChecks(
 /** GET /api/v1/admin/shops/{id}/owner -- current owner account and active applications of a shop */
 export async function getShopOwnerOverview(shopId: number | string): Promise<SysAdminShopOwnerOverview> {
   return apiFetch<SysAdminShopOwnerOverview>(`/shops/${shopId}/owner`)
+}
+
+// ─── Category review queue (B5982-001) ───────────────────────────────────────
+// Decisions (accept / assign / reject) run in the browser through /api/admin/category-review/...
+
+/** GET /api/v1/admin/category-review — borderline backfill categorisations, best proposals first. */
+export async function getCategoryReviewQueue(
+  params: { limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<SysAdminCategoryReviewItem>> {
+  return apiFetch<PaginatedResponse<SysAdminCategoryReviewItem>>(`/category-review${buildQs(params)}`)
 }

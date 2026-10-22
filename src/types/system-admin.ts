@@ -673,3 +673,14 @@ export interface SysAdminMappingLookupOption {
   label: string
   parent_slug: string | null
 }
+
+/** B5982-001 review queue row (GET /api/v1/admin/category-review) */
+export interface SysAdminCategoryReviewItem {
+  item_id: number
+  name: string | null
+  product_url: string | null
+  proposed_category_id: number | null
+  proposed_category_path: string | null
+  descent_confidence: number | null
+  first_confidence: number | null
+}

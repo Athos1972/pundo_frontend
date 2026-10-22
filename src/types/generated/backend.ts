@@ -329,6 +329,74 @@ export interface paths {
         patch: operations["update_cat_attr_def_api_v1_admin_category_attribute_definitions__def_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/category-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Review Queue */
+        get: operations["list_review_queue_api_v1_admin_category_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/category-review/{item_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Proposal */
+        post: operations["accept_proposal_api_v1_admin_category_review__item_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/category-review/{item_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign Category */
+        post: operations["assign_category_api_v1_admin_category_review__item_id__assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/category-review/{item_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Proposal */
+        post: operations["reject_proposal_api_v1_admin_category_review__item_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/category-synonyms": {
         parameters: {
             query?: never;
@@ -7265,6 +7333,11 @@ export interface components {
             /** Shop Owner Id */
             shop_owner_id: number;
         };
+        /** AssignRequest */
+        AssignRequest: {
+            /** Category Id */
+            category_id: number;
+        };
         "AttributeMap-Input": {
             [key: string]: components["schemas"]["JsonValue-Input"];
         };
@@ -7947,6 +8020,23 @@ export interface components {
              * @default []
              */
             mappings: components["schemas"]["CategoryMappingEntry"][];
+        };
+        /** CategoryReviewItem */
+        CategoryReviewItem: {
+            /** Descent Confidence */
+            descent_confidence: number | null;
+            /** First Confidence */
+            first_confidence: number | null;
+            /** Item Id */
+            item_id: number;
+            /** Name */
+            name: string | null;
+            /** Product Url */
+            product_url: string | null;
+            /** Proposed Category Id */
+            proposed_category_id: number | null;
+            /** Proposed Category Path */
+            proposed_category_path: string | null;
         };
         /** CategorySuggestion */
         CategorySuggestion: {
@@ -10616,6 +10706,17 @@ export interface components {
         PaginatedResponse_BacklogResponse_: {
             /** Items */
             items: components["schemas"]["BacklogResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** PaginatedResponse[CategoryReviewItem] */
+        PaginatedResponse_CategoryReviewItem_: {
+            /** Items */
+            items: components["schemas"]["CategoryReviewItem"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -14222,6 +14323,151 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminCatAttrDefResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_queue_api_v1_admin_category_review_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_CategoryReviewItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_proposal_api_v1_admin_category_review__item_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                item_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_category_api_v1_admin_category_review__item_id__assign_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                item_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_proposal_api_v1_admin_category_review__item_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                item_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

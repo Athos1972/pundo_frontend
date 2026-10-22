@@ -86,6 +86,7 @@ export type SysAdminContracts = [
   // @ts-expect-error -- drift: external_batch_id:missing
   Contract<Assignable<Schemas['SocialLinkRuleResponse'], SysAdmin.SysAdminSocialLinkRule>>,
   Contract<Assignable<Schemas['ScrapeRunResponse'], SysAdmin.SysAdminScrapeRun>>,
+  Contract<Assignable<Schemas['CategoryReviewItem'], SysAdmin.SysAdminCategoryReviewItem>>,
 ]
 
 // ── Customer-facing (src/types/api.ts) ──────────────────────────────────────────────────────────────────

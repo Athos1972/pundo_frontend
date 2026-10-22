@@ -6088,6 +6088,19 @@
     "title": "AssignOwnerResponse",
     "type": "object"
    },
+   "AssignRequest": {
+    "properties": {
+     "category_id": {
+      "title": "Category Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "category_id"
+    ],
+    "title": "AssignRequest",
+    "type": "object"
+   },
    "AttributeMap-Input": {
     "additionalProperties": {
      "$ref": "#/components/schemas/JsonValue-Input"
@@ -8067,6 +8080,91 @@
      "domain_id"
     ],
     "title": "CategoryMappingResponse",
+    "type": "object"
+   },
+   "CategoryReviewItem": {
+    "properties": {
+     "descent_confidence": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Descent Confidence"
+     },
+     "first_confidence": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Confidence"
+     },
+     "item_id": {
+      "title": "Item Id",
+      "type": "integer"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "product_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Product Url"
+     },
+     "proposed_category_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposed Category Id"
+     },
+     "proposed_category_path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proposed Category Path"
+     }
+    },
+    "required": [
+     "item_id",
+     "name",
+     "product_url",
+     "proposed_category_id",
+     "proposed_category_path",
+     "descent_confidence",
+     "first_confidence"
+    ],
+    "title": "CategoryReviewItem",
     "type": "object"
    },
    "CategorySuggestion": {
@@ -16040,6 +16138,37 @@
      "offset"
     ],
     "title": "PaginatedResponse[BacklogResponse]",
+    "type": "object"
+   },
+   "PaginatedResponse_CategoryReviewItem_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/CategoryReviewItem"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[CategoryReviewItem]",
     "type": "object"
    },
    "PaginatedResponse_ContactListItem_": {
@@ -26144,6 +26273,324 @@
     "summary": "Update Cat Attr Def",
     "tags": [
      "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/category-review": {
+   "get": {
+    "operationId": "list_review_queue_api_v1_admin_category_review_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_CategoryReviewItem_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Review Queue",
+    "tags": [
+     "admin",
+     "admin-category-review"
+    ]
+   }
+  },
+  "/api/v1/admin/category-review/{item_id}/accept": {
+   "post": {
+    "operationId": "accept_proposal_api_v1_admin_category_review__item_id__accept_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Accept Proposal",
+    "tags": [
+     "admin",
+     "admin-category-review"
+    ]
+   }
+  },
+  "/api/v1/admin/category-review/{item_id}/assign": {
+   "post": {
+    "operationId": "assign_category_api_v1_admin_category_review__item_id__assign_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssignRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Assign Category",
+    "tags": [
+     "admin",
+     "admin-category-review"
+    ]
+   }
+  },
+  "/api/v1/admin/category-review/{item_id}/reject": {
+   "post": {
+    "operationId": "reject_proposal_api_v1_admin_category_review__item_id__reject_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reject Proposal",
+    "tags": [
+     "admin",
+     "admin-category-review"
     ]
    }
   },

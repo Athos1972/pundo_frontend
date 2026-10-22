@@ -2,6 +2,8 @@
 
 import { t } from '@/lib/translations'
 import type { ProgressionPreflightResponse } from '@/types/api'
+import { CreditsLevelHelp } from './CreditsLevelHelp'
+import type { Lang } from '@/lib/lang'
 
 interface Props {
   lang: string
@@ -9,17 +11,18 @@ interface Props {
   onConfirm: () => void
   onCancel: () => void
   isSubmitting?: boolean
+  brand?: string
 }
 
 /** Small K3-only price preview; it deliberately does not show K4 wallet history. */
-export function WalletChargeConfirmDialog({ lang, preview, onConfirm, onCancel, isSubmitting = false }: Props) {
+export function WalletChargeConfirmDialog({ lang, preview, onConfirm, onCancel, isSubmitting = false, brand = 'pundo' }: Props) {
   const tr = t(lang)
   const remaining = Math.max(0, preview.allowance.free_limit - preview.allowance.used)
   const isPaid = preview.charge.kind === 'credits'
 
   return (
     <section aria-live="polite" aria-label={tr.progression_preview_title} className="flex flex-col gap-4 py-2">
-      <h3 className="text-base font-bold text-text">{tr.progression_preview_title}</h3>
+      <div className="flex items-center"><h3 className="text-base font-bold text-text">{tr.progression_preview_title}</h3><CreditsLevelHelp lang={lang as Lang} brand={brand} /></div>
       <p className="text-sm text-text">
         {isPaid ? tr.progression_preview_paid(preview.charge.credits) : tr.progression_preview_free}
       </p>

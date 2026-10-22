@@ -3,6 +3,8 @@
 import type { TrustProfileResponse } from '@/types/api'
 import type { Translations } from '@/lib/translations'
 import { formatDate } from '@/lib/format-date'
+import { CreditsLevelHelp } from '@/components/wallet/CreditsLevelHelp'
+import type { Lang } from '@/lib/lang'
 
 const BADGE_LABEL_KEY: Record<string, keyof Translations> = {
   island_hero: 'trust_badge_island_hero',
@@ -20,22 +22,23 @@ interface Props {
   profile: TrustProfileResponse
   tr: Translations
   lang: string
+  brand?: string
 }
 
-export function TrustProfileSection({ profile, tr, lang }: Props) {
+export function TrustProfileSection({ profile, tr, lang, brand = 'pundo' }: Props) {
   return (
     <div className="space-y-6">
       {/* Level + Credits */}
       <div className="flex gap-4">
         <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-text-muted mb-1">{tr.trust_level}</p>
+          <div className="text-xs text-text-muted mb-1">{tr.trust_level}<CreditsLevelHelp lang={lang as Lang} brand={brand} legacyAccount /></div>
           <p className="text-3xl font-extrabold text-accent font-heading">
             {profile.trust_level}
           </p>
           <p className="text-xs text-text-muted mt-1">{tr.trust_level_label(profile.trust_level)}</p>
         </div>
         <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
-          <p className="text-xs text-text-muted mb-1">{tr.trust_credits}</p>
+          <div className="text-xs text-text-muted mb-1">{tr.trust_credits}<CreditsLevelHelp lang={lang as Lang} brand={brand} legacyAccount /></div>
           <p className="text-3xl font-extrabold text-accent font-heading">
             {profile.credits}
           </p>

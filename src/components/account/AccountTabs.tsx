@@ -143,7 +143,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
           hidden={activeTab !== 'trust'}
         >
           {activeTab === 'trust' && trustProfile && (
-            <TrustProfileSection profile={trustProfile} tr={tr} lang={lang} />
+            <TrustProfileSection profile={trustProfile} tr={tr} lang={lang} brand={brandSlug} />
           )}
           {activeTab === 'trust' && !trustProfile && (
             <p className="text-sm text-text-muted">{tr.error_generic}</p>

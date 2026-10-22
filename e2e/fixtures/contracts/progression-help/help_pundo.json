@@ -1,0 +1,51 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "brand": "pundo",
+    "ledger_enabled": false,
+    "earnings": [
+      {
+        "action": "vote_language",
+        "xp": 5,
+        "credits": 1
+      },
+      {
+        "action": "vote_label",
+        "xp": 3,
+        "credits": 1
+      },
+      {
+        "action": "spotted_report",
+        "xp": 20,
+        "credits": 5
+      },
+      {
+        "action": "photo_upload",
+        "xp": 15,
+        "credits": 3
+      },
+      {
+        "action": "review_approved",
+        "xp": 15,
+        "credits": 3
+      }
+    ],
+    "prices": {
+      "homesick_credits": 3,
+      "mcp_calls_per_block": 100,
+      "mcp_credits_per_100_calls": 1,
+      "product_mail_credits": 2
+    },
+    "allowances": {
+      "homesick_free_daily": 5,
+      "homesick_free_monthly": 20,
+      "mcp_free_calls_daily": 1000,
+      "product_mail_free_monthly": 5
+    }
+  },
+  "backend_commit": "1dbf14ab1c4f37ac0e9f4621c5d48a545029e0e3",
+  "backend_worktree_dirty": true
+}

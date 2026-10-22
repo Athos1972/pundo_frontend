@@ -278,6 +278,7 @@ export function FavoritesTab({ lang, brandSlug = 'pundo' }: Props) {
           <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl">
             <WalletChargeConfirmDialog
               lang={lang}
+              brand={brandSlug}
               preview={pendingActivation.preview}
               onConfirm={() => persistFavoriteInterval(pendingActivation.favoriteId, pendingActivation.interval)}
               onCancel={() => setPendingActivation(null)}

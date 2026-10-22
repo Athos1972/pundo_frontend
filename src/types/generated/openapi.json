@@ -16028,6 +16028,120 @@
     "title": "ProgressionAdmissionLimitResponse",
     "type": "object"
    },
+   "ProgressionHelpAllowances": {
+    "properties": {
+     "homesick_free_daily": {
+      "title": "Homesick Free Daily",
+      "type": "integer"
+     },
+     "homesick_free_monthly": {
+      "title": "Homesick Free Monthly",
+      "type": "integer"
+     },
+     "mcp_free_calls_daily": {
+      "title": "Mcp Free Calls Daily",
+      "type": "integer"
+     },
+     "product_mail_free_monthly": {
+      "title": "Product Mail Free Monthly",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "homesick_free_daily",
+     "homesick_free_monthly",
+     "mcp_free_calls_daily",
+     "product_mail_free_monthly"
+    ],
+    "title": "ProgressionHelpAllowances",
+    "type": "object"
+   },
+   "ProgressionHelpEarning": {
+    "properties": {
+     "action": {
+      "title": "Action",
+      "type": "string"
+     },
+     "credits": {
+      "title": "Credits",
+      "type": "integer"
+     },
+     "xp": {
+      "title": "Xp",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "action",
+     "xp",
+     "credits"
+    ],
+    "title": "ProgressionHelpEarning",
+    "type": "object"
+   },
+   "ProgressionHelpPrices": {
+    "properties": {
+     "homesick_credits": {
+      "title": "Homesick Credits",
+      "type": "integer"
+     },
+     "mcp_calls_per_block": {
+      "title": "Mcp Calls Per Block",
+      "type": "integer"
+     },
+     "mcp_credits_per_100_calls": {
+      "title": "Mcp Credits Per 100 Calls",
+      "type": "integer"
+     },
+     "product_mail_credits": {
+      "title": "Product Mail Credits",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "homesick_credits",
+     "mcp_calls_per_block",
+     "mcp_credits_per_100_calls",
+     "product_mail_credits"
+    ],
+    "title": "ProgressionHelpPrices",
+    "type": "object"
+   },
+   "ProgressionHelpResponse": {
+    "description": "Deliberately small, customer-facing projection of the active rule set.",
+    "properties": {
+     "allowances": {
+      "$ref": "#/components/schemas/ProgressionHelpAllowances"
+     },
+     "brand": {
+      "title": "Brand",
+      "type": "string"
+     },
+     "earnings": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionHelpEarning"
+      },
+      "title": "Earnings",
+      "type": "array"
+     },
+     "ledger_enabled": {
+      "title": "Ledger Enabled",
+      "type": "boolean"
+     },
+     "prices": {
+      "$ref": "#/components/schemas/ProgressionHelpPrices"
+     }
+    },
+    "required": [
+     "brand",
+     "ledger_enabled",
+     "earnings",
+     "prices",
+     "allowances"
+    ],
+    "title": "ProgressionHelpResponse",
+    "type": "object"
+   },
    "ProgressionPreflightAllowance": {
     "properties": {
      "free_limit": {
@@ -37534,6 +37648,81 @@
     "summary": "Get Trust Profile",
     "tags": [
      "trust-profile"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/help": {
+   "get": {
+    "description": "Return only customer-facing active-rule values; never abuse caps or versions.",
+    "operationId": "progression_help_api_v1_customer_progression_help_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProgressionHelpResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Progression Help",
+    "tags": [
+     "customer-progression"
     ]
    }
   },

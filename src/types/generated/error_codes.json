@@ -57,6 +57,9 @@
    "invalid_product_mail_interval",
    "invalid_product_mail_reference",
    "invalid_progression_action"
+  ],
+  "503": [
+   "progression_rules_unavailable"
   ]
  },
  "api/internal/llm_webhook": {

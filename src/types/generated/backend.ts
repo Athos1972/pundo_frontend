@@ -2529,6 +2529,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/progression/help": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Progression Help
+         * @description Return only customer-facing active-rule values; never abuse caps or versions.
+         */
+        get: operations["progression_help_api_v1_customer_progression_help_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/progression/preflight": {
         parameters: {
             query?: never;
@@ -10453,6 +10473,51 @@ export interface components {
             reset_at: string;
             /** Retry After */
             retry_after: number;
+        };
+        /** ProgressionHelpAllowances */
+        ProgressionHelpAllowances: {
+            /** Homesick Free Daily */
+            homesick_free_daily: number;
+            /** Homesick Free Monthly */
+            homesick_free_monthly: number;
+            /** Mcp Free Calls Daily */
+            mcp_free_calls_daily: number;
+            /** Product Mail Free Monthly */
+            product_mail_free_monthly: number;
+        };
+        /** ProgressionHelpEarning */
+        ProgressionHelpEarning: {
+            /** Action */
+            action: string;
+            /** Credits */
+            credits: number;
+            /** Xp */
+            xp: number;
+        };
+        /** ProgressionHelpPrices */
+        ProgressionHelpPrices: {
+            /** Homesick Credits */
+            homesick_credits: number;
+            /** Mcp Calls Per Block */
+            mcp_calls_per_block: number;
+            /** Mcp Credits Per 100 Calls */
+            mcp_credits_per_100_calls: number;
+            /** Product Mail Credits */
+            product_mail_credits: number;
+        };
+        /**
+         * ProgressionHelpResponse
+         * @description Deliberately small, customer-facing projection of the active rule set.
+         */
+        ProgressionHelpResponse: {
+            allowances: components["schemas"]["ProgressionHelpAllowances"];
+            /** Brand */
+            brand: string;
+            /** Earnings */
+            earnings: components["schemas"]["ProgressionHelpEarning"][];
+            /** Ledger Enabled */
+            ledger_enabled: boolean;
+            prices: components["schemas"]["ProgressionHelpPrices"];
         };
         /** ProgressionPreflightAllowance */
         ProgressionPreflightAllowance: {
@@ -19306,6 +19371,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrustProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    progression_help_api_v1_customer_progression_help_get: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionHelpResponse"];
                 };
             };
             /** @description Validation Error */

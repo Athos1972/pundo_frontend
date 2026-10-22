@@ -33,7 +33,8 @@ test.describe('Community-Feedback: Shop-Detailseite', () => {
     // Wenn Section sichtbar ist, soll Login-Link da sein
     const communitySection = page.locator('section[aria-label*="Community"]')
     if (await communitySection.count() > 0) {
-      const loginLink = communitySection.locator('a[href="/auth/login"]')
+      // Mit Daten zeigt die Seite mehrere Login-Hinweise (Feedback und Bewertung); mindestens einer genügt
+      const loginLink = communitySection.locator('a[href="/auth/login"]').first()
       await expect(loginLink).toBeVisible()
     }
   })

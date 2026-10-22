@@ -1,0 +1,42 @@
+{
+  "status": 201,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "vote_id": 5,
+    "shop_id": 1,
+    "attribute_type": "language_en",
+    "value": 1.0,
+    "is_new": true,
+    "credits_awarded": 1,
+    "new_credit_total": 0,
+    "progression_feedback": {
+      "state": "awarded",
+      "reason": null,
+      "event": {
+        "display_kind": "vote_language",
+        "xp_delta": 5,
+        "credit_delta": 1
+      },
+      "standing": {
+        "xp": 5,
+        "level": 1,
+        "next_level": {
+          "level": 2,
+          "threshold_xp": 50,
+          "remaining_xp": 45
+        }
+      },
+      "wallet": {
+        "credits": 1
+      },
+      "achievements": {
+        "level_up": null,
+        "badges": []
+      }
+    }
+  },
+  "backend_commit": "45d5d8ff00dfbc1ffdbd6ca84590d82c6f7f5526",
+  "backend_worktree_dirty": true
+}

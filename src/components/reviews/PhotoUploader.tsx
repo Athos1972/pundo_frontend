@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 import type { Translations } from '@/lib/translations'
+import type { ProgressionFeedback } from '@/types/api'
+import { ProgressionFeedbackNotice } from '@/components/account/ProgressionFeedbackNotice'
 
 const MAX_FILE_MB = 10
 const MAX_PHOTOS = 5
@@ -10,14 +12,17 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 interface Props {
   reviewId: number
   tr: Translations
+  lang: string
+  brandSlug?: 'pundo' | 'naidivse'
   onUploaded: () => void
 }
 
-export function PhotoUploader({ reviewId, tr, onUploaded }: Props) {
+export function PhotoUploader({ reviewId, tr, lang, brandSlug = 'pundo', onUploaded }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadCount, setUploadCount] = useState(0)
   const [error, setError] = useState('')
+  const [progressionFeedback, setProgressionFeedback] = useState<ProgressionFeedback | null>(null)
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
@@ -58,6 +63,8 @@ export function PhotoUploader({ reviewId, tr, onUploaded }: Props) {
         })
 
         if (res.ok) {
+          const payload = await res.json() as { progression_feedback?: ProgressionFeedback | null }
+          setProgressionFeedback(payload.progression_feedback ?? null)
           setUploadCount((n) => n + 1)
           onUploaded()
         }
@@ -94,6 +101,7 @@ export function PhotoUploader({ reviewId, tr, onUploaded }: Props) {
         {uploadCount > 0 && ` (${uploadCount}/${MAX_PHOTOS})`}
       </button>
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      <ProgressionFeedbackNotice feedback={progressionFeedback} lang={lang} brand={brandSlug} />
     </div>
   )
 }

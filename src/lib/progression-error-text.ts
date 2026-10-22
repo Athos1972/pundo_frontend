@@ -21,8 +21,8 @@ export function formatProgressionResetTime(resetAt: string, lang: string): strin
  * Maps the closed admission-limit contract to deliberately specific copy.
  * Unknown identifiers must remain neutral: their semantics are not ours to guess.
  */
-export function progressionAdmissionErrorText(tr: Translations, error: ProgressionAdmissionError, fallback: string, lang = 'en'): string {
-  if (error.kind === 'wallet_insufficient') return tr.progression_wallet_insufficient(error.required_credits, error.wallet_credits)
+export function progressionAdmissionErrorText(tr: Translations, error: ProgressionAdmissionError, fallback: string, lang = 'en', brand = 'pundo'): string {
+  if (error.kind === 'wallet_insufficient') return tr.progression_wallet_insufficient_named(error.required_credits, error.wallet_credits, tr.progression_brand_currency(brand, error.required_credits))
   if (error.kind === 'admission_limit') {
     const reset = formatProgressionResetTime(error.reset_at, lang)
     switch (error.limit_kind) {

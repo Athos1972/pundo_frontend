@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { getCustomerSession, getMyReviews } from '@/lib/customer-api'
-import { getTrustProfile } from '@/lib/community-api'
+import { getProgressionAccount, getTrustProfile } from '@/lib/community-api'
 import { getBrandFromHeaders } from '@/config/brands'
 import { BackButton } from '@/components/ui/BackButton'
 import { AccountTabs } from '@/components/account/AccountTabs'
@@ -24,12 +24,13 @@ export default async function AccountFavoritesPage() {
 
   const user = session.user
 
-  const [reviews, linkedAccounts, trustProfile, brand] = await Promise.all([
+  const brand = await getBrandFromHeaders()
+  const [reviews, linkedAccounts, progression] = await Promise.all([
     getMyReviews(lang),
     fetchLinkedAccounts(lang),
-    getTrustProfile(lang),
-    getBrandFromHeaders(),
+    getProgressionAccount(lang, brand.slug),
   ])
+  const trustProfile = progression.status === 'legacy' ? await getTrustProfile(lang) : null
 
   return (
     <main className="min-h-screen bg-bg">
@@ -50,6 +51,8 @@ export default async function AccountFavoritesPage() {
           linkedAccounts={linkedAccounts}
           reviews={reviews}
           trustProfile={trustProfile}
+          progressionAccount={progression.status === 'available' ? progression.account : null}
+          progressionLegacyFallback={progression.status === 'legacy'}
           lang={lang}
           brandSlug={brand.slug}
           showMcpTab={brand.features.mcp}

@@ -2769,6 +2769,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/progression/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Progression Account
+         * @description Read the K4a account projection without provisioning progression data.
+         */
+        get: operations["progression_account_api_v1_customer_progression_account_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/progression/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Progression Events
+         * @description Page public-safe history; brand validates the current surface only.
+         *
+         *     Standing and wallet are shared across brands, so events are intentionally not
+         *     brand-filtered and carry their own brand label in the DTO.
+         */
+        get: operations["progression_events_api_v1_customer_progression_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/progression/help": {
         parameters: {
             query?: never;
@@ -6628,6 +6671,7 @@ export interface components {
             owner_report_count: number;
             /** Photos */
             photos: components["schemas"]["ReviewPhotoOut"][];
+            progression_feedback?: components["schemas"]["ProgressionFeedbackOut"] | null;
             reply?: components["schemas"]["AdminReviewReplyOut"] | null;
             /** Reporter Count */
             reporter_count: number;
@@ -9995,6 +10039,7 @@ export interface components {
             owner_reply?: components["schemas"]["PublicReviewReplyOut"] | null;
             /** Photos */
             photos: components["schemas"]["ReviewPhotoOut"][];
+            progression_feedback?: components["schemas"]["ProgressionFeedbackOut"] | null;
             /** Stars */
             stars: number;
             /** Updated At */
@@ -11034,6 +11079,18 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ProgressionAccountReadOut */
+        ProgressionAccountReadOut: {
+            /** Allowances */
+            allowances: components["schemas"]["ProgressionAllowanceOut"][];
+            /** Badge Goals */
+            badge_goals: components["schemas"]["ProgressionBadgeGoalOut"][];
+            /** Badges */
+            badges: components["schemas"]["ProgressionBadgeOut"][];
+            history: components["schemas"]["ProgressionHistoryOut"];
+            standing: components["schemas"]["ProgressionStandingOut"];
+            wallet: components["schemas"]["ProgressionWalletOut"];
+        };
         /** ProgressionAdmissionLimitResponse */
         ProgressionAdmissionLimitResponse: {
             /** Code */
@@ -11044,6 +11101,91 @@ export interface components {
             reset_at: string;
             /** Retry After */
             retry_after: number;
+        };
+        /** ProgressionAllowanceOut */
+        ProgressionAllowanceOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "homesick" | "homesick_daily" | "product_mail" | "mcp";
+            /** Limit */
+            limit: number;
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "utc_day" | "utc_month";
+            /** Remaining */
+            remaining: number;
+            /**
+             * Reset At
+             * Format: date-time
+             */
+            reset_at: string;
+        };
+        /** ProgressionBadgeGoalOut */
+        ProgressionBadgeGoalOut: {
+            /** Badge Code */
+            badge_code: string;
+            /** Current */
+            current: number;
+            /** Next Tier */
+            next_tier: string;
+            /** Remaining */
+            remaining: number;
+            /** Target */
+            target: number;
+        };
+        /** ProgressionBadgeOut */
+        ProgressionBadgeOut: {
+            /**
+             * Awarded At
+             * Format: date-time
+             */
+            awarded_at: string;
+            /** Badge Code */
+            badge_code: string;
+            /**
+             * State
+             * @default earned
+             * @constant
+             */
+            state: "earned";
+            /** Tier */
+            tier: string;
+        };
+        /** ProgressionFeedbackAchievementsOut */
+        ProgressionFeedbackAchievementsOut: {
+            /** Badges */
+            badges?: components["schemas"]["ProgressionBadgeOut"][];
+            level_up?: components["schemas"]["ProgressionLevelUpOut"] | null;
+        };
+        /** ProgressionFeedbackEventOut */
+        ProgressionFeedbackEventOut: {
+            /** Credit Delta */
+            credit_delta: number;
+            /** Display Kind */
+            display_kind: string;
+            /** Xp Delta */
+            xp_delta: number;
+        };
+        /**
+         * ProgressionFeedbackOut
+         * @description Only facts from one synchronous booking; never infer a reward in HTTP.
+         */
+        ProgressionFeedbackOut: {
+            achievements?: components["schemas"]["ProgressionFeedbackAchievementsOut"] | null;
+            event?: components["schemas"]["ProgressionFeedbackEventOut"] | null;
+            /** Reason */
+            reason?: string | null;
+            standing?: components["schemas"]["ProgressionStandingOut"] | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "awarded" | "not_awarded" | "unavailable";
+            wallet?: components["schemas"]["ProgressionWalletOut"] | null;
         };
         /** ProgressionHelpAllowances */
         ProgressionHelpAllowances: {
@@ -11090,6 +11232,53 @@ export interface components {
             ledger_enabled: boolean;
             prices: components["schemas"]["ProgressionHelpPrices"];
         };
+        /** ProgressionHistoryItemOut */
+        ProgressionHistoryItemOut: {
+            /**
+             * Brand
+             * @enum {string}
+             */
+            brand: "pundo" | "naidivse";
+            /** Credit Delta */
+            credit_delta: number;
+            /** Display Kind */
+            display_kind: string;
+            /**
+             * Is Reversal
+             * @default false
+             */
+            is_reversal: boolean;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Xp Delta */
+            xp_delta: number;
+        };
+        /** ProgressionHistoryOut */
+        ProgressionHistoryOut: {
+            /** Items */
+            items: components["schemas"]["ProgressionHistoryItemOut"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** ProgressionLevelUpOut */
+        ProgressionLevelUpOut: {
+            /** From Level */
+            from_level: number;
+            /** To Level */
+            to_level: number;
+        };
+        /** ProgressionNextLevelOut */
+        ProgressionNextLevelOut: {
+            /** Level */
+            level: number;
+            /** Remaining Xp */
+            remaining_xp: number;
+            /** Threshold Xp */
+            threshold_xp: number;
+        };
         /** ProgressionPreflightAllowance */
         ProgressionPreflightAllowance: {
             /** Free Limit */
@@ -11132,6 +11321,19 @@ export interface components {
             message_code: string;
             /** Wallet Credits */
             wallet_credits: number;
+        };
+        /** ProgressionStandingOut */
+        ProgressionStandingOut: {
+            /** Level */
+            level: number;
+            next_level: components["schemas"]["ProgressionNextLevelOut"] | null;
+            /** Xp */
+            xp: number;
+        };
+        /** ProgressionWalletOut */
+        ProgressionWalletOut: {
+            /** Credits */
+            credits: number;
         };
         /**
          * PublicOfferItem
@@ -11415,6 +11617,7 @@ export interface components {
             owner_reply?: components["schemas"]["PublicReviewReplyOut"] | null;
             /** Photos */
             photos: components["schemas"]["ReviewPhotoOut"][];
+            progression_feedback?: components["schemas"]["ProgressionFeedbackOut"] | null;
             /** Stars */
             stars: number;
             /** Updated At */
@@ -13243,6 +13446,7 @@ export interface components {
             is_new: boolean;
             /** New Credit Total */
             new_credit_total: number;
+            progression_feedback?: components["schemas"]["ProgressionFeedbackOut"] | null;
             /** Shop Id */
             shop_id: number;
             /** Value */
@@ -20617,6 +20821,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrustProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    progression_account_api_v1_customer_progression_account_get: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionAccountReadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    progression_events_api_v1_customer_progression_events_get: {
+        parameters: {
+            query: {
+                brand: string;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionHistoryOut"];
                 };
             };
             /** @description Validation Error */

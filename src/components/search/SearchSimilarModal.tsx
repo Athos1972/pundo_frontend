@@ -58,7 +58,7 @@ export function SearchSimilarModal({ lang, brandSlug = 'pundo', isOpen, onClose 
         {(state === 'preflighting' || state === 'submitting') && <div className="flex flex-col items-center gap-4 py-6"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /><p className="text-sm text-text text-center">{tr.search_similar_loading}</p></div>}
         {state === 'confirming' && preview && <WalletChargeConfirmDialog lang={lang} brand={brandSlug} preview={preview} onConfirm={submitConfirmedSearch} onCancel={() => setState('form')} />}
         {state === 'success' && <div className="flex flex-col items-center gap-4 py-6 text-center"><p className="text-sm text-text">{tr.search_similar_success}</p><button onClick={onClose} className="text-sm text-accent underline">{tr.close}</button></div>}
-        {state === 'error' && error && <div className="flex flex-col items-center gap-4 py-6 text-center"><p className="text-sm text-red-500">{progressionAdmissionErrorText(tr, error, tr.search_similar_error, lang)}</p><button onClick={() => setState('form')} className="text-sm text-accent underline">{tr.try_again}</button></div>}
+        {state === 'error' && error && <div className="flex flex-col items-center gap-4 py-6 text-center"><p className="text-sm text-red-500">{progressionAdmissionErrorText(tr, error, tr.search_similar_error, lang, brandSlug)}</p><button onClick={() => setState('form')} className="text-sm text-accent underline">{tr.try_again}</button></div>}
       </div>
     </div>, document.body,
   )

@@ -10,25 +10,29 @@ import { ReviewsTab } from './ReviewsTab'
 import { DangerTab } from './DangerTab'
 import { FavoritesTab } from './FavoritesTab'
 import type { AuthUser, LinkedAccountsResponse } from '@/types/customer'
-import type { MyReview, TrustProfileResponse } from '@/types/api'
+import type { MyReview, ProgressionAccountResponse, TrustProfileResponse } from '@/types/api'
 import { TrustProfileSection } from './TrustProfileSection'
+import { ProgressionSection } from './ProgressionSection'
 
-type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'trust' | 'danger'
+type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'progression' | 'danger'
+type InitialTab = Tab | 'trust'
 
 interface Props {
   initialUser: AuthUser
   linkedAccounts: LinkedAccountsResponse | null
   reviews: MyReview[]
   trustProfile: TrustProfileResponse | null
+  progressionAccount?: ProgressionAccountResponse | null
+  progressionLegacyFallback?: boolean
   lang: string
   brandSlug?: string
   showMcpTab: boolean
-  initialTab?: Tab
+  initialTab?: InitialTab
 }
 
-export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, lang, brandSlug = 'pundo', showMcpTab, initialTab }: Props) {
+export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile, progressionAccount = null, progressionLegacyFallback = false, lang, brandSlug = 'pundo', showMcpTab, initialTab }: Props) {
   const tr = t(lang)
-  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? 'profile')
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab === 'trust' ? 'progression' : (initialTab ?? 'profile'))
   const [user, setUser] = useState<AuthUser>(initialUser)
   const pathname = usePathname()
   const isMcpActive = pathname?.includes('/account/mcp') ?? false
@@ -42,7 +46,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
     { id: 'security', label: tr.account_tab_security },
     { id: 'reviews', label: tr.account_tab_reviews },
     { id: 'favorites', label: tr.favorites_tab },
-    { id: 'trust', label: tr.trust_tab },
+    { id: 'progression', label: tr.progression_tab },
     { id: 'danger', label: tr.account_tab_danger },
   ]
 
@@ -138,15 +142,24 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
 
         <div
           role="tabpanel"
-          id="tabpanel-trust"
-          aria-labelledby="tab-trust"
-          hidden={activeTab !== 'trust'}
+          id="tabpanel-progression"
+          aria-labelledby="tab-progression"
+          hidden={activeTab !== 'progression'}
         >
-          {activeTab === 'trust' && trustProfile && (
+          {activeTab === 'progression' && progressionAccount && (
+            <ProgressionSection
+              account={progressionAccount}
+              tr={tr}
+              lang={lang as 'en' | 'de' | 'el' | 'ru' | 'ar' | 'he'}
+              brand={brandSlug === 'naidivse' ? 'naidivse' : 'pundo'}
+              showMcp={showMcpTab}
+            />
+          )}
+          {activeTab === 'progression' && progressionLegacyFallback && trustProfile && (
             <TrustProfileSection profile={trustProfile} tr={tr} lang={lang} brand={brandSlug} />
           )}
-          {activeTab === 'trust' && !trustProfile && (
-            <p className="text-sm text-text-muted">{tr.error_generic}</p>
+          {activeTab === 'progression' && !progressionAccount && !progressionLegacyFallback && (
+            <p className="text-sm text-text-muted">{tr.progression_unavailable}</p>
           )}
         </div>
 

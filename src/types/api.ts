@@ -217,6 +217,7 @@ export interface Review {
   created_at: string
   updated_at: string
   owner_reply?: ReviewOwnerReply | null
+  progression_feedback?: ProgressionFeedback | null
 }
 
 /** Product or shop a review belongs to (name resolved by the backend via Accept-Language). */
@@ -326,6 +327,79 @@ export interface VoteUpsertResponse {
   is_new: boolean
   credits_awarded: number
   new_credit_total: number
+  progression_feedback?: ProgressionFeedback | null
+}
+
+// ─── Progression K4a ─────────────────────────────────────────────────────────
+
+export type ProgressionBrand = 'pundo' | 'naidivse'
+export type ProgressionFeedbackState = 'awarded' | 'not_awarded' | 'unavailable'
+
+export interface ProgressionNextLevel {
+  level: number
+  threshold_xp: number
+  remaining_xp: number
+}
+
+export interface ProgressionStanding {
+  xp: number
+  level: number
+  next_level: ProgressionNextLevel | null
+}
+
+export interface ProgressionWallet { credits: number }
+
+export interface ProgressionAccountAllowance {
+  kind: 'homesick' | 'homesick_daily' | 'product_mail' | 'mcp'
+  period: 'utc_day' | 'utc_month'
+  remaining: number
+  limit: number
+  reset_at: string
+}
+
+export interface ProgressionBadge {
+  badge_code: string
+  tier: string
+  state: 'earned'
+  awarded_at: string
+}
+
+export interface ProgressionBadgeGoal {
+  badge_code: string
+  next_tier: string
+  current: number
+  target: number
+  remaining: number
+}
+
+export interface ProgressionHistoryItem {
+  display_kind: string
+  brand: ProgressionBrand
+  xp_delta: number
+  credit_delta: number
+  occurred_at: string
+  is_reversal: boolean
+}
+
+export interface ProgressionAccountResponse {
+  standing: ProgressionStanding
+  wallet: ProgressionWallet
+  allowances: ProgressionAccountAllowance[]
+  badges: ProgressionBadge[]
+  badge_goals: ProgressionBadgeGoal[]
+  history: { items: ProgressionHistoryItem[]; next_cursor: string | null }
+}
+
+export interface ProgressionFeedback {
+  state: ProgressionFeedbackState
+  reason: string | null
+  event: { display_kind: string; xp_delta: number; credit_delta: number } | null
+  standing: ProgressionStanding | null
+  wallet: ProgressionWallet | null
+  achievements: {
+    level_up: { from_level: number; to_level: number } | null
+    badges: ProgressionBadge[]
+  } | null
 }
 
 // ─── Trust Profile (F3200) ────────────────────────────────────────────────────

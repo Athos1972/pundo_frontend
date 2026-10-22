@@ -5,6 +5,7 @@ import type { Review } from '@/types/api'
 import { ReviewList } from './ReviewList'
 import { ReviewStats } from './ReviewStats'
 import { ReviewForm } from './ReviewForm'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   entityType: 'product' | 'shop'
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export async function ReviewSection({ entityType, entityId, lang, tr, isAuthenticated }: Props) {
+  const brand = await getBrandFromHeaders()
   const myReview: Review | null = isAuthenticated
     ? await getMyReview(entityType, entityId, lang)
     : null
@@ -41,7 +43,7 @@ export async function ReviewSection({ entityType, entityId, lang, tr, isAuthenti
 
       <div className="mb-6">
         <h3 className="text-sm font-medium text-text mb-3">{tr.reviews_write}</h3>
-        <ReviewForm entityType={entityType} entityId={entityId} lang={lang} existingReview={myReview} />
+        <ReviewForm entityType={entityType} entityId={entityId} lang={lang} existingReview={myReview} brandSlug={brand.slug === 'naidivse' ? 'naidivse' : 'pundo'} />
       </div>
 
       <Suspense fallback={<ReviewListSkeleton />}>

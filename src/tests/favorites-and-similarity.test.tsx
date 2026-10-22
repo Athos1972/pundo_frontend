@@ -182,7 +182,7 @@ describe('SearchSimilarModal', () => {
     render(<SearchSimilarModal lang="en" isOpen={true} onClose={onClose} />)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'paid search' } })
     fireEvent.click(screen.getByRole('button', { name: /search/i }))
-    await waitFor(() => expect(screen.getByText(/costs 3 credits/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/costs 3 carobs/i)).toBeInTheDocument())
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(mockFetch.mock.calls[0][0]).toBe('/api/customer/customer/progression/preflight')
   })

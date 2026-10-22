@@ -1,0 +1,25 @@
+{
+  "status": 201,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "vote_id": 5,
+    "shop_id": 1,
+    "attribute_type": "language_en",
+    "value": 1.0,
+    "is_new": false,
+    "credits_awarded": 0,
+    "new_credit_total": 0,
+    "progression_feedback": {
+      "state": "unavailable",
+      "reason": "progression_unavailable",
+      "event": null,
+      "standing": null,
+      "wallet": null,
+      "achievements": null
+    }
+  },
+  "backend_commit": "45d5d8ff00dfbc1ffdbd6ca84590d82c6f7f5526",
+  "backend_worktree_dirty": true
+}

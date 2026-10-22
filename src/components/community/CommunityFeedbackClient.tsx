@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import type { VoteAggregateItem, AttributeType } from '@/types/api'
+import type { VoteAggregateItem, AttributeType, ProgressionFeedback } from '@/types/api'
 import { t } from '@/lib/translations'
 import { submitVote, deleteVote } from '@/lib/community-api'
 import { LanguageVotePanel } from './LanguageVotePanel'
 import { ResponsiveLabelPanel } from './ResponsiveLabelPanel'
 import { LoginToVoteCTA } from './LoginToVoteCTA'
+import { ProgressionFeedbackNotice } from '@/components/account/ProgressionFeedbackNotice'
 
 interface Props {
   shopId: number
@@ -14,15 +15,17 @@ interface Props {
   initialAggregates: VoteAggregateItem[]
   isAuthenticated: boolean
   lang: string
+  brandSlug?: 'pundo' | 'naidivse'
 }
 
 export function CommunityFeedbackClient({
-  shopId, shopTypeCanonical, initialAggregates, isAuthenticated, lang,
+  shopId, shopTypeCanonical, initialAggregates, isAuthenticated, lang, brandSlug = 'pundo',
 }: Props) {
   const tr = t(lang)
   const [aggregates, setAggregates] = useState<VoteAggregateItem[]>(initialAggregates)
   const [submitting, setSubmitting] = useState<AttributeType | null>(null)
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null)
+  const [progressionFeedback, setProgressionFeedback] = useState<ProgressionFeedback | null>(null)
 
   function showToast(msg: string, kind: 'ok' | 'err') {
     setToast({ msg, kind })
@@ -74,6 +77,7 @@ export function CommunityFeedbackClient({
     updateAggregates(attr, value)
     try {
       const res = await submitVote(shopId, attr, value, lang)
+      setProgressionFeedback(res.progression_feedback ?? null)
       if (res.is_new && res.credits_awarded > 0) {
         showToast(tr.community_vote_submit_success(res.credits_awarded), 'ok')
       }
@@ -110,6 +114,7 @@ export function CommunityFeedbackClient({
       </h2>
 
       {!isAuthenticated && <LoginToVoteCTA tr={tr} />}
+      <ProgressionFeedbackNotice feedback={progressionFeedback} lang={lang} brand={brandSlug} />
 
       <LanguageVotePanel
         aggregates={aggregates}

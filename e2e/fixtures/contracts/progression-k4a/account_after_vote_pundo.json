@@ -1,0 +1,89 @@
+{
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "standing": {
+      "xp": 5,
+      "level": 1,
+      "next_level": {
+        "level": 2,
+        "threshold_xp": 50,
+        "remaining_xp": 45
+      }
+    },
+    "wallet": {
+      "credits": 1
+    },
+    "allowances": [
+      {
+        "kind": "homesick",
+        "period": "utc_month",
+        "remaining": 20,
+        "limit": 20,
+        "reset_at": "2026-11-01T00:00:00Z"
+      },
+      {
+        "kind": "homesick_daily",
+        "period": "utc_day",
+        "remaining": 5,
+        "limit": 5,
+        "reset_at": "2026-10-23T00:00:00Z"
+      },
+      {
+        "kind": "product_mail",
+        "period": "utc_month",
+        "remaining": 5,
+        "limit": 5,
+        "reset_at": "2026-11-01T00:00:00Z"
+      },
+      {
+        "kind": "mcp",
+        "period": "utc_day",
+        "remaining": 1000,
+        "limit": 1000,
+        "reset_at": "2026-10-23T00:00:00Z"
+      }
+    ],
+    "badges": [],
+    "badge_goals": [
+      {
+        "badge_code": "community_helper",
+        "next_tier": "bronze",
+        "current": 1,
+        "target": 25,
+        "remaining": 24
+      },
+      {
+        "badge_code": "homesick_scout",
+        "next_tier": "bronze",
+        "current": 0,
+        "target": 5,
+        "remaining": 5
+      },
+      {
+        "badge_code": "weekly_contributor",
+        "next_tier": "bronze",
+        "current": 1,
+        "target": 4,
+        "remaining": 3
+      }
+    ],
+    "history": {
+      "items": [
+        {
+          "display_kind": "vote_language",
+          "brand": "pundo",
+          "xp_delta": 5,
+          "credit_delta": 1,
+          "occurred_at": "2026-10-22T21:15:38.334370Z",
+          "is_reversal": false
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "backend_commit": "45d5d8ff00dfbc1ffdbd6ca84590d82c6f7f5526",
+  "backend_worktree_dirty": true
+}

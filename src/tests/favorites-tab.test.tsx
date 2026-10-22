@@ -227,7 +227,7 @@ describe('FavoritesTab', () => {
     await waitFor(() => expect(screen.getByText('Test Produkt')).toBeInTheDocument())
     const select = screen.getAllByRole('combobox').at(-1)!
     fireEvent.change(select, { target: { value: 'täglich' } })
-    await waitFor(() => expect(screen.getByText(/costs 2 credits/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/costs 2 carobs/i)).toBeInTheDocument())
     expect(select).toHaveValue('nie')
     expect(mockFetch).toHaveBeenCalledTimes(3)
     expect(mockFetch.mock.calls[2][0]).toBe('/api/customer/customer/progression/preflight')
@@ -252,7 +252,7 @@ describe('FavoritesTab', () => {
     fireEvent.change(select, { target: { value: 'täglich' } })
     await waitFor(() => expect(screen.getByRole('button', { name: /confirm and spend/i })).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: /confirm and spend/i }))
-    await waitFor(() => expect(screen.getByText(/need 2 credits.*have 0/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/need 2 carobs.*have 0 carobs/i)).toBeInTheDocument())
     expect(select).toHaveValue('nie')
   })
 })

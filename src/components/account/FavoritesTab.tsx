@@ -132,7 +132,7 @@ export function FavoritesTab({ lang, brandSlug = 'pundo' }: Props) {
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-text">{tr.favorites_tab}</h2>
 
-      {intervalError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{progressionAdmissionErrorText(tr, intervalError, tr.favorites_activation_error, lang)}</p>}
+      {intervalError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{progressionAdmissionErrorText(tr, intervalError, tr.favorites_activation_error, lang, brandSlug)}</p>}
 
       {/* Global notification settings */}
       <div className="bg-surface-alt rounded-xl p-4 border border-border">

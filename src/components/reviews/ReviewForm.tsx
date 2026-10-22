@@ -4,20 +4,22 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { t } from '@/lib/translations'
-import type { CreateReviewRequest, Review } from '@/types/api'
+import type { CreateReviewRequest, ProgressionFeedback, Review } from '@/types/api'
 import { useSession } from '@/components/auth/SessionProvider'
 import { StarRatingInput } from './StarRatingInput'
 import { PhotoUploader } from './PhotoUploader'
 import { ModerationBadge } from './ModerationBadge'
+import { ProgressionFeedbackNotice } from '@/components/account/ProgressionFeedbackNotice'
 
 interface Props {
   entityType: 'product' | 'shop'
   entityId: number
   lang: string
   existingReview?: Review | null
+  brandSlug?: 'pundo' | 'naidivse'
 }
 
-export function ReviewForm({ entityType, entityId, lang, existingReview }: Props) {
+export function ReviewForm({ entityType, entityId, lang, existingReview, brandSlug = 'pundo' }: Props) {
   const tr = t(lang)
   const session = useSession()
   const router = useRouter()
@@ -28,6 +30,7 @@ export function ReviewForm({ entityType, entityId, lang, existingReview }: Props
   const [loading, setLoading] = useState(false)
   const [submittedReviewId, setSubmittedReviewId] = useState<number | null>(null)
   const [photoUploaded, setPhotoUploaded] = useState(false)
+  const [progressionFeedback, setProgressionFeedback] = useState<ProgressionFeedback | null>(null)
 
   if (!session.is_authenticated) {
     return (
@@ -42,9 +45,12 @@ export function ReviewForm({ entityType, entityId, lang, existingReview }: Props
     return (
       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
         <p className="text-sm text-green-800 font-medium">{tr.reviews_success}</p>
+        <ProgressionFeedbackNotice feedback={progressionFeedback} lang={lang} brand={brandSlug} />
         <PhotoUploader
           reviewId={submittedReviewId}
           tr={tr}
+          lang={lang}
+          brandSlug={brandSlug}
           onUploaded={() => setPhotoUploaded(true)}
         />
         {photoUploaded && <ModerationBadge reviewId={submittedReviewId} tr={tr} />}
@@ -81,7 +87,8 @@ export function ReviewForm({ entityType, entityId, lang, existingReview }: Props
         return
       }
 
-      const data = await res.json() as { id: number }
+      const data = await res.json() as Review
+      setProgressionFeedback(data.progression_feedback ?? null)
       setSubmittedReviewId(data.id)
       router.refresh()
     } catch {

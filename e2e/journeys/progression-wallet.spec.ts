@@ -91,7 +91,7 @@ test('Homesick renders free, paid, insufficient-wallet and limit records; screen
   preflight = 'homesick_preflight_paid'; submit = 'homesick_submit_paid'
   await page.keyboard.press('Escape')
   await open('en')
-  await expect(page.getByText('This action costs 3 credits.')).toBeVisible()
+  await expect(page.getByText('This action costs 3 Carobs.')).toBeVisible()
   const paidLight = testInfo.outputPath('homesick-paid-light.png')
   await page.screenshot({ path: paidLight, fullPage: true })
   await testInfo.attach('homesick-paid-light', { path: paidLight, contentType: 'image/png' })
@@ -120,7 +120,7 @@ test('Homesick renders free, paid, insufficient-wallet and limit records; screen
   preflight = 'homesick_wallet_insufficient'
   await page.keyboard.press('Escape')
   await open('en')
-  await expect(page.locator('p.text-red-500')).toContainText('need 3 credits')
+  await expect(page.locator('p.text-red-500')).toContainText('need 3 Carobs')
 })
 
 test('Product-Mail keeps the select unchanged until the recorded paid activation succeeds, and surfaces recorded wallet denial', async ({ page, context }) => {
@@ -136,8 +136,8 @@ test('Product-Mail keeps the select unchanged until the recorded paid activation
   const select = page.getByTitle('Notifications')
   await select.selectOption('täglich')
   await expect(select).toHaveValue('nie')
-  await expect(page.getByText('This action costs 2 credits.')).toBeVisible()
-  await page.getByRole('button', { name: 'Confirm and spend 2 credits' }).click()
+  await expect(page.getByText('This action costs 2 Carobs.')).toBeVisible()
+  await page.getByRole('button', { name: 'Confirm and spend 2 Carobs' }).click()
   await expect(select).toHaveValue('täglich')
 
   patch = 'product_mail_wallet_insufficient'
@@ -145,7 +145,7 @@ test('Product-Mail keeps the select unchanged until the recorded paid activation
   await waitForPageHydrated(page)
   const deniedSelect = page.getByTitle('Notifications')
   await deniedSelect.selectOption('täglich')
-  await page.getByRole('button', { name: 'Confirm and spend 2 credits' }).click()
+  await page.getByRole('button', { name: 'Confirm and spend 2 Carobs' }).click()
   await expect(deniedSelect).toHaveValue('nie')
-  await expect(page.getByText('You need 2 credits but have 0')).toBeVisible()
+  await expect(page.getByText('You need 2 Carobs but have 0 Carobs')).toBeVisible()
 })

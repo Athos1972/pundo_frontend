@@ -4,6 +4,7 @@
 import { getShopVotes } from '@/lib/community-api'
 import type { ShopVotesResponse } from '@/types/api'
 import { CommunityFeedbackClient } from './CommunityFeedbackClient'
+import { getBrandFromHeaders } from '@/config/brands'
 
 interface Props {
   shopId: number
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export async function CommunityFeedbackSection({ shopId, shopTypeCanonical, isAuthenticated, lang }: Props) {
+  const brand = await getBrandFromHeaders()
   let initialVotes: ShopVotesResponse = { shop_id: shopId, aggregates: [] }
   try {
     initialVotes = await getShopVotes(shopId, lang)
@@ -27,6 +29,7 @@ export async function CommunityFeedbackSection({ shopId, shopTypeCanonical, isAu
       initialAggregates={initialVotes.aggregates}
       isAuthenticated={isAuthenticated}
       lang={lang}
+      brandSlug={brand.slug === 'naidivse' ? 'naidivse' : 'pundo'}
     />
   )
 }

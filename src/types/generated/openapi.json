@@ -3760,6 +3760,16 @@
       "title": "Photos",
       "type": "array"
      },
+     "progression_feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "reply": {
       "anyOf": [
        {
@@ -13988,6 +13998,16 @@
       "title": "Photos",
       "type": "array"
      },
+     "progression_feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "stars": {
       "title": "Stars",
       "type": "integer"
@@ -17162,6 +17182,50 @@
     "title": "ProductListResponse",
     "type": "object"
    },
+   "ProgressionAccountReadOut": {
+    "properties": {
+     "allowances": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionAllowanceOut"
+      },
+      "title": "Allowances",
+      "type": "array"
+     },
+     "badge_goals": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionBadgeGoalOut"
+      },
+      "title": "Badge Goals",
+      "type": "array"
+     },
+     "badges": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionBadgeOut"
+      },
+      "title": "Badges",
+      "type": "array"
+     },
+     "history": {
+      "$ref": "#/components/schemas/ProgressionHistoryOut"
+     },
+     "standing": {
+      "$ref": "#/components/schemas/ProgressionStandingOut"
+     },
+     "wallet": {
+      "$ref": "#/components/schemas/ProgressionWalletOut"
+     }
+    },
+    "required": [
+     "standing",
+     "wallet",
+     "allowances",
+     "badges",
+     "badge_goals",
+     "history"
+    ],
+    "title": "ProgressionAccountReadOut",
+    "type": "object"
+   },
    "ProgressionAdmissionLimitResponse": {
     "properties": {
      "code": {
@@ -17188,6 +17252,229 @@
      "retry_after"
     ],
     "title": "ProgressionAdmissionLimitResponse",
+    "type": "object"
+   },
+   "ProgressionAllowanceOut": {
+    "properties": {
+     "kind": {
+      "enum": [
+       "homesick",
+       "homesick_daily",
+       "product_mail",
+       "mcp"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "period": {
+      "enum": [
+       "utc_day",
+       "utc_month"
+      ],
+      "title": "Period",
+      "type": "string"
+     },
+     "remaining": {
+      "title": "Remaining",
+      "type": "integer"
+     },
+     "reset_at": {
+      "format": "date-time",
+      "title": "Reset At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "period",
+     "remaining",
+     "limit",
+     "reset_at"
+    ],
+    "title": "ProgressionAllowanceOut",
+    "type": "object"
+   },
+   "ProgressionBadgeGoalOut": {
+    "properties": {
+     "badge_code": {
+      "title": "Badge Code",
+      "type": "string"
+     },
+     "current": {
+      "title": "Current",
+      "type": "integer"
+     },
+     "next_tier": {
+      "title": "Next Tier",
+      "type": "string"
+     },
+     "remaining": {
+      "title": "Remaining",
+      "type": "integer"
+     },
+     "target": {
+      "title": "Target",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "badge_code",
+     "next_tier",
+     "current",
+     "target",
+     "remaining"
+    ],
+    "title": "ProgressionBadgeGoalOut",
+    "type": "object"
+   },
+   "ProgressionBadgeOut": {
+    "properties": {
+     "awarded_at": {
+      "format": "date-time",
+      "title": "Awarded At",
+      "type": "string"
+     },
+     "badge_code": {
+      "title": "Badge Code",
+      "type": "string"
+     },
+     "state": {
+      "const": "earned",
+      "default": "earned",
+      "title": "State",
+      "type": "string"
+     },
+     "tier": {
+      "title": "Tier",
+      "type": "string"
+     }
+    },
+    "required": [
+     "badge_code",
+     "tier",
+     "awarded_at"
+    ],
+    "title": "ProgressionBadgeOut",
+    "type": "object"
+   },
+   "ProgressionFeedbackAchievementsOut": {
+    "properties": {
+     "badges": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionBadgeOut"
+      },
+      "title": "Badges",
+      "type": "array"
+     },
+     "level_up": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionLevelUpOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "ProgressionFeedbackAchievementsOut",
+    "type": "object"
+   },
+   "ProgressionFeedbackEventOut": {
+    "properties": {
+     "credit_delta": {
+      "title": "Credit Delta",
+      "type": "integer"
+     },
+     "display_kind": {
+      "title": "Display Kind",
+      "type": "string"
+     },
+     "xp_delta": {
+      "title": "Xp Delta",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "display_kind",
+     "xp_delta",
+     "credit_delta"
+    ],
+    "title": "ProgressionFeedbackEventOut",
+    "type": "object"
+   },
+   "ProgressionFeedbackOut": {
+    "description": "Only facts from one synchronous booking; never infer a reward in HTTP.",
+    "properties": {
+     "achievements": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackAchievementsOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "event": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackEventOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "standing": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionStandingOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "state": {
+      "enum": [
+       "awarded",
+       "not_awarded",
+       "unavailable"
+      ],
+      "title": "State",
+      "type": "string"
+     },
+     "wallet": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionWalletOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "state"
+    ],
+    "title": "ProgressionFeedbackOut",
     "type": "object"
    },
    "ProgressionHelpAllowances": {
@@ -17304,6 +17591,117 @@
     "title": "ProgressionHelpResponse",
     "type": "object"
    },
+   "ProgressionHistoryItemOut": {
+    "properties": {
+     "brand": {
+      "enum": [
+       "pundo",
+       "naidivse"
+      ],
+      "title": "Brand",
+      "type": "string"
+     },
+     "credit_delta": {
+      "title": "Credit Delta",
+      "type": "integer"
+     },
+     "display_kind": {
+      "title": "Display Kind",
+      "type": "string"
+     },
+     "is_reversal": {
+      "default": false,
+      "title": "Is Reversal",
+      "type": "boolean"
+     },
+     "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+     },
+     "xp_delta": {
+      "title": "Xp Delta",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "display_kind",
+     "brand",
+     "xp_delta",
+     "credit_delta",
+     "occurred_at"
+    ],
+    "title": "ProgressionHistoryItemOut",
+    "type": "object"
+   },
+   "ProgressionHistoryOut": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ProgressionHistoryItemOut"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Cursor"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "ProgressionHistoryOut",
+    "type": "object"
+   },
+   "ProgressionLevelUpOut": {
+    "properties": {
+     "from_level": {
+      "title": "From Level",
+      "type": "integer"
+     },
+     "to_level": {
+      "title": "To Level",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "from_level",
+     "to_level"
+    ],
+    "title": "ProgressionLevelUpOut",
+    "type": "object"
+   },
+   "ProgressionNextLevelOut": {
+    "properties": {
+     "level": {
+      "title": "Level",
+      "type": "integer"
+     },
+     "remaining_xp": {
+      "title": "Remaining Xp",
+      "type": "integer"
+     },
+     "threshold_xp": {
+      "title": "Threshold Xp",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "level",
+     "threshold_xp",
+     "remaining_xp"
+    ],
+    "title": "ProgressionNextLevelOut",
+    "type": "object"
+   },
    "ProgressionPreflightAllowance": {
     "properties": {
      "free_limit": {
@@ -17407,6 +17805,48 @@
      "message_code"
     ],
     "title": "ProgressionPreflightResponse",
+    "type": "object"
+   },
+   "ProgressionStandingOut": {
+    "properties": {
+     "level": {
+      "title": "Level",
+      "type": "integer"
+     },
+     "next_level": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionNextLevelOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "xp": {
+      "title": "Xp",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "xp",
+     "level",
+     "next_level"
+    ],
+    "title": "ProgressionStandingOut",
+    "type": "object"
+   },
+   "ProgressionWalletOut": {
+    "properties": {
+     "credits": {
+      "title": "Credits",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "credits"
+    ],
+    "title": "ProgressionWalletOut",
     "type": "object"
    },
    "PublicOfferItem": {
@@ -18155,6 +18595,16 @@
       },
       "title": "Photos",
       "type": "array"
+     },
+     "progression_feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "stars": {
       "title": "Stars",
@@ -23793,6 +24243,16 @@
      "new_credit_total": {
       "title": "New Credit Total",
       "type": "integer"
+     },
+     "progression_feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProgressionFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "shop_id": {
       "title": "Shop Id",
@@ -40400,6 +40860,184 @@
     "summary": "Get Trust Profile",
     "tags": [
      "trust-profile"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/account": {
+   "get": {
+    "description": "Read the K4a account projection without provisioning progression data.",
+    "operationId": "progression_account_api_v1_customer_progression_account_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProgressionAccountReadOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Progression Account",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/events": {
+   "get": {
+    "description": "Page public-safe history; brand validates the current surface only.\n\nStanding and wallet are shared across brands, so events are intentionally not\nbrand-filtered and carry their own brand label in the DTO.",
+    "operationId": "progression_events_api_v1_customer_progression_events_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "cursor",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cursor"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 10,
+       "maximum": 50,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProgressionHistoryOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Progression Events",
+    "tags": [
+     "customer-progression"
     ]
    }
   },

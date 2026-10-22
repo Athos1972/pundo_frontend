@@ -3,7 +3,7 @@
 // Auth'd reads (trust profile): server-side only via customer-api.ts pattern.
 // Mutations (vote upsert/delete): client-side via /api/customer/... proxy.
 
-import type { ShopVotesResponse, TrustProfileResponse, VoteUpsertResponse, AttributeType } from '@/types/api'
+import type { ShopVotesResponse, TrustProfileResponse, VoteUpsertResponse, AttributeType, ProgressionAccountResponse } from '@/types/api'
 
 const SERVER_BASE = `${process.env.BACKEND_URL ?? 'http://localhost:8500'}/api/v1`
 const CLIENT_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1')
@@ -43,6 +43,35 @@ export async function getTrustProfile(lang: string): Promise<TrustProfileRespons
     return res.json() as Promise<TrustProfileResponse>
   } catch {
     return null
+  }
+}
+
+export type ProgressionAccountLoad =
+  | { status: 'available'; account: ProgressionAccountResponse }
+  | { status: 'legacy' }
+  | { status: 'unavailable' }
+
+/**
+ * Only a missing K4 endpoint may use the temporary legacy account reader.
+ * Authentication and backend failures deliberately remain neutral so stale
+ * Trust values are never presented as ledger facts.
+ */
+export async function getProgressionAccount(lang: string, brand: string): Promise<ProgressionAccountLoad> {
+  const { cookies } = await import('next/headers')
+  const store = await cookies()
+  const token = store.get('customer_token')?.value
+  if (!token) return { status: 'unavailable' }
+
+  try {
+    const res = await fetch(`${SERVER_BASE}/customer/progression/account?brand=${encodeURIComponent(brand)}`, {
+      headers: { 'Accept-Language': lang, Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    })
+    if (res.status === 404) return { status: 'legacy' }
+    if (!res.ok) return { status: 'unavailable' }
+    return { status: 'available', account: await res.json() as ProgressionAccountResponse }
+  } catch {
+    return { status: 'unavailable' }
   }
 }
 

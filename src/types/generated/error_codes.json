@@ -56,9 +56,11 @@
    "invalid_homesick_reference",
    "invalid_product_mail_interval",
    "invalid_product_mail_reference",
-   "invalid_progression_action"
+   "invalid_progression_action",
+   "invalid_progression_cursor"
   ],
   "503": [
+   "progression_read_unavailable",
    "progression_rules_unavailable"
   ]
  },

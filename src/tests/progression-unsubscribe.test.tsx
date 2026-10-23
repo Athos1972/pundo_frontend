@@ -23,6 +23,6 @@ describe('progression unsubscribe page', () => {
     expect(container.querySelector('main')).toHaveAttribute('dir', 'rtl')
     fireEvent.click(screen.getByRole('button', { name: 'إلغاء الاشتراك' }))
     await waitFor(() => expect(screen.getByTestId('progression-unsubscribe-done')).toBeVisible())
-    expect(screen.getByTestId('progression-unsubscribe-done')).toHaveTextContent('naidivse')
+    expect(screen.getByTestId('progression-unsubscribe-done')).toHaveTextContent('Naidivse')
   })
 })

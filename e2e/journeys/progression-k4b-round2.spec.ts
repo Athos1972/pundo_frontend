@@ -64,7 +64,7 @@ test('K4b R2: Naidivse public unsubscribe is readable in RTL and confirms neutra
   await page.goto('/account/progression/unsubscribe?token=invalid-token&brand=naidivse&lang=ar')
   await expect(page.locator('main')).toHaveAttribute('dir', 'rtl')
   await page.getByRole('button', { name: 'إلغاء الاشتراك' }).click()
-  await expect(page.getByTestId('progression-unsubscribe-done')).toContainText('naidivse')
+  await expect(page.getByTestId('progression-unsubscribe-done')).toContainText('Naidivse')
   await page.screenshot({ path: testInfo.outputPath('k4b-r2-naidivse-rtl.png'), fullPage: true })
   expect(errors.filter(error => !error.includes('favicon'))).toEqual([])
 })

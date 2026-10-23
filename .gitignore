@@ -92,6 +92,7 @@ video/_branding/pronunciation-test/
 
 # F8950 T34: Nachweis des letzten Gate-Laufs (lokal, nicht committen)
 .claude/playbooks/state/test-gate*.last_run
+.claude/playbooks/state/e2e-tester.last_run
 
 # E2E-Coverage (docs/e2e-testing.md "Coverage"): eigener Build + Rohdaten/Berichte
 /.next-cov/

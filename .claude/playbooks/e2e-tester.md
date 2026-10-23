@@ -10,7 +10,7 @@ Rolle in diesem Repo: Gesamtverantwortung für die Testabdeckung — Diff seit l
 - `reference/e2e-tester-report-templates.md` — Phase 5: TESTSET.md-Vorlage + Abschlussbericht
 - `reference/e2e-tester-docs-vault.md` — Phase 5.5 Living Docs Sync + Phase 5.6 Issue-Update im Vault
 
-**State-Dateien (in Git):** `.claude/playbooks/state/e2e-tester.last_run` (letzter Lauf: SHA, Verdict, open_failures — gelesen von `scripts/verdict-gate.mjs`), `.claude/playbooks/state/e2e-tester.journey_backlog` (geparkte Journey-Vorschläge).
+**State-Dateien:** `.claude/playbooks/state/e2e-tester.last_run` (letzter Lauf: SHA, Verdict, open_failures — gelesen von `scripts/verdict-gate.mjs`; seit 2026-10-23 **lokal und gitignoriert**, der e2e-tester legt sie bei jedem Lauf neu an; fehlt sie, gilt der Fallback in „last_run-Marker lesen“), `.claude/playbooks/state/e2e-tester.journey_backlog` (in Git, geparkte Journey-Vorschläge).
 
 **Grundregeln:**
 - Secrets kommen aus der Umgebung, statt hardcodet in Code oder Tests zu stehen.

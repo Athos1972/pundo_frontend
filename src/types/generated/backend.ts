@@ -2812,6 +2812,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/progression/feedback-receipts/{receipt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feedback Receipt */
+        get: operations["feedback_receipt_api_v1_customer_progression_feedback_receipts__receipt_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/progression/help": {
         parameters: {
             query?: never;
@@ -2832,6 +2849,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/progression/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Notification Preferences */
+        get: operations["get_notification_preferences_api_v1_customer_progression_notification_preferences_get"];
+        /** Put Notification Preference */
+        put: operations["put_notification_preference_api_v1_customer_progression_notification_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/progression/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Progression Notifications */
+        get: operations["progression_notifications_api_v1_customer_progression_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/progression/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Progression Notification */
+        post: operations["read_progression_notification_api_v1_customer_progression_notifications__notification_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/progression/preflight": {
         parameters: {
             query?: never;
@@ -2846,6 +2915,26 @@ export interface paths {
          * @description Inform the client about a K3 price without reservation or a write.
          */
         post: operations["progression_preflight_api_v1_customer_progression_preflight_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/progression/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Progression Unsubscribe
+         * @description Public signed email opt-out; always neutral to avoid account enumeration.
+         */
+        get: operations["progression_unsubscribe_api_v1_customer_progression_unsubscribe_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11279,6 +11368,65 @@ export interface components {
             /** Threshold Xp */
             threshold_xp: number;
         };
+        /** ProgressionNotificationOut */
+        ProgressionNotificationOut: {
+            /** Brand */
+            brand: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Read At */
+            read_at?: string | null;
+        };
+        /** ProgressionNotificationPreferenceIn */
+        ProgressionNotificationPreferenceIn: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "achievement" | "weekly_summary";
+            /** Consented */
+            consented: boolean;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "de" | "el" | "ru" | "ar" | "he";
+        };
+        /** ProgressionNotificationPreferenceOut */
+        ProgressionNotificationPreferenceOut: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "achievement" | "weekly_summary";
+            /**
+             * Channel
+             * @default email
+             * @constant
+             */
+            channel: "email";
+            /** Consented */
+            consented: boolean;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "de" | "el" | "ru" | "ar" | "he";
+        };
         /** ProgressionPreflightAllowance */
         ProgressionPreflightAllowance: {
             /** Free Limit */
@@ -11321,6 +11469,23 @@ export interface components {
             message_code: string;
             /** Wallet Credits */
             wallet_credits: number;
+        };
+        /** ProgressionReceiptOut */
+        ProgressionReceiptOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** State */
+            state: string;
         };
         /** ProgressionStandingOut */
         ProgressionStandingOut: {
@@ -20906,6 +21071,43 @@ export interface operations {
             };
         };
     };
+    feedback_receipt_api_v1_customer_progression_feedback_receipts__receipt_id__get: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                receipt_id: string;
+            };
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionReceiptOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     progression_help_api_v1_customer_progression_help_get: {
         parameters: {
             query: {
@@ -20929,6 +21131,151 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProgressionHelpResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_notification_preferences_api_v1_customer_progression_notification_preferences_get: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionNotificationPreferenceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_notification_preference_api_v1_customer_progression_notification_preferences_put: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressionNotificationPreferenceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionNotificationPreferenceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    progression_notifications_api_v1_customer_progression_notifications_get: {
+        parameters: {
+            query: {
+                brand: string;
+                unread_only?: boolean;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressionNotificationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_progression_notification_api_v1_customer_progression_notifications__notification_id__read_post: {
+        parameters: {
+            query: {
+                brand: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                notification_id: string;
+            };
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -20992,6 +21339,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProgressionAdmissionLimitResponse"];
+                };
+            };
+        };
+    };
+    progression_unsubscribe_api_v1_customer_progression_unsubscribe_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

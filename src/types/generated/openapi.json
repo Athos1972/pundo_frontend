@@ -17702,6 +17702,130 @@
     "title": "ProgressionNextLevelOut",
     "type": "object"
    },
+   "ProgressionNotificationOut": {
+    "properties": {
+     "brand": {
+      "title": "Brand",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+     },
+     "read_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Read At"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "brand",
+     "payload",
+     "created_at"
+    ],
+    "title": "ProgressionNotificationOut",
+    "type": "object"
+   },
+   "ProgressionNotificationPreferenceIn": {
+    "properties": {
+     "category": {
+      "enum": [
+       "achievement",
+       "weekly_summary"
+      ],
+      "title": "Category",
+      "type": "string"
+     },
+     "consented": {
+      "title": "Consented",
+      "type": "boolean"
+     },
+     "language": {
+      "enum": [
+       "en",
+       "de",
+       "el",
+       "ru",
+       "ar",
+       "he"
+      ],
+      "title": "Language",
+      "type": "string"
+     }
+    },
+    "required": [
+     "category",
+     "language",
+     "consented"
+    ],
+    "title": "ProgressionNotificationPreferenceIn",
+    "type": "object"
+   },
+   "ProgressionNotificationPreferenceOut": {
+    "properties": {
+     "category": {
+      "enum": [
+       "achievement",
+       "weekly_summary"
+      ],
+      "title": "Category",
+      "type": "string"
+     },
+     "channel": {
+      "const": "email",
+      "default": "email",
+      "title": "Channel",
+      "type": "string"
+     },
+     "consented": {
+      "title": "Consented",
+      "type": "boolean"
+     },
+     "language": {
+      "enum": [
+       "en",
+       "de",
+       "el",
+       "ru",
+       "ar",
+       "he"
+      ],
+      "title": "Language",
+      "type": "string"
+     }
+    },
+    "required": [
+     "category",
+     "language",
+     "consented"
+    ],
+    "title": "ProgressionNotificationPreferenceOut",
+    "type": "object"
+   },
    "ProgressionPreflightAllowance": {
     "properties": {
      "free_limit": {
@@ -17805,6 +17929,43 @@
      "message_code"
     ],
     "title": "ProgressionPreflightResponse",
+    "type": "object"
+   },
+   "ProgressionReceiptOut": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "resolved_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resolved At"
+     },
+     "state": {
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "state",
+     "created_at"
+    ],
+    "title": "ProgressionReceiptOut",
     "type": "object"
    },
    "ProgressionStandingOut": {
@@ -41041,6 +41202,89 @@
     ]
    }
   },
+  "/api/v1/customer/progression/feedback-receipts/{receipt_id}": {
+   "get": {
+    "operationId": "feedback_receipt_api_v1_customer_progression_feedback_receipts__receipt_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "receipt_id",
+      "required": true,
+      "schema": {
+       "title": "Receipt Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProgressionReceiptOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Feedback Receipt",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
   "/api/v1/customer/progression/help": {
    "get": {
     "description": "Return only customer-facing active-rule values; never abuse caps or versions.",
@@ -41111,6 +41355,330 @@
      }
     },
     "summary": "Progression Help",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/notification-preferences": {
+   "get": {
+    "operationId": "get_notification_preferences_api_v1_customer_progression_notification_preferences_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ProgressionNotificationPreferenceOut"
+         },
+         "title": "Response Get Notification Preferences Api V1 Customer Progression Notification Preferences Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Notification Preferences",
+    "tags": [
+     "customer-progression"
+    ]
+   },
+   "put": {
+    "operationId": "put_notification_preference_api_v1_customer_progression_notification_preferences_put",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProgressionNotificationPreferenceIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProgressionNotificationPreferenceOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Notification Preference",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/notifications": {
+   "get": {
+    "operationId": "progression_notifications_api_v1_customer_progression_notifications_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "unread_only",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Unread Only",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ProgressionNotificationOut"
+         },
+         "title": "Response Progression Notifications Api V1 Customer Progression Notifications Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Progression Notifications",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/notifications/{notification_id}/read": {
+   "post": {
+    "operationId": "read_progression_notification_api_v1_customer_progression_notifications__notification_id__read_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "notification_id",
+      "required": true,
+      "schema": {
+       "title": "Notification Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "brand",
+      "required": true,
+      "schema": {
+       "title": "Brand",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Read Progression Notification",
     "tags": [
      "customer-progression"
     ]
@@ -41207,6 +41775,53 @@
      }
     },
     "summary": "Progression Preflight",
+    "tags": [
+     "customer-progression"
+    ]
+   }
+  },
+  "/api/v1/customer/progression/unsubscribe": {
+   "get": {
+    "description": "Public signed email opt-out; always neutral to avoid account enumeration.",
+    "operationId": "progression_unsubscribe_api_v1_customer_progression_unsubscribe_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "boolean"
+         },
+         "title": "Response Progression Unsubscribe Api V1 Customer Progression Unsubscribe Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Progression Unsubscribe",
     "tags": [
      "customer-progression"
     ]

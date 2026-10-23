@@ -1,6 +1,7 @@
 'use client'
 
 import { CreditsLevelHelp } from '@/components/wallet/CreditsLevelHelp'
+import { ProgressionNotifications } from '@/components/account/ProgressionNotifications'
 import { formatDate } from '@/lib/format-date'
 import type { Lang } from '@/lib/lang'
 import type { Translations } from '@/lib/translations'
@@ -117,6 +118,8 @@ export function ProgressionSection({ account, tr, lang, brand, showMcp }: Props)
           </ul>
         )}
       </div>
+
+      <ProgressionNotifications brand={brand} lang={lang} tr={tr} />
     </section>
   )
 }

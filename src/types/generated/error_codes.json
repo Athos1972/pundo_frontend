@@ -51,6 +51,10 @@
   ]
  },
  "api/customer/customer_progression": {
+  "404": [
+   "feedback_receipt_not_found",
+   "notification_not_found"
+  ],
   "422": [
    "invalid_brand",
    "invalid_homesick_reference",

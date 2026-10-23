@@ -1,0 +1,10 @@
+{
+  "recorded_at": "2026-10-23T13:23:29Z",
+  "source": "http://localhost:8500/api/v1/customer/progression/unsubscribe",
+  "backend_worktree_dirty": true,
+  "status": 200,
+  "body": {
+    "ok": true
+  },
+  "privacy_contract": "Die Antwort bleibt für gültige, bereits verwendete und ungültige Tokens gleich."
+}

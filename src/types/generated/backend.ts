@@ -11398,6 +11398,12 @@ export interface components {
              * @enum {string}
              */
             category: "achievement" | "weekly_summary";
+            /**
+             * Channel
+             * @default email
+             * @enum {string}
+             */
+            channel: "email" | "telegram";
             /** Consented */
             consented: boolean;
             /**

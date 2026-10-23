@@ -6,7 +6,7 @@ import type { Translations } from '@/lib/translations'
 
 type Category = 'achievement' | 'weekly_summary'
 type Notice = { id: string; kind: string; read_at: string | null }
-type Preference = { category: Category; language: Lang; consented_at: string | null; revoked_at: string | null }
+type Preference = { category: Category; channel: 'email'; language: Lang; consented: boolean }
 
 interface Props {
   brand: 'pundo' | 'naidivse'
@@ -50,7 +50,7 @@ export function ProgressionNotifications({ brand, lang, tr }: Props) {
   async function updatePreference(category: Category, consented: boolean, language: Lang = preferences.find((row) => row.category === category)?.language ?? lang) {
     const response = await fetch(`/api/customer/customer/progression/notification-preferences?brand=${encodeURIComponent(brand)}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, language: lang, consented }),
+      body: JSON.stringify({ category, channel: 'email', language, consented }),
     })
     if (!response.ok) {
       setStatus(tr.progression_preference_failed)
@@ -61,7 +61,7 @@ export function ProgressionNotifications({ brand, lang, tr }: Props) {
     setStatus(tr.progression_preference_saved)
   }
 
-  const consented = (category: Category) => preferences.find((row) => row.category === category)?.consented_at != null
+  const consented = (category: Category) => preferences.find((row) => row.category === category)?.consented === true
 
   return (
     <div className="space-y-4">

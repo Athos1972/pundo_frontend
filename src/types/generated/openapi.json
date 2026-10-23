@@ -17760,6 +17760,15 @@
       "title": "Category",
       "type": "string"
      },
+     "channel": {
+      "default": "email",
+      "enum": [
+       "email",
+       "telegram"
+      ],
+      "title": "Channel",
+      "type": "string"
+     },
      "consented": {
       "title": "Consented",
       "type": "boolean"

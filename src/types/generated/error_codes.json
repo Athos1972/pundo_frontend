@@ -61,7 +61,8 @@
    "invalid_product_mail_interval",
    "invalid_product_mail_reference",
    "invalid_progression_action",
-   "invalid_progression_cursor"
+   "invalid_progression_cursor",
+   "telegram_channel_not_available"
   ],
   "503": [
    "progression_read_unavailable",

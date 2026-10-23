@@ -1,0 +1,12 @@
+{
+  "recorded_at": "2026-10-23T13:23:29Z",
+  "source": "http://localhost:8500/api/v1/customer/progression/notification-preferences?brand=pundo",
+  "backend_worktree_dirty": true,
+  "status": 200,
+  "body": {
+    "category": "weekly_summary",
+    "channel": "email",
+    "language": "de",
+    "consented": true
+  }
+}

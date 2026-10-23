@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
 // Node 25+ ships a built-in localStorage without .clear() — override with a proper in-memory stub
 // so jsdom-based tests can call localStorage.clear() in beforeEach/afterEach.

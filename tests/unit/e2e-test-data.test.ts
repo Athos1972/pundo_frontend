@@ -6,6 +6,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // ES-Imports werden gehoistet → Run-ID vorher per vi.hoisted setzen (sonst gewinnt .test-state.json)
 vi.hoisted(() => { process.env.E2E_RUN_ID = '20261013154233' })
 
+// Cleanup tests exercise only Admin-API requests. Keep the login helper out of
+// scope so they never depend on a generated E2E state file or the test backend.
+vi.mock('../../e2e/journeys/_helpers', () => ({
+  adminLogin: () => Promise.resolve('test-admin-token'),
+}))
+
 import {
   RUN_ID, TestDataTracker, e2eEmail, e2eName, e2eSlug, generateRunId, isMarkerSlug, marker, testDbUrl,
 } from '../../e2e/journeys/_helpers/test-data'

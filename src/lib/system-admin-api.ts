@@ -29,6 +29,7 @@ import type {
   CrmContactListItem,
   CrmContactDetail,
   CrmConfigOut,
+  CrmPerson,
   SysAdminReview,
   SysAdminCategoryReviewItem,
   SysAdminReviewAuditEntry,
@@ -327,6 +328,14 @@ export async function getCrmConfig(): Promise<CrmConfigOut> {
 
 export async function getCrmContact(id: number): Promise<CrmContactDetail> {
   return apiFetch<CrmContactDetail>(`/crm/contacts/${id}`)
+}
+
+export async function getCrmPersons(params: { q?: string; limit?: number; offset?: number } = {}): Promise<PaginatedResponse<CrmPerson>> {
+  return apiFetch<PaginatedResponse<CrmPerson>>(`/crm/persons${buildQs(params)}`)
+}
+
+export async function getCrmPerson(id: number): Promise<CrmPerson> {
+  return apiFetch<CrmPerson>(`/crm/persons/${id}`)
 }
 
 export async function getMappingGaps(): Promise<MappingGapEntry[]> {

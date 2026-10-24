@@ -19,6 +19,18 @@
    "contact_not_found"
   ]
  },
+ "api/admin/crm/persons": {
+  "404": [
+   "person_not_found",
+   "person_role_not_found"
+  ],
+  "409": [
+   "person_identifier_exists"
+  ],
+  "422": [
+   "suppressed"
+  ]
+ },
  "api/admin/customer_reviews": {
   "404": [
    "photo_not_found"
@@ -113,6 +125,21 @@
  "lib/crm/lifecycle": {
   "422": [
    "illegal_transition"
+  ]
+ },
+ "lib/crm/person_service": {
+  "404": [
+   "contact_not_found",
+   "org_not_found",
+   "person_not_found",
+   "person_role_not_found"
+  ],
+  "422": [
+   "invalid_identifier_kind",
+   "invalid_person_role",
+   "invalid_role_dates",
+   "person_identifier_required",
+   "suppressed"
   ]
  },
  "lib/crm/service": {

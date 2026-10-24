@@ -28,6 +28,10 @@ export const CRM_ERROR_KEYS = {
   duplicate_channel: 'crm_err_duplicate_channel',
   org_name_required: 'crm_err_org_name_required',
   occurred_at_in_future: 'crm_err_future',
+  invalid_identifier_kind: 'crm_err_generic',
+  invalid_person_role: 'crm_err_generic',
+  invalid_role_dates: 'crm_err_generic',
+  person_identifier_required: 'crm_err_person_identifier_required',
 } as const satisfies Record<string, keyof SysAdminTranslations>
 
 /** Statuses handled by status alone (the `detail` code does not change the message). */

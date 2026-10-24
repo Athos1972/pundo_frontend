@@ -256,6 +256,105 @@
     "title": "AddressComponent",
     "type": "object"
    },
+   "AddressIn": {
+    "properties": {
+     "address_line1": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address Line1"
+     },
+     "address_line2": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address Line2"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "country_code": {
+      "default": "CY",
+      "title": "Country Code",
+      "type": "string"
+     },
+     "lat": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lat"
+     },
+     "lon": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lon"
+     },
+     "postal_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Postal Code"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "AddressIn",
+    "type": "object"
+   },
    "AdminApiKeyResponse": {
     "properties": {
      "created_at": {
@@ -9393,6 +9492,17 @@
       ],
       "title": "Owner Id"
      },
+     "person_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Id"
+     },
      "role_title": {
       "anyOf": [
        {
@@ -13746,6 +13856,17 @@
       ],
       "title": "Our Party"
      },
+     "person_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Id"
+     },
      "their_party": {
       "anyOf": [
        {
@@ -16540,6 +16661,161 @@
      "email"
     ],
     "title": "PasswordResetRequest",
+    "type": "object"
+   },
+   "PersonCreateRequest": {
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "identifiers": {
+      "items": {
+       "$ref": "#/components/schemas/PersonIdentifierIn"
+      },
+      "minItems": 1,
+      "title": "Identifiers",
+      "type": "array"
+     }
+    },
+    "required": [
+     "identifiers"
+    ],
+    "title": "PersonCreateRequest",
+    "type": "object"
+   },
+   "PersonIdentifierIn": {
+    "properties": {
+     "kind": {
+      "enum": [
+       "email",
+       "phone"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "value": {
+      "maxLength": 320,
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "value"
+    ],
+    "title": "PersonIdentifierIn",
+    "type": "object"
+   },
+   "PersonRoleEndRequest": {
+    "properties": {
+     "valid_to": {
+      "format": "date",
+      "title": "Valid To",
+      "type": "string"
+     }
+    },
+    "required": [
+     "valid_to"
+    ],
+    "title": "PersonRoleEndRequest",
+    "type": "object"
+   },
+   "PersonRoleRequest": {
+    "properties": {
+     "org_id": {
+      "title": "Org Id",
+      "type": "integer"
+     },
+     "role": {
+      "maxLength": 50,
+      "minLength": 1,
+      "title": "Role",
+      "type": "string"
+     },
+     "source": {
+      "default": "manual",
+      "maxLength": 50,
+      "title": "Source",
+      "type": "string"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "required": [
+     "org_id",
+     "role"
+    ],
+    "title": "PersonRoleRequest",
+    "type": "object"
+   },
+   "PersonUpdateRequest": {
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     }
+    },
+    "title": "PersonUpdateRequest",
     "type": "object"
    },
    "PhotoStatusOut": {
@@ -28857,6 +29133,170 @@
     ]
    }
   },
+  "/api/v1/admin/crm/addresses": {
+   "get": {
+    "operationId": "list_addresses_api_v1_admin_crm_addresses_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response List Addresses Api V1 Admin Crm Addresses Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Addresses",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   },
+   "post": {
+    "operationId": "create_address_api_v1_admin_crm_addresses_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AddressIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Create Address Api V1 Admin Crm Addresses Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Address",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
   "/api/v1/admin/crm/config": {
    "get": {
     "operationId": "get_config_api_v1_admin_crm_config_get",
@@ -30112,6 +30552,760 @@
      }
     },
     "summary": "Suppress Contact",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons": {
+   "get": {
+    "operationId": "list_persons_api_v1_admin_crm_persons_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response List Persons Api V1 Admin Crm Persons Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Persons",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   },
+   "post": {
+    "operationId": "create_person_api_v1_admin_crm_persons_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonCreateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Create Person Api V1 Admin Crm Persons Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Person",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}": {
+   "delete": {
+    "operationId": "erase_person_api_v1_admin_crm_persons__person_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Erase Person",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   },
+   "get": {
+    "operationId": "get_person_api_v1_admin_crm_persons__person_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Person Api V1 Admin Crm Persons  Person Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Person",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   },
+   "patch": {
+    "operationId": "update_person_api_v1_admin_crm_persons__person_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonUpdateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Update Person Api V1 Admin Crm Persons  Person Id  Patch",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Update Person",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/contacts/{contact_id}": {
+   "post": {
+    "operationId": "link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "contact_id",
+      "required": true,
+      "schema": {
+       "title": "Contact Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Link Contact Api V1 Admin Crm Persons  Person Id  Contacts  Contact Id  Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Link Contact",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/opt-out": {
+   "post": {
+    "operationId": "opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Opt Out Person Api V1 Admin Crm Persons  Person Id  Opt Out Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Opt Out Person",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/roles": {
+   "post": {
+    "operationId": "add_role_api_v1_admin_crm_persons__person_id__roles_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonRoleRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Add Role Api V1 Admin Crm Persons  Person Id  Roles Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Role",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/roles/{role_id}/end": {
+   "post": {
+    "operationId": "end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "role_id",
+      "required": true,
+      "schema": {
+       "title": "Role Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonRoleEndRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response End Role Api V1 Admin Crm Persons  Person Id  Roles  Role Id  End Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "End Role",
     "tags": [
      "admin",
      "admin-crm"

@@ -48,6 +48,7 @@
 | [llm-effects-homesick-spotted](llm-effects-homesick-spotted.md) | LLM-Wirkung Homesick und Spotted ueber Gateway und Golden-Worker bis DB und Mail (B8950-016 T14) | implemented | P1 | PASS |
 | [crm-opt-out](crm-opt-out.md) | CRM-Outreach-Mail im Mail-Sink und Opt-out-Link wirkt (B8950-016 T31/T32) | implemented | P1 | PASS |
 | [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
+| [admin-crm-persons](admin-crm-persons.md) | F7600 CRM Stufe 3 — Personen und Rollen | implemented | P1 | PASS (2026-10-23) |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
 | [admin-catalog-review](admin-catalog-review.md) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (47/47 inkl. smoke, 2026-10-19; T1b Wirkung + T6 Teilfehler, F5982; Gateway :8600 nötig, sonst sichtbarer Skip) |
 | [b5900-009-item-photo-upload](b5900-009-item-photo-upload.md) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |

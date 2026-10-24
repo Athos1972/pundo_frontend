@@ -628,6 +628,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/crm/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Addresses */
+        get: operations["list_addresses_api_v1_admin_crm_addresses_get"];
+        put?: never;
+        /** Create Address */
+        post: operations["create_address_api_v1_admin_crm_addresses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/crm/config": {
         parameters: {
             query?: never;
@@ -863,6 +881,111 @@ export interface paths {
         put?: never;
         /** Suppress Contact */
         post: operations["suppress_contact_api_v1_admin_crm_contacts__contact_id__suppress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Persons */
+        get: operations["list_persons_api_v1_admin_crm_persons_get"];
+        put?: never;
+        /** Create Person */
+        post: operations["create_person_api_v1_admin_crm_persons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Person */
+        get: operations["get_person_api_v1_admin_crm_persons__person_id__get"];
+        put?: never;
+        post?: never;
+        /** Erase Person */
+        delete: operations["erase_person_api_v1_admin_crm_persons__person_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Person */
+        patch: operations["update_person_api_v1_admin_crm_persons__person_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Contact */
+        post: operations["link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/opt-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Opt Out Person */
+        post: operations["opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Role */
+        post: operations["add_role_api_v1_admin_crm_persons__person_id__roles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/roles/{role_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Role */
+        post: operations["end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5758,6 +5881,30 @@ export interface components {
             /** Types */
             types: string[];
         };
+        /** AddressIn */
+        AddressIn: {
+            /** Address Line1 */
+            address_line1?: string | null;
+            /** Address Line2 */
+            address_line2?: string | null;
+            /** City */
+            city?: string | null;
+            /**
+             * Country Code
+             * @default CY
+             */
+            country_code: string;
+            /** Lat */
+            lat?: number | null;
+            /** Lon */
+            lon?: number | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Source */
+            source?: string | null;
+            /** State */
+            state?: string | null;
+        };
         /** AdminApiKeyResponse */
         AdminApiKeyResponse: {
             /**
@@ -8629,6 +8776,8 @@ export interface components {
             org: components["schemas"]["OrgOut"];
             /** Owner Id */
             owner_id?: number | null;
+            /** Person Id */
+            person_id?: number | null;
             /** Role Title */
             role_title?: string | null;
             /** Shop Id */
@@ -10101,6 +10250,8 @@ export interface components {
             occurred_at?: string | null;
             /** Our Party */
             our_party?: string | null;
+            /** Person Id */
+            person_id?: number | null;
             /** Their Party */
             their_party?: string | null;
         };
@@ -11044,6 +11195,54 @@ export interface components {
              * Format: email
              */
             email: string;
+        };
+        /** PersonCreateRequest */
+        PersonCreateRequest: {
+            address?: components["schemas"]["AddressIn"] | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** Identifiers */
+            identifiers: components["schemas"]["PersonIdentifierIn"][];
+        };
+        /** PersonIdentifierIn */
+        PersonIdentifierIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "email" | "phone";
+            /** Value */
+            value: string;
+        };
+        /** PersonRoleEndRequest */
+        PersonRoleEndRequest: {
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+        };
+        /** PersonRoleRequest */
+        PersonRoleRequest: {
+            /** Org Id */
+            org_id: number;
+            /** Role */
+            role: string;
+            /**
+             * Source
+             * @default manual
+             */
+            source: string;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+        };
+        /** PersonUpdateRequest */
+        PersonUpdateRequest: {
+            address?: components["schemas"]["AddressIn"] | null;
+            /** Display Name */
+            display_name?: string | null;
         };
         /** PhotoStatusOut */
         PhotoStatusOut: {
@@ -15594,6 +15793,83 @@ export interface operations {
             };
         };
     };
+    list_addresses_api_v1_admin_crm_addresses_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_address_api_v1_admin_crm_addresses_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_config_api_v1_admin_crm_config_get: {
         parameters: {
             query?: never;
@@ -16145,6 +16421,353 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_persons_api_v1_admin_crm_persons_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_person_api_v1_admin_crm_persons_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_person_api_v1_admin_crm_persons__person_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    erase_person_api_v1_admin_crm_persons__person_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_person_api_v1_admin_crm_persons__person_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+                contact_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_role_api_v1_admin_crm_persons__person_id__roles_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+                role_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonRoleEndRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

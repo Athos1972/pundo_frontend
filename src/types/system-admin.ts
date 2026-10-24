@@ -406,7 +406,7 @@ export interface CrmContactListItem {
   primary_email?: string | null; lifecycle_state: string; version: number; updated_at: string
 }
 export interface CrmContactDetail {
-  id: number; org: CrmOrgOut; display_name?: string | null; role_title?: string | null
+  id: number; person_id?: number | null; org: CrmOrgOut; display_name?: string | null; role_title?: string | null
   lifecycle_state: string; effective_legal_tier: string; effective_legal_basis: string
   owner_id: number | null; shop_id: number | null; needs_human: boolean; agent_paused: boolean
   version: number
@@ -437,7 +437,15 @@ export interface CrmManualInteractionRequest {
   occurred_at?: string
   our_party?: string
   their_party?: string
+  person_id?: number
 }
+
+export interface CrmAddress { id: number; address_line1: string | null; address_line2: string | null; city: string | null; state: string | null; postal_code: string | null; country_code: string; lat: number | null; lon: number | null }
+export interface CrmPersonIdentifier { id: number; kind: 'email' | 'phone'; value_normalized: string }
+export interface CrmPersonRole { id: number; org_id: number; role: string; valid_from: string | null; valid_to: string | null; source: string }
+export interface CrmPersonContact { id: number; display_name: string | null; org_id: number }
+export interface CrmPerson { id: number; display_name: string | null; address_id: number | null; address?: CrmAddress | null; identifiers: CrmPersonIdentifier[]; roles: CrmPersonRole[]; contacts?: CrmPersonContact[]; created_at: string; updated_at: string }
+export interface CrmPersonCreateRequest { display_name?: string; identifiers: Array<{ kind: 'email' | 'phone'; value: string }>; address?: Partial<Omit<CrmAddress, 'id'>> }
 
 // Backend error detail (for Toast evaluation)
 export type CrmErrorDetail =

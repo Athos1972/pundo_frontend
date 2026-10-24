@@ -16,6 +16,7 @@ import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface ManualInteractionFormProps {
   contactId: number
+  personId?: number | null
   tr: SysAdminTranslations
 }
 
@@ -32,7 +33,7 @@ function nowLocalInput(): string {
 const FIELD =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-600'
 
-export function ManualInteractionForm({ contactId, tr }: ManualInteractionFormProps) {
+export function ManualInteractionForm({ contactId, personId, tr }: ManualInteractionFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [kind, setKind] = useState<CrmManualKind>('inbound_msg')
@@ -58,6 +59,7 @@ export function ManualInteractionForm({ contactId, tr }: ManualInteractionFormPr
       occurred_at: when ? new Date(when).toISOString() : undefined,
       our_party: ourParty.trim() || undefined,
       their_party: theirParty.trim() || undefined,
+      person_id: personId ?? undefined,
     }
     if (kind === 'call') body.direction = direction
     startTransition(async () => {

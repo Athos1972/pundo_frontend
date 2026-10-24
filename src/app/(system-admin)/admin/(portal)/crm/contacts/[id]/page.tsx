@@ -12,6 +12,7 @@ import { ContactDetailActions } from '@/components/system-admin/crm/ContactDetai
 import { OutreachComposer } from '@/components/system-admin/crm/OutreachComposer'
 import { ManualInteractionForm } from '@/components/system-admin/crm/ManualInteractionForm'
 import { CardImageViewer } from '@/components/system-admin/crm/CardImageViewer'
+import { ContactPersonLink } from '@/components/system-admin/crm/ContactPersonLink'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface PageProps {
@@ -85,6 +86,7 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
         <ContactDetailActions contact={contact} tr={tr} me={me} />
         {canWrite && <ContactEditForm contact={contact} tr={tr} />}
+        <ContactPersonLink contactId={contact.id} personId={contact.person_id ?? null} canWrite={canWrite} tr={tr} />
       </div>
 
       {/* Stufe 2: Business card images (only rendered when card_image_front_url is set) */}
@@ -199,7 +201,7 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
           {canWrite && (
             <section className="bg-white rounded-xl border border-gray-200 p-5">
               <h2 className="text-sm font-semibold text-gray-800 mb-3">{tr.crm_doc_title}</h2>
-              <ManualInteractionForm contactId={contact.id} tr={tr} />
+              <ManualInteractionForm contactId={contact.id} personId={contact.person_id} tr={tr} />
             </section>
           )}
 

@@ -19,13 +19,13 @@ import { test, expect } from '@playwright/test'
 import { test as shopTest } from './journeys/_helpers/worker-shop'
 import { marker } from './journeys/_helpers/test-data'
 import fs from 'fs'
-import path from 'path'
 import { BACKEND_URL } from './env'
+import { E2E_STATE_FILE } from './state'
 import { openItemPickerModal, waitForPageHydrated } from './journeys/_helpers/hydration'
 
 
 function loadStorageState() {
-  const stateFile = path.join(__dirname, '.test-state.json')
+  const stateFile = E2E_STATE_FILE
   if (!fs.existsSync(stateFile)) {
     throw new Error(
       '[shop-discovery] .test-state.json nicht gefunden. ' +

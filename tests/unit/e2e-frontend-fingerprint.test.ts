@@ -15,6 +15,8 @@ import {
   fingerprintsEqual,
   newestMtimeMs,
   STAMP_REL,
+  stampRel,
+  buildLockPath,
 } from '../../scripts/e2e-frontend.cjs'
 
 describe('classifyCommand', () => {
@@ -97,6 +99,49 @@ describe('fingerprint + assertFrontendFresh', () => {
     writeStamp(fp(), Date.now() - 10_000)
     const r = assertFrontendFresh({ repoRoot: root, backendUrl: "http://localhost:8500", head: "abc", chain: standaloneChain(), log: quiet })
     expect(r.mode).toBe('standalone')
+  })
+
+  it('worktree slot: build stamp and freshness check use its own dist path and the E2E backend URL', () => {
+    const previousSlot = process.env.PUNDO_SLOT
+    const previousTestBackend = process.env.TEST_BACKEND_URL
+    const previousBackend = process.env.BACKEND_URL
+    process.env.PUNDO_SLOT = '2'
+    process.env.TEST_BACKEND_URL = 'http://127.0.0.1:8512'
+    process.env.BACKEND_URL = 'http://127.0.0.1:8500'
+    try {
+      const built = computeFingerprint({ repoRoot: root, head: 'abc' })
+      expect(built.backendUrl).toBe('http://127.0.0.1:8512')
+      expect(stampRel()).toBe('.next-worktree-s2/standalone/.e2e-build-stamp.json')
+      fs.mkdirSync(path.dirname(path.join(root, stampRel())), { recursive: true })
+      fs.writeFileSync(path.join(root, stampRel()), JSON.stringify({ fingerprint: built, builtAtMs: Date.now() - 10_000 }))
+      const check = assertFrontendFresh({
+        repoRoot: root, backendUrl: 'http://127.0.0.1:8512', head: 'abc',
+        chain: [{ pid: 42, command: 'node /repo/.next-worktree-s2/standalone/server.js', startedMs: Date.now() + 5_000 }], log: quiet,
+      })
+      expect(check.mode).toBe('standalone')
+    } finally {
+      if (previousSlot === undefined) delete process.env.PUNDO_SLOT
+      else process.env.PUNDO_SLOT = previousSlot
+      if (previousTestBackend === undefined) delete process.env.TEST_BACKEND_URL
+      else process.env.TEST_BACKEND_URL = previousTestBackend
+      if (previousBackend === undefined) delete process.env.BACKEND_URL
+      else process.env.BACKEND_URL = previousBackend
+    }
+  })
+
+  it('slots use separate dist paths but one checkout-wide build lock', () => {
+    const previousSlot = process.env.PUNDO_SLOT
+    try {
+      process.env.PUNDO_SLOT = '1'
+      expect(stampRel()).toContain('.next-worktree-s1/')
+      const lock = buildLockPath(root)
+      process.env.PUNDO_SLOT = '2'
+      expect(stampRel()).toContain('.next-worktree-s2/')
+      expect(buildLockPath(root)).toBe(lock)
+    } finally {
+      if (previousSlot === undefined) delete process.env.PUNDO_SLOT
+      else process.env.PUNDO_SLOT = previousSlot
+    }
   })
 
   it('AK6(2): standalone older than a touched src file aborts', () => {

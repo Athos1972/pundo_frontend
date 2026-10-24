@@ -9,14 +9,13 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
-import path from 'path'
 import { waitForPageHydrated, clickHydrated } from './journeys/_helpers/hydration'
+import { E2E_ADMIN_STATE_FILE as ADMIN_STATE } from './state'
 
 const ADMIN_EMAIL = 'e2e-admin@pundo-e2e.io'
 const ADMIN_PASSWORD = 'E2eAdminPassword!99'
 
 // Admin-storageState, vom Global Setup geschrieben (e2e/global-setup.ts, writeAdminStorageState)
-const ADMIN_STATE = path.join(__dirname, '.auth', 'admin.json')
 
 // ── E2E-11: Admin Login Page ──────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test'
-import { BACKEND_URL, BASE_URL } from './e2e/env'
+import { BACKEND_URL, BASE_URL, IS_WORKTREE_SLOT, SLOT_ENV } from './e2e/env'
 
 // Port-Konvention (PFLICHT — niemals mischen):
 //   Produktion:  Backend 8000, Frontend 3000
@@ -21,7 +21,7 @@ import { BACKEND_URL, BASE_URL } from './e2e/env'
 // URLs und der Port-8000/3000-Guard: einzige Quelle e2e/env.ts.
 const backendUrl = BACKEND_URL
 const frontendUrl = BASE_URL
-const frontendPort = process.env.E2E_FRONTEND_PORT ?? '3500'
+const frontendPort = String(SLOT_ENV.frontendPort)
 
 // Coverage-Modus (optional, docs/e2e-testing.md "Coverage"): E2E_COVERAGE=1 misst src/** (Browser: V8-Coverage ueber
 // e2e/coverage/, Server: NODE_V8_COVERAGE am Coverage-Build .next-cov). Ohne die Variable aendert sich nichts.
@@ -68,12 +68,18 @@ export default defineConfig({
     url: frontendUrl,
     // Coverage: ein bereits laufender (nicht instrumentierter) Server darf nicht wiederverwendet werden; SIGTERM mit
     // Wartezeit, damit Node die V8-Rohdaten (NODE_V8_COVERAGE) beim Beenden schreibt.
-    reuseExistingServer: !coverage,
+    // A slot's browser run owns its frontend so it cannot reuse a stale
+    // standalone process left on that slot port.
+    reuseExistingServer: !coverage && !IS_WORKTREE_SLOT,
     ...(coverage ? { gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 20_000 } } : {}),
     timeout: 600_000,
     env: {
       BACKEND_URL: backendUrl,
       PORT: frontendPort,
+      PUNDO_SLOT: String(SLOT_ENV.slot),
+      ...(SLOT_ENV.token ? { PUNDO_SLOT_TOKEN: SLOT_ENV.token } : {}),
+      ...(SLOT_ENV.manifestPath ? { PUNDO_SLOT_MANIFEST: SLOT_ENV.manifestPath } : {}),
+      ...(process.env.E2E_STATE_DIR ? { E2E_STATE_DIR: process.env.E2E_STATE_DIR } : {}),
     },
   },
 })

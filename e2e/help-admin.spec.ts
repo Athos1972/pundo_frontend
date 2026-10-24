@@ -3,16 +3,15 @@
  * AK 1, 2, 4, 5, 6, 7, 10 laufen immer; AK 3 (neuer Tab zu YouTube) erst, wenn eine echte videoId eingetragen ist.
  * Erwartungswerte kommen aus der Datenquelle bzw. tSysAdmin (keine kopierten Strings).
  */
-import path from 'path'
 import { test, expect } from './fixtures'
 import { BASE_URL } from './env'
+import { E2E_ADMIN_STATE_FILE as ADMIN_STATE } from './state'
 import { HELP_TOPICS } from '../src/lib/system-admin-help'
 import { HELP_CONTENT } from '../src/lib/system-admin-help-content'
 import { tSysAdmin } from '../src/lib/system-admin-translations'
 
 const en = tSysAdmin('en')
 const el = tSysAdmin('el')
-const ADMIN_STATE = path.join(__dirname, '.auth', 'admin.json')
 const ids = HELP_TOPICS.map((t) => t.id)
 
 test.describe('F8960 admin help', () => {

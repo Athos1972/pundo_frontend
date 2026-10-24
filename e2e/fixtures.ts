@@ -13,8 +13,8 @@
  * Reine Backend-Helfer ohne Playwright-Bezug liegen in `journeys/_helpers.ts` bzw. `journeys/_helpers/test-data.ts`.
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import path from 'path'
 import { BACKEND_URL, BASE_URL } from './env'
+import { E2E_ADMIN_STATE_FILE as ADMIN_STATE } from './state'
 import {
   adminHeaders, adminLogin, apiFetch, shopOwnerLogin, shopOwnerOnboardWithRetry,
   type ApiFetchResult,
@@ -28,7 +28,7 @@ export {
 export type { ApiFetchResult, ApiResult }
 
 /** Admin-storageState, vom Global Setup geschrieben (`writeAdminStorageState`). */
-export const ADMIN_STATE = path.join(__dirname, '.auth', 'admin.json')
+export { ADMIN_STATE }
 
 // ── Schrittprotokoll fuer Journey-Reports ─────────────────────────────────────
 

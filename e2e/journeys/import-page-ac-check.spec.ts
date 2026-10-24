@@ -21,6 +21,7 @@ import {
   listListings, offerCount, publicProductNames, gatewayUp, gatewayTask, translationTaskIds, resetAfterResult,
 } from './_helpers/import-flow'
 import { BASE_URL, BACKEND_URL } from '../env'
+import { E2E_STATE_FILE } from '../state'
 import { createStepLog } from '../fixtures'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
@@ -31,7 +32,7 @@ type StorageState = NonNullable<BrowserContextOptions['storageState']>
 
 // Load fresh shop_owner_token from global-setup state (avoids expired hardcoded JWTs)
 function loadStorageState(): StorageState {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
+  const stateFile = E2E_STATE_FILE
   if (!fs.existsSync(stateFile)) return { cookies: [], origins: [] }
   const state = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as { storageState?: StorageState }
   return state.storageState ?? { cookies: [], origins: [] }

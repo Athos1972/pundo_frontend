@@ -14,6 +14,7 @@
  */
 import { execFileSync } from 'child_process'
 import { ownsLock, releaseLock } from './run-lock'
+import { E2E_STATE_FILE } from './state'
 
 const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
@@ -24,7 +25,7 @@ function runScript(args: string[]): { counts: Record<string, number>; skipped: u
   try {
     const out = execFileSync(PY, [SCRIPT, ...args], {
       cwd: BACKEND_REPO, encoding: 'utf8', timeout: 120_000, stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, PYTHONPATH: BACKEND_REPO },
+      env: { ...process.env, PYTHONPATH: BACKEND_REPO, E2E_STATE_FILE },
     })
     return JSON.parse(out.trim().split('\n').at(-1)!)
   } catch (err) {

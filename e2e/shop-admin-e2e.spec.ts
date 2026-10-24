@@ -17,11 +17,11 @@
 import { test, expect, type WorkerShop } from './journeys/_helpers/worker-shop'
 import type { Page } from '@playwright/test'
 import fs from 'fs'
-import path from 'path'
+import { E2E_STATE_FILE } from './state'
 
 // Lädt den Storage State (JWT-Cookie) aus dem global-setup
 function loadStorageState() {
-  const stateFile = path.join(__dirname, '.test-state.json')
+  const stateFile = E2E_STATE_FILE
   if (!fs.existsSync(stateFile)) {
     throw new Error(
       '[shop-admin-e2e] .test-state.json nicht gefunden. ' +

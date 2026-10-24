@@ -121,4 +121,10 @@ if (process.env.E2E_COVERAGE_BUILD === '1') {
   config.typescript = { ...config.typescript, ignoreBuildErrors: true, tsconfigPath: 'tsconfig.next-cov.json' }
 }
 
+// Each controller-managed slot owns its build output. Next may clear distDir,
+// therefore this must never reuse the shared `.next` directory.
+if (/^[1-4]$/.test(process.env.PUNDO_SLOT ?? '')) {
+  config.distDir = `.next-worktree-s${process.env.PUNDO_SLOT}`
+}
+
 export default withBundleAnalyzer(config)

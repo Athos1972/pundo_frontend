@@ -21,7 +21,8 @@ import path from 'path'
 import { chromium } from '@playwright/test'
 import { assertFrontendFresh } from '../scripts/e2e-frontend.cjs'
 import { acquireLock, generateRunId } from './run-lock'
-import { BACKEND_URL, BASE_URL } from './env'
+import { BACKEND_URL, BASE_URL, IS_WORKTREE_SLOT } from './env'
+import { E2E_ADMIN_STATE_FILE, E2E_STATE_FILE } from './state'
 
 // URLs: einzige Quelle e2e/env.ts (lehnt Port 8000 / 3000 ab). 8001 (zweiter Prod-Port) zusaetzlich hier.
 if (BACKEND_URL.includes(':8001')) {
@@ -35,8 +36,8 @@ const FRONTEND_URL = BASE_URL
 const BACKEND_REPO = process.env.BACKEND_REPO
   ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 const _ADMIN_SECRET = process.env.E2E_ADMIN_SECRET ?? 'pundo-admin-dev-secret'
-export const STATE_FILE = path.join(__dirname, '.test-state.json')
-export const ADMIN_STATE_FILE = path.join(__dirname, '.auth', 'admin.json')
+export const STATE_FILE = E2E_STATE_FILE
+export const ADMIN_STATE_FILE = E2E_ADMIN_STATE_FILE
 
 // F6997: das Backend loggt (Test-Server-Skript, Entry-Point ingestor.api.asgi) alles nach stdout im Format
 // `<UTC>Z <LEVEL> api/<pid> <logger> <msg>`. stdout MUSS gelesen werden (Pipe-Puffer), und WARNING/ERROR/CRITICAL
@@ -195,34 +196,29 @@ export default async function globalSetup() {
 
   // ── 0b. Test-Backend auf Port 8500 killen und neu starten ──────────────────
   const backendPort = new URL(BACKEND_URL).port || '8500'
-  console.log(`\n[E2E Setup] Starte Test-Backend neu (Port ${backendPort})...`)
+  console.log(`\n[E2E Setup] ${IS_WORKTREE_SLOT ? 'Prüfe Controller-Backend' : 'Starte Test-Backend neu'} (Port ${backendPort})...`)
 
   // Laufendes Backend auf diesem Port killen
-  try {
+  if (!IS_WORKTREE_SLOT) try {
     execSync(`lsof -ti TCP:${backendPort} -sTCP:LISTEN | xargs kill -9 2>/dev/null || true`, { stdio: 'pipe' })
     console.log(`[E2E Setup] Altes Backend auf Port ${backendPort} beendet.`)
-  } catch {
-    // kein Prozess lief — ok
-  }
+  } catch { /* kein Prozess lief — ok */ }
 
   // Kurz warten damit der Port freigegeben ist
-  await new Promise(r => setTimeout(r, 500))
+  if (!IS_WORKTREE_SLOT) await new Promise(r => setTimeout(r, 500))
 
   // Backend im Hintergrund starten
   const backendScript = path.join(BACKEND_REPO, 'scripts', 'start_test_server.sh')
   if (!fs.existsSync(backendScript)) {
     throw new Error(`[E2E Setup] start_test_server.sh nicht gefunden: ${backendScript}`)
   }
-  const backendProc = spawn('bash', [backendScript], {
-    cwd: BACKEND_REPO,
-    env: { ...process.env, E2E_BACKEND_PORT: backendPort },
-    detached: false,
-    stdio: 'pipe',
+  const backendProc = IS_WORKTREE_SLOT ? undefined : spawn('bash', [backendScript], {
+    cwd: BACKEND_REPO, env: { ...process.env, E2E_BACKEND_PORT: backendPort }, detached: false, stdio: 'pipe',
   })
   // stdout MUSS gelesen werden: das Backend schreibt Logs (F6997) und Access-Zeilen nach stdout; ein ungeleertes
   // Pipe-Puffer (64 KB) blockiert den Backend-Prozess nach einigen Minuten (B8950-012: hängender 8500 mitten im Lauf).
-  backendProc.stdout?.on('data', createBackendStdoutForwarder())
-  backendProc.stderr?.on('data', (d: Buffer) => {
+  backendProc?.stdout?.on('data', createBackendStdoutForwarder())
+  backendProc?.stderr?.on('data', (d: Buffer) => {
     const line = d.toString().trim()
     if (line) console.log(`[backend] ${line}`)
   })
@@ -242,7 +238,7 @@ export default async function globalSetup() {
     await new Promise(r => setTimeout(r, 1000))
   }
   if (!healthy) {
-    backendProc.kill()
+    backendProc?.kill()
     throw new Error(
       `\n[E2E Setup] Test-Backend auf ${BACKEND_URL} antwortet nach 30s nicht.\n` +
       `  Prüfe ${BACKEND_REPO}/scripts/start_test_server.sh und DATABASE_URL_TEST in .env\n`
@@ -268,6 +264,9 @@ export default async function globalSetup() {
   // survives test runs. Set E2E_RESET_DB=true only when a clean slate is required
   // (e.g. CI or explicit migration testing).
   const resetDb = process.env.E2E_RESET_DB === 'true'
+  if (IS_WORKTREE_SLOT && resetDb) {
+    throw new Error('[E2E Setup] E2E_RESET_DB is forbidden for a worktree slot; create a fresh slot instead.')
+  }
 
   // Studio-Mac-Schutz: DATABASE_URL == DATABASE_URL_TEST → kein separates Prod-DB.
   // In diesem Modus würde ein vollständiger Reset alle prod-synced Daten (items,

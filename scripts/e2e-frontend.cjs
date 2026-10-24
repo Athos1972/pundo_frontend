@@ -34,18 +34,32 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
+const slotNumber = () => (/^[1-4]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : null)
+const slotDist = () => (slotNumber() ? `.next-worktree-s${slotNumber()}` : '.next')
 const STAMP_REL = '.next/standalone/.e2e-build-stamp.json'
 const COVERAGE_DIST = '.next-cov'
 /** Coverage-Modus (E2E_COVERAGE=1): anderer Build-Ordner, damit der normale Fingerabdruck-Cache erhalten bleibt. */
 const coverageMode = () => process.env.E2E_COVERAGE === '1'
-const distRel = () => (coverageMode() ? COVERAGE_DIST : '.next')
+const distRel = () => (coverageMode() ? COVERAGE_DIST : slotDist())
 const stampRel = () => `${distRel()}/standalone/.e2e-build-stamp.json`
+// `distDir` is slot-specific, but Turbopack still uses shared checkout state
+// while compiling.  Only serialize that build phase; standalone servers and
+// browser runs remain isolated by their slot ports/state directories.
+const buildLockPath = (repoRoot = REPO_ROOT) => path.join(repoRoot, '.next-worktree-build.lock')
 /** Rohdaten-Ordner des Servers (NODE_V8_COVERAGE); `E2E_COVERAGE_DIR` ist der Ausgabeordner des Laufs. */
 const coverageServerRawDir = () => path.resolve(REPO_ROOT, process.env.E2E_COVERAGE_DIR ?? 'coverage-e2e', 'server-raw')
 const FINGERPRINT_INPUTS = [
   'src', 'public', 'content', 'next.config.ts', 'package.json', 'package-lock.json',
   'tsconfig.json', '.env.local',
 ]
+
+// `e2e/env.ts` accepts TEST_BACKEND_URL as the explicit test endpoint.  Use
+// the exact same precedence while building the standalone server; otherwise a
+// sourced slot environment can build for one backend and have globalSetup
+// validate the stamp against another one.
+function resolvedBackendUrl(backendUrl) {
+  return backendUrl ?? process.env.TEST_BACKEND_URL ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
+}
 
 // ── Fingerprint ──────────────────────────────────────────────────────────────
 
@@ -77,7 +91,7 @@ function gitHead(repoRoot) {
  * @returns {{ gitHead: string, backendUrl: string, newestMtimeMs: number }}
  */
 function computeFingerprint({ repoRoot = REPO_ROOT, backendUrl, head } = {}) {
-  const backend = backendUrl ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
+  const backend = resolvedBackendUrl(backendUrl)
   let newest = 0
   for (const rel of FINGERPRINT_INPUTS) newest = Math.max(newest, newestMtimeMs(path.join(repoRoot, rel)))
   return { gitHead: head ?? gitHead(repoRoot), backendUrl: backend, newestMtimeMs: newest }
@@ -241,6 +255,7 @@ function prepareGateFrontend({
   port = process.env.E2E_FRONTEND_PORT ?? '3500', repoRoot = REPO_ROOT, backendUrl, head, env = process.env,
   chain, killPids, waitPortFree = portFree, log = console.log,
 } = {}) {
+  if (slotNumber()) return { action: 'none', pids: [] }
   if (port === '3000' || port === '8000') throw new Error(`[E2E Frontend] Port ${port} ist Produktion - gate-prepare verweigert.`)
   const doKill = killPids ?? (pids => killPidsDefault(pids, port))
   const procs = chain ?? listenerChain(port)
@@ -280,6 +295,33 @@ function run(cmd, args, opts = {}) {
   execFileSync(cmd, args, { stdio: 'inherit', cwd: REPO_ROOT, ...opts })
 }
 
+function processIsAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 1) return false
+  try { process.kill(pid, 0); return true } catch { return false }
+}
+
+function acquireBuildLock(repoRoot = REPO_ROOT, { timeoutMs = 600_000, sleep = sleepSync } = {}) {
+  const lock = buildLockPath(repoRoot)
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    try {
+      fs.mkdirSync(lock)
+      fs.writeFileSync(path.join(lock, 'owner.json'), JSON.stringify({ pid: process.pid, createdAtMs: Date.now() }))
+      return () => fs.rmSync(lock, { recursive: true, force: true })
+    } catch (err) {
+      if (err?.code !== 'EEXIST') throw err
+      let owner = null
+      try { owner = JSON.parse(fs.readFileSync(path.join(lock, 'owner.json'), 'utf8')) } catch { /* incomplete owner; wait once */ }
+      if (owner && !processIsAlive(owner.pid)) {
+        fs.rmSync(lock, { recursive: true, force: true })
+        continue
+      }
+      if (Date.now() >= deadline) throw new Error(`[E2E Frontend] Timed out waiting for shared frontend build lock: ${lock}`)
+      sleep(250)
+    }
+  }
+}
+
 /** Coverage-Build: das Standalone-Tracing liefert die `.map`-Dateien der Server-Chunks nicht mit; Node braucht sie neben den Chunks. */
 function copyServerSourceMaps(from, to) {
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
@@ -292,44 +334,55 @@ function copyServerSourceMaps(from, to) {
 
 /** @param {{ repoRoot?: string, backendUrl?: string, log?: (msg: string) => void }} [opts] */
 function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console.log } = {}) {
-  const backend = backendUrl ?? process.env.BACKEND_URL ?? 'http://localhost:8500'
-  const fp = computeFingerprint({ repoRoot, backendUrl: backend })
-  const stamp = readStamp(repoRoot)
-  const dist = distRel()
-  const server = path.join(repoRoot, dist, 'standalone/server.js')
-  if (stamp && fingerprintsEqual(stamp.fingerprint, fp) && fs.existsSync(server)
-    && fs.existsSync(path.join(repoRoot, dist, 'standalone', dist, 'static'))) {
-    log('[E2E Frontend] Standalone-Build aktuell (Fingerabdruck gleich) - kein Rebuild.')
-    return false
+  const release = acquireBuildLock(repoRoot)
+  try {
+    // Compute after acquiring the lock: the waiting slot must compare against
+    // the completed build, never the state it observed before another build.
+    const backend = resolvedBackendUrl(backendUrl)
+    const fp = computeFingerprint({ repoRoot, backendUrl: backend })
+    const stamp = readStamp(repoRoot)
+    const dist = distRel()
+    const server = path.join(repoRoot, dist, 'standalone/server.js')
+    if (stamp && fingerprintsEqual(stamp.fingerprint, fp) && fs.existsSync(server)
+      && fs.existsSync(path.join(repoRoot, dist, 'standalone', dist, 'static'))) {
+      log('[E2E Frontend] Standalone-Build aktuell (Fingerabdruck gleich) - kein Rebuild.')
+      return false
+    }
+    log('[E2E Frontend] Standalone-Build fehlt oder veraltet - baue neu (ca. 3 min)...')
+    fs.rmSync(path.join(repoRoot, dist, 'standalone'), { recursive: true, force: true })
+    // B6220-003 (E7): the backend is the only Turnstile verifier and the widget needs a sitekey
+    // in a production build. Default to Cloudflare's always-passes TEST sitekey (inlined at build
+    // time; the E2E backend runs without a secret and bypasses verification on pundo_test).
+    const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || '1x00000000000000000000AA'
+    run('npx', ['next', 'build'], {
+      env: {
+        ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
+        ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
+      },
+    })
+    const sa = path.join(repoRoot, dist, 'standalone')
+    fs.rmSync(path.join(sa, dist, 'static'), { recursive: true, force: true })
+    fs.rmSync(path.join(sa, 'public'), { recursive: true, force: true })
+    fs.cpSync(path.join(repoRoot, dist, 'static'), path.join(sa, dist, 'static'), { recursive: true })
+    fs.cpSync(path.join(repoRoot, 'public'), path.join(sa, 'public'), { recursive: true })
+    if (coverageMode()) copyServerSourceMaps(path.join(repoRoot, dist, 'server'), path.join(sa, dist, 'server'))
+    // Next can update tsconfig.json while compiling. Stamp the completed input
+    // state, otherwise that harmless build side effect makes the server stale
+    // before globalSetup can inspect it. A later source/config edit still
+    // changes the fingerprint and forces the next build.
+    const completedFingerprint = computeFingerprint({ repoRoot, backendUrl: backend })
+    fs.writeFileSync(path.join(sa, '.e2e-build-stamp.json'),
+      JSON.stringify({ fingerprint: completedFingerprint, builtAtMs: Date.now() }, null, 2))
+    return true
+  } finally {
+    release()
   }
-  log('[E2E Frontend] Standalone-Build fehlt oder veraltet - baue neu (ca. 3 min)...')
-  fs.rmSync(path.join(repoRoot, dist, 'standalone'), { recursive: true, force: true })
-  // B6220-003 (E7): the backend is the only Turnstile verifier and the widget needs a sitekey
-  // in a production build. Default to Cloudflare's always-passes TEST sitekey (inlined at build
-  // time; the E2E backend runs without a secret and bypasses verification on pundo_test).
-  const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || '1x00000000000000000000AA'
-  run('npx', ['next', 'build'], {
-    env: {
-      ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
-      ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
-    },
-  })
-  const sa = path.join(repoRoot, dist, 'standalone')
-  fs.rmSync(path.join(sa, dist, 'static'), { recursive: true, force: true })
-  fs.rmSync(path.join(sa, 'public'), { recursive: true, force: true })
-  fs.cpSync(path.join(repoRoot, dist, 'static'), path.join(sa, dist, 'static'), { recursive: true })
-  fs.cpSync(path.join(repoRoot, 'public'), path.join(sa, 'public'), { recursive: true })
-  if (coverageMode()) copyServerSourceMaps(path.join(repoRoot, dist, 'server'), path.join(sa, dist, 'server'))
-  // Stamp = Fingerabdruck VOR dem Build: wird ein Input waehrend des Builds editiert, baut der naechste Lauf neu.
-  fs.writeFileSync(path.join(sa, '.e2e-build-stamp.json'),
-    JSON.stringify({ fingerprint: fp, builtAtMs: Date.now() }, null, 2))
-  return true
 }
 
 function start() {
   assertModeAllowed()
   const port = process.env.PORT ?? process.env.E2E_FRONTEND_PORT ?? '3500'
-  const backend = process.env.BACKEND_URL ?? 'http://localhost:8500'
+  const backend = resolvedBackendUrl()
   if (backend.includes(':8000')) throw new Error('[E2E Frontend] BACKEND_URL zeigt auf Port 8000 (Produktion).')
   let child
   if (process.env.E2E_FRONTEND_MODE === 'dev') {
@@ -354,7 +407,7 @@ function start() {
 }
 
 module.exports = {
-  REPO_ROOT, STAMP_REL, COVERAGE_DIST, coverageMode, distRel, stampRel, coverageServerRawDir, FINGERPRINT_INPUTS, newestMtimeMs, computeFingerprint, fingerprintsEqual,
+  REPO_ROOT, STAMP_REL, COVERAGE_DIST, coverageMode, distRel, stampRel, coverageServerRawDir, buildLockPath, acquireBuildLock, resolvedBackendUrl, FINGERPRINT_INPUTS, newestMtimeMs, computeFingerprint, fingerprintsEqual,
   readStamp, classifyCommand, classifyChain, listenerChain, assertFrontendFresh, ensureStandaloneBuild,
   prepareGateFrontend, assertModeAllowed,
 }

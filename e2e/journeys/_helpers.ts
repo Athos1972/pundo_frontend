@@ -8,8 +8,8 @@
  */
 
 import fs from 'fs'
-import path from 'path'
 import { BACKEND_URL } from '../env'
+import { E2E_STATE_FILE } from '../state'
 
 
 // Backend rate limit: 10 logins per minute (sliding window, per IP).
@@ -113,7 +113,7 @@ export function shopOwnerLogin(email: string, password: string): Promise<string>
 /** Admin-Token aus dem globalen Setup (e2e/.test-state.json, ein Login pro Lauf) — vermeidet Login-Bursts. */
 function cachedStateAdminToken(): string | undefined {
   try {
-    const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.test-state.json'), 'utf8')) as { adminToken?: string | null }
+    const raw = JSON.parse(fs.readFileSync(E2E_STATE_FILE, 'utf8')) as { adminToken?: string | null }
     return raw.adminToken ?? undefined
   } catch {
     return undefined

@@ -14,12 +14,13 @@ import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { adminLogin } from '../_helpers'
-import { BACKEND_URL } from '../../env'
+import { BACKEND_URL, IS_WORKTREE_SLOT, SLOT_ENV } from '../../env'
 import { generateRunId } from '../../run-lock'
+import { E2E_STATE_FILE } from '../../state'
 
 export { BACKEND_URL }
 
-export const STATE_FILE = path.join(__dirname, '..', '..', '.test-state.json')
+export const STATE_FILE = E2E_STATE_FILE
 
 /** Kurze Namen/Slugs duerfen nur `[A-Z0-9-]`. */
 function cleanSpec(spec: string): string {
@@ -67,11 +68,11 @@ export function e2eEmail(spec: string, domain: 'pundo-e2e.io' | 'pundo.com' = 'p
   return `e2e-${RUN_ID}-${cleanSpec(spec).toLowerCase()}-${rand4()}@${domain}`
 }
 
-// ── Direkter DB-Zugriff (nur pundo_test) ──────────────────────────────────────
+// ── Direkter DB-Zugriff (Haupt-Testkopie oder exakter Controller-Slot) ─────────
 
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 
-/** libpq-URL von pundo_test (env DATABASE_URL_TEST oder Backend-.env). Wirft, wenn nicht pundo_test. */
+/** libpq-URL der aktiven Testkopie. Ein Slot akzeptiert nur seine eigene DB. */
 export function testDbUrl(): string {
   let url = process.env.DATABASE_URL_TEST
   if (!url) {
@@ -81,13 +82,14 @@ export function testDbUrl(): string {
   }
   if (!url) throw new Error('DATABASE_URL_TEST nicht gesetzt und nicht in Backend-.env gefunden')
   url = url.replace('+psycopg', '')
-  if (!/\/pundo_test(\?|$)/.test(url) || !/@(localhost|127\.0\.0\.1)[:/]/.test(url)) {
-    throw new Error('DATABASE_URL_TEST zeigt nicht auf localhost/pundo_test - Abbruch')
+  const database = IS_WORKTREE_SLOT ? `pundo_wt_s${SLOT_ENV.slot}` : 'pundo_test'
+  if (!new RegExp(`/${database}(?:\\?|$)`).test(url) || !/@(localhost|127\.0\.0\.1)[:/]/.test(url)) {
+    throw new Error(`DATABASE_URL_TEST zeigt nicht auf localhost/${database} - Abbruch`)
   }
   return url
 }
 
-/** SQL gegen pundo_test (psql -At). Nur fuer gezielte Fixture-Eingriffe an EIGENEN Testzeilen. */
+/** SQL gegen die aktive Testkopie (psql -At), nur für eigene Fixture-Zeilen. */
 export function psql(sql: string): string {
   return execFileSync('psql', [testDbUrl(), '-Atc', sql], { encoding: 'utf8' }).trim()
 }
@@ -100,7 +102,7 @@ export function populatedCategoryId(min = 5): number {
   const id = Number(psql(
     `select category_id from items where category_id is not null group by category_id having count(*) >= ${Math.floor(min)} order by random() limit 1`,
   ))
-  if (!id) throw new Error(`[e2e] keine Kategorie mit >= ${min} Items in pundo_test`)
+  if (!id) throw new Error(`[e2e] keine Kategorie mit >= ${min} Items in der aktiven Testkopie`)
   return id
 }
 

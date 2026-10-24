@@ -13,6 +13,34 @@ Die E2E-Tests laufen gegen eine isolierte `pundo_test`-PostgreSQL-Datenbank und 
 
 Playwright-Safety-Check in `playwright.config.ts` verwirft Port 8000 explizit.
 
+### Worktree-Slots (F8970)
+
+Slot 0 bleibt der bisherige Einzelarbeitsmodus. Ein ausdrücklich angelegter
+Backend-Controller-Slot 1–4 verwendet ausschließlich das feste Portpaar
+3511–3514 / 8511–8514. `e2e/env.ts` akzeptiert einen Slot nur mit passendem,
+externem 0600-Manifest und Lease-Token; abweichende Ports, Produktionsports
+oder eine fremde Datenbank werden vor Playwright abgelehnt. Jeder Slot besitzt
+einen eigenen E2E-Lock, ein vom Controller erzeugtes privates
+`E2E_STATE_DIR` (State-Datei und Admin-Storage-State) und Next-Ausgabe
+`.next-worktree-s<N>`. In einem Slot startet der Controller nur das Backend;
+Playwright besitzt den Frontend-Prozess und verwendet keinen vorhandenen
+Standalone auf dem Slot-Port. So wird ein frischer Standalone-Build erzwungen
+und `globalSetup`/`globalTeardown` bleiben vollständig slot-isoliert.
+
+```bash
+# Backend-Worktree: Slot erzeugen und nur dessen Backend starten
+scripts/worktree-env new --slot 1 --backend "$PWD" --frontend <frontend-worktree> --data-mode prodcopy
+scripts/worktree-env start --slot 1 backend
+
+# Frontend-Worktree: Slot-Env laden und Browser-Smoke starten
+source ~/.pundo/worktree-env/slots/slot-1/frontend.env
+npx playwright test --project=smoke
+
+# Danach im Backend-Worktree vollständig entfernen (DB, Prozesse, E2E-State)
+scripts/worktree-env stop --slot 1 backend
+scripts/worktree-env destroy --slot 1
+```
+
 ### Was wird im Browser getestet (Playwright)
 
 | Bereich | Warum im Browser |
@@ -335,6 +363,23 @@ Das Backend loggt keine Activity-Events fuer Bot-UAs, und der Playwright-Default
 | `E2E_COVERAGE_DIR` | `coverage-e2e` | Ausgabe- und Rohdatenordner des Coverage-Modus |
 | `E2E_COVERAGE_VITEST` | `run` | `run` / `reuse` / `skip` für die Vitest-Coverage im Bericht |
 | `E2E_COVERAGE_KEEP_RAW` | `1` | `0` → Rohdaten nach dem Bericht löschen |
+
+### Isolierte Worktree-Slots (F8970)
+
+Ein Controller-Slot ist ein bewusst gepaartes Backend-/Frontend-Artefakt. Der
+Aufruf `scripts/worktree-env new --backend <backend-worktree> --frontend
+<frontend-worktree>` prüft beide registrierten Git-Worktrees und speichert
+deren Heads im Slot-Manifest. Verwende deshalb Backend- und Frontend-Stand,
+die zusammen entwickelt wurden. Der Controller führt den Frontend-Fast-Lauf
+mit dem gepaarten Backend-Checkout aus; ein neuer Backend-API-Vertrag ohne
+aktualisierten Frontend-API-Typ-Snapshot ist absichtlich rot statt eine
+stillschweigend tolerierte Inkompatibilität.
+
+Nach `source ~/.pundo/worktree-env/slots/slot-N/frontend.env` nutzt der
+Standalone-Build ausschließlich `.next-worktree-sN`. Build-Stamp und
+`globalSetup` verwenden dieselbe effektive Test-Backend-URL
+(`TEST_BACKEND_URL` vor `BACKEND_URL`), damit ein Slot weder Slot 0 noch einen
+anderen Slot als frischen Build ausgeben kann.
 
 ---
 

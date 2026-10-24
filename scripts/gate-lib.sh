@@ -17,7 +17,13 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
 
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/opt/libpq/bin:/usr/local/bin:$PATH"
 
-GATE_STATE_DIR="${GATE_STATE_DIR:-$HOME/Library/Caches/pundo-test-gate}"
+if [ -n "${PUNDO_SLOT:-}" ]; then
+  case "$PUNDO_SLOT" in 1|2|3|4) ;; *) echo "gate: ABBRUCH: PUNDO_SLOT muss 1 bis 4 sein." >&2; exit 4;; esac
+  [ -n "${PUNDO_SLOT_MANIFEST:-}" ] && [ -n "${PUNDO_SLOT_TOKEN:-}" ] || { echo "gate: ABBRUCH: Slot braucht Manifest und Token." >&2; exit 4; }
+  GATE_STATE_DIR="${GATE_STATE_DIR:-$HOME/.pundo/worktree-env/locks/slot-$PUNDO_SLOT/gate}"
+else
+  GATE_STATE_DIR="${GATE_STATE_DIR:-$HOME/Library/Caches/pundo-test-gate}"
+fi
 GATE_LOCK_DIR="$GATE_STATE_DIR/lock.d"
 GATE_LOCK_MINE=0
 GATE_CHILD_PGID=""
@@ -95,6 +101,7 @@ gate_lock_release() {
 # ---- Konfliktprozesse ------------------------------------------------------------------------------------
 # gate_wait_idle <what>: what = playwright | pytest | both. Wartet bis GATE_BUSY_WAIT s (Default 90), dann Abbruch.
 gate_busy_pids() {
+  [ -n "${PUNDO_SLOT:-}" ] && return 0
   local what="$1" out=""
   if [ "$what" = playwright ] || [ "$what" = both ]; then
     out="$out $(pgrep -f '[n]ode .*playwright test' 2>/dev/null | tr '\n' ' ')"
@@ -123,6 +130,14 @@ gate_wait_idle() {
 # ---- Preflight -------------------------------------------------------------------------------------------
 # gate_preflight_db <backend-repo>: PostgreSQL aus DATABASE_URL_TEST (.env) per TCP pruefen (fail-closed, 3 s).
 gate_preflight_db() {
+  if [ -n "${PUNDO_SLOT:-}" ] && [ -n "${PUNDO_PRODCOPY_DATABASE_URL:-}" ]; then
+    local slot_hp
+    slot_hp="$(printf '%s' "$PUNDO_PRODCOPY_DATABASE_URL" | sed -E 's#^[^@]*@([^:/]+):?([0-9]*)/.*#\1 \2#')"
+    local slot_host="${slot_hp%% *}" slot_port="${slot_hp##* }"
+    [ "$slot_port" = "$slot_host" ] || [ -z "$slot_port" ] && slot_port=5432
+    nc -z -w 3 "$slot_host" "$slot_port" >/dev/null 2>&1 || gate_die 4 "PostgreSQL für Slot $PUNDO_SLOT nicht erreichbar."
+    return 0
+  fi
   local envf="$1/.env" hp host port
   [ -f "$envf" ] || gate_die 4 "$envf fehlt (DATABASE_URL_TEST wird fuer die Test-DB gebraucht)."
   hp="$(grep -E '^DATABASE_URL_TEST=' "$envf" | head -1 | sed -E 's#^[^@]*@([^:/]+):?([0-9]*)/.*#\1 \2#')"

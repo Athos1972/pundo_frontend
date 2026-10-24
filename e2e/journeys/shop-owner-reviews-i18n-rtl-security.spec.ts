@@ -19,6 +19,7 @@ import { RUN_ID } from './_helpers/test-data'
 import { specShop, type WorkerShop, type CreatedItem } from './_helpers/worker-shop'
 import { clickHydrated } from './_helpers/hydration'
 import { BASE_URL, BACKEND_URL } from '../env'
+import { E2E_ADMIN_STATE_FILE } from '../state'
 
 if (BASE_URL.includes(':3000') || BACKEND_URL.includes(':8000')) {
   throw new Error('Safety: Journey-Tests dürfen nicht gegen Produktiv-Ports laufen!')
@@ -232,7 +233,7 @@ test.describe.serial('Shop-Owner Bewertungen: Sprachen, RTL, Leerzustand, Rechte
   })
 
   test('AC-12 System-Admin /admin/reviews in EL: uebersetzte Ueberschrift, Aktionen, Namen', async ({ browser }) => {
-    const c = await browser.newContext({ baseURL: BASE_URL, storageState: 'e2e/.auth/admin.json', viewport: { width: 1280, height: 900 } })
+    const c = await browser.newContext({ baseURL: BASE_URL, storageState: E2E_ADMIN_STATE_FILE, viewport: { width: 1280, height: 900 } })
     await c.addCookies([{ name: 'app_lang', value: 'el', url: BASE_URL }])
     const p = await c.newPage()
     await p.goto('/admin/reviews?filter=all')

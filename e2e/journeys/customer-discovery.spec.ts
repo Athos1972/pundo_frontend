@@ -18,6 +18,7 @@ import fs from 'fs'
 import path from 'path'
 import { waitForPageHydrated } from './_helpers/hydration'
 import { BASE_URL, BACKEND_URL } from '../env'
+import { E2E_STATE_FILE } from '../state'
 import { createStepLog } from '../fixtures'
 
 // Port-Safety — niemals gegen Produktiv-Ports laufen
@@ -34,7 +35,7 @@ interface TestState {
 }
 
 function loadTestState(): TestState | null {
-  const stateFile = path.join(__dirname, '..', '.test-state.json')
+  const stateFile = E2E_STATE_FILE
   if (!fs.existsSync(stateFile)) return null
   return JSON.parse(fs.readFileSync(stateFile, 'utf8')) as TestState
 }

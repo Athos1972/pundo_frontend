@@ -1333,6 +1333,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/reviews/photos/unmoderated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Unmoderated Photos
+         * @description Photos without a moderation result (neither LLM nor admin) that have waited at least ``min_age_minutes``.
+         *
+         *     Oldest first. ``moderation_task_id`` null means the gateway submission failed; the photo is pending or, for a
+         *     trusted user, already visible.
+         */
+        get: operations["list_unmoderated_photos_api_v1_admin_reviews_photos_unmoderated_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/photos/{photo_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Photo
+         * @description Approve a photo without moderation result. Audit-logged with admin, IP, user agent and photo id.
+         */
+        post: operations["approve_photo_api_v1_admin_reviews_photos__photo_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/photos/{photo_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject Photo
+         * @description Reject a photo without moderation result (at least one category, default ``other``). Audit-logged.
+         */
+        post: operations["reject_photo_api_v1_admin_reviews_photos__photo_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/reviews/{review_id}/audit-log": {
         parameters: {
             query?: never;
@@ -3069,7 +3132,8 @@ export interface paths {
          *     1. Validates ownership and photo count limit.
          *     2. Generates 5 local variants (thumb/card/carousel/detail/orig).
          *     3. Creates ReviewPhoto record with status='pending'.
-         *     4. Enqueues async moderation (Claude Haiku) as BackgroundTask.
+         *     4. After the commit, submits the gateway job ``moderate.review_photo`` (F3700); a gateway failure never fails the
+         *        upload (the photo then shows up in the admin list of photos without a moderation result).
          */
         post: operations["upload_photo_api_v1_customer_reviews__review_id__photos_post"];
         delete?: never;
@@ -6557,6 +6621,23 @@ export interface components {
             /** Url */
             url?: string | null;
         };
+        /** AdminPhotoDecisionOut */
+        AdminPhotoDecisionOut: {
+            /** Photo Id */
+            photo_id: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "rejected";
+        };
+        /** AdminPhotoDecisionRequest */
+        AdminPhotoDecisionRequest: {
+            /** Categories */
+            categories?: ("nudity" | "violence" | "hate" | "pii" | "spam" | "irrelevant" | "other")[];
+            /** Reason */
+            reason?: string | null;
+        };
         /** AdminProductAttributeCreate */
         AdminProductAttributeCreate: {
             /** Attribute Key */
@@ -7320,6 +7401,35 @@ export interface components {
             whatsapp_number?: string | null;
         };
         /**
+         * AdminUnmoderatedPhotoOut
+         * @description A review photo that still has no moderation result (LLM or admin).
+         */
+        AdminUnmoderatedPhotoOut: {
+            /** Created At */
+            created_at: string;
+            /** Detail Url */
+            detail_url: string | null;
+            /** Moderation Requested At */
+            moderation_requested_at: string | null;
+            /** Moderation Task Id */
+            moderation_task_id: string | null;
+            /** Photo Id */
+            photo_id: number;
+            /** Review Id */
+            review_id: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved";
+            /** Thumb Url */
+            thumb_url: string | null;
+            /** Url */
+            url: string;
+            /** Waiting Minutes */
+            waiting_minutes: number;
+        };
+        /**
          * AliasCreateRequest
          * @description Request body for POST /internal/categorizer/aliases.
          */
@@ -7493,6 +7603,8 @@ export interface components {
             moderation_confidence: number | null;
             /** Moderation Model */
             moderation_model: string | null;
+            /** Photo Id */
+            photo_id?: number | null;
             /** Reason */
             reason: string | null;
             /** Review Id */
@@ -17615,6 +17727,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminReviewOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_unmoderated_photos_api_v1_admin_reviews_photos_unmoderated_get: {
+        parameters: {
+            query?: {
+                min_age_minutes?: number;
+                offset?: number;
+                limit?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUnmoderatedPhotoOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_photo_api_v1_admin_reviews_photos__photo_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                photo_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AdminPhotoDecisionRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPhotoDecisionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_photo_api_v1_admin_reviews_photos__photo_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                photo_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AdminPhotoDecisionRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPhotoDecisionOut"];
                 };
             };
             /** @description Validation Error */

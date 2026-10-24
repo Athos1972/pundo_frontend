@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getReviews, type ReviewListParams } from '@/lib/system-admin-api'
+import { getReviews, getUnmoderatedPhotos, type ReviewListParams } from '@/lib/system-admin-api'
 import { ReviewModerationList } from '@/components/system-admin/ReviewModerationList'
-import type { SysAdminReview } from '@/types/system-admin'
+import { UnmoderatedPhotoList } from '@/components/system-admin/UnmoderatedPhotoList'
+import type { SysAdminReview, SysAdminUnmoderatedPhoto } from '@/types/system-admin'
 
 const LIMIT = 50
-const FILTERS = ['reported', 'owner_reported', 'hidden', 'all'] as const
+const FILTERS = ['reported', 'owner_reported', 'hidden', 'unmoderated_photos', 'all'] as const
 type Filter = (typeof FILTERS)[number]
 
 interface PageProps {
@@ -28,9 +29,15 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(sp.page ?? 1) || 1)
 
   let reviews: SysAdminReview[] = []
+  let photos: SysAdminUnmoderatedPhoto[] = []
   let failed = false
+  const isPhotos = filter === 'unmoderated_photos'
   try {
-    reviews = await getReviews({ ...queryFor(filter), limit: LIMIT, offset: (page - 1) * LIMIT }, lang)
+    if (isPhotos) {
+      photos = await getUnmoderatedPhotos({ limit: LIMIT, offset: (page - 1) * LIMIT })
+    } else {
+      reviews = await getReviews({ ...queryFor(filter), limit: LIMIT, offset: (page - 1) * LIMIT }, lang)
+    }
   } catch {
     failed = true
   }
@@ -39,6 +46,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
     reported: tr.rev_filter_reported,
     owner_reported: tr.rev_filter_owner_reported,
     hidden: tr.rev_filter_hidden,
+    unmoderated_photos: tr.rev_photos_filter,
     all: tr.rev_filter_all,
   }
   const href = (f: Filter, p: number) => `/admin/reviews?filter=${f}${p > 1 ? `&page=${p}` : ''}`
@@ -63,15 +71,17 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
       </nav>
 
       {failed ? (
-        <p role="alert" className="text-sm text-red-600">{tr.rev_load_error}</p>
+        <p role="alert" className="text-sm text-red-600">{isPhotos ? tr.rev_photos_load_error : tr.rev_load_error}</p>
+      ) : isPhotos ? (
+        <UnmoderatedPhotoList key={`${filter}-${page}`} photos={photos} tr={tr} />
       ) : (
         <ReviewModerationList key={`${filter}-${page}`} reviews={reviews} tr={tr} />
       )}
 
-      {(page > 1 || reviews.length === LIMIT) && (
+      {(page > 1 || (isPhotos ? photos.length : reviews.length) === LIMIT) && (
         <div className="flex gap-4 text-sm">
           {page > 1 && <Link href={href(filter, page - 1)} className="text-slate-700 underline">{tr.rev_prev}</Link>}
-          {reviews.length === LIMIT && <Link href={href(filter, page + 1)} className="text-slate-700 underline">{tr.rev_next}</Link>}
+          {(isPhotos ? photos.length : reviews.length) === LIMIT && <Link href={href(filter, page + 1)} className="text-slate-700 underline">{tr.rev_next}</Link>}
         </div>
       )}
     </div>

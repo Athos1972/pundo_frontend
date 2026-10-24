@@ -3041,6 +3041,63 @@
     "title": "AdminOfferUpdate",
     "type": "object"
    },
+   "AdminPhotoDecisionOut": {
+    "properties": {
+     "photo_id": {
+      "title": "Photo Id",
+      "type": "integer"
+     },
+     "status": {
+      "enum": [
+       "approved",
+       "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "photo_id",
+     "status"
+    ],
+    "title": "AdminPhotoDecisionOut",
+    "type": "object"
+   },
+   "AdminPhotoDecisionRequest": {
+    "properties": {
+     "categories": {
+      "items": {
+       "enum": [
+        "nudity",
+        "violence",
+        "hate",
+        "pii",
+        "spam",
+        "irrelevant",
+        "other"
+       ],
+       "type": "string"
+      },
+      "maxItems": 7,
+      "title": "Categories",
+      "type": "array"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "title": "AdminPhotoDecisionRequest",
+    "type": "object"
+   },
    "AdminProductAttributeCreate": {
     "properties": {
      "attribute_key": {
@@ -5779,6 +5836,97 @@
     "title": "AdminShopUpdate",
     "type": "object"
    },
+   "AdminUnmoderatedPhotoOut": {
+    "description": "A review photo that still has no moderation result (LLM or admin).",
+    "properties": {
+     "created_at": {
+      "title": "Created At",
+      "type": "string"
+     },
+     "detail_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail Url"
+     },
+     "moderation_requested_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Moderation Requested At"
+     },
+     "moderation_task_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Moderation Task Id"
+     },
+     "photo_id": {
+      "title": "Photo Id",
+      "type": "integer"
+     },
+     "review_id": {
+      "title": "Review Id",
+      "type": "integer"
+     },
+     "status": {
+      "enum": [
+       "pending",
+       "approved"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "thumb_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thumb Url"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     },
+     "waiting_minutes": {
+      "title": "Waiting Minutes",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "photo_id",
+     "review_id",
+     "status",
+     "thumb_url",
+     "detail_url",
+     "url",
+     "created_at",
+     "moderation_requested_at",
+     "moderation_task_id",
+     "waiting_minutes"
+    ],
+    "title": "AdminUnmoderatedPhotoOut",
+    "type": "object"
+   },
    "AliasCreateRequest": {
     "description": "Request body for POST /internal/categorizer/aliases.",
     "properties": {
@@ -6175,6 +6323,17 @@
        }
       ],
       "title": "Moderation Model"
+     },
+     "photo_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Photo Id"
      },
      "reason": {
       "anyOf": [
@@ -33755,6 +33914,295 @@
     ]
    }
   },
+  "/api/v1/admin/reviews/photos/unmoderated": {
+   "get": {
+    "description": "Photos without a moderation result (neither LLM nor admin) that have waited at least ``min_age_minutes``.\n\nOldest first. ``moderation_task_id`` null means the gateway submission failed; the photo is pending or, for a\ntrusted user, already visible.",
+    "operationId": "list_unmoderated_photos_api_v1_admin_reviews_photos_unmoderated_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "min_age_minutes",
+      "required": false,
+      "schema": {
+       "default": 30,
+       "maximum": 1440,
+       "minimum": 0,
+       "title": "Min Age Minutes",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AdminUnmoderatedPhotoOut"
+         },
+         "title": "Response List Unmoderated Photos Api V1 Admin Reviews Photos Unmoderated Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Unmoderated Photos",
+    "tags": [
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/reviews/photos/{photo_id}/approve": {
+   "post": {
+    "description": "Approve a photo without moderation result. Audit-logged with admin, IP, user agent and photo id.",
+    "operationId": "approve_photo_api_v1_admin_reviews_photos__photo_id__approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "photo_id",
+      "required": true,
+      "schema": {
+       "title": "Photo Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/AdminPhotoDecisionRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AdminPhotoDecisionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve Photo",
+    "tags": [
+     "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/reviews/photos/{photo_id}/reject": {
+   "post": {
+    "description": "Reject a photo without moderation result (at least one category, default ``other``). Audit-logged.",
+    "operationId": "reject_photo_api_v1_admin_reviews_photos__photo_id__reject_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "photo_id",
+      "required": true,
+      "schema": {
+       "title": "Photo Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/AdminPhotoDecisionRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AdminPhotoDecisionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reject Photo",
+    "tags": [
+     "admin"
+    ]
+   }
+  },
   "/api/v1/admin/reviews/{review_id}/audit-log": {
    "get": {
     "description": "Return the full audit log for a review. Admin only.",
@@ -42397,7 +42845,7 @@
   },
   "/api/v1/customer/reviews/{review_id}/photos": {
    "post": {
-    "description": "Upload a photo for a review.\n\n1. Validates ownership and photo count limit.\n2. Generates 5 local variants (thumb/card/carousel/detail/orig).\n3. Creates ReviewPhoto record with status='pending'.\n4. Enqueues async moderation (Claude Haiku) as BackgroundTask.",
+    "description": "Upload a photo for a review.\n\n1. Validates ownership and photo count limit.\n2. Generates 5 local variants (thumb/card/carousel/detail/orig).\n3. Creates ReviewPhoto record with status='pending'.\n4. After the commit, submits the gateway job ``moderate.review_photo`` (F3700); a gateway failure never fails the\n   upload (the photo then shows up in the admin list of photos without a moderation result).",
     "operationId": "upload_photo_api_v1_customer_reviews__review_id__photos_post",
     "parameters": [
      {

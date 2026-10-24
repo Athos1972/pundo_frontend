@@ -19,6 +19,14 @@
    "contact_not_found"
   ]
  },
+ "api/admin/customer_reviews": {
+  "404": [
+   "photo_not_found"
+  ],
+  "409": [
+   "photo_already_moderated"
+  ]
+ },
  "api/admin/social_link_rules": {
   "403": [
    "external_rules_are_read_only",

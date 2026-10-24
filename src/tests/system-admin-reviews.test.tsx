@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import React from 'react'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import type { SysAdminReview } from '@/types/system-admin'
+import type { SysAdminReview, SysAdminUnmoderatedPhoto } from '@/types/system-admin'
 
 vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) =>
@@ -16,6 +16,7 @@ vi.mock('@/lib/system-admin-api')
 import * as api from '@/lib/system-admin-api'
 import { getLangServer } from '@/lib/lang'
 import { ReviewModerationList } from '@/components/system-admin/ReviewModerationList'
+import { UnmoderatedPhotoList } from '@/components/system-admin/UnmoderatedPhotoList'
 
 const tr = tSysAdmin('en')
 const trEl = tSysAdmin('el')
@@ -190,6 +191,103 @@ describe('ReviewModerationList — hide / restore reply', () => {
   })
 })
 
+// ─── Photos without moderation result (F3700) ─────────────────────────────────────
+// Shape follows AdminUnmoderatedPhotoOut of 02-architecture.md §4.1 (backend openapi snapshot not yet available when written).
+const photo = (over: Partial<SysAdminUnmoderatedPhoto> = {}): SysAdminUnmoderatedPhoto => ({
+  photo_id: 7, review_id: 21, status: 'pending',
+  thumb_url: '/review_photos/21/a_thumb.webp', detail_url: '/review_photos/21/a_detail.webp', url: '/review_photos/21/a.jpg',
+  created_at: '2026-10-23T10:00:00Z', moderation_requested_at: '2026-10-23T10:00:02Z',
+  moderation_task_id: '0b6f2d0e-5a43-4a53-9d9e-2f6f2c1f2f11', waiting_minutes: 42, ...over,
+})
+
+describe('UnmoderatedPhotoList', () => {
+  it('renders id, waiting time, status, thumbnail with alt; empty list shows the empty text', () => {
+    const { unmount } = render(<UnmoderatedPhotoList photos={[photo(), photo({ photo_id: 8, status: 'approved', moderation_task_id: null })]} tr={tr} />)
+    expect(screen.getByText('#7')).toBeTruthy()
+    expect(screen.getAllByText('Waiting 42 min')).toHaveLength(2)
+    expect(screen.getByText(tr.rev_photos_status_pending)).toBeTruthy()
+    expect(screen.getByText(tr.rev_photos_status_visible)).toBeTruthy()
+    expect(screen.getByText(tr.rev_photos_not_submitted)).toBeTruthy()
+    const img = screen.getByRole('img', { name: 'Review photo 7 awaiting moderation' })
+    expect(img.getAttribute('src')).toBe('/review_photos/21/a_thumb.webp')
+    unmount()
+    render(<UnmoderatedPhotoList photos={[]} tr={tr} />)
+    expect(screen.getByText(tr.rev_photos_empty)).toBeTruthy()
+  })
+
+  it('falls back to detail_url / url when there is no thumbnail', () => {
+    render(<UnmoderatedPhotoList photos={[photo({ thumb_url: null, detail_url: null })]} tr={tr} />)
+    expect(screen.getByRole('img').getAttribute('src')).toBe('/review_photos/21/a.jpg')
+  })
+
+  it('approve: confirm first (nothing sent before), POST approve with body, row disappears', async () => {
+    render(<UnmoderatedPhotoList photos={[photo(), photo({ photo_id: 8 })]} tr={tr} />)
+    fireEvent.click(screen.getAllByRole('button', { name: tr.rev_photos_approve })[0])
+    expect(fetchMock).not.toHaveBeenCalled()
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(screen.queryByText('#7')).toBeNull())
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/admin/reviews/photos/7/approve')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body)).toEqual({ reason: null, categories: [] })
+    expect(screen.getByText('#8')).toBeTruthy()
+  })
+
+  it('reject: sends reason and selected categories; default category is "other"', async () => {
+    const { unmount } = render(<UnmoderatedPhotoList photos={[photo()]} tr={tr} />)
+    fireEvent.change(screen.getByLabelText(tr.rev_photos_reason_label), { target: { value: ' ID card ' } })
+    fireEvent.click(screen.getByLabelText(tr.rev_photos_category_pii))
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_reject }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/admin/reviews/photos/7/reject')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ reason: 'ID card', categories: ['pii'] })
+    unmount()
+    fetchMock.mockClear()
+    render(<UnmoderatedPhotoList photos={[photo()]} tr={tr} />)
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_reject }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ reason: null, categories: ['other'] })
+  })
+
+  it('cancel in the dialog sends nothing', () => {
+    render(<UnmoderatedPhotoList photos={[photo()]} tr={tr} />)
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_reject }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.cancel }))
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('409: shows "already decided" and removes the entry', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 409, json: async () => ({ detail: 'photo_already_moderated' }) })
+    render(<UnmoderatedPhotoList photos={[photo()]} tr={tr} />)
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_approve }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain(tr.rev_photos_already_decided))
+    expect(screen.queryByRole('img')).toBeNull()
+  })
+
+  it('error (500 and network): message, entry stays', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+    render(<UnmoderatedPhotoList photos={[photo()]} tr={tr} />)
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_approve }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe(tr.rev_photos_action_failed))
+    expect(screen.getByText('#7')).toBeTruthy()
+    fetchMock.mockRejectedValueOnce(new Error('down'))
+    fireEvent.click(screen.getByRole('button', { name: tr.rev_photos_reject }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: tr.rev_confirm_yes }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('alert').textContent).toBe(tr.rev_photos_action_failed)
+  })
+
+  it('Greek strings exist for every photo key', () => {
+    for (const k of Object.keys(tr).filter((x) => x.startsWith('rev_photos_'))) {
+      expect((trEl as unknown as Record<string, string>)[k]).toBeTruthy()
+    }
+  })
+})
+
 // ─── Pages ────────────────────────────────────────────────────────────────────────
 
 type Page = (props: never) => Promise<React.ReactElement> | React.ReactElement
@@ -254,6 +352,30 @@ describe('/admin/reviews page', () => {
     await show(Page, sp())
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(trEl.rev_title)
     expect(api.getReviews).toHaveBeenCalledWith(expect.anything(), 'el')
+  })
+})
+
+describe('/admin/reviews page — photos filter (F3700)', () => {
+  it('has the filter tab; unmoderated_photos loads photos, not reviews', async () => {
+    vi.mocked(api.getUnmoderatedPhotos).mockResolvedValue([photo()])
+    const { default: Page } = await import(`${P}/page`)
+    await show(Page, sp({ filter: 'unmoderated_photos' }))
+    expect(api.getUnmoderatedPhotos).toHaveBeenCalledWith({ limit: 50, offset: 0 })
+    expect(api.getReviews).not.toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: tr.rev_photos_filter }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByText('#7')).toBeTruthy()
+  })
+
+  it('empty list -> empty text; failing backend -> photo error, not empty text', async () => {
+    const { default: Page } = await import(`${P}/page`)
+    vi.mocked(api.getUnmoderatedPhotos).mockResolvedValueOnce([])
+    const { unmount } = await show(Page, sp({ filter: 'unmoderated_photos' }))
+    expect(screen.getByText(tr.rev_photos_empty)).toBeTruthy()
+    unmount()
+    vi.mocked(api.getUnmoderatedPhotos).mockRejectedValueOnce(new Error('API_ERROR:500'))
+    await show(Page, sp({ filter: 'unmoderated_photos' }))
+    expect(screen.getByRole('alert').textContent).toBe(tr.rev_photos_load_error)
+    expect(screen.queryByText(tr.rev_photos_empty)).toBeNull()
   })
 })
 

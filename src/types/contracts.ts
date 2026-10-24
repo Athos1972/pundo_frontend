@@ -63,6 +63,7 @@ type Contract<_ extends true> = true
 // ── System admin (src/types/system-admin.ts) ────────────────────────────────────────────────────────────
 export type SysAdminContracts = [
   Contract<Assignable<Schemas['CrmConfigOut'], SysAdmin.CrmConfigOut>>,
+  Contract<Assignable<Schemas['AdminUnmoderatedPhotoOut'], SysAdmin.SysAdminUnmoderatedPhoto>>,
   Contract<Assignable<Schemas['SendCapOut'], SysAdmin.CrmSendCapOut>>,
   Contract<Assignable<Schemas['OutreachPreviewResponse'], SysAdmin.CrmOutreachPreviewResponse>>,
   Contract<Assignable<Schemas['OutreachSendResponse'], SysAdmin.CrmOutreachSendResponse>>,

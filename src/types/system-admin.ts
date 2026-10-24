@@ -500,6 +500,29 @@ export interface SysAdminReview {
   reply: SysAdminReviewReply | null
 }
 
+export const PHOTO_MODERATION_CATEGORIES = ['nudity', 'violence', 'hate', 'pii', 'spam', 'irrelevant', 'other'] as const
+export type PhotoModerationCategory = (typeof PHOTO_MODERATION_CATEGORIES)[number]
+
+/** GET /api/v1/admin/reviews/photos/unmoderated (F3700, AdminUnmoderatedPhotoOut) */
+export interface SysAdminUnmoderatedPhoto {
+  photo_id: number
+  review_id: number
+  status: 'pending' | 'approved' // approved = trusted user, already visible
+  thumb_url: string | null
+  detail_url: string | null
+  url: string
+  created_at: string
+  moderation_requested_at: string | null
+  moderation_task_id: string | null // null = submission to the gateway failed
+  waiting_minutes: number
+}
+
+/** POST /api/v1/admin/reviews/photos/{id}/approve|reject (F3700, AdminPhotoDecisionRequest) */
+export interface SysAdminPhotoDecisionRequest {
+  reason: string | null
+  categories: PhotoModerationCategory[]
+}
+
 export interface SysAdminReviewAuditEntry {
   id: number
   review_id: number

@@ -32,6 +32,7 @@ import type {
   SysAdminReview,
   SysAdminCategoryReviewItem,
   SysAdminReviewAuditEntry,
+  SysAdminUnmoderatedPhoto,
   SysAdminClaimListItem,
   SysAdminClaimSummary,
   SysAdminClaimDetail,
@@ -372,6 +373,13 @@ export type ReviewListParams = {
 /** GET /api/v1/admin/reviews — a plain list (no paging wrapper). `lang` selects the language of the names. */
 export async function getReviews(params: ReviewListParams = {}, lang = 'en'): Promise<SysAdminReview[]> {
   return apiFetch<SysAdminReview[]>(`/reviews${buildQs(params)}`, { headers: { 'Accept-Language': lang } })
+}
+
+/** GET /api/v1/admin/reviews/photos/unmoderated (F3700) — photos without a moderation result, oldest first. */
+export async function getUnmoderatedPhotos(
+  params: { min_age_minutes?: number; limit?: number; offset?: number } = {},
+): Promise<SysAdminUnmoderatedPhoto[]> {
+  return apiFetch<SysAdminUnmoderatedPhoto[]>(`/reviews/photos/unmoderated${buildQs(params)}`)
 }
 
 /** GET /api/v1/admin/reviews/{id}/audit-log */

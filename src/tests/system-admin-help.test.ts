@@ -14,9 +14,9 @@ const SAME_ALLOWED = new Set(['CRM'])
 describe('help topics (data source)', () => {
   it('has the topics in the agreed order (3b between shops and products)', () => {
     // the agreed core order; later topics are appended at the end, so the topic count is deliberately not hard-coded
-    const core = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm']
+    const core = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'crm-persons']
     expect(HELP_TOPICS.map((t) => t.id).slice(0, core.length)).toEqual(core)
-    expect(HELP_TOPICS.map((t) => t.number).slice(0, core.length)).toEqual(['1', '2', '3', '3b', '4', '4b', '5'])
+    expect(HELP_TOPICS.map((t) => t.number).slice(0, core.length)).toEqual(['1', '2', '3', '3b', '4', '4b', '5', '5b'])
     // topics 6-8 follow, appended in this order (later topics go to the end; the total is deliberately not hard-coded)
     const later = HELP_TOPICS.slice(core.length)
     expect(later.slice(0, 3).map((t) => t.id)).toEqual(['moderation', 'catalog-quality', 'api-keys'])

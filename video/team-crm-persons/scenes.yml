@@ -1,0 +1,152 @@
+# Team video 5b "CRM: people and roles" (F8960 Team-SOPs & Admin-Hilfe, topic 5b). Internal: channel "pundo Team", unlisted.
+# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-crm-persons.el.srt).
+# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3). Follows the SOP "crm-persons" in
+# src/lib/system-admin-help-content.ts. Adds to video 5 (CRM contacts): people (natural persons), roles at organisations, linking a contact.
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker "Team Demo").
+# The video CREATES the person "Team Demo Anna" (prepare_team.py deletes her again), adds a role to the seeded person "Team Demo Petros"
+# at "Team Demo Bakery" and ends it, and links the demo contact "Team Demo Contact" to Petros (prepare_team.py resets both).
+# NOTHING is sent, NOTHING is suppressed (the Suppress button is only hovered). Person/contact lists hold real people of the prod copy:
+# every table row without "Team Demo" is blurred (armMask).
+# Address bar: every scene shows exactly one page; ids in window_path (person 9, contact 7413) are checked by record.mjs against prepare_team.py.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+
+meta:
+  slug: team-crm-persons
+  format: desktop
+  voice_langs: [en]
+  subtitle_langs: [el]
+  title:
+    en: "CRM: people and roles"
+    el: "CRM: πρόσωπα και ρόλοι"
+  url:
+    en: "pundo team · admin help"
+    el: "pundo team · βοήθεια admin"
+  next_video:
+    en: "More help: Help in the admin sidebar"
+    el: "Περισσότερη βοήθεια: «Βοήθεια» στο admin"
+  thumbnail_scene: roles
+  target_duration_s: 150
+  window_path:
+    en: "localhost:3500/admin/crm/persons"
+    el: "localhost:3500/admin/crm/persons"
+
+scenes:
+  - id: intro
+    branding: intro
+
+  - id: open
+    shot: 'CRM contact list (non-demo rows blurred): pointer over the table, then on the link "People" at the top'
+    chapter: { en: "Contacts and people" }
+    window_path: { en: "localhost:3500/admin/crm/contacts" }
+    callout: { en: "Admin · CRM" }
+    narration:
+      en: >-
+        Welcome back.
+        This short video adds the people part of the CRM.
+        A contact is a business contact, with channels and a state.
+        A person is one natural human, stored once, even when the same human appears in several contacts.
+        You reach the people through the link "People", at the top of the contact list.
+    subtitle:
+      el:
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το σύντομο βίντεο προσθέτει το κομμάτι των προσώπων στο CRM."
+        - "Μια επαφή είναι μια επαγγελματική επαφή, με κανάλια και κατάσταση."
+        - "Ένα πρόσωπο είναι ένας φυσικός άνθρωπος, που αποθηκεύεται μία φορά, ακόμη κι όταν ο ίδιος άνθρωπος εμφανίζεται σε περισσότερες επαφές."
+        - "Στα πρόσωπα φτάνετε από τον σύνδεσμο «Πρόσωπα», στο πάνω μέρος της λίστας επαφών."
+
+  - id: list
+    shot: 'people list (non-demo rows blurred): type "Team Demo Petros" into the search, Enter -> one row; pointer on the name'
+    chapter: { en: "Search first" }
+    window_path: { en: "localhost:3500/admin/crm/persons" }
+    callout: { en: "CRM · People" }
+    narration:
+      en: >-
+        This is the list of people.
+        It shows the number, the name, and the identifiers, which are e-mail addresses or phone numbers.
+        Always search first, so that you do not create a person twice.
+        Type at least three characters of the name, the e-mail address or the phone number, and press Enter.
+        Rows of real people are blurred here.
+        When you find the person, click the name to open it.
+    subtitle:
+      el:
+        - "Αυτή είναι η λίστα των προσώπων."
+        - "Δείχνει τον αριθμό, το όνομα και τα αναγνωριστικά, δηλαδή διευθύνσεις email ή αριθμούς τηλεφώνου."
+        - "Αναζητήστε πάντα πρώτα, ώστε να μη δημιουργήσετε το ίδιο πρόσωπο δύο φορές."
+        - "Πληκτρολογήστε τουλάχιστον τρεις χαρακτήρες από το όνομα, το email ή το τηλέφωνο και πατήστε Enter."
+        - "Οι γραμμές πραγματικών ανθρώπων είναι εδώ θολές."
+        - "Όταν βρείτε το πρόσωπο, πατήστε το όνομα για να το ανοίξετε."
+
+  - id: create
+    shot: 'new person form: name, e-mail typed (address skipped); click "Add person"'
+    chapter: { en: "Add a person" }
+    window_path: { en: "localhost:3500/admin/crm/persons/new" }
+    callout: { en: "CRM · New person" }
+    narration:
+      en: >-
+        To add a person, click "Add person" in the list.
+        Type the name, which is optional.
+        Then give at least one e-mail address or phone number, because the button stays off without one.
+        The address is optional, and we skip it here.
+        Click "Add person".
+        The person is saved, and the page of the new person opens.
+    subtitle:
+      el:
+        - "Για να προσθέσετε πρόσωπο, πατήστε «Προσθήκη προσώπου» στη λίστα."
+        - "Πληκτρολογήστε το όνομα, που είναι προαιρετικό."
+        - "Έπειτα δώστε τουλάχιστον μία διεύθυνση email ή έναν αριθμό τηλεφώνου, γιατί χωρίς αυτά το κουμπί μένει ανενεργό."
+        - "Η διεύθυνση είναι προαιρετική και την παραλείπουμε εδώ."
+        - "Πατήστε «Προσθήκη προσώπου»."
+        - "Το πρόσωπο αποθηκεύεται και ανοίγει η σελίδα του νέου προσώπου."
+
+  - id: roles
+    shot: 'page of the seeded person: identifiers, then the roles box: organisation ID, role "owner", "Add role", then "End role"'
+    chapter: { en: "Roles" }
+    window_path: { en: "localhost:3500/admin/crm/persons/9" }
+    callout: { en: "CRM · Roles" }
+    narration:
+      en: >-
+        Open a person to see the identifiers and the roles.
+        A role says what the person is at an organisation.
+        Type the ID of the organisation, then choose the role, for example "owner", and click "Add role".
+        A person can have several roles at several organisations.
+        When someone leaves, click "End role".
+        Today becomes the end date, and the role stays in the history.
+    subtitle:
+      el:
+        - "Ανοίξτε ένα πρόσωπο για να δείτε τα αναγνωριστικά και τους ρόλους."
+        - "Ένας ρόλος δείχνει τι είναι το πρόσωπο σε έναν οργανισμό."
+        - "Πληκτρολογήστε το ID του οργανισμού, έπειτα επιλέξτε τον ρόλο, για παράδειγμα «owner», και πατήστε «Προσθήκη ρόλου»."
+        - "Ένα πρόσωπο μπορεί να έχει πολλούς ρόλους σε πολλούς οργανισμούς."
+        - "Όταν κάποιος φεύγει, πατήστε «Λήξη ρόλου»."
+        - "Η σημερινή ημερομηνία γίνεται ημερομηνία λήξης και ο ρόλος μένει στο ιστορικό."
+
+  - id: link
+    shot: 'contact page of the demo contact: field "Person ID", type the id, "Link person" -> "Linked person"; pointer on "Suppress / Opt-out" (not clicked); sidebar Help'
+    chapter: { en: "Link a contact" }
+    window_path: { en: "localhost:3500/admin/crm/contacts/7413" }
+    callout: { en: "CRM · Link person" }
+    narration:
+      en: >-
+        Now back to a contact.
+        Under the actions you find the field "Person ID".
+        Type the ID of the person and click "Link person".
+        The contact now shows the linked person, with a link to it.
+        Be careful: link a contact only if you are sure it is the same human.
+        If you suppress a linked contact, the opt-out applies to the person and to every contact of that person.
+        That is all for people.
+        More help is on the Help page in the sidebar.
+        Thanks for watching.
+    subtitle:
+      el:
+        - "Τώρα πίσω σε μια επαφή."
+        - "Κάτω από τις ενέργειες βρίσκετε το πεδίο «ID προσώπου»."
+        - "Πληκτρολογήστε το ID του προσώπου και πατήστε «Σύνδεση προσώπου»."
+        - "Η επαφή δείχνει πλέον το συνδεδεμένο πρόσωπο, με σύνδεσμο προς αυτό."
+        - "Προσοχή: συνδέστε μια επαφή μόνο αν είστε βέβαιοι ότι είναι ο ίδιος άνθρωπος."
+        - "Αν αποκλείσετε μια συνδεδεμένη επαφή, το opt-out ισχύει για το πρόσωπο και για κάθε επαφή αυτού του προσώπου."
+        - "Αυτά ήταν όλα για τα πρόσωπα."
+        - "Περισσότερη βοήθεια υπάρχει στη σελίδα «Βοήθεια» της πλευρικής στήλης."
+        - "Ευχαριστούμε που παρακολουθήσατε."
+
+  - id: outro
+    branding: outro

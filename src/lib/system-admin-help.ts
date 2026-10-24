@@ -1,7 +1,7 @@
 // F8960 — Admin help topics (data only, no UI text). Texts live in system-admin-help-content.ts.
 // Server-side only: SOP content and video IDs must never be shipped to a client bundle (see guard test).
 
-export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'moderation', 'catalog-quality', 'api-keys'] as const
+export const HELP_TOPIC_IDS = ['admin-tour', 'claims-owners', 'shops', 'catalog-basics', 'products', 'translations', 'crm', 'crm-persons', 'moderation', 'catalog-quality', 'api-keys'] as const
 export type HelpTopicId = (typeof HELP_TOPIC_IDS)[number]
 
 export interface HelpAdminLink {
@@ -85,7 +85,14 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'moderation', number: '6', order: 8,
+    id: 'crm-persons', number: '5b', order: 8,
+    adminLinks: [
+      { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
+      { href: '/admin/crm/contacts', navKey: 'nav_crm' },
+    ],
+  },
+  {
+    id: 'moderation', number: '6', order: 9,
     videoId: 'AUA2FiK-F8Y', durationSec: 164,
     adminLinks: [
       { href: '/admin/reviews', navKey: 'nav_reviews' },
@@ -93,7 +100,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'catalog-quality', number: '7', order: 9,
+    id: 'catalog-quality', number: '7', order: 10,
     videoId: 'nQWqQ1xgvVI', durationSec: 173,
     adminLinks: [
       { href: '/admin/category-attribute-definitions', navKey: 'nav_cat_attr_defs' },
@@ -101,7 +108,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     ],
   },
   {
-    id: 'api-keys', number: '8', order: 10, noVideo: true,
+    id: 'api-keys', number: '8', order: 11, noVideo: true,
     adminLinks: [{ href: '/admin/api-keys', navKey: 'nav_api_keys' }],
   },
 ]

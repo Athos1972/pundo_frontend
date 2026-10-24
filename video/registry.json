@@ -98,6 +98,20 @@
     ]
   },
   {
+    "slug": "team-crm-persons",
+    "topic": "crm-persons",
+    "youtubeId": "",
+    "recordedAtCommit": "ad49434572b850b30872796f3bbf8c59cc44861d",
+    "recordedAt": "2026-10-24",
+    "touches": [
+      "src/app/(system-admin)/admin/(portal)/crm/persons",
+      "src/components/system-admin/crm/PersonForm.tsx",
+      "src/components/system-admin/crm/PersonEditForm.tsx",
+      "src/components/system-admin/crm/PersonRoleEditor.tsx",
+      "src/components/system-admin/crm/ContactPersonLink.tsx"
+    ]
+  },
+  {
     "slug": "team-moderation",
     "topic": "moderation",
     "youtubeId": "AUA2FiK-F8Y",

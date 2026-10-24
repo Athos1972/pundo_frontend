@@ -44,6 +44,11 @@ CRM video (team-crm): the video edits the demo contact "Team Demo Contact" (adds
     (exact display name + exact organisation name + source `manual`, with its channels/sources/interactions/messages and its
     organisation when nothing else hangs on it). The video never suppresses a contact (suppression cannot be undone) and never
     sends a message.
+CRM people video (team-crm-persons): the demo person "Team Demo Petros" (identifier e-mail petros.demo@pundo-e2e.io) is seeded once and
+    reset at the start of every run (no roles, not linked to any contact; its id stays stable so the address bar of the video can show it).
+    The video adds a role at "Team Demo Bakery", ends it, links the demo contact "Team Demo Contact" to Petros, and CREATES the person
+    "Team Demo Anna" (e-mail anna.demo@pundo-e2e.io, no address). prepare_team.py DELETES Anna again (exact display name + her exact
+    e-mail identifier; identifiers/roles cascade; contacts that point to her are unlinked by the foreign key). No suppression, no mail.
 Moderation video (team-moderation): synthetic review + social-link rule (marker "Team Demo", authors only @pundo-e2e.io):
     review by "Team Demo Reviewer" on the demo shop "Team Demo Bakery" (spam-like demo text), reported by a second demo customer
     (reporter@pundo-e2e.io) AND by the demo shop (shop-owner report), plus the audit entries "created" / "reported" / "reported".
@@ -124,6 +129,8 @@ CRM_ORG = "Team Demo Bakery"
 CRM_CONTACT = "Team Demo Contact"
 CRM_EMAIL = "contact" + DEMO_DOMAIN
 CRM_PHONE = "+35790000000"
+PERSON_SEED = {"display_name": "Team Demo Petros", "email": "petros" + DEMO_DOMAIN}            # seeded + reset by prepare_team.py
+NEW_PERSON = {"display_name": "Team Demo Anna", "email": "anna" + DEMO_DOMAIN}                   # created by the people video, removed again here
 NEW_CONTACT = {"display_name": "Team Demo Maria", "org": "Team Demo Cafe"}   # created by the CRM video, removed again here
 
 
@@ -454,6 +461,37 @@ def remove_created_demo_contact(cur) -> int:
     return len(rows)
 
 
+def remove_created_demo_person(cur) -> int:
+    """Delete the person the people video created (exact display name AND exact e-mail identifier). Identifiers and roles cascade."""
+    from ingestor.lib.crm.suppression import compute_suppression_key
+    cur.execute("select p.id from crm_person p join crm_person_identifier i on i.person_id=p.id "
+                "where p.display_name=%s and i.kind='email' and i.value_hmac=%s",
+                (NEW_PERSON["display_name"], compute_suppression_key(NEW_PERSON["email"])))
+    ids = [r[0] for r in cur.fetchall()]
+    for pid in ids:
+        cur.execute("update crm_contact set person_id=null where person_id=%s", (pid,))
+        cur.execute("delete from crm_person where id=%s", (pid,))
+    return len(ids)
+
+
+def upsert_demo_person(cur, contact_id: int, org_id: int) -> dict:
+    """Seed "Team Demo Petros" once (stable id), reset: no roles, no linked contact."""
+    from ingestor.lib.crm.suppression import compute_suppression_key
+    h = compute_suppression_key(PERSON_SEED["email"])
+    cur.execute("select person_id from crm_person_identifier where value_hmac=%s", (h,))
+    row = cur.fetchone()
+    if row:
+        person_id = row[0]
+    else:
+        cur.execute("insert into crm_person (display_name) values (%s) returning id", (PERSON_SEED["display_name"],))
+        person_id = cur.fetchone()[0]
+        cur.execute("insert into crm_person_identifier (person_id, kind, value_normalized, value_hmac) values (%s,'email',%s,%s)",
+                    (person_id, PERSON_SEED["email"], h))
+    cur.execute("delete from crm_person_org_role where person_id=%s", (person_id,))
+    cur.execute("update crm_contact set person_id=null where person_id=%s or id=%s", (person_id, contact_id))
+    return {"person_id": person_id, "org_id": org_id, "contact_id": contact_id}
+
+
 def main() -> None:
     url = db_url()
     admin = ensure_accounts()
@@ -463,6 +501,7 @@ def main() -> None:
         removed_item = remove_created_demo_item(cur)
         removed_brand = remove_created_demo_brand(cur)
         removed_contact = remove_created_demo_contact(cur)
+        removed_person = remove_created_demo_person(cur)
         removed_rule = remove_created_demo_rule(cur)
         shops = {k: upsert_shop(cur, s) for k, s in SHOPS.items()}
         owner = upsert_owner(cur, OWNER_EMAIL, "Team Demo Owner", "approved", shops["bakery"])
@@ -475,6 +514,7 @@ def main() -> None:
         service_item_id = upsert_demo_service(cur)
         removed_mappings = remove_created_demo_mappings(cur, service_item_id)
         crm = upsert_crm(cur, shops["bakery"])
+        person = upsert_demo_person(cur, crm["contact_id"], crm["org_id"])
         review = upsert_demo_review(cur, shops["bakery"], owner)
         out = {"shops": {k: {"id": shops[k], "slug": SHOPS[k]["slug"]} for k in shops}, "owner_id": owner, "claimant_id": claimant, "claimant2_id": claimant2,
                "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "item_ean": ITEM_EAN, "crm": crm, "marker": "Team Demo",
@@ -482,6 +522,7 @@ def main() -> None:
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
                "new_brand": {**NEW_BRAND, "removed_from_last_run": removed_brand},
                "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact},
+               "person": person, "new_person": {**NEW_PERSON, "removed_from_last_run": removed_person},
                "service_item_id": service_item_id,
                "new_attr_def": {**NEW_ATTR_DEF, "removed_from_last_run": removed_attr_def},
                "new_mapping": {"service_item_id": service_item_id, "removed_from_last_run": removed_mappings},

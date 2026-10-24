@@ -226,3 +226,24 @@ export class TestDataTracker {
     return report
   }
 }
+
+// ── Review-Foto-Moderation (F3700) ────────────────────────────────────────────
+
+/**
+ * Laesst EIN selbst angelegtes Review-Foto "ueberfaellig" werden: setzt `moderation_requested_at` in die Vergangenheit.
+ * Der Schutz `review_id` verhindert, dass je ein fremdes Foto der Prod-Kopie veraendert wird; geaendert wird nur die
+ * eine Zeile (`id` + `review_id`), nie ein Muster.
+ */
+export function ageReviewPhoto(photoId: number, reviewId: number, minutes: number): void {
+  const pid = Math.trunc(photoId)
+  const rid = Math.trunc(reviewId)
+  const min = Math.trunc(minutes)
+  if (!Number.isInteger(pid) || !Number.isInteger(rid) || !Number.isInteger(min) || min < 0) {
+    throw new Error('[e2e] ageReviewPhoto: ungueltige Argumente')
+  }
+  const changed = psql(
+    `with u as (update review_photos set moderation_requested_at = now() - interval '${min} minutes' ` +
+    `where id = ${pid} and review_id = ${rid} and moderation_task_id is not null returning id) select count(*) from u`,
+  )
+  if (changed !== '1') throw new Error(`[e2e] ageReviewPhoto: Foto ${pid} (Review ${rid}) nicht gefunden oder ohne Gateway-Auftrag`)
+}

@@ -695,6 +695,7 @@ const sysAdminTranslations = {
     crm_err_last_channel: 'Cannot remove the last channel — at least one must remain.',
     crm_err_duplicate_channel: 'This channel already exists for this contact.',
     crm_err_person_identifier_required: 'Enter at least one valid email address or phone number.',
+    crm_err_person_search_too_short: 'Enter at least 3 characters to search.',
     // Source labels (Stufe 1)
     crm_source_business_card: 'Business card',
     crm_source_manual: 'Direct contact',
@@ -1473,6 +1474,7 @@ const sysAdminTranslations = {
     crm_err_last_channel: 'Δεν είναι δυνατή η αφαίρεση του τελευταίου καναλιού — πρέπει να παραμείνει τουλάχιστον ένα.',
     crm_err_duplicate_channel: 'Αυτό το κανάλι υπάρχει ήδη για αυτή την επαφή.',
     crm_err_person_identifier_required: 'Εισαγάγετε τουλάχιστον ένα έγκυρο email ή αριθμό τηλεφώνου.',
+    crm_err_person_search_too_short: 'Εισαγάγετε τουλάχιστον 3 χαρακτήρες για αναζήτηση.',
     // Source labels (Stufe 1)
     crm_source_business_card: 'Επαγγελματική κάρτα',
     crm_source_manual: 'Άμεση επαφή',

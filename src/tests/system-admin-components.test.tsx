@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 
 // ─── Mock next/navigation ─────────────────────────────────────────────────────
 vi.mock('next/navigation', () => ({
@@ -511,6 +511,118 @@ describe('Combobox', () => {
     // Tab/other keys should NOT open the dropdown
     fireEvent.keyDown(container, { key: 'Tab' })
     expect(screen.queryByRole('listbox')).toBeNull()
+  })
+})
+
+describe('Combobox remote mode (F7600 org/person search)', () => {
+  const hit = (value: string, label: string) => ({ value, label })
+  const props = {
+    items: [],
+    value: '',
+    onChange: vi.fn(),
+    noResultsLabel: 'No results',
+    minQueryLength: 2,
+    minQueryLabel: 'Type at least 2 characters',
+    loadingLabel: 'Searching…',
+    errorLabel: 'Search failed',
+  }
+  async function typeAndWait(text: string, ms = 250) {
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: text } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(ms) })
+  }
+  beforeEach(() => { vi.useFakeTimers() })
+  afterEach(() => { vi.useRealTimers() })
+
+  it('does not call loadItems below the minimum length and shows the hint, also when opened empty', async () => {
+    const loadItems = vi.fn().mockResolvedValue([])
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByText('Type at least 2 characters')).toBeDefined()
+    await typeAndWait('a', 1000)
+    expect(loadItems).not.toHaveBeenCalled()
+    expect(screen.getByText('Type at least 2 characters')).toBeDefined()
+  })
+
+  it('debounces: calls loadItems once, 250 ms after the last keystroke', async () => {
+    const loadItems = vi.fn().mockResolvedValue([hit('1', 'Alpha')])
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('al', 100)
+    await typeAndWait('alp', 249)
+    expect(loadItems).not.toHaveBeenCalled()
+    await act(async () => { await vi.advanceTimersByTimeAsync(1) })
+    expect(loadItems).toHaveBeenCalledTimes(1)
+    expect(loadItems).toHaveBeenCalledWith('alp')
+    expect(screen.getByText('Alpha')).toBeDefined()
+  })
+
+  it('shows only the hits of the last input when answers arrive out of order (3-1-2)', async () => {
+    const resolvers: Record<string, (v: { value: string; label: string }[]) => void> = {}
+    const loadItems = vi.fn((q: string) => new Promise<{ value: string; label: string }[]>((res) => { resolvers[q] = res }))
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('ba')
+    await typeAndWait('bak')
+    await typeAndWait('bake')
+    expect(Object.keys(resolvers)).toEqual(['ba', 'bak', 'bake'])
+    await act(async () => { resolvers['bake']([hit('3', 'Bakery for Bake')]) })
+    await act(async () => { resolvers['ba']([hit('1', 'Bar for Ba')]) })
+    await act(async () => { resolvers['bak']([hit('2', 'Bank for Bak')]) })
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Bakery for Bake'])
+  })
+
+  it('shows the loading text instead of the hits of an older input while the answer is pending', async () => {
+    const loadItems = vi.fn().mockResolvedValueOnce([hit('1', 'Alpha')]).mockReturnValueOnce(new Promise(() => {}))
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('al')
+    expect(screen.getByText('Alpha')).toBeDefined()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'alp' } })
+    expect(screen.queryByText('Alpha')).toBeNull()
+    expect(screen.getByText('Searching…')).toBeDefined()
+  })
+
+  it('shows the error text (string) on rejection, not "No results", and searches again on the next input', async () => {
+    const loadItems = vi.fn().mockRejectedValueOnce(new Error('500')).mockResolvedValueOnce([hit('1', 'Alpha')])
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('al')
+    expect(screen.getByRole('alert').textContent).toBe('Search failed')
+    expect(screen.queryByText('No results')).toBeNull()
+    await typeAndWait('alp')
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByText('Alpha')).toBeDefined()
+  })
+
+  it('errorLabel may be a function of the error', async () => {
+    const loadItems = vi.fn().mockRejectedValue(new Error('403'))
+    render(<Combobox {...props} loadItems={loadItems} errorLabel={(e) => `failed: ${(e as Error).message}`} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('al')
+    expect(screen.getByRole('alert').textContent).toBe('failed: 403')
+  })
+
+  it('an empty answer shows "No results" (different from the error text)', async () => {
+    const loadItems = vi.fn().mockResolvedValue([])
+    render(<Combobox {...props} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await typeAndWait('zz')
+    expect(screen.getByText('No results')).toBeDefined()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('without the new props a rejection still shows an empty list (unchanged behaviour)', async () => {
+    const loadItems = vi.fn().mockRejectedValue(new Error('x'))
+    render(<Combobox items={[]} value="" onChange={vi.fn()} loadItems={loadItems} />)
+    fireEvent.click(screen.getByRole('button'))
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    expect(screen.getByText('No results')).toBeDefined()
+  })
+
+  it('searchLabel names the search field', () => {
+    render(<Combobox {...props} loadItems={vi.fn().mockResolvedValue([])} searchLabel="Organisation" />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByRole('textbox', { name: 'Organisation' })).toBeDefined()
   })
 })
 

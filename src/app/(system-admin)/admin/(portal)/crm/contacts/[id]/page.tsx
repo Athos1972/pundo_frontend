@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLangServer } from '@/lib/lang'
 import { tSysAdmin } from '@/lib/system-admin-translations'
-import { getCrmContact, getAdminMe } from '@/lib/system-admin-api'
+import { getCrmContact, getCrmPerson, getAdminMe } from '@/lib/system-admin-api'
 import { LifecycleBadge } from '@/components/system-admin/crm/LifecycleBadge'
 import { ChannelEditor } from '@/components/system-admin/crm/ChannelEditor'
 import { ContactEditForm } from '@/components/system-admin/crm/ContactEditForm'
@@ -47,6 +47,12 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
 
   const canWrite = me.role === 'superadmin' || me.permissions == null || me.permissions.includes('crm:contacts:write')
 
+  // Name of the linked person for "Linked person: <name>"; a failed lookup falls back to "#id" instead of breaking the page
+  let personName: string | null = null
+  if (contact.person_id) {
+    try { personName = (await getCrmPerson(contact.person_id)).display_name } catch { /* fallback #id */ }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
@@ -86,7 +92,7 @@ export default async function CrmContactDetailPage({ params }: PageProps) {
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
         <ContactDetailActions contact={contact} tr={tr} me={me} />
         {canWrite && <ContactEditForm contact={contact} tr={tr} />}
-        <ContactPersonLink contactId={contact.id} personId={contact.person_id ?? null} canWrite={canWrite} tr={tr} />
+        <ContactPersonLink contactId={contact.id} personId={contact.person_id ?? null} personName={personName} canWrite={canWrite} tr={tr} />
       </div>
 
       {/* Stufe 2: Business card images (only rendered when card_image_front_url is set) */}

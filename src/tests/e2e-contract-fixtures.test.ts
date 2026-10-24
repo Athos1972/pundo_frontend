@@ -59,6 +59,13 @@ describe('recorded social-link responses keep the shape the frontend reads', () 
     expect(typeof body.detail).toBe('string')
   })
 
+  it('admin org search too short is a 422 with the code the frontend maps (CRM_ERROR_KEYS)', async () => {
+    const { CRM_ERROR_KEYS } = await import('@/components/system-admin/crm/crmFetch')
+    const { status, body } = contract('admin-crm-orgs-search-too-short')
+    expect(status).toBe(422)
+    expect(Object.keys(CRM_ERROR_KEYS)).toContain(body.detail)
+  })
+
   it('every fixture file is used by a journey (no orphans)', () => {
     const used = readdirSync(join(__dirname, '..', '..', 'e2e', 'journeys'))
       .filter((f) => f.endsWith('.ts'))

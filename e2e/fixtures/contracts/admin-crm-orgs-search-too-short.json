@@ -1,0 +1,6 @@
+{
+  "status": 422,
+  "body": {
+    "detail": "org_search_too_short"
+  }
+}

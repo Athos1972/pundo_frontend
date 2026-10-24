@@ -33,7 +33,7 @@ export const CRM_ERROR_KEYS = {
   invalid_role_dates: 'crm_err_generic',
   person_identifier_required: 'crm_err_person_identifier_required',
   person_search_too_short: 'crm_err_person_search_too_short',
-  org_search_too_short: 'crm_err_person_search_too_short',
+  org_search_too_short: 'crm_err_org_search_too_short',
 } as const satisfies Record<string, keyof SysAdminTranslations>
 
 /** Statuses handled by status alone (the `detail` code does not change the message). */
@@ -190,4 +190,46 @@ export async function crmPut<T>(
   tr: SysAdminTranslations,
 ): Promise<CrmFetchResult<T>> {
   return crmRequest<T>('PUT', path, body, tr)
+}
+
+/** Failed search (no Toast: one per keystroke would be noise). `status` 0 = network error; `code` = 422 `detail` code if any. */
+export class CrmSearchError extends Error {
+  constructor(public status: number, public code?: string) {
+    super(`crm_search_${status}${code ? `_${code}` : ''}`)
+  }
+}
+
+/**
+ * GET /api/admin/<path> for the type-ahead searches. Errors are thrown as `CrmSearchError` and shown by the Combobox;
+ * 401 redirects to the login like `crmRequest`.
+ */
+export async function crmSearch<T>(path: string): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(`/api/admin/${path}`)
+  } catch {
+    throw new CrmSearchError(0)
+  }
+  if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = '/admin/login'
+    }
+    throw new CrmSearchError(401)
+  }
+  if (!res.ok) {
+    let code: string | undefined
+    if (res.status === 422) {
+      try {
+        const json = await res.json() as { detail?: unknown }
+        if (typeof json.detail === 'string') code = json.detail
+      } catch { /* not JSON */ }
+    }
+    throw new CrmSearchError(res.status, code)
+  }
+  try {
+    return await res.json() as T
+  } catch {
+    throw new CrmSearchError(res.status)
+  }
 }

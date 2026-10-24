@@ -80,6 +80,9 @@ export type SysAdminContracts = [
   // @ts-expect-error -- drift: social_links.*:type, social_links.*:notobject, social_links.*:notarray
   Contract<Assignable<Schemas['AdminBrandResponse'], SysAdmin.SysAdminBrand>>,
   Contract<Assignable<Schemas['AdminCategoryResponse'], SysAdmin.SysAdminCategory>>,
+  Contract<Assignable<Schemas['OrgSearchHit'], SysAdmin.CrmOrgSearchHit>>,
+  Contract<Assignable<Schemas['PersonOut'], SysAdmin.CrmPerson>>,
+  Contract<Assignable<Schemas['PersonRoleOut'], SysAdmin.CrmPersonRole>>,
   Contract<Assignable<Schemas['AdminShopOwnerResponse'], SysAdmin.SysAdminShopOwner>>,
   Contract<Assignable<Schemas['AdminOfferResponse'], SysAdmin.SysAdminOffer>>,
   Contract<Assignable<Schemas['AdminApiKeyResponse'], SysAdmin.SysAdminApiKey>>,

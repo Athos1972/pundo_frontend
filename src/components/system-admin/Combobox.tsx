@@ -23,7 +23,19 @@ interface ComboboxProps {
    * of filtering `items`. `items` then only has to contain the currently selected entry, so its label is shown.
    */
   loadItems?: (query: string) => Promise<ComboboxItem[]>
+  /** Remote mode: below this length (after trim) `loadItems` is not called; `minQueryLabel` is shown instead. */
+  minQueryLength?: number
+  minQueryLabel?: string
+  /** Remote mode: text while the answer for the current input is pending (instead of the hits of an older input). */
+  loadingLabel?: string
+  /** Remote mode: text when `loadItems` rejects (a function allows status-dependent texts). Without it a rejection shows an empty list. */
+  errorLabel?: string | ((error: unknown) => string)
+  /** aria-label of the search field inside the dropdown (otherwise only the placeholder names it). */
+  searchLabel?: string
 }
+
+/** Remote answer together with the input it belongs to, so a late answer is never shown for a newer input. */
+type RemoteState = { for: string; items: ComboboxItem[]; error?: undefined } | { for: string; items?: undefined; error: unknown }
 
 /**
  * Searchable select with priority sort:
@@ -57,6 +69,11 @@ export function Combobox({
   id: idProp,
   noResultsLabel = 'No results',
   loadItems,
+  minQueryLength,
+  minQueryLabel,
+  loadingLabel,
+  errorLabel,
+  searchLabel,
 }: ComboboxProps) {
   const generatedId = useId()
   const fieldId = idProp ?? generatedId
@@ -68,26 +85,41 @@ export function Combobox({
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const [remote, setRemote] = useState<ComboboxItem[] | null>(null)
+  const [remote, setRemote] = useState<RemoteState | null>(null)
   const [picked, setPicked] = useState<ComboboxItem | null>(null)
   const selected =
     items.find((i) => i.value === value) ??
-    remote?.find((i) => i.value === value) ??
+    remote?.items?.find((i) => i.value === value) ??
     (picked?.value === value ? picked : undefined)
 
   // Remote mode: debounced server search while the dropdown is open
   useEffect(() => {
     if (!loadItems || !open) return
+    const q = query.trim()
+    if (minQueryLength !== undefined && q.length < minQueryLength) return
     let cancelled = false
     const timer = setTimeout(() => {
-      loadItems(query.trim())
-        .then((res) => { if (!cancelled) setRemote(res) })
-        .catch(() => { if (!cancelled) setRemote([]) })
+      loadItems(q)
+        .then((res) => { if (!cancelled) setRemote({ for: q, items: res }) })
+        .catch((error: unknown) => { if (!cancelled) setRemote(errorLabel === undefined ? { for: q, items: [] } : { for: q, error }) })
     }, query ? 250 : 0)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [loadItems, open, query])
+  }, [loadItems, open, query, minQueryLength, errorLabel])
 
-  const filtered = loadItems ? (remote ?? []) : filterItems(items, query)
+  // Remote mode status row (instead of the list): too short, answer pending, or failed
+  const trimmed = query.trim()
+  let statusRow: { text: string; alert: boolean } | null = null
+  if (loadItems) {
+    if (minQueryLength !== undefined && trimmed.length < minQueryLength) {
+      statusRow = { text: minQueryLabel ?? noResultsLabel, alert: false }
+    } else if (loadingLabel !== undefined && remote?.for !== trimmed) {
+      statusRow = { text: loadingLabel, alert: false }
+    } else if (remote?.error !== undefined && errorLabel !== undefined) {
+      statusRow = { text: typeof errorLabel === 'function' ? errorLabel(remote.error) : errorLabel, alert: true }
+    }
+  }
+  const remoteItems = remote?.items
+  const filtered = loadItems ? (statusRow ? [] : (remoteItems ?? [])) : filterItems(items, query)
 
   // Close on click outside
   useEffect(() => {
@@ -175,6 +207,7 @@ export function Combobox({
               value={query}
               onChange={(e) => { setQuery(e.target.value); setActiveIndex(0) }}
               placeholder={placeholder}
+              aria-label={searchLabel}
               className="flex-1 text-sm px-2 py-1 focus:outline-none"
               autoComplete="off"
             />
@@ -192,7 +225,9 @@ export function Combobox({
 
           {/* List */}
           <ul ref={listRef} className="max-h-56 overflow-y-auto py-1" role="listbox">
-            {filtered.length === 0 ? (
+            {statusRow ? (
+              <li role={statusRow.alert ? 'alert' : 'status'} className={`px-3 py-2 text-sm italic ${statusRow.alert ? 'text-red-700' : 'text-gray-400'}`}>{statusRow.text}</li>
+            ) : filtered.length === 0 ? (
               <li className="px-3 py-2 text-sm text-gray-400 italic">{noResultsLabel}</li>
             ) : (
               filtered.map((item, idx) => (

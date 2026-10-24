@@ -12,6 +12,7 @@ touches-modules:
   - src/components/shop-admin/OfferList.tsx
   - src/app/(system-admin)/admin/(portal)/item-domain-mappings/**
   - src/lib/system-admin-api.ts
+  - src/components/system-admin/Combobox.tsx
   - src/types/shop-admin.ts
 last-run: 2026-05-15T05:30:00Z
 last-result: PASS

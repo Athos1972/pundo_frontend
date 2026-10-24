@@ -204,3 +204,23 @@ describe('help content (EN + EL)', () => {
     expect(helpLang('ar')).toBe('en')
   })
 })
+
+describe('help topic crm-persons describes the search (F7600 org/person search)', () => {
+  const steps = (lang: 'en' | 'el') => HELP_CONTENT['crm-persons'][lang].steps.join('\n')
+
+  it('EN: no ID typing, search by at least 2 / 3 characters', () => {
+    const text = steps('en')
+    expect(text).not.toMatch(/ID of the organisation|person ID/)
+    expect(text).toContain('type at least 2 characters')
+    const link = HELP_CONTENT['crm-persons'].en.steps.find((x) => x.includes('Link person'))
+    expect(link).toContain('type at least 3 characters')
+  })
+
+  it('EL: no ID typing, search by at least 2 / 3 characters', () => {
+    const text = steps('el')
+    expect(text).not.toMatch(/ID του οργανισμού|ID του προσώπου/)
+    expect(text).toContain('τουλάχιστον 2 χαρακτήρες')
+    const link = HELP_CONTENT['crm-persons'].el.steps.find((x) => x.includes('Σύνδεση προσώπου»'))
+    expect(link).toContain('τουλάχιστον 3 χαρακτήρες')
+  })
+})

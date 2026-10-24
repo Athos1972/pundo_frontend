@@ -43,6 +43,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 |-------------------|--------------|-------------|-----------------|
 | **Produktion**    | **3000**     | **8000**    | postgres `pundo` |
 | **Test / E2E**    | **3500**     | **8500**    | postgres `pundo_test` |
+| **Worktree-Slot N** (1–4, F8970) | **3510+N** (3511–3514) | **8510+N** (8511–8514), Gateway 8611–8614, Mail-Sink 1026–1029 | postgres `pundo_wt_sN` |
 
 **Regeln:**
 
@@ -66,6 +67,26 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Test-Instanzen (Port **3500** / **8500**) dürfen automatisch neu gestartet werden — kein Zögern
 - Produktiv-Instanzen (Port **3000** / **8000**) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung
+**Hauptumgebung vs. Worktree-Slots (F8970 Worktree-Umgebungen):** Die Hauptumgebung bleibt 3500/8500 (Gateway 8600) mit `pundo_test`. Worktree-Slots haben eigene Ports und eine eigene Datenbank `pundo_wt_sN` (nie `pundo_test`, nie `pundo`). 3000/8000/8100 bleiben tabu. Ein Slot wird **ausschließlich** mit `scripts/worktree-env` (Backend-Repo) angelegt und entfernt; fremde Prozesse auf Slot-Ports beendet der Controller nicht.
+
+**Datenbanken und Migrationen (PFLICHT):**
+- Migrationen **nie** aus Entwürfen oder unveröffentlichten Branches auf die gemeinsame `pundo_test` anwenden (Wettlauf 2026-10-22/23 mit `f3900ops02` und `f7600s3p01`). Dafür einen Worktree-Slot nutzen.
+- `pundo_test` nur manuell über `sync_prod_to_test.sh` auffrischen; keine Fremdschlüssel-Waisen hinterlassen (Prodcopy-Slots tolerieren sie, `pundo_test` soll sauber sein).
+- Push mit neuer Migration: Restore-Point-Bestätigung von prod nötig, technisch erzwungen durch den Gate-Schritt `restore-point-ack`.
+
+**Worktrees (F8970):**
+- Verpflichtend bei größeren Änderungen (Migration, Vertrags-Snapshot oder mehr als zwölf Dateien; Entwurf `scripts/push_mode.py`, an den Hooks noch nicht aktiv) und bei jeder Migration. Bugfixes weiter direkt im Main-Arbeitsbaum.
+- Push-Gate einer größeren Änderung läuft aus einem frischen Worktree: `.venv`/`.env` verlinken, Frontend mit echtem `npm ci`, `MAIL_SINK_DIR` auf den laufenden Sink; Backend-Gate mit `PUNDO_FRONTEND_REPO`, Frontend-Gate mit `BACKEND_REPO`/`PUNDO_BACKEND_DIR` auf die zusammengehörigen Worktrees. Parken fremder Dateien per `git stash` entfällt dadurch.
+- Selbstbedienung (aus dem Backend-Worktree):
+  ```bash
+  scripts/worktree-env new --slot 2 --backend "$PWD" --frontend <frontend-worktree> --data-mode prodcopy --restore-prodcopy
+  scripts/worktree-env start --slot 2 backend
+  # Frontend: source ~/.pundo/worktree-env/slots/slot-2/frontend.env && npx playwright test --project=smoke
+  scripts/worktree-env gate --slot 2 full
+  scripts/worktree-env stop --slot 2 all && scripts/worktree-env destroy --slot 2
+  scripts/worktree-env doctor --all --repair   # bei Resten
+  ```
+- Offene Punkte: `worktree-env verify-push`/`verify-pair` stellt im sauberen Worktree keine `.env` bereit (Nachprüfung steht aus, Hooks bleiben bis dahin im alten Modus); Test `test_generate_category_synonyms` ist im vollen Prodcopy-Lauf reihenfolgeabhängig (einzeln grün).
 <!-- END:port-convention -->
 
 <!-- BEGIN:test-gates -->

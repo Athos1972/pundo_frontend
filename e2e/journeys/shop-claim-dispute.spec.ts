@@ -439,7 +439,8 @@ test.describe.serial('shop-claim-dispute', () => {
       expect(v.detail[it.slug], `Produktseite ${it.slug}`).not.toContain(shopSlug)
       expect(v.search[it.slug], `Suche ${it.slug}`).not.toContain(shopSlug)
     }
-    const list = await pub<{ items: Array<{ slug: string }> }>('/shops', { q: 'Taverne', lat: LAT, lng: LNG })
+    // Run-unique name: the generic word 'Taverne' matches ~185 shops in pundo_test and pushes this one off the first page.
+    const list = await pub<{ items: Array<{ slug: string }> }>('/shops', { q: SHOP_NAME, lat: LAT, lng: LNG })
     expect(list.items.map((s) => s.slug)).toContain(shopSlug)
     expect(psql(`select count(*) from offers o join shop_listings l on l.id=o.shop_listing_id where l.shop_id=${shopId} and o.archived=false`), 'in der DB nichts geloescht/archiviert').toBe('2')
 

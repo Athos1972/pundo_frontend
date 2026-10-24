@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonRoleEditor } from '@/components/system-admin/crm/PersonRoleEditor'
+import { PersonEditForm } from '@/components/system-admin/crm/PersonEditForm'
 import { ContactPersonLink } from '@/components/system-admin/crm/ContactPersonLink'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import type { CrmPerson } from '@/types/system-admin'
@@ -36,6 +37,14 @@ describe('CRM person UI', () => {
     fireEvent.change(screen.getByLabelText('Person ID'), { target: { value: '17' } })
     fireEvent.click(screen.getByRole('button', { name: 'Link person' }))
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/admin/crm/persons/17/contacts/3', expect.objectContaining({ method: 'POST' })))
+    expect(refresh).toHaveBeenCalled()
+  })
+
+  it('removes an address through the explicit null PATCH contract', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 17, address_id: null }))))
+    render(<PersonEditForm person={{ ...person, address_id: 4, address: { id: 4, address_line1: 'Main 1', address_line2: null, city: 'Nicosia', state: null, postal_code: '1010', country_code: 'CY', lat: null, lon: null } }} tr={tr} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Remove address' }))
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/admin/crm/persons/17', expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ address: null }) })))
     expect(refresh).toHaveBeenCalled()
   })
 })

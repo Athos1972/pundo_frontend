@@ -28,6 +28,7 @@
    "person_identifier_exists"
   ],
   "422": [
+   "person_search_too_short",
    "suppressed"
   ]
  },

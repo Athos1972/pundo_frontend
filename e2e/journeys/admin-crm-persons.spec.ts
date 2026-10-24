@@ -42,7 +42,7 @@ test.describe.serial('F7600 CRM Stufe 3 — people and roles', () => {
       await page.locator('#person-org').fill(String(ctx.orgIds[index]))
       await page.locator('#person-role').selectOption(role)
       await page.getByRole('button', { name: 'Add role' }).click()
-      await expect(page.getByText(new RegExp(`${role} · Org #${ctx.orgIds[index]}`))).toBeVisible()
+      await expect(page.getByText(new RegExp(`${role} · Organisation #${ctx.orgIds[index]}`))).toBeVisible()
     }
 
     await page.goto(`${BASE_URL}/admin/crm/contacts/${ctx.contactIds[0]}`)

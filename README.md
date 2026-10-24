@@ -9,10 +9,10 @@ Gebaut mit **Next.js 16 App Router**, **React 19**, **Tailwind CSS v4** und **Le
 
 | Bereich | Technologie |
 |---|---|
-| Framework | Next.js 16.3 (App Router, RSC-first) |
+| Framework | Next.js 16.4 (App Router, RSC-first) |
 | UI | React 19, Tailwind CSS v4 |
 | Karten | Leaflet 1.9 + react-leaflet 5 |
-| Sprache | TypeScript 6 (strict) |
+| Sprache | TypeScript (strict): Typprüfung mit TypeScript 7 (`@typescript/native`), ESLint nutzt TypeScript 6 |
 | Fonts | Space Grotesk (Display), DM Sans (Body) |
 | Deployment | Docker / Standalone-Build |
 
@@ -20,7 +20,7 @@ Gebaut mit **Next.js 16 App Router**, **React 19**, **Tailwind CSS v4** und **Le
 
 ## Voraussetzungen
 
-- Node.js ≥ 20
+- Node.js ≥ 20 (das Docker-Image und Produktion laufen auf Node 24)
 - Ein laufendes Pundo-Backend (API) — Standard: `http://localhost:8500` (Test-Backend)
 
 ---
@@ -260,7 +260,7 @@ docker run -p 3000:3000 \
   pundo-frontend
 ```
 
-Das Image nutzt einen **Multi-Stage-Build** (Builder → Runner auf `node:20-alpine`) mit `output: 'standalone'` — nur die nötigsten Dateien landen im finalen Image.
+Das Image nutzt einen **Multi-Stage-Build** (Builder → Runner auf `node:24-alpine`) mit `output: 'standalone'` — nur die nötigsten Dateien landen im finalen Image.
 
 ---
 

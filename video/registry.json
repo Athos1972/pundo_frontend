@@ -101,14 +101,16 @@
     "slug": "team-crm-persons",
     "topic": "crm-persons",
     "youtubeId": "",
-    "recordedAtCommit": "ad49434572b850b30872796f3bbf8c59cc44861d",
+    "recordedAtCommit": "370e93c33863b6a8cbf6fc72144d576a878f0fe2",
     "recordedAt": "2026-10-24",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/crm/persons",
       "src/components/system-admin/crm/PersonForm.tsx",
       "src/components/system-admin/crm/PersonEditForm.tsx",
       "src/components/system-admin/crm/PersonRoleEditor.tsx",
-      "src/components/system-admin/crm/ContactPersonLink.tsx"
+      "src/components/system-admin/crm/ContactPersonLink.tsx",
+      "src/components/system-admin/Combobox.tsx",
+      "src/components/system-admin/crm/crmSearch.ts"
     ]
   },
   {

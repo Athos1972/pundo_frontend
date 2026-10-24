@@ -99,7 +99,7 @@ scenes:
         - "Το πρόσωπο αποθηκεύεται και ανοίγει η σελίδα του νέου προσώπου."
 
   - id: roles
-    shot: 'page of the seeded person: identifiers, then the roles box: organisation ID, role "owner", "Add role", then "End role"'
+    shot: 'page of the seeded person: identifiers, then the roles box: search the organisation by name ("Team Demo"), pick it, role "owner", "Add role", then "End role"'
     chapter: { en: "Roles" }
     window_path: { en: "localhost:3500/admin/crm/persons/9" }
     callout: { en: "CRM · Roles" }
@@ -107,7 +107,10 @@ scenes:
       en: >-
         Open a person to see the identifiers and the roles.
         A role says what the person is at an organisation.
-        Type the ID of the organisation, then choose the role, for example "owner", and click "Add role".
+        Click the field "Organisation" and type a part of the name, for example "Team Demo".
+        The list shows the matching organisations, with name, city and category.
+        Click the right one, then choose the role, for example "owner", and click "Add role".
+        The role list now shows the name of the organisation.
         A person can have several roles at several organisations.
         When someone leaves, click "End role".
         Today becomes the end date, and the role stays in the history.
@@ -115,22 +118,26 @@ scenes:
       el:
         - "Ανοίξτε ένα πρόσωπο για να δείτε τα αναγνωριστικά και τους ρόλους."
         - "Ένας ρόλος δείχνει τι είναι το πρόσωπο σε έναν οργανισμό."
-        - "Πληκτρολογήστε το ID του οργανισμού, έπειτα επιλέξτε τον ρόλο, για παράδειγμα «owner», και πατήστε «Προσθήκη ρόλου»."
+        - "Πατήστε το πεδίο «Οργανισμός» και πληκτρολογήστε μέρος του ονόματος, για παράδειγμα «Team Demo»."
+        - "Η λίστα δείχνει τους οργανισμούς που ταιριάζουν, με όνομα, πόλη και κατηγορία."
+        - "Πατήστε τον σωστό, έπειτα επιλέξτε τον ρόλο, για παράδειγμα «owner», και πατήστε «Προσθήκη ρόλου»."
+        - "Η λίστα ρόλων δείχνει πλέον το όνομα του οργανισμού."
         - "Ένα πρόσωπο μπορεί να έχει πολλούς ρόλους σε πολλούς οργανισμούς."
         - "Όταν κάποιος φεύγει, πατήστε «Λήξη ρόλου»."
         - "Η σημερινή ημερομηνία γίνεται ημερομηνία λήξης και ο ρόλος μένει στο ιστορικό."
 
   - id: link
-    shot: 'contact page of the demo contact: field "Person ID", type the id, "Link person" -> "Linked person"; pointer on "Suppress / Opt-out" (not clicked); sidebar Help'
+    shot: 'contact page of the demo contact: field "Person", search "Team Demo", pick the person, "Link person" -> "Linked person: <name>"; pointer on "Suppress / Opt-out" (not clicked); sidebar Help'
     chapter: { en: "Link a contact" }
     window_path: { en: "localhost:3500/admin/crm/contacts/7413" }
     callout: { en: "CRM · Link person" }
     narration:
       en: >-
         Now back to a contact.
-        Under the actions you find the field "Person ID".
-        Type the ID of the person and click "Link person".
-        The contact now shows the linked person, with a link to it.
+        Under the actions you find the field "Person".
+        Type a part of the name, the e-mail address or the phone number of the person, for example "Team Demo".
+        Click the person in the list, and click "Link person".
+        The contact now shows the linked person, with the name and a link to it.
         Be careful: link a contact only if you are sure it is the same human.
         If you suppress a linked contact, the opt-out applies to the person and to every contact of that person.
         That is all for people.
@@ -139,9 +146,10 @@ scenes:
     subtitle:
       el:
         - "Τώρα πίσω σε μια επαφή."
-        - "Κάτω από τις ενέργειες βρίσκετε το πεδίο «ID προσώπου»."
-        - "Πληκτρολογήστε το ID του προσώπου και πατήστε «Σύνδεση προσώπου»."
-        - "Η επαφή δείχνει πλέον το συνδεδεμένο πρόσωπο, με σύνδεσμο προς αυτό."
+        - "Κάτω από τις ενέργειες βρίσκετε το πεδίο «Πρόσωπο»."
+        - "Πληκτρολογήστε μέρος του ονόματος, το email ή το τηλέφωνο του προσώπου, για παράδειγμα «Team Demo»."
+        - "Πατήστε το πρόσωπο στη λίστα και πατήστε «Σύνδεση προσώπου»."
+        - "Η επαφή δείχνει πλέον το συνδεδεμένο πρόσωπο, με το όνομα και σύνδεσμο προς αυτό."
         - "Προσοχή: συνδέστε μια επαφή μόνο αν είστε βέβαιοι ότι είναι ο ίδιος άνθρωπος."
         - "Αν αποκλείσετε μια συνδεδεμένη επαφή, το opt-out ισχύει για το πρόσωπο και για κάθε επαφή αυτού του προσώπου."
         - "Αυτά ήταν όλα για τα πρόσωπα."

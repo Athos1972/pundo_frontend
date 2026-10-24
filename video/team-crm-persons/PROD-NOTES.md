@@ -1,20 +1,20 @@
-# team-crm-persons: Produktionsnotizen (Stand 2026-10-24)
+# team-crm-persons: Produktionsnotizen (Stand 2026-10-24, nach der Namenssuche)
 
 Team-Video 5b „CRM: people and roles“ (Feature „Team-SOPs & Admin-Hilfe“, Thema `crm-persons`). Ergänzt das CRM-Video (Kontakte, Outreach, Opt-out, Sicherheit) um Personenverwaltung (CRM Stufe 3). EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, noch nicht hochgeladen.** Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht gegengelesen).
 
 ## Ergebnis
 | Größe | Wert |
 |---|---|
-| Dateien | `out/team-crm-persons.en.mp4` (1920×1080, 30 fps, 8,9 MB), `out/upload.en.mp4` (4,9 MB, libx264 crf 27), `.en.srt` (28 Cues), `.el.srt` (39 Cues), `thumbnail.en.png` (Szene „roles“) |
-| Dauer | 147,3 s (2:27) |
+| Dateien | `out/team-crm-persons.en.mp4` (1920×1080, 30 fps, ca. 9 MB), `out/upload.en.mp4` (5,5 MB, libx264 crf 27), `.en.srt` (32 Cues), `.el.srt` (46 Cues), `thumbnail.en.png` (Szene „roles“) |
+| Dauer | 167,4 s (2:47) |
 | verify_output.py | OK |
-| Kapitel | 0:00 Contacts and people · 0:28 Search first · 0:55 Add a person · 1:17 Roles · 1:44 Link a contact |
+| Kapitel | 0:00 Contacts and people · 0:28 Search first · 0:55 Add a person · 1:17 Roles · 1:57 Link a contact |
 
 ## Bauen
 `npm run dev:test` (:3500), Backend :8500, dann `video/build.sh team-crm-persons en [--rerecord]`; danach Dev-Server beenden. Kein Gate/E2E parallel. `prepare_team.py` läuft vor der Aufnahme selbst (nur pundo_test).
 
 ## Was das Video tut / nie tut
-- Tut (nur pundo_test): Person „Team Demo Anna“ (E-Mail `anna@pundo-e2e.io`, ohne Adresse) anlegen (POST persons); Rolle „owner“ bei „Team Demo Bakery“ an die Demo-Person „Team Demo Petros“ hängen (POST roles) und beenden (POST roles/<id>/end); Demo-Kontakt „Team Demo Contact“ mit Petros verknüpfen (POST persons/<id>/contacts/<id>). Am Ende muss die Liste der CRM-Schreibaufrufe genau diese vier sein (im Lauf bestätigt).
+- Tut (nur pundo_test): Person „Team Demo Anna“ (E-Mail `anna@pundo-e2e.io`, ohne Adresse) anlegen (POST persons); Rolle „owner“ bei „Team Demo Bakery“ (Organisation per Namenssuche „Team Demo“ gewählt, nicht per ID) an die Demo-Person „Team Demo Petros“ hängen (POST roles) und beenden (POST roles/<id>/end); Demo-Kontakt „Team Demo Contact“ per Personensuche „Team Demo“ mit Petros verknüpfen (POST persons/<id>/contacts/<id>). Die Aufnahme bricht ab, wenn die Suchtreffer eine Organisation/Person ohne „Team Demo“ enthalten (Datenschutz). Am Ende muss die Liste der CRM-Schreibaufrufe genau diese vier sein (im Lauf bestätigt).
 - Tut nie: „Suppress / Opt-out“ klicken (nur überfahren; Opt-out wirkt auf Person und alle verknüpften Kontakte und ist nicht umkehrbar), Mails senden, „Confirm business“, Sicherheitseinstellungen ändern. Schutz: `fetch`-Wrapper verwirft Schreibaufrufe auf `outreach/send`, `suppress`, `confirm-business`, `crm/config`.
 
 ## Testdaten (`prepare_team.py` erweitert)

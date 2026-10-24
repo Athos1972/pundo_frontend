@@ -37,6 +37,9 @@ export default async function CrmContactsPage({ searchParams }: PageProps) {
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-gray-900">{tr.crm_title}</h1>
         <div className="flex items-center gap-3">
+          <Link href="/admin/crm/persons" className="text-sm text-gray-500 hover:text-gray-700">
+            {tr.crm_persons_title}
+          </Link>
           <Link href="/admin/crm/settings" className="text-sm text-gray-500 hover:text-gray-700">
             {tr.crm_safety_link}
           </Link>

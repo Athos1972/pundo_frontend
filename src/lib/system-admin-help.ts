@@ -9,7 +9,7 @@ export interface HelpAdminLink {
   href: `/admin/${string}`
   navKey:
     | 'nav_dashboard' | 'nav_claims' | 'nav_shop_owners' | 'nav_shops' | 'nav_shop_types'
-    | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings'
+    | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings' | 'crm_persons_title'
     | 'nav_reviews' | 'nav_social_link_rules' | 'nav_cat_attr_defs' | 'nav_item_domain_mappings' | 'nav_api_keys'
 }
 
@@ -80,6 +80,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     videoId: '0gdPz5DOLsk', durationSec: 226,
     adminLinks: [
       { href: '/admin/crm/contacts', navKey: 'nav_crm' },
+      { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
       { href: '/admin/crm/settings', navKey: 'help_link_crm_settings' },
     ],
   },

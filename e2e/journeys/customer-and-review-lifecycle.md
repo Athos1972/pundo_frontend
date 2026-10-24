@@ -67,3 +67,6 @@ PHASE 3 — Admin Moderation
 **Nicht mehr Teil dieser Journey (Zuordnung in `03-implementation.md`):** E-Mail-Verify per Admin-Bypass (Schritt 3 alt; @pundo.com ist auto-verifiziert, der OTP-Fluss ist Backend-pytest), Spotted (Schritt 9 alt; seit dem Umbau Foto-Upload mit KI-Erkennung, braucht Gateway/LLM), Admin-„Approve" (Schritt 11 alt; Reviews sind sofort sichtbar, moderiert wird per invalidate/restore) und der API-Key-Zyklus (Schritt 12 alt; `shop-admin-e2e.spec.ts` „API Key anlegen/löschen").
 
 **Reporting-Anforderungen:** (wie Journey 1)
+
+
+**Geplante Erweiterung (F6110 Betroffenenrechte, Spec 2026-10-24-betroffenenrechte, bestätigt von Bernhard 2026-10-24):** Nach der Konto-Löschung zusätzlich prüfen: Datenschutzfall geschlossen mit Ergebnis je Kategorie, Abschlussmail mit behaltenen Kategorien und Grund im Mail-Sink (AC15 Kunden-Löschung vollständig, AC16 Abschlussmail nennt Ausnahmen), Review öffentlich nicht mehr sichtbar. Die Tiefenprüfung je Kategorie macht `privacy-erasure-cross-role`.

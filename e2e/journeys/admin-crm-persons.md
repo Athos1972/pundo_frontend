@@ -27,3 +27,6 @@ Erzeugt zwei isolierte Testorganisationen, legt über die System-Admin-UI eine
 Person an, setzt Rollen bei beiden Organisationen, verknüpft einen Contact und
 beendet anschließend eine Rolle. Die Journey verwendet ausschließlich die
 Testports 3500/8500 und setzt die Testdatenbank nicht zurück.
+
+
+**Geplante Erweiterung (F6110 Betroffenenrechte, Spec 2026-10-24-betroffenenrechte, bestätigt von Bernhard 2026-10-24):** Das Löschen einer Person läuft über den gemeinsamen Lösch-Orchestrator und legt einen Datenschutzfall an; das sichtbare Ergebnis in der CRM-Ansicht bleibt wie bisher.

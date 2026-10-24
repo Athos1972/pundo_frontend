@@ -63,6 +63,11 @@
 | [shop-claim-self-service](shop-claim-self-service.md) | Shop-Claim per Self-Service (Domain-/Code-Nachweis), Admin-Entscheid, Superseded (F5970) | implemented | P1 | PASS (12/12, 2026-10-18) |
 | [shop-claim-dispute](shop-claim-dispute.md) | Shop-Claim Dispute: Dokument, Rückruf, Owner-Wechsel, Sperre, Angebote zu prüfen, assign-owner, Matching-Tab (F5970) | implemented | P1 | PASS (14/14, 2026-10-18) |
 | [contact-form](contact-form.md) | Kontaktformular senden (6 Sprachen), Captcha-Fehler, Rate-Limit (B6220-003) | implemented | P2 | PASS (10/10 dev 3500 + 10/10 Standalone-Build, 2026-10-13) |
+| [privacy-request-guest-to-admin](privacy-request-guest-to-admin.md) | Datenschutzanfrage ohne Konto: Formular, Bestätigung, Admin-Fall, Export-Download, Negativauskunft (F6110 Betroffenenrechte) | approved | P1 | — |
+| [privacy-self-service-export](privacy-self-service-export.md) | Selbstbedienung Datenkopie Kunde und Shop-Besitzer, Fremdzugriff gesperrt, Ablauf (F6110 Betroffenenrechte) | approved | P1 | — |
+| [privacy-erasure-cross-role](privacy-erasure-cross-role.md) | Löschung über alle Rollen mit Vorschau, Abschlussmail und Wirkung je Kategorie (F6110 Betroffenenrechte) | approved | P1 | — |
+| [privacy-admin-case-handling](privacy-admin-case-handling.md) | Admin-Fallbearbeitung: E-Mail-Eingang, Fristen, Alarm, Verlängerung, Ablehnung, Berichtigung, Rollen, Kennzahlen (F6110 Betroffenenrechte) | approved | P1 | — |
+| [privacy-restriction-and-objection](privacy-restriction-and-objection.md) | Einschränkung und Widerspruch wirken auf Outreach, Benachrichtigung und Retention (F6110 Betroffenenrechte) | approved | P1 | — |
 
 ## Smoketest Coverage
 

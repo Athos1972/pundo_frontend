@@ -51,3 +51,6 @@ Opt-out-Basis-URL auf `http://localhost:3500`).
 |---|---|---|
 | AC1 | Mail zugestellt | Betreff wie gerendert, From enthaelt care@pundo.cy, Text- und HTML-Teil vorhanden, `List-Unsubscribe` zeigt auf das Test-Frontend, jede Bild-URL absolut (https) und liefert per HEAD 200 mit `image/*` |
 | AC2 | Opt-out wirkt | Link oeffnen, Button bestaetigen, Bestaetigungsbox sichtbar, `crm_contact.lifecycle_state = HARD_OPTOUT`, Interaction `suppression` vorhanden |
+
+
+**Geplante Erweiterung (F6110 Betroffenenrechte, Spec 2026-10-24-betroffenenrechte, bestätigt von Bernhard 2026-10-24):** Die Opt-out-Seite verlinkt auf das Datenschutzformular; die Suppression bleibt unverändert und wird vom Widerspruchspfad in `privacy-restriction-and-objection` mitgenutzt.

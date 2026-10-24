@@ -63,3 +63,6 @@ last-result: PASS
 - Cleanup (Reaktivierung) ist zwingend — sonst ist `e2e-owner@pundo-e2e.io` für alle nachfolgenden Shop-Owner-Tests unbrauchbar
 - Customer-Sicht (Schritt 11) kann durch Caching verzögert sein — kurzes Wait oder Retry-Assert
 - Backend-Prerequisite: `POST /api/v1/shop-owner/shop/deactivate` muss implementiert sein
+
+
+**Geplante Erweiterung (F6110 Betroffenenrechte, Spec 2026-10-24-betroffenenrechte, bestätigt von Bernhard 2026-10-24):** Die Deaktivierungsmail im Mail-Sink nennt die Datenschutzadresse der Marke und den Link zum Datenschutzformular, nicht mehr support@pundo.cy (AC34 Adressen angeglichen).

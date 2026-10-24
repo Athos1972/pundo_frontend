@@ -61,7 +61,31 @@ describe('privacy policy: shop-claim section', () => {
     expect(el!.querySelector('h2')!.textContent).toBe('Shop-Übernahme und Nachweisdokumente')
   })
 
-  it('other sections have no id attribute', () => {
-    expect(legalContent.privacy.en.sections.filter((s) => s.id).map((s) => s.id)).toEqual(['shop-claim'])
+  it('only the known sections carry an id attribute', () => {
+    expect(legalContent.privacy.en.sections.filter((s) => s.id).map((s) => s.id)).toEqual(['levels-credits', 'evidence-archive', 'shop-claim'])
+  })
+})
+
+// F3900 K4c: privacy policy sections for levels/credits and the evidence archive in all 6 languages
+describe('privacy policy: levels/credits and evidence archive sections', () => {
+  it.each(LANGS)('%s has both sections with substantial text, in the same order', (lang) => {
+    const ids = legalContent.privacy[lang].sections.filter((s) => s.id).map((s) => s.id)
+    expect(ids).toEqual(['levels-credits', 'evidence-archive', 'shop-claim'])
+    for (const id of ['levels-credits', 'evidence-archive']) {
+      expect(legalContent.privacy[lang].sections.find((s) => s.id === id)!.body.length).toBeGreaterThan(600)
+    }
+  })
+
+  it.each(LANGS)('%s archive section names the 3 year period, the contact and no apostrophes break the text', (lang) => {
+    const body = legalContent.privacy[lang].sections.find((s) => s.id === 'evidence-archive')!.body
+    expect(body).toMatch(/\b3\b/)
+    expect(body).toContain('info@pundo.cy')
+  })
+
+  it.each(LANGS.filter((l) => l !== 'en'))('%s sections are translated, not copied from English', (lang) => {
+    for (const id of ['levels-credits', 'evidence-archive']) {
+      const en = legalContent.privacy.en.sections.find((s) => s.id === id)!.body
+      expect(legalContent.privacy[lang].sections.find((s) => s.id === id)!.body).not.toBe(en)
+    }
   })
 })

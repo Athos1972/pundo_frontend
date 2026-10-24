@@ -56,7 +56,7 @@ export const legalContentEn: LegalContentByLang = {
     sections: [
       {
         heading: 'Data Controller',
-        body: 'Effective date: 14 April 2026\n\nThis Privacy Policy describes how Buhl Consulting Ltd. (Registration No. HE 329258) collects, uses, stores, and protects your personal data when you use the Pundo platform at https://pundo.cy.\n\nData Controller:\nBuhl Consulting Ltd.\nKimonos 1, Apt 104, 7040 Oroklini, Larnaka, Cyprus\nEmail: info@pundo.cy',
+        body: 'Effective date: 24 October 2026\n\nThis Privacy Policy describes how Buhl Consulting Ltd. (Registration No. HE 329258) collects, uses, stores, and protects your personal data when you use the Pundo platform at https://pundo.cy.\n\nData Controller:\nBuhl Consulting Ltd.\nKimonos 1, Apt 104, 7040 Oroklini, Larnaka, Cyprus\nEmail: info@pundo.cy',
       },
       {
         heading: 'Personal Data We Collect',
@@ -84,6 +84,16 @@ export const legalContentEn: LegalContentByLang = {
       },
       // F5970 T20 (decision E2): backups keep deleted proof documents for up to 12 months (Borg rotation on prod,
       // BB decision 2026-10-18: documents stay in the backup). Anchor #shop-claim is linked from the claim upload.
+      {
+        id: 'levels-credits',
+        heading: 'Levels, Credits and Notifications',
+        body: 'Purpose: Pundo rewards confirmed contributions (for example reviews, price confirmations and photos) with levels and credits. Credits can be used for certain functions, for example Homesick searches, MCP calls and product e-mails. Levels and credits appear under the names of the brand you are using.\n\nData we process:\n• Bookings of levels and credits (what was earned or spent, when, how much, for which type of action, and a pseudonymous reference to the contribution)\n• Your current balance and level\n• Notifications about earned or spent credits and your notification settings, including the language you chose\n• Technical records proving that a notification or e-mail was sent\n\nLegal basis: Art. 6(1)(b) GDPR (providing the functions you use) and Art. 6(1)(f) GDPR (legitimate interest in preventing misuse and fraud and in correct accounting of credits). E-mail notifications and weekly summaries are sent only with your explicit consent (Art. 6(1)(a) GDPR). They are off by default. You can withdraw your consent at any time in your account or with the link in every e-mail; withdrawal does not affect earlier processing.\n\nStorage period: Bookings are kept as long as your account exists; see "Evidence Archive for Credit Bookings" for what happens when you delete it. Notifications are deleted automatically: delivery receipts after 30 days, read notifications after 90 days and unread notifications after 180 days at the latest.\n\nYour rights: You can request access, correction and deletion (see "Your Rights (GDPR)").',
+      },
+      {
+        id: 'evidence-archive',
+        heading: 'Evidence Archive for Credit Bookings',
+        body: 'Purpose: When you delete your account, we anonymise your data. So that we can still prove the correct booking of levels and credits if a legal claim arises (for example a dispute about a balance, a reversal or a case of misuse), we archive a minimal record of every deleted account before the anonymisation.\n\nData in the archive: Only the bookings of levels and credits and the last balance, linked to a protected identifier. Not archived: name, e-mail address, content you wrote, photos, messages, notification settings and e-mail records.\n\nLegal basis: Art. 6(1)(f) GDPR (legitimate interest in securing evidence); for requests for erasure Art. 17(3)(e) GDPR (establishment, exercise or defence of legal claims). We weighed this interest against yours: the archive is limited to the data named above, protected, access-restricted and time-limited.\n\nProcedure: After you confirm the deletion, your account is locked immediately. We create and check the archive and only then anonymise your account. You receive a confirmation when the deletion is complete.\n\nProtection: The archive is encrypted and stored separately from the platform database. The key to read it is not on the platform servers. The archive is opened only for a concrete legal dispute, with the approval of two independent persons, and every access is logged. It is never used for analysis, advertising or product development.\n\nStorage period: 3 years from the sealing of the archive, without extension through activity. After that it is permanently deleted and the deletion is logged. Only if a concrete legal dispute about your bookings is pending when the period ends, the record is kept exactly as long as that dispute lasts and is deleted afterwards.\n\nYour rights: You can request information about the archived data and object to the processing (Art. 21 GDPR). We examine each request individually; while the exception of Art. 17(3)(e) GDPR applies, erasure before expiry is not possible. Contact: info@pundo.cy.',
+      },
       {
         id: 'shop-claim',
         heading: 'Shop Takeover and Proof Documents',

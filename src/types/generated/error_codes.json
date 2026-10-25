@@ -89,6 +89,9 @@
   ],
   "429": [
    "rate_limited"
+  ],
+  "500": [
+   "account_deletion_failed"
   ]
  },
  "api/customer/customer_progression": {

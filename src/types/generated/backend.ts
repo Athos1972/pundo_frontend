@@ -2514,13 +2514,7 @@ export interface paths {
         post?: never;
         /**
          * Delete Account
-         * @description Delete the account, or queue its sealed K4c export when enabled.
-         *
-         *     Validates the OTP sent via POST /account/request-deletion, then:
-         *     1. Deletes all local review photo files (best-effort).
-         *     2. Deletes the local avatar file (best-effort).
-         *     3. Deletes the customer_users row (CASCADE removes all related data).
-         *     4. Clears the auth cookie.
+         * @description Delete directly, or queue the existing K4c seal before deletion.
          */
         delete: operations["delete_account_api_v1_customer_auth_account_delete"];
         options?: never;

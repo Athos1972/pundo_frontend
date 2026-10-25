@@ -27,14 +27,15 @@ const LANGS = ['en', 'de', 'el', 'ru', 'ar', 'he'] as const
 // `Record<Union, true>` makes the compiler fail when the backend contract (types) gains a code this test does not know.
 const ROW_ERRORS: Record<ImportRowErrorCode, true> = {
   missing_name: true, row_failed: true, invalid_ean: true, invalid_price: true, invalid_currency: true,
-  invalid_available: true, invalid_language: true, invalid_image_url: true, invalid_sku: true, duplicate_in_file: true,
+  invalid_available: true, invalid_language: true, invalid_image_url: true, invalid_sku: true, invalid_description: true, duplicate_in_file: true,
 }
 const HINTS: Record<ImportRowHintCode, true> = {
   linked_catalog_item: true, ambiguous_name_match: true, name_not_updated_shared: true, photo_skipped_shared: true,
   category_unresolved: true, category_hint_unknown: true, no_price: true, offer_replaced_complex: true, ean_mismatch: true,
+  description_not_updated_shared: true, description_translations_stale: true,
 }
 const CHANGES: Record<ImportChangeField, true> = {
-  available: true, price: true, name: true, sku: true, category: true, reactivated: true,
+  available: true, price: true, name: true, sku: true, category: true, reactivated: true, description: true,
 }
 const SYNC_ERRORS: Record<ImportSyncErrorCode, true> = {
   sheet_url_invalid: true, sheet_fetch_failed: true, sheet_not_public: true, rows_failed: true, sync_failed: true,
@@ -67,8 +68,8 @@ describe('hints, changes, sync errors, file errors, flow errors', () => {
     it(`all codes are translated in ${lang}`, () => {
       const tr = tAdmin(lang) as unknown as Record<string, string | undefined>
       for (const code of Object.keys(HINTS)) expect(tr[`hint_${code}`], `hint_${code}`).toBeTruthy()
-      for (const code of ['available', 'reactivated', 'price', 'name', 'sku', 'category']) expect(tr[`change_${code}`], code).toBeTruthy()
-      for (const code of Object.keys(CHANGES)) expect(['available', 'reactivated', 'price', 'name', 'sku', 'category']).toContain(code)
+      for (const code of ['available', 'reactivated', 'price', 'name', 'sku', 'category', 'description']) expect(tr[`change_${code}`], code).toBeTruthy()
+      for (const code of Object.keys(CHANGES)) expect(['available', 'reactivated', 'price', 'name', 'sku', 'category', 'description']).toContain(code)
       for (const code of ['empty_sheet', 'missing_name_column', 'too_many_rows']) expect(tr[`sheets_error_${code}`], code).toBeTruthy()
       for (const code of Object.keys(SYNC_ERRORS)) expect(code).toBeTruthy()
 

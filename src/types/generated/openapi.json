@@ -11403,7 +11403,8 @@
         "name",
         "sku",
         "category",
-        "reactivated"
+        "reactivated",
+        "description"
        ],
        "type": "string"
       },
@@ -11452,7 +11453,9 @@
         "category_hint_unknown",
         "no_price",
         "offer_replaced_complex",
-        "ean_mismatch"
+        "ean_mismatch",
+        "description_not_updated_shared",
+        "description_translations_stale"
        ],
        "type": "string"
       },
@@ -11585,6 +11588,7 @@
          "invalid_language",
          "invalid_image_url",
          "invalid_sku",
+         "invalid_description",
          "duplicate_in_file"
         ],
         "type": "string"

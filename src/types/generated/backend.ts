@@ -9819,7 +9819,7 @@ export interface components {
              * Changes
              * @default []
              */
-            changes: ("available" | "price" | "name" | "sku" | "category" | "reactivated")[];
+            changes: ("available" | "price" | "name" | "sku" | "category" | "reactivated" | "description")[];
             /** Currency */
             currency?: string | null;
             /** Ean */
@@ -9833,7 +9833,7 @@ export interface components {
              * Hints
              * @default []
              */
-            hints: ("linked_catalog_item" | "ambiguous_name_match" | "name_not_updated_shared" | "photo_skipped_shared" | "category_unresolved" | "category_hint_unknown" | "no_price" | "offer_replaced_complex" | "ean_mismatch")[];
+            hints: ("linked_catalog_item" | "ambiguous_name_match" | "name_not_updated_shared" | "photo_skipped_shared" | "category_unresolved" | "category_hint_unknown" | "no_price" | "offer_replaced_complex" | "ean_mismatch" | "description_not_updated_shared" | "description_translations_stale")[];
             /** Language */
             language: string;
             /** Matched By */
@@ -9861,7 +9861,7 @@ export interface components {
         /** ImportRowError */
         ImportRowError: {
             /** Code */
-            code?: ("missing_name" | "row_failed" | "invalid_ean" | "invalid_price" | "invalid_currency" | "invalid_available" | "invalid_language" | "invalid_image_url" | "invalid_sku" | "duplicate_in_file") | null;
+            code?: ("missing_name" | "row_failed" | "invalid_ean" | "invalid_price" | "invalid_currency" | "invalid_available" | "invalid_language" | "invalid_image_url" | "invalid_sku" | "invalid_description" | "duplicate_in_file") | null;
             /** Message */
             message: string;
             /** Row */

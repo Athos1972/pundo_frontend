@@ -46,6 +46,7 @@ function changeLabel(change: ImportChangeField, tr: ShopAdminTranslations): stri
     case 'name': return tr.change_name
     case 'sku': return tr.change_sku
     case 'category': return tr.change_category
+    case 'description': return tr.change_description
     default: return change
   }
 }

@@ -480,6 +480,32 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
     })
   })
 
+  test('B5920-002: Spalte description — bereinigt gespeichert (items.descriptions), Fehler ab 5.000 Zeichen, leere Zelle aendert nichts', async ({ page }) => {
+    const name = uniqName('descr')
+    const plainName = uniqName('nodescr')
+    const header = [...HEADER, 'image_url', 'description']
+    await openImport(page, 'en')
+    await uploadToPreview(page, 'descr.csv', csv(header, [
+      ['D-5920-1', name, 'en', '', '', 'true', '4.00', 'EUR', '', '<p>Complete <b>dry</b> food for adult cats.</p><script>x()</script>'],
+      ['D-5920-2', plainName, 'en', '', '', 'true', '2.00', 'EUR', '', ''],
+    ]))
+    await applyToResult(page)
+    await step('B5920-002', 'Beschreibung steht bereinigt in der Sprache der Zeile in items.descriptions; leere Zelle speichert nichts', async () => {
+      const stored = (n: string) => psql(`select coalesce(i.descriptions::text, 'NULL') from items i join shop_listings sl on sl.item_id=i.id where sl.shop_id=${shop.id} and i.names->>'en'='${n}'`)
+      expect(JSON.parse(stored(name))).toEqual({ en: 'Complete dry food for adult cats.' })
+      expect(stored(plainName)).toBe('NULL')
+    })
+    await resetAfterResult(page)
+    await step('B5920-002', 'zweite Datei mit zu langer Beschreibung: Zeilenfehler, Uebernehmen gesperrt, nichts geaendert', async () => {
+      await openImport(page, 'en')
+      await uploadToPreview(page, 'toolong.csv', csv(header, [['D-5920-1', name, 'en', '', '', 'true', '4.00', 'EUR', '', 'x'.repeat(5001)]]))
+      await expect(page.getByTestId('import-preview')).toContainText('Description is longer than 5,000 characters')
+      await expect(page.getByTestId('import-apply')).toBeDisabled()
+      const stored = psql(`select i.descriptions::text from items i join shop_listings sl on sl.item_id=i.id where sl.shop_id=${shop.id} and i.names->>'en'='${name}'`)
+      expect(JSON.parse(stored)).toEqual({ en: 'Complete dry food for adult cats.' })
+    })
+  })
+
   test('AK17+AK23: doppelte SKU und Fehlerzeile -> Vorschau mit uebersetzten Fehlern, Uebernehmen gesperrt, nichts gespeichert', async ({ page }) => {
     const before = (await listListings(shop.ownerToken)).length
     await openImport(page, 'en')
@@ -550,8 +576,8 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
     })
   })
 
-  test('AK20: Vorlage mit 9 Spalten in der Reihenfolge; Feldkatalog beschreibt alle Spalten + Wiedererkennungs-Reihenfolge in 6 Sprachen', async ({ page }) => {
-    await step('AK20', 'Vorlage enthaelt sku, name, language, ean, category, available, price, currency, image_url (Reihenfolge)', async () => {
+  test('AK20: Vorlage mit 10 Spalten in der Reihenfolge; Feldkatalog beschreibt alle Spalten + Wiedererkennungs-Reihenfolge in 6 Sprachen', async ({ page }) => {
+    await step('AK20', 'Vorlage enthaelt sku, name, language, ean, category, available, price, currency, image_url, description (Reihenfolge)', async () => {
       await openImport(page, 'en')
       const res = await page.request.get(`${BASE_URL}/api/shop-admin/import/template`)
       expect(res.status()).toBe(200)
@@ -561,7 +587,7 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
         const xml = execFileSync('unzip', ['-p', file, 'xl/worksheets/sheet1.xml'], { encoding: 'utf8' })
         const row1 = xml.match(/<row r="1">(.*?)<\/row>/)?.[1] ?? ''
         const header = [...row1.matchAll(/<t>(.*?)<\/t>/g)].map((m) => m[1])
-        expect(header).toEqual(['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url'])
+        expect(header).toEqual(['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url', 'description'])
         // Beispielzeilen tragen eine SKU (Spalte A, ab Zeile 2)
         expect(xml).toMatch(/<c r="A2"[^>]*><is><t>[^<]+<\/t>/)
       } finally {
@@ -574,11 +600,11 @@ test.describe('F5920 Katalog-Import — Vorschau, Wiedererkennung, komplette Lis
       ar: 'كيف يتعرّف pundo على منتجاتك', he: 'כך pundo מזהה את הפריטים שלך',
     }
     for (const lang of Object.keys(TITLE)) {
-      await step('AK20', `Feldkatalog [${lang}]: 9 Spalten (sku, language neu) + Wiedererkennungs-Reihenfolge`, async () => {
+      await step('AK20', `Feldkatalog [${lang}]: 10 Spalten (sku, language, description) + Wiedererkennungs-Reihenfolge`, async () => {
         await openImport(page, lang)
         const details = page.locator('details').first()
         await expect(details).toContainText(TITLE[lang])
-        for (const c of ['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url']) {
+        for (const c of ['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url', 'description']) {
           await expect(details.locator('td code', { hasText: new RegExp(`^${c}$`) }).first()).toBeVisible()
         }
         // Wiedererkennungs-Reihenfolge: 1. SKU, 2. EAN, 3. Name (nummerierte Liste)

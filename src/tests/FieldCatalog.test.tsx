@@ -117,11 +117,11 @@ describe('FieldCatalog', () => {
     expect(screen.getByText('Required')).toBeInTheDocument()
   })
 
-  it('shows Optional for every column except name (8 of 9, F5920 AK 20; was 3 of 4)', async () => {
+  it('shows Optional for every column except name (9 of 10, F5920 AK 20 + B5920-002; was 3 of 4)', async () => {
     const { FieldCatalog } = await import('@/components/shop-admin/FieldCatalog')
     render(<FieldCatalog lang="en" />)
     const optionalBadges = screen.getAllByText('Optional')
-    expect(optionalBadges).toHaveLength(8)
+    expect(optionalBadges).toHaveLength(9)
   })
 
   it('falls back to English for unknown lang', async () => {
@@ -130,15 +130,15 @@ describe('FieldCatalog', () => {
     expect(screen.getByText('Field reference')).toBeInTheDocument()
   })
 
-  // ── F5920 AK 20: nine columns, recognition order, all 6 languages ───────────────
+  // ── F5920 AK 20 (+ B5920-002): ten columns, recognition order, all 6 languages ───────────────
 
-  const NINE = ['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url']
+  const TEN = ['sku', 'name', 'language', 'ean', 'category', 'available', 'price', 'currency', 'image_url', 'description']
 
-  it.each(['en', 'de', 'el', 'ru', 'ar', 'he'])('lists all nine template columns in template order (%s)', async (lang) => {
+  it.each(['en', 'de', 'el', 'ru', 'ar', 'he'])('lists all ten template columns in template order (%s)', async (lang) => {
     const { FieldCatalog } = await import('@/components/shop-admin/FieldCatalog')
     const { container } = render(<FieldCatalog lang={lang} />)
     const names = Array.from(container.querySelectorAll('tbody tr td:first-child code')).map((c) => c.textContent)
-    expect(names).toEqual(NINE)
+    expect(names).toEqual(TEN)
   })
 
   it('column order matches the downloadable template (backend generate_template_xlsx)', async () => {
@@ -152,7 +152,7 @@ describe('FieldCatalog', () => {
     const { FieldCatalog } = await import('@/components/shop-admin/FieldCatalog')
     const { container } = render(<FieldCatalog lang={lang} />)
     const rows = container.querySelectorAll('tbody tr')
-    expect(rows).toHaveLength(9)
+    expect(rows).toHaveLength(10)
     rows.forEach((row) => {
       const cells = row.querySelectorAll('td')
       expect(cells).toHaveLength(4) // journey AC-1 relies on the 4-cell structure
@@ -185,7 +185,7 @@ describe('FieldCatalog', () => {
     const { FieldCatalog } = await import('@/components/shop-admin/FieldCatalog')
     for (const lang of ['ar', 'he']) {
       const { container, unmount } = render(<FieldCatalog lang={lang} />)
-      expect(container.querySelectorAll('code').length).toBe(18)
+      expect(container.querySelectorAll('code').length).toBe(20)
       container.querySelectorAll('code').forEach((el) => expect(el.getAttribute('dir')).toBe('ltr'))
       unmount()
     }

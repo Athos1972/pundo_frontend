@@ -8,9 +8,9 @@ interface FieldCatalogProps {
 }
 
 type DescKey = 'field_name_desc' | 'field_category_desc' | 'field_available_desc' | 'field_image_url_desc'
-  | 'fc_sku_desc' | 'fc_language_desc' | 'fc_ean_desc' | 'fc_price_desc' | 'fc_currency_desc'
+  | 'fc_sku_desc' | 'fc_language_desc' | 'fc_ean_desc' | 'fc_price_desc' | 'fc_currency_desc' | 'fc_description_desc'
 
-// The nine columns of the import template, in template order. Column names and example values stay literal.
+// The ten columns of the import template, in template order. Column names and example values stay literal.
 const FIELDS: { col: string; required?: boolean; desc: DescKey; example: string }[] = [
   { col: 'sku', desc: 'fc_sku_desc', example: 'RC-CAT-5' },
   { col: 'name', required: true, desc: 'field_name_desc', example: 'Royal Canin Adult Cat 5kg' },
@@ -21,6 +21,7 @@ const FIELDS: { col: string; required?: boolean; desc: DescKey; example: string 
   { col: 'price', desc: 'fc_price_desc', example: '29.99' },
   { col: 'currency', desc: 'fc_currency_desc', example: 'EUR' },
   { col: 'image_url', desc: 'field_image_url_desc', example: 'https://example.com/product.jpg' },
+  { col: 'description', desc: 'fc_description_desc', example: 'Complete food for adult cats.' },
 ]
 
 export function FieldCatalog({ lang }: FieldCatalogProps) {

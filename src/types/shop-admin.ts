@@ -258,6 +258,7 @@ export type ImportRowErrorCode =
   | 'invalid_language'
   | 'invalid_image_url'
   | 'invalid_sku'
+  | 'invalid_description'
   | 'duplicate_in_file'
 export type ImportSyncErrorCode =
   | 'sheet_url_invalid'
@@ -318,7 +319,7 @@ export interface ImportUploadResult {
 
 export type ImportPreviewStatus = 'processing' | 'ready' | 'applying' | 'applied' | 'failed'
 export type ImportRowStatus = 'new' | 'updated' | 'unchanged' | 'error' | 'possible_duplicate'
-export type ImportChangeField = 'available' | 'price' | 'name' | 'sku' | 'category' | 'reactivated'
+export type ImportChangeField = 'available' | 'price' | 'name' | 'sku' | 'category' | 'reactivated' | 'description'
 export type ImportMatchedBy = 'sku' | 'ean' | 'name' | 'decision'
 export type ImportRowHintCode =
   | 'linked_catalog_item'
@@ -330,6 +331,8 @@ export type ImportRowHintCode =
   | 'no_price'
   | 'offer_replaced_complex'
   | 'ean_mismatch'
+  | 'description_not_updated_shared'
+  | 'description_translations_stale'
 export type ImportPreviewErrorCode = 'job_lost' | 'preview_stale' | 'apply_failed' | 'preview_failed'
 /** Datei-/Upload-Fehler, die der Server synchron mit 400/413/429 meldet (`detail.code`). */
 export type ImportFileErrorCode =

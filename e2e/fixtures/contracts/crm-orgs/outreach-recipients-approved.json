@@ -1,0 +1,72 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "channel_id": 7976,
+      "kind": "email",
+      "value": "info@alpha.t15-202610250935.example",
+      "owner_type": "org",
+      "person": null,
+      "relation_id": null,
+      "roles": [],
+      "effective_tier": "green",
+      "approval_required": false,
+      "approval_open": false,
+      "is_default": true
+    },
+    {
+      "channel_id": 7979,
+      "kind": "email",
+      "value": "maria@alpha.t15-202610250935.example",
+      "owner_type": "relation",
+      "person": {
+        "id": 23,
+        "display_name": "Maria Georgiou 202610250935"
+      },
+      "relation_id": 9,
+      "roles": [
+        "owner"
+      ],
+      "effective_tier": "red",
+      "approval_required": true,
+      "approval_open": true,
+      "is_default": false
+    },
+    {
+      "channel_id": 7978,
+      "kind": "email",
+      "value": "maria.private@t15-202610250935.example",
+      "owner_type": "person",
+      "person": {
+        "id": 23,
+        "display_name": "Maria Georgiou 202610250935"
+      },
+      "relation_id": 9,
+      "roles": [
+        "owner"
+      ],
+      "effective_tier": "green",
+      "approval_required": false,
+      "approval_open": false,
+      "is_default": false
+    },
+    {
+      "channel_id": 7981,
+      "kind": "email",
+      "value": "maria@beta.t15-202610250935.example",
+      "owner_type": "person",
+      "person": {
+        "id": 23,
+        "display_name": "Maria Georgiou 202610250935"
+      },
+      "relation_id": 9,
+      "roles": [
+        "owner"
+      ],
+      "effective_tier": "green",
+      "approval_required": false,
+      "approval_open": false,
+      "is_default": false
+    }
+  ]
+}

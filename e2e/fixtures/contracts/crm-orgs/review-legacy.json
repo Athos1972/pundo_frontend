@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": 48,
+        "kind": "legacy_contact_name",
+        "status": "open",
+        "org": {
+          "id": 7451,
+          "name": "E2E F7600 T15 Alpha Bakery 202610250935"
+        },
+        "person": null,
+        "relation_id": null,
+        "channel": null,
+        "payload": {
+          "role_title": "Shop manager",
+          "display_name": "Andreas T15 Fixture"
+        },
+        "created_at": "2026-10-25T09:35:16.195337Z"
+      }
+    ],
+    "total": 1,
+    "limit": 200,
+    "offset": 0
+  }
+}

@@ -71,11 +71,30 @@ describe('help topics (data source)', () => {
 describe('adminRouteExists (helper)', () => {
   it('finds portal pages and rejects everything else', () => {
     expect(adminRouteExists('/admin/dashboard')).toBe(true)
-    expect(adminRouteExists('/admin/crm/contacts')).toBe(true)
+    expect(adminRouteExists('/admin/crm/orgs')).toBe(true)
     expect(adminRouteExists('/admin/does-not-exist')).toBe(false)
     expect(adminRouteExists('/admin/login')).toBe(false) // outside (portal)
-    expect(adminRouteExists('/admin/crm/contacts/[id]')).toBe(false) // dynamic segment is no literal match
+    expect(adminRouteExists('/admin/crm/orgs/[id]')).toBe(false) // dynamic segment is no literal match
     expect(adminRouteExists('/shops')).toBe(false)
+  })
+})
+
+describe('CRM org cut (F7600): help links follow the new routes', () => {
+  it('no help link points to the removed contact pages; the routes are gone without a redirect page', () => {
+    const hrefs = HELP_TOPICS.flatMap((t) => t.adminLinks.map((l) => l.href))
+    expect(hrefs.filter((h) => h.includes('crm/contacts'))).toEqual([])
+    expect(adminRouteExists('/admin/crm/contacts')).toBe(false)
+    expect(adminRouteExists('/admin/crm/contacts/new')).toBe(false)
+  })
+
+  it('topics 5 and 5b link to the organisation list and the review list', () => {
+    for (const id of ['crm', 'crm-persons'] as const) {
+      const hrefs = getHelpTopic(id)!.adminLinks.map((l) => l.href)
+      expect(hrefs, id).toContain('/admin/crm/orgs')
+      expect(hrefs, id).toContain('/admin/crm/review')
+    }
+    expect(adminRouteExists('/admin/crm/review')).toBe(true)
+    expect(adminRouteExists('/admin/crm/orgs/new')).toBe(true)
   })
 })
 

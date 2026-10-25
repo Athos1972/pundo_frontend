@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import { CRM_ALLOWED_TRANSITIONS, LIFECYCLE_BADGE_COLORS, ALL_LIFECYCLE_STATES } from '@/components/system-admin/crm/transitions'
-import type { CrmLifecycleState } from '@/types/system-admin'
+import type { CrmLeadState } from '@/types/system-admin'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -15,26 +15,36 @@ describe('CRM translations', () => {
   const en = tSysAdmin('en')
   const el = tSysAdmin('el')
 
+  // Org model (F7600 org cut, T18 i18n EN/EL): organisations, lead status, contact persons, relations, channels, send gate
   const requiredCrmKeys = [
-    'nav_crm', 'crm_title', 'crm_new',
-    'crm_col_name', 'crm_col_org', 'crm_col_email', 'crm_col_state', 'crm_col_updated',
-    'crm_filter_all', 'crm_search_placeholder',
-    'crm_form_display_name', 'crm_form_org_name', 'crm_form_email', 'crm_form_phone',
-    'crm_form_city', 'crm_form_category', 'crm_form_role',
-    'crm_form_submit', 'crm_form_submitting',
-    'crm_action_confirm_business', 'crm_action_set_lifecycle', 'crm_action_register', 'crm_action_suppress',
+    'nav_crm', 'crm_orgs_title', 'crm_org_new', 'crm_persons_title', 'crm_review_title',
+    'crm_col_name', 'crm_col_org', 'crm_col_email', 'crm_col_lead_state', 'crm_col_updated',
+    'crm_filter_all', 'crm_filter_lead_only', 'crm_lead_none', 'crm_org_search_list_placeholder',
+    'crm_form_org_name', 'crm_form_email', 'crm_form_phone', 'crm_form_city', 'crm_form_category',
+    'crm_org_form_as_lead', 'crm_org_form_submit', 'crm_form_submitting', 'crm_org_edit_title', 'crm_org_saved',
+    'crm_lead_section', 'crm_master_data', 'crm_org_channels_title', 'crm_contact_persons_title', 'crm_sources_proofs_title',
+    'crm_parent_title', 'crm_parent_belongs_to', 'crm_parent_branches', 'crm_org_branch_of',
+    'crm_action_make_target', 'crm_action_confirm_business', 'crm_action_set_lifecycle', 'crm_action_register',
+    'crm_action_suppress', 'crm_action_change_legal',
     'crm_register_shop_id', 'crm_register_shop_id_hint',
     'crm_suppress_reason_hard_optout', 'crm_suppress_reason_rejected_private',
-    'crm_composer_lang', 'crm_composer_subject', 'crm_composer_body',
+    'crm_detail_legal_tier', 'crm_tier_green', 'crm_tier_amber', 'crm_tier_red',
+    'crm_owner_org', 'crm_owner_relation', 'crm_owner_person',
+    'crm_composer_subject', 'crm_composer_body',
     'crm_composer_preview', 'crm_composer_send', 'crm_composer_sending', 'crm_composer_already_sent',
-    'crm_timeline_title', 'crm_channels_title', 'crm_sources_title',
-    'crm_detail_org', 'crm_detail_legal', 'crm_detail_flags',
+    'crm_outreach_recipient', 'crm_outreach_tier', 'crm_outreach_approve', 'crm_outreach_approve_title',
+    'crm_outreach_approve_intro', 'crm_outreach_approve_reason', 'crm_outreach_approved',
+    'crm_outreach_approval_open', 'crm_outreach_approval_needs_permission',
+    'crm_timeline_title', 'crm_doc_title',
+    'crm_relation_role_missing', 'crm_relation_end', 'crm_relation_preferred',
+    'crm_owner_rule_title', 'crm_approval_tiers_title',
     'crm_state_SOURCED', 'crm_state_ENRICHED', 'crm_state_NEEDS_REVIEW', 'crm_state_QUEUED',
     'crm_state_CONTACTED', 'crm_state_ENGAGED', 'crm_state_INTERESTED', 'crm_state_REGISTERED',
     'crm_state_UNREACHABLE', 'crm_state_HARD_OPTOUT', 'crm_state_REJECTED_PRIVATE', 'crm_state_DEAD',
     'crm_err_forbidden', 'crm_err_conflict', 'crm_err_suppressed',
     'crm_err_illegal_transition', 'crm_err_shop_id_required', 'crm_err_no_email',
-    'crm_err_send_failed', 'crm_err_generic',
+    'crm_err_send_failed', 'crm_err_generic', 'crm_err_not_found',
+    'crm_err_tier_approval_required', 'crm_err_approval_not_required', 'crm_err_approval_reason_required',
     'crm_optout_confirm', 'crm_optout_button', 'crm_optout_done',
   ] as const
 
@@ -56,6 +66,48 @@ describe('CRM translations', () => {
   })
 })
 
+// ─── T18 (F7600 org cut): no CRM text speaks of the removed "contact" model ─────
+
+describe('CRM wording after the org cut (T18 i18n EN/EL)', () => {
+  const en = tSysAdmin('en') as unknown as Record<string, string>
+  const el = tSysAdmin('el') as unknown as Record<string, string>
+  const crmEntries = (t: Record<string, string>) => Object.entries(t).filter(([k]) => k.startsWith('crm_') || k === 'nav_crm')
+
+  // "Direct contact" is a source (a personal encounter) and "Σε επαφή" the state ENGAGED ("in touch"); neither is the model.
+  const EN_ALLOWED = new Set(['crm_source_manual'])
+  const EL_ALLOWED = new Set(['crm_source_manual', 'crm_state_ENGAGED'])
+
+  it('EN: "contact" only as "contact person(s)" or a former contact record (legacy review cases)', () => {
+    const bad = crmEntries(en)
+      .filter(([k, v]) => !EN_ALLOWED.has(k) && /\bcontacts?\b(?!\s+(person|persons|record)\b)/i.test(v))
+      .map(([k]) => k)
+    expect(bad).toEqual([])
+  })
+
+  it('EL: no "επαφή/επαφές" except a former contact record (legacy review cases)', () => {
+    const bad = crmEntries(el)
+      .filter(([k, v]) => !EL_ALLOWED.has(k) && /επαφ/i.test(v) && !/εγγραφ\S* επαφής/.test(v))
+      .map(([k]) => k)
+    expect(bad).toEqual([])
+  })
+
+  it('EL: the legal tier is "βαθμίδα" everywhere, never "κατηγορία" (that word is the business category)', () => {
+    const tierKeys = ['crm_detail_legal_tier', 'crm_action_change_legal', 'crm_legal_hint', 'crm_outreach_tier',
+      'crm_err_tier_approval_required', 'crm_err_approval_not_required',
+      'crm_approval_tiers_title', 'crm_approval_tiers_help', 'crm_approval_tiers_none']
+    for (const key of tierKeys) expect(el[key], key).toMatch(/βαθμίδ/)
+    const mixed = crmEntries(el).filter(([, v]) => /νομικ\S*\s+κατηγορ/i.test(v)).map(([k]) => k)
+    expect(mixed).toEqual([])
+  })
+
+  it('one key per thing: "Contact persons" serves the list column and the detail section', () => {
+    expect(Object.keys(en)).not.toContain('crm_col_contacts')
+    expect(en.crm_contact_persons_title).toBe('Contact persons')
+    expect(el.crm_contact_persons_title).toBe('Υπεύθυνοι επικοινωνίας')
+    expect(el.crm_relation_no_contacts).toContain('υπεύθυνοι επικοινωνίας')
+  })
+})
+
 // ─── T1: Lifecycle transitions ────────────────────────────────────────────────
 
 describe('CRM_ALLOWED_TRANSITIONS', () => {
@@ -66,7 +118,7 @@ describe('CRM_ALLOWED_TRANSITIONS', () => {
   })
 
   it('terminal states have no allowed transitions', () => {
-    const terminal: CrmLifecycleState[] = ['HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD']
+    const terminal: CrmLeadState[] = ['HARD_OPTOUT', 'REJECTED_PRIVATE', 'DEAD']
     for (const state of terminal) {
       expect(CRM_ALLOWED_TRANSITIONS[state]).toHaveLength(0)
     }
@@ -88,7 +140,7 @@ describe('CRM_ALLOWED_TRANSITIONS', () => {
     const validSet = new Set(ALL_LIFECYCLE_STATES)
     for (const [from, targets] of Object.entries(CRM_ALLOWED_TRANSITIONS)) {
       for (const to of targets) {
-        expect(validSet.has(to as CrmLifecycleState), `${from} → ${to} target is not a valid state`).toBe(true)
+        expect(validSet.has(to as CrmLeadState), `${from} → ${to} target is not a valid state`).toBe(true)
       }
     }
   })

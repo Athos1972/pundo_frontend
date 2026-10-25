@@ -6,6 +6,7 @@ vi.mock('next/headers', () => ({
 }))
 
 import * as api from '@/lib/system-admin-api'
+import * as fx from './helpers/crm-fixtures'
 
 const mockFetch = vi.fn()
 const res = (status: number, body: unknown = {}) => ({ ok: status < 400, status, json: async () => body })
@@ -81,13 +82,56 @@ describe('system-admin server API client', () => {
       [() => api.getSocialLinkRuleCategories(), /\/social-link-rules\/categories$/],
       [() => api.getItemDomainMappings({ domain: 'pets' }), /\/item-domain-mappings\?domain=pets$/],
       [() => api.getItemDomainMapping(11), /\/item-domain-mappings\/11$/],
-      [() => api.getCrmContacts({ lifecycle_state: 'QUEUED' }), /\/crm\/contacts\?lifecycle_state=QUEUED$/],
-      [() => api.getCrmContact(12), /\/crm\/contacts\/12$/],
     ]
     for (const [fn, re] of cases) {
       await fn()
       expect(call().url).toMatch(re)
     }
+  })
+
+  it('CRM reads (org cut): routes, query strings and typed answers', async () => {
+    const cases: Array<[() => Promise<unknown>, RegExp]> = [
+      [() => api.getCrmOrgs({ q: 'alpha', lead_state: 'QUEUED', lead_only: true, owner_id: 3, limit: 50, offset: 100 }), /\/crm\/orgs\?q=alpha&lead_state=QUEUED&lead_only=true&owner_id=3&limit=50&offset=100$/],
+      [() => api.getCrmOrgs({ lead_only: false }), /\/crm\/orgs\?lead_only=false$/],
+      [() => api.getCrmOrgSearch({ q: 'al', parent_candidates_only: true, exclude_id: 41 }), /\/crm\/orgs\/search\?q=al&parent_candidates_only=true&exclude_id=41$/],
+      [() => api.getCrmOrg(41), /\/crm\/orgs\/41$/],
+      [() => api.getCrmOrgRecipients(41), /\/crm\/orgs\/41\/outreach\/recipients$/],
+      [() => api.getCrmPersons({ q: 'maria' }), /\/crm\/persons\?q=maria$/],
+      [() => api.getCrmPerson(17), /\/crm\/persons\/17$/],
+      [() => api.getCrmReview({ category: 'channel_owner', limit: 20 }), /\/crm\/review\?category=channel_owner&limit=20$/],
+      [() => api.getCrmConfig(), /\/crm\/config$/],
+    ]
+    for (const [fn, re] of cases) {
+      mockFetch.mockResolvedValue(res(200, {}))
+      await fn()
+      expect(call().url).toMatch(re)
+      expect(call().init.method).toBeUndefined() // reads only: every CRM write runs through crmFetch in the browser
+    }
+  })
+
+  it('CRM reads return the backend answer unchanged (org detail with lead block, relation and channel owners)', async () => {
+    mockFetch.mockResolvedValueOnce(res(200, fx.orgDetail))
+    const org = await api.getCrmOrg(41)
+    expect(org.lead.state).toBe('SOURCED')
+    expect(org.lead.version).toBe(3)
+    expect(org.relations[0].roles).toEqual(['owner'])
+    expect(org.relations[1].role_missing).toBe(true)
+    expect(org.channels[0].owner).toEqual({ type: 'org', id: 41 })
+    mockFetch.mockResolvedValueOnce(res(200, fx.recipients))
+    await expect(api.getCrmOrgRecipients(41)).resolves.toMatchObject([{ owner_type: 'org', is_default: true }, { owner_type: 'relation', approval_required: true }])
+    mockFetch.mockResolvedValueOnce(res(200, fx.page([fx.reviewItemComputed])))
+    await expect(api.getCrmReview({ category: 'relations_without_role' })).resolves.toMatchObject({ items: [{ id: null, kind: 'relation_without_role' }] })
+  })
+
+  it('CRM reads: 404 of an unknown organisation raises API_ERROR:404 (the page turns it into notFound)', async () => {
+    mockFetch.mockResolvedValue(res(404, fx.errorBody('org_not_found')))
+    await expect(api.getCrmOrg(999)).rejects.toThrow('API_ERROR:404')
+    mockFetch.mockResolvedValue(res(403, {}))
+    await expect(api.getCrmConfig()).rejects.toThrow('FORBIDDEN')
+  })
+
+  it('no contact reads are left (the contact routes are gone with the org cut)', () => {
+    expect(Object.keys(api).filter((name) => /Contact/i.test(name))).toEqual([])
   })
 
   it('"get all" helpers request pages of 1000 rows and unwrap the items', async () => {

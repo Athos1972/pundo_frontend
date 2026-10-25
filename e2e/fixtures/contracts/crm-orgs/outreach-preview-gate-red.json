@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": {
+    "subject": "E2E F7600 T15 Alpha Bakery 202610250935 — 5 minutes to reach customers who can't find you yet",
+    "body_rendered": "Hi Maria Georgiou 202610250935,\n\nThere are thousands of expats and newcomers in Cyprus actively looking for exactly what E2E F7600 T15 Alpha Bakery 202610250935 offers — but they have no idea you exist. Not through Google, not through Facebook.\n\nI'm Claire from pundo.cy, a new free directory built specifically for them. I came across your business card and thought you'd be a great fit.\n\nWe'd love to list you. It takes less than 5 minutes to sign up yourself:\n\n👉 http://localhost:3500/for-shops\n\nAny questions? Just hit reply.\n\nClaire · pundo.cy",
+    "placeholders": {
+      "name": "Maria Georgiou 202610250935",
+      "business": "E2E F7600 T15 Alpha Bakery 202610250935",
+      "quelle": "I came across your business card and thought you'd be a great fit.",
+      "link": "http://localhost:3500/for-shops",
+      "absender": "Claire"
+    },
+    "recipient_channel_id": 7979,
+    "gate": {
+      "effective_tier": "red",
+      "org_tier": "green",
+      "channel_tier": "red",
+      "approval_required": true,
+      "approval": null
+    }
+  }
+}

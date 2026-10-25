@@ -1,0 +1,6 @@
+{
+  "status": 422,
+  "body": {
+    "detail": "channel_owned_by_other_person"
+  }
+}

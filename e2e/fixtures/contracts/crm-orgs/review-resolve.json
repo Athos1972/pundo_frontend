@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "body": {
+    "id": 48,
+    "kind": "legacy_contact_name",
+    "status": "resolved",
+    "org": {
+      "id": 7451,
+      "name": "E2E F7600 T15 Alpha Bakery 202610250935"
+    },
+    "person": null,
+    "relation_id": null,
+    "channel": null,
+    "payload": null,
+    "created_at": "2026-10-25T09:35:16.195337Z"
+  }
+}

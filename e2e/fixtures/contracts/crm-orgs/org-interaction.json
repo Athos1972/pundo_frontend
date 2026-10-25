@@ -1,0 +1,22 @@
+{
+  "status": 201,
+  "body": {
+    "id": 7905,
+    "actor_type": "user",
+    "actor_id": "1",
+    "kind": "call",
+    "channel": "phone",
+    "direction": "out",
+    "state_from": null,
+    "state_to": null,
+    "outcome": "Called about the offer",
+    "payload": {
+      "manual": true,
+      "our_party": null,
+      "their_party": null
+    },
+    "person_id": 23,
+    "relation_id": 9,
+    "created_at": "2026-10-25T09:35:15.952509Z"
+  }
+}

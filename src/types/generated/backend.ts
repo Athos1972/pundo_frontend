@@ -646,6 +646,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/crm/channels/{channel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set Channel Tier */
+        patch: operations["set_channel_tier_api_v1_admin_crm_channels__channel_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/crm/channels/{channel_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move Channel */
+        post: operations["move_channel_api_v1_admin_crm_channels__channel_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/crm/config": {
         parameters: {
             query?: never;
@@ -664,76 +698,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts": {
+    "/api/v1/admin/crm/orgs": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Contacts */
-        get: operations["list_contacts_api_v1_admin_crm_contacts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/crm/contacts/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Ingest Contact */
-        post: operations["ingest_contact_api_v1_admin_crm_contacts_ingest_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/crm/contacts/{contact_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Contact */
-        get: operations["get_contact_api_v1_admin_crm_contacts__contact_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
         /**
-         * Update Contact
-         * @description Partial-update org and/or contact fields (last-write-wins).
+         * List Orgs
+         * @description Organisations with lead status (AC 26). ``lead_only`` = only acquisition targets (lead state set).
          */
-        patch: operations["update_contact_api_v1_admin_crm_contacts__contact_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/admin/crm/contacts/{contact_id}/card-image/{side}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
+        get: operations["list_orgs_api_v1_admin_crm_orgs_get"];
+        put?: never;
         /**
-         * Serve Card Image
-         * @description Serve a card image for the given contact and side (front|back).
+         * Create Org
+         * @description Create an org (201) or enrich the org that already holds one of the values (200, §6.4).
          *
-         *     Requires Admin-JWT with crm:contacts:read permission.
-         *     Returns 404 if no image is stored or the file is missing on disk.
+         *     A value held by a person stays there; the org gets a review ``channel_owner_conflict`` (ingest rule §5.2).
          */
-        get: operations["serve_card_image_api_v1_admin_crm_contacts__contact_id__card_image__side__get"];
+        post: operations["create_org_api_v1_admin_crm_orgs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Orgs
+         * @description Typeahead (was ``GET /orgs?q=`` before the org cut). ``parent_candidates_only`` = orgs without a head
+         *     office of their own (possible head offices, AC 42/43).
+         */
+        get: operations["search_orgs_api_v1_admin_crm_orgs_search_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -742,7 +745,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/channels": {
+    "/api/v1/admin/crm/orgs/{org_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Org */
+        get: operations["get_org_api_v1_admin_crm_orgs__org_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Org
+         * @description Master data incl. head office (``parent_org_id``); never the lead block (last-write-wins).
+         */
+        patch: operations["update_org_api_v1_admin_crm_orgs__org_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/{org_id}/channels": {
         parameters: {
             query?: never;
             header?: never;
@@ -751,18 +775,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Add Channel
-         * @description Add a new channel to a contact (suppression + duplicate check).
-         */
-        post: operations["add_channel_api_v1_admin_crm_contacts__contact_id__channels_post"];
+        /** Add Org Channel */
+        post: operations["add_org_channel_api_v1_admin_crm_orgs__org_id__channels_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/channels/{channel_id}": {
+    "/api/v1/admin/crm/orgs/{org_id}/channels/{channel_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -773,16 +794,17 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Remove Channel
-         * @description Remove a channel. Requires at least 1 channel to remain.
+         * Remove Org Channel
+         * @description Remove an org channel; the last reachable channel of an active lead → 422 ``last_channel`` unless
+         *     ``mark_unreachable=true`` (then ``UNREACHABLE`` in the same operation, AC 13).
          */
-        delete: operations["remove_channel_api_v1_admin_crm_contacts__contact_id__channels__channel_id__delete"];
+        delete: operations["remove_org_channel_api_v1_admin_crm_orgs__org_id__channels__channel_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/confirm-business": {
+    "/api/v1/admin/crm/orgs/{org_id}/confirm-business": {
         parameters: {
             query?: never;
             header?: never;
@@ -792,14 +814,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Confirm Business */
-        post: operations["confirm_business_api_v1_admin_crm_contacts__contact_id__confirm_business_post"];
+        post: operations["confirm_business_api_v1_admin_crm_orgs__org_id__confirm_business_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/interactions": {
+    "/api/v1/admin/crm/orgs/{org_id}/interactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -812,14 +834,14 @@ export interface paths {
          * Add Manual Interaction
          * @description Document a WhatsApp chat, phone call or note that happened outside the system (N7600).
          */
-        post: operations["add_manual_interaction_api_v1_admin_crm_contacts__contact_id__interactions_post"];
+        post: operations["add_manual_interaction_api_v1_admin_crm_orgs__org_id__interactions_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/lifecycle": {
+    "/api/v1/admin/crm/orgs/{org_id}/lead": {
         parameters: {
             query?: never;
             header?: never;
@@ -828,15 +850,18 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set Lifecycle */
-        post: operations["set_lifecycle_api_v1_admin_crm_contacts__contact_id__lifecycle_post"];
+        /**
+         * Transition Lead
+         * @description Lead transition incl. "make it an acquisition target" (empty → ``SOURCED``).
+         */
+        post: operations["transition_lead_api_v1_admin_crm_orgs__org_id__lead_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/outreach/preview": {
+    "/api/v1/admin/crm/orgs/{org_id}/legal": {
         parameters: {
             query?: never;
             header?: never;
@@ -845,15 +870,75 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Outreach Preview */
-        post: operations["outreach_preview_api_v1_admin_crm_contacts__contact_id__outreach_preview_post"];
+        /**
+         * Set Legal
+         * @description Legal tier (and basis) of the lead block (T4b Sendegate Rechtsstufe); audited as interaction.
+         */
+        post: operations["set_legal_api_v1_admin_crm_orgs__org_id__legal_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/outreach/send": {
+    "/api/v1/admin/crm/orgs/{org_id}/outreach/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Outreach Approve
+         * @description Approve one send to this recipient despite the legal tier (7 days, one send; EA9, EA9a).
+         */
+        post: operations["outreach_approve_api_v1_admin_crm_orgs__org_id__outreach_approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/{org_id}/outreach/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Outreach Preview
+         * @description Rendered mail plus the gate state; never blocks (the UI shows the warning before sending).
+         */
+        post: operations["outreach_preview_api_v1_admin_crm_orgs__org_id__outreach_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/{org_id}/outreach/recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outreach Recipients */
+        get: operations["outreach_recipients_api_v1_admin_crm_orgs__org_id__outreach_recipients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/{org_id}/outreach/send": {
         parameters: {
             query?: never;
             header?: never;
@@ -863,14 +948,35 @@ export interface paths {
         get?: never;
         put?: never;
         /** Outreach Send */
-        post: operations["outreach_send_api_v1_admin_crm_contacts__contact_id__outreach_send_post"];
+        post: operations["outreach_send_api_v1_admin_crm_orgs__org_id__outreach_send_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/contacts/{contact_id}/suppress": {
+    "/api/v1/admin/crm/orgs/{org_id}/sources/{source_id}/card-image/{side}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Serve Card Image
+         * @description Card image evidence of a source (``Cache-Control: private``). The storage key comes from the DB row,
+         *     never from the request; ``load_image`` validates it against a safe pattern.
+         */
+        get: operations["serve_card_image_api_v1_admin_crm_orgs__org_id__sources__source_id__card_image__side__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/orgs/{org_id}/suppress": {
         parameters: {
             query?: never;
             header?: never;
@@ -879,25 +985,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Suppress Contact */
-        post: operations["suppress_contact_api_v1_admin_crm_contacts__contact_id__suppress_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/crm/orgs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Search Orgs */
-        get: operations["search_orgs_api_v1_admin_crm_orgs_get"];
-        put?: never;
-        post?: never;
+        /**
+         * Suppress Org
+         * @description Org opt-out: lead terminal, every org channel suppressed (branches/head office untouched, AC 44).
+         */
+        post: operations["suppress_org_api_v1_admin_crm_orgs__org_id__suppress_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -911,10 +1003,18 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Persons */
+        /**
+         * List Persons
+         * @description Name search ``ILIKE`` on ``display_name`` (≥ 3 characters, finds derived names, AC 30) plus an exact
+         *     e-mail/phone match over the HMAC of person and relation channels (never org channels, never the birth date).
+         */
         get: operations["list_persons_api_v1_admin_crm_persons_get"];
         put?: never;
-        /** Create Person */
+        /**
+         * Create Person
+         * @description A person with 0..n person channels (EA5). Conflicts: 409 ``person_channel_exists`` (``person_id``),
+         *     422 ``channel_owned_by_org``, ``suppressed`` (checked before anything is stored).
+         */
         post: operations["create_person_api_v1_admin_crm_persons_post"];
         delete?: never;
         options?: never;
@@ -937,11 +1037,15 @@ export interface paths {
         delete: operations["erase_person_api_v1_admin_crm_persons__person_id__delete"];
         options?: never;
         head?: never;
-        /** Update Person */
+        /**
+         * Update Person
+         * @description Only sent fields change. With a name part set an explicit ``display_name`` → 422
+         *     ``person_display_name_derived`` (AC 33); replacing a free name is audited without values (AC 32).
+         */
         patch: operations["update_person_api_v1_admin_crm_persons__person_id__patch"];
         trace?: never;
     };
-    "/api/v1/admin/crm/persons/{person_id}/contacts/{contact_id}": {
+    "/api/v1/admin/crm/persons/{person_id}/channels": {
         parameters: {
             query?: never;
             header?: never;
@@ -950,8 +1054,53 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Contact */
-        post: operations["link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post"];
+        /**
+         * Add Person Channel
+         * @description Person channel ("persönlich", valid for every relation); same conflict rules as relation channels.
+         */
+        post: operations["add_person_channel_api_v1_admin_crm_persons__person_id__channels_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/channels/{channel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Person Channel
+         * @description Remove a person channel; it counts for every org of an active relation, so the reachability rule
+         *     applies (422 ``last_channel`` unless ``mark_unreachable=true``).
+         */
+        delete: operations["remove_person_channel_api_v1_admin_crm_persons__person_id__channels__channel_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/persons/{person_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Person
+         * @description Interim export (Art. 15, EA11) until the F6110 orchestrator takes over; birth date without the
+         *     placeholder year (AC 36), org channels only for an active owner role with the owner rule on (AC 20).
+         */
+        get: operations["export_person_api_v1_admin_crm_persons__person_id__export_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -967,7 +1116,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Opt Out Person */
+        /**
+         * Opt Out Person
+         * @description Person objection: every person and relation channel suppressed, orgs unchanged except the owner rule.
+         */
         post: operations["opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post"];
         delete?: never;
         options?: never;
@@ -975,7 +1127,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/persons/{person_id}/roles": {
+    "/api/v1/admin/crm/relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Relation */
+        post: operations["create_relation_api_v1_admin_crm_relations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/relations/{relation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Relation */
+        patch: operations["update_relation_api_v1_admin_crm_relations__relation_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/crm/relations/{relation_id}/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Relation Channel
+         * @description Relation channel; conflicts: ``channel_owned_by_org`` (with ``channel_id``, AC 39),
+         *     ``channel_owned_by_other_person`` (AC 10), 409 ``channel_exists_same_person`` (with ``channel_id``, AC 9).
+         */
+        post: operations["add_relation_channel_api_v1_admin_crm_relations__relation_id__channels_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/relations/{relation_id}/channels/{channel_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Relation Channel
+         * @description Remove a relation channel; reachability rule as for org channels (422 ``last_channel``).
+         */
+        delete: operations["remove_relation_channel_api_v1_admin_crm_relations__relation_id__channels__channel_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/relations/{relation_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End Relation
+         * @description End a relation (``valid_to``); its channels are no recipients any more but stay visible (AC 11).
+         */
+        post: operations["end_relation_api_v1_admin_crm_relations__relation_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/relations/{relation_id}/roles": {
         parameters: {
             query?: never;
             header?: never;
@@ -985,14 +1232,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Add Role */
-        post: operations["add_role_api_v1_admin_crm_persons__person_id__roles_post"];
+        post: operations["add_role_api_v1_admin_crm_relations__relation_id__roles_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/crm/persons/{person_id}/roles/{role_id}/end": {
+    "/api/v1/admin/crm/relations/{relation_id}/roles/{role}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1001,8 +1248,42 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** End Role */
-        post: operations["end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post"];
+        post?: never;
+        /** Remove Role */
+        delete: operations["remove_role_api_v1_admin_crm_relations__relation_id__roles__role__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Review */
+        get: operations["list_review_api_v1_admin_crm_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/crm/review/{item_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Review */
+        post: operations["resolve_review_api_v1_admin_crm_review__item_id__resolve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8214,6 +8495,13 @@ export interface components {
              */
             outcome: "reached" | "not_reached";
         };
+        /** CardImageFlags */
+        CardImageFlags: {
+            /** Back */
+            back: boolean;
+            /** Front */
+            front: boolean;
+        };
         /** CatalogCaseApproveResponse */
         CatalogCaseApproveResponse: {
             /** Id */
@@ -8516,25 +8804,19 @@ export interface components {
             /** New Password */
             new_password: string;
         };
-        /** ChannelAddRequest */
-        ChannelAddRequest: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "email" | "phone";
-            /** Value */
-            value: string;
-        };
         /** ChannelIn */
         ChannelIn: {
             /**
              * Kind
              * @enum {string}
              */
-            kind: "email" | "phone";
+            kind: "email" | "phone" | "whatsapp";
             /** Value */
             value: string;
+        };
+        /** ChannelMoveRequest */
+        ChannelMoveRequest: {
+            owner: components["schemas"]["ChannelOwnerOut"];
         };
         /** ChannelOut */
         ChannelOut: {
@@ -8551,10 +8833,38 @@ export interface components {
             is_preferred: boolean;
             /** Kind */
             kind: string;
+            /**
+             * Legal Tier
+             * @enum {string}
+             */
+            legal_tier: "green" | "amber" | "red";
+            /** Origin */
+            origin?: string | null;
+            owner: components["schemas"]["ChannelOwnerOut"];
+            /** Owner Review Pending */
+            owner_review_pending: boolean;
             /** Reachable */
             reachable: string;
             /** Value Normalized */
             value_normalized: string;
+        };
+        /** ChannelOwnerOut */
+        ChannelOwnerOut: {
+            /** Id */
+            id: number;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "org" | "relation" | "person";
+        };
+        /** ChannelTierRequest */
+        ChannelTierRequest: {
+            /**
+             * Legal Tier
+             * @enum {string}
+             */
+            legal_tier: "green" | "amber" | "red";
         };
         /** CharityApproveRequest */
         CharityApproveRequest: {
@@ -8772,92 +9082,6 @@ export interface components {
             /** Sha256 */
             sha256: string;
         };
-        /** ConfirmBusinessRequest */
-        ConfirmBusinessRequest: {
-            /** Legal Basis */
-            legal_basis?: ("legitimate_interest" | "consent" | "contract" | "none") | null;
-            /** Note */
-            note?: string | null;
-            /** Version */
-            version: number;
-        };
-        /** ContactDetailResponse */
-        ContactDetailResponse: {
-            /** Agent Paused */
-            agent_paused: boolean;
-            /** Card Image Back Url */
-            card_image_back_url?: string | null;
-            /** Card Image Front Url */
-            card_image_front_url?: string | null;
-            /** Channels */
-            channels?: components["schemas"]["ChannelOut"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Display Name */
-            display_name?: string | null;
-            /** Effective Legal Basis */
-            effective_legal_basis: string;
-            /** Effective Legal Tier */
-            effective_legal_tier: string;
-            /** Id */
-            id: number;
-            /** Interactions */
-            interactions?: components["schemas"]["InteractionOut"][];
-            /** Lifecycle State */
-            lifecycle_state: string;
-            /** Messages */
-            messages?: components["schemas"]["MessageOut"][];
-            /** Needs Human */
-            needs_human: boolean;
-            org: components["schemas"]["OrgOut"];
-            /** Owner Id */
-            owner_id?: number | null;
-            /** Person Id */
-            person_id?: number | null;
-            /** Role Title */
-            role_title?: string | null;
-            /** Shop Id */
-            shop_id?: number | null;
-            /** Sources */
-            sources?: components["schemas"]["SourceOut"][];
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Version */
-            version: number;
-        };
-        /** ContactIn */
-        ContactIn: {
-            /** Display Name */
-            display_name?: string | null;
-            /** Role Title */
-            role_title?: string | null;
-        };
-        /** ContactListItem */
-        ContactListItem: {
-            /** Display Name */
-            display_name?: string | null;
-            /** Id */
-            id: number;
-            /** Lifecycle State */
-            lifecycle_state: string;
-            /** Org Name */
-            org_name: string;
-            /** Primary Email */
-            primary_email?: string | null;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Version */
-            version: number;
-        };
         /** ContactRequest */
         ContactRequest: {
             /** Category */
@@ -8875,14 +9099,6 @@ export interface components {
             subject: string;
             /** Turnstile Token */
             turnstile_token?: string | null;
-        };
-        /** ContactUpdateRequest */
-        ContactUpdateRequest: {
-            /** Display Name */
-            display_name?: string | null;
-            org?: components["schemas"]["OrgUpdateRequest"] | null;
-            /** Role Title */
-            role_title?: string | null;
         };
         /** CreateReviewRequest */
         CreateReviewRequest: {
@@ -8902,6 +9118,10 @@ export interface components {
         CrmConfigOut: {
             /** Outbound Kill Switch */
             outbound_kill_switch: boolean;
+            /** Owner Optout Rule */
+            owner_optout_rule: boolean;
+            /** Require Human Approval For Tier */
+            require_human_approval_for_tier: ("green" | "amber" | "red")[];
             /** Send Caps */
             send_caps: {
                 [key: string]: components["schemas"]["SendCapOut"];
@@ -8915,6 +9135,10 @@ export interface components {
         CrmConfigUpdate: {
             /** Outbound Kill Switch */
             outbound_kill_switch?: boolean | null;
+            /** Owner Optout Rule */
+            owner_optout_rule?: boolean | null;
+            /** Require Human Approval For Tier */
+            require_human_approval_for_tier?: ("green" | "amber" | "red")[] | null;
             /** Send Caps */
             send_caps?: {
                 [key: string]: number;
@@ -9700,14 +9924,6 @@ export interface components {
             /** Imported */
             imported: number;
         };
-        /** IngestRequest */
-        IngestRequest: {
-            /** Channels */
-            channels: components["schemas"]["ChannelIn"][];
-            contact: components["schemas"]["ContactIn"];
-            org: components["schemas"]["OrgIn"];
-            source: components["schemas"]["SourceIn"];
-        };
         /** IntakeProductData */
         IntakeProductData: {
             /** @default {} */
@@ -9822,6 +10038,10 @@ export interface components {
             payload?: {
                 [key: string]: unknown;
             } | null;
+            /** Person Id */
+            person_id?: number | null;
+            /** Relation Id */
+            relation_id?: number | null;
             /** State From */
             state_from?: string | null;
             /** State To */
@@ -10006,6 +10226,26 @@ export interface components {
             /** Source Urls */
             source_urls: string[];
         };
+        /** LeadConfirmRequest */
+        LeadConfirmRequest: {
+            /** Lead Version */
+            lead_version: number;
+            /** Legal Basis */
+            legal_basis?: ("legitimate_interest" | "consent" | "contract" | "none") | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** LeadTransitionRequest */
+        LeadTransitionRequest: {
+            /** Lead Version */
+            lead_version: number;
+            /** Reason */
+            reason?: string | null;
+            /** Shop Id */
+            shop_id?: number | null;
+            /** To State */
+            to_state: string;
+        };
         /** LeaseEventsRequest */
         LeaseEventsRequest: {
             /** Events */
@@ -10134,17 +10374,6 @@ export interface components {
             to_status: string | null;
             /** Workflow Id */
             workflow_id: string | null;
-        };
-        /** LifecycleRequest */
-        LifecycleRequest: {
-            /** Reason */
-            reason?: string | null;
-            /** Shop Id */
-            shop_id?: number | null;
-            /** To State */
-            to_state: string;
-            /** Version */
-            version: number;
         };
         /** LifecycleResponse */
         LifecycleResponse: {
@@ -10289,8 +10518,8 @@ export interface components {
             occurred_at?: string | null;
             /** Our Party */
             our_party?: string | null;
-            /** Person Id */
-            person_id?: number | null;
+            /** Relation Id */
+            relation_id?: number | null;
             /** Their Party */
             their_party?: string | null;
         };
@@ -10354,10 +10583,16 @@ export interface components {
             id: number;
             /** Language */
             language?: string | null;
+            /** Person Id */
+            person_id?: number | null;
             /** Provider */
             provider?: string | null;
             /** Provider Message Id */
             provider_message_id?: string | null;
+            /** Recipient Channel Id */
+            recipient_channel_id?: number | null;
+            /** Relation Id */
+            relation_id?: number | null;
             /** Retry Count */
             retry_count: number;
             /** Subject Rendered */
@@ -10546,6 +10781,14 @@ export interface components {
             /** Url */
             url: string | null;
         };
+        /** OkResponse */
+        OkResponse: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
         /** OnboardingContactRequest */
         OnboardingContactRequest: {
             /** Business Email */
@@ -10717,45 +10960,180 @@ export interface components {
              */
             ok: boolean;
         };
-        /** OrgIn */
-        OrgIn: {
-            /** Category */
-            category?: string | null;
-            /** City */
-            city?: string | null;
-            /** Name */
-            name: string;
+        /** OrgChildrenOut */
+        OrgChildrenOut: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["OrgRef"][];
         };
-        /** OrgOut */
-        OrgOut: {
-            /** Business Status */
-            business_status: string;
+        /** OrgCreateRequest */
+        OrgCreateRequest: {
+            /**
+             * As Lead
+             * @default true
+             */
+            as_lead: boolean;
             /** Category */
             category?: string | null;
+            /** Channels */
+            channels?: components["schemas"]["ChannelIn"][];
             /** City */
             city?: string | null;
-            /** Id */
-            id: number;
             /** Legal Name */
             legal_name?: string | null;
             /** Name */
             name: string;
+            source?: components["schemas"]["OrgSourceIn"];
+        };
+        /** OrgDetail */
+        OrgDetail: {
+            address?: components["schemas"]["AddressOut"] | null;
+            /** Business Status */
+            business_status: string;
+            /** Category */
+            category?: string | null;
+            /** Channels */
+            channels: components["schemas"]["ChannelOut"][];
+            children: components["schemas"]["OrgChildrenOut"];
+            /** City */
+            city?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Interactions */
+            interactions: components["schemas"]["InteractionOut"][];
+            lead: components["schemas"]["OrgLeadOut"];
+            /** Legal Name */
+            legal_name?: string | null;
+            /** Messages */
+            messages: components["schemas"]["MessageOut"][];
+            /** Name */
+            name: string;
+            /** Open Review Count */
+            open_review_count: number;
+            parent?: components["schemas"]["OrgRef"] | null;
+            /** Reachable */
+            reachable: boolean;
             /** Region */
             region?: string | null;
+            /** Relations */
+            relations: components["schemas"]["RelationOut"][];
             /** Shop Id */
             shop_id?: number | null;
+            /** Sources */
+            sources: components["schemas"]["SourceOut"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** OrgLeadOut */
+        OrgLeadOut: {
+            /** Agent Paused */
+            agent_paused: boolean;
+            /**
+             * Effective Legal Basis
+             * @enum {string}
+             */
+            effective_legal_basis: "legitimate_interest" | "consent" | "contract" | "none";
+            /**
+             * Effective Legal Tier
+             * @enum {string}
+             */
+            effective_legal_tier: "green" | "amber" | "red";
+            /** Needs Human */
+            needs_human: boolean;
+            /** Owner Id */
+            owner_id?: number | null;
+            /** Primary Source */
+            primary_source?: string | null;
+            /** State */
+            state?: ("SOURCED" | "ENRICHED" | "NEEDS_REVIEW" | "QUEUED" | "CONTACTED" | "ENGAGED" | "INTERESTED" | "REGISTERED" | "HARD_OPTOUT" | "REJECTED_PRIVATE" | "UNREACHABLE" | "DEAD") | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** OrgLegalRequest */
+        OrgLegalRequest: {
+            /** Effective Legal Basis */
+            effective_legal_basis?: ("legitimate_interest" | "consent" | "contract" | "none") | null;
+            /**
+             * Effective Legal Tier
+             * @enum {string}
+             */
+            effective_legal_tier: "green" | "amber" | "red";
+            /** Lead Version */
+            lead_version: number;
+            /** Note */
+            note?: string | null;
+        };
+        /** OrgListItem */
+        OrgListItem: {
+            /** City */
+            city?: string | null;
+            /** Contact Count */
+            contact_count: number;
+            /** Id */
+            id: number;
+            /** Lead State */
+            lead_state?: ("SOURCED" | "ENRICHED" | "NEEDS_REVIEW" | "QUEUED" | "CONTACTED" | "ENGAGED" | "INTERESTED" | "REGISTERED" | "HARD_OPTOUT" | "REJECTED_PRIVATE" | "UNREACHABLE" | "DEAD") | null;
+            /** Lead Version */
+            lead_version: number;
+            /** Name */
+            name: string;
+            parent?: components["schemas"]["OrgRef"] | null;
+            /** Primary Email */
+            primary_email?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** OrgRef */
+        OrgRef: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** OrgRefCity */
+        OrgRefCity: {
+            /** City */
+            city?: string | null;
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
         };
         /**
          * OrgSearchHit
-         * @description Treffer der Organisationssuche; bewusst ohne Kontakte, Kanäle, shop_id, Adresse.
+         * @description Hit of the organisation search; without channels, relations, shop_id, address.
          */
         OrgSearchHit: {
             /** Business Status */
             business_status: string;
             /** Category */
             category?: string | null;
+            /**
+             * Child Count
+             * @default 0
+             */
+            child_count: number;
             /** City */
             city?: string | null;
+            /**
+             * Has Parent
+             * @default false
+             */
+            has_parent: boolean;
             /** Id */
             id: number;
             /** Legal Name */
@@ -10763,14 +11141,45 @@ export interface components {
             /** Name */
             name: string;
         };
-        /** OrgUpdateRequest */
+        /** OrgSourceIn */
+        OrgSourceIn: {
+            /**
+             * Source
+             * @default business_card
+             * @enum {string}
+             */
+            source: "business_card" | "manual" | "referral" | "event";
+            /** Source Ref */
+            source_ref?: string | null;
+        };
+        /** OrgSuppressRequest */
+        OrgSuppressRequest: {
+            /** Lead Version */
+            lead_version: number;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "hard_optout" | "rejected_private";
+        };
+        /**
+         * OrgUpdateRequest
+         * @description Master data only; lead fields are refused (extra keys → 422). Explicit ``null`` clears.
+         */
         OrgUpdateRequest: {
+            address?: components["schemas"]["AddressIn"] | null;
             /** Category */
             category?: string | null;
             /** City */
             city?: string | null;
+            /** Legal Name */
+            legal_name?: string | null;
             /** Name */
             name?: string | null;
+            /** Parent Org Id */
+            parent_org_id?: number | null;
+            /** Region */
+            region?: string | null;
         };
         /** OsmBatchIntakeRequest */
         OsmBatchIntakeRequest: {
@@ -10899,6 +11308,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** OutreachApproveRequest */
+        OutreachApproveRequest: {
+            /** Reason */
+            reason: string;
+            /** Recipient Channel Id */
+            recipient_channel_id: number;
+        };
+        /** OutreachGate */
+        OutreachGate: {
+            approval?: components["schemas"]["SendApprovalOut"] | null;
+            /** Approval Required */
+            approval_required: boolean;
+            /** Channel Tier */
+            channel_tier?: string | null;
+            /**
+             * Effective Tier
+             * @enum {string}
+             */
+            effective_tier: "green" | "amber" | "red";
+            /** Org Tier */
+            org_tier: string;
+        };
         /** OutreachPreviewRequest */
         OutreachPreviewRequest: {
             /**
@@ -10906,6 +11337,8 @@ export interface components {
              * @enum {string}
              */
             language: "el" | "en" | "ru";
+            /** Recipient Channel Id */
+            recipient_channel_id?: number | null;
             /**
              * Template Id
              * @default first_contact_email
@@ -10917,12 +11350,55 @@ export interface components {
         OutreachPreviewResponse: {
             /** Body Rendered */
             body_rendered: string;
+            gate: components["schemas"]["OutreachGate"];
             /** Placeholders */
             placeholders: {
                 [key: string]: unknown;
             };
+            /** Recipient Channel Id */
+            recipient_channel_id?: number | null;
             /** Subject */
             subject: string;
+        };
+        /** OutreachRecipientOut */
+        OutreachRecipientOut: {
+            /** Approval Open */
+            approval_open: boolean;
+            /** Approval Required */
+            approval_required: boolean;
+            /** Channel Id */
+            channel_id: number;
+            /**
+             * Effective Tier
+             * @enum {string}
+             */
+            effective_tier: "green" | "amber" | "red";
+            /** Is Default */
+            is_default: boolean;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "email";
+            /**
+             * Owner Type
+             * @enum {string}
+             */
+            owner_type: "org" | "relation" | "person";
+            person?: components["schemas"]["OutreachRecipientPerson"] | null;
+            /** Relation Id */
+            relation_id?: number | null;
+            /** Roles */
+            roles: string[];
+            /** Value */
+            value: string;
+        };
+        /** OutreachRecipientPerson */
+        OutreachRecipientPerson: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
         };
         /** OutreachSendRequest */
         OutreachSendRequest: {
@@ -10930,8 +11406,13 @@ export interface components {
             body: string;
             /** Idempotency Key */
             idempotency_key: string;
-            /** Language */
-            language: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "el" | "en" | "ru";
+            /** Recipient Channel Id */
+            recipient_channel_id?: number | null;
             /** Subject */
             subject: string;
         };
@@ -11207,17 +11688,6 @@ export interface components {
             /** Total */
             total: number;
         };
-        /** PaginatedResponse[ContactListItem] */
-        PaginatedResponse_ContactListItem_: {
-            /** Items */
-            items: components["schemas"]["ContactListItem"][];
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-            /** Total */
-            total: number;
-        };
         /** PaginatedResponse[ItemDomainMappingResponse] */
         PaginatedResponse_ItemDomainMappingResponse_: {
             /** Items */
@@ -11240,6 +11710,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** PaginatedResponse[OrgListItem] */
+        PaginatedResponse_OrgListItem_: {
+            /** Items */
+            items: components["schemas"]["OrgListItem"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** PaginatedResponse[OrgSearchHit] */
         PaginatedResponse_OrgSearchHit_: {
             /** Items */
@@ -11255,6 +11736,17 @@ export interface components {
         PaginatedResponse_PersonOut_: {
             /** Items */
             items: components["schemas"]["PersonOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** PaginatedResponse[ReviewItemOut] */
+        PaginatedResponse_ReviewItemOut_: {
+            /** Items */
+            items: components["schemas"]["ReviewItemOut"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -11304,49 +11796,33 @@ export interface components {
              */
             email: string;
         };
-        /** PersonContactOut */
-        PersonContactOut: {
-            /** Display Name */
-            display_name?: string | null;
-            /** Id */
-            id: number;
-            /** Org Id */
-            org_id?: number | null;
-        };
         /** PersonCreateRequest */
         PersonCreateRequest: {
             address?: components["schemas"]["AddressIn"] | null;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Birth Year Unknown */
+            birth_year_unknown?: boolean | null;
+            /** Channels */
+            channels?: components["schemas"]["ChannelIn"][];
             /** Display Name */
             display_name?: string | null;
-            /** Identifiers */
-            identifiers: components["schemas"]["PersonIdentifierIn"][];
-        };
-        /** PersonIdentifierIn */
-        PersonIdentifierIn: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "email" | "phone";
-            /** Value */
-            value: string;
-        };
-        /** PersonIdentifierOut */
-        PersonIdentifierOut: {
-            /** Id */
-            id: number;
-            /** Kind */
-            kind: string;
-            /** Value Normalized */
-            value_normalized: string;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Salutation */
+            salutation?: ("mr" | "ms" | "mx" | "dr" | "none") | null;
         };
         /** PersonOut */
         PersonOut: {
             address?: components["schemas"]["AddressOut"] | null;
-            /** Address Id */
-            address_id?: number | null;
-            /** Contacts */
-            contacts: components["schemas"]["PersonContactOut"][];
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Birth Year Unknown */
+            birth_year_unknown: boolean;
+            /** Channels */
+            channels: components["schemas"]["ChannelOut"][];
             /**
              * Created At
              * Format: date-time
@@ -11354,87 +11830,44 @@ export interface components {
             created_at: string;
             /** Display Name */
             display_name?: string | null;
+            /** First Name */
+            first_name?: string | null;
             /** Id */
             id: number;
-            /** Identifiers */
-            identifiers: components["schemas"]["PersonIdentifierOut"][];
-            /** Roles */
-            roles: components["schemas"]["PersonRoleOut"][];
+            /** Last Name */
+            last_name?: string | null;
+            /** Name Derived */
+            name_derived: boolean;
+            /** Optout */
+            optout: boolean;
+            /** Relations */
+            relations: components["schemas"]["RelationOut"][];
+            /** Salutation */
+            salutation?: string | null;
             /**
              * Updated At
              * Format: date-time
              */
             updated_at: string;
         };
-        /** PersonRoleCreatedOut */
-        PersonRoleCreatedOut: {
-            /** Id */
-            id: number;
-            /** Org City */
-            org_city?: string | null;
-            /** Org Id */
-            org_id: number;
-            /** Org Name */
-            org_name: string;
-            /** Person Id */
-            person_id: number;
-            /** Role */
-            role: string;
-            /** Source */
-            source: string;
-            /** Valid From */
-            valid_from?: string | null;
-            /** Valid To */
-            valid_to?: string | null;
-        };
-        /** PersonRoleEndRequest */
-        PersonRoleEndRequest: {
-            /**
-             * Valid To
-             * Format: date
-             */
-            valid_to: string;
-        };
-        /** PersonRoleOut */
-        PersonRoleOut: {
-            /** Id */
-            id: number;
-            /** Org City */
-            org_city?: string | null;
-            /** Org Id */
-            org_id: number;
-            /** Org Name */
-            org_name: string;
-            /** Role */
-            role: string;
-            /** Source */
-            source: string;
-            /** Valid From */
-            valid_from?: string | null;
-            /** Valid To */
-            valid_to?: string | null;
-        };
-        /** PersonRoleRequest */
-        PersonRoleRequest: {
-            /** Org Id */
-            org_id: number;
-            /** Role */
-            role: string;
-            /**
-             * Source
-             * @default manual
-             */
-            source: string;
-            /** Valid From */
-            valid_from?: string | null;
-            /** Valid To */
-            valid_to?: string | null;
-        };
-        /** PersonUpdateRequest */
-        PersonUpdateRequest: {
+        /**
+         * PersonWriteRequest
+         * @description PATCH semantics: only sent fields change; explicit ``null`` clears.
+         */
+        PersonWriteRequest: {
             address?: components["schemas"]["AddressIn"] | null;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Birth Year Unknown */
+            birth_year_unknown?: boolean | null;
             /** Display Name */
             display_name?: string | null;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Salutation */
+            salutation?: ("mr" | "ms" | "mx" | "dr" | "none") | null;
         };
         /** PhotoStatusOut */
         PhotoStatusOut: {
@@ -12226,6 +12659,91 @@ export interface components {
             /** Items */
             items: components["schemas"]["RelatedShopItem"][];
         };
+        /** RelationCreateRequest */
+        RelationCreateRequest: {
+            address?: components["schemas"]["AddressIn"] | null;
+            /** Note */
+            note?: string | null;
+            /** Org Id */
+            org_id: number;
+            /** Person Id */
+            person_id: number;
+            /** Preferred Channel Id */
+            preferred_channel_id?: number | null;
+            /** Roles */
+            roles?: string[];
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+        };
+        /** RelationEndRequest */
+        RelationEndRequest: {
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+        };
+        /** RelationOut */
+        RelationOut: {
+            /** Active */
+            active: boolean;
+            address?: components["schemas"]["AddressOut"] | null;
+            /** Channels */
+            channels: components["schemas"]["ChannelOut"][];
+            /** Id */
+            id: number;
+            /** Note */
+            note?: string | null;
+            org: components["schemas"]["OrgRefCity"];
+            person: components["schemas"]["RelationPersonOut"];
+            /** Person Channels */
+            person_channels: components["schemas"]["ChannelOut"][];
+            /** Preferred Channel Id */
+            preferred_channel_id?: number | null;
+            /** Role Missing */
+            role_missing: boolean;
+            /** Roles */
+            roles: string[];
+            /** Source */
+            source: string;
+            /** Uses Org Address */
+            uses_org_address: boolean;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+        };
+        /** RelationPersonOut */
+        RelationPersonOut: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
+            /** Optout */
+            optout: boolean;
+        };
+        /** RelationRoleRequest */
+        RelationRoleRequest: {
+            /** Role */
+            role: string;
+        };
+        /**
+         * RelationUpdateRequest
+         * @description PATCH: only sent fields change; explicit ``null`` clears.
+         */
+        RelationUpdateRequest: {
+            address?: components["schemas"]["AddressIn"] | null;
+            /** Note */
+            note?: string | null;
+            /** Preferred Channel Id */
+            preferred_channel_id?: number | null;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+        };
         /** ReleaseRequest */
         ReleaseRequest: {
             /**
@@ -12274,6 +12792,33 @@ export interface components {
              */
             type: "product" | "shop";
         };
+        /**
+         * ReviewItemOut
+         * @description A stored review item (``id`` set) or a computed one (``relation_without_role``,
+         *     ``person_without_name_parts``: ``id`` null).
+         */
+        ReviewItemOut: {
+            channel?: components["schemas"]["ChannelOut"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id?: number | null;
+            /** Kind */
+            kind: string;
+            org?: components["schemas"]["OrgRef"] | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            person?: components["schemas"]["ReviewPersonOut"] | null;
+            /** Relation Id */
+            relation_id?: number | null;
+            /** Status */
+            status: string;
+        };
         /** ReviewOut */
         ReviewOut: {
             /** Comment */
@@ -12301,6 +12846,13 @@ export interface components {
             /** User Id */
             user_id: number;
         };
+        /** ReviewPersonOut */
+        ReviewPersonOut: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
+        };
         /** ReviewPhotoOut */
         ReviewPhotoOut: {
             /** Id */
@@ -12315,6 +12867,14 @@ export interface components {
             thumbnail_url: string | null;
             /** Url */
             url: string;
+        };
+        /** ReviewResolveRequest */
+        ReviewResolveRequest: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "resolved" | "dismissed";
         };
         /** ReviewStatsOut */
         ReviewStatsOut: {
@@ -12910,6 +13470,31 @@ export interface components {
             egress_blocked_hosts?: string[];
             /** Prompt Injection Detected */
             prompt_injection_detected: boolean;
+        };
+        /** SendApprovalOut */
+        SendApprovalOut: {
+            /** Approved By */
+            approved_by: string;
+            /** Channel Id */
+            channel_id?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Effective Tier */
+            effective_tier: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: number;
+            /** Reason */
+            reason: string;
+            /** Used Message Id */
+            used_message_id?: number | null;
         };
         /** SendCapOut */
         SendCapOut: {
@@ -13710,23 +14295,9 @@ export interface components {
             /** Warning */
             warning?: string | null;
         };
-        /** SourceIn */
-        SourceIn: {
-            /** Raw */
-            raw?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Source
-             * @default business_card
-             * @enum {string}
-             */
-            source: "business_card" | "manual" | "referral" | "event";
-            /** Source Ref */
-            source_ref?: string | null;
-        };
         /** SourceOut */
         SourceOut: {
+            has_card_image: components["schemas"]["CardImageFlags"];
             /** Id */
             id: number;
             /** Legal Basis */
@@ -13843,16 +14414,6 @@ export interface components {
             spotted_id: number;
             /** Status */
             status: string;
-        };
-        /** SuppressRequest */
-        SuppressRequest: {
-            /**
-             * Reason
-             * @enum {string}
-             */
-            reason: "hard_optout" | "rejected_private";
-            /** Version */
-            version: number;
         };
         /** TopProduct */
         TopProduct: {
@@ -16046,9 +16607,85 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AddressOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_channel_tier_api_v1_admin_crm_channels__channel_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                channel_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelTierRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_channel_api_v1_admin_crm_channels__channel_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                channel_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelMoveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelOut"];
                 };
             };
             /** @description Validation Error */
@@ -16132,11 +16769,13 @@ export interface operations {
             };
         };
     };
-    list_contacts_api_v1_admin_crm_contacts_get: {
+    list_orgs_api_v1_admin_crm_orgs_get: {
         parameters: {
             query?: {
                 q?: string | null;
-                lifecycle_state?: string | null;
+                lead_state?: ("SOURCED" | "ENRICHED" | "NEEDS_REVIEW" | "QUEUED" | "CONTACTED" | "ENGAGED" | "INTERESTED" | "REGISTERED" | "HARD_OPTOUT" | "REJECTED_PRIVATE" | "UNREACHABLE" | "DEAD") | null;
+                lead_only?: boolean;
+                owner_id?: number | null;
                 limit?: number;
                 offset?: number;
             };
@@ -16156,7 +16795,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ContactListItem_"];
+                    "application/json": components["schemas"]["PaginatedResponse_OrgListItem_"];
                 };
             };
             /** @description Validation Error */
@@ -16170,7 +16809,7 @@ export interface operations {
             };
         };
     };
-    ingest_contact_api_v1_admin_crm_contacts_ingest_post: {
+    create_org_api_v1_admin_crm_orgs_post: {
         parameters: {
             query?: never;
             header?: {
@@ -16183,156 +16822,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IngestRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_contact_api_v1_admin_crm_contacts__contact_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                contact_id: number;
-            };
-            cookie?: {
-                admin_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_contact_api_v1_admin_crm_contacts__contact_id__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                contact_id: number;
-            };
-            cookie?: {
-                admin_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ContactUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    serve_card_image_api_v1_admin_crm_contacts__contact_id__card_image__side__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                contact_id: number;
-                side: string;
-            };
-            cookie?: {
-                admin_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_channel_api_v1_admin_crm_contacts__contact_id__channels_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                contact_id: number;
-            };
-            cookie?: {
-                admin_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChannelAddRequest"];
+                "application/json": components["schemas"]["OrgCreateRequest"];
             };
         };
         responses: {
@@ -16342,7 +16832,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
+                    "application/json": components["schemas"]["OrgDetail"];
                 };
             };
             /** @description Validation Error */
@@ -16356,14 +16846,168 @@ export interface operations {
             };
         };
     };
-    remove_channel_api_v1_admin_crm_contacts__contact_id__channels__channel_id__delete: {
+    search_orgs_api_v1_admin_crm_orgs_search_get: {
+        parameters: {
+            query: {
+                q: string;
+                parent_candidates_only?: boolean;
+                exclude_id?: number | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_OrgSearchHit_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_org_api_v1_admin_crm_orgs__org_id__get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_org_api_v1_admin_crm_orgs__org_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_org_channel_api_v1_admin_crm_orgs__org_id__channels_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_org_channel_api_v1_admin_crm_orgs__org_id__channels__channel_id__delete: {
+        parameters: {
+            query?: {
+                mark_unreachable?: boolean;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
                 channel_id: number;
             };
             cookie?: {
@@ -16378,7 +17022,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
+                    "application/json": components["schemas"]["OrgDetail"];
                 };
             };
             /** @description Validation Error */
@@ -16392,14 +17036,14 @@ export interface operations {
             };
         };
     };
-    confirm_business_api_v1_admin_crm_contacts__contact_id__confirm_business_post: {
+    confirm_business_api_v1_admin_crm_orgs__org_id__confirm_business_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16407,7 +17051,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ConfirmBusinessRequest"];
+                "application/json": components["schemas"]["LeadConfirmRequest"];
             };
         };
         responses: {
@@ -16417,7 +17061,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
+                    "application/json": components["schemas"]["OrgDetail"];
                 };
             };
             /** @description Validation Error */
@@ -16431,14 +17075,14 @@ export interface operations {
             };
         };
     };
-    add_manual_interaction_api_v1_admin_crm_contacts__contact_id__interactions_post: {
+    add_manual_interaction_api_v1_admin_crm_orgs__org_id__interactions_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16470,14 +17114,14 @@ export interface operations {
             };
         };
     };
-    set_lifecycle_api_v1_admin_crm_contacts__contact_id__lifecycle_post: {
+    transition_lead_api_v1_admin_crm_orgs__org_id__lead_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16485,7 +17129,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LifecycleRequest"];
+                "application/json": components["schemas"]["LeadTransitionRequest"];
             };
         };
         responses: {
@@ -16495,7 +17139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
+                    "application/json": components["schemas"]["OrgDetail"];
                 };
             };
             /** @description Validation Error */
@@ -16509,14 +17153,92 @@ export interface operations {
             };
         };
     };
-    outreach_preview_api_v1_admin_crm_contacts__contact_id__outreach_preview_post: {
+    set_legal_api_v1_admin_crm_orgs__org_id__legal_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgLegalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    outreach_approve_api_v1_admin_crm_orgs__org_id__outreach_approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutreachApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SendApprovalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    outreach_preview_api_v1_admin_crm_orgs__org_id__outreach_preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16548,14 +17270,49 @@ export interface operations {
             };
         };
     };
-    outreach_send_api_v1_admin_crm_contacts__contact_id__outreach_send_post: {
+    outreach_recipients_api_v1_admin_crm_orgs__org_id__outreach_recipients_get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutreachRecipientOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    outreach_send_api_v1_admin_crm_orgs__org_id__outreach_send_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                org_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16587,24 +17344,22 @@ export interface operations {
             };
         };
     };
-    suppress_contact_api_v1_admin_crm_contacts__contact_id__suppress_post: {
+    serve_card_image_api_v1_admin_crm_orgs__org_id__sources__source_id__card_image__side__get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                contact_id: number;
+                org_id: number;
+                source_id: number;
+                side: "front" | "back";
             };
             cookie?: {
                 admin_token?: string | null;
             };
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SuppressRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -16612,7 +17367,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDetailResponse"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -16626,22 +17381,24 @@ export interface operations {
             };
         };
     };
-    search_orgs_api_v1_admin_crm_orgs_get: {
+    suppress_org_api_v1_admin_crm_orgs__org_id__suppress_post: {
         parameters: {
-            query: {
-                q: string;
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: {
                 authorization?: string | null;
             };
-            path?: never;
+            path: {
+                org_id: number;
+            };
             cookie?: {
                 admin_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgSuppressRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -16649,7 +17406,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_OrgSearchHit_"];
+                    "application/json": components["schemas"]["OrgDetail"];
                 };
             };
             /** @description Validation Error */
@@ -16820,7 +17577,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PersonUpdateRequest"];
+                "application/json": components["schemas"]["PersonWriteRequest"];
             };
         };
         responses: {
@@ -16844,7 +17601,7 @@ export interface operations {
             };
         };
     };
-    link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post: {
+    add_person_channel_api_v1_admin_crm_persons__person_id__channels_post: {
         parameters: {
             query?: never;
             header?: {
@@ -16852,7 +17609,85 @@ export interface operations {
             };
             path: {
                 person_id: number;
-                contact_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_person_channel_api_v1_admin_crm_persons__person_id__channels__channel_id__delete: {
+        parameters: {
+            query?: {
+                mark_unreachable?: boolean;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
+                channel_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_person_api_v1_admin_crm_persons__person_id__export_get: {
+        parameters: {
+            query?: {
+                lang?: "en" | "de" | "el";
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                person_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16903,9 +17738,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["OkResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16919,22 +17752,20 @@ export interface operations {
             };
         };
     };
-    add_role_api_v1_admin_crm_persons__person_id__roles_post: {
+    create_relation_api_v1_admin_crm_relations_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
-            path: {
-                person_id: number;
-            };
+            path?: never;
             cookie?: {
                 admin_token?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PersonRoleRequest"];
+                "application/json": components["schemas"]["RelationCreateRequest"];
             };
         };
         responses: {
@@ -16944,7 +17775,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonRoleCreatedOut"];
+                    "application/json": components["schemas"]["RelationOut"];
                 };
             };
             /** @description Validation Error */
@@ -16958,15 +17789,14 @@ export interface operations {
             };
         };
     };
-    end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post: {
+    update_relation_api_v1_admin_crm_relations__relation_id__patch: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                person_id: number;
-                role_id: number;
+                relation_id: number;
             };
             cookie?: {
                 admin_token?: string | null;
@@ -16974,7 +17804,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PersonRoleEndRequest"];
+                "application/json": components["schemas"]["RelationUpdateRequest"];
             };
         };
         responses: {
@@ -16984,9 +17814,274 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_relation_channel_api_v1_admin_crm_relations__relation_id__channels_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                relation_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChannelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_relation_channel_api_v1_admin_crm_relations__relation_id__channels__channel_id__delete: {
+        parameters: {
+            query?: {
+                mark_unreachable?: boolean;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                relation_id: number;
+                channel_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_relation_api_v1_admin_crm_relations__relation_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                relation_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationEndRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_role_api_v1_admin_crm_relations__relation_id__roles_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                relation_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_role_api_v1_admin_crm_relations__relation_id__roles__role__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                relation_id: number;
+                role: string;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_api_v1_admin_crm_review_get: {
+        parameters: {
+            query: {
+                category: "legacy" | "channel_owner" | "relations_without_role" | "persons_name_parts";
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ReviewItemOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_review_api_v1_admin_crm_review__item_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                item_id: number;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItemOut"];
                 };
             };
             /** @description Validation Error */

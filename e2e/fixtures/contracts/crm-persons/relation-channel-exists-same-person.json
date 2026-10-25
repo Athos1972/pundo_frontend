@@ -1,0 +1,9 @@
+{
+  "status": 409,
+  "body": {
+    "detail": {
+      "detail": "channel_exists_same_person",
+      "channel_id": 7985
+    }
+  }
+}

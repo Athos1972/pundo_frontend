@@ -7,6 +7,7 @@ import type { ComboboxItem } from '@/components/system-admin/Combobox'
 import type { CrmOrgSearchHit, CrmPerson, PaginatedResponse } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 import { CRM_ERROR_KEYS, CrmSearchError, crmSearch } from './crmFetch'
+import { crmPath } from './crmPaths'
 
 /** Minimum input lengths; the backend enforces the same numbers (422 `org_search_too_short` / `person_search_too_short`). */
 export const ORG_SEARCH_MIN = 2
@@ -22,26 +23,43 @@ export function orgHitToItem(hit: CrmOrgSearchHit): ComboboxItem {
   }
 }
 
+/** Channel values shown in the sublabel of a person hit (personal channels first, then those of the relations). */
+const PERSON_SUBLABEL_CHANNELS = 3
+
+/** Sublabel of a person: channel values tell people with the same name apart; the number is the last resort. */
 export function personToItem(person: CrmPerson): ComboboxItem {
-  const identifiers = (person.identifiers ?? []).map((identifier) => identifier.value_normalized)
+  const channels = [...(person.channels ?? []), ...(person.relations ?? []).flatMap((relation) => relation.channels ?? [])]
+  const values = [...new Set(channels.map((channel) => channel.value_normalized))].slice(0, PERSON_SUBLABEL_CHANNELS)
   return {
     value: String(person.id),
     label: person.display_name ?? '—',
-    subLabel: [...identifiers, `#${person.id}`].join(' · '),
+    subLabel: [...values, `#${person.id}`].join(' · '),
   }
 }
 
-export async function searchCrmOrgs(query: string): Promise<ComboboxItem[]> {
+/**
+ * Organisation type-ahead (`GET /admin/crm/orgs/search`). `parentCandidatesOnly` offers only organisations without a head
+ * office of their own (for "belongs to"); `excludeId` leaves out the organisation being edited.
+ */
+export async function searchCrmOrgs(
+  query: string,
+  options: { parentCandidatesOnly?: boolean; excludeId?: number } = {},
+): Promise<ComboboxItem[]> {
   const q = query.trim()
   if (q.length < ORG_SEARCH_MIN) return []
-  const res = await crmSearch<PaginatedResponse<CrmOrgSearchHit>>(`crm/orgs?q=${encodeURIComponent(q)}&limit=${SEARCH_LIMIT}`)
+  const res = await crmSearch<PaginatedResponse<CrmOrgSearchHit>>(crmPath('orgSearch', {
+    q,
+    limit: SEARCH_LIMIT,
+    parent_candidates_only: options.parentCandidatesOnly ? true : undefined,
+    exclude_id: options.excludeId,
+  }))
   return res.items.map(orgHitToItem)
 }
 
 export async function searchCrmPersons(query: string): Promise<ComboboxItem[]> {
   const q = query.trim()
   if (q.length < PERSON_SEARCH_MIN) return []
-  const res = await crmSearch<PaginatedResponse<CrmPerson>>(`crm/persons?q=${encodeURIComponent(q)}&limit=${SEARCH_LIMIT}`)
+  const res = await crmSearch<PaginatedResponse<CrmPerson>>(crmPath('personList', { q, limit: SEARCH_LIMIT }))
   return res.items.map(personToItem)
 }
 

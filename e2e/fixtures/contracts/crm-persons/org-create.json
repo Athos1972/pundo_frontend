@@ -1,0 +1,107 @@
+{
+  "status": 201,
+  "body": {
+    "id": 7454,
+    "name": "E2E F7600 T16 Taverna Kyma 202610250944",
+    "legal_name": null,
+    "city": "Larnaca",
+    "region": null,
+    "category": null,
+    "business_status": "unknown",
+    "shop_id": null,
+    "address": null,
+    "lead": {
+      "state": null,
+      "owner_id": null,
+      "effective_legal_tier": "green",
+      "effective_legal_basis": "legitimate_interest",
+      "primary_source": "manual",
+      "needs_human": false,
+      "agent_paused": false,
+      "version": 1,
+      "updated_at": null
+    },
+    "parent": null,
+    "children": {
+      "count": 0,
+      "items": []
+    },
+    "channels": [
+      {
+        "id": 7983,
+        "kind": "email",
+        "value_normalized": "info@t16-kyma-202610250944.example",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "manual",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7454
+        },
+        "created_at": "2026-10-25T09:44:17.802557Z"
+      }
+    ],
+    "relations": [],
+    "sources": [
+      {
+        "id": 7797,
+        "source": "manual",
+        "source_ref": null,
+        "legal_tier": "green",
+        "legal_basis": "legitimate_interest",
+        "observed_at": "2026-10-25T09:44:17.802557Z",
+        "has_card_image": {
+          "front": false,
+          "back": false
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "id": 7910,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "created",
+        "payload": {
+          "lead": false,
+          "event": "org_created"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:44:17.802557Z"
+      },
+      {
+        "id": 7911,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "ingested",
+        "payload": {
+          "source": "manual",
+          "channels_added": 1,
+          "owner_conflicts": 0
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:44:17.802557Z"
+      }
+    ],
+    "messages": [],
+    "open_review_count": 0,
+    "reachable": true,
+    "created_at": "2026-10-25T09:44:17.802557Z",
+    "updated_at": "2026-10-25T09:44:17.802557Z"
+  }
+}

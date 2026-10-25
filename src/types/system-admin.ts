@@ -330,100 +330,249 @@ export interface SysAdminApiKey {
 }
 
 // ─── CRM (F7600) ───────────────────────────────────────────────────────────────
+// Model since the org cut (Variante E): the lead block sits on the organisation, a channel has exactly one owner
+// (organisation, relation or person), people belong to organisations through relations with a set of roles.
+// Backend contract: docs/openapi.json (generated/backend.ts); `src/types/contracts.ts` compares the responses.
 
-export type CrmLifecycleState =
+/** Lead status of an organisation. `null` (no lead) is a valid state: the organisation is just master data. */
+export type CrmLeadState =
   | 'SOURCED' | 'ENRICHED' | 'NEEDS_REVIEW' | 'QUEUED' | 'CONTACTED'
   | 'ENGAGED' | 'INTERESTED' | 'REGISTERED' | 'UNREACHABLE'
   | 'HARD_OPTOUT' | 'REJECTED_PRIVATE' | 'DEAD'
 
-export type CrmChannelKindIn = 'email' | 'phone'          // Request-side (Ingest)
+export type CrmChannelKindIn = 'email' | 'phone' | 'whatsapp'   // Request side (create/add)
 export type CrmOutreachLang = 'el' | 'en' | 'ru'
 export type CrmLegalBasis = 'legitimate_interest' | 'consent' | 'contract' | 'none'
+export type CrmLegalTier = 'green' | 'amber' | 'red'
 export type CrmSuppressReason = 'hard_optout' | 'rejected_private'
 export type CrmSource = 'business_card' | 'manual' | 'referral' | 'event'
+export type CrmChannelOwnerType = 'org' | 'relation' | 'person'
+export type CrmSalutation = 'mr' | 'ms' | 'mx' | 'dr' | 'none'
 
-// — Requests —
-export interface CrmIngestRequest {
-  org: { name: string; city?: string | null; category?: string | null }
-  contact: { display_name?: string | null; role_title?: string | null }
-  channels: Array<{ kind: CrmChannelKindIn; value: string }>
-  source: { source: CrmSource; source_ref?: string | null; raw?: Record<string, unknown> | null }
-}
+// — Shared building blocks —
+export interface CrmAddress { id: number; address_line1: string | null; address_line2: string | null; city: string | null; state: string | null; postal_code: string | null; country_code: string; lat: number | null; lon: number | null }
+/** Address in a request (find-or-create on the backend by canonical key). */
+export type CrmAddressIn = Partial<Omit<CrmAddress, 'id'>>
+export interface CrmOrgRef { id: number; name: string }
+export interface CrmChannelOwner { type: CrmChannelOwnerType; id: number }
 
-export interface CrmOrgUpdateRequest {
-  name?: string | null
-  city?: string | null
-  category?: string | null
-}
-
-export interface CrmContactUpdateRequest {
-  org?: CrmOrgUpdateRequest | null
-  display_name?: string | null
-  role_title?: string | null
-}
-
-export interface CrmChannelAddRequest {
-  kind: CrmChannelKindIn
-  value: string
-}
-export interface CrmConfirmBusinessRequest { version: number; legal_basis?: CrmLegalBasis | null; note?: string | null }
-export interface CrmLifecycleRequest { to_state: CrmLifecycleState; version: number; reason?: string | null; shop_id?: number | null }
-export interface CrmSuppressRequest { reason: CrmSuppressReason; version: number }
-export interface CrmOutreachPreviewRequest { language: CrmOutreachLang; template_id?: 'first_contact_email' }
-export interface CrmOutreachSendRequest { language: CrmOutreachLang; subject: string; body: string; idempotency_key: string } // NO version
-
-// — Responses —
-export interface CrmOutreachPreviewResponse { subject: string; body_rendered: string; placeholders: Record<string, string> }
-export interface CrmOutreachSendResponse { message_id: number; delivery_status: string }
-
-export interface CrmOrgOut {
-  id: number; name: string; legal_name?: string | null; city?: string | null
-  region?: string | null; category?: string | null; business_status: string; shop_id: number | null
-}
-export type CrmChannelKindOut = 'email' | 'phone_call' | 'sms' | 'whatsapp' | 'push'
+export type CrmChannelKindOut = 'email' | 'phone_call' | 'sms' | 'whatsapp' | 'telegram' | 'push'
 export interface CrmChannelOut {
   id: number; kind: CrmChannelKindOut; value_normalized: string; reachable: string
-  consent_state: string; is_preferred: boolean; created_at: string
+  consent_state: string; is_preferred: boolean; legal_tier: CrmLegalTier
+  /** shop|card|manual|migration|migration_identifier|google_places|facebook_places|… */
+  origin: string | null
+  /** "Check channel assignment" marker (unclear owner after the cut or the card classification). */
+  owner_review_pending: boolean
+  owner: CrmChannelOwner
+  created_at: string
+}
+
+// — Organisations —
+export interface CrmOrgListItem {
+  id: number; name: string; city: string | null; lead_state: CrmLeadState | null
+  /** Number of active relations (contact persons). */
+  contact_count: number
+  primary_email: string | null; parent: CrmOrgRef | null; lead_version: number; updated_at: string
+}
+/** One hit of `GET /admin/crm/orgs/search`. Company fields only, no channels. */
+export interface CrmOrgSearchHit {
+  id: number; name: string; legal_name: string | null; city: string | null; category: string | null
+  business_status: string; has_parent: boolean; child_count: number
 }
 export interface CrmSourceOut {
-  id: number; source: string; source_ref?: string | null
+  id: number; source: string; source_ref: string | null
   legal_tier: string; legal_basis: string; observed_at: string
+  /** Card images are served by `GET /admin/crm/orgs/{org_id}/sources/{id}/card-image/{front|back}`. */
+  has_card_image: { front: boolean; back: boolean }
 }
 export interface CrmInteractionOut {
-  id: number; actor_type: string; actor_id?: string | null; kind: string; channel: string
-  direction: string; state_from?: string | null; state_to?: string | null
-  outcome?: string | null; payload?: Record<string, unknown> | null; created_at: string
+  id: number; actor_type: string; actor_id: string | null; kind: string; channel: string
+  direction: string; state_from: string | null; state_to: string | null
+  outcome: string | null; payload: Record<string, unknown> | null
+  person_id: number | null; relation_id: number | null; created_at: string
 }
 export interface CrmMessageOut {
-  id: number; channel: string; direction: string; provider?: string | null
-  provider_message_id?: string | null; template_id?: string | null; language?: string | null
-  subject_rendered?: string | null; body_rendered?: string | null
-  delivery_status: string; error_code?: string | null; retry_count: number
+  id: number; channel: string; direction: string; provider: string | null
+  provider_message_id: string | null; template_id: string | null; language: string | null
+  subject_rendered: string | null; body_rendered: string | null
+  delivery_status: string; error_code: string | null; retry_count: number
+  recipient_channel_id: number | null; person_id: number | null; relation_id: number | null
   created_at: string; updated_at: string
 }
-export interface CrmContactListItem {
-  id: number; display_name?: string | null; org_name: string
-  primary_email?: string | null; lifecycle_state: string; version: number; updated_at: string
+export interface CrmOrgLead {
+  state: CrmLeadState | null; owner_id: number | null
+  effective_legal_tier: CrmLegalTier; effective_legal_basis: CrmLegalBasis
+  primary_source: string | null; needs_human: boolean; agent_paused: boolean
+  /** Optimistic lock of the lead block; goes into every lead action as `lead_version`. */
+  version: number; updated_at: string | null
 }
-export interface CrmContactDetail {
-  id: number; person_id?: number | null; org: CrmOrgOut; display_name?: string | null; role_title?: string | null
-  lifecycle_state: string; effective_legal_tier: string; effective_legal_basis: string
-  owner_id: number | null; shop_id: number | null; needs_human: boolean; agent_paused: boolean
-  version: number
-  // Stufe 2: card image storage keys (used to build /admin/crm/contacts/{id}/card-image/{side})
-  card_image_front_url: string | null; card_image_back_url: string | null
-  channels: CrmChannelOut[]; sources: CrmSourceOut[]
+export interface CrmOrgDetail {
+  id: number; name: string; legal_name: string | null; city: string | null; region: string | null
+  category: string | null; business_status: string; shop_id: number | null; address: CrmAddress | null
+  lead: CrmOrgLead
+  parent: CrmOrgRef | null
+  /** `items` is capped at 100; `count` is the real number. */
+  children: { count: number; items: CrmOrgRef[] }
+  /** Channels owned by the organisation itself. */
+  channels: CrmChannelOut[]
+  /** Active and ended relations (`active` tells them apart). */
+  relations: CrmRelationOut[]
+  sources: CrmSourceOut[]
   interactions: CrmInteractionOut[]; messages: CrmMessageOut[]
+  open_review_count: number; reachable: boolean
   created_at: string; updated_at: string
 }
 
-// Safety net (N7600): kill switch + send caps
+// — Relations (person × organisation) —
+export interface CrmRelationOut {
+  id: number
+  person: { id: number; display_name: string | null; optout: boolean }
+  org: { id: number; name: string; city: string | null }
+  valid_from: string | null; valid_to: string | null; active: boolean
+  /** Role set (ROLE_CATALOG codes); empty is allowed, `role_missing` flags it. */
+  roles: string[]; role_missing: boolean
+  note: string | null; source: string
+  address: CrmAddress | null; uses_org_address: boolean
+  preferred_channel_id: number | null
+  /** Channels owned by the relation (work phone, work mail). */
+  channels: CrmChannelOut[]
+  /** Personal channels of the person ("personal"). */
+  person_channels: CrmChannelOut[]
+}
+
+// — Persons —
+export interface CrmPerson {
+  id: number; display_name: string | null; first_name: string | null; last_name: string | null
+  /** `true` while `display_name` is built from first and last name (then it must not be sent). */
+  name_derived: boolean
+  salutation: CrmSalutation | null
+  /** ISO date; with `birth_year_unknown` the year is the placeholder 2000 and must never be shown. */
+  birth_date: string | null; birth_year_unknown: boolean
+  optout: boolean; address: CrmAddress | null
+  /** Personal channels; channels of a relation are in `relations[].channels`. */
+  channels: CrmChannelOut[]; relations: CrmRelationOut[]
+  created_at: string; updated_at: string
+}
+
+// — Review —
+export type CrmReviewCategory = 'legacy' | 'channel_owner' | 'relations_without_role' | 'persons_name_parts'
+export type CrmReviewKind =
+  | 'legacy_contact_person' | 'legacy_contact_name' | 'legacy_person_channel' | 'legacy_role'
+  | 'legacy_identifier_conflict' | 'channel_owner_unclear' | 'channel_owner_conflict'
+  | 'relation_without_role' | 'person_without_name_parts'      // computed, `id` is null
+export interface CrmReviewItemOut {
+  /** `null` for computed entries (relations without role, persons without name parts): they cannot be resolved by id. */
+  id: number | null
+  kind: CrmReviewKind; status: string
+  org: CrmOrgRef | null; person: { id: number; display_name: string | null } | null
+  relation_id: number | null; channel: CrmChannelOut | null
+  /** Only legacy cases: `{display_name, role_title}`; emptied when resolved. */
+  payload: Record<string, unknown> | null
+  created_at: string
+}
+
+// — Outreach and send gate —
+export interface CrmOutreachRecipient {
+  channel_id: number; kind: string; value: string; owner_type: CrmChannelOwnerType
+  person: { id: number; display_name: string | null } | null
+  relation_id: number | null; roles: string[]
+  effective_tier: CrmLegalTier; approval_required: boolean; approval_open: boolean; is_default: boolean
+}
+export interface CrmSendApprovalOut {
+  id: number; channel_id: number | null; effective_tier: string; approved_by: string
+  reason: string; created_at: string; expires_at: string; used_message_id: number | null
+}
+export interface CrmOutreachGate {
+  effective_tier: CrmLegalTier; org_tier: string
+  /** `null` when the organisation has no email channel (preview without recipient): then only the org tier counts. */
+  channel_tier: string | null
+  approval_required: boolean
+  /** Open (not used, not expired) approval for the chosen recipient. */
+  approval: CrmSendApprovalOut | null
+}
+export interface CrmOutreachPreviewResponse {
+  subject: string; body_rendered: string; placeholders: Record<string, string>
+  /** The recipient the preview was rendered for (the default when none was sent). */
+  recipient_channel_id: number | null
+  gate: CrmOutreachGate
+}
+export interface CrmOutreachSendResponse { message_id: number; delivery_status: string }
+
+// — Requests —
+export interface CrmOrgCreateRequest {
+  name: string; legal_name?: string | null; city?: string | null; category?: string | null
+  /** `false` creates plain master data without a lead status. */
+  as_lead?: boolean
+  channels?: Array<{ kind: CrmChannelKindIn; value: string }>
+  source?: { source: CrmSource; source_ref?: string | null }
+}
+/** Master data only; lead fields are rejected with 422. `null` clears a field. */
+export interface CrmOrgUpdateRequest {
+  name?: string | null; legal_name?: string | null; city?: string | null; region?: string | null
+  category?: string | null; address?: CrmAddressIn | null
+  /** Head office. */
+  parent_org_id?: number | null
+}
+export interface CrmChannelAddRequest { kind: CrmChannelKindIn; value: string }
+export interface CrmConfirmBusinessRequest { lead_version: number; legal_basis?: CrmLegalBasis | null; note?: string | null }
+export interface CrmLeadTransitionRequest { to_state: CrmLeadState; lead_version: number; reason?: string | null; shop_id?: number | null }
+export interface CrmSuppressRequest { reason: CrmSuppressReason; lead_version: number }
+export interface CrmOrgLegalRequest { effective_legal_tier: CrmLegalTier; effective_legal_basis?: CrmLegalBasis | null; lead_version: number; note?: string | null }
+export interface CrmOutreachPreviewRequest { language: CrmOutreachLang; template_id?: 'first_contact_email'; recipient_channel_id?: number | null }
+export interface CrmOutreachSendRequest { language: CrmOutreachLang; subject: string; body: string; idempotency_key: string; recipient_channel_id?: number | null } // NO lead_version
+/** `reason`: 10..500 characters. */
+export interface CrmOutreachApproveRequest { recipient_channel_id: number; reason: string }
+
+export interface CrmRelationCreateRequest {
+  person_id: number; org_id: number; valid_from?: string | null; valid_to?: string | null
+  note?: string | null; roles?: string[]; address?: CrmAddressIn | null; preferred_channel_id?: number | null
+}
+/** Explicit `null` clears the field; fields that are not sent stay as they are. */
+export interface CrmRelationUpdateRequest {
+  valid_from?: string | null; valid_to?: string | null; note?: string | null
+  address?: CrmAddressIn | null; preferred_channel_id?: number | null
+}
+export interface CrmRelationEndRequest { valid_to: string }
+export interface CrmRelationRoleRequest { role: string }
+export interface CrmChannelMoveRequest { owner: CrmChannelOwner }
+export interface CrmChannelTierRequest { legal_tier: CrmLegalTier }
+
+/**
+ * Person fields. Only send what changed. **Never send `display_name` while the person has a first or last name**
+ * (not even `null`): 422 `person_display_name_derived`.
+ */
+export interface CrmPersonWriteRequest {
+  display_name?: string | null; first_name?: string | null; last_name?: string | null
+  salutation?: CrmSalutation | null
+  /** ISO date; with `birth_year_unknown: true` send the placeholder year 2000. */
+  birth_date?: string | null; birth_year_unknown?: boolean | null
+  address?: CrmAddressIn | null
+}
+export interface CrmPersonCreateRequest extends CrmPersonWriteRequest {
+  channels?: Array<{ kind: CrmChannelKindIn; value: string }>
+}
+
+export interface CrmReviewResolveRequest { status: 'resolved' | 'dismissed' }
+
+// Safety net (N7600): kill switch + send caps; since the org cut also the owner rule and the approval tiers
 export interface CrmSendCapOut { limit: number; sent_24h: number }
 export interface CrmConfigOut {
   outbound_kill_switch: boolean
   send_caps: Record<string, CrmSendCapOut>
+  /** Person opt-out also suppresses the organisation channels when the person is an owner. */
+  owner_optout_rule: boolean
+  /** Legal tiers whose sends need an explicit admin approval (default `['red']`). */
+  require_human_approval_for_tier: CrmLegalTier[]
   updated_at: string | null
   updated_by: string | null
+}
+/** `PUT /admin/crm/config` is a partial update: fields that are not sent stay as they are. */
+export interface CrmConfigUpdateRequest {
+  outbound_kill_switch?: boolean | null
+  send_caps?: Record<string, number> | null
+  owner_optout_rule?: boolean | null
+  require_human_approval_for_tier?: CrmLegalTier[] | null
 }
 
 // Manual contact documentation (N7600)
@@ -437,22 +586,23 @@ export interface CrmManualInteractionRequest {
   occurred_at?: string
   our_party?: string
   their_party?: string
-  person_id?: number
+  /** "Who at the customer": a relation of this organisation; the person is derived from it. */
+  relation_id?: number
 }
 
-export interface CrmAddress { id: number; address_line1: string | null; address_line2: string | null; city: string | null; state: string | null; postal_code: string | null; country_code: string; lat: number | null; lon: number | null }
-export interface CrmPersonIdentifier { id: number; kind: 'email' | 'phone'; value_normalized: string }
-export interface CrmPersonRole { id: number; org_id: number; org_name: string; org_city: string | null; role: string; valid_from: string | null; valid_to: string | null; source: string }
-export interface CrmPersonContact { id: number; display_name: string | null; org_id: number | null }
-/** One hit of `GET /admin/crm/orgs` (organisation search for assigning a role). Company fields only, no channels. */
-export interface CrmOrgSearchHit { id: number; name: string; legal_name: string | null; city: string | null; category: string | null; business_status: string }
-export interface CrmPerson { id: number; display_name: string | null; address_id: number | null; address?: CrmAddress | null; identifiers: CrmPersonIdentifier[]; roles: CrmPersonRole[]; contacts?: CrmPersonContact[]; created_at: string; updated_at: string }
-export interface CrmPersonCreateRequest { display_name?: string; identifiers: Array<{ kind: 'email' | 'phone'; value: string }>; address?: Partial<Omit<CrmAddress, 'id'>> }
-
-// Backend error detail (for Toast evaluation)
+// Backend error detail (for Toast evaluation): `"code"` or `{"detail": "code", …extras}`
+export interface CrmErrorExtras {
+  channel_kind?: string      // suppressed
+  current_version?: number   // version_conflict
+  message_id?: number        // smtp_failed
+  channel_id?: number        // channel_owned_by_org, channel_exists_same_person
+  person_id?: number         // person_channel_exists
+  tier?: string              // outreach_tier_approval_required, outreach_approval_not_required
+  cap?: number               // send_cap_reached
+}
 export type CrmErrorDetail =
   | string                                              // e.g. "illegal_transition", "shop_id_required"
-  | { detail: string; channel_kind?: string; current_version?: number; message_id?: number }
+  | ({ detail: string } & CrmErrorExtras)
 
 
 // ─── Review moderation (F5930, /admin/reviews) ───────────────────────────────

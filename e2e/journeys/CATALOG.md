@@ -45,11 +45,12 @@
 | [cookie-consent-flow](cookie-consent-flow.md) | Cookie Consent Gate + Meta-Pixel Load/Block (F7500) | implemented | P1 | PASS |
 | [customer-shop-all-products-flow](customer-shop-all-products-flow.md) | Customer Shop-Detail → "Alle" → Suchergebnisse mit shop_id; Schritt E: best_offer nur vom eigenen Shop (B5900-016) | implemented | P2 | PASS (11/11, 2026-10-14) |
 | [shop-owner-self-deactivate](shop-owner-self-deactivate.md) | Shop-Owner Self-Deactivate (Danger Zone) | implemented | P1 | PASS |
-| [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Contact Lifecycle (F7600 Stufe 0+1) — Create → Edit → Channel Mgmt → Confirm → Suppress | implemented | P1 | PASS |
+| [admin-crm-contact-lifecycle](admin-crm-contact-lifecycle.md) | CRM Org-Lead-Lifecycle (F7600 Stufe 0+1, Org-Schnitt) — Anlegen → Bearbeiten → Org-Kanäle → Zentrale/Filiale → Confirm → Suppress | implemented | P1 | PASS (8/8, Slot 3, 2026-10-25) |
 | [llm-effects-homesick-spotted](llm-effects-homesick-spotted.md) | LLM-Wirkung Homesick und Spotted ueber Gateway und Golden-Worker bis DB und Mail (B8950-016 T14) | implemented | P1 | PASS |
-| [crm-opt-out](crm-opt-out.md) | CRM-Outreach-Mail im Mail-Sink und Opt-out-Link wirkt (B8950-016 T31/T32) | implemented | P1 | PASS |
-| [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW Flow (F7600 Stufe 2) — Card Confirm + CardImageViewer Visibility | implemented | P1 | PASS |
-| [admin-crm-persons](admin-crm-persons.md) | F7600 CRM Stufe 3 — Personen und Rollen | implemented | P1 | PASS (2026-10-23) |
+| [crm-opt-out](crm-opt-out.md) | CRM-Outreach-Mail im Mail-Sink, Opt-out-Link (Token v2) sperrt nach Besitzer, Altlink ohne Wirkung (B8950-016 T31/T32, F7600 Org-Schnitt) | implemented | P1 | PASS (4/4, Slot 3, 2026-10-25) |
+| [admin-crm-needs-review](admin-crm-needs-review.md) | CRM NEEDS_REVIEW-Flow (F7600 Stufe 2, Org-Schnitt) — Kartenbeleg an der Quelle, Lead-Übergang, „Kanalzuordnung prüfen“ | implemented | P1 | PASS (3/3, Slot 3, 2026-10-25) |
+| [admin-crm-persons](admin-crm-persons.md) | F7600 CRM Stufe 3 — Personen, Beziehungen und Rollen (Org-Schnitt v3) | implemented | P1 | PASS (7/7, Slot 3, 2026-10-25) |
+| [admin-crm-relation-channels](admin-crm-relation-channels.md) | F7600 CRM – Person mit zwei Firmenbeziehungen, Outreach an Beziehungsmail, Opt-out sperrt Person, nicht Firma; Sendegate red | implemented | P1 | PASS (9/9, Slot 3, 2026-10-25, auch --repeat-each=2) |
 | [shop-city-hub-and-completeness](shop-city-hub-and-completeness.md) | Shop Städte-Hub + Completeness-Policy (B5900-006, B5900-007) | implemented | P2 | PASS |
 | [admin-catalog-review](admin-catalog-review.md) | Katalog-Review-Übersicht + Stichprobe + Approve/Reject-Rework (F5980 Autonomous Shop Commerce Brain) | implemented | P1 | PASS (47/47 inkl. smoke, 2026-10-19; T1b Wirkung + T6 Teilfehler, F5982; Gateway :8600 nötig, sonst sichtbarer Skip) |
 | [b5900-009-item-photo-upload](b5900-009-item-photo-upload.md) | Shop-Admin Artikel-Foto-Upload (B5900-009) | implemented | P2 | PASS (2026-10-12) |
@@ -104,10 +105,11 @@
 | shop-detail-attribute-matrix | **Yes** | `shop-detail-sample` |
 | customer-shop-all-products-flow | **Yes** | `shop-all-products-link` (vorschlagen) |
 | shop-owner-self-deactivate | No — writes + account-deactivation | — |
-| admin-crm-contact-lifecycle | No — admin area, writes CRM contacts | — |
+| admin-crm-contact-lifecycle | No — admin area, writes CRM organisations | — |
 | llm-effects-homesick-spotted | No — writes customer, spotted item/offer in pundo_test, mail goes to the local sink | — |
-| crm-opt-out | No — writes CRM contacts in pundo_test, mail goes to the local sink | — |
-| admin-crm-needs-review | No — admin area, writes CRM contacts | — |
+| crm-opt-out | No — writes CRM organisations/persons in the test DB, mail goes to the local sink | — |
+| admin-crm-needs-review | No — admin area, writes CRM organisations | — |
+| admin-crm-relation-channels | No — admin area, writes CRM organisations/persons, mail goes to the local sink | — |
 
 **Manifest entries not tied to a journey (standalone smoke coverage):**
 

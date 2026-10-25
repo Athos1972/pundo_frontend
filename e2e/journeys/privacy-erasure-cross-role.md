@@ -22,7 +22,8 @@ touches-states:
   - CustomerUser.exists:false
   - Review.is_visible:false
   - ShopOwner.status:erased
-  - CrmContact.lifecycle_state:HARD_OPTOUT
+  - CrmOrg.lead_state:HARD_OPTOUT
+  - CrmPerson.exists:false
 status-changed-at: 2026-10-24T16:09:16Z
 status-changed-by-spec: 2026-10-24-betroffenenrechte
 last-run: never
@@ -56,3 +57,10 @@ last-result: N/A
 **Known Risks:**
 - Die Nachprüfung muss je Kategorie aus der Datenlandkarte laufen, nicht über eine feste Liste im Test — sonst fallen neue Kategorien durch.
 - Fixtures sind nach dem Lauf gelöscht (das ist der Test); keine Prod-Kopie-Daten verwenden.
+
+**Delta CRM-Org-Schnitt ([F7600 CRM-Backbone], Spec 2026-10-25-crm-person-contact-modell, Architektur §13; Pflicht für die Umsetzung dieser Journey, Stand e2e-tester 2026-10-25):**
+- Begriffe: Es gibt keinen „CRM-Kontakt“ mehr. Die Fixture `person-all-roles` ist im CRM eine **Person** (`crm_person`) mit einer **Beziehung** zu einer **Organisation** (`crm_org`, Lead-Status `crm_org.lead_state`); die Adresse ist ein Beziehungs- oder Personenkanal (`crm_channel`), nicht ein Kanal der Organisation. Zusätzlich Geburtsdatum (mit „Jahr unbekannt“) und Anrede setzen.
+- Schritt 6 (Nachprüfung CRM) prüft: `crm_person`, ihre Beziehungen (`crm_person_org_relation`, Rollen per CASCADE) sowie Personen- und Beziehungskanäle existieren nicht mehr; deren HMACs stehen in `crm_suppression`; **die Organisation und ihre Org-Kanäle überleben** (Org- und Kanalzahl unverändert); Nachrichten an die Person haben keinen Betreff, keinen Text und keine Provider-ID mehr; Geburtsdatum und Anrede sind mit der Personenzeile entfernt.
+- Zusätzliche Fixture `person-owner` (Inhaberin, Rolle `owner`, Schalter `owner_optout_rule` an): nach der Löschung sind die Org-Kanäle ihrer Firma **gelöscht** (Anzahl 0) und ihre HMACs gesperrt, die Org besteht weiter mit Lead-Status `HARD_OPTOUT` (Entscheidung EA6 Löschung einer Inhaberin). Gegenprobe mit Schalter aus: Org-Kanäle unverändert.
+- Baustein des Orchestrators für das CRM ist `PersonService.erase` (Backend `ingestor/lib/crm/person_service.py`); die Datenlandkarte führt die CRM-Tabellen in den Kategorien `crm_person`, `crm_card_intake`, `crm_org_records`, `crm_operations`.
+- Belegt sind diese Wirkungen heute über die Admin-Route `DELETE /admin/crm/persons/{id}` (API-Abnahme im Testbericht des Org-Schnitts, AC 16a/19/37); die Journey selbst ist noch nicht implementiert.

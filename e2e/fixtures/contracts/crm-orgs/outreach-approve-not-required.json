@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "body": {
+    "detail": {
+      "detail": "outreach_approval_not_required",
+      "tier": "green"
+    }
+  }
+}

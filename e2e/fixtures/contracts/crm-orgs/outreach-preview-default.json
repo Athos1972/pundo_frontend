@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": {
+    "subject": "E2E F7600 T15 Alpha Bakery 202610250935 — 5 λεπτά για νέους πελάτες που δεν σας βρίσκουν ακόμα",
+    "body_rendered": "Γεια σας!\n\nΞέρετε ότι υπάρχουν χιλιάδες ξένοι κάτοικοι στην Κύπρο που ψάχνουν ακριβώς αυτό που κάνετε εσείς — αλλά δεν ξέρουν πού να κοιτάξουν; Ούτε το Google τους βοηθάει πάντα, ούτε το Facebook.\n\nΛέγομαι Claire και δουλεύω για το pundo.cy — έναν νέο δωρεάν οδηγό ειδικά για αυτούς τους κατοίκους. Πήρα την κάρτα σας — και μου φάνηκε ιδανικό.\n\nΘέλαμε να δούμε αν E2E F7600 T15 Alpha Bakery 202610250935 θα ήθελε μια δωρεάν καταχώριση. Η εγγραφή γίνεται σε λιγότερο από 5 λεπτά:\n\n👉 http://localhost:3500/for-shops\n\nΑν έχετε ερωτήσεις, απαντήστε απλώς εδώ.\n\nClaire · pundo.cy",
+    "placeholders": {
+      "name": "",
+      "business": "E2E F7600 T15 Alpha Bakery 202610250935",
+      "quelle": "Πήρα την κάρτα σας — και μου φάνηκε ιδανικό.",
+      "link": "http://localhost:3500/for-shops",
+      "absender": "Claire"
+    },
+    "recipient_channel_id": 7976,
+    "gate": {
+      "effective_tier": "green",
+      "org_tier": "green",
+      "channel_tier": "green",
+      "approval_required": false,
+      "approval": null
+    }
+  }
+}

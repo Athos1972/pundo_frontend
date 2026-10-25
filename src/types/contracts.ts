@@ -62,17 +62,26 @@ type Contract<_ extends true> = true
 
 // ── System admin (src/types/system-admin.ts) ────────────────────────────────────────────────────────────
 export type SysAdminContracts = [
+  // CRM since the org cut (F7600 CRM-Backbone): response shapes of /admin/crm/*
   Contract<Assignable<Schemas['CrmConfigOut'], SysAdmin.CrmConfigOut>>,
-  Contract<Assignable<Schemas['AdminUnmoderatedPhotoOut'], SysAdmin.SysAdminUnmoderatedPhoto>>,
   Contract<Assignable<Schemas['SendCapOut'], SysAdmin.CrmSendCapOut>>,
   Contract<Assignable<Schemas['OutreachPreviewResponse'], SysAdmin.CrmOutreachPreviewResponse>>,
   Contract<Assignable<Schemas['OutreachSendResponse'], SysAdmin.CrmOutreachSendResponse>>,
+  Contract<Assignable<Schemas['OutreachRecipientOut'], SysAdmin.CrmOutreachRecipient>>,
+  Contract<Assignable<Schemas['OutreachGate'], SysAdmin.CrmOutreachGate>>,
+  Contract<Assignable<Schemas['SendApprovalOut'], SysAdmin.CrmSendApprovalOut>>,
   Contract<Assignable<Schemas['InteractionOut'], SysAdmin.CrmInteractionOut>>,
+  Contract<Assignable<Schemas['MessageOut'], SysAdmin.CrmMessageOut>>,
   Contract<Assignable<Schemas['ChannelOut'], SysAdmin.CrmChannelOut>>,
   Contract<Assignable<Schemas['SourceOut'], SysAdmin.CrmSourceOut>>,
-  Contract<Assignable<Schemas['OrgOut'], SysAdmin.CrmOrgOut>>,
-  Contract<Assignable<Schemas['ContactDetailResponse'], SysAdmin.CrmContactDetail>>,
-  Contract<Assignable<Schemas['ContactListItem'], SysAdmin.CrmContactListItem>>,
+  Contract<Assignable<Schemas['OrgLeadOut'], SysAdmin.CrmOrgLead>>,
+  Contract<Assignable<Schemas['OrgDetail'], SysAdmin.CrmOrgDetail>>,
+  Contract<Assignable<Schemas['OrgListItem'], SysAdmin.CrmOrgListItem>>,
+  Contract<Assignable<Schemas['OrgSearchHit'], SysAdmin.CrmOrgSearchHit>>,
+  Contract<Assignable<Schemas['RelationOut'], SysAdmin.CrmRelationOut>>,
+  Contract<Assignable<Schemas['PersonOut'], SysAdmin.CrmPerson>>,
+  Contract<Assignable<Schemas['ReviewItemOut'], SysAdmin.CrmReviewItemOut>>,
+  Contract<Assignable<Schemas['AdminUnmoderatedPhotoOut'], SysAdmin.SysAdminUnmoderatedPhoto>>,
   // @ts-expect-error -- drift: opening_hours[].open:nullable, opening_hours[].close:nullable, opening_hours[].second_open:nullable, opening_hours[].second_close:nullable, social_links.*:type
   Contract<Assignable<Schemas['AdminShopResponse'], SysAdmin.SysAdminShop>>,
   // `/products` (the only endpoint the admin UI reads items from) answers with AdminProductResponse, not AdminItemResponse
@@ -80,9 +89,6 @@ export type SysAdminContracts = [
   // @ts-expect-error -- drift: social_links.*:type, social_links.*:notobject, social_links.*:notarray
   Contract<Assignable<Schemas['AdminBrandResponse'], SysAdmin.SysAdminBrand>>,
   Contract<Assignable<Schemas['AdminCategoryResponse'], SysAdmin.SysAdminCategory>>,
-  Contract<Assignable<Schemas['OrgSearchHit'], SysAdmin.CrmOrgSearchHit>>,
-  Contract<Assignable<Schemas['PersonOut'], SysAdmin.CrmPerson>>,
-  Contract<Assignable<Schemas['PersonRoleOut'], SysAdmin.CrmPersonRole>>,
   Contract<Assignable<Schemas['AdminShopOwnerResponse'], SysAdmin.SysAdminShopOwner>>,
   Contract<Assignable<Schemas['AdminOfferResponse'], SysAdmin.SysAdminOffer>>,
   Contract<Assignable<Schemas['AdminApiKeyResponse'], SysAdmin.SysAdminApiKey>>,
@@ -91,6 +97,31 @@ export type SysAdminContracts = [
   Contract<Assignable<Schemas['SocialLinkRuleResponse'], SysAdmin.SysAdminSocialLinkRule>>,
   Contract<Assignable<Schemas['ScrapeRunResponse'], SysAdmin.SysAdminScrapeRun>>,
   Contract<Assignable<Schemas['CategoryReviewItem'], SysAdmin.SysAdminCategoryReviewItem>>,
+]
+
+// ── CRM requests (F7600 CRM-Backbone): the opposite direction - what the frontend sends must satisfy what the backend requires ──
+export type CrmRequestContracts = [
+  Contract<Assignable<SysAdmin.CrmOrgCreateRequest, Schemas['OrgCreateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmOrgUpdateRequest, Schemas['OrgUpdateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmChannelAddRequest, Schemas['ChannelIn']>>,
+  Contract<Assignable<SysAdmin.CrmConfirmBusinessRequest, Schemas['LeadConfirmRequest']>>,
+  Contract<Assignable<SysAdmin.CrmLeadTransitionRequest, Schemas['LeadTransitionRequest']>>,
+  Contract<Assignable<SysAdmin.CrmSuppressRequest, Schemas['OrgSuppressRequest']>>,
+  Contract<Assignable<SysAdmin.CrmOrgLegalRequest, Schemas['OrgLegalRequest']>>,
+  Contract<Assignable<SysAdmin.CrmOutreachPreviewRequest, Schemas['OutreachPreviewRequest']>>,
+  Contract<Assignable<SysAdmin.CrmOutreachSendRequest, Schemas['OutreachSendRequest']>>,
+  Contract<Assignable<SysAdmin.CrmOutreachApproveRequest, Schemas['OutreachApproveRequest']>>,
+  Contract<Assignable<SysAdmin.CrmManualInteractionRequest, Schemas['ManualInteractionRequest']>>,
+  Contract<Assignable<SysAdmin.CrmRelationCreateRequest, Schemas['RelationCreateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmRelationUpdateRequest, Schemas['RelationUpdateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmRelationEndRequest, Schemas['RelationEndRequest']>>,
+  Contract<Assignable<SysAdmin.CrmRelationRoleRequest, Schemas['RelationRoleRequest']>>,
+  Contract<Assignable<SysAdmin.CrmChannelMoveRequest, Schemas['ChannelMoveRequest']>>,
+  Contract<Assignable<SysAdmin.CrmChannelTierRequest, Schemas['ChannelTierRequest']>>,
+  Contract<Assignable<SysAdmin.CrmPersonWriteRequest, Schemas['PersonWriteRequest']>>,
+  Contract<Assignable<SysAdmin.CrmPersonCreateRequest, Schemas['PersonCreateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmReviewResolveRequest, Schemas['ReviewResolveRequest']>>,
+  Contract<Assignable<SysAdmin.CrmConfigUpdateRequest, Schemas['CrmConfigUpdate']>>,
 ]
 
 // ── Customer-facing (src/types/api.ts) ──────────────────────────────────────────────────────────────────

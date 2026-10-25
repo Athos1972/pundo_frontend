@@ -22,7 +22,7 @@ function resolve(dir: string, segments: string[], inPortal: boolean): boolean {
   return false
 }
 
-/** True if `href` (static, e.g. /admin/crm/contacts) is a page inside the (portal) group. Dynamic `[param]` folders never match. */
+/** True if `href` (static, e.g. /admin/crm/orgs) is a page inside the (portal) group. Dynamic `[param]` folders never match. */
 export function adminRouteExists(href: string): boolean {
   if (!href.startsWith('/admin/') && href !== '/admin') return false
   const segments = href.split('/').filter(Boolean).slice(1)

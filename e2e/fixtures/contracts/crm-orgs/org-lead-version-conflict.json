@@ -1,0 +1,9 @@
+{
+  "status": 409,
+  "body": {
+    "detail": {
+      "detail": "version_conflict",
+      "current_version": 2
+    }
+  }
+}

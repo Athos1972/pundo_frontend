@@ -1,0 +1,90 @@
+{
+  "status": 201,
+  "body": {
+    "id": 7453,
+    "name": "E2E F7600 T15 Gamma Kiosk 202610250935",
+    "legal_name": null,
+    "city": "Paphos",
+    "region": null,
+    "category": null,
+    "business_status": "unknown",
+    "shop_id": null,
+    "address": null,
+    "lead": {
+      "state": "SOURCED",
+      "owner_id": null,
+      "effective_legal_tier": "green",
+      "effective_legal_basis": "legitimate_interest",
+      "primary_source": "manual",
+      "needs_human": false,
+      "agent_paused": false,
+      "version": 1,
+      "updated_at": "2026-10-25T09:35:16.137258Z"
+    },
+    "parent": null,
+    "children": {
+      "count": 0,
+      "items": []
+    },
+    "channels": [],
+    "relations": [],
+    "sources": [
+      {
+        "id": 7796,
+        "source": "manual",
+        "source_ref": null,
+        "legal_tier": "green",
+        "legal_basis": "legitimate_interest",
+        "observed_at": "2026-10-25T09:35:16.137258Z",
+        "has_card_image": {
+          "front": false,
+          "back": false
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "id": 7908,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": "SOURCED",
+        "outcome": "created",
+        "payload": {
+          "lead": true,
+          "event": "org_created"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:16.137258Z"
+      },
+      {
+        "id": 7909,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "ingested",
+        "payload": {
+          "source": "manual",
+          "channels_added": 0,
+          "owner_conflicts": 1
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:16.137258Z"
+      }
+    ],
+    "messages": [],
+    "open_review_count": 1,
+    "reachable": false,
+    "created_at": "2026-10-25T09:35:16.137258Z",
+    "updated_at": "2026-10-25T09:35:16.137258Z"
+  }
+}

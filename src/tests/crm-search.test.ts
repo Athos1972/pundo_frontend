@@ -3,21 +3,20 @@ import { orgHitToItem, personToItem, searchCrmOrgs, searchCrmPersons, searchErro
 import { CrmSearchError, CRM_ERROR_KEYS } from '@/components/system-admin/crm/crmFetch'
 import { tSysAdmin } from '@/lib/system-admin-translations'
 import type { components } from '@/types/generated/backend'
+import * as fx from './helpers/crm-fixtures'
+import type * as SysAdminTypes from '@/types/system-admin'
 
 // Typed by the generated backend schema (contract V1/V3): a renamed backend field breaks the compile, not the page
 // (FastAPI always serialises fields with a default, so the optional ones are required here, as contracts.ts compares them)
 type OrgHit = Required<components['schemas']['OrgSearchHit']>
-type PersonOut = components['schemas']['PersonOut']
+type PersonOut = SysAdminTypes.CrmPerson
 
 const tr = tSysAdmin('en')
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
 
-const bakeryNic: OrgHit = { id: 41, name: 'Alpha Bakery', legal_name: 'Alpha Bakery Ltd', city: 'Nicosia', category: 'bakery', business_status: 'unknown' }
-const person: PersonOut = {
-  id: 17, display_name: 'Alex', address_id: null, address: null,
-  identifiers: [{ id: 1, kind: 'email', value_normalized: 'alex@example.cy' }, { id: 2, kind: 'phone', value_normalized: '+35799123456' }],
-  roles: [], contacts: [], created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
-}
+const bakeryNic: OrgHit = { id: 41, name: 'Alpha Bakery', legal_name: 'Alpha Bakery Ltd', city: 'Nicosia', category: 'bakery', business_status: 'unknown', has_parent: false, child_count: 0 }
+// Maria Georgiou: one personal phone (person channel) and one work mail (relation channel)
+const person: PersonOut = fx.person
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -27,14 +26,31 @@ describe('mappers', () => {
   })
 
   it('org hit with nulls and legal name equal to name', () => {
-    const hit: OrgHit = { id: 7, name: 'Solo', legal_name: 'Solo', city: null, category: null, business_status: 'unknown' }
+    const hit: OrgHit = { id: 7, name: 'Solo', legal_name: 'Solo', city: null, category: null, business_status: 'unknown', has_parent: false, child_count: 0 }
     expect(orgHitToItem(hit)).toEqual({ value: '7', label: 'Solo', subLabel: '#7' })
     expect(orgHitToItem({ ...hit, legal_name: null })).toEqual({ value: '7', label: 'Solo', subLabel: '#7' })
   })
 
-  it('person: label name, subLabel identifiers and number; nameless person gets a dash', () => {
-    expect(personToItem(person as never)).toEqual({ value: '17', label: 'Alex', subLabel: 'alex@example.cy · +35799123456 · #17' })
-    expect(personToItem({ ...person, display_name: null, identifiers: [] } as never)).toEqual({ value: '17', label: '—', subLabel: '#17' })
+  it('person: label is the name, subLabel lists personal and relation channel values, then the number', () => {
+    expect(personToItem(person)).toEqual({ value: '17', label: 'Maria Georgiou', subLabel: '+35799123456 · maria@alpha-bakery.cy · #17' })
+  })
+
+  it('person: same value on two owners is shown once; at most three values; nameless person gets a dash', () => {
+    const extra = (id: number, value: string) => ({ ...fx.personChannel, id, value_normalized: value })
+    const crowded: PersonOut = {
+      ...person, display_name: null,
+      channels: [fx.personChannel, extra(21, 'a@x.cy'), extra(22, 'b@x.cy')],
+      relations: [{ ...fx.relation, channels: [extra(23, 'a@x.cy'), extra(24, 'c@x.cy')] }],
+    }
+    expect(personToItem(crowded)).toEqual({ value: '17', label: '—', subLabel: '+35799123456 · a@x.cy · b@x.cy · #17' })
+  })
+
+  it('person without any channel or relation: only the number', () => {
+    expect(personToItem({ ...person, channels: [], relations: [] })).toEqual({ value: '17', label: 'Maria Georgiou', subLabel: '#17' })
+  })
+
+  it('person: missing lists (older cached answer) do not crash', () => {
+    expect(personToItem({ ...person, channels: undefined, relations: undefined } as never).subLabel).toBe('#17')
   })
 })
 
@@ -43,8 +59,18 @@ describe('searchCrmOrgs', () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ items: [bakeryNic], total: 1, limit: 20, offset: 0 }))
     vi.stubGlobal('fetch', fetchMock)
     const items = await searchCrmOrgs('  Alpha & Co ')
-    expect(fetchMock).toHaveBeenCalledWith('/api/admin/crm/orgs?q=Alpha%20%26%20Co&limit=20')
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/crm/orgs/search?q=Alpha%20%26%20Co&limit=20')
     expect(items.map((i) => i.label)).toEqual(['Alpha Bakery'])
+    expect(fetchMock.mock.calls[0][0]).not.toMatch(/crm\/orgs\?q=/) // the list route `GET /orgs` is no search any more
+  })
+
+  it('head-office picker: parent_candidates_only and exclude_id go into the request, absent options stay out', async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => json({ items: [], total: 0, limit: 20, offset: 0 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await searchCrmOrgs('alp', { parentCandidatesOnly: true, excludeId: 41 })
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/admin/crm/orgs/search?q=alp&limit=20&parent_candidates_only=true&exclude_id=41')
+    await searchCrmOrgs('alp', { parentCandidatesOnly: false })
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/admin/crm/orgs/search?q=alp&limit=20')
   })
 
   it('empty: 200 with no items -> [] (not an error)', async () => {
@@ -85,9 +111,9 @@ describe('searchCrmPersons', () => {
     vi.stubGlobal('fetch', fetchMock)
     expect(await searchCrmPersons('ab')).toEqual([])
     expect(fetchMock).not.toHaveBeenCalled()
-    const items = await searchCrmPersons('alex')
-    expect(fetchMock).toHaveBeenCalledWith('/api/admin/crm/persons?q=alex&limit=20')
-    expect(items[0].label).toBe('Alex')
+    const items = await searchCrmPersons('maria')
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/crm/persons?q=maria&limit=20')
+    expect(items[0].label).toBe('Maria Georgiou')
     expect(PERSON_SEARCH_MIN).toBe(3)
   })
 })

@@ -22,7 +22,7 @@ import { CategoryForm } from '@/components/system-admin/CategoryForm'
 import { BrandLogoInput } from '@/components/system-admin/BrandLogoInput'
 import { AttributeDefinitionEditor, type AttrDefDraft } from '@/components/system-admin/AttributeDefinitionEditor'
 import { ChannelEditor } from '@/components/system-admin/crm/ChannelEditor'
-import type { CrmContactDetail } from '@/types/system-admin'
+import { rec } from './helpers/crm-recorded'
 import { LARNACA } from '@/lib/default-location'
 
 describe('LocationEditor default position', () => {
@@ -111,7 +111,8 @@ describe('ChannelEditor label association (a11y)', () => {
   afterEach(() => vi.unstubAllGlobals())
   it('add form: kind select and value input reachable via label', async () => {
     const tr = tSysAdmin('en')
-    render(<ChannelEditor contact={{ id: 5, channels: [{ id: 1, kind: 'email', value_normalized: 'a@x.io', reachable: 'yes', consent_state: 'opted_in', is_preferred: true, created_at: '' }] } as unknown as CrmContactDetail} tr={tr} canWrite />)
+    const org = rec.orgDetail()
+    render(<ChannelEditor owner={{ type: 'org', id: org.id }} channels={org.channels} tr={tr} canWrite />)
     fireEvent.click(screen.getByText(new RegExp(tr.crm_channel_add)))
     await waitFor(() => expect(screen.getByLabelText(tr.crm_channel_kind)).toBeTruthy())
     expect(screen.getByLabelText(tr.crm_channel_value)).toBeTruthy()

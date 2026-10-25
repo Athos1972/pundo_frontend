@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": 7453,
+        "name": "E2E F7600 T15 Gamma Kiosk 202610250935",
+        "legal_name": null,
+        "city": "Paphos",
+        "category": null,
+        "business_status": "unknown",
+        "has_parent": false,
+        "child_count": 0
+      },
+      {
+        "id": 7450,
+        "name": "E2E F7600 T15 Ocean Basket Head Office 202610250935",
+        "legal_name": null,
+        "city": "Nicosia",
+        "category": null,
+        "business_status": "unknown",
+        "has_parent": false,
+        "child_count": 1
+      }
+    ],
+    "total": 2,
+    "limit": 20,
+    "offset": 0
+  }
+}

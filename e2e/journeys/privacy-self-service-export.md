@@ -55,3 +55,8 @@ last-result: N/A
 **Known Risks:**
 - Hintergrund-Erzeugung: auf Status warten (Polling mit Timeout), nicht fest schlafen.
 - Ablauf-Test braucht einen Test-Hook für Zeit oder Job; der Architekt legt ihn fest.
+
+**Delta CRM-Org-Schnitt ([F7600 CRM-Backbone], Spec 2026-10-25-crm-person-contact-modell, Architektur §13; gilt, soweit der Selbstbedienungs-Export eine CRM-Person enthält, Stand e2e-tester 2026-10-25):**
+- Hat `customer-maximal` bzw. `owner-with-claim` dieselbe Adresse wie eine CRM-Person, enthält die Kopie den CRM-Teil aus `PersonService.export`: Anrede, Geburtsdatum (bei unbekanntem Jahr als `--MM-DD` mit Text „TT.MM. (Jahr unbekannt)“, nie 2000), Beziehungen mit Rollen, `note` und Beziehungskanälen, Personenkanäle und an die Person adressierte Nachrichten; **keine Org-Kanäle** (außer aktive Rolle `owner` mit Inhaber-Regel).
+- Für AC11 (keine Daten Dritter): Ein Org-Kanal der Firma, bei der die Person Ansprechpartnerin ist, ist kein Datum der Person und darf nicht in ihrer Kopie stehen; dafür eine Fixture mit Beziehung und Org-Kanal ergänzen.
+- Die Journey selbst ist noch nicht implementiert; belegt ist der Export heute in der API-Abnahme des Org-Schnitts (AC 20/36/37).

@@ -1,40 +1,18 @@
 {
- "api/admin/crm/card_image": {
+ "api/admin/crm/orgs": {
   "404": [
    "card_image_not_found_on_disk",
-   "contact_not_found",
-   "no_card_image"
-  ]
- },
- "api/admin/crm/contacts": {
-  "404": [
-   "contact_not_found"
+   "no_card_image",
+   "org_not_found"
   ],
   "422": [
-   "occurred_at_in_future"
-  ]
- },
- "api/admin/crm/orgs": {
-  "422": [
+   "occurred_at_in_future",
    "org_search_too_short"
   ]
  },
- "api/admin/crm/outreach": {
-  "404": [
-   "contact_not_found"
-  ]
- },
  "api/admin/crm/persons": {
-  "404": [
-   "person_not_found",
-   "person_role_not_found"
-  ],
-  "409": [
-   "person_identifier_exists"
-  ],
   "422": [
-   "person_search_too_short",
-   "suppressed"
+   "person_search_too_short"
   ]
  },
  "api/admin/customer_reviews": {
@@ -138,6 +116,29 @@
    "invalid_secret"
   ]
  },
+ "lib/crm/channels": {
+  "404": [
+   "channel_not_found",
+   "org_not_found",
+   "person_not_found",
+   "relation_not_found"
+  ],
+  "409": [
+   "channel_exists_same_person"
+  ],
+  "422": [
+   "channel_owned_by_org",
+   "channel_owned_by_other_org",
+   "channel_owned_by_other_person",
+   "channel_owner_invalid",
+   "duplicate_channel",
+   "invalid_channel_kind",
+   "invalid_channel_value",
+   "last_channel",
+   "relation_preferred_channel_invalid",
+   "suppressed"
+  ]
+ },
  "lib/crm/config": {
   "423": [
    "outreach_paused"
@@ -153,40 +154,65 @@
  },
  "lib/crm/person_service": {
   "404": [
-   "contact_not_found",
    "org_not_found",
    "person_not_found",
-   "person_role_not_found"
+   "relation_not_found",
+   "relation_role_not_found"
+  ],
+  "409": [
+   "person_channel_exists",
+   "relation_active_exists",
+   "relation_role_exists"
   ],
   "422": [
-   "invalid_identifier_kind",
+   "channel_owned_by_org",
    "invalid_person_role",
-   "invalid_role_dates",
-   "person_identifier_required",
+   "person_birth_date_invalid",
+   "person_display_name_derived",
+   "person_salutation_invalid",
+   "relation_dates_invalid",
    "suppressed"
+  ]
+ },
+ "lib/crm/review": {
+  "404": [
+   "review_item_not_found"
   ]
  },
  "lib/crm/service": {
   "404": [
-   "channel_not_found",
-   "contact_not_found",
    "org_not_found"
   ],
   "409": [
    "version_conflict"
   ],
   "422": [
-   "duplicate_channel",
    "illegal_transition",
+   "invalid_channel_kind",
    "last_channel",
    "no_email_channel",
    "org_name_required",
+   "org_parent_has_children",
+   "org_parent_has_parent",
+   "org_parent_self",
    "outreach_not_allowed_state",
+   "outreach_recipient_invalid",
+   "relation_not_in_org",
    "shop_id_required",
    "suppressed"
   ],
   "502": [
    "smtp_failed"
+  ]
+ },
+ "lib/crm/tier_gate": {
+  "404": [
+   "channel_not_found"
+  ],
+  "422": [
+   "outreach_approval_not_required",
+   "outreach_approval_reason_required",
+   "outreach_tier_approval_required"
   ]
  },
  "lib/progression/service": {

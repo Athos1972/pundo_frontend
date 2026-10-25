@@ -1,0 +1,36 @@
+{
+  "status": 201,
+  "body": {
+    "id": 25,
+    "display_name": "Maria Georgiou",
+    "first_name": "Maria",
+    "last_name": "Georgiou",
+    "name_derived": true,
+    "salutation": "ms",
+    "birth_date": "2000-02-29",
+    "birth_year_unknown": true,
+    "optout": false,
+    "address": null,
+    "channels": [
+      {
+        "id": 7984,
+        "kind": "email",
+        "value_normalized": "maria.private@t16-202610250944.example",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "manual",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "person",
+          "id": 25
+        },
+        "created_at": "2026-10-25T09:44:17.862918Z"
+      }
+    ],
+    "relations": [],
+    "created_at": "2026-10-25T09:44:17.862918Z",
+    "updated_at": "2026-10-25T09:44:17.862918Z"
+  }
+}

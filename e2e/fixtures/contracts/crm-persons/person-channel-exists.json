@@ -1,0 +1,9 @@
+{
+  "status": 409,
+  "body": {
+    "detail": {
+      "detail": "person_channel_exists",
+      "person_id": 25
+    }
+  }
+}

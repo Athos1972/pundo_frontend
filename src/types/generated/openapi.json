@@ -7775,6 +7775,24 @@
     "title": "CallbackRequest",
     "type": "object"
    },
+   "CardImageFlags": {
+    "properties": {
+     "back": {
+      "title": "Back",
+      "type": "boolean"
+     },
+     "front": {
+      "title": "Front",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "front",
+     "back"
+    ],
+    "title": "CardImageFlags",
+    "type": "object"
+   },
    "CatalogCaseApproveResponse": {
     "properties": {
      "id": {
@@ -8653,39 +8671,20 @@
     "title": "ChangePasswordRequest",
     "type": "object"
    },
-   "ChannelAddRequest": {
-    "properties": {
-     "kind": {
-      "enum": [
-       "email",
-       "phone"
-      ],
-      "title": "Kind",
-      "type": "string"
-     },
-     "value": {
-      "title": "Value",
-      "type": "string"
-     }
-    },
-    "required": [
-     "kind",
-     "value"
-    ],
-    "title": "ChannelAddRequest",
-    "type": "object"
-   },
    "ChannelIn": {
     "properties": {
      "kind": {
       "enum": [
        "email",
-       "phone"
+       "phone",
+       "whatsapp"
       ],
       "title": "Kind",
       "type": "string"
      },
      "value": {
+      "maxLength": 320,
+      "minLength": 1,
       "title": "Value",
       "type": "string"
      }
@@ -8695,6 +8694,18 @@
      "value"
     ],
     "title": "ChannelIn",
+    "type": "object"
+   },
+   "ChannelMoveRequest": {
+    "properties": {
+     "owner": {
+      "$ref": "#/components/schemas/ChannelOwnerOut"
+     }
+    },
+    "required": [
+     "owner"
+    ],
+    "title": "ChannelMoveRequest",
     "type": "object"
    },
    "ChannelOut": {
@@ -8720,6 +8731,33 @@
       "title": "Kind",
       "type": "string"
      },
+     "legal_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Legal Tier",
+      "type": "string"
+     },
+     "origin": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Origin"
+     },
+     "owner": {
+      "$ref": "#/components/schemas/ChannelOwnerOut"
+     },
+     "owner_review_pending": {
+      "title": "Owner Review Pending",
+      "type": "boolean"
+     },
      "reachable": {
       "title": "Reachable",
       "type": "string"
@@ -8736,9 +8774,53 @@
      "reachable",
      "consent_state",
      "is_preferred",
+     "legal_tier",
+     "owner_review_pending",
+     "owner",
      "created_at"
     ],
     "title": "ChannelOut",
+    "type": "object"
+   },
+   "ChannelOwnerOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "type": {
+      "enum": [
+       "org",
+       "relation",
+       "person"
+      ],
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "type",
+     "id"
+    ],
+    "title": "ChannelOwnerOut",
+    "type": "object"
+   },
+   "ChannelTierRequest": {
+    "properties": {
+     "legal_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Legal Tier",
+      "type": "string"
+     }
+    },
+    "required": [
+     "legal_tier"
+    ],
+    "title": "ChannelTierRequest",
     "type": "object"
    },
    "CharityApproveRequest": {
@@ -9437,295 +9519,6 @@
     "title": "ConfigCandidate",
     "type": "object"
    },
-   "ConfirmBusinessRequest": {
-    "properties": {
-     "legal_basis": {
-      "anyOf": [
-       {
-        "enum": [
-         "legitimate_interest",
-         "consent",
-         "contract",
-         "none"
-        ],
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Legal Basis"
-     },
-     "note": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Note"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "version"
-    ],
-    "title": "ConfirmBusinessRequest",
-    "type": "object"
-   },
-   "ContactDetailResponse": {
-    "properties": {
-     "agent_paused": {
-      "title": "Agent Paused",
-      "type": "boolean"
-     },
-     "card_image_back_url": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Card Image Back Url"
-     },
-     "card_image_front_url": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Card Image Front Url"
-     },
-     "channels": {
-      "items": {
-       "$ref": "#/components/schemas/ChannelOut"
-      },
-      "title": "Channels",
-      "type": "array"
-     },
-     "created_at": {
-      "format": "date-time",
-      "title": "Created At",
-      "type": "string"
-     },
-     "display_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Display Name"
-     },
-     "effective_legal_basis": {
-      "title": "Effective Legal Basis",
-      "type": "string"
-     },
-     "effective_legal_tier": {
-      "title": "Effective Legal Tier",
-      "type": "string"
-     },
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "interactions": {
-      "items": {
-       "$ref": "#/components/schemas/InteractionOut"
-      },
-      "title": "Interactions",
-      "type": "array"
-     },
-     "lifecycle_state": {
-      "title": "Lifecycle State",
-      "type": "string"
-     },
-     "messages": {
-      "items": {
-       "$ref": "#/components/schemas/MessageOut"
-      },
-      "title": "Messages",
-      "type": "array"
-     },
-     "needs_human": {
-      "title": "Needs Human",
-      "type": "boolean"
-     },
-     "org": {
-      "$ref": "#/components/schemas/OrgOut"
-     },
-     "owner_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Owner Id"
-     },
-     "person_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Person Id"
-     },
-     "role_title": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Role Title"
-     },
-     "shop_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Shop Id"
-     },
-     "sources": {
-      "items": {
-       "$ref": "#/components/schemas/SourceOut"
-      },
-      "title": "Sources",
-      "type": "array"
-     },
-     "updated_at": {
-      "format": "date-time",
-      "title": "Updated At",
-      "type": "string"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "id",
-     "org",
-     "lifecycle_state",
-     "effective_legal_tier",
-     "effective_legal_basis",
-     "needs_human",
-     "agent_paused",
-     "version",
-     "created_at",
-     "updated_at"
-    ],
-    "title": "ContactDetailResponse",
-    "type": "object"
-   },
-   "ContactIn": {
-    "properties": {
-     "display_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Display Name"
-     },
-     "role_title": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Role Title"
-     }
-    },
-    "title": "ContactIn",
-    "type": "object"
-   },
-   "ContactListItem": {
-    "properties": {
-     "display_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Display Name"
-     },
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "lifecycle_state": {
-      "title": "Lifecycle State",
-      "type": "string"
-     },
-     "org_name": {
-      "title": "Org Name",
-      "type": "string"
-     },
-     "primary_email": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Primary Email"
-     },
-     "updated_at": {
-      "format": "date-time",
-      "title": "Updated At",
-      "type": "string"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "id",
-     "org_name",
-     "lifecycle_state",
-     "version",
-     "updated_at"
-    ],
-    "title": "ContactListItem",
-    "type": "object"
-   },
    "ContactRequest": {
     "properties": {
      "category": {
@@ -9770,44 +9563,6 @@
      "email"
     ],
     "title": "ContactRequest",
-    "type": "object"
-   },
-   "ContactUpdateRequest": {
-    "properties": {
-     "display_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Display Name"
-     },
-     "org": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/OrgUpdateRequest"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "role_title": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Role Title"
-     }
-    },
-    "title": "ContactUpdateRequest",
     "type": "object"
    },
    "CreateReviewRequest": {
@@ -9857,6 +9612,22 @@
       "title": "Outbound Kill Switch",
       "type": "boolean"
      },
+     "owner_optout_rule": {
+      "title": "Owner Optout Rule",
+      "type": "boolean"
+     },
+     "require_human_approval_for_tier": {
+      "items": {
+       "enum": [
+        "green",
+        "amber",
+        "red"
+       ],
+       "type": "string"
+      },
+      "title": "Require Human Approval For Tier",
+      "type": "array"
+     },
      "send_caps": {
       "additionalProperties": {
        "$ref": "#/components/schemas/SendCapOut"
@@ -9890,7 +9661,9 @@
     },
     "required": [
      "outbound_kill_switch",
-     "send_caps"
+     "send_caps",
+     "owner_optout_rule",
+     "require_human_approval_for_tier"
     ],
     "title": "CrmConfigOut",
     "type": "object"
@@ -9907,6 +9680,36 @@
        }
       ],
       "title": "Outbound Kill Switch"
+     },
+     "owner_optout_rule": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Optout Rule"
+     },
+     "require_human_approval_for_tier": {
+      "anyOf": [
+       {
+        "items": {
+         "enum": [
+          "green",
+          "amber",
+          "red"
+         ],
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Require Human Approval For Tier"
      },
      "send_caps": {
       "anyOf": [
@@ -11849,34 +11652,6 @@
     "title": "ImportUploadResponse",
     "type": "object"
    },
-   "IngestRequest": {
-    "properties": {
-     "channels": {
-      "items": {
-       "$ref": "#/components/schemas/ChannelIn"
-      },
-      "title": "Channels",
-      "type": "array"
-     },
-     "contact": {
-      "$ref": "#/components/schemas/ContactIn"
-     },
-     "org": {
-      "$ref": "#/components/schemas/OrgIn"
-     },
-     "source": {
-      "$ref": "#/components/schemas/SourceIn"
-     }
-    },
-    "required": [
-     "org",
-     "contact",
-     "channels",
-     "source"
-    ],
-    "title": "IngestRequest",
-    "type": "object"
-   },
    "IntakeProductData": {
     "properties": {
      "attributes": {
@@ -12302,6 +12077,28 @@
        }
       ],
       "title": "Payload"
+     },
+     "person_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Id"
+     },
+     "relation_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relation Id"
      },
      "state_from": {
       "anyOf": [
@@ -12944,6 +12741,89 @@
     "title": "KnownSourcesResponse",
     "type": "object"
    },
+   "LeadConfirmRequest": {
+    "properties": {
+     "lead_version": {
+      "title": "Lead Version",
+      "type": "integer"
+     },
+     "legal_basis": {
+      "anyOf": [
+       {
+        "enum": [
+         "legitimate_interest",
+         "consent",
+         "contract",
+         "none"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Legal Basis"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "required": [
+     "lead_version"
+    ],
+    "title": "LeadConfirmRequest",
+    "type": "object"
+   },
+   "LeadTransitionRequest": {
+    "properties": {
+     "lead_version": {
+      "title": "Lead Version",
+      "type": "integer"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "shop_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shop Id"
+     },
+     "to_state": {
+      "title": "To State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "to_state",
+     "lead_version"
+    ],
+    "title": "LeadTransitionRequest",
+    "type": "object"
+   },
    "LeaseEventsRequest": {
     "properties": {
      "events": {
@@ -13417,46 +13297,6 @@
      "occurred_at"
     ],
     "title": "LifecycleEventResponse",
-    "type": "object"
-   },
-   "LifecycleRequest": {
-    "properties": {
-     "reason": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Reason"
-     },
-     "shop_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Shop Id"
-     },
-     "to_state": {
-      "title": "To State",
-      "type": "string"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "to_state",
-     "version"
-    ],
-    "title": "LifecycleRequest",
     "type": "object"
    },
    "LifecycleResponse": {
@@ -13941,7 +13781,7 @@
       ],
       "title": "Our Party"
      },
-     "person_id": {
+     "relation_id": {
       "anyOf": [
        {
         "type": "integer"
@@ -13950,7 +13790,7 @@
         "type": "null"
        }
       ],
-      "title": "Person Id"
+      "title": "Relation Id"
      },
      "their_party": {
       "anyOf": [
@@ -14162,6 +14002,17 @@
       ],
       "title": "Language"
      },
+     "person_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Id"
+     },
      "provider": {
       "anyOf": [
        {
@@ -14183,6 +14034,28 @@
        }
       ],
       "title": "Provider Message Id"
+     },
+     "recipient_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recipient Channel Id"
+     },
+     "relation_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relation Id"
      },
      "retry_count": {
       "title": "Retry Count",
@@ -14770,6 +14643,17 @@
     "title": "OfferDetail",
     "type": "object"
    },
+   "OkResponse": {
+    "properties": {
+     "ok": {
+      "default": true,
+      "title": "Ok",
+      "type": "boolean"
+     }
+    },
+    "title": "OkResponse",
+    "type": "object"
+   },
    "OnboardingContactRequest": {
     "properties": {
      "business_email": {
@@ -15249,11 +15133,38 @@
     "title": "OptOutResponse",
     "type": "object"
    },
-   "OrgIn": {
+   "OrgChildrenOut": {
     "properties": {
+     "count": {
+      "title": "Count",
+      "type": "integer"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OrgRef"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "count",
+     "items"
+    ],
+    "title": "OrgChildrenOut",
+    "type": "object"
+   },
+   "OrgCreateRequest": {
+    "properties": {
+     "as_lead": {
+      "default": true,
+      "title": "As Lead",
+      "type": "boolean"
+     },
      "category": {
       "anyOf": [
        {
+        "maxLength": 120,
         "type": "string"
        },
        {
@@ -15262,9 +15173,17 @@
       ],
       "title": "Category"
      },
+     "channels": {
+      "items": {
+       "$ref": "#/components/schemas/ChannelIn"
+      },
+      "title": "Channels",
+      "type": "array"
+     },
      "city": {
       "anyOf": [
        {
+        "maxLength": 120,
         "type": "string"
        },
        {
@@ -15273,19 +15192,45 @@
       ],
       "title": "City"
      },
+     "legal_name": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Legal Name"
+     },
      "name": {
+      "maxLength": 255,
       "title": "Name",
       "type": "string"
+     },
+     "source": {
+      "$ref": "#/components/schemas/OrgSourceIn"
      }
     },
     "required": [
      "name"
     ],
-    "title": "OrgIn",
+    "title": "OrgCreateRequest",
     "type": "object"
    },
-   "OrgOut": {
+   "OrgDetail": {
     "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "business_status": {
       "title": "Business Status",
       "type": "string"
@@ -15301,6 +15246,413 @@
       ],
       "title": "Category"
      },
+     "channels": {
+      "items": {
+       "$ref": "#/components/schemas/ChannelOut"
+      },
+      "title": "Channels",
+      "type": "array"
+     },
+     "children": {
+      "$ref": "#/components/schemas/OrgChildrenOut"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "interactions": {
+      "items": {
+       "$ref": "#/components/schemas/InteractionOut"
+      },
+      "title": "Interactions",
+      "type": "array"
+     },
+     "lead": {
+      "$ref": "#/components/schemas/OrgLeadOut"
+     },
+     "legal_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Legal Name"
+     },
+     "messages": {
+      "items": {
+       "$ref": "#/components/schemas/MessageOut"
+      },
+      "title": "Messages",
+      "type": "array"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "open_review_count": {
+      "title": "Open Review Count",
+      "type": "integer"
+     },
+     "parent": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OrgRef"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "reachable": {
+      "title": "Reachable",
+      "type": "boolean"
+     },
+     "region": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Region"
+     },
+     "relations": {
+      "items": {
+       "$ref": "#/components/schemas/RelationOut"
+      },
+      "title": "Relations",
+      "type": "array"
+     },
+     "shop_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shop Id"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceOut"
+      },
+      "title": "Sources",
+      "type": "array"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "business_status",
+     "lead",
+     "children",
+     "channels",
+     "relations",
+     "sources",
+     "interactions",
+     "messages",
+     "open_review_count",
+     "reachable",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "OrgDetail",
+    "type": "object"
+   },
+   "OrgLeadOut": {
+    "properties": {
+     "agent_paused": {
+      "title": "Agent Paused",
+      "type": "boolean"
+     },
+     "effective_legal_basis": {
+      "enum": [
+       "legitimate_interest",
+       "consent",
+       "contract",
+       "none"
+      ],
+      "title": "Effective Legal Basis",
+      "type": "string"
+     },
+     "effective_legal_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Effective Legal Tier",
+      "type": "string"
+     },
+     "needs_human": {
+      "title": "Needs Human",
+      "type": "boolean"
+     },
+     "owner_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Id"
+     },
+     "primary_source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Primary Source"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "SOURCED",
+         "ENRICHED",
+         "NEEDS_REVIEW",
+         "QUEUED",
+         "CONTACTED",
+         "ENGAGED",
+         "INTERESTED",
+         "REGISTERED",
+         "HARD_OPTOUT",
+         "REJECTED_PRIVATE",
+         "UNREACHABLE",
+         "DEAD"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "updated_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Updated At"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "effective_legal_tier",
+     "effective_legal_basis",
+     "needs_human",
+     "agent_paused",
+     "version"
+    ],
+    "title": "OrgLeadOut",
+    "type": "object"
+   },
+   "OrgLegalRequest": {
+    "properties": {
+     "effective_legal_basis": {
+      "anyOf": [
+       {
+        "enum": [
+         "legitimate_interest",
+         "consent",
+         "contract",
+         "none"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Effective Legal Basis"
+     },
+     "effective_legal_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Effective Legal Tier",
+      "type": "string"
+     },
+     "lead_version": {
+      "title": "Lead Version",
+      "type": "integer"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "required": [
+     "effective_legal_tier",
+     "lead_version"
+    ],
+    "title": "OrgLegalRequest",
+    "type": "object"
+   },
+   "OrgListItem": {
+    "properties": {
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "contact_count": {
+      "title": "Contact Count",
+      "type": "integer"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "lead_state": {
+      "anyOf": [
+       {
+        "enum": [
+         "SOURCED",
+         "ENRICHED",
+         "NEEDS_REVIEW",
+         "QUEUED",
+         "CONTACTED",
+         "ENGAGED",
+         "INTERESTED",
+         "REGISTERED",
+         "HARD_OPTOUT",
+         "REJECTED_PRIVATE",
+         "UNREACHABLE",
+         "DEAD"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lead State"
+     },
+     "lead_version": {
+      "title": "Lead Version",
+      "type": "integer"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "parent": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OrgRef"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "primary_email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Primary Email"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "contact_count",
+     "lead_version",
+     "updated_at"
+    ],
+    "title": "OrgListItem",
+    "type": "object"
+   },
+   "OrgRef": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name"
+    ],
+    "title": "OrgRef",
+    "type": "object"
+   },
+   "OrgRefCity": {
+    "properties": {
      "city": {
       "anyOf": [
        {
@@ -15316,54 +15668,20 @@
       "title": "Id",
       "type": "integer"
      },
-     "legal_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Legal Name"
-     },
      "name": {
       "title": "Name",
       "type": "string"
-     },
-     "region": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Region"
-     },
-     "shop_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Shop Id"
      }
     },
     "required": [
      "id",
-     "name",
-     "business_status"
+     "name"
     ],
-    "title": "OrgOut",
+    "title": "OrgRefCity",
     "type": "object"
    },
    "OrgSearchHit": {
-    "description": "Treffer der Organisationssuche; bewusst ohne Kontakte, Kanäle, shop_id, Adresse.",
+    "description": "Hit of the organisation search; without channels, relations, shop_id, address.",
     "properties": {
      "business_status": {
       "title": "Business Status",
@@ -15380,6 +15698,11 @@
       ],
       "title": "Category"
      },
+     "child_count": {
+      "default": 0,
+      "title": "Child Count",
+      "type": "integer"
+     },
      "city": {
       "anyOf": [
        {
@@ -15390,6 +15713,11 @@
        }
       ],
       "title": "City"
+     },
+     "has_parent": {
+      "default": false,
+      "title": "Has Parent",
+      "type": "boolean"
      },
      "id": {
       "title": "Id",
@@ -15419,11 +15747,75 @@
     "title": "OrgSearchHit",
     "type": "object"
    },
-   "OrgUpdateRequest": {
+   "OrgSourceIn": {
     "properties": {
+     "source": {
+      "default": "business_card",
+      "enum": [
+       "business_card",
+       "manual",
+       "referral",
+       "event"
+      ],
+      "title": "Source",
+      "type": "string"
+     },
+     "source_ref": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Ref"
+     }
+    },
+    "title": "OrgSourceIn",
+    "type": "object"
+   },
+   "OrgSuppressRequest": {
+    "properties": {
+     "lead_version": {
+      "title": "Lead Version",
+      "type": "integer"
+     },
+     "reason": {
+      "enum": [
+       "hard_optout",
+       "rejected_private"
+      ],
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "reason",
+     "lead_version"
+    ],
+    "title": "OrgSuppressRequest",
+    "type": "object"
+   },
+   "OrgUpdateRequest": {
+    "additionalProperties": false,
+    "description": "Master data only; lead fields are refused (extra keys → 422). Explicit ``null`` clears.",
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "category": {
       "anyOf": [
        {
+        "maxLength": 120,
         "type": "string"
        },
        {
@@ -15435,6 +15827,7 @@
      "city": {
       "anyOf": [
        {
+        "maxLength": 120,
         "type": "string"
        },
        {
@@ -15443,9 +15836,22 @@
       ],
       "title": "City"
      },
+     "legal_name": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Legal Name"
+     },
      "name": {
       "anyOf": [
        {
+        "maxLength": 255,
         "type": "string"
        },
        {
@@ -15453,6 +15859,29 @@
        }
       ],
       "title": "Name"
+     },
+     "parent_org_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parent Org Id"
+     },
+     "region": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Region"
      }
     },
     "title": "OrgUpdateRequest",
@@ -15854,6 +16283,74 @@
     "title": "OutboundLinkListResponse",
     "type": "object"
    },
+   "OutreachApproveRequest": {
+    "properties": {
+     "reason": {
+      "maxLength": 2000,
+      "title": "Reason",
+      "type": "string"
+     },
+     "recipient_channel_id": {
+      "title": "Recipient Channel Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "recipient_channel_id",
+     "reason"
+    ],
+    "title": "OutreachApproveRequest",
+    "type": "object"
+   },
+   "OutreachGate": {
+    "properties": {
+     "approval": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SendApprovalOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "approval_required": {
+      "title": "Approval Required",
+      "type": "boolean"
+     },
+     "channel_tier": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Channel Tier"
+     },
+     "effective_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Effective Tier",
+      "type": "string"
+     },
+     "org_tier": {
+      "title": "Org Tier",
+      "type": "string"
+     }
+    },
+    "required": [
+     "effective_tier",
+     "org_tier",
+     "approval_required"
+    ],
+    "title": "OutreachGate",
+    "type": "object"
+   },
    "OutreachPreviewRequest": {
     "properties": {
      "language": {
@@ -15864,6 +16361,17 @@
       ],
       "title": "Language",
       "type": "string"
+     },
+     "recipient_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recipient Channel Id"
      },
      "template_id": {
       "const": "first_contact_email",
@@ -15884,10 +16392,24 @@
       "title": "Body Rendered",
       "type": "string"
      },
+     "gate": {
+      "$ref": "#/components/schemas/OutreachGate"
+     },
      "placeholders": {
       "additionalProperties": true,
       "title": "Placeholders",
       "type": "object"
+     },
+     "recipient_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recipient Channel Id"
      },
      "subject": {
       "title": "Subject",
@@ -15897,26 +16419,161 @@
     "required": [
      "subject",
      "body_rendered",
-     "placeholders"
+     "placeholders",
+     "gate"
     ],
     "title": "OutreachPreviewResponse",
+    "type": "object"
+   },
+   "OutreachRecipientOut": {
+    "properties": {
+     "approval_open": {
+      "title": "Approval Open",
+      "type": "boolean"
+     },
+     "approval_required": {
+      "title": "Approval Required",
+      "type": "boolean"
+     },
+     "channel_id": {
+      "title": "Channel Id",
+      "type": "integer"
+     },
+     "effective_tier": {
+      "enum": [
+       "green",
+       "amber",
+       "red"
+      ],
+      "title": "Effective Tier",
+      "type": "string"
+     },
+     "is_default": {
+      "title": "Is Default",
+      "type": "boolean"
+     },
+     "kind": {
+      "const": "email",
+      "title": "Kind",
+      "type": "string"
+     },
+     "owner_type": {
+      "enum": [
+       "org",
+       "relation",
+       "person"
+      ],
+      "title": "Owner Type",
+      "type": "string"
+     },
+     "person": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OutreachRecipientPerson"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "relation_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relation Id"
+     },
+     "roles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Roles",
+      "type": "array"
+     },
+     "value": {
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "channel_id",
+     "kind",
+     "value",
+     "owner_type",
+     "roles",
+     "effective_tier",
+     "approval_required",
+     "approval_open",
+     "is_default"
+    ],
+    "title": "OutreachRecipientOut",
+    "type": "object"
+   },
+   "OutreachRecipientPerson": {
+    "properties": {
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "title": "OutreachRecipientPerson",
     "type": "object"
    },
    "OutreachSendRequest": {
     "properties": {
      "body": {
+      "maxLength": 20000,
+      "minLength": 1,
       "title": "Body",
       "type": "string"
      },
      "idempotency_key": {
+      "maxLength": 200,
+      "minLength": 1,
       "title": "Idempotency Key",
       "type": "string"
      },
      "language": {
+      "enum": [
+       "el",
+       "en",
+       "ru"
+      ],
       "title": "Language",
       "type": "string"
      },
+     "recipient_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recipient Channel Id"
+     },
      "subject": {
+      "maxLength": 500,
+      "minLength": 1,
       "title": "Subject",
       "type": "string"
      }
@@ -16678,37 +17335,6 @@
     "title": "PaginatedResponse[CategoryReviewItem]",
     "type": "object"
    },
-   "PaginatedResponse_ContactListItem_": {
-    "properties": {
-     "items": {
-      "items": {
-       "$ref": "#/components/schemas/ContactListItem"
-      },
-      "title": "Items",
-      "type": "array"
-     },
-     "limit": {
-      "title": "Limit",
-      "type": "integer"
-     },
-     "offset": {
-      "title": "Offset",
-      "type": "integer"
-     },
-     "total": {
-      "title": "Total",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "items",
-     "total",
-     "limit",
-     "offset"
-    ],
-    "title": "PaginatedResponse[ContactListItem]",
-    "type": "object"
-   },
    "PaginatedResponse_ItemDomainMappingResponse_": {
     "properties": {
      "items": {
@@ -16771,6 +17397,37 @@
     "title": "PaginatedResponse[LifecycleResponse]",
     "type": "object"
    },
+   "PaginatedResponse_OrgListItem_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OrgListItem"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[OrgListItem]",
+    "type": "object"
+   },
    "PaginatedResponse_OrgSearchHit_": {
     "properties": {
      "items": {
@@ -16831,6 +17488,37 @@
      "offset"
     ],
     "title": "PaginatedResponse[PersonOut]",
+    "type": "object"
+   },
+   "PaginatedResponse_ReviewItemOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewItemOut"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[ReviewItemOut]",
     "type": "object"
    },
    "PaginatedResponse_ScrapeRunResponse_": {
@@ -16938,41 +17626,6 @@
     "title": "PasswordResetRequest",
     "type": "object"
    },
-   "PersonContactOut": {
-    "properties": {
-     "display_name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Display Name"
-     },
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "org_id": {
-      "anyOf": [
-       {
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Org Id"
-     }
-    },
-    "required": [
-     "id"
-    ],
-    "title": "PersonContactOut",
-    "type": "object"
-   },
    "PersonCreateRequest": {
     "properties": {
      "address": {
@@ -16984,6 +17637,36 @@
         "type": "null"
        }
       ]
+     },
+     "birth_date": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Birth Date"
+     },
+     "birth_year_unknown": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Birth Year Unknown"
+     },
+     "channels": {
+      "items": {
+       "$ref": "#/components/schemas/ChannelIn"
+      },
+      "title": "Channels",
+      "type": "array"
      },
      "display_name": {
       "anyOf": [
@@ -16997,66 +17680,50 @@
       ],
       "title": "Display Name"
      },
-     "identifiers": {
-      "items": {
-       "$ref": "#/components/schemas/PersonIdentifierIn"
-      },
-      "minItems": 1,
-      "title": "Identifiers",
-      "type": "array"
-     }
-    },
-    "required": [
-     "identifiers"
-    ],
-    "title": "PersonCreateRequest",
-    "type": "object"
-   },
-   "PersonIdentifierIn": {
-    "properties": {
-     "kind": {
-      "enum": [
-       "email",
-       "phone"
+     "first_name": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
       ],
-      "title": "Kind",
-      "type": "string"
+      "title": "First Name"
      },
-     "value": {
-      "maxLength": 320,
-      "minLength": 1,
-      "title": "Value",
-      "type": "string"
+     "last_name": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Name"
+     },
+     "salutation": {
+      "anyOf": [
+       {
+        "enum": [
+         "mr",
+         "ms",
+         "mx",
+         "dr",
+         "none"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salutation"
      }
     },
-    "required": [
-     "kind",
-     "value"
-    ],
-    "title": "PersonIdentifierIn",
-    "type": "object"
-   },
-   "PersonIdentifierOut": {
-    "properties": {
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "kind": {
-      "title": "Kind",
-      "type": "string"
-     },
-     "value_normalized": {
-      "title": "Value Normalized",
-      "type": "string"
-     }
-    },
-    "required": [
-     "id",
-     "kind",
-     "value_normalized"
-    ],
-    "title": "PersonIdentifierOut",
+    "title": "PersonCreateRequest",
     "type": "object"
    },
    "PersonOut": {
@@ -17071,22 +17738,27 @@
        }
       ]
      },
-     "address_id": {
+     "birth_date": {
       "anyOf": [
        {
-        "type": "integer"
+        "format": "date",
+        "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Address Id"
+      "title": "Birth Date"
      },
-     "contacts": {
+     "birth_year_unknown": {
+      "title": "Birth Year Unknown",
+      "type": "boolean"
+     },
+     "channels": {
       "items": {
-       "$ref": "#/components/schemas/PersonContactOut"
+       "$ref": "#/components/schemas/ChannelOut"
       },
-      "title": "Contacts",
+      "title": "Channels",
       "type": "array"
      },
      "created_at": {
@@ -17105,23 +17777,57 @@
       ],
       "title": "Display Name"
      },
+     "first_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Name"
+     },
      "id": {
       "title": "Id",
       "type": "integer"
      },
-     "identifiers": {
+     "last_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Name"
+     },
+     "name_derived": {
+      "title": "Name Derived",
+      "type": "boolean"
+     },
+     "optout": {
+      "title": "Optout",
+      "type": "boolean"
+     },
+     "relations": {
       "items": {
-       "$ref": "#/components/schemas/PersonIdentifierOut"
+       "$ref": "#/components/schemas/RelationOut"
       },
-      "title": "Identifiers",
+      "title": "Relations",
       "type": "array"
      },
-     "roles": {
-      "items": {
-       "$ref": "#/components/schemas/PersonRoleOut"
-      },
-      "title": "Roles",
-      "type": "array"
+     "salutation": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salutation"
      },
      "updated_at": {
       "format": "date-time",
@@ -17131,221 +17837,19 @@
     },
     "required": [
      "id",
-     "identifiers",
-     "roles",
-     "contacts",
+     "name_derived",
+     "birth_year_unknown",
+     "optout",
+     "channels",
+     "relations",
      "created_at",
      "updated_at"
     ],
     "title": "PersonOut",
     "type": "object"
    },
-   "PersonRoleCreatedOut": {
-    "properties": {
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "org_city": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Org City"
-     },
-     "org_id": {
-      "title": "Org Id",
-      "type": "integer"
-     },
-     "org_name": {
-      "title": "Org Name",
-      "type": "string"
-     },
-     "person_id": {
-      "title": "Person Id",
-      "type": "integer"
-     },
-     "role": {
-      "title": "Role",
-      "type": "string"
-     },
-     "source": {
-      "title": "Source",
-      "type": "string"
-     },
-     "valid_from": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid From"
-     },
-     "valid_to": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid To"
-     }
-    },
-    "required": [
-     "id",
-     "org_id",
-     "org_name",
-     "role",
-     "source",
-     "person_id"
-    ],
-    "title": "PersonRoleCreatedOut",
-    "type": "object"
-   },
-   "PersonRoleEndRequest": {
-    "properties": {
-     "valid_to": {
-      "format": "date",
-      "title": "Valid To",
-      "type": "string"
-     }
-    },
-    "required": [
-     "valid_to"
-    ],
-    "title": "PersonRoleEndRequest",
-    "type": "object"
-   },
-   "PersonRoleOut": {
-    "properties": {
-     "id": {
-      "title": "Id",
-      "type": "integer"
-     },
-     "org_city": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Org City"
-     },
-     "org_id": {
-      "title": "Org Id",
-      "type": "integer"
-     },
-     "org_name": {
-      "title": "Org Name",
-      "type": "string"
-     },
-     "role": {
-      "title": "Role",
-      "type": "string"
-     },
-     "source": {
-      "title": "Source",
-      "type": "string"
-     },
-     "valid_from": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid From"
-     },
-     "valid_to": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid To"
-     }
-    },
-    "required": [
-     "id",
-     "org_id",
-     "org_name",
-     "role",
-     "source"
-    ],
-    "title": "PersonRoleOut",
-    "type": "object"
-   },
-   "PersonRoleRequest": {
-    "properties": {
-     "org_id": {
-      "title": "Org Id",
-      "type": "integer"
-     },
-     "role": {
-      "maxLength": 50,
-      "minLength": 1,
-      "title": "Role",
-      "type": "string"
-     },
-     "source": {
-      "default": "manual",
-      "maxLength": 50,
-      "title": "Source",
-      "type": "string"
-     },
-     "valid_from": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid From"
-     },
-     "valid_to": {
-      "anyOf": [
-       {
-        "format": "date",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Valid To"
-     }
-    },
-    "required": [
-     "org_id",
-     "role"
-    ],
-    "title": "PersonRoleRequest",
-    "type": "object"
-   },
-   "PersonUpdateRequest": {
+   "PersonWriteRequest": {
+    "description": "PATCH semantics: only sent fields change; explicit ``null`` clears.",
     "properties": {
      "address": {
       "anyOf": [
@@ -17356,6 +17860,29 @@
         "type": "null"
        }
       ]
+     },
+     "birth_date": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Birth Date"
+     },
+     "birth_year_unknown": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Birth Year Unknown"
      },
      "display_name": {
       "anyOf": [
@@ -17368,9 +17895,51 @@
        }
       ],
       "title": "Display Name"
+     },
+     "first_name": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Name"
+     },
+     "last_name": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Name"
+     },
+     "salutation": {
+      "anyOf": [
+       {
+        "enum": [
+         "mr",
+         "ms",
+         "mx",
+         "dr",
+         "none"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salutation"
      }
     },
-    "title": "PersonUpdateRequest",
+    "title": "PersonWriteRequest",
     "type": "object"
    },
    "PhotoStatusOut": {
@@ -19592,6 +20161,332 @@
     "title": "RelatedShopsResponse",
     "type": "object"
    },
+   "RelationCreateRequest": {
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "org_id": {
+      "title": "Org Id",
+      "type": "integer"
+     },
+     "person_id": {
+      "title": "Person Id",
+      "type": "integer"
+     },
+     "preferred_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preferred Channel Id"
+     },
+     "roles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Roles",
+      "type": "array"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "required": [
+     "person_id",
+     "org_id"
+    ],
+    "title": "RelationCreateRequest",
+    "type": "object"
+   },
+   "RelationEndRequest": {
+    "properties": {
+     "valid_to": {
+      "format": "date",
+      "title": "Valid To",
+      "type": "string"
+     }
+    },
+    "required": [
+     "valid_to"
+    ],
+    "title": "RelationEndRequest",
+    "type": "object"
+   },
+   "RelationOut": {
+    "properties": {
+     "active": {
+      "title": "Active",
+      "type": "boolean"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "channels": {
+      "items": {
+       "$ref": "#/components/schemas/ChannelOut"
+      },
+      "title": "Channels",
+      "type": "array"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "org": {
+      "$ref": "#/components/schemas/OrgRefCity"
+     },
+     "person": {
+      "$ref": "#/components/schemas/RelationPersonOut"
+     },
+     "person_channels": {
+      "items": {
+       "$ref": "#/components/schemas/ChannelOut"
+      },
+      "title": "Person Channels",
+      "type": "array"
+     },
+     "preferred_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preferred Channel Id"
+     },
+     "role_missing": {
+      "title": "Role Missing",
+      "type": "boolean"
+     },
+     "roles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Roles",
+      "type": "array"
+     },
+     "source": {
+      "title": "Source",
+      "type": "string"
+     },
+     "uses_org_address": {
+      "title": "Uses Org Address",
+      "type": "boolean"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "required": [
+     "id",
+     "person",
+     "org",
+     "active",
+     "roles",
+     "role_missing",
+     "source",
+     "uses_org_address",
+     "channels",
+     "person_channels"
+    ],
+    "title": "RelationOut",
+    "type": "object"
+   },
+   "RelationPersonOut": {
+    "properties": {
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "optout": {
+      "title": "Optout",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "id",
+     "optout"
+    ],
+    "title": "RelationPersonOut",
+    "type": "object"
+   },
+   "RelationRoleRequest": {
+    "properties": {
+     "role": {
+      "maxLength": 50,
+      "minLength": 1,
+      "title": "Role",
+      "type": "string"
+     }
+    },
+    "required": [
+     "role"
+    ],
+    "title": "RelationRoleRequest",
+    "type": "object"
+   },
+   "RelationUpdateRequest": {
+    "additionalProperties": false,
+    "description": "PATCH: only sent fields change; explicit ``null`` clears.",
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "preferred_channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preferred Channel Id"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "title": "RelationUpdateRequest",
+    "type": "object"
+   },
    "ReleaseRequest": {
     "properties": {
      "reason": {
@@ -19699,6 +20594,95 @@
     "title": "ReviewEntityOut",
     "type": "object"
    },
+   "ReviewItemOut": {
+    "description": "A stored review item (``id`` set) or a computed one (``relation_without_role``,\n``person_without_name_parts``: ``id`` null).",
+    "properties": {
+     "channel": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ChannelOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "org": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OrgRef"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "payload": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payload"
+     },
+     "person": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ReviewPersonOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "relation_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relation Id"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "status",
+     "created_at"
+    ],
+    "title": "ReviewItemOut",
+    "type": "object"
+   },
    "ReviewOut": {
     "properties": {
      "comment": {
@@ -19792,6 +20776,30 @@
     "title": "ReviewOut",
     "type": "object"
    },
+   "ReviewPersonOut": {
+    "properties": {
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "title": "ReviewPersonOut",
+    "type": "object"
+   },
    "ReviewPhotoOut": {
     "properties": {
      "id": {
@@ -19852,6 +20860,23 @@
      "moderation_categories"
     ],
     "title": "ReviewPhotoOut",
+    "type": "object"
+   },
+   "ReviewResolveRequest": {
+    "properties": {
+     "status": {
+      "enum": [
+       "resolved",
+       "dismissed"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "ReviewResolveRequest",
     "type": "object"
    },
    "ReviewStatsOut": {
@@ -21494,6 +22519,68 @@
      "blocked_requests"
     ],
     "title": "SecurityEvidence",
+    "type": "object"
+   },
+   "SendApprovalOut": {
+    "properties": {
+     "approved_by": {
+      "title": "Approved By",
+      "type": "string"
+     },
+     "channel_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Channel Id"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "effective_tier": {
+      "title": "Effective Tier",
+      "type": "string"
+     },
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     },
+     "used_message_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Used Message Id"
+     }
+    },
+    "required": [
+     "id",
+     "effective_tier",
+     "approved_by",
+     "reason",
+     "created_at",
+     "expires_at"
+    ],
+    "title": "SendApprovalOut",
     "type": "object"
    },
    "SendCapOut": {
@@ -24147,48 +25234,11 @@
     "title": "SocialLinkWhitelistResponse",
     "type": "object"
    },
-   "SourceIn": {
-    "properties": {
-     "raw": {
-      "anyOf": [
-       {
-        "additionalProperties": true,
-        "type": "object"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Raw"
-     },
-     "source": {
-      "default": "business_card",
-      "enum": [
-       "business_card",
-       "manual",
-       "referral",
-       "event"
-      ],
-      "title": "Source",
-      "type": "string"
-     },
-     "source_ref": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Source Ref"
-     }
-    },
-    "title": "SourceIn",
-    "type": "object"
-   },
    "SourceOut": {
     "properties": {
+     "has_card_image": {
+      "$ref": "#/components/schemas/CardImageFlags"
+     },
      "id": {
       "title": "Id",
       "type": "integer"
@@ -24227,7 +25277,8 @@
      "source",
      "legal_tier",
      "legal_basis",
-     "observed_at"
+     "observed_at",
+     "has_card_image"
     ],
     "title": "SourceOut",
     "type": "object"
@@ -24523,28 +25574,6 @@
      "created_at"
     ],
     "title": "SpottedUploadItem",
-    "type": "object"
-   },
-   "SuppressRequest": {
-    "properties": {
-     "reason": {
-      "enum": [
-       "hard_optout",
-       "rejected_private"
-      ],
-      "title": "Reason",
-      "type": "string"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     }
-    },
-    "required": [
-     "reason",
-     "version"
-    ],
-    "title": "SuppressRequest",
     "type": "object"
    },
    "TopProduct": {
@@ -29698,6 +30727,8 @@
       "required": false,
       "schema": {
        "default": 50,
+       "maximum": 100,
+       "minimum": 1,
        "title": "Limit",
        "type": "integer"
       }
@@ -29708,6 +30739,7 @@
       "required": false,
       "schema": {
        "default": 0,
+       "minimum": 0,
        "title": "Offset",
        "type": "integer"
       }
@@ -29826,9 +30858,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Create Address Api V1 Admin Crm Addresses Post",
-         "type": "object"
+         "$ref": "#/components/schemas/AddressOut"
         }
        }
       },
@@ -29846,6 +30876,176 @@
      }
     },
     "summary": "Create Address",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/channels/{channel_id}": {
+   "patch": {
+    "operationId": "set_channel_tier_api_v1_admin_crm_channels__channel_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "channel_id",
+      "required": true,
+      "schema": {
+       "title": "Channel Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChannelTierRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ChannelOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Channel Tier",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/channels/{channel_id}/move": {
+   "post": {
+    "operationId": "move_channel_api_v1_admin_crm_channels__channel_id__move_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "channel_id",
+      "required": true,
+      "schema": {
+       "title": "Channel Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChannelMoveRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ChannelOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Move Channel",
     "tags": [
      "admin",
      "admin-crm"
@@ -29992,9 +31192,10 @@
     ]
    }
   },
-  "/api/v1/admin/crm/contacts": {
+  "/api/v1/admin/crm/orgs": {
    "get": {
-    "operationId": "list_contacts_api_v1_admin_crm_contacts_get",
+    "description": "Organisations with lead status (AC 26). ``lead_only`` = only acquisition targets (lead state set).",
+    "operationId": "list_orgs_api_v1_admin_crm_orgs_get",
     "parameters": [
      {
       "in": "query",
@@ -30014,18 +31215,58 @@
      },
      {
       "in": "query",
-      "name": "lifecycle_state",
+      "name": "lead_state",
       "required": false,
       "schema": {
        "anyOf": [
         {
+         "enum": [
+          "SOURCED",
+          "ENRICHED",
+          "NEEDS_REVIEW",
+          "QUEUED",
+          "CONTACTED",
+          "ENGAGED",
+          "INTERESTED",
+          "REGISTERED",
+          "HARD_OPTOUT",
+          "REJECTED_PRIVATE",
+          "UNREACHABLE",
+          "DEAD"
+         ],
          "type": "string"
         },
         {
          "type": "null"
         }
        ],
-       "title": "Lifecycle State"
+       "title": "Lead State"
+      }
+     },
+     {
+      "in": "query",
+      "name": "lead_only",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Lead Only",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "owner_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Owner Id"
       }
      },
      {
@@ -30089,7 +31330,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/PaginatedResponse_ContactListItem_"
+         "$ref": "#/components/schemas/PaginatedResponse_OrgListItem_"
         }
        }
       },
@@ -30106,345 +31347,16 @@
       "description": "Validation Error"
      }
     },
-    "summary": "List Contacts",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/ingest": {
-   "post": {
-    "operationId": "ingest_contact_api_v1_admin_crm_contacts_ingest_post",
-    "parameters": [
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/IngestRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Ingest Contact",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}": {
-   "get": {
-    "operationId": "get_contact_api_v1_admin_crm_contacts__contact_id__get",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Get Contact",
+    "summary": "List Orgs",
     "tags": [
      "admin",
      "admin-crm"
     ]
    },
-   "patch": {
-    "description": "Partial-update org and/or contact fields (last-write-wins).",
-    "operationId": "update_contact_api_v1_admin_crm_contacts__contact_id__patch",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ContactUpdateRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Update Contact",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/card-image/{side}": {
-   "get": {
-    "description": "Serve a card image for the given contact and side (front|back).\n\nRequires Admin-JWT with crm:contacts:read permission.\nReturns 404 if no image is stored or the file is missing on disk.",
-    "operationId": "serve_card_image_api_v1_admin_crm_contacts__contact_id__card_image__side__get",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "path",
-      "name": "side",
-      "required": true,
-      "schema": {
-       "title": "Side",
-       "type": "string"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Serve Card Image",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/channels": {
    "post": {
-    "description": "Add a new channel to a contact (suppression + duplicate check).",
-    "operationId": "add_channel_api_v1_admin_crm_contacts__contact_id__channels_post",
+    "description": "Create an org (201) or enrich the org that already holds one of the values (200, §6.4).\n\nA value held by a person stays there; the org gets a review ``channel_owner_conflict`` (ingest rule §5.2).",
+    "operationId": "create_org_api_v1_admin_crm_orgs_post",
     "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
      {
       "in": "header",
       "name": "authorization",
@@ -30482,7 +31394,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ChannelAddRequest"
+        "$ref": "#/components/schemas/OrgCreateRequest"
        }
       }
      },
@@ -30493,7 +31405,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
+         "$ref": "#/components/schemas/OrgDetail"
         }
        }
       },
@@ -30510,612 +31422,17 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Add Channel",
+    "summary": "Create Org",
     "tags": [
      "admin",
      "admin-crm"
     ]
    }
   },
-  "/api/v1/admin/crm/contacts/{contact_id}/channels/{channel_id}": {
-   "delete": {
-    "description": "Remove a channel. Requires at least 1 channel to remain.",
-    "operationId": "remove_channel_api_v1_admin_crm_contacts__contact_id__channels__channel_id__delete",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "path",
-      "name": "channel_id",
-      "required": true,
-      "schema": {
-       "title": "Channel Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Remove Channel",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/confirm-business": {
-   "post": {
-    "operationId": "confirm_business_api_v1_admin_crm_contacts__contact_id__confirm_business_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ConfirmBusinessRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Confirm Business",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/interactions": {
-   "post": {
-    "description": "Document a WhatsApp chat, phone call or note that happened outside the system (N7600).",
-    "operationId": "add_manual_interaction_api_v1_admin_crm_contacts__contact_id__interactions_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ManualInteractionRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/InteractionOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Add Manual Interaction",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/lifecycle": {
-   "post": {
-    "operationId": "set_lifecycle_api_v1_admin_crm_contacts__contact_id__lifecycle_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/LifecycleRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Set Lifecycle",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/outreach/preview": {
-   "post": {
-    "operationId": "outreach_preview_api_v1_admin_crm_contacts__contact_id__outreach_preview_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/OutreachPreviewRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/OutreachPreviewResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Outreach Preview",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/outreach/send": {
-   "post": {
-    "operationId": "outreach_send_api_v1_admin_crm_contacts__contact_id__outreach_send_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/OutreachSendRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/OutreachSendResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Outreach Send",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/contacts/{contact_id}/suppress": {
-   "post": {
-    "operationId": "suppress_contact_api_v1_admin_crm_contacts__contact_id__suppress_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "contact_id",
-      "required": true,
-      "schema": {
-       "title": "Contact Id",
-       "type": "integer"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/SuppressRequest"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ContactDetailResponse"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Suppress Contact",
-    "tags": [
-     "admin",
-     "admin-crm"
-    ]
-   }
-  },
-  "/api/v1/admin/crm/orgs": {
+  "/api/v1/admin/crm/orgs/search": {
    "get": {
-    "operationId": "search_orgs_api_v1_admin_crm_orgs_get",
+    "description": "Typeahead (was ``GET /orgs?q=`` before the org cut). ``parent_candidates_only`` = orgs without a head\noffice of their own (possible head offices, AC 42/43).",
+    "operationId": "search_orgs_api_v1_admin_crm_orgs_search_get",
     "parameters": [
      {
       "in": "query",
@@ -31124,6 +31441,32 @@
       "schema": {
        "title": "Q",
        "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "parent_candidates_only",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Parent Candidates Only",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "exclude_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Exclude Id"
       }
      },
      {
@@ -31211,8 +31554,1209 @@
     ]
    }
   },
+  "/api/v1/admin/crm/orgs/{org_id}": {
+   "get": {
+    "operationId": "get_org_api_v1_admin_crm_orgs__org_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Org",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   },
+   "patch": {
+    "description": "Master data incl. head office (``parent_org_id``); never the lead block (last-write-wins).",
+    "operationId": "update_org_api_v1_admin_crm_orgs__org_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrgUpdateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Update Org",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/channels": {
+   "post": {
+    "operationId": "add_org_channel_api_v1_admin_crm_orgs__org_id__channels_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChannelIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Org Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/channels/{channel_id}": {
+   "delete": {
+    "description": "Remove an org channel; the last reachable channel of an active lead → 422 ``last_channel`` unless\n``mark_unreachable=true`` (then ``UNREACHABLE`` in the same operation, AC 13).",
+    "operationId": "remove_org_channel_api_v1_admin_crm_orgs__org_id__channels__channel_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "channel_id",
+      "required": true,
+      "schema": {
+       "title": "Channel Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "mark_unreachable",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Mark Unreachable",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Org Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/confirm-business": {
+   "post": {
+    "operationId": "confirm_business_api_v1_admin_crm_orgs__org_id__confirm_business_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LeadConfirmRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Confirm Business",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/interactions": {
+   "post": {
+    "description": "Document a WhatsApp chat, phone call or note that happened outside the system (N7600).",
+    "operationId": "add_manual_interaction_api_v1_admin_crm_orgs__org_id__interactions_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ManualInteractionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InteractionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Manual Interaction",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/lead": {
+   "post": {
+    "description": "Lead transition incl. \"make it an acquisition target\" (empty → ``SOURCED``).",
+    "operationId": "transition_lead_api_v1_admin_crm_orgs__org_id__lead_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LeadTransitionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Transition Lead",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/legal": {
+   "post": {
+    "description": "Legal tier (and basis) of the lead block (T4b Sendegate Rechtsstufe); audited as interaction.",
+    "operationId": "set_legal_api_v1_admin_crm_orgs__org_id__legal_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrgLegalRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Legal",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/outreach/approve": {
+   "post": {
+    "description": "Approve one send to this recipient despite the legal tier (7 days, one send; EA9, EA9a).",
+    "operationId": "outreach_approve_api_v1_admin_crm_orgs__org_id__outreach_approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutreachApproveRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SendApprovalOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Outreach Approve",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/outreach/preview": {
+   "post": {
+    "description": "Rendered mail plus the gate state; never blocks (the UI shows the warning before sending).",
+    "operationId": "outreach_preview_api_v1_admin_crm_orgs__org_id__outreach_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutreachPreviewRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OutreachPreviewResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Outreach Preview",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/outreach/recipients": {
+   "get": {
+    "operationId": "outreach_recipients_api_v1_admin_crm_orgs__org_id__outreach_recipients_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/OutreachRecipientOut"
+         },
+         "title": "Response Outreach Recipients Api V1 Admin Crm Orgs  Org Id  Outreach Recipients Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Outreach Recipients",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/outreach/send": {
+   "post": {
+    "operationId": "outreach_send_api_v1_admin_crm_orgs__org_id__outreach_send_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutreachSendRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OutreachSendResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Outreach Send",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/sources/{source_id}/card-image/{side}": {
+   "get": {
+    "description": "Card image evidence of a source (``Cache-Control: private``). The storage key comes from the DB row,\nnever from the request; ``load_image`` validates it against a safe pattern.",
+    "operationId": "serve_card_image_api_v1_admin_crm_orgs__org_id__sources__source_id__card_image__side__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "side",
+      "required": true,
+      "schema": {
+       "enum": [
+        "front",
+        "back"
+       ],
+       "title": "Side",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Serve Card Image",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/orgs/{org_id}/suppress": {
+   "post": {
+    "description": "Org opt-out: lead terminal, every org channel suppressed (branches/head office untouched, AC 44).",
+    "operationId": "suppress_org_api_v1_admin_crm_orgs__org_id__suppress_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "org_id",
+      "required": true,
+      "schema": {
+       "title": "Org Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrgSuppressRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrgDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Suppress Org",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
   "/api/v1/admin/crm/persons": {
    "get": {
+    "description": "Name search ``ILIKE`` on ``display_name`` (≥ 3 characters, finds derived names, AC 30) plus an exact\ne-mail/phone match over the HMAC of person and relation channels (never org channels, never the birth date).",
     "operationId": "list_persons_api_v1_admin_crm_persons_get",
     "parameters": [
      {
@@ -31237,6 +32781,8 @@
       "required": false,
       "schema": {
        "default": 50,
+       "maximum": 100,
+       "minimum": 1,
        "title": "Limit",
        "type": "integer"
       }
@@ -31247,6 +32793,7 @@
       "required": false,
       "schema": {
        "default": 0,
+       "minimum": 0,
        "title": "Offset",
        "type": "integer"
       }
@@ -31313,6 +32860,7 @@
     ]
    },
    "post": {
+    "description": "A person with 0..n person channels (EA5). Conflicts: 409 ``person_channel_exists`` (``person_id``),\n422 ``channel_owned_by_org``, ``suppressed`` (checked before anything is stored).",
     "operationId": "create_person_api_v1_admin_crm_persons_post",
     "parameters": [
      {
@@ -31528,6 +33076,7 @@
     ]
    },
    "patch": {
+    "description": "Only sent fields change. With a name part set an explicit ``display_name`` → 422\n``person_display_name_derived`` (AC 33); replacing a free name is audited without values (AC 32).",
     "operationId": "update_person_api_v1_admin_crm_persons__person_id__patch",
     "parameters": [
      {
@@ -31576,7 +33125,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PersonUpdateRequest"
+        "$ref": "#/components/schemas/PersonWriteRequest"
        }
       }
      },
@@ -31611,9 +33160,96 @@
     ]
    }
   },
-  "/api/v1/admin/crm/persons/{person_id}/contacts/{contact_id}": {
+  "/api/v1/admin/crm/persons/{person_id}/channels": {
    "post": {
-    "operationId": "link_contact_api_v1_admin_crm_persons__person_id__contacts__contact_id__post",
+    "description": "Person channel (\"persönlich\", valid for every relation); same conflict rules as relation channels.",
+    "operationId": "add_person_channel_api_v1_admin_crm_persons__person_id__channels_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChannelIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PersonOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Person Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/channels/{channel_id}": {
+   "delete": {
+    "description": "Remove a person channel; it counts for every org of an active relation, so the reachability rule\napplies (422 ``last_channel`` unless ``mark_unreachable=true``).",
+    "operationId": "remove_person_channel_api_v1_admin_crm_persons__person_id__channels__channel_id__delete",
     "parameters": [
      {
       "in": "path",
@@ -31626,11 +33262,112 @@
      },
      {
       "in": "path",
-      "name": "contact_id",
+      "name": "channel_id",
       "required": true,
       "schema": {
-       "title": "Contact Id",
+       "title": "Channel Id",
        "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "mark_unreachable",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Mark Unreachable",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PersonOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Person Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/persons/{person_id}/export": {
+   "get": {
+    "description": "Interim export (Art. 15, EA11) until the F6110 orchestrator takes over; birth date without the\nplaceholder year (AC 36), org channels only for an active owner role with the owner rule on (AC 20).",
+    "operationId": "export_person_api_v1_admin_crm_persons__person_id__export_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "person_id",
+      "required": true,
+      "schema": {
+       "title": "Person Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "lang",
+      "required": false,
+      "schema": {
+       "default": "en",
+       "enum": [
+        "en",
+        "de",
+        "el"
+       ],
+       "title": "Lang",
+       "type": "string"
       }
      },
      {
@@ -31672,7 +33409,7 @@
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Link Contact Api V1 Admin Crm Persons  Person Id  Contacts  Contact Id  Post",
+         "title": "Response Export Person Api V1 Admin Crm Persons  Person Id  Export Get",
          "type": "object"
         }
        }
@@ -31690,7 +33427,7 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Link Contact",
+    "summary": "Export Person",
     "tags": [
      "admin",
      "admin-crm"
@@ -31699,6 +33436,7 @@
   },
   "/api/v1/admin/crm/persons/{person_id}/opt-out": {
    "post": {
+    "description": "Person objection: every person and relation channel suppressed, orgs unchanged except the owner rule.",
     "operationId": "opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post",
     "parameters": [
      {
@@ -31748,9 +33486,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Opt Out Person Api V1 Admin Crm Persons  Person Id  Opt Out Post",
-         "type": "object"
+         "$ref": "#/components/schemas/OkResponse"
         }
        }
       },
@@ -31774,16 +33510,92 @@
     ]
    }
   },
-  "/api/v1/admin/crm/persons/{person_id}/roles": {
+  "/api/v1/admin/crm/relations": {
    "post": {
-    "operationId": "add_role_api_v1_admin_crm_persons__person_id__roles_post",
+    "operationId": "create_relation_api_v1_admin_crm_relations_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RelationCreateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Relation",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/relations/{relation_id}": {
+   "patch": {
+    "operationId": "update_relation_api_v1_admin_crm_relations__relation_id__patch",
     "parameters": [
      {
       "in": "path",
-      "name": "person_id",
+      "name": "relation_id",
       "required": true,
       "schema": {
-       "title": "Person Id",
+       "title": "Relation Id",
        "type": "integer"
       }
      },
@@ -31824,7 +33636,93 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PersonRoleRequest"
+        "$ref": "#/components/schemas/RelationUpdateRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Update Relation",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/relations/{relation_id}/channels": {
+   "post": {
+    "description": "Relation channel; conflicts: ``channel_owned_by_org`` (with ``channel_id``, AC 39),\n``channel_owned_by_other_person`` (AC 10), 409 ``channel_exists_same_person`` (with ``channel_id``, AC 9).",
+    "operationId": "add_relation_channel_api_v1_admin_crm_relations__relation_id__channels_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "relation_id",
+      "required": true,
+      "schema": {
+       "title": "Relation Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChannelIn"
        }
       }
      },
@@ -31835,7 +33733,273 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/PersonRoleCreatedOut"
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Relation Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/relations/{relation_id}/channels/{channel_id}": {
+   "delete": {
+    "description": "Remove a relation channel; reachability rule as for org channels (422 ``last_channel``).",
+    "operationId": "remove_relation_channel_api_v1_admin_crm_relations__relation_id__channels__channel_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "relation_id",
+      "required": true,
+      "schema": {
+       "title": "Relation Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "channel_id",
+      "required": true,
+      "schema": {
+       "title": "Channel Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "mark_unreachable",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Mark Unreachable",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Relation Channel",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/relations/{relation_id}/end": {
+   "post": {
+    "description": "End a relation (``valid_to``); its channels are no recipients any more but stay visible (AC 11).",
+    "operationId": "end_relation_api_v1_admin_crm_relations__relation_id__end_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "relation_id",
+      "required": true,
+      "schema": {
+       "title": "Relation Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RelationEndRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "End Relation",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/relations/{relation_id}/roles": {
+   "post": {
+    "operationId": "add_role_api_v1_admin_crm_relations__relation_id__roles_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "relation_id",
+      "required": true,
+      "schema": {
+       "title": "Relation Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RelationRoleRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
         }
        }
       },
@@ -31859,25 +34023,204 @@
     ]
    }
   },
-  "/api/v1/admin/crm/persons/{person_id}/roles/{role_id}/end": {
-   "post": {
-    "operationId": "end_role_api_v1_admin_crm_persons__person_id__roles__role_id__end_post",
+  "/api/v1/admin/crm/relations/{relation_id}/roles/{role}": {
+   "delete": {
+    "operationId": "remove_role_api_v1_admin_crm_relations__relation_id__roles__role__delete",
     "parameters": [
      {
       "in": "path",
-      "name": "person_id",
+      "name": "relation_id",
       "required": true,
       "schema": {
-       "title": "Person Id",
+       "title": "Relation Id",
        "type": "integer"
       }
      },
      {
       "in": "path",
-      "name": "role_id",
+      "name": "role",
       "required": true,
       "schema": {
-       "title": "Role Id",
+       "title": "Role",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RelationOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Role",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/review": {
+   "get": {
+    "operationId": "list_review_api_v1_admin_crm_review_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "category",
+      "required": true,
+      "schema": {
+       "enum": [
+        "legacy",
+        "channel_owner",
+        "relations_without_role",
+        "persons_name_parts"
+       ],
+       "title": "Category",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_ReviewItemOut_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Review",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
+  "/api/v1/admin/crm/review/{item_id}/resolve": {
+   "post": {
+    "operationId": "resolve_review_api_v1_admin_crm_review__item_id__resolve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
        "type": "integer"
       }
      },
@@ -31918,7 +34261,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PersonRoleEndRequest"
+        "$ref": "#/components/schemas/ReviewResolveRequest"
        }
       }
      },
@@ -31929,9 +34272,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response End Role Api V1 Admin Crm Persons  Person Id  Roles  Role Id  End Post",
-         "type": "object"
+         "$ref": "#/components/schemas/ReviewItemOut"
         }
        }
       },
@@ -31948,7 +34289,7 @@
       "description": "Validation Error"
      }
     },
-    "summary": "End Role",
+    "summary": "Resolve Review",
     "tags": [
      "admin",
      "admin-crm"

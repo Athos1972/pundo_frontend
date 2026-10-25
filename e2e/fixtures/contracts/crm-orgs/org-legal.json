@@ -1,0 +1,213 @@
+{
+  "status": 200,
+  "body": {
+    "id": 7452,
+    "name": "E2E F7600 T15 Beta Tax Office 202610250935",
+    "legal_name": null,
+    "city": "Limassol",
+    "region": null,
+    "category": null,
+    "business_status": "unknown",
+    "shop_id": null,
+    "address": null,
+    "lead": {
+      "state": null,
+      "owner_id": null,
+      "effective_legal_tier": "amber",
+      "effective_legal_basis": "legitimate_interest",
+      "primary_source": "manual",
+      "needs_human": false,
+      "agent_paused": false,
+      "version": 2,
+      "updated_at": "2026-10-25T09:35:16.096760Z"
+    },
+    "parent": null,
+    "children": {
+      "count": 0,
+      "items": []
+    },
+    "channels": [],
+    "relations": [
+      {
+        "id": 11,
+        "person": {
+          "id": 23,
+          "display_name": "Maria Georgiou 202610250935",
+          "optout": false
+        },
+        "org": {
+          "id": 7452,
+          "name": "E2E F7600 T15 Beta Tax Office 202610250935",
+          "city": "Limassol"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "active": true,
+        "roles": [
+          "accountant"
+        ],
+        "role_missing": false,
+        "note": null,
+        "source": "manual",
+        "address": null,
+        "uses_org_address": true,
+        "preferred_channel_id": null,
+        "channels": [],
+        "person_channels": [
+          {
+            "id": 7978,
+            "kind": "email",
+            "value_normalized": "maria.private@t15-202610250935.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 23
+            },
+            "created_at": "2026-10-25T09:35:15.299847Z"
+          },
+          {
+            "id": 7981,
+            "kind": "email",
+            "value_normalized": "maria@beta.t15-202610250935.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 23
+            },
+            "created_at": "2026-10-25T09:35:15.502628Z"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": 7795,
+        "source": "manual",
+        "source_ref": null,
+        "legal_tier": "green",
+        "legal_basis": "legitimate_interest",
+        "observed_at": "2026-10-25T09:35:15.183799Z",
+        "has_card_image": {
+          "front": false,
+          "back": false
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "id": 7894,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "created",
+        "payload": {
+          "lead": false,
+          "event": "org_created"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.183799Z"
+      },
+      {
+        "id": 7895,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "ingested",
+        "payload": {
+          "source": "manual",
+          "channels_added": 0,
+          "owner_conflicts": 0
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.183799Z"
+      },
+      {
+        "id": 7899,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "channel_added",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "channel_id": 7981,
+          "channel_kind": "email"
+        },
+        "person_id": 23,
+        "relation_id": 11,
+        "created_at": "2026-10-25T09:35:15.502628Z"
+      },
+      {
+        "id": 7901,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "channel_removed",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "to": {
+            "id": 23,
+            "type": "person"
+          },
+          "from": {
+            "id": 11,
+            "type": "relation"
+          },
+          "channel_id": 7981
+        },
+        "person_id": 23,
+        "relation_id": 11,
+        "created_at": "2026-10-25T09:35:15.686142Z"
+      },
+      {
+        "id": 7907,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "to": "amber",
+          "from": "green",
+          "event": "legal_tier_changed"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:16.096760Z"
+      }
+    ],
+    "messages": [],
+    "open_review_count": 0,
+    "reachable": true,
+    "created_at": "2026-10-25T09:35:15.183799Z",
+    "updated_at": "2026-10-25T09:35:16.096760Z"
+  }
+}

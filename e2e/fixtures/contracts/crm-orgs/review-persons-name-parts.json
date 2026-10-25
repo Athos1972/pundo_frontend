@@ -1,0 +1,24 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": null,
+        "kind": "person_without_name_parts",
+        "status": "open",
+        "org": null,
+        "person": {
+          "id": 24,
+          "display_name": "Eleni T15 202610250935"
+        },
+        "relation_id": null,
+        "channel": null,
+        "payload": null,
+        "created_at": "2026-10-25T09:35:15.320046Z"
+      }
+    ],
+    "total": 1,
+    "limit": 200,
+    "offset": 0
+  }
+}

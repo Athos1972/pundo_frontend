@@ -1,42 +1,34 @@
 'use client'
-// ─── CRM Card Image Viewer (F7600 Stufe 2) ────────────────────────────────────
-// Renders front/back thumbnails for business-card contacts.
-// Images are loaded from the auth-gated endpoint:
-//   GET /api/v1/admin/crm/contacts/{id}/card-image/{front|back}
-// The endpoint requires Admin-JWT; the browser sends the cookie automatically
-// since this is a same-origin GET request from within the Admin portal.
-// AK6: Thumbnail click opens a lightbox with full-size image.
-// AK7: Component is not rendered when card_image_front_url is null.
-// AK13: Auth is enforced server-side; the URL here resolves through the proxy.
+// ─── CRM card image viewer (F7600 Stufe 2; org cut: the images are proofs of a source) ───────────────────────────────
+// Front/back thumbnails of the business card behind one source of an organisation. Images come from the auth-gated
+// endpoint GET /api/v1/admin/crm/orgs/{org_id}/sources/{source_id}/card-image/{front|back}; the browser sends the admin
+// cookie (same origin through the /api/v1 rewrite). Thumbnail click opens a lightbox. Renders nothing without a front
+// image (`has_card_image.front`).
 
 import { useState } from 'react'
+import { crmPath } from './crmPaths'
+import type { CrmSourceOut } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 interface CardImageViewerProps {
-  contactId: number
-  frontKey: string | null
-  backKey: string | null
+  orgId: number
+  source: Pick<CrmSourceOut, 'id' | 'has_card_image'>
   tr: SysAdminTranslations
 }
 
-function CardThumb({
-  src,
-  label,
-  onExpand,
-}: {
-  src: string
-  label: string
-  onExpand: () => void
-}) {
+export function cardImageUrl(orgId: number, sourceId: number, side: 'front' | 'back'): string {
+  return `/api/v1/admin/${crmPath('orgCardImage', { org_id: orgId, source_id: sourceId, side })}`
+}
+
+function CardThumb({ src, label, onExpand, expandLabel }: { src: string; label: string; onExpand: () => void; expandLabel: string }) {
   return (
     <div className="flex flex-col items-start gap-1">
       <span className="text-xs text-gray-500">{label}</span>
       <button
         type="button"
         onClick={onExpand}
-        className="rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors
-          focus:outline-none focus:ring-2 focus:ring-slate-500"
-        aria-label={`Expand ${label}`}
+        className="rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
+        aria-label={expandLabel}
       >
         {/* Auth-gated endpoint — cannot use next/image (requires public URL or configured loader) */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -52,70 +44,48 @@ function CardThumb({
   )
 }
 
-export function CardImageViewer({
-  contactId,
-  frontKey,
-  backKey,
-  tr,
-}: CardImageViewerProps) {
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
-  const [lightboxLabel, setLightboxLabel] = useState<string>('')
+export function CardImageViewer({ orgId, source, tr }: CardImageViewerProps) {
+  const [lightbox, setLightbox] = useState<{ src: string; label: string } | null>(null)
 
-  if (!frontKey) return null
+  if (!source.has_card_image.front) return null
 
-  const baseUrl = `/api/v1/admin/crm/contacts/${contactId}/card-image`
-  const frontSrc = `${baseUrl}/front`
-  const backSrc = backKey ? `${baseUrl}/back` : null
-
-  function openLightbox(src: string, label: string) {
-    setLightboxSrc(src)
-    setLightboxLabel(label)
-  }
-
-  function closeLightbox() {
-    setLightboxSrc(null)
-  }
+  const frontSrc = cardImageUrl(orgId, source.id, 'front')
+  const backSrc = source.has_card_image.back ? cardImageUrl(orgId, source.id, 'back') : null
 
   return (
-    <>
-      <section className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-sm font-semibold text-gray-800 mb-3">
-          {tr.crm_card_images_title}
-        </h2>
-        <div className="flex flex-wrap gap-4">
+    <div className="flex flex-col gap-2" data-testid={`crm-card-images-${source.id}`}>
+      <h3 className="text-xs font-semibold text-gray-700">{tr.crm_card_images_title}</h3>
+      <div className="flex flex-wrap gap-4">
+        <CardThumb
+          src={frontSrc}
+          label={tr.crm_card_front}
+          expandLabel={`${tr.crm_card_expand}: ${tr.crm_card_front}`}
+          onExpand={() => setLightbox({ src: frontSrc, label: tr.crm_card_front })}
+        />
+        {backSrc && (
           <CardThumb
-            src={frontSrc}
-            label={tr.crm_card_front}
-            onExpand={() => openLightbox(frontSrc, tr.crm_card_front)}
+            src={backSrc}
+            label={tr.crm_card_back}
+            expandLabel={`${tr.crm_card_expand}: ${tr.crm_card_back}`}
+            onExpand={() => setLightbox({ src: backSrc, label: tr.crm_card_back })}
           />
-          {backSrc && (
-            <CardThumb
-              src={backSrc}
-              label={tr.crm_card_back}
-              onExpand={() => openLightbox(backSrc, tr.crm_card_back)}
-            />
-          )}
-        </div>
-      </section>
+        )}
+      </div>
 
-      {/* Lightbox overlay */}
-      {lightboxSrc && (
+      {lightbox && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={lightboxLabel}
+          aria-label={lightbox.label}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-          onClick={closeLightbox}
+          onClick={() => setLightbox(null)}
         >
-          <div
-            className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between w-full px-1">
-              <span className="text-white text-sm font-medium">{lightboxLabel}</span>
+              <span className="text-white text-sm font-medium">{lightbox.label}</span>
               <button
                 type="button"
-                onClick={closeLightbox}
+                onClick={() => setLightbox(null)}
                 className="text-white hover:text-gray-300 text-xl leading-none"
                 aria-label={tr.close}
               >
@@ -123,14 +93,10 @@ export function CardImageViewer({
               </button>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={lightboxSrc}
-              alt={lightboxLabel}
-              className="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain"
-            />
+            <img src={lightbox.src} alt={lightbox.label} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain" />
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

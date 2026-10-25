@@ -107,8 +107,8 @@
       "src/app/(system-admin)/admin/(portal)/crm/persons",
       "src/components/system-admin/crm/PersonForm.tsx",
       "src/components/system-admin/crm/PersonEditForm.tsx",
-      "src/components/system-admin/crm/PersonRoleEditor.tsx",
-      "src/components/system-admin/crm/ContactPersonLink.tsx",
+      "src/components/system-admin/crm/PersonRelationEditor.tsx",
+      "src/components/system-admin/crm/OrgRelationList.tsx",
       "src/components/system-admin/Combobox.tsx",
       "src/components/system-admin/crm/crmSearch.ts"
     ]

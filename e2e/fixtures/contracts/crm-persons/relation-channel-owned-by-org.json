@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "body": {
+    "detail": {
+      "detail": "channel_owned_by_org",
+      "channel_id": 7983
+    }
+  }
+}

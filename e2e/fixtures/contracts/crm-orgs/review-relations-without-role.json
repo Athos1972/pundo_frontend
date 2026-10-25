@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": null,
+        "kind": "relation_without_role",
+        "status": "open",
+        "org": {
+          "id": 7451,
+          "name": "E2E F7600 T15 Alpha Bakery 202610250935"
+        },
+        "person": {
+          "id": 24,
+          "display_name": "Eleni T15 202610250935"
+        },
+        "relation_id": 10,
+        "channel": null,
+        "payload": null,
+        "created_at": "2026-10-25T09:35:15.400289Z"
+      }
+    ],
+    "total": 1,
+    "limit": 200,
+    "offset": 0
+  }
+}

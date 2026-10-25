@@ -1,0 +1,143 @@
+{
+  "status": 201,
+  "body": {
+    "id": 7451,
+    "name": "E2E F7600 T15 Alpha Bakery 202610250935",
+    "legal_name": "Alpha Bakery Ltd",
+    "city": "Larnaca",
+    "region": null,
+    "category": "bakery",
+    "business_status": "unknown",
+    "shop_id": null,
+    "address": null,
+    "lead": {
+      "state": "SOURCED",
+      "owner_id": null,
+      "effective_legal_tier": "green",
+      "effective_legal_basis": "legitimate_interest",
+      "primary_source": "business_card",
+      "needs_human": false,
+      "agent_paused": false,
+      "version": 1,
+      "updated_at": "2026-10-25T09:35:15.139147Z"
+    },
+    "parent": null,
+    "children": {
+      "count": 0,
+      "items": []
+    },
+    "channels": [
+      {
+        "id": 7976,
+        "kind": "email",
+        "value_normalized": "info@alpha.t15-202610250935.example",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "business_card",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7451
+        },
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7977,
+        "kind": "phone_call",
+        "value_normalized": "+35720250935",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "business_card",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7451
+        },
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      }
+    ],
+    "relations": [],
+    "sources": [
+      {
+        "id": 7794,
+        "source": "business_card",
+        "source_ref": "t15-202610250935",
+        "legal_tier": "green",
+        "legal_basis": "legitimate_interest",
+        "observed_at": "2026-10-25T09:35:15.139147Z",
+        "has_card_image": {
+          "front": false,
+          "back": false
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "id": 7891,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": "SOURCED",
+        "outcome": "created",
+        "payload": {
+          "lead": true,
+          "event": "org_created"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7892,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "ingested",
+        "payload": {
+          "source": "business_card",
+          "channels_added": 2,
+          "owner_conflicts": 0
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7893,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "event": "org_updated",
+          "fields": [
+            "legal_name"
+          ]
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      }
+    ],
+    "messages": [],
+    "open_review_count": 0,
+    "reachable": true,
+    "created_at": "2026-10-25T09:35:15.139147Z",
+    "updated_at": "2026-10-25T09:35:15.139147Z"
+  }
+}

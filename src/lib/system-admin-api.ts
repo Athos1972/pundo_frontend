@@ -26,10 +26,15 @@ import type {
   SysAdminItemDomainMapping,
   SysAdminItemDomainMappingCreate,
   MappingGapEntry,
-  CrmContactListItem,
-  CrmContactDetail,
+  CrmOrgListItem,
+  CrmOrgSearchHit,
+  CrmOrgDetail,
+  CrmOutreachRecipient,
   CrmConfigOut,
   CrmPerson,
+  CrmReviewItemOut,
+  CrmReviewCategory,
+  CrmLeadState,
   SysAdminReview,
   SysAdminCategoryReviewItem,
   SysAdminReviewAuditEntry,
@@ -305,29 +310,35 @@ export async function deleteItemDomainMapping(id: number): Promise<void> {
   await apiFetch<void>(`/item-domain-mappings/${id}`, { method: 'DELETE' })
 }
 
-/**
- * Fetch the auto-assign gap report.
- *
- * Backend returns:
- *   { uncovered_domains: [{domain_id, domain_slug, auto_assign_count}],
- *     uncovered_specialties: [{specialty_id, specialty_slug, auto_assign_count}] }
- *
- * We normalise to a flat MappingGapEntry[] so the page can filter uniformly.
- */
 // ─── CRM (F7600) ──────────────────────────────────────────────────────────────
+// Reads for Server Components. Every CRM write (POST/PATCH/PUT/DELETE: relations, channels incl. move, lead actions,
+// legal tier, outreach approve/send, review resolve, persons, config) runs in the browser through `crmFetch.ts` and the
+// proxy /api/admin/[...path]; the route table for that is `components/system-admin/crm/crmPaths.ts`.
 
-export async function getCrmContacts(
-  params: { q?: string; lifecycle_state?: string; limit?: number; offset?: number } = {},
-): Promise<PaginatedResponse<CrmContactListItem>> {
-  return apiFetch<PaginatedResponse<CrmContactListItem>>(`/crm/contacts${buildQs(params)}`)
+export async function getCrmOrgs(
+  params: { q?: string; lead_state?: CrmLeadState; lead_only?: boolean; owner_id?: number; limit?: number; offset?: number } = {},
+): Promise<PaginatedResponse<CrmOrgListItem>> {
+  return apiFetch<PaginatedResponse<CrmOrgListItem>>(`/crm/orgs${buildQs(params)}`)
+}
+
+/** Type-ahead search (`q` of at least 2 characters). `parent_candidates_only` hides organisations that already have a head office. */
+export async function getCrmOrgSearch(
+  params: { q: string; parent_candidates_only?: boolean; exclude_id?: number; limit?: number; offset?: number },
+): Promise<PaginatedResponse<CrmOrgSearchHit>> {
+  return apiFetch<PaginatedResponse<CrmOrgSearchHit>>(`/crm/orgs/search${buildQs(params)}`)
+}
+
+export async function getCrmOrg(id: number): Promise<CrmOrgDetail> {
+  return apiFetch<CrmOrgDetail>(`/crm/orgs/${id}`)
+}
+
+/** Recipients the outreach composer may offer (default first); locked, ended and recipient-less people are already left out. */
+export async function getCrmOrgRecipients(orgId: number): Promise<CrmOutreachRecipient[]> {
+  return apiFetch<CrmOutreachRecipient[]>(`/crm/orgs/${orgId}/outreach/recipients`)
 }
 
 export async function getCrmConfig(): Promise<CrmConfigOut> {
   return apiFetch<CrmConfigOut>('/crm/config')
-}
-
-export async function getCrmContact(id: number): Promise<CrmContactDetail> {
-  return apiFetch<CrmContactDetail>(`/crm/contacts/${id}`)
 }
 
 export async function getCrmPersons(params: { q?: string; limit?: number; offset?: number } = {}): Promise<PaginatedResponse<CrmPerson>> {
@@ -338,6 +349,22 @@ export async function getCrmPerson(id: number): Promise<CrmPerson> {
   return apiFetch<CrmPerson>(`/crm/persons/${id}`)
 }
 
+/** Items to check by category; computed categories (`relations_without_role`, `persons_name_parts`) have `id: null`. */
+export async function getCrmReview(
+  params: { category: CrmReviewCategory; limit?: number; offset?: number },
+): Promise<PaginatedResponse<CrmReviewItemOut>> {
+  return apiFetch<PaginatedResponse<CrmReviewItemOut>>(`/crm/review${buildQs(params)}`)
+}
+
+/**
+ * Fetch the auto-assign gap report.
+ *
+ * Backend returns:
+ *   { uncovered_domains: [{domain_id, domain_slug, auto_assign_count}],
+ *     uncovered_specialties: [{specialty_id, specialty_slug, auto_assign_count}] }
+ *
+ * We normalise to a flat MappingGapEntry[] so the page can filter uniformly.
+ */
 export async function getMappingGaps(): Promise<MappingGapEntry[]> {
   const raw = await apiFetch<{
     uncovered_domains?: Array<{ domain_id: number; domain_slug: string; auto_assign_count: number }>

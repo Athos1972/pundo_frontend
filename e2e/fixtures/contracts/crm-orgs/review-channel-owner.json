@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": 47,
+        "kind": "channel_owner_conflict",
+        "status": "open",
+        "org": {
+          "id": 7453,
+          "name": "E2E F7600 T15 Gamma Kiosk 202610250935"
+        },
+        "person": {
+          "id": 23,
+          "display_name": "Maria Georgiou 202610250935"
+        },
+        "relation_id": null,
+        "channel": {
+          "id": 7978,
+          "kind": "email",
+          "value_normalized": "maria.private@t15-202610250935.example",
+          "reachable": "unknown",
+          "consent_state": "none",
+          "is_preferred": false,
+          "legal_tier": "green",
+          "origin": "manual",
+          "owner_review_pending": false,
+          "owner": {
+            "type": "person",
+            "id": 23
+          },
+          "created_at": "2026-10-25T09:35:15.299847Z"
+        },
+        "payload": null,
+        "created_at": "2026-10-25T09:35:16.137258Z"
+      }
+    ],
+    "total": 1,
+    "limit": 200,
+    "offset": 0
+  }
+}

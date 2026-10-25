@@ -1,0 +1,339 @@
+{
+  "status": 201,
+  "body": {
+    "id": 7451,
+    "name": "E2E F7600 T15 Alpha Bakery 202610250935",
+    "legal_name": "Alpha Bakery Ltd",
+    "city": "Larnaca",
+    "region": null,
+    "category": "bakery",
+    "business_status": "unknown",
+    "shop_id": null,
+    "address": null,
+    "lead": {
+      "state": "SOURCED",
+      "owner_id": null,
+      "effective_legal_tier": "green",
+      "effective_legal_basis": "legitimate_interest",
+      "primary_source": "business_card",
+      "needs_human": false,
+      "agent_paused": false,
+      "version": 1,
+      "updated_at": "2026-10-25T09:35:15.139147Z"
+    },
+    "parent": {
+      "id": 7450,
+      "name": "E2E F7600 T15 Ocean Basket Head Office 202610250935"
+    },
+    "children": {
+      "count": 0,
+      "items": []
+    },
+    "channels": [
+      {
+        "id": 7976,
+        "kind": "email",
+        "value_normalized": "info@alpha.t15-202610250935.example",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "business_card",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7451
+        },
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7977,
+        "kind": "phone_call",
+        "value_normalized": "+35720250935",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "business_card",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7451
+        },
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7982,
+        "kind": "whatsapp",
+        "value_normalized": "+35792509351",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "manual",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "org",
+          "id": 7451
+        },
+        "created_at": "2026-10-25T09:35:15.535656Z"
+      }
+    ],
+    "relations": [
+      {
+        "id": 9,
+        "person": {
+          "id": 23,
+          "display_name": "Maria Georgiou 202610250935",
+          "optout": false
+        },
+        "org": {
+          "id": 7451,
+          "name": "E2E F7600 T15 Alpha Bakery 202610250935",
+          "city": "Larnaca"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "active": true,
+        "roles": [
+          "owner"
+        ],
+        "role_missing": false,
+        "note": "Region West",
+        "source": "manual",
+        "address": null,
+        "uses_org_address": true,
+        "preferred_channel_id": null,
+        "channels": [
+          {
+            "id": 7979,
+            "kind": "email",
+            "value_normalized": "maria@alpha.t15-202610250935.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "relation",
+              "id": 9
+            },
+            "created_at": "2026-10-25T09:35:15.367581Z"
+          }
+        ],
+        "person_channels": [
+          {
+            "id": 7978,
+            "kind": "email",
+            "value_normalized": "maria.private@t15-202610250935.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 23
+            },
+            "created_at": "2026-10-25T09:35:15.299847Z"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "person": {
+          "id": 24,
+          "display_name": "Eleni T15 202610250935",
+          "optout": false
+        },
+        "org": {
+          "id": 7451,
+          "name": "E2E F7600 T15 Alpha Bakery 202610250935",
+          "city": "Larnaca"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "active": true,
+        "roles": [],
+        "role_missing": true,
+        "note": null,
+        "source": "manual",
+        "address": null,
+        "uses_org_address": true,
+        "preferred_channel_id": null,
+        "channels": [
+          {
+            "id": 7980,
+            "kind": "phone_call",
+            "value_normalized": "+35790250935",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "relation",
+              "id": 10
+            },
+            "created_at": "2026-10-25T09:35:15.434289Z"
+          }
+        ],
+        "person_channels": []
+      }
+    ],
+    "sources": [
+      {
+        "id": 7794,
+        "source": "business_card",
+        "source_ref": "t15-202610250935",
+        "legal_tier": "green",
+        "legal_basis": "legitimate_interest",
+        "observed_at": "2026-10-25T09:35:15.139147Z",
+        "has_card_image": {
+          "front": false,
+          "back": false
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "id": 7891,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": "SOURCED",
+        "outcome": "created",
+        "payload": {
+          "lead": true,
+          "event": "org_created"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7892,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": "ingested",
+        "payload": {
+          "source": "business_card",
+          "channels_added": 2,
+          "owner_conflicts": 0
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7893,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "event": "org_updated",
+          "fields": [
+            "legal_name"
+          ]
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.139147Z"
+      },
+      {
+        "id": 7896,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "note",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "to": 7450,
+          "from": null,
+          "event": "parent_changed"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.211806Z"
+      },
+      {
+        "id": 7897,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "channel_added",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "channel_id": 7979,
+          "channel_kind": "email"
+        },
+        "person_id": 23,
+        "relation_id": 9,
+        "created_at": "2026-10-25T09:35:15.367581Z"
+      },
+      {
+        "id": 7898,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "channel_added",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "channel_id": 7980,
+          "channel_kind": "phone_call"
+        },
+        "person_id": 24,
+        "relation_id": 10,
+        "created_at": "2026-10-25T09:35:15.434289Z"
+      },
+      {
+        "id": 7900,
+        "actor_type": "user",
+        "actor_id": "1",
+        "kind": "channel_added",
+        "channel": "system",
+        "direction": "n_a",
+        "state_from": null,
+        "state_to": null,
+        "outcome": null,
+        "payload": {
+          "channel_id": 7982,
+          "channel_kind": "whatsapp"
+        },
+        "person_id": null,
+        "relation_id": null,
+        "created_at": "2026-10-25T09:35:15.535656Z"
+      }
+    ],
+    "messages": [],
+    "open_review_count": 0,
+    "reachable": true,
+    "created_at": "2026-10-25T09:35:15.139147Z",
+    "updated_at": "2026-10-25T09:35:15.211806Z"
+  }
+}

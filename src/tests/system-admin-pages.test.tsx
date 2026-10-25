@@ -29,11 +29,13 @@ vi.mock('@/components/system-admin/ShopForm', () => ({ ShopForm: stub('ShopForm'
 vi.mock('@/components/system-admin/BrandForm', () => ({ BrandForm: stub('BrandForm') }))
 vi.mock('@/components/system-admin/ProductForm', () => ({ ProductForm: stub('ProductForm') }))
 vi.mock('@/components/system-admin/CategoryForm', () => ({ CategoryForm: stub('CategoryForm') }))
-vi.mock('@/components/system-admin/crm/ContactForm', () => ({ ContactForm: stub('ContactForm') }))
-vi.mock('@/components/system-admin/crm/ContactDetailActions', () => ({ ContactDetailActions: stub('ContactDetailActions') }))
-vi.mock('@/components/system-admin/crm/ContactEditForm', () => ({ ContactEditForm: stub('ContactEditForm') }))
+vi.mock('@/components/system-admin/crm/OrgForm', () => ({ OrgForm: stub('OrgForm') }))
+vi.mock('@/components/system-admin/crm/OrgLeadActions', () => ({ OrgLeadActions: stub('OrgLeadActions') }))
+vi.mock('@/components/system-admin/crm/OrgEditForm', () => ({ OrgEditForm: stub('OrgEditForm') }))
 vi.mock('@/components/system-admin/crm/ChannelEditor', () => ({ ChannelEditor: stub('ChannelEditor') }))
+vi.mock('@/components/system-admin/crm/OrgRelationSection', () => ({ OrgRelationSection: stub('OrgRelationSection') }))
 vi.mock('@/components/system-admin/crm/OutreachComposer', () => ({ OutreachComposer: stub('OutreachComposer') }))
+vi.mock('@/components/system-admin/crm/ManualInteractionForm', () => ({ ManualInteractionForm: stub('ManualInteractionForm') }))
 vi.mock('@/components/system-admin/crm/CardImageViewer', () => ({ CardImageViewer: stub('CardImageViewer') }))
 vi.mock('@/app/(system-admin)/admin/(portal)/shop-types/[id]/edit/ShopTypeEditForm', () => ({ ShopTypeEditForm: stub('ShopTypeEditForm') }))
 vi.mock('@/app/(system-admin)/admin/(portal)/shop-owners/[id]/edit/ShopOwnerEditForm', () => ({ ShopOwnerEditForm: stub('ShopOwnerEditForm') }))
@@ -45,6 +47,7 @@ vi.mock('@/app/(system-admin)/admin/(portal)/category-attribute-definitions/[cat
 import * as api from '@/lib/system-admin-api'
 import { getLangServer } from '@/lib/lang'
 import type { SysAdminApiKey } from '@/types/system-admin'
+import { rec } from './helpers/crm-recorded'
 
 const tr = tSysAdmin('en')
 const trEl = tSysAdmin('el')
@@ -539,7 +542,7 @@ describe('new pages', () => {
     ['products/new/page', 'ProductForm', { product: null, attributes: [] }],
     ['categories/new/page', 'CategoryForm', { category: null, translations: [], attrDefs: [] }],
     ['item-domain-mappings/new/page', 'MappingForm', { mode: 'create' }],
-    ['crm/contacts/new/page', 'ContactForm', {}],
+    ['crm/orgs/new/page', 'OrgForm', {}],
   ] as const)('%s renders an empty form', async (file, stubName, expected) => {
     vi.mocked(api.getAllShopTypes).mockRejectedValue(new Error('x'))
     vi.mocked(api.getAllCategories).mockRejectedValue(new Error('x'))
@@ -632,90 +635,145 @@ describe('social link rules page', () => {
   })
 })
 
-describe('CRM pages', () => {
-  it('contacts list: forwards filters, offset 50 per page, empty state on failure', async () => {
-    vi.mocked(api.getCrmContacts).mockResolvedValueOnce({ items: [
-      { id: 1, display_name: 'Mia', org_name: 'Acme', primary_email: 'm@a.io', lifecycle_state: 'QUEUED', version: 1, updated_at: '2026-01-01T00:00:00Z' },
-    ], total: 1, limit: 50, offset: 0 } as never)
-    const { default: Page } = await import(`${A}/crm/contacts/page`)
-    const { unmount } = await show(Page, sp({ q: 'acme', lifecycle_state: 'QUEUED', page: '3' }))
-    expect(api.getCrmContacts).toHaveBeenCalledWith({ q: 'acme', lifecycle_state: 'QUEUED', limit: 50, offset: 100 })
-    expect(screen.getByText('Acme')).toBeTruthy()
+describe('CRM pages (org cut: organisations and review list; recorded backend answers)', () => {
+  const me = (over: Record<string, unknown> = {}) => ({ id: 1, email: 'a@b.io', role: 'editor', permissions: null, ...over })
+
+  it('org list: forwards search, lead status, lead_only and the offset (50 per page); renders the recorded rows', async () => {
+    const list = rec.orgList()
+    vi.mocked(api.getCrmOrgs).mockResolvedValueOnce(list)
+    const { default: Page } = await import(`${A}/crm/orgs/page`)
+    await show(Page, sp({ q: ' kyma ', lead_state: 'QUEUED', lead_only: 'true', page: '3' }))
+    expect(api.getCrmOrgs).toHaveBeenCalledWith({ q: 'kyma', lead_state: 'QUEUED', lead_only: true, limit: 50, offset: 100 })
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(tr.crm_orgs_title)
+    for (const org of list.items) expect(screen.getByRole('link', { name: org.name })).toBeTruthy()
+    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'))
+    expect(hrefs).toEqual(expect.arrayContaining(['/admin/crm/orgs/new', '/admin/crm/persons', '/admin/crm/review', '/admin/crm/settings']))
+    expect(hrefs.filter((h) => h?.includes('crm/contacts'))).toEqual([])
     expect(screen.getByRole('link', { name: tr.clear })).toBeTruthy()
-    unmount()
-    vi.mocked(api.getCrmContacts).mockRejectedValueOnce(new Error('x'))
-    await show(Page, sp())
+  })
+
+  it('org list: a too short term and an unknown status are not sent; a failing backend shows the empty state', async () => {
+    vi.mocked(api.getCrmOrgs).mockRejectedValueOnce(new Error('API_ERROR:500'))
+    const { default: Page } = await import(`${A}/crm/orgs/page`)
+    await show(Page, sp({ q: 'k', lead_state: 'BOGUS' }))
+    expect(api.getCrmOrgs).toHaveBeenCalledWith({ q: undefined, lead_state: undefined, lead_only: undefined, limit: 50, offset: 0 })
     expect(screen.getByText(tr.no_items)).toBeTruthy()
   })
 
-  const detail = (over: Record<string, unknown> = {}) => ({
-    id: 5, version: 2, display_name: 'Mia', role_title: 'Owner', lifecycle_state: 'QUEUED',
-    org: { id: 1, name: 'Acme', legal_name: 'Acme Ltd', city: 'Larnaca', category: 'cafe', business_status: 'unconfirmed' },
-    shop_id: 77, needs_human: true, agent_paused: false, effective_legal_tier: 'B', effective_legal_basis: 'li',
-    card_image_front_url: null, card_image_back_url: null, channels: [], sources: [], interactions: [], messages: [],
-    created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-02T00:00:00Z', ...over,
-  })
-  const me = (over: Record<string, unknown>) => ({ id: 1, email: 'a@b.io', role: 'editor', permissions: null, ...over })
-
-  it('detail: non-numeric id is a 404 without hitting the backend', async () => {
-    const { default: Page } = await import(`${A}/crm/contacts/[id]/page`)
+  it('org detail: non-numeric id is a 404 without the backend; backend 404 -> notFound, other errors propagate', async () => {
+    const { default: Page } = await import(`${A}/crm/orgs/[id]/page`)
     await expect(show(Page, par({ id: 'abc' }))).rejects.toBeInstanceOf(NotFoundError)
-    expect(api.getCrmContact).not.toHaveBeenCalled()
-  })
-
-  it('detail: backend 404 -> notFound, other errors propagate', async () => {
-    const { default: Page } = await import(`${A}/crm/contacts/[id]/page`)
-    vi.mocked(api.getCrmContact).mockRejectedValueOnce(new Error('API_ERROR:404'))
+    expect(api.getCrmOrg).not.toHaveBeenCalled()
+    vi.mocked(api.getCrmOrg).mockRejectedValueOnce(new Error('API_ERROR:404'))
     await expect(show(Page, par({ id: '5' }))).rejects.toBeInstanceOf(NotFoundError)
-    vi.mocked(api.getCrmContact).mockRejectedValueOnce(new Error('API_ERROR:500'))
+    vi.mocked(api.getCrmOrg).mockRejectedValueOnce(new Error('API_ERROR:500'))
     await expect(show(Page, par({ id: '5' }))).rejects.toThrow('API_ERROR:500')
   })
 
-  it('detail: shows org data, flags, sources and hides the card viewer without a front image', async () => {
-    vi.mocked(api.getCrmContact).mockResolvedValue(detail({
-      sources: [{ id: 1, source: 'business_card', source_ref: 'ref-1', legal_basis: 'li', observed_at: '2026-01-01T00:00:00Z' }],
-    }) as never)
-    vi.mocked(api.getAdminMe).mockResolvedValue(me({}) as never)
-    const { default: Page } = await import(`${A}/crm/contacts/[id]/page`)
-    await show(Page, par({ id: '5' }))
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Mia')
-    expect(screen.getByText('Acme Ltd')).toBeTruthy()
-    expect(screen.getByText(tr.crm_state_QUEUED)).toBeTruthy()
-    expect(screen.getByText('77')).toBeTruthy()
-    expect(screen.getByText(/ref-1/)).toBeTruthy()
-    expect(screen.getByText(tr.yes)).toBeTruthy()
-    expect(screen.queryByTestId('CardImageViewer')).toBeNull()
-    expect(stubProps('ContactDetailActions').me).toMatchObject({ role: 'editor' })
+  async function detail(org = rec.orgDetail(), admin: Record<string, unknown> = me(), recipients: unknown = rec.recipients()) {
+    vi.mocked(api.getCrmOrg).mockResolvedValue(org)
+    vi.mocked(api.getAdminMe).mockResolvedValue(admin as never)
+    if (recipients instanceof Error) vi.mocked(api.getCrmOrgRecipients).mockRejectedValue(recipients)
+    else vi.mocked(api.getCrmOrgRecipients).mockResolvedValue(recipients as never)
+    const { default: Page } = await import(`${A}/crm/orgs/[id]/page`)
+    return show(Page, par({ id: String(org.id) }))
+  }
+
+  it('org detail: exactly one h1 = organisation name; sections in the agreed order (AC 27)', async () => {
+    const org = rec.orgDetail()
+    await detail(org)
+    const h1 = screen.getAllByRole('heading', { level: 1 })
+    expect(h1).toHaveLength(1)
+    expect(h1[0].textContent).toBe(org.name)
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      tr.crm_lead_section, tr.crm_master_data, tr.crm_parent_title, tr.crm_org_channels_title, tr.crm_contact_persons_title,
+      tr.crm_sources_proofs_title, tr.crm_outreach_title, tr.crm_doc_title, tr.crm_timeline_title,
+    ])
+    expect(screen.getAllByText(tr.crm_state_ENRICHED).length).toBeGreaterThanOrEqual(2) // badge and lead block
+    expect(screen.getByRole('link', { name: org.parent!.name }).getAttribute('href')).toBe(`/admin/crm/orgs/${org.parent!.id}`)
+    expect(screen.queryByText(tr.crm_review_hint)).toBeNull()
+    expect(screen.queryByText(tr.crm_unreachable_hint)).toBeNull()
   })
 
-  it('detail: write permission decides whether edit form and channel editing are offered', async () => {
-    vi.mocked(api.getCrmContact).mockResolvedValue(detail({ card_image_front_url: 'k' }) as never)
-    const { default: Page } = await import(`${A}/crm/contacts/[id]/page`)
+  it('org detail: org channels and contact persons are separate sections fed with the recorded data (AC 6)', async () => {
+    const org = rec.orgDetail()
+    const recipients = rec.recipients()
+    await detail(org, me(), recipients)
+    expect(stubProps('ChannelEditor')).toMatchObject({ owner: { type: 'org', id: org.id }, channels: org.channels, canWrite: true, canSetTier: true })
+    const active = org.relations.filter((r) => r.active)
+    expect(stubProps('ChannelEditor').moveTargets).toEqual(active.flatMap((r) => [
+      { owner: { type: 'relation', id: r.id }, label: tr.crm_move_target_relation.replace('{name}', r.person.display_name!) },
+      { owner: { type: 'person', id: r.person.id }, label: tr.crm_move_target_person.replace('{name}', r.person.display_name!) },
+    ]))
+    expect(stubProps('OrgRelationSection')).toMatchObject({ org: { id: org.id, relations: org.relations }, canWrite: true, canSetTier: true })
+    expect(stubProps('CardImageViewer')).toMatchObject({ orgId: org.id, source: org.sources[0] })
+    expect(stubProps('OutreachComposer')).toMatchObject({ org: { id: org.id, lead: org.lead }, recipients, canSend: true, canApprove: true })
+    expect(stubProps('ManualInteractionForm')).toMatchObject({ orgId: org.id, relations: org.relations })
+    expect(stubProps('OrgLeadActions').me).toMatchObject({ role: 'editor' })
+    expect(screen.getByTestId(`crm-message-recipient-${org.messages[0].id}`)).toBeTruthy()
+  })
 
-    vi.mocked(api.getAdminMe).mockResolvedValueOnce(me({ permissions: ['crm:lifecycle:write'] }) as never)
-    const first = await show(Page, par({ id: '5' }))
-    expect(screen.queryByTestId('ContactEditForm')).toBeNull()
-    expect(stubProps('ChannelEditor').canWrite).toBe(false)
-    expect(stubProps('CardImageViewer')).toMatchObject({ contactId: 5, frontKey: 'k', backKey: null })
+  it('org detail: write and lifecycle permissions decide which controls are offered (AC 29)', async () => {
+    const first = await detail(rec.orgDetail(), me({ permissions: ['crm:lifecycle:write'] }))
+    expect(screen.queryByTestId('OrgEditForm')).toBeNull()
+    expect(screen.queryByTestId('ManualInteractionForm')).toBeNull()
+    expect(stubProps('ChannelEditor')).toMatchObject({ canWrite: false, canSetTier: true })
+    expect(stubProps('OutreachComposer')).toMatchObject({ canSend: false, canApprove: false })
     first.unmount()
-
-    vi.mocked(api.getAdminMe).mockResolvedValueOnce(me({ permissions: ['crm:contacts:write'] }) as never)
-    const second = await show(Page, par({ id: '5' }))
-    expect(screen.getByTestId('ContactEditForm')).toBeTruthy()
-    expect(stubProps('ChannelEditor').canWrite).toBe(true)
-    second.unmount()
-
-    vi.mocked(api.getAdminMe).mockResolvedValueOnce(me({ role: 'superadmin', permissions: [] }) as never)
-    await show(Page, par({ id: '5' }))
-    expect(stubProps('ChannelEditor').canWrite).toBe(true)
+    await detail(rec.orgDetail(), me({ role: 'superadmin', permissions: [] }))
+    expect(screen.getByTestId('OrgEditForm')).toBeTruthy()
+    expect(stubProps('OutreachComposer')).toMatchObject({ canSend: true, canApprove: true })
   })
 
-  it('detail: empty sources show the empty state', async () => {
-    vi.mocked(api.getCrmContact).mockResolvedValue(detail() as never)
-    vi.mocked(api.getAdminMe).mockResolvedValue(me({}) as never)
-    const { default: Page } = await import(`${A}/crm/contacts/[id]/page`)
-    await show(Page, par({ id: '5' }))
-    expect(screen.getAllByText(tr.no_items).length).toBeGreaterThan(0)
+  it('org detail: "check channel assignment" hint for an open review (recorded owner conflict, AC 24); unreachable hint', async () => {
+    const conflict = rec.orgOwnerConflict()
+    expect(conflict.open_review_count).toBeGreaterThan(0)
+    const first = await detail(conflict)
+    expect(screen.getByText(tr.crm_review_hint)).toBeTruthy()
+    expect(screen.getByRole('link', { name: tr.crm_review_open_link }).getAttribute('href')).toBe('/admin/crm/review?category=channel_owner')
+    first.unmount()
+    await detail({ ...rec.orgDetail(), reachable: false })
+    expect(screen.getByText(tr.crm_unreachable_hint)).toBeTruthy()
+  })
+
+  it('org detail: no lead status shows "no acquisition target"; a failing recipient list leaves the composer empty', async () => {
+    const plain = rec.orgDetailNoLead()
+    await detail(plain, me(), new Error('API_ERROR:500'))
+    expect(screen.getAllByText(tr.crm_lead_none).length).toBeGreaterThanOrEqual(2)
+    expect(stubProps('OutreachComposer').recipients).toEqual([])
+    expect(screen.queryByText(tr.crm_unreachable_hint)).toBeNull()
+  })
+
+  it('review list: default category legacy, tabs per category, recorded items with their actions', async () => {
+    const page = rec.review('legacy')
+    vi.mocked(api.getCrmReview).mockResolvedValueOnce(page)
+    vi.mocked(api.getAdminMe).mockResolvedValue(me() as never)
+    const { default: Page } = await import(`${A}/crm/review/page`)
+    await show(Page, sp())
+    expect(api.getCrmReview).toHaveBeenCalledWith({ category: 'legacy', limit: 50, offset: 0 })
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(tr.crm_review_title)
+    const tabs = within(screen.getByRole('navigation', { name: tr.crm_review_title })).getAllByRole('link')
+    expect(tabs.map((t) => t.getAttribute('href'))).toEqual([
+      '/admin/crm/review?category=legacy', '/admin/crm/review?category=channel_owner',
+      '/admin/crm/review?category=relations_without_role', '/admin/crm/review?category=persons_name_parts',
+    ])
+    expect(tabs.map((t) => t.textContent)).toEqual([tr.crm_review_cat_legacy, tr.crm_review_cat_channel_owner, tr.crm_review_cat_relations_without_role, tr.crm_review_cat_persons_name_parts])
+    expect(screen.getByText(tr.crm_review_kind_legacy_contact_name)).toBeTruthy()
+    expect(screen.getByRole('button', { name: tr.crm_review_resolve })).toBeTruthy()
+  })
+
+  it('review list: category and page are forwarded, an unknown category falls back, read-only without write permission', async () => {
+    vi.mocked(api.getCrmReview).mockResolvedValue(rec.review('channel_owner'))
+    vi.mocked(api.getAdminMe).mockResolvedValue(me({ permissions: [] }) as never)
+    const { default: Page } = await import(`${A}/crm/review/page`)
+    const first = await show(Page, sp({ category: 'channel_owner', page: '2' }))
+    expect(api.getCrmReview).toHaveBeenLastCalledWith({ category: 'channel_owner', limit: 50, offset: 50 })
+    expect(screen.queryByRole('button')).toBeNull()
+    first.unmount()
+    vi.mocked(api.getCrmReview).mockRejectedValueOnce(new Error('API_ERROR:500'))
+    await show(Page, sp({ category: 'nope' }))
+    expect(api.getCrmReview).toHaveBeenLastCalledWith({ category: 'legacy', limit: 50, offset: 0 })
+    expect(screen.getByText(tr.crm_review_empty)).toBeTruthy()
   })
 })
 

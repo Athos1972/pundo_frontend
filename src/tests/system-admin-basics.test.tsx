@@ -267,9 +267,20 @@ describe('SysAdminNav / Shell', () => {
     const current = screen.getAllByRole('link', { current: 'page' })
     expect(current).toHaveLength(1)
     expect(current[0].getAttribute('href')).toBe('/admin/shops')
-    expect(screen.getByRole('link', { name: new RegExp(tr.nav_crm) }).getAttribute('href')).toBe('/admin/crm/contacts')
+    expect(screen.getByRole('link', { name: new RegExp(tr.nav_crm) }).getAttribute('href')).toBe('/admin/crm/orgs')
     expect(screen.getByText('root@pundo.io')).toBeTruthy()
   })
+
+  it.each(['/admin/crm/orgs/7', '/admin/crm/persons/3', '/admin/crm/review', '/admin/crm/settings'])(
+    'the CRM item is the current section on every CRM page (%s)',
+    (path) => {
+      pathname = path
+      render(<SysAdminNav tr={tr} adminEmail="root@pundo.io" />)
+      const current = screen.getAllByRole('link', { current: 'page' })
+      expect(current).toHaveLength(1)
+      expect(current[0].getAttribute('href')).toBe('/admin/crm/orgs')
+    },
+  )
 
   it('logout posts to the logout route and redirects to the login, even if the call fails', async () => {
     const user = userEvent.setup()

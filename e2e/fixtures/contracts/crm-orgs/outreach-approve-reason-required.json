@@ -1,0 +1,6 @@
+{
+  "status": 422,
+  "body": {
+    "detail": "outreach_approval_reason_required"
+  }
+}

@@ -200,6 +200,24 @@ Steuert die `redirect_uri`, die das Backend beim Aufbau der Google-OAuth-Authori
 
 > Spec: `oauth-redirect-uri-mismatch-20260604` (F5910)
 
+## System-Admin CRM (F7600, Org-Schnitt)
+
+Seit dem CRM-Modellumbau liegt der Lead-Status an der Organisation; Kanäle haben genau einen Besitzer (Organisation, Beziehung Person × Organisation oder Person). Routen unter `src/app/(system-admin)/admin/(portal)/crm/`:
+
+| Route | Inhalt |
+|---|---|
+| `/admin/crm/orgs` | Organisationsliste mit Lead-Status (leer = kein Akquise-Ziel), Filter Lead-Status und „nur Akquise-Ziele“ (`OrgList`) |
+| `/admin/crm/orgs/new` | Organisation anlegen, optional als Akquise-Ziel (`OrgForm`) |
+| `/admin/crm/orgs/[id]` | Detail, genau ein `h1` = Org-Name: Lead-Aktionen und Rechtsstufe (`OrgLeadActions`), Stammdaten und Zentrale (`OrgEditForm`, `OrgParentSection`), Org-Kanäle (`ChannelEditor`), Ansprechpartner (`OrgRelationList` über `OrgRelationSection`), Quellen mit Kartenbildern (`CardImageViewer`), Outreach mit Empfängerwahl und Sendegate (`OutreachComposer`), manuelle Dokumentation, Verlauf |
+| `/admin/crm/persons`, `/persons/new`, `/persons/[id]` | Personen, Beziehungen, Personenkanäle |
+| `/admin/crm/review` | Prüfliste je Kategorie (`?category=` legacy, channel_owner, relations_without_role, persons_name_parts; `ReviewList`) |
+| `/admin/crm/settings` | Sicherheitsnetz (Kill-Switch, Sendelimits, Inhaber-Regel, Freigabestufen) |
+
+- Die früheren Seiten `/admin/crm/contacts/**` sind **ersatzlos entfallen** (keine Weiterleitung); der Guard `tests/unit/guards/crm-contact-routes-removed.test.ts` hält `src/` frei von Verweisen darauf.
+- Schreibzugriffe laufen im Browser über `crmFetch.ts` mit Pfaden aus `crmPaths.ts` (Routentabelle, gegen den OpenAPI-Snapshot getestet); Lesen in Server Components über `src/lib/system-admin-api.ts`. Reine Hilfsmodule ohne `'use client'` (`crmLabels.ts`, `crmAccess.ts`, `transitions.ts`) dürfen auch Server Components importieren; aus Client-Modulen nur Komponenten importieren.
+- Berechtigungen (`crmAccess.ts::crmCan`): `crm:contacts:write` (Stammdaten, Kanäle, Beziehungen, Prüfliste), `crm:lifecycle:write` (Lead-Aktionen, Rechtsstufe), `crm:suppress_override`, `crm:send`, `crm:send_approve` (Sendefreigabe trotz Rechtsstufe).
+- Aufgezeichnete Backend-Antworten für Vitest und Playwright-Mocks: `e2e/fixtures/contracts/crm-orgs/` (Recorder `record.mjs` daneben, nur gegen Slot oder 8500) und `e2e/fixtures/contracts/crm-persons/`.
+
 ## Shop-Admin Clean Boundary
 
 **PFLICHT — keine Ausnahmen:**

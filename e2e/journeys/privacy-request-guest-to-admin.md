@@ -56,3 +56,9 @@ last-result: N/A
 **Known Risks:**
 - Begrenzungszähler darf andere Läufe nicht blockieren: lauf-eindeutige Adressen verwenden, Zähler im Test-Backend isolieren.
 - Antwortzeit-Gleichheit (AC4) nur grob prüfbar; Body-Gleichheit ist der harte Nachweis.
+
+**Delta CRM-Org-Schnitt ([F7600 CRM-Backbone], Spec 2026-10-25-crm-person-contact-modell, Architektur §13; Pflicht für die Umsetzung dieser Journey, Stand e2e-tester 2026-10-25):**
+- Die Fixture `crm-contact-known` wird zu `crm-person-known`: eine **Person** mit lauf-eindeutiger Mail als Personen- oder Beziehungskanal, einer Beziehung (mit Rolle und `note`) zu einer Organisation, die einen eigenen Org-Kanal hat, Anrede, Geburtsdatum mit „Jahr unbekannt“ (z. B. 14.03.) und einer an sie adressierten Nachricht.
+- Schritt 8 (Export-Assertion): Das JSON enthält Anrede, Geburtsdatum als `--03-14` mit Text „14.03. (Jahr unbekannt)“ (bzw. EN „14 March (year unknown)“, EL „14 Μαρτίου (άγνωστο έτος)“), **nirgends das Platzhalterjahr 2000**, die Beziehungen mit Rollen, `note` und Beziehungskanälen, die Personenkanäle und die an die Person adressierten Nachrichten — aber **keine Org-Kanäle** der Firma (Ausnahme: aktive Rolle `owner` bei eingeschalteter Inhaber-Regel; dafür eine eigene Fixture).
+- Schritt 6: Die Trefferübersicht nennt CRM-Kategorien der Datenlandkarte (`crm_person`, `crm_org_records`, `crm_operations`, `crm_card_intake`), nicht mehr `crm_contact`.
+- Baustein ist `PersonService.export` (heute als Übergangs-Export `GET /admin/crm/persons/{id}/export?lang=en|de|el`, Entscheidung EA11 Übergangs-Export); belegt in der API-Abnahme des Org-Schnitts (AC 20/36/37). Die Journey selbst ist noch nicht implementiert.

@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "id": 7453,
+        "name": "E2E F7600 T15 Gamma Kiosk 202610250935",
+        "city": "Paphos",
+        "lead_state": "SOURCED",
+        "contact_count": 0,
+        "primary_email": null,
+        "parent": null,
+        "lead_version": 1,
+        "updated_at": "2026-10-25T09:35:16.137258Z"
+      },
+      {
+        "id": 7452,
+        "name": "E2E F7600 T15 Beta Tax Office 202610250935",
+        "city": "Limassol",
+        "lead_state": null,
+        "contact_count": 1,
+        "primary_email": null,
+        "parent": null,
+        "lead_version": 2,
+        "updated_at": "2026-10-25T09:35:16.096760Z"
+      },
+      {
+        "id": 7451,
+        "name": "E2E F7600 T15 Alpha Bakery 202610250935",
+        "city": "Larnaca",
+        "lead_state": "ENRICHED",
+        "contact_count": 2,
+        "primary_email": "info@alpha.t15-202610250935.example",
+        "parent": {
+          "id": 7450,
+          "name": "E2E F7600 T15 Ocean Basket Head Office 202610250935"
+        },
+        "lead_version": 2,
+        "updated_at": "2026-10-25T09:35:16.003171Z"
+      },
+      {
+        "id": 7450,
+        "name": "E2E F7600 T15 Ocean Basket Head Office 202610250935",
+        "city": "Nicosia",
+        "lead_state": "SOURCED",
+        "contact_count": 0,
+        "primary_email": "info@hq.t15-202610250935.example",
+        "parent": null,
+        "lead_version": 1,
+        "updated_at": "2026-10-25T09:35:15.082901Z"
+      }
+    ],
+    "total": 4,
+    "limit": 50,
+    "offset": 0
+  }
+}

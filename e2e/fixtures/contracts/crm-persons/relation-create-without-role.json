@@ -1,0 +1,28 @@
+{
+  "status": 201,
+  "body": {
+    "id": 13,
+    "person": {
+      "id": 26,
+      "display_name": "Γεωργίου Ελένη",
+      "optout": false
+    },
+    "org": {
+      "id": 7454,
+      "name": "E2E F7600 T16 Taverna Kyma 202610250944",
+      "city": "Larnaca"
+    },
+    "valid_from": null,
+    "valid_to": null,
+    "active": true,
+    "roles": [],
+    "role_missing": true,
+    "note": null,
+    "source": "manual",
+    "address": null,
+    "uses_org_address": true,
+    "preferred_channel_id": null,
+    "channels": [],
+    "person_channels": []
+  }
+}

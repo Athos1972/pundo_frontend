@@ -9,7 +9,7 @@ export interface HelpAdminLink {
   href: `/admin/${string}`
   navKey:
     | 'nav_dashboard' | 'nav_claims' | 'nav_shop_owners' | 'nav_shops' | 'nav_shop_types'
-    | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings' | 'crm_persons_title'
+    | 'nav_products' | 'nav_brands' | 'nav_categories' | 'nav_crm' | 'help_link_crm_settings' | 'crm_persons_title' | 'crm_review_title'
     | 'nav_reviews' | 'nav_social_link_rules' | 'nav_cat_attr_defs' | 'nav_item_domain_mappings' | 'nav_api_keys'
 }
 
@@ -79,8 +79,9 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     id: 'crm', number: '5', order: 7,
     videoId: '0gdPz5DOLsk', durationSec: 226,
     adminLinks: [
-      { href: '/admin/crm/contacts', navKey: 'nav_crm' },
+      { href: '/admin/crm/orgs', navKey: 'nav_crm' },
       { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
+      { href: '/admin/crm/review', navKey: 'crm_review_title' },
       { href: '/admin/crm/settings', navKey: 'help_link_crm_settings' },
     ],
   },
@@ -88,7 +89,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     id: 'crm-persons', number: '5b', order: 8,
     adminLinks: [
       { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
-      { href: '/admin/crm/contacts', navKey: 'nav_crm' },
+      { href: '/admin/crm/orgs', navKey: 'nav_crm' },
+      { href: '/admin/crm/review', navKey: 'crm_review_title' },
     ],
   },
   {

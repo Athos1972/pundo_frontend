@@ -12,7 +12,7 @@ interface Props {
 
 export function DeleteAccountModal({ lang, email, onConfirmed, onClose }: Props) {
   const tr = t(lang)
-  const [phase, setPhase] = useState<'warning' | 'otp'>('warning')
+  const [phase, setPhase] = useState<'warning' | 'otp' | 'pending'>('warning')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -67,7 +67,12 @@ export function DeleteAccountModal({ lang, email, onConfirmed, onClose }: Props)
         const data = await res.json().catch(() => ({}))
         throw new Error(data?.detail ?? tr.auth_otp_invalid)
       }
-      onConfirmed()
+      const data = await res.json().catch(() => ({}))
+      if (data?.status === 'archive_pending') {
+        setPhase('pending')
+      } else {
+        onConfirmed()
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : tr.error_generic)
     } finally {
@@ -108,6 +113,18 @@ export function DeleteAccountModal({ lang, email, onConfirmed, onClose }: Props)
                 className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {loading ? '…' : tr.account_delete_send_code}
+              </button>
+            </div>
+          </>
+        ) : phase === 'pending' ? (
+          <>
+            <p className="text-sm text-text-muted" role="status">{tr.account_delete_pending}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={onConfirmed}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                {tr.account_delete_pending_done}
               </button>
             </div>
           </>

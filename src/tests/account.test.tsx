@@ -369,6 +369,34 @@ describe('DeleteAccountModal', () => {
       expect(onConfirmed).toHaveBeenCalled()
     })
   })
+
+  it('shows the locked-pending confirmation before ending a K4c deletion', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'otp_sent' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'archive_pending' }) })
+    const user = userEvent.setup()
+    render(<DeleteAccountModal lang="en" email="test@example.com" onConfirmed={onConfirmed} onClose={onClose} />)
+    await user.click(screen.getByText(tr_en.account_delete_send_code))
+    await user.type(await screen.findByRole('textbox'), '654321')
+    await user.click(screen.getByText(tr_en.account_delete_confirm_btn))
+    expect(await screen.findByText(tr_en.account_delete_pending)).toBeInTheDocument()
+    expect(onConfirmed).not.toHaveBeenCalled()
+    await user.click(screen.getByText(tr_en.account_delete_pending_done))
+    expect(onConfirmed).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['de', 'el', 'ru', 'ar', 'he'] as const)('renders the localized K4c pending confirmation for %s', async (lang) => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'otp_sent' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'archive_pending' }) })
+    const user = userEvent.setup()
+    const tr = t(lang)
+    render(<DeleteAccountModal lang={lang} email="test@example.com" onConfirmed={onConfirmed} onClose={onClose} />)
+    await user.click(screen.getByText(tr.account_delete_send_code))
+    await user.type(await screen.findByRole('textbox'), '654321')
+    await user.click(screen.getByText(tr.account_delete_confirm_btn))
+    expect(await screen.findByRole('status')).toHaveTextContent(tr.account_delete_pending)
+  })
 })
 
 // ── Translation completeness ───────────────────────────────────────────────────
@@ -383,6 +411,8 @@ describe('Account translations present in all languages', () => {
     'account_tab_danger',
     'account_save',
     'account_delete_title',
+    'account_delete_pending',
+    'account_delete_pending_done',
     'account_delete_warning',
     'account_delete_confirm_btn',
     'account_avatar_too_large',

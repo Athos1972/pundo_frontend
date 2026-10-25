@@ -355,6 +355,130 @@
     "title": "AddressIn",
     "type": "object"
    },
+   "AddressOut": {
+    "properties": {
+     "address_line1": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address Line1"
+     },
+     "address_line2": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address Line2"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "country_code": {
+      "title": "Country Code",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "lat": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lat"
+     },
+     "lon": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lon"
+     },
+     "postal_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Postal Code"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "verified_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Verified At"
+     }
+    },
+    "required": [
+     "id",
+     "country_code",
+     "created_at"
+    ],
+    "title": "AddressOut",
+    "type": "object"
+   },
    "AdminApiKeyResponse": {
     "properties": {
      "created_at": {
@@ -15069,6 +15193,77 @@
     "title": "OpeningHoursRaw",
     "type": "object"
    },
+   "OperationalHoldCreate": {
+    "properties": {
+     "case_reference": {
+      "maxLength": 128,
+      "minLength": 3,
+      "title": "Case Reference",
+      "type": "string"
+     },
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "telegram_confirmation": {
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Telegram Confirmation",
+      "type": "string"
+     }
+    },
+    "required": [
+     "case_reference",
+     "expires_at",
+     "telegram_confirmation"
+    ],
+    "title": "OperationalHoldCreate",
+    "type": "object"
+   },
+   "OperationalHoldExtend": {
+    "properties": {
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "extension_decision": {
+      "maxLength": 4000,
+      "minLength": 3,
+      "title": "Extension Decision",
+      "type": "string"
+     },
+     "telegram_confirmation": {
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Telegram Confirmation",
+      "type": "string"
+     }
+    },
+    "required": [
+     "expires_at",
+     "extension_decision",
+     "telegram_confirmation"
+    ],
+    "title": "OperationalHoldExtend",
+    "type": "object"
+   },
+   "OperationalHoldRelease": {
+    "properties": {
+     "telegram_confirmation": {
+      "maxLength": 512,
+      "minLength": 1,
+      "title": "Telegram Confirmation",
+      "type": "string"
+     }
+    },
+    "required": [
+     "telegram_confirmation"
+    ],
+    "title": "OperationalHoldRelease",
+    "type": "object"
+   },
    "OptOutRequest": {
     "properties": {
      "token": {
@@ -15204,6 +15399,63 @@
      "business_status"
     ],
     "title": "OrgOut",
+    "type": "object"
+   },
+   "OrgSearchHit": {
+    "description": "Treffer der Organisationssuche; bewusst ohne Kontakte, Kanäle, shop_id, Adresse.",
+    "properties": {
+     "business_status": {
+      "title": "Business Status",
+      "type": "string"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "legal_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Legal Name"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "business_status"
+    ],
+    "title": "OrgSearchHit",
     "type": "object"
    },
    "OrgUpdateRequest": {
@@ -16558,6 +16810,68 @@
     "title": "PaginatedResponse[LifecycleResponse]",
     "type": "object"
    },
+   "PaginatedResponse_OrgSearchHit_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OrgSearchHit"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[OrgSearchHit]",
+    "type": "object"
+   },
+   "PaginatedResponse_PersonOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PersonOut"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "limit": {
+      "title": "Limit",
+      "type": "integer"
+     },
+     "offset": {
+      "title": "Offset",
+      "type": "integer"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "items",
+     "total",
+     "limit",
+     "offset"
+    ],
+    "title": "PaginatedResponse[PersonOut]",
+    "type": "object"
+   },
    "PaginatedResponse_ScrapeRunResponse_": {
     "properties": {
      "items": {
@@ -16663,6 +16977,41 @@
     "title": "PasswordResetRequest",
     "type": "object"
    },
+   "PersonContactOut": {
+    "properties": {
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "org_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Org Id"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "title": "PersonContactOut",
+    "type": "object"
+   },
    "PersonCreateRequest": {
     "properties": {
      "address": {
@@ -16726,6 +17075,183 @@
     "title": "PersonIdentifierIn",
     "type": "object"
    },
+   "PersonIdentifierOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "value_normalized": {
+      "title": "Value Normalized",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "value_normalized"
+    ],
+    "title": "PersonIdentifierOut",
+    "type": "object"
+   },
+   "PersonOut": {
+    "properties": {
+     "address": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AddressOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "address_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address Id"
+     },
+     "contacts": {
+      "items": {
+       "$ref": "#/components/schemas/PersonContactOut"
+      },
+      "title": "Contacts",
+      "type": "array"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "identifiers": {
+      "items": {
+       "$ref": "#/components/schemas/PersonIdentifierOut"
+      },
+      "title": "Identifiers",
+      "type": "array"
+     },
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/PersonRoleOut"
+      },
+      "title": "Roles",
+      "type": "array"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "identifiers",
+     "roles",
+     "contacts",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "PersonOut",
+    "type": "object"
+   },
+   "PersonRoleCreatedOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "org_city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Org City"
+     },
+     "org_id": {
+      "title": "Org Id",
+      "type": "integer"
+     },
+     "org_name": {
+      "title": "Org Name",
+      "type": "string"
+     },
+     "person_id": {
+      "title": "Person Id",
+      "type": "integer"
+     },
+     "role": {
+      "title": "Role",
+      "type": "string"
+     },
+     "source": {
+      "title": "Source",
+      "type": "string"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "required": [
+     "id",
+     "org_id",
+     "org_name",
+     "role",
+     "source",
+     "person_id"
+    ],
+    "title": "PersonRoleCreatedOut",
+    "type": "object"
+   },
    "PersonRoleEndRequest": {
     "properties": {
      "valid_to": {
@@ -16738,6 +17264,74 @@
      "valid_to"
     ],
     "title": "PersonRoleEndRequest",
+    "type": "object"
+   },
+   "PersonRoleOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "org_city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Org City"
+     },
+     "org_id": {
+      "title": "Org Id",
+      "type": "integer"
+     },
+     "org_name": {
+      "title": "Org Name",
+      "type": "string"
+     },
+     "role": {
+      "title": "Role",
+      "type": "string"
+     },
+     "source": {
+      "title": "Source",
+      "type": "string"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "required": [
+     "id",
+     "org_id",
+     "org_name",
+     "role",
+     "source"
+    ],
+    "title": "PersonRoleOut",
     "type": "object"
    },
    "PersonRoleRequest": {
@@ -30558,6 +31152,104 @@
     ]
    }
   },
+  "/api/v1/admin/crm/orgs": {
+   "get": {
+    "operationId": "search_orgs_api_v1_admin_crm_orgs_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": true,
+      "schema": {
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 20,
+       "maximum": 50,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginatedResponse_OrgSearchHit_"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Search Orgs",
+    "tags": [
+     "admin",
+     "admin-crm"
+    ]
+   }
+  },
   "/api/v1/admin/crm/persons": {
    "get": {
     "operationId": "list_persons_api_v1_admin_crm_persons_get",
@@ -30636,9 +31328,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response List Persons Api V1 Admin Crm Persons Get",
-         "type": "object"
+         "$ref": "#/components/schemas/PaginatedResponse_PersonOut_"
         }
        }
       },
@@ -30712,9 +31402,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Create Person Api V1 Admin Crm Persons Post",
-         "type": "object"
+         "$ref": "#/components/schemas/PersonOut"
         }
        }
       },
@@ -30855,9 +31543,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Get Person Api V1 Admin Crm Persons  Person Id  Get",
-         "type": "object"
+         "$ref": "#/components/schemas/PersonOut"
         }
        }
       },
@@ -30940,9 +31626,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Update Person Api V1 Admin Crm Persons  Person Id  Patch",
-         "type": "object"
+         "$ref": "#/components/schemas/PersonOut"
         }
        }
       },
@@ -31190,9 +31874,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "additionalProperties": true,
-         "title": "Response Add Role Api V1 Admin Crm Persons  Person Id  Roles Post",
-         "type": "object"
+         "$ref": "#/components/schemas/PersonRoleCreatedOut"
         }
        }
       },
@@ -34913,6 +35595,267 @@
     "summary": "Get Product Attributes",
     "tags": [
      "admin"
+    ]
+   }
+  },
+  "/api/v1/admin/progression-archive/operational-holds/{hold_id}/extend": {
+   "post": {
+    "operationId": "extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "hold_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Hold Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OperationalHoldExtend"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Extend Operational Hold Api V1 Admin Progression Archive Operational Holds  Hold Id  Extend Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Extend Operational Hold",
+    "tags": [
+     "admin-progression-archive"
+    ]
+   }
+  },
+  "/api/v1/admin/progression-archive/operational-holds/{hold_id}/release": {
+   "post": {
+    "operationId": "release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "hold_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Hold Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OperationalHoldRelease"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Release Operational Hold Api V1 Admin Progression Archive Operational Holds  Hold Id  Release Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Release Operational Hold",
+    "tags": [
+     "admin-progression-archive"
+    ]
+   }
+  },
+  "/api/v1/admin/progression-archive/requests/{request_id}/operational-hold": {
+   "post": {
+    "operationId": "create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "request_id",
+      "required": true,
+      "schema": {
+       "format": "uuid",
+       "title": "Request Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "admin_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Admin Token"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OperationalHoldCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Create Operational Hold Api V1 Admin Progression Archive Requests  Request Id  Operational Hold Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Operational Hold",
+    "tags": [
+     "admin-progression-archive"
     ]
    }
   },
@@ -40999,7 +41942,7 @@
   },
   "/api/v1/customer/auth/account": {
    "delete": {
-    "description": "Permanently delete the account (GDPR hard-delete).\n\nValidates the OTP sent via POST /account/request-deletion, then:\n1. Deletes all local review photo files (best-effort).\n2. Deletes the local avatar file (best-effort).\n3. Deletes the customer_users row (CASCADE removes all related data).\n4. Clears the auth cookie.",
+    "description": "Delete the account, or queue its sealed K4c export when enabled.\n\nValidates the OTP sent via POST /account/request-deletion, then:\n1. Deletes all local review photo files (best-effort).\n2. Deletes the local avatar file (best-effort).\n3. Deletes the customer_users row (CASCADE removes all related data).\n4. Clears the auth cookie.",
     "operationId": "delete_account_api_v1_customer_auth_account_delete",
     "parameters": [
      {

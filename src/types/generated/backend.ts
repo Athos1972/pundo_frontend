@@ -887,6 +887,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/crm/orgs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Orgs */
+        get: operations["search_orgs_api_v1_admin_crm_orgs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/crm/persons": {
         parameters: {
             query?: never;
@@ -1428,6 +1445,57 @@ export interface paths {
         get: operations["get_product_attributes_api_v1_admin_products__product_id__attributes_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/progression-archive/operational-holds/{hold_id}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Extend Operational Hold */
+        post: operations["extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/progression-archive/operational-holds/{hold_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Release Operational Hold */
+        post: operations["release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/progression-archive/requests/{request_id}/operational-hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Operational Hold */
+        post: operations["create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2446,7 +2514,7 @@ export interface paths {
         post?: never;
         /**
          * Delete Account
-         * @description Permanently delete the account (GDPR hard-delete).
+         * @description Delete the account, or queue its sealed K4c export when enabled.
          *
          *     Validates the OTP sent via POST /account/request-deletion, then:
          *     1. Deletes all local review photo files (best-effort).
@@ -5904,6 +5972,36 @@ export interface components {
             source?: string | null;
             /** State */
             state?: string | null;
+        };
+        /** AddressOut */
+        AddressOut: {
+            /** Address Line1 */
+            address_line1?: string | null;
+            /** Address Line2 */
+            address_line2?: string | null;
+            /** City */
+            city?: string | null;
+            /** Country Code */
+            country_code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Lat */
+            lat?: number | null;
+            /** Lon */
+            lon?: number | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Source */
+            source?: string | null;
+            /** State */
+            state?: string | null;
+            /** Verified At */
+            verified_at?: string | null;
         };
         /** AdminApiKeyResponse */
         AdminApiKeyResponse: {
@@ -10636,6 +10734,35 @@ export interface components {
             /** Weekdaydescriptions */
             weekdayDescriptions?: string[];
         };
+        /** OperationalHoldCreate */
+        OperationalHoldCreate: {
+            /** Case Reference */
+            case_reference: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Telegram Confirmation */
+            telegram_confirmation: string;
+        };
+        /** OperationalHoldExtend */
+        OperationalHoldExtend: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Extension Decision */
+            extension_decision: string;
+            /** Telegram Confirmation */
+            telegram_confirmation: string;
+        };
+        /** OperationalHoldRelease */
+        OperationalHoldRelease: {
+            /** Telegram Confirmation */
+            telegram_confirmation: string;
+        };
         /** OptOutRequest */
         OptOutRequest: {
             /** Token */
@@ -10676,6 +10803,24 @@ export interface components {
             region?: string | null;
             /** Shop Id */
             shop_id?: number | null;
+        };
+        /**
+         * OrgSearchHit
+         * @description Treffer der Organisationssuche; bewusst ohne Kontakte, Kanäle, shop_id, Adresse.
+         */
+        OrgSearchHit: {
+            /** Business Status */
+            business_status: string;
+            /** Category */
+            category?: string | null;
+            /** City */
+            city?: string | null;
+            /** Id */
+            id: number;
+            /** Legal Name */
+            legal_name?: string | null;
+            /** Name */
+            name: string;
         };
         /** OrgUpdateRequest */
         OrgUpdateRequest: {
@@ -11154,6 +11299,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** PaginatedResponse[OrgSearchHit] */
+        PaginatedResponse_OrgSearchHit_: {
+            /** Items */
+            items: components["schemas"]["OrgSearchHit"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** PaginatedResponse[PersonOut] */
+        PaginatedResponse_PersonOut_: {
+            /** Items */
+            items: components["schemas"]["PersonOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** PaginatedResponse[ScrapeRunResponse] */
         PaginatedResponse_ScrapeRunResponse_: {
             /** Items */
@@ -11196,6 +11363,15 @@ export interface components {
              */
             email: string;
         };
+        /** PersonContactOut */
+        PersonContactOut: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
+            /** Org Id */
+            org_id?: number | null;
+        };
         /** PersonCreateRequest */
         PersonCreateRequest: {
             address?: components["schemas"]["AddressIn"] | null;
@@ -11214,6 +11390,62 @@ export interface components {
             /** Value */
             value: string;
         };
+        /** PersonIdentifierOut */
+        PersonIdentifierOut: {
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Value Normalized */
+            value_normalized: string;
+        };
+        /** PersonOut */
+        PersonOut: {
+            address?: components["schemas"]["AddressOut"] | null;
+            /** Address Id */
+            address_id?: number | null;
+            /** Contacts */
+            contacts: components["schemas"]["PersonContactOut"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
+            /** Identifiers */
+            identifiers: components["schemas"]["PersonIdentifierOut"][];
+            /** Roles */
+            roles: components["schemas"]["PersonRoleOut"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** PersonRoleCreatedOut */
+        PersonRoleCreatedOut: {
+            /** Id */
+            id: number;
+            /** Org City */
+            org_city?: string | null;
+            /** Org Id */
+            org_id: number;
+            /** Org Name */
+            org_name: string;
+            /** Person Id */
+            person_id: number;
+            /** Role */
+            role: string;
+            /** Source */
+            source: string;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+        };
         /** PersonRoleEndRequest */
         PersonRoleEndRequest: {
             /**
@@ -11221,6 +11453,25 @@ export interface components {
              * Format: date
              */
             valid_to: string;
+        };
+        /** PersonRoleOut */
+        PersonRoleOut: {
+            /** Id */
+            id: number;
+            /** Org City */
+            org_city?: string | null;
+            /** Org Id */
+            org_id: number;
+            /** Org Name */
+            org_name: string;
+            /** Role */
+            role: string;
+            /** Source */
+            source: string;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
         };
         /** PersonRoleRequest */
         PersonRoleRequest: {
@@ -16434,6 +16685,43 @@ export interface operations {
             };
         };
     };
+    search_orgs_api_v1_admin_crm_orgs_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_OrgSearchHit_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_persons_api_v1_admin_crm_persons_get: {
         parameters: {
             query?: {
@@ -16457,9 +16745,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PaginatedResponse_PersonOut_"];
                 };
             };
             /** @description Validation Error */
@@ -16496,9 +16782,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PersonOut"];
                 };
             };
             /** @description Validation Error */
@@ -16533,9 +16817,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PersonOut"];
                 };
             };
             /** @description Validation Error */
@@ -16607,9 +16889,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PersonOut"];
                 };
             };
             /** @description Validation Error */
@@ -16723,9 +17003,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PersonRoleCreatedOut"];
                 };
             };
             /** @description Validation Error */
@@ -18308,6 +18586,129 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminItemAttributeResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                hold_id: string;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationalHoldExtend"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                hold_id: string;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationalHoldRelease"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: {
+                admin_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationalHoldCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

@@ -14,6 +14,11 @@
    "occurred_at_in_future"
   ]
  },
+ "api/admin/crm/orgs": {
+  "422": [
+   "org_search_too_short"
+  ]
+ },
  "api/admin/crm/outreach": {
   "404": [
    "contact_not_found"
@@ -38,6 +43,18 @@
   ],
   "409": [
    "photo_already_moderated"
+  ]
+ },
+ "api/admin/progression_archive": {
+  "404": [
+   "archive_request_not_found",
+   "operational_hold_not_found"
+  ],
+  "409": [
+   "operational_hold_already_active"
+  ],
+  "422": [
+   "operational_hold_maximum_12_months"
   ]
  },
  "api/admin/social_link_rules": {
@@ -67,6 +84,9 @@
   ]
  },
  "api/customer/customer_auth": {
+  "403": [
+   "account_deletion_pending"
+  ],
   "429": [
    "rate_limited"
   ]

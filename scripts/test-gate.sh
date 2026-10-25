@@ -127,6 +127,16 @@ case "$LANE" in
     step_security || finish 1
     finish 0
     ;;
+  e2e)
+    # Browser-Stufe des isolierten Push-Gates (scripts/worktree-env gate frontend-push): die statischen Pruefungen und
+    # Vitest laufen dort vorher als Lane `fast` in der normalen Test-Umgebung; hier laeuft nur, was die Slot-Umgebung braucht.
+    gate_init frontend e2e
+    gate_lock_acquire
+    playwright_preflight
+    gate_step playwright-full 1500 npx playwright test || finish 1
+    step_security || finish 1
+    finish 0
+    ;;
   nightly)
     gate_init frontend nightly
     gate_lock_acquire
@@ -149,7 +159,7 @@ case "$LANE" in
     finish 0
     ;;
   *)
-    echo "usage: $0 fast|commit|smoke|push|nightly|e2e-coverage" >&2
+    echo "usage: $0 fast|commit|smoke|push|e2e|nightly|e2e-coverage" >&2
     exit 2
     ;;
 esac

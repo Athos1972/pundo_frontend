@@ -1732,7 +1732,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/progression-archive/operational-holds/{hold_id}/extend": {
+    "/api/v1/admin/progression-archive/access-requests": {
         parameters: {
             query?: never;
             header?: never;
@@ -1741,15 +1741,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Extend Operational Hold */
-        post: operations["extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post"];
+        /** Create Access Request */
+        post: operations["create_access_request_api_v1_admin_progression_archive_access_requests_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/progression-archive/operational-holds/{hold_id}/release": {
+    "/api/v1/admin/progression-archive/access-requests/{access_id}/execute": {
         parameters: {
             query?: never;
             header?: never;
@@ -1758,25 +1758,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Release Operational Hold */
-        post: operations["release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/progression-archive/requests/{request_id}/operational-hold": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Operational Hold */
-        post: operations["create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post"];
+        /** Execute Access Request */
+        post: operations["execute_access_request_api_v1_admin_progression_archive_access_requests__access_id__execute_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5818,6 +5801,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/archive-approval/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Approval Callback */
+        post: operations["archive_approval_callback_internal_archive_approval_callback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/internal/categorizer/aliases": {
         parameters: {
             query?: never;
@@ -8028,6 +8028,29 @@ export interface components {
             name: string;
             /** Scope */
             scope: string;
+        };
+        /** ArchiveAccessRequestCreate */
+        ArchiveAccessRequestCreate: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "retrieve" | "hold_create" | "hold_extend" | "hold_release";
+            /**
+             * Archive Request Id
+             * Format: uuid
+             */
+            archive_request_id: string;
+            /** Case Reference */
+            case_reference: string;
+            /** Decision Reference */
+            decision_reference?: string | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Hold Id */
+            hold_id?: string | null;
+            /** Purpose Code */
+            purpose_code: string;
         };
         /** AssignOwnerRequest */
         AssignOwnerRequest: {
@@ -10917,35 +10940,6 @@ export interface components {
             }[];
             /** Weekdaydescriptions */
             weekdayDescriptions?: string[];
-        };
-        /** OperationalHoldCreate */
-        OperationalHoldCreate: {
-            /** Case Reference */
-            case_reference: string;
-            /**
-             * Expires At
-             * Format: date-time
-             */
-            expires_at: string;
-            /** Telegram Confirmation */
-            telegram_confirmation: string;
-        };
-        /** OperationalHoldExtend */
-        OperationalHoldExtend: {
-            /**
-             * Expires At
-             * Format: date-time
-             */
-            expires_at: string;
-            /** Extension Decision */
-            extension_decision: string;
-            /** Telegram Confirmation */
-            telegram_confirmation: string;
-        };
-        /** OperationalHoldRelease */
-        OperationalHoldRelease: {
-            /** Telegram Confirmation */
-            telegram_confirmation: string;
         };
         /** OptOutRequest */
         OptOutRequest: {
@@ -19635,27 +19629,25 @@ export interface operations {
             };
         };
     };
-    extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post: {
+    create_access_request_api_v1_admin_progression_archive_access_requests_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
-            path: {
-                hold_id: string;
-            };
+            path?: never;
             cookie?: {
                 admin_token?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OperationalHoldExtend"];
+                "application/json": components["schemas"]["ArchiveAccessRequestCreate"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19676,24 +19668,20 @@ export interface operations {
             };
         };
     };
-    release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post: {
+    execute_access_request_api_v1_admin_progression_archive_access_requests__access_id__execute_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
             };
             path: {
-                hold_id: string;
+                access_id: string;
             };
             cookie?: {
                 admin_token?: string | null;
             };
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationalHoldRelease"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -19701,50 +19689,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                request_id: string;
-            };
-            cookie?: {
-                admin_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OperationalHoldCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -28460,6 +28405,28 @@ export interface operations {
                 content: {
                     "application/json": {
                         [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    archive_approval_callback_internal_archive_approval_callback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
                     };
                 };
             };

@@ -6364,6 +6364,85 @@
     "title": "ApiKeyResponse",
     "type": "object"
    },
+   "ArchiveAccessRequestCreate": {
+    "properties": {
+     "action": {
+      "enum": [
+       "retrieve",
+       "hold_create",
+       "hold_extend",
+       "hold_release"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "archive_request_id": {
+      "format": "uuid",
+      "title": "Archive Request Id",
+      "type": "string"
+     },
+     "case_reference": {
+      "maxLength": 128,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "title": "Case Reference",
+      "type": "string"
+     },
+     "decision_reference": {
+      "anyOf": [
+       {
+        "maxLength": 256,
+        "minLength": 3,
+        "pattern": "^[A-Za-z0-9._:/#-]+$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision Reference"
+     },
+     "expires_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "hold_id": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hold Id"
+     },
+     "purpose_code": {
+      "maxLength": 64,
+      "minLength": 2,
+      "pattern": "^[a-z0-9._-]+$",
+      "title": "Purpose Code",
+      "type": "string"
+     }
+    },
+    "required": [
+     "action",
+     "archive_request_id",
+     "case_reference",
+     "purpose_code"
+    ],
+    "title": "ArchiveAccessRequestCreate",
+    "type": "object"
+   },
    "AssignOwnerRequest": {
     "properties": {
      "approve_owner": {
@@ -15036,77 +15115,6 @@
      }
     },
     "title": "OpeningHoursRaw",
-    "type": "object"
-   },
-   "OperationalHoldCreate": {
-    "properties": {
-     "case_reference": {
-      "maxLength": 128,
-      "minLength": 3,
-      "title": "Case Reference",
-      "type": "string"
-     },
-     "expires_at": {
-      "format": "date-time",
-      "title": "Expires At",
-      "type": "string"
-     },
-     "telegram_confirmation": {
-      "maxLength": 512,
-      "minLength": 1,
-      "title": "Telegram Confirmation",
-      "type": "string"
-     }
-    },
-    "required": [
-     "case_reference",
-     "expires_at",
-     "telegram_confirmation"
-    ],
-    "title": "OperationalHoldCreate",
-    "type": "object"
-   },
-   "OperationalHoldExtend": {
-    "properties": {
-     "expires_at": {
-      "format": "date-time",
-      "title": "Expires At",
-      "type": "string"
-     },
-     "extension_decision": {
-      "maxLength": 4000,
-      "minLength": 3,
-      "title": "Extension Decision",
-      "type": "string"
-     },
-     "telegram_confirmation": {
-      "maxLength": 512,
-      "minLength": 1,
-      "title": "Telegram Confirmation",
-      "type": "string"
-     }
-    },
-    "required": [
-     "expires_at",
-     "extension_decision",
-     "telegram_confirmation"
-    ],
-    "title": "OperationalHoldExtend",
-    "type": "object"
-   },
-   "OperationalHoldRelease": {
-    "properties": {
-     "telegram_confirmation": {
-      "maxLength": 512,
-      "minLength": 1,
-      "title": "Telegram Confirmation",
-      "type": "string"
-     }
-    },
-    "required": [
-     "telegram_confirmation"
-    ],
-    "title": "OperationalHoldRelease",
     "type": "object"
    },
    "OptOutRequest": {
@@ -37900,20 +37908,10 @@
     ]
    }
   },
-  "/api/v1/admin/progression-archive/operational-holds/{hold_id}/extend": {
+  "/api/v1/admin/progression-archive/access-requests": {
    "post": {
-    "operationId": "extend_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__extend_post",
+    "operationId": "create_access_request_api_v1_admin_progression_archive_access_requests_post",
     "parameters": [
-     {
-      "in": "path",
-      "name": "hold_id",
-      "required": true,
-      "schema": {
-       "format": "uuid",
-       "title": "Hold Id",
-       "type": "string"
-      }
-     },
      {
       "in": "header",
       "name": "authorization",
@@ -37951,19 +37949,19 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/OperationalHoldExtend"
+        "$ref": "#/components/schemas/ArchiveAccessRequestCreate"
        }
       }
      },
      "required": true
     },
     "responses": {
-     "200": {
+     "201": {
       "content": {
        "application/json": {
         "schema": {
          "additionalProperties": true,
-         "title": "Response Extend Operational Hold Api V1 Admin Progression Archive Operational Holds  Hold Id  Extend Post",
+         "title": "Response Create Access Request Api V1 Admin Progression Archive Access Requests Post",
          "type": "object"
         }
        }
@@ -37981,23 +37979,23 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Extend Operational Hold",
+    "summary": "Create Access Request",
     "tags": [
      "admin-progression-archive"
     ]
    }
   },
-  "/api/v1/admin/progression-archive/operational-holds/{hold_id}/release": {
+  "/api/v1/admin/progression-archive/access-requests/{access_id}/execute": {
    "post": {
-    "operationId": "release_operational_hold_api_v1_admin_progression_archive_operational_holds__hold_id__release_post",
+    "operationId": "execute_access_request_api_v1_admin_progression_archive_access_requests__access_id__execute_post",
     "parameters": [
      {
       "in": "path",
-      "name": "hold_id",
+      "name": "access_id",
       "required": true,
       "schema": {
        "format": "uuid",
-       "title": "Hold Id",
+       "title": "Access Id",
        "type": "string"
       }
      },
@@ -38034,25 +38032,11 @@
       }
      }
     ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/OperationalHoldRelease"
-       }
-      }
-     },
-     "required": true
-    },
     "responses": {
      "200": {
       "content": {
        "application/json": {
-        "schema": {
-         "additionalProperties": true,
-         "title": "Response Release Operational Hold Api V1 Admin Progression Archive Operational Holds  Hold Id  Release Post",
-         "type": "object"
-        }
+        "schema": {}
        }
       },
       "description": "Successful Response"
@@ -38068,94 +38052,7 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Release Operational Hold",
-    "tags": [
-     "admin-progression-archive"
-    ]
-   }
-  },
-  "/api/v1/admin/progression-archive/requests/{request_id}/operational-hold": {
-   "post": {
-    "operationId": "create_operational_hold_api_v1_admin_progression_archive_requests__request_id__operational_hold_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "request_id",
-      "required": true,
-      "schema": {
-       "format": "uuid",
-       "title": "Request Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "header",
-      "name": "authorization",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Authorization"
-      }
-     },
-     {
-      "in": "cookie",
-      "name": "admin_token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "Admin Token"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/OperationalHoldCreate"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "additionalProperties": true,
-         "title": "Response Create Operational Hold Api V1 Admin Progression Archive Requests  Request Id  Operational Hold Post",
-         "type": "object"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/HTTPValidationError"
-        }
-       }
-      },
-      "description": "Validation Error"
-     }
-    },
-    "summary": "Create Operational Hold",
+    "summary": "Execute Access Request",
     "tags": [
      "admin-progression-archive"
     ]
@@ -57242,6 +57139,31 @@
      }
     },
     "summary": "Healthz"
+   }
+  },
+  "/internal/archive-approval/callback": {
+   "post": {
+    "operationId": "archive_approval_callback_internal_archive_approval_callback_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Archive Approval Callback Internal Archive Approval Callback Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Archive Approval Callback",
+    "tags": [
+     "internal-progression-archive"
+    ]
    }
   },
   "/internal/categorizer/aliases": {

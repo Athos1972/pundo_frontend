@@ -24,15 +24,14 @@
   ]
  },
  "api/admin/progression_archive": {
+  "403": [
+   "archive_approval_token_invalid"
+  ],
   "404": [
-   "archive_request_not_found",
-   "operational_hold_not_found"
+   "not_found"
   ],
-  "409": [
-   "operational_hold_already_active"
-  ],
-  "422": [
-   "operational_hold_maximum_12_months"
+  "503": [
+   "archive_approval_notify_failed"
   ]
  },
  "api/admin/social_link_rules": {

@@ -18,7 +18,11 @@ What it creates / updates:
     since the forms page through everything they live at NORMAL ids again: an existing row at the old id is moved once
     (copy to a new id, repoint items, delete; refuses when anything else references it) - see _ensure_normal_ids. The ids are
     printed in the JSON line (brand_id / category_id) and the recorders compare them with the address bars of scenes.yml.
- 5. CRM: org + contact "Team Demo Contact" (NEEDS_REVIEW) with channels contact@pundo-e2e.io / WhatsApp +35790000000.
+ 5. CRM (model after the F7600 org cut: lead status at the organisation, channels with exactly one owner, relations person x
+    organisation; see upsert_crm): head office "Team Demo Bakery" (org of the demo shop, lead status NEEDS_REVIEW), its branch
+    "Team Demo Bakery Larnaca" (QUEUED), the employer "Team Demo Accounting Office" (no lead status), the people "Petros Team Demo"
+    (first/last name, salutation, birthday without year, two "Manager" relations with note "Region West", a red relation e-mail),
+    "Team Demo Nikos" (free name, relation without role) and "Team Demo Eleni" (opted out). Everything is RESET on every run.
     Claims video (team-claims-owners): a third shop "Team Demo Flower Corner" and a second applicant
     (claimant2@pundo-e2e.io) with a second claim; BOTH demo claims are RESET to "open" on every run (the video
     accepts the first and rejects the second), together with their applicants (pending, no shop).
@@ -37,18 +41,22 @@ Catalog basics video (team-catalog-basics): the video CREATES the brand "Team De
     prefilled from the name) and renames nothing else but the German name of "Team Demo Category" (the language reset above puts it back).
     prepare_team.py DELETES the created brand again at the start of every run (only slug team-demo-brand-two AND English name
     "Team Demo Brand Two" AND source NULL, as the admin form writes it, AND no item points to it).
-CRM video (team-crm): the video edits the demo contact "Team Demo Contact" (adds a phone channel, moves it NEEDS_REVIEW -> SOURCED via
-    "Set state") and CREATES the contact "Team Demo Maria" (organisation "Team Demo Cafe") through the admin form. prepare_team.py
-    therefore (a) puts the demo contact back at the start of every run: state NEEDS_REVIEW, needs_human, version 1, only the two
-    seeded channels, no interactions/messages, updated_at = now() (so it heads the list); and (b) DELETES the created contact again
-    (exact display name + exact organisation name + source `manual`, with its channels/sources/interactions/messages and its
-    organisation when nothing else hangs on it). The video never suppresses a contact (suppression cannot be undone) and never
-    sends a message.
-CRM people video (team-crm-persons): the demo person "Team Demo Petros" (identifier e-mail petros.demo@pundo-e2e.io) is seeded once and
-    reset at the start of every run (no roles, not linked to any contact; its id stays stable so the address bar of the video can show it).
-    The video adds a role at "Team Demo Bakery", ends it, links the demo contact "Team Demo Contact" to Petros, and CREATES the person
-    "Team Demo Anna" (e-mail anna.demo@pundo-e2e.io, no address). prepare_team.py DELETES Anna again (exact display name + her exact
-    e-mail identifier; identifiers/roles cascade; contacts that point to her are unlinked by the foreign key). No suppression, no mail.
+CRM video (team-crm): the video CREATES the organisation "Team Demo Cafe" (acquisition target, cafe@pundo-e2e.io) through the admin
+    form, clicks "Confirm business" on "Team Demo Bakery" (NEEDS_REVIEW -> QUEUED), loads an outreach preview and APPROVES one send to
+    the red relation e-mail of Petros (crm_send_approval + an interaction note). prepare_team.py therefore (a) puts the three demo
+    organisations back at the start of every run (lead status, needs_human, lead_version 1, business status, legal tier green, head office
+    link, only the seeded channels, no interactions/messages/approvals/review rows, updated_at = now() so they head the list) and (b)
+    DELETES the created organisation again (exact name + no shop + primary source `manual`, with its channels/sources/interactions/
+    messages/relations). The video never sends (the recorder blocks outreach/send), never suppresses, never changes the settings.
+CRM people video (team-crm-persons): the people are found by their seeded personal e-mail (stable ids for the address bar) and reset on
+    every run (names, salutation, birthday, opt-out, personal channels; ALL their relations are deleted and the seeded four recreated,
+    relation channels and roles cascade). The video adds a relation of Petros to the employer (no role, then a role, then ends it),
+    replaces the free name of Nikos by first/last name, makes info.bakery@ the preferred channel of a relation and CREATES the person
+    "Anna Team Demo" (personal e-mail anna@pundo-e2e.io). prepare_team.py DELETES Anna again (display name "Anna Team Demo" or the
+    former "Team Demo Anna" AND her personal e-mail; channels/relations cascade). No suppression, no mail.
+    All CRM demo values are @pundo-e2e.io addresses or the fictional numbers +357900000xx. The objection of "Team Demo Eleni" is set
+    through the backend's PersonService.opt_out (object_via_service, after the commit), so her two values (eleni@, eleni.bakery@) are on
+    crm_suppression like after a real objection; nothing else is ever written to crm_suppression.
 Moderation video (team-moderation): synthetic review + social-link rule (marker "Team Demo", authors only @pundo-e2e.io):
     review by "Team Demo Reviewer" on the demo shop "Team Demo Bakery" (spam-like demo text), reported by a second demo customer
     (reporter@pundo-e2e.io) AND by the demo shop (shop-owner report), plus the audit entries "created" / "reported" / "reported".
@@ -72,6 +80,7 @@ import os
 import secrets
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import psycopg
@@ -125,13 +134,43 @@ ITEM_NAMES = {"en": "Team Demo Sourdough Loaf", "de": "Team Demo Sauerteigbrot",
               "ru": "Team Demo Хлеб на закваске", "ar": "Team Demo خبز العجين المخمر", "he": "Team Demo לחם מחמצת"}
 ITEM_DESCRIPTIONS = {"en": "Fictional demo product for the team videos.", "de": "Fiktives Demo-Produkt für die Team-Videos."}
 ITEM_EAN = "2099900000015"   # fictional (restricted-circulation prefix 2), no real product
-CRM_ORG = "Team Demo Bakery"
-CRM_CONTACT = "Team Demo Contact"
-CRM_EMAIL = "contact" + DEMO_DOMAIN
-CRM_PHONE = "+35790000000"
-PERSON_SEED = {"display_name": "Team Demo Petros", "email": "petros" + DEMO_DOMAIN}            # seeded + reset by prepare_team.py
-NEW_PERSON = {"display_name": "Team Demo Anna", "email": "anna" + DEMO_DOMAIN}                   # created by the people video, removed again here
-NEW_CONTACT = {"display_name": "Team Demo Maria", "org": "Team Demo Cafe"}   # created by the CRM video, removed again here
+# ---- CRM (F7600 org cut): organisations with a lead status, channels with exactly one owner, relations person x organisation ----
+# Organisations: "head" is the org of the demo shop (found by shop_id), the others are found by exact name, no shop, source manual.
+CRM_ORGS = {
+    "head": {"name": "Team Demo Bakery", "city": "Limassol", "category": "Bakery", "lead_state": "NEEDS_REVIEW",
+             "needs_human": True, "business_status": "unknown", "parent": None},
+    "branch": {"name": "Team Demo Bakery Larnaca", "city": "Larnaca", "category": "Bakery", "lead_state": "QUEUED",
+               "needs_human": False, "business_status": "confirmed", "parent": "head"},
+    "employer": {"name": "Team Demo Accounting Office", "city": "Limassol", "category": "Accounting", "lead_state": None,
+                 "needs_human": False, "business_status": "unknown", "parent": None},
+}
+# org channels: (kind, value, is_preferred); kinds as stored (phone = phone_call)
+CRM_ORG_CHANNELS = {
+    "head": [("email", "info.bakery" + DEMO_DOMAIN, True), ("phone_call", "+35790000010", False)],
+    "branch": [("email", "larnaca.bakery" + DEMO_DOMAIN, True)],
+    "employer": [],
+}
+# people: found by their first personal channel ("key", stable id); legacy = former display names of the same seed
+CRM_PERSONS = {
+    "petros": {"display_name": "Petros Team Demo", "first_name": "Petros", "last_name": "Team Demo", "salutation": "mr",
+               "birth_date": date(2000, 3, 14), "birth_year_unknown": True, "optout": False,
+               "personal": [("email", "petros" + DEMO_DOMAIN), ("phone_call", "+35790000003")]},
+    "nikos": {"display_name": "Team Demo Nikos", "first_name": None, "last_name": None, "salutation": None,
+              "birth_date": None, "birth_year_unknown": False, "optout": False,
+              "personal": [("email", "nikos" + DEMO_DOMAIN)]},
+    "eleni": {"display_name": "Team Demo Eleni", "first_name": None, "last_name": None, "salutation": None,
+              "birth_date": None, "birth_year_unknown": False, "optout": True,
+              "personal": [("email", "eleni" + DEMO_DOMAIN)]},
+}
+# relations: (person, org, roles, note, valid_from, relation channels [(kind, value, legal_tier)])
+CRM_RELATIONS = [
+    ("petros", "head", ["manager"], "Region West", date(2025, 3, 1), [("email", "petros.bakery" + DEMO_DOMAIN, "red")]),
+    ("petros", "branch", ["manager"], "Region West", date(2025, 3, 1), []),
+    ("eleni", "head", ["employee"], None, None, [("email", "eleni.bakery" + DEMO_DOMAIN, "green")]),
+    ("nikos", "branch", [], None, None, []),
+]
+NEW_ORG = {"name": "Team Demo Cafe"}                                                     # created by the CRM video, removed again here
+NEW_PERSON = {"names": ["Anna Team Demo", "Team Demo Anna"], "email": "anna" + DEMO_DOMAIN}   # created by the people video, removed again here
 
 
 def db_url() -> str:
@@ -408,88 +447,180 @@ def upsert_brand_category_item(cur) -> dict:
     return {"brand_id": brand_id, "category_id": cat_id, "item_id": item_id}
 
 
-def upsert_crm(cur, shop_id: int) -> dict:
+def _hmac(value: str) -> str:
     from ingestor.lib.crm.suppression import compute_suppression_key   # needs CRM_SUPPRESSION_PEPPER (backend .env)
-    cur.execute("select c.id, c.org_id from crm_contact c join crm_org o on o.id=c.org_id where o.name=%s and c.display_name=%s",
-                (CRM_ORG, CRM_CONTACT))
-    row = cur.fetchone()
-    if row:
-        contact_id, org_id = row
-    else:
-        cur.execute("select id from crm_org where shop_id=%s", (shop_id,))
-        o = cur.fetchone()
-        if o:
-            org_id = o[0]
-            cur.execute("update crm_org set name=%s, city='Limassol', category='Bakery' where id=%s", (CRM_ORG, org_id))
-        else:
-            cur.execute("insert into crm_org (name, city, category, business_status, shop_id) values (%s,'Limassol','Bakery','confirmed',%s) returning id",
-                        (CRM_ORG, shop_id))
-            org_id = cur.fetchone()[0]
-        cur.execute("""insert into crm_contact (org_id, display_name, role_title, primary_source, lifecycle_state, needs_human)
-                       values (%s,%s,'Owner (demo)','manual','NEEDS_REVIEW',true) returning id""", (org_id, CRM_CONTACT))
-        contact_id = cur.fetchone()[0]
-        cur.execute("insert into crm_contact_source (contact_id, source, source_ref, raw, ingest_via) values (%s,'manual','team-demo','{}'::jsonb,'prepare_team.py')",
-                    (contact_id,))
-    for kind, value, preferred in (("email", CRM_EMAIL, True), ("whatsapp", CRM_PHONE, False)):
-        cur.execute("select 1 from crm_contact_channel where contact_id=%s and kind=%s", (contact_id, kind))
-        if not cur.fetchone():
-            cur.execute("insert into crm_contact_channel (contact_id, kind, value_normalized, value_hmac, is_preferred) values (%s,%s,%s,%s,%s)",
-                        (contact_id, kind, value, compute_suppression_key(value), preferred))
-    _reset_crm_demo_contact(cur, contact_id)
-    return {"contact_id": contact_id, "org_id": org_id}
+    return compute_suppression_key(value)
 
 
-def _reset_crm_demo_contact(cur, contact_id: int) -> None:
-    """Back to the seeded state after the CRM video (state NEEDS_REVIEW, two channels, no interactions/messages)."""
-    cur.execute("delete from crm_message where contact_id=%s", (contact_id,))
-    cur.execute("delete from crm_interaction where contact_id=%s", (contact_id,))
-    cur.execute("delete from crm_contact_channel where contact_id=%s and value_normalized <> all(%s)", (contact_id, [CRM_EMAIL, CRM_PHONE]))
-    cur.execute("update crm_contact set lifecycle_state='NEEDS_REVIEW', needs_human=true, version=1, updated_at=now() where id=%s", (contact_id,))
+def _delete_crm_org(cur, org_id: int) -> None:
+    """Delete one organisation with everything that hangs on it (only called for the org the CRM video created)."""
+    cur.execute("delete from crm_person_org_relation where org_id=%s", (org_id,))   # relation channels/roles cascade
+    for table in ("crm_send_approval", "crm_message", "crm_interaction", "crm_org_source", "crm_review_item", "crm_channel"):
+        cur.execute(f"delete from {table} where org_id=%s", (org_id,))
+    cur.execute("update crm_card_vision_job set org_id=null where org_id=%s", (org_id,))
+    cur.execute("update crm_org set parent_org_id=null where parent_org_id=%s", (org_id,))
+    cur.execute("delete from crm_org where id=%s", (org_id,))
 
 
-def remove_created_demo_contact(cur) -> int:
-    """Delete the contact the CRM video created (exact display name + exact organisation name + source manual). Returns the count."""
-    cur.execute("select c.id, c.org_id from crm_contact c join crm_org o on o.id=c.org_id "
-                "where c.display_name=%s and o.name=%s and c.primary_source='manual'", (NEW_CONTACT["display_name"], NEW_CONTACT["org"]))
-    rows = cur.fetchall()
-    for cid, org_id in rows:
-        for table in ("crm_message", "crm_interaction", "crm_contact_source", "crm_contact_channel"):
-            cur.execute(f"delete from {table} where contact_id=%s", (cid,))
-        cur.execute("update crm_card_vision_job set contact_id=null where contact_id=%s", (cid,))
-        cur.execute("delete from crm_contact where id=%s", (cid,))
-        cur.execute("delete from crm_org where id=%s and shop_id is null and not exists (select 1 from crm_contact where org_id=%s)", (org_id, org_id))
-    return len(rows)
+def remove_created_demo_org(cur) -> int:
+    """Delete the organisation the CRM video created (exact name + no shop + primary source manual). Returns the count."""
+    cur.execute("select id from crm_org where name=%s and shop_id is null and primary_source='manual'", (NEW_ORG["name"],))
+    ids = [r[0] for r in cur.fetchall()]
+    for org_id in ids:
+        _delete_crm_org(cur, org_id)
+    return len(ids)
 
 
 def remove_created_demo_person(cur) -> int:
-    """Delete the person the people video created (exact display name AND exact e-mail identifier). Identifiers and roles cascade."""
-    from ingestor.lib.crm.suppression import compute_suppression_key
-    cur.execute("select p.id from crm_person p join crm_person_identifier i on i.person_id=p.id "
-                "where p.display_name=%s and i.kind='email' and i.value_hmac=%s",
-                (NEW_PERSON["display_name"], compute_suppression_key(NEW_PERSON["email"])))
-    ids = [r[0] for r in cur.fetchall()]
+    """Delete the person the people video created (display name "Anna Team Demo"/former "Team Demo Anna" AND her personal e-mail).
+    Personal channels and relations cascade (relation channels and roles with them)."""
+    cur.execute("select p.id from crm_person p join crm_channel c on c.person_id=p.id where p.display_name = any(%s) and c.value_hmac=%s",
+                (NEW_PERSON["names"], _hmac(NEW_PERSON["email"])))
+    ids = sorted({r[0] for r in cur.fetchall()})
     for pid in ids:
-        cur.execute("update crm_contact set person_id=null where person_id=%s", (pid,))
         cur.execute("delete from crm_person where id=%s", (pid,))
     return len(ids)
 
 
-def upsert_demo_person(cur, contact_id: int, org_id: int) -> dict:
-    """Seed "Team Demo Petros" once (stable id), reset: no roles, no linked contact."""
-    from ingestor.lib.crm.suppression import compute_suppression_key
-    h = compute_suppression_key(PERSON_SEED["email"])
-    cur.execute("select person_id from crm_person_identifier where value_hmac=%s", (h,))
+def _find_crm_org(cur, key: str, shop_id: int) -> int:
+    """Demo organisation id (created when missing). The head office is the org of the demo shop; the others: exact name, no shop."""
+    spec = CRM_ORGS[key]
+    if key == "head":
+        cur.execute("select id from crm_org where shop_id=%s", (shop_id,))
+    else:
+        cur.execute("select id from crm_org where name=%s and shop_id is null and primary_source='manual' order by id limit 1", (spec["name"],))
     row = cur.fetchone()
     if row:
-        person_id = row[0]
-    else:
-        cur.execute("insert into crm_person (display_name) values (%s) returning id", (PERSON_SEED["display_name"],))
-        person_id = cur.fetchone()[0]
-        cur.execute("insert into crm_person_identifier (person_id, kind, value_normalized, value_hmac) values (%s,'email',%s,%s)",
-                    (person_id, PERSON_SEED["email"], h))
-    cur.execute("delete from crm_person_org_role where person_id=%s", (person_id,))
-    cur.execute("update crm_contact set person_id=null where person_id=%s or id=%s", (person_id, contact_id))
-    return {"person_id": person_id, "org_id": org_id, "contact_id": contact_id}
+        return row[0]
+    cur.execute("insert into crm_org (name, city, category, business_status, shop_id, primary_source) values (%s,%s,%s,%s,%s,'manual') returning id",
+                (spec["name"], spec["city"], spec["category"], spec["business_status"], shop_id if key == "head" else None))
+    org_id = cur.fetchone()[0]
+    cur.execute("insert into crm_org_source (org_id, source, source_ref, raw, ingest_via) values (%s,'manual','team-demo','{}'::jsonb,'prepare_team.py')",
+                (org_id,))
+    return org_id
+
+
+def _find_crm_person(cur, key: str) -> int:
+    """Demo person id, found by the first personal channel (stable id for the address bar); created when missing."""
+    spec = CRM_PERSONS[key]
+    cur.execute("select person_id, org_id, relation_id from crm_channel where value_hmac=%s", (_hmac(spec["personal"][0][1]),))
+    row = cur.fetchone()
+    if row and row[0] is not None:
+        return row[0]
+    if row:
+        sys.exit(f"refusing: {spec['personal'][0][1]} is a channel of an organisation or relation, not of the demo person {key}")
+    cur.execute("insert into crm_person (display_name) values (%s) returning id", (spec["display_name"],))
+    return cur.fetchone()[0]
+
+
+def _put_channel(cur, owner: str, owner_id: int, kind: str, value: str, *, preferred: bool = False, tier: str = "green",
+                 consent: str = "none") -> int:
+    """Seed one channel at exactly this owner (org_id / relation_id / person_id), reset its flags. Refuses a value that belongs to a
+    foreign owner (demo relations are deleted before, so a remaining owner other than this one is not ours)."""
+    assert value.endswith(DEMO_DOMAIN) or value.startswith("+357900000"), value
+    h = _hmac(value)
+    cur.execute("select id, org_id, relation_id, person_id from crm_channel where value_hmac=%s", (h,))
+    row = cur.fetchone()
+    owners = {"org_id": None, "relation_id": None, "person_id": None, owner: owner_id}
+    if row:
+        current = {"org_id": row[1], "relation_id": row[2], "person_id": row[3]}
+        if current != owners:
+            sys.exit(f"refusing: demo channel {value} belongs to another owner {current}")
+        cur.execute("""update crm_channel set kind=%s, value_normalized=%s, reachable='unknown', consent_state=%s, is_preferred=%s,
+                       legal_tier=%s, origin='manual', owner_review_pending=false, updated_at=now() where id=%s""",
+                    (kind, value, consent, preferred, tier, row[0]))
+        return row[0]
+    cur.execute(f"""insert into crm_channel ({owner}, kind, value_normalized, value_hmac, consent_state, is_preferred, legal_tier, origin)
+                    values (%s,%s,%s,%s,%s,%s,%s,'manual') returning id""", (owner_id, kind, value, h, consent, preferred, tier))
+    return cur.fetchone()[0]
+
+
+def upsert_crm(cur, shop_id: int) -> dict:
+    """CRM demo data on the model after the F7600 org cut, RESET to the same state on every run (see the module docstring)."""
+    orgs = {key: _find_crm_org(cur, key, shop_id) for key in CRM_ORGS}
+    persons = {key: _find_crm_person(cur, key) for key in CRM_PERSONS}
+    org_ids, person_ids = list(orgs.values()), list(persons.values())
+
+    # 1. history and video traces on the demo organisations and people
+    for table in ("crm_send_approval", "crm_message", "crm_interaction", "crm_review_item"):
+        cur.execute(f"delete from {table} where org_id = any(%s)", (org_ids,))
+    cur.execute("delete from crm_review_item where person_id = any(%s)", (person_ids,))
+    # 2. all relations of the demo people (relation channels, roles and review rows cascade); recreated below
+    cur.execute("delete from crm_person_org_relation where person_id = any(%s)", (person_ids,))
+    cur.execute("select count(*) from crm_person_org_relation where org_id = any(%s)", (org_ids,))
+    foreign_relations = cur.fetchone()[0]   # relations of non-demo people to a demo org: left alone, reported
+    # 3. organisations: master data and lead block back to the seed (head office first, the branch points to it)
+    for key in CRM_ORGS:
+        spec = CRM_ORGS[key]
+        cur.execute("""update crm_org set name=%s, city=%s, category=%s, region=null, legal_name=null, business_status=%s,
+                       lead_state=%s, owner_id=null, effective_legal_tier='green', effective_legal_basis='legitimate_interest',
+                       primary_source='manual', needs_human=%s, agent_paused=false, lead_version=1, lead_updated_at=now(),
+                       parent_org_id=%s, updated_at=now() where id=%s""",
+                    (spec["name"], spec["city"], spec["category"], spec["business_status"], spec["lead_state"], spec["needs_human"],
+                     orgs[spec["parent"]] if spec["parent"] else None, orgs[key]))
+        seeded = [_hmac(value) for _, value, _ in CRM_ORG_CHANNELS[key]]
+        cur.execute("delete from crm_channel where org_id=%s and value_hmac <> all(%s)", (orgs[key], seeded))
+        for kind, value, preferred in CRM_ORG_CHANNELS[key]:
+            _put_channel(cur, "org_id", orgs[key], kind, value, preferred=preferred)
+    # 4. people: names, salutation, birthday, opt-out, personal channels
+    for key, spec in CRM_PERSONS.items():
+        cur.execute("""update crm_person set display_name=%s, first_name=%s, last_name=%s, salutation=%s, birth_date=%s,
+                       birth_year_unknown=%s, address_id=null, optout_at=case when %s then optout_at end,
+                       updated_at=now() where id=%s""",
+                    (spec["display_name"], spec["first_name"], spec["last_name"], spec["salutation"], spec["birth_date"],
+                     spec["birth_year_unknown"], spec["optout"], persons[key]))
+        seeded = [_hmac(value) for _, value in spec["personal"]]
+        cur.execute("delete from crm_channel where person_id=%s and value_hmac <> all(%s)", (persons[key], seeded))
+        for kind, value in spec["personal"]:
+            _put_channel(cur, "person_id", persons[key], kind, value)   # an objection is set by PersonService.opt_out after the commit
+    # 5. relations with roles and relation channels
+    relations = {}
+    for person, org, roles, note, valid_from, channels in CRM_RELATIONS:
+        cur.execute("insert into crm_person_org_relation (person_id, org_id, valid_from, note, source) values (%s,%s,%s,%s,'manual') returning id",
+                    (persons[person], orgs[org], valid_from, note))
+        rid = cur.fetchone()[0]
+        relations[f"{person}@{org}"] = rid
+        for role in roles:
+            cur.execute("insert into crm_relation_role (relation_id, role) values (%s,%s)", (rid, role))
+        for kind, value, tier in channels:
+            _put_channel(cur, "relation_id", rid, kind, value, tier=tier)
+    # 6. every demo org needs a source (the org page lists "Sources and proofs")
+    for org_id in org_ids:
+        cur.execute("select 1 from crm_org_source where org_id=%s", (org_id,))
+        if not cur.fetchone():
+            cur.execute("insert into crm_org_source (org_id, source, source_ref, raw, ingest_via) values (%s,'manual','team-demo','{}'::jsonb,'prepare_team.py')",
+                        (org_id,))
+    # 7. the values the videos need must be reachable (crm_suppression is only read here; Eleni's objection: object_via_service)
+    for value in ("info.bakery" + DEMO_DOMAIN, "petros.bakery" + DEMO_DOMAIN, "larnaca.bakery" + DEMO_DOMAIN):
+        cur.execute("select 1 from crm_suppression where suppression_key=%s", (_hmac(value),))
+        if cur.fetchone():
+            sys.exit(f"refusing: demo value {value} is on the suppression list - the outreach scenes cannot work")
+    return {"orgs": orgs, "persons": persons, "relations": relations, "foreign_relations_on_demo_orgs": foreign_relations}
+
+
+def object_via_service(url: str, person_ids: list[int]) -> dict:
+    """Objection of the demo people with "optout" through the backend's PersonService.opt_out (the same path as the admin API
+    POST /persons/{id}/opt-out): optout_at once, every personal and relation channel suppressed (crm_suppression + consent
+    "optout"), audit, interaction "person_optout" per relation. Idempotent, so the person is consistent on every run (the indicator
+    objection_leaks of crm_effect_watch finds no leak). The demo values are @pundo-e2e.io addresses, their suppression keys stay.
+    Runs after the commit of the SQL seed; refuses when the owner rule would block an organisation (no demo person is "Owner")."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from ingestor.lib.crm.person_service import PersonService
+    engine = create_engine(url.replace("postgresql://", "postgresql+psycopg://", 1))
+    result = {}
+    try:
+        with Session(engine) as session:
+            for pid in person_ids:
+                blocked = PersonService(session, "prepare_team.py").opt_out(pid)
+                if blocked:
+                    session.rollback()
+                    sys.exit(f"refusing: the objection of demo person {pid} would block organisations {blocked} (owner rule)")
+                result[pid] = "opted_out"
+            session.commit()
+    finally:
+        engine.dispose()
+    return result
 
 
 def main() -> None:
@@ -500,7 +631,7 @@ def main() -> None:
         removed = remove_created_demo_shop(cur)
         removed_item = remove_created_demo_item(cur)
         removed_brand = remove_created_demo_brand(cur)
-        removed_contact = remove_created_demo_contact(cur)
+        removed_org = remove_created_demo_org(cur)
         removed_person = remove_created_demo_person(cur)
         removed_rule = remove_created_demo_rule(cur)
         shops = {k: upsert_shop(cur, s) for k, s in SHOPS.items()}
@@ -514,15 +645,14 @@ def main() -> None:
         service_item_id = upsert_demo_service(cur)
         removed_mappings = remove_created_demo_mappings(cur, service_item_id)
         crm = upsert_crm(cur, shops["bakery"])
-        person = upsert_demo_person(cur, crm["contact_id"], crm["org_id"])
         review = upsert_demo_review(cur, shops["bakery"], owner)
         out = {"shops": {k: {"id": shops[k], "slug": SHOPS[k]["slug"]} for k in shops}, "owner_id": owner, "claimant_id": claimant, "claimant2_id": claimant2,
                "claim_id": claim, "claim2_id": claim2, **catalog, "item_slug": ITEM_SLUG, "item_ean": ITEM_EAN, "crm": crm, "marker": "Team Demo",
                "new_shop": {**NEW_SHOP, "removed_from_last_run": removed},
                "new_item": {**NEW_ITEM, "removed_from_last_run": removed_item},
                "new_brand": {**NEW_BRAND, "removed_from_last_run": removed_brand},
-               "new_contact": {**NEW_CONTACT, "removed_from_last_run": removed_contact},
-               "person": person, "new_person": {**NEW_PERSON, "removed_from_last_run": removed_person},
+               "new_org": {**NEW_ORG, "removed_from_last_run": removed_org},
+               "new_person": {**NEW_PERSON, "removed_from_last_run": removed_person},
                "service_item_id": service_item_id,
                "new_attr_def": {**NEW_ATTR_DEF, "removed_from_last_run": removed_attr_def},
                "new_mapping": {"service_item_id": service_item_id, "removed_from_last_run": removed_mappings},
@@ -531,6 +661,8 @@ def main() -> None:
             conn.rollback()
         else:
             conn.commit()
+    optout_ids = [crm["persons"][k] for k, spec in CRM_PERSONS.items() if spec["optout"]]
+    out["crm"]["objections"] = "skipped (dry run)" if DRY else object_via_service(url, optout_ids)
     print(json.dumps(out))
 
 

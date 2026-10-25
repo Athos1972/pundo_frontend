@@ -1,43 +1,43 @@
-# team-crm: Produktionsnotizen (Stand 2026-10-19)
+# team-crm: Produktionsnotizen (Stand 2026-10-25, Neuaufnahme nach dem CRM-Modellumbau)
 
-Team-Video 5 „CRM: contacts and safety“ (F8960 T22, Thema 5). Letztes Video der Serie (Outro verweist auf „Help“ in der Sidebar, `/admin/help`). EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, nicht hochgeladen.** Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht gegengelesen, F8960 O3).
+Team-Video 5 „CRM: organisations and outreach“ (Feature „Team-SOPs & Admin-Hilfe“, Thema `crm`), neu aufgenommen nach dem Modellumbau
+von „CRM-Backbone“ (Organisationen mit Lead-Status statt Contacts, Kanäle mit genau einem Besitzer, Beziehungen Person × Organisation,
+Sendegate). EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, noch nicht hochgeladen**
+(der Hilfe-Link zeigt bis zum Upload noch das alte Video `0gdPz5DOLsk`). Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht
+gegengelesen; griechische UI-Begriffe vorläufig).
 
-## Ergebnis
+## Ergebnis (Aufnahme 2026-10-25)
 | Größe | Wert |
 |---|---|
-| Dateien | `out/team-crm.en.mp4` (1920×1080, 30 fps, 14,9 MB), `out/upload.en.mp4` (8,1 MB, libx264 crf 27), `.en.srt` (44 Cues), `.el.srt` (65 Cues), `thumbnail.en.png` (Szene „channels“) |
-| Dauer | 226,1 s (3:46) |
+| Dateien | `out/team-crm.en.mp4` (1920×1080, 30 fps, 23,4 MB), `.en.srt` (49 Cues), `.el.srt` (78 Cues), `thumbnail.en.png` (Szene „outreach“) |
+| Dauer | 286,1 s (4:46), Ziel 260 s |
 | verify_output.py | OK |
-| Kapitel (alle ≥ 10 s) | 0:00 The contact list · 0:41 Search first · 0:59 Add a contact · 1:19 Channels · 1:48 Needs review · 2:12 Outreach basics · 2:33 Opt-out · 3:01 Safety settings |
+| Kapitel (alle ≥ 10 s) | 0:00 Organisations and lead status · 0:30 Search first · 0:52 Add an organisation · 1:19 The organisation page · 1:44 Confirm business · 2:09 Channels and their owner · 2:38 Outreach and the send gate · 3:16 Opt-out by owner · 3:43 Review list · 4:07 Safety settings |
 
 ## Bauen
-`npm run dev:test` (:3500), Backend :8500, dann `video/build.sh team-crm en [--rerecord]`; danach Dev-Server beenden. Kein Gate/E2E parallel. Keine Pipeline-Dateien geändert (kein Regressionsvergleich nötig).
+Dev-Server dieses Repos auf :3500 (`npm run dev:test`), Backend :8500, dann `video/build.sh team-crm [--rerecord]`; danach Dev-Server
+beenden. Kein Gate/E2E parallel (ein Push-Gate einer anderen Sitzung beendet den Dev-Server auf :3500 und bricht die Aufnahme ab).
 
 ## Was das Video tut / nie tut
-- Tut (nur pundo_test): Kontakt „Team Demo Maria“ (Org „Team Demo Cafe“, `maria.demo@pundo-e2e.io`) anlegen (POST ingest); Telefonkanal an „Team Demo Contact“ anhängen (POST channels); „Set state“ NEEDS_REVIEW → SOURCED (POST lifecycle); „Load preview“ (POST outreach/preview, nur Render).
-- Tut nie: „Send email“ (nur überfahren), Suppress (Dialog geöffnet, Cancel), „Confirm business“ (setzt QUEUED), Safety-Settings ändern. Schutz: `fetch`-Wrapper im Browser verwirft jeden Schreibaufruf auf `outreach/send`, `suppress`, `confirm-business`, `crm/config`; Lauf bricht ab, wenn einer versucht wurde. Am Ende muss die Liste der CRM-Schreibaufrufe genau {ingest, channels, lifecycle, preview} sein (im Lauf bestätigt, `CRM write requests` im Log). Keine Mail, kein WhatsApp.
+- Tut (nur pundo_test): Organisation „Team Demo Cafe“ (Akquise-Ziel, `cafe@pundo-e2e.io`, Quelle „Direct contact“) anlegen
+  (POST orgs); „Confirm business“ bei „Team Demo Bakery“ (NEEDS_REVIEW → QUEUED, POST confirm-business); eine Freigabe für den roten
+  Beziehungskanal von Petros (POST outreach/approve, Begründung „Petros asked for our offer at the bakery fair (demo).“); eine Vorschau
+  (POST outreach/preview). Am Ende muss die Liste der CRM-Schreibaufrufe genau diese vier sein (im Lauf bestätigt).
+- Tut nie: „Send email“ (nur überfahren, nach der Freigabe aktiv), „Suppress / Opt-out“ (Dialog geöffnet, „Cancel“), Kanal- oder
+  Beziehungsänderungen, Sicherheitseinstellungen ändern. Schutz: `fetch`-Wrapper verwirft Schreibaufrufe auf `outreach/send`,
+  `suppress`, Org-Kanäle, `persons/{id}/opt-out`, `config`, `relations`, `channels`.
 
-## Testdaten (`prepare_team.py` erweitert)
-Vor jedem Lauf: löscht „Team Demo Maria“ (exakter Name + exakte Org + source manual) samt Kanälen/Quellen/Interaktionen/Nachrichten/Org; setzt „Team Demo Contact“ zurück (NEEDS_REVIEW, needs_human, version 1, nur die zwei Seed-Kanäle, keine Interaktionen/Nachrichten, `updated_at=now()` damit er die Liste anführt). Idempotent (Lauf 2 entfernte die Kontakt-Maria aus Lauf 1; nach dem Lauf erneut zurückgesetzt, geprüft: `crm_suppression` unverändert 261, 0 Nachrichten). Löschpfad zusätzlich in Rollback-Transaktion getestet.
-
-## Faktenbelege (Code, 2026-10-19)
-- Liste/Chips/Suche (Name, Org, E-Mail): `src/components/system-admin/crm/ContactList.tsx`, Backend `ingestor/api/admin/crm/contacts.py:61-108`. Anlegen: `ContactForm.tsx` (Org Pflicht, E-Mail oder Telefon Pflicht, Quelle), Start-State SOURCED `ingestor/lib/crm/service.py:~170`.
-- Kanäle (Formular nur E-Mail/Telefon): `ChannelEditor.tsx`, `types/system-admin.ts:341`; letzter Kanal nicht entfernbar `service.py:446ff`/`crm_err_last_channel`. WhatsApp wird nur dokumentiert (`ManualInteractionForm.tsx`), nicht versendet.
-- NEEDS_REVIEW entsteht u. a. bei Visitenkarten-OCR (`service.py:ingest_from_card`, Lifecycle NEEDS_REVIEW); „Confirm card“ nur mit Kartenbild (`ContactDetailActions.tsx`, `showConfirmCard`); sonst „Set state“ → SOURCED erlaubt (`ingestor/lib/crm/lifecycle.py`). „In this state we send nothing“ ist Regel aus Vault F7600 (NEEDS_REVIEW = kein Outreach), **im Code nicht erzwungen** (`outreach_send` prüft den State nicht).
-- Outreach: Sprachen EL/EN/RU, Senden = echte SMTP-Mail an bevorzugte E-Mail (`service.py:outreach_send`).
-- Suppress: alle Kanäle in Suppression-Liste, terminal, kein Rückweg in Admin/API gefunden (`lifecycle.py` TERMINAL_STATES; kein Unsuppress-Endpoint), Ingest/Kanal-Add verweigern unterdrückte Werte. Unsubscribe-Link in Mails setzt HARD_OPTOUT (`opt_out_by_token`) – im Video nicht erwähnt.
-- Safety: Kill-Switch + Tageslimit `SafetyPanel.tsx`, `ingestor/lib/crm/config.py`.
-
-## Befunde (nicht behoben)
-1. „Confirm business“ setzt den Kontakt auf QUEUED (`service.py:277-307`), nicht nur `business_status`; SOP/Journey beschreiben es als „bestätigt“. Deshalb nicht gefilmt.
-2. NEEDS_REVIEW-„kein Outreach“ nicht technisch erzwungen (s. o.).
-3. Die SOP-Schritt „Check the channel flags: consent, reachable, preferred“ ist abgedeckt; die Zeile „Record how you got the contact“ = Quellenauswahl.
+## Testdaten (`../team-common/prepare_team.py`, Abschnitt CRM)
+Zentrale „Team Demo Bakery“ (#7413, Org des Demo-Shops, NEEDS_REVIEW, Kanäle `info.bakery@pundo-e2e.io` und `+35790000010`),
+Filiale „Team Demo Bakery Larnaca“ (#7625, QUEUED), Arbeitgeber „Team Demo Accounting Office“ (#7626, ohne Lead-Status); Personen
+„Petros Team Demo“ (#9, zwei Beziehungen „Manager“ mit Notiz „Region West“, roter Beziehungskanal `petros.bakery@pundo-e2e.io`),
+„Team Demo Nikos“ (#68, Beziehung ohne Rolle), „Team Demo Eleni“ (#69, Widerspruch). Alles wird vor jedem Lauf zurückgesetzt, die
+angelegte Organisation gelöscht; `crm_suppression` wird nie geschrieben. Die Org-ID der Adresszeile prüft `record.mjs` gegen `scenes.yml`
+(nach einem neuen Prod-Kopie-Sync können sich die IDs ändern: dann `window_path` anpassen).
 
 ## Datenschutz-QA
-- Strikte Schranke 3500/8500; Privacy-Check je Szene: **8 von 8 ok** (0 fremde E-Mails, 0 Passwortfelder), 0 Seitenfehler.
-- CRM-Listen (pundo_test = Prod-Kopie, ca. 6 300 Kontakte, E2E-Datensätze): `armMask` (MutationObserver) blurt jede `tbody tr` ohne „Team Demo“; Aufnahme prüft, dass alle Fremdzeilen markiert sind (50 von 50 bzw. 5 von 5). Such-Szene: genau 1 Treffer. Kontaktseiten (Detail, Safety) zeigen nur Demo-Daten und sind nicht maskiert (erster Lauf maskierte dort fälschlich die Kanaltabelle – behoben, Neuaufnahme).
-- Sichtprüfung: 3-s-Kontaktbögen über das ganze Video; 6-fps-Bögen (je 4 s) um den Klick „Needs review“ und die Suche (Enter): nur unscharfe Fremdzeilen, keine lesbare Fremdzeile. Szenenübergänge (Überblendung 0,4 s) nicht einzeln bei 6 fps gesichtet. Unschärfe 14 px bei 2× DSF.
-- Sichtbar echte Zahl: „10 of 25 sent in the last 24 h“ (Testdaten, keine Person).
-
-## Layout (ehrlich)
-Desktop-Rahmen korrekt; Adresszeile je Szene genau eine Seite (Listenszenen zeigen `/admin/crm/contacts` auch mit Filter/Suche; Szene „create“ bleibt auf `/new` und endet eingefroren auf dem Formular mit Klick-Welle: der Sprechtext sagt deshalb nur „The system saves it“, die neue Kontaktseite wird nicht gezeigt). Detailszenen: `/admin/crm/contacts/9108` (Recorder prüft die ID gegen scenes.yml). Schrift der echten Seiten klein wie bei den anderen Team-Videos; Detailseite scrollt komplett (Sidebar scrollt mit). Audio-Aussprache nicht gehört. Die Liste zeigt viele rote HARD_OPTOUT-Badges (unscharf).
+- Strikte Schranke 3500/8500; Privacy-Check je Szene 10 von 10 ok (0 fremde E-Mails, 0 Passwortfelder), 0 Seitenfehler.
+- Org-Liste (Prod-Kopie): `armMask` blurt jede Zeile ohne „Team Demo“ (47 von 50 bzw. 48 von 50); Suche „Team Demo“ = genau 3 Treffer.
+  Prüfliste: jeder Eintrag ohne „Team Demo“ geblurrt (Altfälle 50 von 50, „Relations without role“ 4 von 5).
+- Sichtprüfung: Mittelbilder aller Szenen und 1-fps-Kontaktbögen der Szenen list, search, outreach, review: keine lesbare Fremdzeile.
+- Sichtbar echte Zahl: „21 of 25 sent in the last 24 h“ (Zähler, keine Person).

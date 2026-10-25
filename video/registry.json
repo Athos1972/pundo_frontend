@@ -3,12 +3,14 @@
     "slug": "team-admin-tour",
     "topic": "admin-tour",
     "youtubeId": "fAgsmmvzEIQ",
-    "recordedAtCommit": "b5b4a5e1729811bc30f1707061db42708966ee0e",
-    "recordedAt": "2026-10-19",
+    "recordedAtCommit": "e355f83561d22132823ef09d28191943b091eb58",
+    "recordedAt": "2026-10-25",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/dashboard",
       "src/components/system-admin/AdminNav.tsx",
-      "src/components/system-admin/AdminShell.tsx"
+      "src/components/system-admin/AdminShell.tsx",
+      "src/app/(system-admin)/admin/(portal)/crm/orgs/page.tsx",
+      "src/components/system-admin/crm/OrgList.tsx"
     ]
   },
   {
@@ -76,8 +78,8 @@
     "slug": "team-translations",
     "topic": "translations",
     "youtubeId": "sw0l_oaN73M",
-    "recordedAtCommit": "f98603fe40095ed9bc2c936b804ed3ec5d8b7a2a",
-    "recordedAt": "2026-10-20",
+    "recordedAtCommit": "e355f83561d22132823ef09d28191943b091eb58",
+    "recordedAt": "2026-10-25",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/products",
       "src/app/(system-admin)/admin/(portal)/categories",
@@ -90,8 +92,8 @@
     "slug": "team-crm",
     "topic": "crm",
     "youtubeId": "0gdPz5DOLsk",
-    "recordedAtCommit": "a08fa971fc2a16d251497ca8da6b06038587873d",
-    "recordedAt": "2026-10-20",
+    "recordedAtCommit": "e355f83561d22132823ef09d28191943b091eb58",
+    "recordedAt": "2026-10-25",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/crm",
       "src/components/system-admin/crm"
@@ -101,8 +103,8 @@
     "slug": "team-crm-persons",
     "topic": "crm-persons",
     "youtubeId": "",
-    "recordedAtCommit": "370e93c33863b6a8cbf6fc72144d576a878f0fe2",
-    "recordedAt": "2026-10-24",
+    "recordedAtCommit": "e355f83561d22132823ef09d28191943b091eb58",
+    "recordedAt": "2026-10-25",
     "touches": [
       "src/app/(system-admin)/admin/(portal)/crm/persons",
       "src/components/system-admin/crm/PersonForm.tsx",
@@ -110,7 +112,10 @@
       "src/components/system-admin/crm/PersonRelationEditor.tsx",
       "src/components/system-admin/crm/OrgRelationList.tsx",
       "src/components/system-admin/Combobox.tsx",
-      "src/components/system-admin/crm/crmSearch.ts"
+      "src/components/system-admin/crm/crmSearch.ts",
+      "src/components/system-admin/crm/BirthDateField.tsx",
+      "src/components/system-admin/crm/crmPersonName.ts",
+      "src/components/system-admin/crm/ChannelEditor.tsx"
     ]
   },
   {

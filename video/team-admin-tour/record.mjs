@@ -92,7 +92,7 @@ const requireDemoRows = async (what) => {
 // ---- login (API, no login form on screen) + warm-up (Next dev compiles pages on first visit; not part of any scene) ----
 await adminLogin(sess, account)
 for (const p of ['/admin/shops?q=Team+Demo', '/admin/products?q=Team+Demo', '/admin/categories?q=Team+Demo', '/admin/claims',
-  '/admin/reviews', '/admin/crm/contacts?q=Team+Demo', '/admin/help', '/admin/help/admin-tour', '/admin/dashboard']) {
+  '/admin/reviews', '/admin/crm/orgs?q=Team+Demo', '/admin/help', '/admin/help/admin-tour', '/admin/dashboard']) {
   await page.goto(`${BASE}${p}`, { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
 }
@@ -123,7 +123,7 @@ await runScene(sess, 'sidebar', dur('sidebar'), null, async (at) => {
   await at(lead + 0.04 * a)
   await moveTo(page, side('/admin/dashboard'), 700)
   const walk = [['/admin/shops', 0.36], ['/admin/shop-owners', 0.46], ['/admin/claims', 0.55], ['/admin/products', 0.64],
-    ['/admin/categories', 0.71], ['/admin/brands', 0.78], ['/admin/reviews', 0.86], ['/admin/api-keys', 0.92], ['/admin/crm/contacts', 0.97]]
+    ['/admin/categories', 0.71], ['/admin/brands', 0.78], ['/admin/reviews', 0.86], ['/admin/api-keys', 0.92], ['/admin/crm/orgs', 0.97]]
   for (const [href, f] of walk) {
     await at(lead + f * a)
     await moveTo(page, side(href), 450)
@@ -184,8 +184,12 @@ await runScene(sess, 'claims', dur('claims'), null, async (at) => {
   await at(lead + 0.48 * a)
   await highlight(table, false)
   await goSide('/admin/reviews', async () => {
-    // moderation queue "Reported" must be empty (cannot be blurred in a meaningful way): otherwise abort
-    await page.getByText('No reviews found').waitFor({ timeout: 10000 })
+    // moderation queue "Reported": since the moderation video (prepare_team.py) it holds the reported demo review; every review card
+    // without the demo marker is blurred (author, text and reporters of real reviews are never readable)
+    await sess.mask('article', MARK)
+    const all = await page.locator('article').count(), demo = await page.locator('article', { hasText: MARK }).count()
+    console.log(`  reviews: ${demo} demo card(s) of ${all}`)
+    if (!demo) throw new Error('reviews: demo review not found - run prepare_team.py')
   })
   await at(lead + 0.78 * a)
   await moveTo(page, page.getByText('Reported', { exact: true }).first(), 700)
@@ -195,10 +199,10 @@ await runScene(sess, 'claims', dur('claims'), null, async (at) => {
 await runScene(sess, 'crm', dur('crm'), null, async (at) => {
   const a = A('crm')
   await at(lead + 0.02 * a)
-  await goSide('/admin/crm/contacts', blurRows)
-  await at(lead + 0.20 * a)
-  await search(MARK, () => requireDemoRows('crm contacts'))
-  const badge = page.locator('tbody tr', { hasText: MARK }).first().getByText('Needs review', { exact: true })
+  await goSide('/admin/crm/orgs', blurRows)
+  await at(lead + 0.30 * a)
+  await search(MARK, () => requireDemoRows('crm organisations'))
+  const badge = page.locator('tbody tr').filter({ has: page.getByRole('link', { name: 'Team Demo Bakery', exact: true }) }).first().getByText('Needs review', { exact: true })
   await at(lead + 0.50 * a)
   await moveTo(page, badge, 800)
   await highlight(badge)

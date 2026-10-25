@@ -9,6 +9,20 @@ interface HelpSopProps {
 export function HelpSop({ content, tr }: HelpSopProps) {
   return (
     <div className="flex flex-col gap-4">
+      {content.rules && content.rules.length > 0 && (
+        <section
+          aria-labelledby="help-rules-heading"
+          data-testid="help-rules"
+          className="rounded-lg border-2 border-violet-300 bg-violet-50 px-4 py-3 text-sm text-violet-950"
+        >
+          <h2 id="help-rules-heading" className="text-base font-semibold">{tr.help_rules_title}</h2>
+          <ul className="mt-2 flex list-disc flex-col gap-1.5 ps-5">
+            {content.rules.map((rule, i) => (
+              <li key={i}>{rule}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section aria-labelledby="help-steps-heading" className="flex flex-col gap-3">
         <h2 id="help-steps-heading" className="text-lg font-semibold text-gray-900">{tr.help_steps_title}</h2>
         <ol className="flex list-decimal flex-col gap-2 ps-6 text-sm text-gray-800">
@@ -16,6 +30,16 @@ export function HelpSop({ content, tr }: HelpSopProps) {
             <li key={i}>{step}</li>
           ))}
         </ol>
+        {content.sections?.map((section, s) => (
+          <div key={s} className="flex flex-col gap-2" data-testid="help-section">
+            <h3 id={`help-section-${s}`} className="pt-2 text-base font-semibold text-gray-900">{section.heading}</h3>
+            <ol aria-labelledby={`help-section-${s}`} className="flex list-decimal flex-col gap-2 ps-6 text-sm text-gray-800">
+              {section.steps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </section>
       {content.notes?.map((note, i) => (
         <aside

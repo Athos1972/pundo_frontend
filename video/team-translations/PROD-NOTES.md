@@ -1,4 +1,11 @@
-# team-translations: Produktionsnotizen (Stand 2026-10-20, neu geschrieben nach B8000-003/-004)
+# team-translations: Produktionsnotizen (Stand 2026-10-25; Stand 2026-10-20 neu geschrieben nach B8000-003/-004)
+
+**Neuaufnahme 2026-10-25:** nur der Ausblick am Ende geändert („Next in this series: the CRM, with organisations, outreach and the safety
+settings“ statt „… with contacts …“, EL «… με οργανισμούς, προσέγγιση …», `meta.next_video` ebenso), nach dem CRM-Modellumbau von
+„CRM-Backbone“. Dabei die Adresszeilen auf die neuen Demo-IDs der Test-DB gezogen (Produkt 61855, Kategorie 8839; die Test-DB wurde seit
+2026-10-20 neu aus der Prod-Kopie aufgebaut). Ergebnis: 181,2 s, 1920×1080, `.en.srt` 33 Cues, `.el.srt` 51 Cues, verify_output OK,
+Privacy-Check 5 von 5, Kapitel unverändert (0:00 · 0:47 · 1:37 · 2:12). Noch nicht hochgeladen; der Hilfe-Link zeigt bis zum Upload
+das veröffentlichte Video `sw0l_oaN73M`.
 
 Team-Video 4b „How translations come about“ (F8960 T21). Erklärvideo, kein SOP. EN-Stimme, EN-Untertitel eingebrannt, EL nur `.el.srt`. **Kanal „pundo Team“, nicht gelistet, nicht hochgeladen.** Status: **Entwurf** (EN-Text nicht freigegeben, EL nicht gegengelesen, F8960 O3).
 Die alte Prämisse „einziger Hebel ist der Quelltext“ ist weg. Kernaussagen: (a) Herkunft: Lauf `translate_products.py` bzw. automatisch nach Katalog-Import → LLM-Gateway → Worker → DB, nur fehlende Sprachen; (b) jede Sprachfassung im Produktformular direkt bearbeitbar, der Job überschreibt nie; (c) Kategorienamen je Sprache im Admin umbenennbar, kein automatischer Job überschreibt sie, nur ein von Hand gestarteter Seed mit `--overwrite-names`; Prod-Stand offen (O4) → vorsichtig formuliert; (d) kein Herkunftsmarker (F5983, Idee). Kapitel „Watch out when saving“ entfällt.
@@ -16,7 +23,7 @@ Die alte Prämisse „einziger Hebel ist der Quelltext“ ist weg. Kernaussagen:
 
 ## Bild
 - Grafiken: `graphics.html` (lokal, `file://`, Branding aus `_branding`, kein CDN); Adresszeile „pundo team · explainer“; Schritte per `window.__step(n)` nach Wortzeiten. Demo-Werte fiktiv.
-- Adresszeilen der echten Szenen: `/admin/products/329578/edit`, `/admin/categories/53789/edit` (normale IDs, `record.mjs` prüft gegen `prepare_team.py`; nach `sync_prod_to_test.sh` nachziehen).
+- Adresszeilen der echten Szenen: `/admin/products/61855/edit`, `/admin/categories/8839/edit` (Stand 2026-10-25) (normale IDs, `record.mjs` prüft gegen `prepare_team.py`; nach `sync_prod_to_test.sh` nachziehen).
 
 ## Faktenbelege (Code, 2026-10-20)
 - Speichern startet keine Übersetzung: `pundo_main_backend/ingestor/api/admin/products.py` (create/PATCH ohne Dispatch).

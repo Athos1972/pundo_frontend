@@ -86,7 +86,7 @@ src/
 │   ├── translations.ts          # Barrel über src/lib/i18n/*.ts (6 Sprachen, kein i18n-Framework)
 │   ├── shop-admin-translations.ts  # Shop-Admin UI-Strings
 │   ├── system-admin-translations.ts
-│   ├── system-admin-help.ts / -help-content.ts / -session.ts  # F8960: Hilfe-Themen (Daten), SOP-Texte EN+EL, strenge Seiten-Session-Prüfung (nur Server, nie in Client Components importieren)
+│   ├── system-admin-help.ts / -help-content.ts / -session.ts  # F8960: Hilfe-Themen (Daten), SOP-Texte EN+EL (Schritte, optional `sections` mit Überschrift und `rules` = Kasten „Rules that are easy to forget“, Schrittzahl über `allHelpSteps`), strenge Seiten-Session-Prüfung (nur Server, nie in Client Components importieren)
 │   ├── price-tiers.ts           # F5200: Staffelpreis-View-Model (Hauptpreis/Suffix/Zeilen) + JSON-LD priceSpecification
 │   ├── routing.ts               # localePath(), stripLang(), buildHreflang()
 │   ├── seo/                     # metadata-defaults, og-defaults, static-page-metadata, …

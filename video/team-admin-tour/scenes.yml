@@ -3,6 +3,7 @@
 # DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
 # Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
 # ../team-common/prepare_team.py (marker "Team Demo"); real rows are filtered/masked, see record.mjs and PROD-NOTES.md.
+# 2026-10-25: CRM scene on /admin/crm/orgs after the F7600 CRM-Backbone org cut (organisations with lead status instead of contacts).
 # UI terms in quotes match src/lib/system-admin-translations.ts (EN).
 
 meta:
@@ -117,21 +118,22 @@ scenes:
         - "Οι Αξιολογήσεις είναι η ουρά διαχείρισης: οι αναφερμένες αξιολογήσεις περιμένουν εκεί μέχρι να αποφασίσει κάποιος."
 
   - id: crm
-    shot: 'CRM -> search "Team Demo" -> demo contact with state Needs review'
+    shot: 'CRM -> organisation list (blurred) -> search "Team Demo" -> demo organisations, lead status "Needs review"'
     chapter: { en: "CRM" }
-    window_path: { en: "localhost:3500/admin/crm/contacts" }
+    window_path: { en: "localhost:3500/admin/crm/orgs" }
     callout: { en: "Admin · CRM" }
     narration:
       en: >-
-        The CRM holds our business contacts. Search by name, organisation or email.
-        The state badge shows where a contact stands, for example Needs review.
-        Contacts include real people, so open them only when your work requires it.
+        The CRM holds organisations with their lead status, the people who work there and every message we send.
+        Search by name, or by an exact email address or phone number.
+        The badge shows the lead status of an organisation, for example Needs review.
+        The CRM also holds real people, so open records only when your work requires it.
     subtitle:
       el:
-        - "Το CRM περιέχει τις επαγγελματικές μας επαφές."
-        - "Αναζητήστε με όνομα, οργανισμό ή email."
-        - "Το σήμα κατάστασης δείχνει σε ποιο στάδιο βρίσκεται μια επαφή, για παράδειγμα Needs review."
-        - "Οι επαφές περιλαμβάνουν πραγματικά πρόσωπα, γι' αυτό ανοίξτε τις μόνο όταν το απαιτεί η δουλειά σας."
+        - "Το CRM περιέχει οργανισμούς με την κατάσταση lead τους, τους ανθρώπους που εργάζονται εκεί και κάθε μήνυμα που στέλνουμε."
+        - "Αναζητήστε με όνομα ή με ακριβές email ή τηλέφωνο."
+        - "Η ένδειξη δείχνει την κατάσταση lead ενός οργανισμού, για παράδειγμα «Χρειάζεται έλεγχο»."
+        - "Το CRM περιέχει και πραγματικά πρόσωπα, γι' αυτό ανοίγετε εγγραφές μόνο όταν το απαιτεί η δουλειά σας."
 
   - id: environment
     shot: 'dashboard; pointer rests; callout asks to check the address bar (host visible in the window bar)'

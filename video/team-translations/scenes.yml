@@ -21,8 +21,8 @@ meta:
     en: "pundo team · admin help"
     el: "pundo team · βοήθεια admin"
   next_video:
-    en: "Next: CRM, contacts and safety settings"
-    el: "Επόμενο: CRM, επαφές και ρυθμίσεις ασφαλείας"
+    en: "Next: CRM, organisations and safety settings"
+    el: "Επόμενο: CRM, οργανισμοί και ρυθμίσεις ασφαλείας"
   thumbnail_scene: chain
   target_duration_s: 200
   window_path:
@@ -66,7 +66,7 @@ scenes:
   - id: product
     shot: 'real admin: edit page of the demo loaf; pointer over the name fields of all languages (English, German, Arabic, Hebrew), then on Save (hover only, nothing saved)'
     chapter: { en: "Edit languages directly" }
-    window_path: { en: "localhost:3500/admin/products/329578/edit" }
+    window_path: { en: "localhost:3500/admin/products/61855/edit" }
     callout: { en: "Products · Every language" }
     narration:
       en: >-
@@ -111,7 +111,7 @@ scenes:
   - id: categories
     shot: 'real admin: category edit page of "Team Demo Category", translation table with six languages; type a German name, click Save (PUT translations)'
     chapter: { en: "Category names" }
-    window_path: { en: "localhost:3500/admin/categories/53789/edit" }
+    window_path: { en: "localhost:3500/admin/categories/8839/edit" }
     callout: { en: "Categories · Translations" }
     narration:
       en: >-
@@ -148,7 +148,7 @@ scenes:
         But a later automatic re-translation could not tell careful manual work from machine text.
         That is only an idea for later, and it has low priority.
         That is all for translations.
-        Next in this series: the CRM, with contacts, outreach and the safety settings.
+        Next in this series: the CRM, with organisations, outreach and the safety settings.
         Thanks for watching.
     subtitle:
       el:
@@ -159,7 +159,7 @@ scenes:
         - "Μια μελλοντική αυτόματη νέα μετάφραση όμως δεν θα μπορούσε να ξεχωρίσει την προσεκτική χειροκίνητη δουλειά από το κείμενο του μηχανήματος."
         - "Είναι μόνο μια ιδέα για αργότερα και έχει χαμηλή προτεραιότητα."
         - "Αυτά ήταν όλα για τις μεταφράσεις."
-        - "Στη συνέχεια της σειράς: το CRM, με επαφές, επικοινωνία και ρυθμίσεις ασφαλείας."
+        - "Στη συνέχεια της σειράς: το CRM, με οργανισμούς, προσέγγιση και ρυθμίσεις ασφαλείας."
         - "Ευχαριστούμε που παρακολουθήσατε."
 
   - id: outro

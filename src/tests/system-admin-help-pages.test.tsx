@@ -39,7 +39,7 @@ vi.mock('@/lib/system-admin-help', async (orig) => {
 import { getLangServer } from '@/lib/lang'
 import { requireAdminSession } from '@/lib/system-admin-session'
 import { HELP_TOPICS, type HelpTopic } from '@/lib/system-admin-help'
-import { HELP_CONTENT } from '@/lib/system-admin-help-content'
+import { HELP_CONTENT, allHelpSteps } from '@/lib/system-admin-help-content'
 import { HelpVideoButton } from '@/components/system-admin/help/HelpVideoButton'
 import { HelpTopicCard } from '@/components/system-admin/help/HelpTopicCard'
 import { HelpSop } from '@/components/system-admin/help/HelpSop'
@@ -127,6 +127,39 @@ describe('HelpSop', () => {
     render(<HelpSop content={{ title: 't', summary: 's', steps: ['one'] }} tr={en} />)
     expect(screen.getAllByRole('listitem').length).toBe(1)
     expect(screen.queryAllByRole('note').length).toBe(0)
+    expect(screen.queryByTestId('help-rules')).toBeNull()
+    expect(screen.queryAllByTestId('help-section').length).toBe(0)
+  })
+
+  it('renders the highlighted rules box above the steps and one headed, numbered list per section (F7600 SOP)', () => {
+    const content = {
+      title: 't', summary: 's', rules: ['rule A', 'rule B'], steps: ['first'],
+      sections: [{ heading: 'Section one', steps: ['s1a', 's1b'] }, { heading: 'Section two', steps: ['s2a'] }],
+    }
+    const { container } = render(<HelpSop content={content} tr={en} />)
+    const box = screen.getByTestId('help-rules')
+    expect(within(box).getByRole('heading', { level: 2 }).textContent).toBe(en.help_rules_title)
+    expect(within(box).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['rule A', 'rule B'])
+    // the box comes before the steps
+    const steps = screen.getByRole('heading', { level: 2, name: en.help_steps_title })
+    expect(box.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const sections = screen.getAllByTestId('help-section')
+    expect(sections.map((s) => within(s).getByRole('heading', { level: 3 }).textContent)).toEqual(['Section one', 'Section two'])
+    expect(within(sections[0]).getByRole('list', { name: 'Section one' }).querySelectorAll('li').length).toBe(2)
+    expect(Array.from(container.querySelectorAll('ol > li')).map((li) => li.textContent)).toEqual(['first', 's1a', 's1b', 's2a'])
+  })
+
+  it.each(['crm', 'crm-persons'] as const)('%s: the real SOP shows the rules box and every section in EN and EL', (id) => {
+    for (const [lang, t] of [['en', en], ['el', el]] as const) {
+      const c = HELP_CONTENT[id][lang]
+      const { container, unmount } = render(<HelpSop content={c} tr={t} />)
+      const box = screen.getByTestId('help-rules')
+      expect(within(box).getByRole('heading').textContent).toBe(t.help_rules_title)
+      expect(within(box).getAllByRole('listitem').length).toBe(c.rules!.length)
+      expect(screen.getAllByTestId('help-section').map((s) => within(s).getByRole('heading', { level: 3 }).textContent)).toEqual(c.sections!.map((s) => s.heading))
+      expect(container.querySelectorAll('ol > li').length).toBe(allHelpSteps(c).length)
+      unmount()
+    }
   })
 })
 
@@ -178,7 +211,7 @@ describe('help topic page', () => {
     const c = HELP_CONTENT[id].en
     expect(screen.getAllByRole('heading', { level: 1 }).length).toBe(1)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(c.title)
-    expect(container.querySelectorAll('ol > li').length).toBe(c.steps.length)
+    expect(container.querySelectorAll('ol > li').length).toBe(allHelpSteps(c).length)
     const links = screen.getAllByTestId('help-admin-link')
     expect(links.map((a) => a.getAttribute('href'))).toEqual(topic.adminLinks.map((l) => l.href))
     links.forEach((a, i) => expect(a.textContent).toContain(`${en.help_open_in_admin}: ${en[topic.adminLinks[i].navKey]}`))

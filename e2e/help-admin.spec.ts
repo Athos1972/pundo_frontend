@@ -7,7 +7,7 @@ import { test, expect } from './fixtures'
 import { BASE_URL } from './env'
 import { E2E_ADMIN_STATE_FILE as ADMIN_STATE } from './state'
 import { HELP_TOPICS } from '../src/lib/system-admin-help'
-import { HELP_CONTENT } from '../src/lib/system-admin-help-content'
+import { HELP_CONTENT, allHelpSteps } from '../src/lib/system-admin-help-content'
 import { tSysAdmin } from '../src/lib/system-admin-translations'
 
 const en = tSysAdmin('en')
@@ -47,7 +47,8 @@ test.describe('F8960 admin help', () => {
       await page.goto(`/admin/help/${t.id}`)
       const c = HELP_CONTENT[t.id].en
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(c.title)
-      await expect(page.locator('main ol > li')).toHaveCount(c.steps.length)
+      await expect(page.locator('main ol > li')).toHaveCount(allHelpSteps(c).length)
+      if (c.rules?.length) await expect(page.getByTestId('help-rules').locator('li')).toHaveCount(c.rules.length)
       if (t.noVideo) {
         await expect(page.locator('main a[href*="youtube.com"]')).toHaveCount(0)
         await expect(page.getByText(en.help_video_coming_soon)).toHaveCount(0)

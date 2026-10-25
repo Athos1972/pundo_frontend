@@ -1,14 +1,16 @@
-# Team video 5 "CRM: contacts, outreach and safety" (F8960 T22, topic 5). Internal: channel "pundo Team", unlisted.
-# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-crm.el.srt).
-# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
-# Order and wording follow the SOP "crm" in src/lib/system-admin-help-content.ts. LAST video of the series: the outro points to the Help page.
+# Team video 5 "CRM: organisations and outreach" (F8960 Team-SOPs & Admin-Hilfe, topic 5; re-recorded after the F7600 CRM-Backbone
+# org cut). Internal: channel "pundo Team", unlisted. EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only
+# (subtitle.el -> out/team-crm.el.srt). DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Order and wording follow the SOP "crm" in src/lib/system-admin-help-content.ts (rules box, sections). People and relations: video 5b.
 # Recording: ONLY test instance 3500/8500 (strict mode), admin login via API (no login scene), demo data from
-# ../team-common/prepare_team.py (marker "Team Demo"). The video CREATES the contact "Team Demo Maria" (prepare_team.py deletes it
-# again on the next run), adds a phone channel to "Team Demo Contact" and moves it from "Needs review" to "Sourced" (prepare_team.py puts
-# it back). NOTHING is sent (the recorder aborts every request to outreach/send), NOTHING is suppressed (dialog is cancelled), the safety
-# settings are only looked at. Lists of the CRM hold real contacts of the test copy: every row without "Team Demo" is blurred (armMask).
-# Address bar: every scene shows exactly one page (window_path is static per scene); page switches happen at the scene borders.
-# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+# ../team-common/prepare_team.py (marker "Team Demo"). The video CREATES the organisation "Team Demo Cafe" (prepare_team.py deletes it
+# on the next run), clicks "Confirm business" on "Team Demo Bakery" (NEEDS_REVIEW -> QUEUED), loads a preview and APPROVES one send to
+# the red relation e-mail of Petros (prepare_team.py puts everything back). NOTHING is sent (the recorder rejects every request to
+# outreach/send), NOTHING is suppressed (dialog cancelled), the safety settings are only looked at. Lists of the CRM hold real
+# organisations and people of the test copy: every row/entry without "Team Demo" is blurred (armMask).
+# Address bar: every scene shows exactly one page (window_path is static per scene); page switches happen at the scene borders or
+# while the picture is frozen. The ids in window_path (org 7413) are checked by record.mjs against prepare_team.py.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN in "...", EL in «...»).
 
 meta:
   slug: team-crm
@@ -16,210 +18,214 @@ meta:
   voice_langs: [en]
   subtitle_langs: [el]
   title:
-    en: "CRM: contacts and safety"
-    el: "CRM: επαφές και ασφάλεια"
+    en: "CRM: organisations and outreach"
+    el: "CRM: οργανισμοί και προσέγγιση"
   url:
     en: "pundo team · admin help"
     el: "pundo team · βοήθεια admin"
   next_video:
-    en: "More help: Help in the admin sidebar"
-    el: "Περισσότερη βοήθεια: «Βοήθεια» στο admin"
-  thumbnail_scene: channels
-  target_duration_s: 215
+    en: "Next: CRM people and relations"
+    el: "Επόμενο: CRM, πρόσωπα και σχέσεις"
+  thumbnail_scene: outreach
+  target_duration_s: 260
   window_path:
-    en: "localhost:3500/admin/crm/contacts"
-    el: "localhost:3500/admin/crm/contacts"
+    en: "localhost:3500/admin/crm/orgs"
+    el: "localhost:3500/admin/crm/orgs"
 
 scenes:
   - id: intro
     branding: intro
 
   - id: list
-    shot: 'CRM list (non-demo rows blurred): pointer over the state chips one by one, click the chip "Needs review"'
-    chapter: { en: "The contact list" }
-    window_path: { en: "localhost:3500/admin/crm/contacts" }
+    shot: 'organisation list (non-demo rows blurred): pointer over the table and the lead status chips, click "Only acquisition targets"'
+    chapter: { en: "Organisations and lead status" }
+    window_path: { en: "localhost:3500/admin/crm/orgs" }
     callout: { en: "Admin · CRM" }
     narration:
       en: >-
         Welcome back.
-        This is the last video of the series, and it is about the CRM.
-        The CRM holds our business contacts and every message we send them.
-        The chips above the list filter by state, and the state tells you where a contact stands.
-        "Sourced" means newly added.
-        "Needs review" waits for your decision.
-        "Queued" is ready for a first message, and "Contacted" means one was sent.
-        "Hard opt-out" means: never contact this person again.
-        Click "Needs review".
-        Rows of real people are blurred here.
+        The CRM holds organisations, such as shops and offices, the people who work there, and every message we send.
+        Each row is one organisation with its lead status.
+        The chips filter by lead status, and "Only acquisition targets" hides organisations that we do not want to win as customers.
+        Real rows are blurred here.
     subtitle:
       el:
         - "Καλωσορίσατε ξανά."
-        - "Αυτό είναι το τελευταίο βίντεο της σειράς και αφορά το CRM."
-        - "Το CRM περιέχει τις επαγγελματικές μας επαφές και κάθε μήνυμα που τους στέλνουμε."
-        - "Τα chips πάνω από τη λίστα φιλτράρουν ανά κατάσταση και η κατάσταση δείχνει πού βρίσκεται μια επαφή."
-        - "Το «Εντοπίστηκε» σημαίνει ότι η επαφή μόλις προστέθηκε."
-        - "Το «Χρειάζεται έλεγχο» περιμένει τη δική σας απόφαση."
-        - "Το «Σε ουρά» είναι έτοιμο για το πρώτο μήνυμα και το «Έγινε επικοινωνία» σημαίνει ότι στάλθηκε ένα."
-        - "Το «Οριστικό opt-out» σημαίνει: να μην επικοινωνήσουμε ποτέ ξανά με αυτό το άτομο."
-        - "Πατήστε «Χρειάζεται έλεγχο»."
-        - "Οι γραμμές πραγματικών ανθρώπων είναι εδώ θολές."
+        - "Το CRM περιέχει οργανισμούς, όπως καταστήματα και γραφεία, τους ανθρώπους που εργάζονται εκεί και κάθε μήνυμα που στέλνουμε."
+        - "Κάθε γραμμή είναι ένας οργανισμός με την «Κατάσταση lead» του."
+        - "Τα chips φιλτράρουν ανά κατάσταση lead και το «Μόνο στόχοι προσέγγισης» κρύβει τους οργανισμούς που δεν θέλουμε να αποκτήσουμε ως πελάτες."
+        - "Οι πραγματικές γραμμές είναι εδώ θολές."
 
   - id: search
-    shot: 'type "Team Demo Bakery" into the search box, Enter -> the demo contact; pointer on the row, then on "Add contact"'
+    shot: 'type "Team Demo" into the search, Enter -> head office ("Needs review"), branch ("Branch of ..."), employer ("No acquisition target"); pointer on "+ Add organisation"'
     chapter: { en: "Search first" }
-    window_path: { en: "localhost:3500/admin/crm/contacts" }
+    window_path: { en: "localhost:3500/admin/crm/orgs" }
     callout: { en: "CRM · Search" }
     narration:
       en: >-
-        Always search before you add someone.
-        Type part of the name, the company or the e-mail address, and press Enter.
-        If the contact exists, open it, and do not create a second record.
-        Only if nobody matches, click "Add contact".
+        Always search first: type at least two characters of the name, or an exact email address or phone number, and press Enter.
+        Our demo chain appears: the head office needs review, its branch in Larnaca names the head office, and the accounting office has no acquisition target.
+        Only if nothing matches, click "Add organisation".
     subtitle:
       el:
-        - "Πάντα αναζητήστε πριν προσθέσετε κάποιον."
-        - "Πληκτρολογήστε μέρος του ονόματος, της εταιρείας ή του email και πατήστε Enter."
-        - "Αν η επαφή υπάρχει, ανοίξτε την και μη δημιουργήσετε δεύτερη εγγραφή."
-        - "Μόνο αν δεν ταιριάζει κανείς, πατήστε «Προσθήκη επαφής»."
+        - "Αναζητήστε πάντα πρώτα: πληκτρολογήστε τουλάχιστον δύο χαρακτήρες του ονόματος ή ένα ακριβές email ή τηλέφωνο και πατήστε Enter."
+        - "Εμφανίζεται η δοκιμαστική μας αλυσίδα: το κεντρικό «Χρειάζεται έλεγχο», το υποκατάστημα στη Λάρνακα δείχνει το κεντρικό και το λογιστικό γραφείο «Δεν είναι στόχος προσέγγισης»."
+        - "Μόνο αν δεν ταιριάζει τίποτα, πατήστε «Νέος οργανισμός»."
 
   - id: create
-    shot: 'new contact form: organisation, name, e-mail, phone typed; source "Direct contact"; click "Create contact"'
-    chapter: { en: "Add a contact" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/new" }
-    callout: { en: "CRM · New contact" }
+    shot: 'new organisation form: name, city, category; "Acquisition target (lead status Sourced)" stays ticked; email; source "Direct contact"; click "Create organisation"'
+    chapter: { en: "Add an organisation" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/new" }
+    callout: { en: "CRM · New organisation" }
     narration:
       en: >-
-        Fill in the organisation name, as it is required.
-        Add the name of a person if you have one.
-        Then give at least one e-mail address or phone number.
-        Choose where the contact came from, here "Direct contact".
-        Click "Create contact".
-        The system saves it in the state "Sourced".
+        Fill in the name, the city and the category.
+        "Acquisition target" is ticked by default: keep it only if we want to win the organisation as a customer, and then give an email address or a phone number.
+        Untick it for an organisation that is only the employer of a contact person.
+        Choose the source and click "Create organisation".
+        Contact persons are added later, on the organisation page.
     subtitle:
       el:
-        - "Συμπληρώστε το όνομα του οργανισμού, γιατί είναι υποχρεωτικό."
-        - "Προσθέστε το όνομα ενός ατόμου, αν έχετε."
-        - "Έπειτα δώστε τουλάχιστον μία διεύθυνση email ή έναν αριθμό τηλεφώνου."
-        - "Επιλέξτε από πού προήλθε η επαφή, εδώ «Άμεση επαφή»."
-        - "Πατήστε «Δημιουργία επαφής»."
-        - "Το σύστημα την αποθηκεύει στην κατάσταση «Εντοπίστηκε»."
+        - "Συμπληρώστε το όνομα, την πόλη και την κατηγορία."
+        - "Το «Στόχος προσέγγισης» είναι επιλεγμένο από προεπιλογή: κρατήστε το μόνο αν θέλουμε να αποκτήσουμε τον οργανισμό ως πελάτη και τότε δώστε email ή αριθμό τηλεφώνου."
+        - "Αφαιρέστε την επιλογή για οργανισμό που είναι μόνο ο εργοδότης ενός υπεύθυνου επικοινωνίας."
+        - "Επιλέξτε την πηγή και πατήστε «Δημιουργία οργανισμού»."
+        - "Οι υπεύθυνοι επικοινωνίας προστίθενται αργότερα, στη σελίδα του οργανισμού."
+
+  - id: detail
+    shot: 'page of "Team Demo Bakery": h1 + lead status badge, sections in order, "Head office and branches" with the branch'
+    chapter: { en: "The organisation page" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/7413" }
+    callout: { en: "CRM · Organisation" }
+    narration:
+      en: >-
+        This is the page of one organisation: its name, and next to it the lead status.
+        The sections always follow the same order, from the lead status down to outreach and the timeline.
+        Team Demo Bakery is a head office and lists its branch.
+        A chain has one level only, and nothing is inherited: each branch has its own channels, lead status and opt-out.
+    subtitle:
+      el:
+        - "Αυτή είναι η σελίδα ενός οργανισμού: το όνομά του και δίπλα η κατάσταση lead."
+        - "Οι ενότητες έχουν πάντα την ίδια σειρά, από την «Κατάσταση lead και ενέργειες» μέχρι την «Προσέγγιση» και το χρονολόγιο."
+        - "Το Team Demo Bakery είναι κεντρικό και δείχνει το υποκατάστημά του («Κεντρικό και υποκαταστήματα»)."
+        - "Μια αλυσίδα έχει μόνο ένα επίπεδο και τίποτα δεν κληρονομείται: κάθε υποκατάστημα έχει δικά του κανάλια, κατάσταση lead και opt-out."
+
+  - id: lead
+    shot: 'same page: badge "Needs review", click "Confirm business", confirm in the dialog -> badge "Queued"; pointer on "Set lead status"'
+    chapter: { en: "Confirm business" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/7413" }
+    callout: { en: "CRM · Lead status" }
+    narration:
+      en: >-
+        The lead status is "Needs review": the organisation waits for a human decision, and no outreach is possible.
+        We checked the details, so we click "Confirm business" and confirm.
+        The organisation moves to "Queued" and can receive emails.
+        "Set lead status" chooses another status, and a final status, such as "Hard opt-out", cannot be changed any more.
+    subtitle:
+      el:
+        - "Η κατάσταση lead είναι «Χρειάζεται έλεγχο»: ο οργανισμός περιμένει ανθρώπινη απόφαση και δεν επιτρέπεται προσέγγιση."
+        - "Ελέγξαμε τα στοιχεία, οπότε πατάμε «Επιβεβαίωση επιχείρησης» και επιβεβαιώνουμε."
+        - "Ο οργανισμός περνά σε «Σε ουρά» και μπορεί να λαμβάνει email."
+        - "Το «Ορισμός κατάστασης lead» επιλέγει άλλη κατάσταση και μια τελική κατάσταση, όπως το «Οριστικό opt-out», δεν αλλάζει πια."
 
   - id: channels
-    shot: 'contact page of the demo contact: header with state, then the channels table; add a phone channel'
-    chapter: { en: "Channels" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/9108" }
+    shot: 'same page: "Channels of the organisation" table, then "Contact persons": Petros with "Channels of this relation" and personal channels marked "Personal"'
+    chapter: { en: "Channels and their owner" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/7413" }
     callout: { en: "CRM · Channels" }
     narration:
       en: >-
-        This is the page of a contact, with name, organisation and state at the top.
-        Channels are the ways to reach this person.
-        Each row shows type, value, consent, reachability, and whether it is the preferred channel.
-        Click "Add channel", choose e-mail or phone, and type the value.
-        The last channel of a contact cannot be removed.
-        A WhatsApp chat is written down in the box "Document a contact".
+        A channel belongs to exactly one owner, and a value is stored only once.
+        Company channels, such as the info address and the official number, belong to the organisation, with type, value, legal tier, consent and reachability.
+        Under "Contact persons", Petros has the company email of his relation to this bakery, and below it his personal channels.
+        Video 5b explains people and relations.
     subtitle:
       el:
-        - "Αυτή είναι η σελίδα μιας επαφής, με όνομα, οργανισμό και κατάσταση στην κορυφή."
-        - "Τα κανάλια είναι οι τρόποι να επικοινωνήσουμε με αυτό το άτομο."
-        - "Κάθε γραμμή δείχνει τύπο, τιμή, συναίνεση, προσβασιμότητα και αν είναι το προτιμώμενο κανάλι."
-        - "Πατήστε «Προσθήκη καναλιού», επιλέξτε email ή τηλέφωνο και πληκτρολογήστε την τιμή."
-        - "Το τελευταίο κανάλι μιας επαφής δεν μπορεί να αφαιρεθεί."
-        - "Μια συνομιλία WhatsApp καταγράφεται στο πλαίσιο «Καταγραφή επαφής»."
-
-  - id: review
-    shot: 'same page: state "Needs review" -> "Set state" -> dialog, choose "Sourced", "Save" -> badge changes'
-    chapter: { en: "Needs review" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/9108" }
-    callout: { en: "CRM · Needs review" }
-    narration:
-      en: >-
-        Now the state "Needs review".
-        The system is not sure this is a business, for example after it read a business card photo.
-        In this state we send nothing.
-        With a card photo you get the button "Confirm card".
-        Without one, click "Set state", choose "Sourced" and save.
-        The badge changes, and the contact no longer waits.
-    subtitle:
-      el:
-        - "Τώρα η κατάσταση «Χρειάζεται έλεγχο»."
-        - "Το σύστημα δεν είναι βέβαιο ότι πρόκειται για επιχείρηση, για παράδειγμα αφού διάβασε τη φωτογραφία μιας επαγγελματικής κάρτας."
-        - "Σε αυτή την κατάσταση δεν στέλνουμε τίποτα."
-        - "Με φωτογραφία κάρτας εμφανίζεται το κουμπί «Επιβεβαίωση κάρτας»."
-        - "Χωρίς αυτήν, πατήστε «Ορισμός κατάστασης», επιλέξτε «Εντοπίστηκε» και αποθηκεύστε."
-        - "Η ένδειξη αλλάζει και η επαφή δεν περιμένει πια."
+        - "Ένα κανάλι ανήκει σε ακριβώς έναν κάτοχο και μια τιμή αποθηκεύεται μόνο μία φορά."
+        - "Τα εταιρικά κανάλια, όπως η διεύθυνση info και ο επίσημος αριθμός, ανήκουν στον οργανισμό («Κανάλια του οργανισμού»), με τύπο, τιμή, «Νομική βαθμίδα», συγκατάθεση και προσβασιμότητα."
+        - "Στους «Υπεύθυνοι επικοινωνίας» ο Petros έχει το εταιρικό email της σχέσης του με αυτόν τον φούρνο και από κάτω τα «Προσωπικό» κανάλια του."
+        - "Το βίντεο 5b εξηγεί τα πρόσωπα και τις σχέσεις."
 
   - id: outreach
-    shot: 'same page, right column: Outreach box, tab English, "Load preview" -> text; pointer on "Send email" (never clicked); timeline'
-    chapter: { en: "Outreach basics" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/9108" }
+    shot: 'same page, "Outreach": recipient select (default info address), choose Petros (relation, Red) -> warning box, "Send email" disabled; "Approve" -> dialog, reason, "Approve" -> approved box; English, "Load preview"; pointer on "Send email" (never clicked)'
+    chapter: { en: "Outreach and the send gate" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/7413" }
     callout: { en: "CRM · Outreach" }
     narration:
       en: >-
-        On the right is the Outreach box.
-        Choose a language, English for example, and click "Load preview".
-        You get a ready text that you can edit.
-        "Send email" sends a real e-mail to the preferred address, so we do not click it here.
-        The timeline below lists everything that happened with this contact.
+        In "Outreach", pick the recipient: a channel of the organisation, or of a contact person with an active relation.
+        The info address is the default.
+        We choose the company email of Petros.
+        Its legal tier is "Red", so a warning box appears and "Send email" stays disabled.
+        An admin with the permission clicks "Approve", writes a reason of ten to five hundred characters, and confirms.
+        One approval allows exactly one send to this recipient and expires after seven days.
+        Then load the preview: "Send email" is active, but we do not send here.
     subtitle:
       el:
-        - "Δεξιά βρίσκεται το πλαίσιο «Προσέγγιση»."
-        - "Επιλέξτε γλώσσα, για παράδειγμα αγγλικά, και πατήστε «Φόρτωση προεπισκόπησης»."
-        - "Παίρνετε ένα έτοιμο κείμενο που μπορείτε να επεξεργαστείτε."
-        - "Η «Αποστολή email» στέλνει πραγματικό email στην προτιμώμενη διεύθυνση, γι' αυτό δεν την πατάμε εδώ."
-        - "Το χρονολόγιο παρακάτω δείχνει ό,τι έγινε με αυτή την επαφή."
+        - "Στην «Προσέγγιση» επιλέξτε τον «Παραλήπτη»: ένα κανάλι του οργανισμού ή ενός υπευθύνου επικοινωνίας με ενεργή σχέση."
+        - "Η διεύθυνση info είναι η προεπιλογή."
+        - "Επιλέγουμε το εταιρικό email του Petros."
+        - "Η νομική βαθμίδα του είναι «Κόκκινη», οπότε εμφανίζεται πλαίσιο προειδοποίησης και η «Αποστολή email» μένει ανενεργή."
+        - "Ένας διαχειριστής με το δικαίωμα πατά «Έγκριση», γράφει «Αιτιολόγηση (10 έως 500 χαρακτήρες)» και επιβεβαιώνει."
+        - "Μία έγκριση επιτρέπει ακριβώς μία αποστολή σε αυτόν τον παραλήπτη και λήγει μετά από 7 ημέρες."
+        - "Έπειτα φορτώστε την προεπισκόπηση: η «Αποστολή email» είναι ενεργή, αλλά εδώ δεν στέλνουμε."
 
-  - id: suppress
-    shot: 'same page: click "Suppress / Opt-out" -> dialog with the two reasons, pointer over both, "Cancel" (nothing is suppressed)'
-    chapter: { en: "Opt-out" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/9108" }
+  - id: optout
+    shot: 'same page: "Suppress / Opt-out" -> dialog, pointer on the first reason, "Cancel"; then "Contact persons": Eleni with "Opted out"'
+    chapter: { en: "Opt-out by owner" }
+    window_path: { en: "localhost:3500/admin/crm/orgs/7413" }
     callout: { en: "CRM · Opt-out" }
     narration:
       en: >-
-        If someone does not want to be contacted, click "Suppress / Opt-out" right away.
-        "Hard opt-out" is for people who object.
-        "Rejected (private)" is for private persons.
-        After you confirm, the state is final and all channels go on the suppression list.
-        The admin cannot undo this, and the system refuses these values on other contacts.
-        Never work around it.
+        An opt-out works by owner.
+        "Suppress / Opt-out" here, or an unsubscribe through a channel of the organisation, blocks the organisation and all its channels.
         We cancel here.
+        An unsubscribe through a channel of a person blocks only that person: Eleni shows "Opted out", and the bakery keeps its lead status.
+        Exception: a person with the role "Owner" blocks the organisation as well.
     subtitle:
       el:
-        - "Αν κάποιος δεν θέλει να επικοινωνούμε μαζί του, πατήστε αμέσως «Αποκλεισμός / Opt-out»."
-        - "Το «Οριστικό opt-out» είναι για όσους αντιτίθενται."
-        - "Το «Απορρίφθηκε (ιδιώτης)» είναι για ιδιώτες."
-        - "Μόλις επιβεβαιώσετε, η κατάσταση είναι οριστική και όλα τα κανάλια μπαίνουν στη λίστα αποκλεισμού."
-        - "Το admin δεν μπορεί να το αναιρέσει και το σύστημα αρνείται αυτές τις τιμές σε άλλες επαφές."
-        - "Μην το παρακάμψετε ποτέ."
+        - "Το opt-out λειτουργεί ανάλογα με τον κάτοχο."
+        - "Το «Αποκλεισμός / Opt-out» εδώ ή μια διαγραφή μέσω καναλιού του οργανισμού μπλοκάρει τον οργανισμό και όλα τα κανάλια του («Οριστικό opt-out»)."
         - "Εδώ ακυρώνουμε."
+        - "Μια διαγραφή μέσω καναλιού ενός προσώπου μπλοκάρει μόνο αυτό το πρόσωπο: η Eleni δείχνει «Έχει προβάλει αντίρρηση» και ο φούρνος κρατά την κατάσταση lead του."
+        - "Εξαίρεση: ένα πρόσωπο με ρόλο «Ιδιοκτήτης/τρια» μπλοκάρει και τον οργανισμό."
+
+  - id: review
+    shot: 'review list (entries without "Team Demo" blurred): pointer over the category tabs, click "Relations without role" -> Nikos at the branch'
+    chapter: { en: "Review list" }
+    window_path: { en: "localhost:3500/admin/crm/review" }
+    callout: { en: "CRM · Review list" }
+    narration:
+      en: >-
+        The review list collects what a human has to check, in four categories, such as legacy cases and unclear channel owners.
+        Here we open "Relations without role": the relation of Nikos to the branch has no role yet.
+        It disappears by itself once fixed, and stored entries are closed with "Done" or "Dismiss".
+        Entries of real people are blurred.
+    subtitle:
+      el:
+        - "Η «Λίστα ελέγχου» συγκεντρώνει ό,τι πρέπει να ελέγξει ένας άνθρωπος, σε τέσσερις κατηγορίες, όπως «Παλαιές περιπτώσεις» και «Έλεγχος αντιστοίχισης καναλιών»."
+        - "Εδώ ανοίγουμε τις «Σχέσεις χωρίς ρόλο»: η σχέση του Nikos με το υποκατάστημα δεν έχει ακόμη ρόλο."
+        - "Εξαφανίζεται μόνη της μόλις διορθωθεί και οι αποθηκευμένες καταχωρίσεις κλείνουν με «Ολοκληρώθηκε» ή «Παράβλεψη»."
+        - "Οι καταχωρίσεις πραγματικών ανθρώπων είναι θολές."
 
   - id: safety
-    shot: 'CRM safety settings page: pointer on kill switch, then on the daily e-mail limit (nothing changed or saved)'
+    shot: 'CRM safety settings: pointer on kill switch, send limits, "Owner rule on objection", approval tiers (nothing changed or saved); sidebar Help'
     chapter: { en: "Safety settings" }
     window_path: { en: "localhost:3500/admin/crm/settings" }
     callout: { en: "CRM · Safety settings" }
     narration:
       en: >-
-        Last, the safety settings, linked at the top of the list.
-        The kill switch pauses all sending.
-        When it is on, no message leaves the system.
-        Here, sending is active.
-        Below is the limit for e-mails per 24 hours, and how many went out.
-        These settings apply to everyone.
-        We only look, and you change them only after agreement with your team lead.
-        That is all for the CRM and the series.
-        More help is on the Help page in the sidebar.
+        Last, the safety settings: the kill switch pauses all sending, and below are the send limits per 24 hours.
+        The owner rule on objection is on by default, and only the legal tier "Red" needs an approval before sending.
+        These settings apply to everyone, so change them only after agreement with your team lead.
+        The written guide is under Help in the sidebar, and video 5b follows.
         Thanks for watching.
     subtitle:
       el:
-        - "Τέλος, οι ρυθμίσεις ασφαλείας, με σύνδεσμο στην κορυφή της λίστας."
-        - "Ο διακόπτης έκτακτης ανάγκης σταματά κάθε αποστολή."
-        - "Όταν είναι ενεργός, κανένα μήνυμα δεν φεύγει από το σύστημα."
-        - "Εδώ η αποστολή είναι ενεργή."
-        - "Παρακάτω είναι το όριο email ανά 24 ώρες και πόσα έχουν σταλεί."
-        - "Αυτές οι ρυθμίσεις ισχύουν για όλους."
-        - "Εμείς απλώς τις βλέπουμε και εσείς τις αλλάζετε μόνο μετά από συμφωνία με τον υπεύθυνο της ομάδας."
-        - "Αυτά ήταν όλα για το CRM και τη σειρά."
-        - "Περισσότερη βοήθεια υπάρχει στη σελίδα «Βοήθεια» της πλευρικής στήλης."
+        - "Τέλος, οι «Ρυθμίσεις ασφαλείας»: ο διακόπτης (kill switch) σταματά κάθε αποστολή και παρακάτω είναι τα «Όρια αποστολής ανά 24 ώρες»."
+        - "Ο «Κανόνας ιδιοκτήτη σε αντίρρηση» είναι ενεργός από προεπιλογή και μόνο η νομική βαθμίδα «Κόκκινη» χρειάζεται έγκριση πριν από την αποστολή."
+        - "Αυτές οι ρυθμίσεις ισχύουν για όλους, γι' αυτό αλλάξτε τις μόνο μετά από συμφωνία με τον υπεύθυνο της ομάδας."
+        - "Ο γραπτός οδηγός βρίσκεται στη «Βοήθεια» της πλευρικής στήλης και ακολουθεί το βίντεο 5b."
         - "Ευχαριστούμε που παρακολουθήσατε."
 
   - id: outro

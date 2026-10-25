@@ -10,16 +10,28 @@ export interface HelpNote {
   text: string
 }
 
+/** A group of steps with its own heading, shown after the first steps (long SOPs, e.g. CRM). */
+export interface HelpSection {
+  heading: string
+  steps: readonly string[]
+}
+
 export interface HelpTopicContent {
   title: string
   /** One-liner shown on the card. */
   summary: string
   intro?: string
+  /** Highlighted box "Rules that are easy to forget", shown above the steps. */
+  rules?: readonly string[]
   steps: readonly string[]
+  sections?: readonly HelpSection[]
   notes?: readonly HelpNote[]
 }
 
 export const helpLang = (lang: string): HelpLang => (lang === 'el' ? 'el' : 'en')
+
+/** Every numbered step of a topic: the first steps plus the steps of all sections, in display order. */
+export const allHelpSteps = (c: HelpTopicContent): string[] => [...c.steps, ...(c.sections ?? []).flatMap((s) => s.steps)]
 
 export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent>> = {
   'admin-tour': {
@@ -238,84 +250,304 @@ export const HELP_CONTENT: Record<HelpTopicId, Record<HelpLang, HelpTopicContent
     },
   },
 
+  // F7600 CRM-Backbone (org cut): organisations with a lead status, channels with exactly one owner, relations
+  // person x organisation, send gate. UI words are the labels of system-admin-translations.ts (EN and EL).
   crm: {
     en: {
-      title: 'CRM',
-      summary: 'Create contacts, check their channels and respect the safety settings.',
-      intro: 'The CRM holds contacts and every message we send them. Sending is limited by global safety settings.',
+      title: 'CRM: organisations and outreach',
+      summary: 'Work with organisations and their lead status, channels with one owner, outreach with the send gate, opt-out and the review list.',
+      intro: 'The CRM holds organisations (companies, shops, offices) with their lead status, the people who work there and every message we send. A channel, such as an e-mail address or a phone number, belongs to exactly one owner. Sending is limited by global safety settings. People, relations and personal channels are explained in topic 5b "CRM: people and relations".',
+      rules: [
+        'A channel belongs to exactly one owner: the organisation (info@, the official number), a relation (the company e-mail of a person at this organisation) or a person (private number or e-mail). A value is stored only once in the CRM, never twice.',
+        'Reference, not copy: if the company address (for example info@) is the best way to reach a person, choose it as the "Preferred channel" of the relation. Do not enter it again at the person.',
+        'The name of a person is built from first and last name as soon as one of them is filled; the field "Name" is then locked. Filling in the parts later replaces a free name. Details in topic 5b.',
+        'Nothing is inherited between a head office and its branches: no channels, no responsible admin, no opt-out. Each one is an organisation of its own.',
+        'An opt-out works by owner: through a channel of the organisation it blocks the organisation; through a channel of a person it blocks the person and not the company, unless the person has the role "Owner".',
+        'One approval allows exactly one send to one recipient. A second send needs a new approval.',
+        'Business cards: a mobile number becomes a channel of the person only if the card also shows a landline.',
+      ],
       steps: [
-        'Open "CRM" and search for the person or company first, so you do not create a second record.',
-        'Click "Add contact" and fill in the name and at least one channel (e-mail or phone). Record how you got the contact.',
-        'Check the channel flags on the contact: consent, reachable and preferred.',
-        'Contacts in the state "Needs review" wait for a human decision. Look at the details and set the next state yourself; do not leave them.',
-        'Click "Confirm business" only for a real business contact. It confirms the business and puts the contact in the state QUEUED, which means it is queued for outreach: from then on it can receive e-mails.',
-        'If a conversation took place outside the system (WhatsApp chat, phone call, personal note), write it down on the contact in the box "Document a contact": choose what happened, the channel, when, who spoke on each side and the content.',
-        'Natural persons are kept separately from contacts, see the next topic "CRM: people and roles".',
-        'If someone does not want to be contacted, use "Suppress / Opt-out" with the matching reason straight away. If the contact is linked to a person, the opt-out applies to that person and to every contact linked to them.',
-        'Open "Safety settings" to see the kill switch and the daily send limits. Change them only after agreement with the team lead.',
+        'Open "CRM": the list "Organisations" (/admin/crm/orgs) opens. Search first, so you do not create a second record: type at least 2 characters of the name or the legal name, or an exact e-mail address or phone number.',
+        'Filter the list by "Lead status" or click "Only acquisition targets". At the top you also find "People", "Review list" and "Safety settings".',
+      ],
+      sections: [
+        {
+          heading: 'Organisations and lead status',
+          steps: [
+            'Click "Add organisation" and fill in "Organisation name", "City" and "Category / Industry". "Acquisition target (lead status Sourced)" is ticked by default: keep it only if we want to win the organisation as a customer; then an e-mail address or a phone number is required. Untick it for an organisation that is only the employer of a contact person. Pick the "Source" and click "Create organisation".',
+            'You do not type contact persons in here. Add them on the organisation page under "Contact persons" (topic 5b).',
+            'The organisation page is one page per company, in this order: "Lead status and actions", "Master data", "Head office and branches", "Channels of the organisation", "Contact persons", "Sources and proofs", "Outreach", "Document an interaction" and the "Interaction timeline".',
+            'The lead status shows where we stand with the organisation. Empty means "No acquisition target": the organisation exists only as an employer or as the other side of a relation, does not count in the acquisition figures and gets no outreach, but you can still find it. "Make acquisition target" sets the lead status to "Sourced".',
+            'An organisation in "Needs review" waits for a human decision: look at the details and set the next status yourself with "Set lead status". Click "Confirm business" only for a real business; it puts the organisation in "Queued", and from then on it can receive e-mails. A final lead status (for example "Hard opt-out" or "Registered") cannot be changed any more.',
+            'If a conversation took place outside the system (WhatsApp chat, phone call, personal note), record it in "Document an interaction": what happened, the channel, when, who on our side, who on their side (or the contact person) and the content.',
+          ],
+        },
+        {
+          heading: 'Head office and branches',
+          steps: [
+            'A chain has one level only. Open the branch, click "Edit" under "Master data" (the form "Edit organisation" opens) and pick the head office in "Belongs to (head office)". Only organisations without a head office of their own are offered. The branch then shows "Branch of …" with a link, and the head office lists its branches.',
+            'The head office is an organisation of its own with its own address, channels and lead status. Nothing is inherited: an opt-out of the head office does not block a branch, and a branch without channels is not reachable even if the head office has some. An organisation with branches cannot become a branch itself.',
+            'An area manager is a person with the role "Manager" and one relation to each branch they look after; write the area into the "Note" of the relation (for example "Region West"). A change of area manager across many branches is done by the tech team with a script, not in the admin: ask the team lead.',
+          ],
+        },
+        {
+          heading: 'Channels',
+          steps: [
+            'Keep the company channels under "Channels of the organisation": info@, the official number, the WhatsApp number of the shop. Channels of a person are kept at the relation or at the person (topic 5b).',
+            'Each channel shows "Type", "Value", "Legal tier", "Origin", "Consent", "Reachable" and "Preferred". "Check owner" marks a channel whose owner is unclear: decide, and if needed click "Move" and pick the "New owner".',
+            'When you add a value, the CRM checks who already owns it. If it belongs to the organisation, choose it as the preferred channel of the relation instead. If it belongs to another person, it is a shared channel and stays at the organisation. If it already belongs to the same person in another relation, confirm "Keep as personal channel".',
+            'An acquisition target must stay reachable. If you remove the last reachable channel, the CRM asks whether to remove it anyway and set the lead status to UNREACHABLE ("Remove and set UNREACHABLE").',
+          ],
+        },
+        {
+          heading: 'Outreach and the send gate',
+          steps: [
+            'In "Outreach" pick the "Recipient": a channel of the organisation, a relation channel or a personal channel of a contact person with an active relation. The default recipient is marked. Blocked channels, ended relations and people without an active relation are not offered. The message always belongs to the organisation.',
+            'Click "Load preview", check "Subject" and "Body" and click "Send email". An organisation in "Queued" moves to "Contacted".',
+            'Send gate: every send has a "Legal tier" (Green, Amber or Red), the stricter one of the organisation and the channel. "Legal tiers that need an admin approval before sending" in the safety settings decides which tiers need an approval (default: only Red). For such a recipient a warning box appears ("Legal tier Red: sending only after admin approval.") and "Send email" stays disabled.',
+            'An admin with the permission crm:send_approve clicks "Approve", writes a reason in "Reason (10 to 500 characters)" (required) and confirms. One approval allows exactly one send to this recipient and expires after 7 days; then "Send email" is active. You may approve your own send if you have the permission. Without it, the box says that an admin with this permission has to approve first.',
+            'The tier of the organisation is changed with "Change legal tier", the tier of a single channel in the channel list. Change a tier only with a reason and after agreement with the team lead.',
+          ],
+        },
+        {
+          heading: 'Opt-out',
+          steps: [
+            'The effect of an opt-out depends on the owner of the channel. An unsubscribe through a channel of the organisation, or "Suppress / Opt-out" on the organisation page, sets the organisation to "Hard opt-out" and blocks all its channels: no more outreach in the name of this company, also not to its contact persons.',
+            'An unsubscribe through a relation channel or a personal channel blocks the person: all their personal and relation channels are blocked, the person shows "Opted out" and appears in no recipient list. The organisations keep their lead status and their own channels.',
+            'Owner rule: if the person has an active relation with the role "Owner", the objection also blocks that organisation ("Hard opt-out" and its channels). The switch "Owner rule on objection" in the safety settings is on by default; it protects sole traders.',
+            'If someone asks by phone or in person not to be contacted any more, act at once: for the company use "Suppress / Opt-out" with the matching reason. The admin has no button yet for the objection of a single person; tell the team lead straight away.',
+          ],
+        },
+        {
+          heading: 'Review list and business cards',
+          steps: [
+            'Open "Review list" (/admin/crm/review). It has four categories: "Legacy cases" (records from before the switch to organisations), "Check channel assignment" (channels with an unclear owner or a value that already belongs to someone else), "Relations without role" and "People without first or last name". Each entry links to the organisation or the person; close it with "Done" or "Dismiss". Computed entries disappear by themselves once fixed.',
+            'A business card sent through Telegram creates or updates an organisation with the lead status "Needs review". The card photo is under "Sources and proofs". Check the details and the channels, then click "Confirm card", or "Reject (private)" for a private person.',
+            'Card rule: if the card shows a landline and a mobile number, the landline stays with the organisation and the mobile becomes a channel of the person (relation). Mobile numbers alone stay with the organisation, even with a name on the card. Service numbers starting with 7 or 8 count as a landline. info@ and other function mailboxes go to the organisation, an e-mail that contains the name of the person goes to the relation.',
+            'Anything unclear stays at the organisation, is marked "Check owner" and is listed under "Check channel assignment"; the organisation page shows the hint until you have decided. A card without the name of a person creates only channels of the organisation. A role is set only if the card names a clear function; otherwise the relation shows "Role missing".',
+          ],
+        },
+        {
+          heading: 'Safety settings',
+          steps: [
+            'Open "Safety settings": the kill switch stops all outbound sending, the send limits cap the e-mails per 24 hours, "Owner rule on objection" and "Legal tiers that need an admin approval before sending" control the opt-out and the send gate. Change them only after agreement with the team lead.',
+          ],
+        },
       ],
       notes: [
-        { kind: 'warning', text: 'A suppressed contact must never be contacted again. If the kill switch is on, no message leaves the system at all.' },
-        { kind: 'warning', text: 'Do not enter private data you are not allowed to keep. Only record what is needed for the business contact.' },
+        { kind: 'warning', text: 'An organisation in "Hard opt-out" and a person marked "Opted out" must never be written to again. If the kill switch is on, no message leaves the system at all.' },
+        { kind: 'warning', text: 'Do not enter private data you are not allowed to keep. Record only what is needed for the business relationship.' },
+        { kind: 'tip', text: 'Old bookmarks from before the switch to organisations lead to an error page. Start from "CRM" in the sidebar.' },
       ],
     },
     el: {
-      title: 'CRM',
-      summary: 'Δημιουργία επαφών, έλεγχος των καναλιών τους και τήρηση των ρυθμίσεων ασφαλείας.',
-      intro: 'Το CRM περιέχει τις επαφές και κάθε μήνυμα που τους στέλνουμε. Η αποστολή περιορίζεται από καθολικές ρυθμίσεις ασφαλείας.',
+      title: 'CRM: οργανισμοί και προσέγγιση',
+      summary: 'Εργασία με οργανισμούς και την κατάσταση lead τους, κανάλια με έναν κάτοχο, προσέγγιση με έγκριση πριν από την αποστολή, opt-out και λίστα ελέγχου.',
+      intro: 'Το CRM περιέχει οργανισμούς (εταιρείες, καταστήματα, γραφεία) με την κατάσταση lead τους, τα πρόσωπα που εργάζονται εκεί και κάθε μήνυμα που στέλνουμε. Ένα κανάλι, όπως μια διεύθυνση email ή ένας αριθμός τηλεφώνου, ανήκει σε ακριβώς έναν κάτοχο. Η αποστολή περιορίζεται από καθολικές ρυθμίσεις ασφαλείας. Τα πρόσωπα, οι σχέσεις και τα προσωπικά κανάλια εξηγούνται στο θέμα 5b «CRM: πρόσωπα και σχέσεις».',
+      rules: [
+        'Ένα κανάλι ανήκει σε ακριβώς έναν κάτοχο: στον οργανισμό (info@, ο επίσημος αριθμός), σε μια σχέση (το εταιρικό email ενός προσώπου σε αυτόν τον οργανισμό) ή σε ένα πρόσωπο (ιδιωτικός αριθμός ή email). Μια τιμή καταχωρίζεται μόνο μία φορά στο CRM, ποτέ δύο.',
+        'Παραπομπή, όχι αντίγραφο: αν η διεύθυνση της εταιρείας (π.χ. info@) είναι ο καλύτερος τρόπος να φτάσετε σε ένα πρόσωπο, επιλέξτε την ως «Προτιμώμενο κανάλι» της σχέσης. Μην την καταχωρίσετε ξανά στο πρόσωπο.',
+        'Το ονοματεπώνυμο ενός προσώπου σχηματίζεται από όνομα και επώνυμο μόλις συμπληρωθεί ένα από τα δύο· τότε το πεδίο «Ονοματεπώνυμο» κλειδώνει. Αν συμπληρώσετε τα μέρη αργότερα, αντικαθιστούν ένα ελεύθερο ονοματεπώνυμο. Λεπτομέρειες στο θέμα 5b.',
+        'Μεταξύ κεντρικού και υποκαταστημάτων δεν κληρονομείται τίποτα: ούτε κανάλια ούτε υπεύθυνος διαχειριστής ούτε opt-out. Το καθένα είναι ξεχωριστός οργανισμός.',
+        'Το opt-out λειτουργεί ανάλογα με τον κάτοχο: μέσω καναλιού του οργανισμού μπλοκάρει τον οργανισμό· μέσω καναλιού προσώπου μπλοκάρει το πρόσωπο και όχι την εταιρεία, εκτός αν το πρόσωπο έχει τον ρόλο «Ιδιοκτήτης/τρια».',
+        'Μία έγκριση επιτρέπει ακριβώς μία αποστολή σε έναν παραλήπτη. Μια δεύτερη αποστολή χρειάζεται νέα έγκριση.',
+        'Επαγγελματικές κάρτες: ένας αριθμός κινητού γίνεται κανάλι του προσώπου μόνο αν η κάρτα δείχνει και σταθερό τηλέφωνο.',
+      ],
       steps: [
-        'Ανοίξτε το «CRM» και αναζητήστε πρώτα το άτομο ή την εταιρεία, ώστε να μη δημιουργήσετε δεύτερη εγγραφή.',
-        'Πατήστε «Προσθήκη επαφής» και συμπληρώστε το όνομα και τουλάχιστον ένα κανάλι (email ή τηλέφωνο). Καταγράψτε πώς αποκτήσατε την επαφή.',
-        'Ελέγξτε τις ενδείξεις του καναλιού στην επαφή: συναίνεση, προσβάσιμο και προτιμώμενο.',
-        'Οι επαφές στην κατάσταση «Χρειάζεται έλεγχο» περιμένουν ανθρώπινη απόφαση. Δείτε τις λεπτομέρειες και ορίστε μόνοι σας την επόμενη κατάσταση· μην τις αφήνετε.',
-        'Πατήστε «Επιβεβαίωση επιχείρησης» μόνο για πραγματική επαγγελματική επαφή. Επιβεβαιώνει την επιχείρηση και βάζει την επαφή στην κατάσταση QUEUED, δηλαδή στην ουρά επικοινωνίας: από εκείνη τη στιγμή μπορεί να λαμβάνει email.',
-        'Αν μια συζήτηση έγινε εκτός συστήματος (συνομιλία WhatsApp, τηλεφώνημα, προσωπική σημείωση), καταγράψτε την στην επαφή, στο πλαίσιο «Καταγραφή επαφής»: επιλέξτε τι έγινε, το κανάλι, πότε, ποιος μίλησε από κάθε πλευρά και το περιεχόμενο.',
-        'Τα φυσικά πρόσωπα τηρούνται χωριστά από τις επαφές, δείτε το επόμενο θέμα «CRM: πρόσωπα και ρόλοι».',
-        'Αν κάποιος δεν θέλει να επικοινωνούμε μαζί του, χρησιμοποιήστε αμέσως το «Αποκλεισμός / Opt-out» με τον σωστό λόγο. Αν η επαφή είναι συνδεδεμένη με πρόσωπο, το opt-out ισχύει για το πρόσωπο και για κάθε επαφή που είναι συνδεδεμένη με αυτό.',
-        'Ανοίξτε τις «Ρυθμίσεις ασφαλείας» για να δείτε τον διακόπτη έκτακτης ανάγκης και τα ημερήσια όρια αποστολής. Αλλάξτε τα μόνο μετά από συμφωνία με τον υπεύθυνο της ομάδας.',
+        'Ανοίξτε το «CRM»: ανοίγει η λίστα «Οργανισμοί» (/admin/crm/orgs). Αναζητήστε πρώτα, ώστε να μη δημιουργήσετε δεύτερη εγγραφή: πληκτρολογήστε τουλάχιστον 2 χαρακτήρες από το όνομα ή την επίσημη επωνυμία, ή ένα ακριβές email ή τηλέφωνο.',
+        'Φιλτράρετε τη λίστα κατά «Κατάσταση lead» ή πατήστε «Μόνο στόχοι προσέγγισης». Στο πάνω μέρος βρίσκετε επίσης τα «Πρόσωπα», τη «Λίστα ελέγχου» και τις «Ρυθμίσεις ασφαλείας».',
+      ],
+      sections: [
+        {
+          heading: 'Οργανισμοί και κατάσταση lead',
+          steps: [
+            'Πατήστε «Νέος οργανισμός» και συμπληρώστε «Όνομα οργανισμού», «Πόλη» και «Κατηγορία / Κλάδος». Το «Στόχος προσέγγισης (κατάσταση lead «Εντοπίστηκε»)» είναι επιλεγμένο από προεπιλογή: κρατήστε το μόνο αν θέλουμε να κερδίσουμε τον οργανισμό ως πελάτη· τότε χρειάζεται διεύθυνση email ή αριθμός τηλεφώνου. Αφαιρέστε την επιλογή για οργανισμό που είναι μόνο ο εργοδότης ενός υπευθύνου επικοινωνίας. Επιλέξτε την «Πηγή» και πατήστε «Δημιουργία οργανισμού».',
+            'Εδώ δεν πληκτρολογείτε υπευθύνους επικοινωνίας. Τους προσθέτετε στη σελίδα του οργανισμού, στην ενότητα «Υπεύθυνοι επικοινωνίας» (θέμα 5b).',
+            'Η σελίδα του οργανισμού είναι μία σελίδα ανά εταιρεία, με αυτή τη σειρά: «Κατάσταση lead και ενέργειες», «Βασικά στοιχεία», «Κεντρικό και υποκαταστήματα», «Κανάλια του οργανισμού», «Υπεύθυνοι επικοινωνίας», «Πηγές και αποδεικτικά», «Προσέγγιση», «Καταγραφή αλληλεπίδρασης» και το «Χρονολόγιο αλληλεπιδράσεων».',
+            'Η κατάσταση lead δείχνει πού βρισκόμαστε με τον οργανισμό. Κενή σημαίνει «Δεν είναι στόχος προσέγγισης»: ο οργανισμός υπάρχει μόνο ως εργοδότης ή ως η άλλη πλευρά μιας σχέσης, δεν μετρά στα στοιχεία προσέγγισης και δεν λαμβάνει μηνύματα, αλλά μπορείτε να τον βρείτε. Το «Ορισμός ως στόχου προσέγγισης» ορίζει την κατάσταση lead σε «Εντοπίστηκε».',
+            'Ένας οργανισμός σε «Χρειάζεται έλεγχο» περιμένει ανθρώπινη απόφαση: δείτε τις λεπτομέρειες και ορίστε μόνοι σας την επόμενη κατάσταση με «Ορισμός κατάστασης lead». Πατήστε «Επιβεβαίωση επιχείρησης» μόνο για πραγματική επιχείρηση· βάζει τον οργανισμό σε «Σε ουρά» και από εκείνη τη στιγμή μπορεί να λαμβάνει email. Μια τελική κατάσταση lead (π.χ. «Οριστικό opt-out» ή «Εγγράφηκε») δεν αλλάζει πια.',
+            'Αν μια συζήτηση έγινε εκτός συστήματος (συνομιλία WhatsApp, τηλεφώνημα, προσωπική σημείωση), καταγράψτε την στην «Καταγραφή αλληλεπίδρασης»: τι συνέβη, το κανάλι, πότε, ποιος από εμάς, ποιος από την άλλη πλευρά (ή ο υπεύθυνος επικοινωνίας) και το περιεχόμενο.',
+          ],
+        },
+        {
+          heading: 'Κεντρικό και υποκαταστήματα',
+          steps: [
+            'Μια αλυσίδα έχει μόνο ένα επίπεδο. Ανοίξτε το υποκατάστημα, πατήστε «Επεξεργασία» στα «Βασικά στοιχεία» (ανοίγει η φόρμα «Επεξεργασία οργανισμού») και επιλέξτε το κεντρικό στο «Ανήκει στο (κεντρικό)». Προτείνονται μόνο οργανισμοί χωρίς δικό τους κεντρικό. Το υποκατάστημα δείχνει τότε «Υποκατάστημα του …» με σύνδεσμο και το κεντρικό δείχνει τα υποκαταστήματά του.',
+            'Το κεντρικό είναι ξεχωριστός οργανισμός με δική του διεύθυνση, κανάλια και κατάσταση lead. Δεν κληρονομείται τίποτα: ένα opt-out του κεντρικού δεν μπλοκάρει κανένα υποκατάστημα, και ένα υποκατάστημα χωρίς κανάλια δεν είναι προσβάσιμο, ακόμη κι αν το κεντρικό έχει. Ένας οργανισμός με υποκαταστήματα δεν μπορεί να γίνει ο ίδιος υποκατάστημα.',
+            'Ένας υπεύθυνος περιοχής είναι πρόσωπο με τον ρόλο «Διευθυντής/τρια» και μία σχέση με κάθε υποκατάστημα που παρακολουθεί· γράψτε την περιοχή στη «Σημείωση» της σχέσης (π.χ. «Περιοχή Δύσης»). Η αλλαγή υπευθύνου περιοχής για πολλά υποκαταστήματα γίνεται από την τεχνική ομάδα με σενάριο (script), όχι στο admin: ρωτήστε τον υπεύθυνο της ομάδας.',
+          ],
+        },
+        {
+          heading: 'Κανάλια',
+          steps: [
+            'Κρατήστε τα εταιρικά κανάλια στα «Κανάλια του οργανισμού»: info@, ο επίσημος αριθμός, ο αριθμός WhatsApp του καταστήματος. Τα κανάλια ενός προσώπου καταχωρίζονται στη σχέση ή στο πρόσωπο (θέμα 5b).',
+            'Κάθε κανάλι δείχνει «Τύπος», «Τιμή», «Νομική βαθμίδα», «Προέλευση», «Συγκατάθεση», «Προσβάσιμο» και «Προτιμώμενο». Το «Έλεγχος κατόχου» σημαίνει κανάλι με ασαφή κάτοχο: αποφασίστε και, αν χρειάζεται, πατήστε «Μεταφορά» και επιλέξτε τον «Νέος κάτοχος».',
+            'Όταν προσθέτετε μια τιμή, το CRM ελέγχει σε ποιον ανήκει ήδη. Αν ανήκει στον οργανισμό, επιλέξτε την αντί γι\' αυτό ως προτιμώμενο κανάλι της σχέσης. Αν ανήκει σε άλλο πρόσωπο, είναι κοινό κανάλι και μένει στον οργανισμό. Αν ανήκει ήδη στο ίδιο πρόσωπο σε άλλη σχέση, επιβεβαιώστε «Διατήρηση ως προσωπικό κανάλι».',
+            'Ένας στόχος προσέγγισης πρέπει να μένει προσβάσιμος. Αν αφαιρέσετε το τελευταίο προσβάσιμο κανάλι, το CRM ρωτά αν θέλετε να το αφαιρέσετε παρ\' όλα αυτά και να ορίσετε την κατάσταση lead σε UNREACHABLE («Αφαίρεση και ορισμός UNREACHABLE»).',
+          ],
+        },
+        {
+          heading: 'Προσέγγιση και έγκριση πριν από την αποστολή',
+          steps: [
+            'Στην «Προσέγγιση» επιλέξτε τον «Παραλήπτης»: κανάλι του οργανισμού, κανάλι σχέσης ή προσωπικό κανάλι ενός υπευθύνου επικοινωνίας με ενεργή σχέση. Ο προεπιλεγμένος παραλήπτης είναι σημειωμένος. Αποκλεισμένα κανάλια, σχέσεις που έληξαν και πρόσωπα χωρίς ενεργή σχέση δεν προτείνονται. Το μήνυμα ανήκει πάντα στον οργανισμό.',
+            'Πατήστε «Φόρτωση προεπισκόπησης», ελέγξτε «Θέμα» και «Κείμενο» και πατήστε «Αποστολή email». Ένας οργανισμός σε «Σε ουρά» περνά σε «Έγινε επικοινωνία».',
+            'Έγκριση πριν από την αποστολή: κάθε αποστολή έχει «Νομική βαθμίδα» (Πράσινη, Πορτοκαλί ή Κόκκινη), την αυστηρότερη μεταξύ οργανισμού και καναλιού. Οι «Νομικές βαθμίδες που χρειάζονται έγκριση διαχειριστή πριν από την αποστολή» στις ρυθμίσεις ασφαλείας ορίζουν ποιες βαθμίδες χρειάζονται έγκριση (προεπιλογή: μόνο Κόκκινη). Για τέτοιον παραλήπτη εμφανίζεται πλαίσιο προειδοποίησης («Νομική βαθμίδα Κόκκινη: αποστολή μόνο μετά από έγκριση διαχειριστή.») και η «Αποστολή email» μένει ανενεργή.',
+            'Ένας διαχειριστής με το δικαίωμα crm:send_approve πατά «Έγκριση», γράφει αιτιολόγηση στο «Αιτιολόγηση (10 έως 500 χαρακτήρες)» (υποχρεωτικό) και επιβεβαιώνει. Μία έγκριση επιτρέπει ακριβώς μία αποστολή σε αυτόν τον παραλήπτη και λήγει μετά από 7 ημέρες· τότε η «Αποστολή email» ενεργοποιείται. Μπορείτε να εγκρίνετε τη δική σας αποστολή αν έχετε το δικαίωμα. Χωρίς αυτό, το πλαίσιο λέει ότι πρέπει πρώτα να την εγκρίνει διαχειριστής με αυτό το δικαίωμα.',
+            'Η βαθμίδα του οργανισμού αλλάζει με «Αλλαγή νομικής βαθμίδας», η βαθμίδα ενός μεμονωμένου καναλιού στη λίστα καναλιών. Αλλάξτε μια βαθμίδα μόνο με αιτιολόγηση και μετά από συμφωνία με τον υπεύθυνο της ομάδας.',
+          ],
+        },
+        {
+          heading: 'Αποκλεισμός / Opt-out',
+          steps: [
+            'Το αποτέλεσμα ενός opt-out εξαρτάται από τον κάτοχο του καναλιού. Μια διαγραφή από τη λίστα μέσω καναλιού του οργανισμού, ή το «Αποκλεισμός / Opt-out» στη σελίδα του οργανισμού, ορίζει τον οργανισμό σε «Οριστικό opt-out» και μπλοκάρει όλα τα κανάλια του: καμία προσέγγιση πια στο όνομα αυτής της εταιρείας, ούτε προς τους υπευθύνους επικοινωνίας της.',
+            'Μια διαγραφή από τη λίστα μέσω καναλιού σχέσης ή προσωπικού καναλιού μπλοκάρει το πρόσωπο: όλα τα προσωπικά κανάλια και τα κανάλια σχέσεών του μπλοκάρονται, το πρόσωπο δείχνει «Έχει προβάλει αντίρρηση» και δεν εμφανίζεται σε καμία λίστα παραληπτών. Οι οργανισμοί κρατούν την κατάσταση lead και τα δικά τους κανάλια.',
+            'Κανόνας ιδιοκτήτη: αν το πρόσωπο έχει ενεργή σχέση με τον ρόλο «Ιδιοκτήτης/τρια», η αντίρρηση μπλοκάρει και αυτόν τον οργανισμό («Οριστικό opt-out» και τα κανάλια του). Ο διακόπτης «Κανόνας ιδιοκτήτη σε αντίρρηση» στις ρυθμίσεις ασφαλείας είναι ενεργός από προεπιλογή· προστατεύει τις ατομικές επιχειρήσεις.',
+            'Αν κάποιος ζητήσει τηλεφωνικά ή αυτοπροσώπως να μην επικοινωνούμε πια μαζί του, ενεργήστε αμέσως: για την εταιρεία χρησιμοποιήστε το «Αποκλεισμός / Opt-out» με τον σωστό λόγο. Το admin δεν έχει ακόμη κουμπί για την αντίρρηση ενός μεμονωμένου προσώπου· ενημερώστε αμέσως τον υπεύθυνο της ομάδας.',
+          ],
+        },
+        {
+          heading: 'Λίστα ελέγχου και επαγγελματικές κάρτες',
+          steps: [
+            'Ανοίξτε τη «Λίστα ελέγχου» (/admin/crm/review). Έχει τέσσερις κατηγορίες: «Παλαιές περιπτώσεις» (εγγραφές από πριν από τη μετάβαση σε οργανισμούς), «Έλεγχος αντιστοίχισης καναλιών» (κανάλια με ασαφή κάτοχο ή τιμή που ανήκει ήδη σε κάποιον άλλο), «Σχέσεις χωρίς ρόλο» και «Πρόσωπα χωρίς όνομα ή επώνυμο». Κάθε καταχώριση συνδέεται με τον οργανισμό ή το πρόσωπο· κλείστε την με «Ολοκληρώθηκε» ή «Παράβλεψη». Οι υπολογιζόμενες καταχωρίσεις εξαφανίζονται μόνες τους μόλις διορθωθούν.',
+            'Μια επαγγελματική κάρτα που στέλνεται μέσω Telegram δημιουργεί ή ενημερώνει έναν οργανισμό με κατάσταση lead «Χρειάζεται έλεγχο». Η φωτογραφία της κάρτας βρίσκεται στις «Πηγές και αποδεικτικά». Ελέγξτε τα στοιχεία και τα κανάλια και πατήστε «Επιβεβαίωση κάρτας», ή «Απόρριψη (ιδιώτης)» για ιδιώτη.',
+            'Κανόνας κάρτας: αν η κάρτα δείχνει σταθερό τηλέφωνο και κινητό, το σταθερό μένει στον οργανισμό και το κινητό γίνεται κανάλι του προσώπου (σχέση). Κινητά χωρίς σταθερό μένουν στον οργανισμό, ακόμη κι αν η κάρτα έχει όνομα. Οι αριθμοί υπηρεσιών που αρχίζουν από 7 ή 8 μετρούν ως σταθερό. Το info@ και άλλες γραμματοθυρίδες λειτουργιών πηγαίνουν στον οργανισμό, ένα email που περιέχει το όνομα του προσώπου πηγαίνει στη σχέση.',
+            'Ό,τι είναι ασαφές μένει στον οργανισμό, σημειώνεται με «Έλεγχος κατόχου» και εμφανίζεται στον «Έλεγχος αντιστοίχισης καναλιών»· η σελίδα του οργανισμού δείχνει την ένδειξη μέχρι να αποφασίσετε. Μια κάρτα χωρίς όνομα προσώπου δημιουργεί μόνο κανάλια του οργανισμού. Ρόλος ορίζεται μόνο αν η κάρτα αναφέρει σαφή θέση· διαφορετικά η σχέση δείχνει «Λείπει ρόλος».',
+          ],
+        },
+        {
+          heading: 'Ρυθμίσεις ασφαλείας',
+          steps: [
+            'Ανοίξτε τις «Ρυθμίσεις ασφαλείας»: ο διακόπτης έκτακτης ανάγκης (kill switch) σταματά κάθε εξερχόμενη αποστολή, τα όρια αποστολής περιορίζουν τα email ανά 24 ώρες, ο «Κανόνας ιδιοκτήτη σε αντίρρηση» και οι «Νομικές βαθμίδες που χρειάζονται έγκριση διαχειριστή πριν από την αποστολή» ρυθμίζουν το opt-out και την έγκριση πριν από την αποστολή. Αλλάξτε τα μόνο μετά από συμφωνία με τον υπεύθυνο της ομάδας.',
+          ],
+        },
       ],
       notes: [
-        { kind: 'warning', text: 'Μια επαφή που έχει αποκλειστεί δεν πρέπει ποτέ να ξαναδεχτεί μήνυμα. Αν ο διακόπτης έκτακτης ανάγκης είναι ενεργός, κανένα μήνυμα δεν φεύγει από το σύστημα.' },
-        { kind: 'warning', text: 'Μην καταχωρείτε ιδιωτικά δεδομένα που δεν επιτρέπεται να κρατάτε. Καταγράφετε μόνο ό,τι χρειάζεται για την επαγγελματική επαφή.' },
+        { kind: 'warning', text: 'Σε έναν οργανισμό με «Οριστικό opt-out» και σε ένα πρόσωπο με «Έχει προβάλει αντίρρηση» δεν στέλνουμε ποτέ ξανά μήνυμα. Αν ο διακόπτης έκτακτης ανάγκης είναι ενεργός, κανένα μήνυμα δεν φεύγει από το σύστημα.' },
+        { kind: 'warning', text: 'Μην καταχωρείτε ιδιωτικά δεδομένα που δεν επιτρέπεται να κρατάτε. Καταγράφετε μόνο ό,τι χρειάζεται για την επαγγελματική σχέση.' },
+        { kind: 'tip', text: 'Παλιοί σελιδοδείκτες από πριν από τη μετάβαση σε οργανισμούς οδηγούν σε σελίδα σφάλματος. Ξεκινήστε από το «CRM» στην πλευρική στήλη.' },
       ],
     },
   },
 
   'crm-persons': {
     en: {
-      title: 'CRM: people and roles',
-      summary: 'Keep a natural person once, give them roles at organisations and link their contacts.',
-      intro: 'A contact is a business contact with channels and a state. A person is one natural human, stored once, even when that human appears in several contacts. The roles say what the person is at which organisation.',
+      title: 'CRM: people and relations',
+      summary: 'Keep a person once with name, salutation and birthday, link them to organisations through relations and keep their channels with the right owner.',
+      intro: 'A person is one natural human, stored once. A relation connects a person with an organisation: it has a period, a note, a set of roles and its own channels. Channels that belong to the person and not to one company are personal channels. Organisations, their lead status and outreach are explained in topic 5 "CRM: organisations and outreach".',
+      rules: [
+        'A channel belongs to exactly one owner: the organisation (info@, the official number), the relation (the company e-mail of the person at this organisation) or the person (private number or e-mail). Never enter the same value twice.',
+        'Reference, not copy: info@ of the company stays with the company. If it is the best way to reach the person, choose it as the "Preferred channel" of the relation instead of entering it again.',
+        'The name is built from first and last name: as soon as "First name" or "Last name" is filled, the system builds "Name" itself (first name, then last name) and the field is locked. Filling in the parts later replaces a free name; the CRM shows the old and the new name and asks you to confirm with "Replace name".',
+        'Roles have no dates. Only the relation has a period ("From", "Until"). Write the role history or an area into the "Note" of the relation.',
+        'Personal channels without a relation are allowed, but a person can only be written to through an active relation to an organisation.',
+        'Set a salutation only when it is known or confirmed, never guess it from the name.',
+      ],
       steps: [
-        'Open "CRM" and click "People" at the top of the contact list. The list shows the number, the name and the identifiers (e-mail addresses or phone numbers).',
-        'Search first, so you do not create a person twice: type at least 3 characters of the name, the e-mail address or the phone number and press Enter.',
-        'To add a person, click "Add person", fill in the name (optional) and at least one e-mail address or phone number, and click "Add person" again. An address is optional.',
-        'Open a person to see the identifiers and the roles. To add a role, click the field "Organisation" and type at least 2 characters of its name. Pick the right organisation from the list (city, category and number tell organisations with the same name apart), choose the role (for example owner, advisor or accountant) and click "Add role". The role list shows the name of the organisation. A person can have several roles at several organisations.',
-        'When someone leaves an organisation, click "End role". Today becomes the end date and the role stays in the history.',
-        'To change the name or the address, edit the fields on the person page and save. "Remove address" detaches the address from the person.',
-        'To connect a contact to a person, open the contact, click the field "Person", type at least 3 characters of the name, the e-mail address or the phone number, pick the person and click "Link person". From then on the contact shows "Linked person" with the name and a link to the person.',
+        'Open "CRM" and click "People" at the top of the list "Organisations" (/admin/crm/persons). The list shows the name, the badge "Opted out" and the number of "Active relations".',
+        'Search first, so you do not create a person twice: type at least 3 characters of the name, or an exact e-mail address or phone number, and click "Search".',
+      ],
+      sections: [
+        {
+          heading: 'Add a person',
+          steps: [
+            'Click "Add person". Fill in "First name" and "Last name" when you can tell them apart safely. "Name" is then built from them and locked (hint "Built from first and last name.").',
+            'If the parts cannot be told apart safely, for example on a business card in a foreign language, leave first and last name empty and type the full name into "Name" (free name).',
+            '"Salutation": choose Mr, Ms, Mx, Dr or "No salutation" only when it is known or confirmed; otherwise leave it at "— not set —".',
+            '"Birthday" is voluntary and personal. If you know only day and month, tick "Year unknown": the year field disappears, and only day and month are stored and shown. The birthday is shown only on the person page and never with an age.',
+            'A personal e-mail address, a phone number and an address are optional. Click "Add person". If a value already belongs to another person, the CRM says so and offers "Open that person".',
+          ],
+        },
+        {
+          heading: 'Change name and master data',
+          steps: [
+            'On the person page change the same fields under "Master data" and click "Save". If the person has a free name and you fill in first or last name, the CRM shows that the current name will be replaced by the new one; confirm with "Replace name". If you empty both parts again, "Name" becomes editable again and keeps the last built name.',
+            '"Remove address" detaches the address from the person.',
+          ],
+        },
+        {
+          heading: 'Relations to organisations',
+          steps: [
+            'Under "Relations to organisations" click the field "Organisation", type at least 2 characters of its name and pick the right one (city and category tell organisations with the same name apart). Tick the roles (none is allowed), set "From" if you know it, add a "Note" and click "Add relation".',
+            'You can also start on the organisation page: under "Contact persons" search the person (at least 3 characters), choose roles and a note and click "Add contact person". If the person does not exist yet, create them first under "People".',
+            'Each relation shows its "Period", its "Roles" and its "Note". Add a role with "Add role" and remove one with "Remove role …". A relation without a role is valid and shows "Role missing"; the review list also lists it under "Relations without role".',
+            'Use the "Note" for anything without a field: the role history ("until 2025 also IT") or an area ("Region West"). "Edit period, note and work location" changes these; the "Work location" is the "Organisation address" unless the person works somewhere else.',
+            'When someone leaves an organisation, click "End relation" and confirm. The relation ends today and stays in the history; its channels are no longer offered as recipients.',
+            'An area manager who looks after several branches has one relation with the role "Manager" to each branch, with the area in the note. A change of area manager across many branches is done by the tech team with a script, not in the admin: ask the team lead.',
+          ],
+        },
+        {
+          heading: 'Channels of a person',
+          steps: [
+            'A company e-mail or a work mobile that the person uses at one organisation goes into "Channels of this relation" of that relation. It is offered as a recipient only for this organisation.',
+            'A private number or e-mail that is the same for all their organisations goes into "Personal channels (valid for all relations)". These channels are allowed without a relation, but the person can only be written to through an active relation to an organisation.',
+            '"Preferred channel" of a relation: choose a channel of the relation, a personal channel of the person or a channel of the same organisation. A channel of another organisation, also of a head office, cannot be chosen.',
+            'If a value you add already belongs to the organisation, the CRM offers "Choose as preferred channel of the relation" instead of a copy. If it belongs to another person, it is a shared channel: keep it at the organisation. If it is already a channel of the same person in another relation, confirm "Keep as personal channel"; the value is then stored once and both relations can point to it.',
+          ],
+        },
       ],
       notes: [
-        { kind: 'warning', text: 'Link a contact only when you are sure it is the same human. If you suppress a linked contact ("Suppress / Opt-out"), the opt-out applies to the person and to every contact linked to them, and it cannot be undone in the admin.' },
-        { kind: 'warning', text: 'A person holds private data. Record only what is needed for the business contact and do not copy it into chats or tickets outside the team.' },
+        { kind: 'warning', text: 'An objection of a person cannot be undone in the admin. It blocks all personal and relation channels of the person; with the role "Owner" it also blocks the organisation (owner rule, topic 5).' },
+        { kind: 'warning', text: 'A person holds private data. Record only what is needed for the business relationship and do not copy it into chats or tickets outside the team. The birthday and the salutation are never used to find or merge people.' },
       ],
     },
     el: {
-      title: 'CRM: πρόσωπα και ρόλοι',
-      summary: 'Κρατήστε ένα φυσικό πρόσωπο μία φορά, δώστε του ρόλους σε οργανισμούς και συνδέστε τις επαφές του.',
-      intro: 'Μια επαφή είναι μια επαγγελματική επαφή με κανάλια και κατάσταση. Ένα πρόσωπο είναι ένας φυσικός άνθρωπος, που αποθηκεύεται μία φορά, ακόμη κι όταν εμφανίζεται σε περισσότερες επαφές. Οι ρόλοι δείχνουν τι είναι το πρόσωπο σε ποιον οργανισμό.',
+      title: 'CRM: πρόσωπα και σχέσεις',
+      summary: 'Κρατήστε ένα πρόσωπο μία φορά με ονοματεπώνυμο, προσφώνηση και γενέθλια, συνδέστε το με οργανισμούς μέσω σχέσεων και κρατήστε τα κανάλια του στον σωστό κάτοχο.',
+      intro: 'Ένα πρόσωπο είναι ένας φυσικός άνθρωπος, που αποθηκεύεται μία φορά. Μια σχέση συνδέει ένα πρόσωπο με έναν οργανισμό: έχει περίοδο, σημείωση, ένα σύνολο ρόλων και δικά της κανάλια. Τα κανάλια που ανήκουν στο πρόσωπο και όχι σε μία εταιρεία είναι προσωπικά κανάλια. Οι οργανισμοί, η κατάσταση lead και η προσέγγιση εξηγούνται στο θέμα 5 «CRM: οργανισμοί και προσέγγιση».',
+      rules: [
+        'Ένα κανάλι ανήκει σε ακριβώς έναν κάτοχο: στον οργανισμό (info@, ο επίσημος αριθμός), στη σχέση (το εταιρικό email του προσώπου σε αυτόν τον οργανισμό) ή στο πρόσωπο (ιδιωτικός αριθμός ή email). Μην καταχωρίζετε ποτέ την ίδια τιμή δύο φορές.',
+        'Παραπομπή, όχι αντίγραφο: το info@ της εταιρείας μένει στην εταιρεία. Αν είναι ο καλύτερος τρόπος να φτάσετε στο πρόσωπο, επιλέξτε το ως «Προτιμώμενο κανάλι» της σχέσης αντί να το καταχωρίσετε ξανά.',
+        'Το ονοματεπώνυμο σχηματίζεται από όνομα και επώνυμο: μόλις συμπληρωθεί το «Όνομα» ή το «Επώνυμο», το σύστημα σχηματίζει μόνο του το «Ονοματεπώνυμο» (πρώτα το όνομα, μετά το επώνυμο) και το πεδίο κλειδώνει. Αν συμπληρώσετε τα μέρη αργότερα, αντικαθιστούν ένα ελεύθερο ονοματεπώνυμο· το CRM δείχνει το παλιό και το νέο και ζητά επιβεβαίωση με «Αντικατάσταση ονόματος».',
+        'Οι ρόλοι δεν έχουν ημερομηνίες. Περίοδο («Από», «Έως») έχει μόνο η σχέση. Γράψτε το ιστορικό ρόλων ή μια περιοχή στη «Σημείωση» της σχέσης.',
+        'Προσωπικά κανάλια χωρίς σχέση επιτρέπονται, αλλά σε ένα πρόσωπο μπορούμε να γράψουμε μόνο μέσω ενεργής σχέσης με οργανισμό.',
+        'Ορίστε προσφώνηση μόνο όταν είναι γνωστή ή επιβεβαιωμένη, ποτέ με εικασία από το όνομα.',
+      ],
       steps: [
-        'Ανοίξτε το «CRM» και πατήστε «Πρόσωπα» στο πάνω μέρος της λίστας επαφών. Η λίστα δείχνει τον αριθμό, το όνομα και τα αναγνωριστικά (διευθύνσεις email ή αριθμούς τηλεφώνου).',
-        'Αναζητήστε πρώτα, ώστε να μη δημιουργήσετε το ίδιο πρόσωπο δύο φορές: πληκτρολογήστε τουλάχιστον 3 χαρακτήρες από το όνομα, το email ή το τηλέφωνο και πατήστε Enter.',
-        'Για να προσθέσετε πρόσωπο, πατήστε «Προσθήκη προσώπου», συμπληρώστε το όνομα (προαιρετικό) και τουλάχιστον ένα email ή τηλέφωνο και πατήστε ξανά «Προσθήκη προσώπου». Η διεύθυνση είναι προαιρετική.',
-        'Ανοίξτε ένα πρόσωπο για να δείτε τα αναγνωριστικά και τους ρόλους. Για να προσθέσετε ρόλο, πατήστε το πεδίο «Οργανισμός» και πληκτρολογήστε τουλάχιστον 2 χαρακτήρες από το όνομά του. Επιλέξτε τον σωστό οργανισμό από τη λίστα (η πόλη, η κατηγορία και ο αριθμός ξεχωρίζουν οργανισμούς με το ίδιο όνομα), επιλέξτε τον ρόλο (για παράδειγμα owner, advisor ή accountant) και πατήστε «Προσθήκη ρόλου». Η λίστα ρόλων δείχνει το όνομα του οργανισμού. Ένα πρόσωπο μπορεί να έχει πολλούς ρόλους σε πολλούς οργανισμούς.',
-        'Όταν κάποιος φεύγει από έναν οργανισμό, πατήστε «Λήξη ρόλου». Η σημερινή ημερομηνία γίνεται ημερομηνία λήξης και ο ρόλος μένει στο ιστορικό.',
-        'Για να αλλάξετε το όνομα ή τη διεύθυνση, επεξεργαστείτε τα πεδία στη σελίδα του προσώπου και αποθηκεύστε. Η «Αφαίρεση διεύθυνσης» αποσυνδέει τη διεύθυνση από το πρόσωπο.',
-        'Για να συνδέσετε μια επαφή με πρόσωπο, ανοίξτε την επαφή, πατήστε το πεδίο «Πρόσωπο», πληκτρολογήστε τουλάχιστον 3 χαρακτήρες από το όνομα, το email ή το τηλέφωνο, επιλέξτε το πρόσωπο και πατήστε «Σύνδεση προσώπου». Από εκεί και πέρα η επαφή δείχνει «Συνδεδεμένο πρόσωπο» με το όνομα και σύνδεσμο προς το πρόσωπο.',
+        'Ανοίξτε το «CRM» και πατήστε «Πρόσωπα» στο πάνω μέρος της λίστας «Οργανισμοί» (/admin/crm/persons). Η λίστα δείχνει το ονοματεπώνυμο, την ένδειξη «Έχει προβάλει αντίρρηση» και τον αριθμό «Ενεργές σχέσεις».',
+        'Αναζητήστε πρώτα, ώστε να μη δημιουργήσετε το ίδιο πρόσωπο δύο φορές: πληκτρολογήστε τουλάχιστον 3 χαρακτήρες από το ονοματεπώνυμο, ή ένα ακριβές email ή τηλέφωνο, και πατήστε «Αναζήτηση».',
+      ],
+      sections: [
+        {
+          heading: 'Προσθήκη προσώπου',
+          steps: [
+            'Πατήστε «Προσθήκη προσώπου». Συμπληρώστε «Όνομα» και «Επώνυμο» όταν μπορείτε να τα ξεχωρίσετε με ασφάλεια. Το «Ονοματεπώνυμο» σχηματίζεται τότε από αυτά και κλειδώνει (ένδειξη «Σχηματίζεται από όνομα και επώνυμο.»).',
+            'Αν τα μέρη δεν διακρίνονται με ασφάλεια, π.χ. σε επαγγελματική κάρτα σε ξένη γλώσσα, αφήστε όνομα και επώνυμο κενά και πληκτρολογήστε ολόκληρο το όνομα στο «Ονοματεπώνυμο» (ελεύθερο ονοματεπώνυμο).',
+            '«Προσφώνηση»: επιλέξτε Κος, Κα, Mx (ουδέτερη), Δρ ή «Χωρίς προσφώνηση» μόνο όταν είναι γνωστή ή επιβεβαιωμένη· διαφορετικά αφήστε την στο «— δεν έχει οριστεί —».',
+            'Τα «Γενέθλια» είναι προαιρετικό και προσωπικό στοιχείο. Αν ξέρετε μόνο ημέρα και μήνα, επιλέξτε «Άγνωστο έτος»: το πεδίο του έτους εξαφανίζεται και αποθηκεύονται και εμφανίζονται μόνο ημέρα και μήνας. Τα γενέθλια εμφανίζονται μόνο στη σελίδα του προσώπου και ποτέ με ηλικία.',
+            'Προσωπικό email, αριθμός τηλεφώνου και διεύθυνση είναι προαιρετικά. Πατήστε «Προσθήκη προσώπου». Αν μια τιμή ανήκει ήδη σε άλλο πρόσωπο, το CRM το λέει και προσφέρει «Άνοιγμα αυτού του προσώπου».',
+          ],
+        },
+        {
+          heading: 'Αλλαγή ονόματος και βασικών στοιχείων',
+          steps: [
+            'Στη σελίδα του προσώπου αλλάζετε τα ίδια πεδία στα «Βασικά στοιχεία» και πατάτε «Αποθήκευση». Αν το πρόσωπο έχει ελεύθερο ονοματεπώνυμο και συμπληρώσετε όνομα ή επώνυμο, το CRM δείχνει ότι το τρέχον ονοματεπώνυμο θα αντικατασταθεί από το νέο· επιβεβαιώστε με «Αντικατάσταση ονόματος». Αν αδειάσετε ξανά και τα δύο μέρη, το «Ονοματεπώνυμο» γίνεται ξανά επεξεργάσιμο και κρατά το τελευταίο σχηματισμένο όνομα.',
+            'Η «Αφαίρεση διεύθυνσης» αποσυνδέει τη διεύθυνση από το πρόσωπο.',
+          ],
+        },
+        {
+          heading: 'Σχέσεις με οργανισμούς',
+          steps: [
+            'Στις «Σχέσεις με οργανισμούς» πατήστε το πεδίο «Οργανισμός», πληκτρολογήστε τουλάχιστον 2 χαρακτήρες από το όνομά του και επιλέξτε τον σωστό (η πόλη και η κατηγορία ξεχωρίζουν οργανισμούς με το ίδιο όνομα). Επιλέξτε τους ρόλους (επιτρέπεται και κανένας), ορίστε το «Από» αν το ξέρετε, προσθέστε «Σημείωση» και πατήστε «Προσθήκη σχέσης».',
+            'Μπορείτε να ξεκινήσετε και από τη σελίδα του οργανισμού: στους «Υπεύθυνοι επικοινωνίας» αναζητήστε το πρόσωπο (τουλάχιστον 3 χαρακτήρες), επιλέξτε ρόλους και σημείωση και πατήστε «Προσθήκη υπευθύνου επικοινωνίας». Αν το πρόσωπο δεν υπάρχει ακόμη, δημιουργήστε το πρώτα στα «Πρόσωπα».',
+            'Κάθε σχέση δείχνει την «Περίοδος», τους «Ρόλοι» και τη «Σημείωση». Προσθέστε ρόλο με «Προσθήκη ρόλου» και αφαιρέστε με «Αφαίρεση ρόλου …». Μια σχέση χωρίς ρόλο είναι έγκυρη και δείχνει «Λείπει ρόλος»· η λίστα ελέγχου τη δείχνει επίσης στις «Σχέσεις χωρίς ρόλο».',
+            'Χρησιμοποιήστε τη «Σημείωση» για ό,τι δεν έχει δικό του πεδίο: το ιστορικό ρόλων («έως 2025 και IT») ή μια περιοχή («Περιοχή Δύσης»). Η «Επεξεργασία περιόδου, σημείωσης και τόπου εργασίας» τα αλλάζει· ο «Τόπος εργασίας» είναι η «Διεύθυνση του οργανισμού», εκτός αν το πρόσωπο εργάζεται αλλού.',
+            'Όταν κάποιος φεύγει από έναν οργανισμό, πατήστε «Λήξη σχέσης» και επιβεβαιώστε. Η σχέση λήγει σήμερα και μένει στο ιστορικό· τα κανάλια της δεν προτείνονται πλέον ως παραλήπτες.',
+            'Ένας υπεύθυνος περιοχής που παρακολουθεί πολλά υποκαταστήματα έχει μία σχέση με τον ρόλο «Διευθυντής/τρια» με κάθε υποκατάστημα, με την περιοχή στη σημείωση. Η αλλαγή υπευθύνου περιοχής για πολλά υποκαταστήματα γίνεται από την τεχνική ομάδα με σενάριο (script), όχι στο admin: ρωτήστε τον υπεύθυνο της ομάδας.',
+          ],
+        },
+        {
+          heading: 'Κανάλια ενός προσώπου',
+          steps: [
+            'Ένα εταιρικό email ή ένα κινητό εργασίας που το πρόσωπο χρησιμοποιεί σε έναν οργανισμό καταχωρίζεται στα «Κανάλια αυτής της σχέσης» εκείνης της σχέσης. Προτείνεται ως παραλήπτης μόνο για αυτόν τον οργανισμό.',
+            'Ένας ιδιωτικός αριθμός ή ένα email που είναι ίδιο για όλους τους οργανισμούς του καταχωρίζεται στα «Προσωπικά κανάλια (ισχύουν για όλες τις σχέσεις)». Αυτά τα κανάλια επιτρέπονται χωρίς σχέση, αλλά στο πρόσωπο μπορούμε να γράψουμε μόνο μέσω ενεργής σχέσης με οργανισμό.',
+            '«Προτιμώμενο κανάλι» μιας σχέσης: επιλέξτε κανάλι της σχέσης, προσωπικό κανάλι του προσώπου ή κανάλι του ίδιου οργανισμού. Κανάλι άλλου οργανισμού, ακόμη και του κεντρικού, δεν μπορεί να επιλεγεί.',
+            'Αν μια τιμή που προσθέτετε ανήκει ήδη στον οργανισμό, το CRM προσφέρει «Επιλογή ως προτιμώμενο κανάλι της σχέσης» αντί για αντίγραφο. Αν ανήκει σε άλλο πρόσωπο, είναι κοινό κανάλι: κρατήστε την στον οργανισμό. Αν είναι ήδη κανάλι του ίδιου προσώπου σε άλλη σχέση, επιβεβαιώστε «Διατήρηση ως προσωπικό κανάλι»· η τιμή αποθηκεύεται τότε μία φορά και και οι δύο σχέσεις μπορούν να παραπέμπουν σε αυτήν.',
+          ],
+        },
       ],
       notes: [
-        { kind: 'warning', text: 'Συνδέστε μια επαφή μόνο όταν είστε βέβαιοι ότι πρόκειται για τον ίδιο άνθρωπο. Αν αποκλείσετε μια συνδεδεμένη επαφή («Αποκλεισμός / Opt-out»), το opt-out ισχύει για το πρόσωπο και για κάθε επαφή που είναι συνδεδεμένη με αυτό και δεν αναιρείται από το admin.' },
-        { kind: 'warning', text: 'Ένα πρόσωπο περιέχει προσωπικά δεδομένα. Καταγράφετε μόνο ό,τι χρειάζεται για την επαγγελματική επαφή και μην τα αντιγράφετε σε συνομιλίες ή tickets εκτός ομάδας.' },
+        { kind: 'warning', text: 'Η αντίρρηση ενός προσώπου δεν αναιρείται από το admin. Μπλοκάρει όλα τα προσωπικά κανάλια και τα κανάλια σχέσεων του προσώπου· με τον ρόλο «Ιδιοκτήτης/τρια» μπλοκάρει και τον οργανισμό (κανόνας ιδιοκτήτη, θέμα 5).' },
+        { kind: 'warning', text: 'Ένα πρόσωπο περιέχει προσωπικά δεδομένα. Καταγράφετε μόνο ό,τι χρειάζεται για την επαγγελματική σχέση και μην τα αντιγράφετε σε συνομιλίες ή tickets εκτός ομάδας. Τα γενέθλια και η προσφώνηση δεν χρησιμοποιούνται ποτέ για εύρεση ή συγχώνευση προσώπων.' },
       ],
     },
   },

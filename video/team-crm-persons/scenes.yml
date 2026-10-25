@@ -1,14 +1,15 @@
-# Team video 5b "CRM: people and roles" (F8960 Team-SOPs & Admin-Hilfe, topic 5b). Internal: channel "pundo Team", unlisted.
-# EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles only (subtitle.el -> out/team-crm-persons.el.srt).
-# DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3). Follows the SOP "crm-persons" in
-# src/lib/system-admin-help-content.ts. Adds to video 5 (CRM contacts): people (natural persons), roles at organisations, linking a contact.
-# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker "Team Demo").
-# The video CREATES the person "Team Demo Anna" (prepare_team.py deletes her again), adds a role to the seeded person "Team Demo Petros"
-# at "Team Demo Bakery" and ends it, and links the demo contact "Team Demo Contact" to Petros (prepare_team.py resets both).
-# NOTHING is sent, NOTHING is suppressed (the Suppress button is only hovered). Person/contact lists hold real people of the prod copy:
-# every table row without "Team Demo" is blurred (armMask).
-# Address bar: every scene shows exactly one page; ids in window_path (person 9, contact 7413) are checked by record.mjs against prepare_team.py.
-# UI terms in quotes match src/lib/system-admin-translations.ts (EN).
+# Team video 5b "CRM: people and relations" (F8960 Team-SOPs & Admin-Hilfe, topic 5b "crm-persons"; re-recorded after the F7600
+# CRM-Backbone org cut, AC 48). Internal: channel "pundo Team", unlisted. EN voice (narration.en) + burnt-in EN subtitles; EL = subtitles
+# only (subtitle.el -> out/team-crm-persons.el.srt). DRAFT (EN script awaits approval by Bernhard, EL awaits a native-speaker read: F8960 O3).
+# Follows the SOP "crm-persons" in src/lib/system-admin-help-content.ts (rules box, sections "Add a person", "Change name and master data",
+# "Relations to organisations", "Channels of a person"). Organisations, lead status, outreach and opt-out: video 5.
+# Recording: ONLY test instance 3500/8500 (strict mode), admin login via API, demo data from ../team-common/prepare_team.py (marker
+# "Team Demo"). The video CREATES the person "Anna Team Demo" (prepare_team.py deletes her again), replaces the free name of "Team Demo
+# Nikos" by first and last name, adds a relation of Petros to the accounting office (no role, then "Advisor", then ended) and makes the
+# info address of the bakery the preferred channel of his relation (prepare_team.py resets all of it). NOTHING is sent or suppressed.
+# The people list holds real people of the test copy: every row without "Team Demo" is blurred (armMask).
+# Address bar: every scene shows exactly one page; ids in window_path (person 9 Petros, person 68 Nikos) are checked by record.mjs.
+# UI terms in quotes match src/lib/system-admin-translations.ts (EN in "...", EL in «...»).
 
 meta:
   slug: team-crm-persons
@@ -16,16 +17,16 @@ meta:
   voice_langs: [en]
   subtitle_langs: [el]
   title:
-    en: "CRM: people and roles"
-    el: "CRM: πρόσωπα και ρόλοι"
+    en: "CRM: people and relations"
+    el: "CRM: πρόσωπα και σχέσεις"
   url:
     en: "pundo team · admin help"
     el: "pundo team · βοήθεια admin"
   next_video:
     en: "More help: Help in the admin sidebar"
     el: "Περισσότερη βοήθεια: «Βοήθεια» στο admin"
-  thumbnail_scene: roles
-  target_duration_s: 150
+  thumbnail_scene: relations
+  target_duration_s: 220
   window_path:
     en: "localhost:3500/admin/crm/persons"
     el: "localhost:3500/admin/crm/persons"
@@ -34,126 +35,142 @@ scenes:
   - id: intro
     branding: intro
 
-  - id: open
-    shot: 'CRM contact list (non-demo rows blurred): pointer over the table, then on the link "People" at the top'
-    chapter: { en: "Contacts and people" }
-    window_path: { en: "localhost:3500/admin/crm/contacts" }
-    callout: { en: "Admin · CRM" }
-    narration:
-      en: >-
-        Welcome back.
-        This short video adds the people part of the CRM.
-        A contact is a business contact, with channels and a state.
-        A person is one natural human, stored once, even when the same human appears in several contacts.
-        You reach the people through the link "People", at the top of the contact list.
-    subtitle:
-      el:
-        - "Καλωσορίσατε ξανά."
-        - "Αυτό το σύντομο βίντεο προσθέτει το κομμάτι των προσώπων στο CRM."
-        - "Μια επαφή είναι μια επαγγελματική επαφή, με κανάλια και κατάσταση."
-        - "Ένα πρόσωπο είναι ένας φυσικός άνθρωπος, που αποθηκεύεται μία φορά, ακόμη κι όταν ο ίδιος άνθρωπος εμφανίζεται σε περισσότερες επαφές."
-        - "Στα πρόσωπα φτάνετε από τον σύνδεσμο «Πρόσωπα», στο πάνω μέρος της λίστας επαφών."
-
-  - id: list
-    shot: 'people list (non-demo rows blurred): type "Team Demo Petros" into the search, Enter -> one row; pointer on the name'
-    chapter: { en: "Search first" }
+  - id: people
+    shot: 'people list (non-demo rows blurred): pointer over the columns; search "Team Demo" -> Petros, Nikos, Eleni ("Opted out")'
+    chapter: { en: "People" }
     window_path: { en: "localhost:3500/admin/crm/persons" }
     callout: { en: "CRM · People" }
     narration:
       en: >-
-        This is the list of people.
-        It shows the number, the name, and the identifiers, which are e-mail addresses or phone numbers.
-        Always search first, so that you do not create a person twice.
-        Type at least three characters of the name, the e-mail address or the phone number, and press Enter.
-        Rows of real people are blurred here.
-        When you find the person, click the name to open it.
+        Welcome back.
+        This video shows people and their relations to organisations.
+        A person is one natural human, stored once.
+        The list shows the name, the badge "Opted out" and the number of active relations.
+        Search first: type at least three characters of the name, or an exact email address or phone number, and click "Search".
+        Real rows are blurred here.
     subtitle:
       el:
-        - "Αυτή είναι η λίστα των προσώπων."
-        - "Δείχνει τον αριθμό, το όνομα και τα αναγνωριστικά, δηλαδή διευθύνσεις email ή αριθμούς τηλεφώνου."
-        - "Αναζητήστε πάντα πρώτα, ώστε να μη δημιουργήσετε το ίδιο πρόσωπο δύο φορές."
-        - "Πληκτρολογήστε τουλάχιστον τρεις χαρακτήρες από το όνομα, το email ή το τηλέφωνο και πατήστε Enter."
-        - "Οι γραμμές πραγματικών ανθρώπων είναι εδώ θολές."
-        - "Όταν βρείτε το πρόσωπο, πατήστε το όνομα για να το ανοίξετε."
+        - "Καλωσορίσατε ξανά."
+        - "Αυτό το βίντεο δείχνει τα πρόσωπα και τις σχέσεις τους με οργανισμούς."
+        - "Ένα πρόσωπο είναι ένας φυσικός άνθρωπος, που αποθηκεύεται μία φορά."
+        - "Η λίστα δείχνει το ονοματεπώνυμο, την ένδειξη «Έχει προβάλει αντίρρηση» και τον αριθμό των «Ενεργές σχέσεις»."
+        - "Αναζητήστε πρώτα: πληκτρολογήστε τουλάχιστον τρεις χαρακτήρες του ονόματος ή ένα ακριβές email ή τηλέφωνο και πατήστε «Αναζήτηση»."
+        - "Οι πραγματικές γραμμές είναι εδώ θολές."
 
   - id: create
-    shot: 'new person form: name, e-mail typed (address skipped); click "Add person"'
+    shot: 'new person form: "First name" Anna, "Last name" Team Demo -> "Name" built and locked; "Salutation" Ms; "Birthday" 14 March with "Year unknown"; personal email; "Add person"'
     chapter: { en: "Add a person" }
     window_path: { en: "localhost:3500/admin/crm/persons/new" }
     callout: { en: "CRM · New person" }
     narration:
       en: >-
-        To add a person, click "Add person" in the list.
-        Type the name, which is optional.
-        Then give at least one e-mail address or phone number, because the button stays off without one.
-        The address is optional, and we skip it here.
+        To add a person, click "Add person".
+        If you can tell the parts apart safely, fill in the first name and the last name.
+        The name is then built from them, and the field is locked.
+        Choose a salutation only when it is known or confirmed, never guess it from the name.
+        The birthday is voluntary and personal: with "Year unknown", only day and month are stored.
+        A personal email address is optional.
         Click "Add person".
-        The person is saved, and the page of the new person opens.
     subtitle:
       el:
-        - "Για να προσθέσετε πρόσωπο, πατήστε «Προσθήκη προσώπου» στη λίστα."
-        - "Πληκτρολογήστε το όνομα, που είναι προαιρετικό."
-        - "Έπειτα δώστε τουλάχιστον μία διεύθυνση email ή έναν αριθμό τηλεφώνου, γιατί χωρίς αυτά το κουμπί μένει ανενεργό."
-        - "Η διεύθυνση είναι προαιρετική και την παραλείπουμε εδώ."
+        - "Για να προσθέσετε πρόσωπο, πατήστε «Προσθήκη προσώπου»."
+        - "Αν ξεχωρίζετε με ασφάλεια τα μέρη, συμπληρώστε «Όνομα» και «Επώνυμο»."
+        - "Το «Ονοματεπώνυμο» σχηματίζεται τότε από αυτά και το πεδίο κλειδώνει."
+        - "Ορίστε «Προσφώνηση» μόνο όταν είναι γνωστή ή επιβεβαιωμένη, ποτέ με εικασία από το όνομα."
+        - "Τα «Γενέθλια» είναι προαιρετικό και προσωπικό στοιχείο: με το «Άγνωστο έτος» αποθηκεύονται μόνο ημέρα και μήνας."
+        - "Ένα προσωπικό email είναι προαιρετικό."
         - "Πατήστε «Προσθήκη προσώπου»."
-        - "Το πρόσωπο αποθηκεύεται και ανοίγει η σελίδα του νέου προσώπου."
 
-  - id: roles
-    shot: 'page of the seeded person: identifiers, then the roles box: search the organisation by name ("Team Demo"), pick it, role "owner", "Add role", then "End role"'
-    chapter: { en: "Roles" }
-    window_path: { en: "localhost:3500/admin/crm/persons/9" }
-    callout: { en: "CRM · Roles" }
+  - id: name
+    shot: 'page of "Team Demo Nikos" (free name): "Master data", type first and last name -> replace notice; "Save" -> dialog "Replace name" -> h1 "Nikos Team Demo"'
+    chapter: { en: "Name built or free" }
+    window_path: { en: "localhost:3500/admin/crm/persons/68" }
+    callout: { en: "CRM · Name" }
     narration:
       en: >-
-        Open a person to see the identifiers and the roles.
-        A role says what the person is at an organisation.
-        Click the field "Organisation" and type a part of the name, for example "Team Demo".
-        The list shows the matching organisations, with name, city and category.
-        Click the right one, then choose the role, for example "owner", and click "Add role".
-        The role list now shows the name of the organisation.
-        A person can have several roles at several organisations.
-        When someone leaves, click "End role".
-        Today becomes the end date, and the role stays in the history.
+        This person has a free name, as it often comes from a business card in a foreign language.
+        If the parts cannot be told apart safely, leave first and last name empty and keep the free name.
+        Here we know them, so we fill in both under "Master data".
+        A hint says that the current name will be replaced.
+        After "Save", a dialog asks again, and we confirm with "Replace name".
+        The heading shows the built name, and the field "Name" is locked.
     subtitle:
       el:
-        - "Ανοίξτε ένα πρόσωπο για να δείτε τα αναγνωριστικά και τους ρόλους."
-        - "Ένας ρόλος δείχνει τι είναι το πρόσωπο σε έναν οργανισμό."
-        - "Πατήστε το πεδίο «Οργανισμός» και πληκτρολογήστε μέρος του ονόματος, για παράδειγμα «Team Demo»."
-        - "Η λίστα δείχνει τους οργανισμούς που ταιριάζουν, με όνομα, πόλη και κατηγορία."
-        - "Πατήστε τον σωστό, έπειτα επιλέξτε τον ρόλο, για παράδειγμα «owner», και πατήστε «Προσθήκη ρόλου»."
-        - "Η λίστα ρόλων δείχνει πλέον το όνομα του οργανισμού."
-        - "Ένα πρόσωπο μπορεί να έχει πολλούς ρόλους σε πολλούς οργανισμούς."
-        - "Όταν κάποιος φεύγει, πατήστε «Λήξη ρόλου»."
-        - "Η σημερινή ημερομηνία γίνεται ημερομηνία λήξης και ο ρόλος μένει στο ιστορικό."
+        - "Αυτό το πρόσωπο έχει ελεύθερο ονοματεπώνυμο, όπως συχνά προκύπτει από επαγγελματική κάρτα σε ξένη γλώσσα."
+        - "Αν τα μέρη δεν ξεχωρίζουν με ασφάλεια, αφήστε όνομα και επώνυμο κενά και κρατήστε το ελεύθερο ονοματεπώνυμο."
+        - "Εδώ τα γνωρίζουμε, οπότε συμπληρώνουμε και τα δύο στα «Βασικά στοιχεία»."
+        - "Μια υπόδειξη λέει ότι το τρέχον ονοματεπώνυμο θα αντικατασταθεί."
+        - "Μετά την «Αποθήκευση» ένας διάλογος ρωτά ξανά και επιβεβαιώνουμε με «Αντικατάσταση ονόματος»."
+        - "Ο τίτλος δείχνει το σχηματισμένο ονοματεπώνυμο και το πεδίο «Ονοματεπώνυμο» είναι κλειδωμένο."
 
-  - id: link
-    shot: 'contact page of the demo contact: field "Person", search "Team Demo", pick the person, "Link person" -> "Linked person: <name>"; pointer on "Suppress / Opt-out" (not clicked); sidebar Help'
-    chapter: { en: "Link a contact" }
-    window_path: { en: "localhost:3500/admin/crm/contacts/7413" }
-    callout: { en: "CRM · Link person" }
+  - id: relations
+    shot: 'page of "Petros Team Demo": salutation + birthday "14 March"; two relations "Manager" with note "Region West"; add relation to the accounting office without role -> "Role missing"; "Add role" Advisor; "End relation" -> "Ended"'
+    chapter: { en: "Relations, roles and notes" }
+    window_path: { en: "localhost:3500/admin/crm/persons/9" }
+    callout: { en: "CRM · Relations" }
     narration:
       en: >-
-        Now back to a contact.
-        Under the actions you find the field "Person".
-        Type a part of the name, the e-mail address or the phone number of the person, for example "Team Demo".
-        Click the person in the list, and click "Link person".
-        The contact now shows the linked person, with the name and a link to it.
-        Be careful: link a contact only if you are sure it is the same human.
-        If you suppress a linked contact, the opt-out applies to the person and to every contact of that person.
-        That is all for people.
-        More help is on the Help page in the sidebar.
+        Petros has a salutation and a birthday without a year, shown only on this page.
+        A relation connects him with an organisation.
+        He is an area manager: one relation with the role "Manager" to the head office, one to the branch, and the area in the note.
+        Roles have no dates: only the relation has a period, and the role history goes into the note.
+        Now we add a relation: search the organisation, here the accounting office, and leave the roles empty.
+        The new relation shows "Role missing", and we add the role "Advisor".
+        When someone leaves, "End relation" ends it today, and it stays in the history.
+    subtitle:
+      el:
+        - "Ο Petros έχει προσφώνηση και γενέθλια χωρίς έτος, που εμφανίζονται μόνο σε αυτή τη σελίδα."
+        - "Μια σχέση τον συνδέει με έναν οργανισμό."
+        - "Είναι υπεύθυνος περιοχής: μία σχέση με ρόλο «Διευθυντής/τρια» με το κεντρικό, μία με το υποκατάστημα και η περιοχή στη «Σημείωση»."
+        - "Οι ρόλοι δεν έχουν ημερομηνίες: μόνο η σχέση έχει «Περίοδος» και το ιστορικό ρόλων μπαίνει στη σημείωση."
+        - "Τώρα προσθέτουμε σχέση: αναζητούμε τον οργανισμό, εδώ το λογιστικό γραφείο, και αφήνουμε τους ρόλους κενούς."
+        - "Η νέα σχέση δείχνει «Λείπει ρόλος» και προσθέτουμε τον ρόλο «Σύμβουλος»."
+        - "Όταν κάποιος φεύγει, η «Λήξη σχέσης» τη λήγει σήμερα και μένει στο ιστορικό."
+
+  - id: channels
+    shot: 'same page: relation channels of the bakery relation, then "Personal channels (valid for all relations)"; add info.bakery@ at the relation -> hint, "Choose as preferred channel of the relation" -> "Preferred channel" shows the organisation channel'
+    chapter: { en: "Channels: owner and reference" }
+    window_path: { en: "localhost:3500/admin/crm/persons/9" }
+    callout: { en: "CRM · Channels of a person" }
+    narration:
+      en: >-
+        Every channel has exactly one owner.
+        The company email that Petros uses at the bakery belongs to this relation.
+        His private number is the same for all his organisations, so it is a personal channel.
+        Personal channels are allowed without a relation, but a person can only be written to through an active relation.
+        Now we try to enter the info address of the bakery at his relation.
+        The CRM refuses a copy, because the value belongs to the organisation, and offers "Choose as preferred channel of the relation".
+        The relation now points to the channel of the organisation: a reference, not a copy.
+    subtitle:
+      el:
+        - "Κάθε κανάλι έχει ακριβώς έναν κάτοχο."
+        - "Το εταιρικό email που χρησιμοποιεί ο Petros στον φούρνο ανήκει σε αυτή τη σχέση («Κανάλια αυτής της σχέσης»)."
+        - "Ο ιδιωτικός του αριθμός είναι ο ίδιος για όλους τους οργανισμούς του, άρα είναι προσωπικό κανάλι."
+        - "Τα προσωπικά κανάλια επιτρέπονται χωρίς σχέση, αλλά σε ένα πρόσωπο γράφουμε μόνο μέσω ενεργής σχέσης."
+        - "Τώρα δοκιμάζουμε να καταχωρίσουμε τη διεύθυνση info του φούρνου στη σχέση του."
+        - "Το CRM αρνείται το αντίγραφο, επειδή η τιμή ανήκει στον οργανισμό, και προτείνει «Επιλογή ως προτιμώμενο κανάλι της σχέσης»."
+        - "Η σχέση δείχνει τώρα στο κανάλι του οργανισμού: παραπομπή, όχι αντίγραφο."
+
+  - id: rules
+    shot: 'help page of topic 5b: box "Rules that are easy to forget", pointer over the rules; sidebar Help'
+    chapter: { en: "Rules that are easy to forget" }
+    window_path: { en: "localhost:3500/admin/help/crm-persons" }
+    callout: { en: "Help · CRM people" }
+    narration:
+      en: >-
+        The written guide starts with the box "Rules that are easy to forget".
+        A channel belongs to exactly one owner, a reference beats a copy, and the name is built from first and last name.
+        A head office and its branches share nothing: no channels, no opt-out.
+        A change of area manager across many branches is done by the tech team with a script, not in the admin.
+        The full guide is under Help in the sidebar.
         Thanks for watching.
     subtitle:
       el:
-        - "Τώρα πίσω σε μια επαφή."
-        - "Κάτω από τις ενέργειες βρίσκετε το πεδίο «Πρόσωπο»."
-        - "Πληκτρολογήστε μέρος του ονόματος, το email ή το τηλέφωνο του προσώπου, για παράδειγμα «Team Demo»."
-        - "Πατήστε το πρόσωπο στη λίστα και πατήστε «Σύνδεση προσώπου»."
-        - "Η επαφή δείχνει πλέον το συνδεδεμένο πρόσωπο, με το όνομα και σύνδεσμο προς αυτό."
-        - "Προσοχή: συνδέστε μια επαφή μόνο αν είστε βέβαιοι ότι είναι ο ίδιος άνθρωπος."
-        - "Αν αποκλείσετε μια συνδεδεμένη επαφή, το opt-out ισχύει για το πρόσωπο και για κάθε επαφή αυτού του προσώπου."
-        - "Αυτά ήταν όλα για τα πρόσωπα."
-        - "Περισσότερη βοήθεια υπάρχει στη σελίδα «Βοήθεια» της πλευρικής στήλης."
+        - "Ο γραπτός οδηγός ξεκινά με το πλαίσιο «Κανόνες που ξεχνιούνται εύκολα»."
+        - "Ένα κανάλι ανήκει σε ακριβώς έναν κάτοχο, η παραπομπή είναι καλύτερη από το αντίγραφο και το ονοματεπώνυμο σχηματίζεται από όνομα και επώνυμο."
+        - "Ένα κεντρικό και τα υποκαταστήματά του δεν μοιράζονται τίποτα: ούτε κανάλια ούτε opt-out."
+        - "Η αλλαγή υπευθύνου περιοχής σε πολλά υποκαταστήματα γίνεται από την τεχνική ομάδα με σενάριο, όχι στο admin."
+        - "Ο πλήρης οδηγός βρίσκεται στη «Βοήθεια» της πλευρικής στήλης."
         - "Ευχαριστούμε που παρακολουθήσατε."
 
   - id: outro

@@ -1,9 +1,18 @@
-# team-admin-tour: Produktionsnotizen (Stand 2026-10-19)
+# team-admin-tour: Produktionsnotizen (Stand 2026-10-25, CRM-Szene nach dem CRM-Modellumbau neu aufgenommen)
 
 Team-Video 1 „pundo admin tour“ (F8960, Thema 1, Pilot). EN-Stimme, EN-Untertitel eingebrannt, EL nur als `.el.srt`. **Kanal „pundo Team“, nicht gelistet, noch nicht hochgeladen.**
 Status: **Entwurf.** Der EN-Sprechtext (`scenes.yml`) ist von Bernhard noch nicht freigegeben, der EL-Text noch nicht von Muttersprachler:in gelesen (F8960 O3).
 
-## Ergebnis
+## Neuaufnahme 2026-10-25 (CRM-Modellumbau von „CRM-Backbone“)
+Nur die CRM-Szene ist inhaltlich neu: `/admin/crm/orgs` statt der früheren Kontaktliste, Suche „Team Demo“ → drei Demo-Organisationen,
+Lead-Status „Needs review“ an „Team Demo Bakery“, Sprechtext „organisations with their lead status“ statt „business contacts“; der
+Sidebar-Gang endet auf `/admin/crm/orgs`. Die Bewertungs-Warteschlange „Reported“ ist seit dem Moderationsvideo nicht mehr leer (Demo-
+Bewertung aus `prepare_team.py`): der Recorder verlangt jetzt die Demo-Karte und blurt jede andere Karte (`sess.mask('article', …)`).
+Ergebnis: `out/team-admin-tour.en.mp4` 169,1 s, 1920×1080, `.en.srt` 29 Cues, `.el.srt` 46 Cues, verify_output OK, Privacy-Check 8 von 8.
+Kapitel: 0:00 Dashboard · 0:26 Sidebar · 0:45 Shops · 1:02 Products and categories · 1:18 Claims and reviews · 1:36 CRM · 2:00 Test or live? · 2:22 Help.
+Noch nicht hochgeladen; der Hilfe-Link zeigt bis zum Upload das alte Video `fAgsmmvzEIQ`.
+
+## Ergebnis (Pilot 2026-10-19)
 | Größe | Wert |
 |---|---|
 | Datei | `out/team-admin-tour.en.mp4` (1920×1080, 30 fps, H.264 + AAC, 9,5 MB), `out/team-admin-tour.en.srt` (28 Cues), `out/team-admin-tour.el.srt` (45 Cues), `out/thumbnail.en.png` |
@@ -32,7 +41,7 @@ Feste Schlüssel, Upsert, alle Mail-Adressen `@pundo-e2e.io`; fremde Zeilen werd
 - Shops `team-demo-bakery` (Typ Bakery, Owner `owner@pundo-e2e.io`, approved) und `team-demo-pet-corner` (Typ Pet Shop), Fantasie-Adressen in Limassol
 - offener Claim (#659 beim Pilotlauf) auf Pet Corner von `claimant@pundo-e2e.io` (Owner „pending“ ohne Shop), mit Event `created`
 - Marke `team-demo-brand`, Kategorie `px-team-demo` (unter `px-cooking`, EN/EL-Name), Produkt `team-demo-sourdough-loaf`
-- CRM: Org „Team Demo Bakery“, Kontakt „Team Demo Contact“ (`NEEDS_REVIEW`), Kanäle `contact@pundo-e2e.io` und WhatsApp `+35790000000` (HMAC mit dem Pepper aus dem Backend-`.env`)
+- CRM (seit 2026-10-25, neues Modell): Organisationen „Team Demo Bakery“ (`NEEDS_REVIEW`), „Team Demo Bakery Larnaca“, „Team Demo Accounting Office“ mit Kanälen und Demo-Personen, Details in `../team-crm/PROD-NOTES.md` (HMAC mit dem Pepper aus dem Backend-`.env`)
 - stellt `e2e-admin@pundo-e2e.io` über `scripts/seed_admin.py` sicher, falls er fehlt (in `pundo_test` vorhanden)
 
 Belege:

@@ -125,6 +125,9 @@ if (process.env.E2E_COVERAGE_BUILD === '1') {
 // therefore this must never reuse the shared `.next` directory.
 if (/^[1-5]$/.test(process.env.PUNDO_SLOT ?? '')) {
   config.distDir = `.next-worktree-s${process.env.PUNDO_SLOT}`
+  // Eigene tsconfig mit `extends`: Next bricht dort sein Auto-Setup ab und schreibt weder Formatierung noch
+  // `.next-worktree-sN/types` in tsconfig.json (Fingerabdruck-Input des Standalone-Builds, sonst dauerhaft dirty).
+  config.typescript = { ...config.typescript, tsconfigPath: 'tsconfig.next-worktree.json' }
 }
 
 export default withBundleAnalyzer(config)

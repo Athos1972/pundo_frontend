@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mts",
+    ".next-worktree-s*/types/**/*.ts",
+    ".next-worktree-s*/dev/types/**/*.ts"
+  ]
+}

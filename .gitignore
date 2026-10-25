@@ -98,6 +98,10 @@ video/_branding/pronunciation-test/
 /.next-cov/
 /coverage-e2e/
 
+# F8970 Worktree-Umgebungen: Build-Ausgabe und Build-Lock der Controller-Slots (next.config.ts distDir, scripts/e2e-frontend.cjs)
+/.next-worktree-s*/
+/.next-worktree-build.lock
+
 # Journey-Reports sind lokale Laufartefakte (jeder Playwright-Lauf schreibt sie neu), nicht versionieren (BB 2026-10-16)
 e2e/journeys/reports/*
 !e2e/journeys/reports/.gitkeep

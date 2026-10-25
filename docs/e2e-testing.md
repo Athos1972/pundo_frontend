@@ -26,6 +26,10 @@ einen eigenen E2E-Lock, ein vom Controller erzeugtes privates
 Playwright besitzt den Frontend-Prozess und verwendet keinen vorhandenen
 Standalone auf dem Slot-Port. So wird ein frischer Standalone-Build erzwungen
 und `globalSetup`/`globalTeardown` bleiben vollständig slot-isoliert.
+`.next-worktree-s*/` steht in `.gitignore` und in den ESLint-Ignores. Slot-Builds
+nutzen `tsconfig.next-worktree.json` (`extends`, `typescript.tsconfigPath` in
+`next.config.ts`), damit Next `tsconfig.json` nicht umschreibt (Fingerabdruck-Input,
+sonst dauerhaft dirty).
 
 ```bash
 # Backend-Worktree: Slot erzeugen und nur dessen Backend starten

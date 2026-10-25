@@ -14,7 +14,7 @@ export function generateRunId(now: Date = new Date()): string {
 }
 
 /** `E2E_LOCK_FILE` nur fuer Unit-Tests (damit sie nie den echten Lock eines laufenden Laufs anfassen). */
-const slot = /^[1-4]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : '0'
+const slot = /^[1-5]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : '0'
 export const LOCK_FILE = process.env.E2E_LOCK_FILE ?? path.join(os.tmpdir(), `pundo-e2e-run-s${slot}.lock`)
 
 export interface LockInfo { pid: number; runId: string; startedAt: string }

@@ -43,7 +43,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 |-------------------|--------------|-------------|-----------------|
 | **Produktion**    | **3000**     | **8000**    | postgres `pundo` |
 | **Test / E2E**    | **3500**     | **8500**    | postgres `pundo_test` |
-| **Worktree-Slot N** (1–4, F8970) | **3510+N** (3511–3514) | **8510+N** (8511–8514), Gateway 8611–8614, Mail-Sink 1026–1029 | postgres `pundo_wt_sN` |
+| **Worktree-Slot N** (1–5, F8970) | **3510+N** (3511–3515) | **8510+N** (8511–8515), Gateway 8611–8615, Mail-Sink 1026–1030 | postgres `pundo_wt_sN` |
 
 **Regeln:**
 

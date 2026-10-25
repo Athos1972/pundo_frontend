@@ -18,7 +18,7 @@ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/opt/libpq/bin:/usr/local/bin:$PATH"
 
 if [ -n "${PUNDO_SLOT:-}" ]; then
-  case "$PUNDO_SLOT" in 1|2|3|4) ;; *) echo "gate: ABBRUCH: PUNDO_SLOT muss 1 bis 4 sein." >&2; exit 4;; esac
+  case "$PUNDO_SLOT" in 1|2|3|4|5) ;; *) echo "gate: ABBRUCH: PUNDO_SLOT muss 1 bis 5 sein." >&2; exit 4;; esac
   [ -n "${PUNDO_SLOT_MANIFEST:-}" ] && [ -n "${PUNDO_SLOT_TOKEN:-}" ] || { echo "gate: ABBRUCH: Slot braucht Manifest und Token." >&2; exit 4; }
   GATE_STATE_DIR="${GATE_STATE_DIR:-$HOME/.pundo/worktree-env/locks/slot-$PUNDO_SLOT/gate}"
 else

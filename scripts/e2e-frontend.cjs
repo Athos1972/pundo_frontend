@@ -34,7 +34,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
-const slotNumber = () => (/^[1-4]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : null)
+const slotNumber = () => (/^[1-5]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : null)
 const slotDist = () => (slotNumber() ? `.next-worktree-s${slotNumber()}` : '.next')
 const STAMP_REL = '.next/standalone/.e2e-build-stamp.json'
 const COVERAGE_DIST = '.next-cov'

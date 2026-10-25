@@ -14,7 +14,7 @@ function fail(message: string): never { throw new Error(`[E2E] ${message}`) }
 export function resolveSlotEnvironment(env: NodeJS.ProcessEnv = process.env): SlotEnvironment {
   const raw = env.PUNDO_SLOT
   if (!raw) return { slot: 0, frontendPort: 3500, backendPort: 8500 }
-  if (!/^[1-4]$/.test(raw)) fail('PUNDO_SLOT must be 1 through 4; slot 0 is the legacy main environment.')
+  if (!/^[1-5]$/.test(raw)) fail('PUNDO_SLOT must be 1 through 5; slot 0 is the legacy main environment.')
   const slot = Number(raw)
   const manifestPath = env.PUNDO_SLOT_MANIFEST
   if (!manifestPath || !env.PUNDO_SLOT_TOKEN) fail('a worktree slot needs PUNDO_SLOT_MANIFEST and PUNDO_SLOT_TOKEN.')

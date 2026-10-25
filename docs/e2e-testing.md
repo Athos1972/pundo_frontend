@@ -16,8 +16,8 @@ Playwright-Safety-Check in `playwright.config.ts` verwirft Port 8000 explizit.
 ### Worktree-Slots (F8970)
 
 Slot 0 bleibt der bisherige Einzelarbeitsmodus. Ein ausdrücklich angelegter
-Backend-Controller-Slot 1–4 verwendet ausschließlich das feste Portpaar
-3511–3514 / 8511–8514. `e2e/env.ts` akzeptiert einen Slot nur mit passendem,
+Backend-Controller-Slot 1–5 verwendet ausschließlich das feste Portpaar
+3511–3515 / 8511–8515. `e2e/env.ts` akzeptiert einen Slot nur mit passendem,
 externem 0600-Manifest und Lease-Token; abweichende Ports, Produktionsports
 oder eine fremde Datenbank werden vor Playwright abgelehnt. Jeder Slot besitzt
 einen eigenen E2E-Lock, ein vom Controller erzeugtes privates

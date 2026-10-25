@@ -1,7 +1,7 @@
 /** Per-slot state paths; slot 0 preserves the historical filenames. */
 import path from 'path'
 
-const slot = /^[1-4]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : '0'
+const slot = /^[1-5]$/.test(process.env.PUNDO_SLOT ?? '') ? process.env.PUNDO_SLOT : '0'
 const stateDir = slot === '0' ? __dirname : process.env.E2E_STATE_DIR
 
 if (!stateDir) {

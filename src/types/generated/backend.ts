@@ -3632,29 +3632,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/products/intake/category-batch-run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Run Category Batch
-         * @description Submit deferred category matches to the LLM Gateway (non-blocking).
-         *
-         *     Each pending item gets one categorize.item task submitted to the gateway.
-         *     Results are delivered asynchronously via the webhook at /internal/llm/webhook.
-         */
-        post: operations["run_category_batch_api_v1_products_intake_category_batch_run_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/products/{product_id}": {
         parameters: {
             query?: never;
@@ -8418,36 +8395,6 @@ export interface components {
             status: "none" | "given";
             /** Text Version */
             text_version?: string | null;
-        };
-        /**
-         * CategoryBatchRunResponse
-         * @description Response for POST /intake/category-batch-run.
-         *
-         *     The endpoint is now non-blocking: it submits tasks to the LLM Gateway and
-         *     returns immediately. Outcomes (matched / low_confidence / gateway_failed)
-         *     are delivered asynchronously via categorizer_handler.py.
-         *
-         *     Fields:
-         *       scanned         -- items inspected
-         *       submitted       -- tasks pushed to gateway
-         *       deduplicated    -- gateway returned deduplicated=True (already in-flight)
-         *       no_candidates   -- items skipped (no category candidates found)
-         *       invalid_payload -- items skipped (empty product_name)
-         *       submit_errors   -- gateway HTTP errors during submit
-         */
-        CategoryBatchRunResponse: {
-            /** Deduplicated */
-            deduplicated: number;
-            /** Invalid Payload */
-            invalid_payload: number;
-            /** No Candidates */
-            no_candidates: number;
-            /** Scanned */
-            scanned: number;
-            /** Submit Errors */
-            submit_errors: number;
-            /** Submitted */
-            submitted: number;
         };
         /** CategoryDetail */
         CategoryDetail: {
@@ -23484,39 +23431,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BatchIntakeResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    run_category_batch_api_v1_products_intake_category_batch_run_post: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: {
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryBatchRunResponse"];
                 };
             };
             /** @description Validation Error */

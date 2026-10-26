@@ -67,12 +67,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Test-Instanzen (Port **3500** / **8500**) dürfen automatisch neu gestartet werden — kein Zögern
 - Produktiv-Instanzen (Port **3000** / **8000**) **NIEMALS** automatisch neu starten — nur manuell durch den User oder auf ausdrückliche Aufforderung
+
+**Test-Instanz 3500/8500 und Test-Worker (F8970 Worktree-Umgebungen):**
+- `next dev` auf 3500 und das Test-Backend auf 8500 nur aus dem **Main-Baum** starten, nie aus einem Feature-Worktree. Sonst laufen Frontend und Backend aus verschiedenen Checkouts, und ein gelöschter Worktree lässt einen Prozess ohne Quellcode zurück (2026-10-25: 8500 lief aus dem gelöschten Beweisarchiv-Worktree, 3500 aus dem Videos-Worktree).
+- Videoaufnahmen (Admin-Schulungsvideos) laufen in einem eigenen Slot (`worktree-env new … --owner "Videos"`) oder in einem abgesprochenen Zeitfenster; das Arbeitsbaum-Gate beendet einen `next dev` auf 3500 absichtlich.
+- Test-Worker (`restart_test_worker.sh`) pollen das gemeinsame Test-Gateway 8600. Das Arbeitsbaum-Gate pausiert sie vor Playwright selbst und startet sie danach wieder. Wer Journeys von Hand startet, stoppt sie vorher oder arbeitet in einem Slot (eigenes Gateway, kein Worker).
+
 **Hauptumgebung vs. Worktree-Slots (F8970 Worktree-Umgebungen):** Die Hauptumgebung bleibt 3500/8500 (Gateway 8600) mit `pundo_test`. Worktree-Slots haben eigene Ports und eine eigene Datenbank `pundo_wt_sN` (nie `pundo_test`, nie `pundo`). 3000/8000/8100 bleiben tabu. Ein Slot wird **ausschließlich** mit `scripts/worktree-env` (Backend-Repo) angelegt und entfernt; fremde Prozesse auf Slot-Ports beendet der Controller nicht.
 
 **Datenbanken und Migrationen (PFLICHT):**
 - Migrationen **nie** aus Entwürfen oder unveröffentlichten Branches auf die gemeinsame `pundo_test` anwenden (Wettlauf 2026-10-22/23 mit `f3900ops02` und `f7600s3p01`). Dafür einen Worktree-Slot nutzen.
 - `pundo_test` nur manuell über `sync_prod_to_test.sh` auffrischen; keine Fremdschlüssel-Waisen hinterlassen (Prodcopy-Slots tolerieren sie, `pundo_test` soll sauber sein).
 - Push mit neuer Migration: Restore-Point-Bestätigung von prod nötig, technisch erzwungen durch den Gate-Schritt `restore-point-ack`.
+- Läufe gegen `pundo_test` (volle pytest-Suite, Playwright, Skripte mit Schreibwirkung) gehen nur über die Gate-Sperre (`scripts/test-gate.sh …`) oder in einem Worktree-Slot. Gates aus Feature-Worktrees (auch von Codex) laufen über `scripts/worktree-env gate`, nicht gegen die gemeinsame Schema-Vorlage `pundo_test_schema`: Zwei Worktrees mit verschiedenen Migrationsständen setzen sie sonst gegenseitig außer Gefecht (Vorfälle 2026-10-24 und 2026-10-26). Ein freihändiges `pytest ingestor` gegen `pundo_test` blockiert fremde Push-Gates.
+- Entwurfs-Migrationen werden auf `pundo_test` auch nicht gestempelt oder von Hand zurückgesetzt (Vorfälle 2026-10-24: zwei Migrations-Köpfe Foto-Moderation und CRM; 2026-10-25: sieben `privacy_*`-Tabellen und `alembic_version`).
+- Manuelle Gate-Umgebungen nur per `source ~/.pundo/worktree-env/slots/slot-N/frontend.env` bzw. `backend.env` herstellen (setzt Ports, Datenbank und `MAIL_SINK_DIR` konsistent). Selbstgebaute Variablen führten am 2026-10-25 zu „keine Mail im Mail-Sink“ und zu einer `.env`, die auf `pundo_test` zeigte.
 
 **Worktrees (F8970):**
 - Verpflichtend bei größeren Änderungen (Migration, Vertrags-Snapshot oder mehr als zwölf Dateien; Entwurf `scripts/push_mode.py`, an den Hooks noch nicht aktiv) und bei jeder Migration. Bugfixes weiter direkt im Main-Arbeitsbaum.
@@ -86,7 +95,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   scripts/worktree-env stop --slot 2 all && scripts/worktree-env destroy --slot 2
   scripts/worktree-env doctor --all --repair   # bei Resten
   ```
-- Offene Punkte: `worktree-env verify-push`/`verify-pair` stellt im sauberen Worktree keine `.env` bereit (Nachprüfung steht aus, Hooks bleiben bis dahin im alten Modus); Test `test_generate_category_synonyms` ist im vollen Prodcopy-Lauf reihenfolgeabhängig (einzeln grün).
+- Gemeinsamer Main-Baum: nur explizite Pfade committen (`git commit -- <pfade>`), Commit und Push nie in einem Befehl verketten, den Push-Check (`git fetch`, `origin/main..main`) unmittelbar vor `git push` ausführen. Am 2026-10-24 gingen so drei fremde Commits mit einem Datenschutz-Push raus.
+- Das Gate im Arbeitsbaum-Modus testet auch die uncommitteten Dateien anderer Sessions mit (2026-10-25: fremde Worker-Dateien machten einen Fast-Gate rot). Größere Pushes laufen deshalb aus dem sauberen Worktree-Paar.
+- Slots: Entwicklungs-Sessions belegen von Slot 1 aufwärts und tragen sich mit `new --owner "<Session/Auftrag>"` ein; `verify-push`/`verify-pair` nehmen von Slot 5 abwärts, reservieren atomar und warten bei Vollbelegung bis zu 300 s. `list` zeigt Besitzer, Branches, Leerlauf und `lease_expired` (nur Hinweis; der Controller räumt nie von selbst auf). `doctor --all --repair` entfernt auch Reste abgebrochener Verify-Läufe.
+- Offene Punkte: Der Pre-Push-Hook des Frontends wird noch auf die automatische Moduswahl umgestellt (der Backend-Hook nutzt `verify-push` bereits); Test `test_generate_category_synonyms` ist im vollen Prodcopy-Lauf reihenfolgeabhängig (einzeln grün).
 <!-- END:port-convention -->
 
 <!-- BEGIN:test-gates -->

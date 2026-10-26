@@ -31,21 +31,27 @@ async function authenticate(context: import('@playwright/test').BrowserContext, 
 
 async function openNaidivseAccount(lang: 'ru' | 'he') {
   const browser = await chromium.launch({ args: ['--host-resolver-rules=MAP naidivse.com 127.0.0.1'] })
-  const naidivseUrl = BASE_URL.replace('127.0.0.1', 'naidivse.com')
+  const loopbackUrl = new URL(BASE_URL)
+  const naidivse = new URL(BASE_URL)
+  naidivse.hostname = 'naidivse.com'
+  const naidivseUrl = naidivse.toString().replace(/\/$/, '')
+  const naidivseOrigin = naidivse.origin
+  const loopbackOrigin = loopbackUrl.origin
+  const host = `naidivse.com:${naidivse.port}`
   const context = await browser.newContext({ baseURL: naidivseUrl })
   // Chromium upgrades naidivse.com subresources to HTTPS from its HSTS cache, while the
   // local E2E server deliberately speaks HTTP. Keep the document on naidivse.com (so brand
   // resolution and domain cookies are exercised), but load its static bundle from loopback.
-  await context.route('https://naidivse.com:3500/**', async route => {
+  await context.route(`https://naidivse.com:${naidivse.port}/**`, async route => {
     if (route.request().isNavigationRequest()) {
       await route.continue()
       return
     }
     const response = await route.fetch({
-      url: route.request().url().replace('https://naidivse.com:3500', 'http://127.0.0.1:3500'),
+      url: route.request().url().replace(naidivseOrigin, loopbackOrigin),
       headers: {
         ...route.request().headers(),
-        host: 'naidivse.com:3500',
+        host,
         cookie: `customer_token=${token}; app_lang=${lang}`,
       },
     })

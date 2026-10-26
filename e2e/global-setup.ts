@@ -496,6 +496,24 @@ export default async function globalSetup() {
       err instanceof Error ? err.message.split('\n')[0] : err)
   }
 
+  // ── 1e. CRM-Sendefenster im gewählten Test-Slot zurücksetzen ─────────────
+  // Der CRM-Outreach-Cap zählt gesendete Nachrichten der letzten 24 Stunden in
+  // crm_message. Eine Prodcopy kann diesen Verlauf schon mitbringen; das würde
+  // die relation-channel-AC vor ihrem eigenen Versand mit send_cap_reached
+  // abbrechen. Das Backend-Skript altert ausschließlich diese Slot-/Test-DB
+  // Einträge, nie pundo/prod-artige Umgebungen.
+  try {
+    const out = execSync(
+      `${BACKEND_REPO}/.venv/bin/python ${BACKEND_REPO}/scripts/prepare_e2e_db.py --reset-crm-send-cap`,
+      { cwd: BACKEND_REPO, encoding: 'utf8', timeout: 30_000, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONPATH: BACKEND_REPO } }
+    )
+    const n = JSON.parse(out.trim().split('\n').at(-1)!).crm_send_cap_reset as number
+    console.log(`[E2E Setup] CRM-Sendelimit-Fenster zurückgesetzt (${n} Nachricht/en gealtert).`)
+  } catch (err) {
+    console.warn('[E2E Setup] CRM-Sendelimit-Fenster konnte nicht zurückgesetzt werden (CRM-Outreach kann send_cap_reached liefern):',
+      err instanceof Error ? err.message.split('\n')[0] : err)
+  }
+
   // ── 2 + 3. Shop-Owner registrieren und approven ────────────────────────────
   // Also handles re-runs where the owner already exists (DB not fully reset).
   console.log(`[E2E Setup] Registriere Shop-Owner: ${creds.email}`)

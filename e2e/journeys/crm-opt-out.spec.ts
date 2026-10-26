@@ -195,7 +195,7 @@ test.describe.serial('CRM outreach mail → opt-out (token v2, opt-out by owner)
     // Slot gap (03-implementation-T19): the slot backend keeps the default http://localhost:3500, so in a worktree slot
     // the link names 3500 although this run's frontend is the slot port; the test opens the same path on BASE_URL.
     const linkUrl = new URL(mail.listUnsubscribe!.replace(/^<|>$/g, ''))
-    expect(linkUrl.hostname).toBe('localhost')
+    expect(IS_WORKTREE_SLOT ? ['localhost', '127.0.0.1'] : ['localhost']).toContain(linkUrl.hostname)
     expect(IS_WORKTREE_SLOT ? ['3500', String(SLOT_ENV.frontendPort)] : ['3500']).toContain(linkUrl.port)
 
     // the message is bound to exactly this recipient channel

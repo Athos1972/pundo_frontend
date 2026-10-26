@@ -1,7 +1,7 @@
 {
   "status": 201,
   "body": {
-    "id": 25,
+    "id": 85,
     "display_name": "Maria Georgiou",
     "first_name": "Maria",
     "last_name": "Georgiou",
@@ -10,12 +10,16 @@
     "birth_date": "2000-02-29",
     "birth_year_unknown": true,
     "optout": false,
+    "optout_at": null,
+    "optout_source": null,
+    "optout_reason": null,
+    "optout_by": null,
     "address": null,
     "channels": [
       {
-        "id": 7984,
+        "id": 8195,
         "kind": "email",
-        "value_normalized": "maria.private@t16-202610250944.example",
+        "value_normalized": "maria.private@t16-202610251927.example",
         "reachable": "unknown",
         "consent_state": "none",
         "is_preferred": false,
@@ -24,13 +28,13 @@
         "owner_review_pending": false,
         "owner": {
           "type": "person",
-          "id": 25
+          "id": 85
         },
-        "created_at": "2026-10-25T09:44:17.862918Z"
+        "created_at": "2026-10-25T19:27:40.662482Z"
       }
     ],
     "relations": [],
-    "created_at": "2026-10-25T09:44:17.862918Z",
-    "updated_at": "2026-10-25T09:44:17.862918Z"
+    "created_at": "2026-10-25T19:27:40.662482Z",
+    "updated_at": "2026-10-25T19:27:40.662482Z"
   }
 }

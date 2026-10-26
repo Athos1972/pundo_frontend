@@ -14726,17 +14726,6 @@
     "title": "OfferDetail",
     "type": "object"
    },
-   "OkResponse": {
-    "properties": {
-     "ok": {
-      "default": true,
-      "title": "Ok",
-      "type": "boolean"
-     }
-    },
-    "title": "OkResponse",
-    "type": "object"
-   },
    "OnboardingContactRequest": {
     "properties": {
      "business_email": {
@@ -17738,6 +17727,37 @@
     "title": "PersonCreateRequest",
     "type": "object"
    },
+   "PersonOptOutRequest": {
+    "description": "Objection recorded in the admin. Deliberately lax (like ``OutreachApproveRequest``): a missing body, an\nunknown source or a reason outside 10..500 characters (trimmed) is refused by the service with its own code\n422 ``person_optout_reason_invalid`` instead of a Pydantic validation error.",
+    "properties": {
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "maxLength": 32,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     }
+    },
+    "title": "PersonOptOutRequest",
+    "type": "object"
+   },
    "PersonOut": {
     "properties": {
      "address": {
@@ -17823,6 +17843,59 @@
       "title": "Optout",
       "type": "boolean"
      },
+     "optout_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Optout At"
+     },
+     "optout_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Optout By"
+     },
+     "optout_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Optout Reason"
+     },
+     "optout_source": {
+      "anyOf": [
+       {
+        "enum": [
+         "phone",
+         "email",
+         "in_person",
+         "letter",
+         "other",
+         "optout_link"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Optout Source"
+     },
      "relations": {
       "items": {
        "$ref": "#/components/schemas/RelationOut"
@@ -17852,6 +17925,10 @@
      "name_derived",
      "birth_year_unknown",
      "optout",
+     "optout_at",
+     "optout_source",
+     "optout_reason",
+     "optout_by",
      "channels",
      "relations",
      "created_at",
@@ -33448,7 +33525,7 @@
   },
   "/api/v1/admin/crm/persons/{person_id}/opt-out": {
    "post": {
-    "description": "Person objection: every person and relation channel suppressed, orgs unchanged except the owner rule.",
+    "description": "Record the objection of a person (spec 2026-10-26-crm-person-widerspruch-knopf): every person and\nrelation channel suppressed, orgs unchanged except the owner rule. Body ``{source, reason}`` required:\nmissing body, unknown source or reason outside 10..500 characters → 422 ``person_optout_reason_invalid``;\nalready objected → 409 ``person_already_opted_out``; no effect → 500 ``person_optout_no_effect``. Any error\nrolls the whole operation back (one commit at the end, ``get_db`` rolls back on an exception).",
     "operationId": "opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post",
     "parameters": [
      {
@@ -33493,12 +33570,29 @@
       }
      }
     ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/PersonOptOutRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
     "responses": {
      "200": {
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/OkResponse"
+         "$ref": "#/components/schemas/PersonOut"
         }
        }
       },

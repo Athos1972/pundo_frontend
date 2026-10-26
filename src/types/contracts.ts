@@ -120,6 +120,7 @@ export type CrmRequestContracts = [
   Contract<Assignable<SysAdmin.CrmChannelTierRequest, Schemas['ChannelTierRequest']>>,
   Contract<Assignable<SysAdmin.CrmPersonWriteRequest, Schemas['PersonWriteRequest']>>,
   Contract<Assignable<SysAdmin.CrmPersonCreateRequest, Schemas['PersonCreateRequest']>>,
+  Contract<Assignable<SysAdmin.CrmPersonOptOutRequest, Schemas['PersonOptOutRequest']>>,
   Contract<Assignable<SysAdmin.CrmReviewResolveRequest, Schemas['ReviewResolveRequest']>>,
   Contract<Assignable<SysAdmin.CrmConfigUpdateRequest, Schemas['CrmConfigUpdate']>>,
 ]

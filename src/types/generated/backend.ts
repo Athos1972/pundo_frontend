@@ -1118,7 +1118,11 @@ export interface paths {
         put?: never;
         /**
          * Opt Out Person
-         * @description Person objection: every person and relation channel suppressed, orgs unchanged except the owner rule.
+         * @description Record the objection of a person (spec 2026-10-26-crm-person-widerspruch-knopf): every person and
+         *     relation channel suppressed, orgs unchanged except the owner rule. Body ``{source, reason}`` required:
+         *     missing body, unknown source or reason outside 10..500 characters → 422 ``person_optout_reason_invalid``;
+         *     already objected → 409 ``person_already_opted_out``; no effect → 500 ``person_optout_no_effect``. Any error
+         *     rolls the whole operation back (one commit at the end, ``get_db`` rolls back on an exception).
          */
         post: operations["opt_out_person_api_v1_admin_crm_persons__person_id__opt_out_post"];
         delete?: never;
@@ -10804,14 +10808,6 @@ export interface components {
             /** Url */
             url: string | null;
         };
-        /** OkResponse */
-        OkResponse: {
-            /**
-             * Ok
-             * @default true
-             */
-            ok: boolean;
-        };
         /** OnboardingContactRequest */
         OnboardingContactRequest: {
             /** Business Email */
@@ -11808,6 +11804,18 @@ export interface components {
             /** Salutation */
             salutation?: ("mr" | "ms" | "mx" | "dr" | "none") | null;
         };
+        /**
+         * PersonOptOutRequest
+         * @description Objection recorded in the admin. Deliberately lax (like ``OutreachApproveRequest``): a missing body, an
+         *     unknown source or a reason outside 10..500 characters (trimmed) is refused by the service with its own code
+         *     422 ``person_optout_reason_invalid`` instead of a Pydantic validation error.
+         */
+        PersonOptOutRequest: {
+            /** Reason */
+            reason?: string | null;
+            /** Source */
+            source?: string | null;
+        };
         /** PersonOut */
         PersonOut: {
             address?: components["schemas"]["AddressOut"] | null;
@@ -11834,6 +11842,14 @@ export interface components {
             name_derived: boolean;
             /** Optout */
             optout: boolean;
+            /** Optout At */
+            optout_at: string | null;
+            /** Optout By */
+            optout_by: string | null;
+            /** Optout Reason */
+            optout_reason: string | null;
+            /** Optout Source */
+            optout_source: ("phone" | "email" | "in_person" | "letter" | "other" | "optout_link") | null;
             /** Relations */
             relations: components["schemas"]["RelationOut"][];
             /** Salutation */
@@ -17724,7 +17740,11 @@ export interface operations {
                 admin_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PersonOptOutRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -17732,7 +17752,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OkResponse"];
+                    "application/json": components["schemas"]["PersonOut"];
                 };
             };
             /** @description Validation Error */

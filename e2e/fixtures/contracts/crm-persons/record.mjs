@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Records real answers of the CRM person/relation/config API (F7600 CRM-Backbone, org cut, T16 person components and
-// T17 settings) as `{status, body}` files next to this script. The Vitest suites crm-person-components.test.tsx,
-// crm-birthdate.test.tsx and crm-safety-panel.test.tsx read exactly these files (R1: fixtures from the producer, never
+// T17 settings, follow-up "record objection") as `{status, body}` files next to this script. The Vitest suites
+// crm-person-components.test.tsx, crm-birthdate.test.tsx, crm-safety-panel.test.tsx and crm-person-objection.test.tsx
+// read exactly these files (R1: fixtures from the producer, never
 // hand-written); the Playwright specs of T19 may use the same files for `page.route` mocks.
 //
 // Run against a TEST backend only (slot or 8500), never 8000:
@@ -113,4 +114,31 @@ save('config-put', await call('PUT', 'config', {
   require_human_approval_for_tier: config.require_human_approval_for_tier,
 }), 200)
 
-console.log(`done: org ${orgA.id}/${orgB.id}, persons ${maria.id}/${eleni.id}/${andreas.id} (run ${RUN})`)
+// Objection (F7600 follow-up "Widerspruch einer Person im Admin erfassen"): Nikos with two personal channels, owner of C
+// (two relation channels) and manager at D (one relation channel) -> 5 channels in the dialog. C is a lead (owner rule
+// on by default -> HARD_OPTOUT), D keeps its lead. Answers: candidate before, 422 (reason too short), 200, 409, org C after.
+const orgC = (await call('POST', 'orgs', {
+  name: `E2E F7600 OBJ Kafeneio Nikos ${RUN}`, city: 'Paphos', as_lead: true,
+  channels: [{ kind: 'email', value: `info@obj-c-${RUN}.example` }], source: { source: 'manual' },
+})).body
+const orgD = (await call('POST', 'orgs', {
+  name: `E2E F7600 OBJ Bakery Delta ${RUN}`, city: 'Larnaca', as_lead: true,
+  channels: [{ kind: 'email', value: `info@obj-d-${RUN}.example` }], source: { source: 'manual' },
+})).body
+const nikos = (await call('POST', 'persons', {
+  first_name: 'Nikos', last_name: `Objection ${RUN}`,
+  channels: [{ kind: 'email', value: `nikos.private@obj-${RUN}.example` }, { kind: 'phone', value: `+35799${RUN.slice(-6)}` }],
+})).body
+const relC = (await call('POST', 'relations', { person_id: nikos.id, org_id: orgC.id, roles: ['owner'] })).body
+const relD = (await call('POST', 'relations', { person_id: nikos.id, org_id: orgD.id, roles: ['manager'] })).body
+await call('POST', `relations/${relC.id}/channels`, { kind: 'email', value: `nikos@obj-c-${RUN}.example` })
+await call('POST', `relations/${relC.id}/channels`, { kind: 'email', value: `owner@obj-c-${RUN}.example` })
+await call('POST', `relations/${relD.id}/channels`, { kind: 'email', value: `nikos@obj-d-${RUN}.example` })
+save('person-objection-candidate', await call('GET', `persons/${nikos.id}`), 200)
+save('person-optout-422', await call('POST', `persons/${nikos.id}/opt-out`, { source: 'phone', reason: 'too short' }), 422)
+const objection = { source: 'phone', reason: 'Called on 25 Oct, wants no further contact' }
+save('person-optout-ok', await call('POST', `persons/${nikos.id}/opt-out`, objection), 200)
+save('person-optout-409', await call('POST', `persons/${nikos.id}/opt-out`, objection), 409)
+save('org-detail-after-owner-objection', await call('GET', `orgs/${orgC.id}`), 200)
+
+console.log(`done: org ${orgA.id}/${orgB.id}/${orgC.id}/${orgD.id}, persons ${maria.id}/${eleni.id}/${andreas.id}/${nikos.id} (run ${RUN})`)

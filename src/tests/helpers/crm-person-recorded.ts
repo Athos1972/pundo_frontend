@@ -25,4 +25,10 @@ export const rec = {
   orgDetail: () => recorded<T.CrmOrgDetail>('org-detail-with-relations').body,
   personList: () => recorded<T.PaginatedResponse<T.CrmPerson>>('person-list').body,
   config: () => recorded<T.CrmConfigOut>('config').body,
+  /** Nikos before the objection: 2 personal channels, owner of organisation C (2 relation channels), manager at D (1). */
+  objectionCandidate: () => recorded<T.CrmPerson>('person-objection-candidate').body,
+  /** Answer of POST /persons/{id}/opt-out (source phone, reason, admin id) for Nikos. */
+  optoutOk: () => recorded<T.CrmPerson>('person-optout-ok').body,
+  /** Organisation C after the objection of its owner: HARD_OPTOUT, channels blocked, interaction `person_optout`. */
+  orgAfterOwnerObjection: () => recorded<T.CrmOrgDetail>('org-detail-after-owner-objection').body,
 }

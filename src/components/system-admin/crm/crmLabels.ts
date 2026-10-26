@@ -2,7 +2,7 @@
 // Pure helpers (Server and Client Components): backend codes → translated text. Unknown codes are shown raw instead of
 // being hidden, so a new backend value stays visible.
 
-import type { CrmChannelOwnerType, CrmLegalTier, CrmReviewCategory } from '@/types/system-admin'
+import type { CrmChannelOwnerType, CrmLegalTier, CrmObjectionSource, CrmReviewCategory } from '@/types/system-admin'
 import type { SysAdminTranslations } from '@/lib/system-admin-translations'
 
 const KIND_KEYS: Record<string, keyof SysAdminTranslations> = {
@@ -45,4 +45,13 @@ export function reviewCategoryLabel(tr: SysAdminTranslations, category: CrmRevie
 export function reviewKindLabel(tr: SysAdminTranslations, kind: string): string {
   const value = tr[`crm_review_kind_${kind}` as keyof SysAdminTranslations]
   return typeof value === 'string' ? value : kind
+}
+
+/** Sources an admin can choose when recording an objection (backend `OBJECTION_SOURCES`, same order). */
+export const OBJECTION_SOURCES: readonly CrmObjectionSource[] = ['phone', 'email', 'in_person', 'letter', 'other']
+
+/** Label of an objection source (incl. `optout_link` of the unsubscribe link); an unknown value is shown raw. */
+export function objectionSourceLabel(tr: SysAdminTranslations, source: string): string {
+  const value = tr[`crm_objection_source_${source}` as keyof SysAdminTranslations]
+  return typeof value === 'string' ? value : source
 }

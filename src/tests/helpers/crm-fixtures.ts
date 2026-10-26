@@ -38,6 +38,7 @@ export const relationWithoutRole: T.CrmRelationOut = { ...relation, id: 6, roles
 export const person: T.CrmPerson = {
   id: 17, display_name: 'Maria Georgiou', first_name: 'Maria', last_name: 'Georgiou', name_derived: true,
   salutation: 'ms', birth_date: '2000-03-14', birth_year_unknown: true, optout: false, address: null,
+  optout_at: null, optout_source: null, optout_reason: null, optout_by: null,
   channels: [personChannel], relations: [relation], created_at: NOW, updated_at: NOW,
 }
 

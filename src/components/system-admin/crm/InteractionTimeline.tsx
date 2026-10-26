@@ -24,6 +24,12 @@ function kindBadgeColor(kind: string): string {
   return 'bg-gray-100 text-gray-600'
 }
 
+/** Outcome codes with a text of their own; every other outcome stays raw (a new backend value remains visible). */
+function outcomeText(outcome: string, tr: SysAdminTranslations): string {
+  if (outcome === 'person_optout') return tr.crm_timeline_person_objected
+  return outcome
+}
+
 function deliveryBadgeColor(status: string): string {
   if (status === 'sent' || status === 'delivered') return 'bg-green-50 text-green-700'
   if (status === 'failed') return 'bg-red-100 text-red-800'
@@ -85,7 +91,7 @@ export function InteractionTimeline({ interactions, messages, tr, relations = []
                 <span className="text-xs text-gray-400 ms-auto">{new Date(ia.created_at).toLocaleString()}</span>
               </div>
               {who && <p className="text-xs text-gray-700">{tr.crm_timeline_person.replace('{name}', who)}</p>}
-              {ia.outcome && <p className="text-xs text-gray-600 whitespace-pre-wrap">{ia.outcome}</p>}
+              {ia.outcome && <p className="text-xs text-gray-600 whitespace-pre-wrap">{outcomeText(ia.outcome, tr)}</p>}
               {ia.payload?.manual === true && (!!ia.payload.our_party || !!ia.payload.their_party) && (
                 <p className="text-xs text-gray-500">
                   {String(ia.payload.our_party ?? '—')} ↔ {String(ia.payload.their_party ?? '—')}

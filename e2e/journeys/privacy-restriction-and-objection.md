@@ -45,7 +45,7 @@ last-result: N/A
 2. Outreach-Lauf und Benachrichtigungslauf auslösen → keine Mail an die Adresse im Mail-Sink (Gegenprobe: Kontrollkontakt bekommt seine Mail).
 3. Retention-Job mit einer Frist auslösen, die den Kontakt sonst träfe → Daten bleiben (AC22).
 4. Einschränkung im Fall mit Notiz aufheben → nächster Lauf versendet wieder.
-5. Widerspruch für `contact-objection` umsetzen → Adresse als Hash in der Unterdrückungsliste, Werbe- und Benachrichtigungs-Einwilligungen aus; folgender Outreach-Lauf versendet nichts (AC23).
+5. Widerspruch für `contact-objection` umsetzen, für die CRM-Person über den Knopf „Record objection“ auf der Personenseite (Quelle und Begründung, Folgeauftrag „Widerspruch einer Person im Admin erfassen“) → Adresse als Hash in der Unterdrückungsliste, Werbe- und Benachrichtigungs-Einwilligungen aus; folgender Outreach-Lauf versendet nichts (AC23).
 6. Opt-out-Seite (`/crm/opt-out`) verlinkt auf das Datenschutzformular.
 
 **Known Risks:**
@@ -56,4 +56,4 @@ last-result: N/A
 - Schritt 5 (Widerspruch) prüft nach Besitzer: `crm_person.optout_at` gesetzt (Entscheidung EA17 Personensperre), alle Personen- und Beziehungskanäle `consent_state = optout` und ihre HMACs in `crm_suppression`; **die Organisation behält Lead-Status und Org-Kanäle**, ein folgender Outreach an den Org-Kanal kommt im Mail-Sink an, die Person fehlt in jeder Empfängerauswahl (`GET /orgs/{id}/outreach/recipients`).
 - Inhaber-Regel (Entscheidung E3, Schalter `owner_optout_rule` in der CRM-Konfiguration, Standard an): widerspricht eine Person mit aktiver Rolle `owner`, steht ihre Firma zusätzlich auf `HARD_OPTOUT` und deren Org-Kanäle sind gesperrt; mit Schalter aus nicht. Eigene Fixture, nicht mit `contact-objection` zusammenlegen.
 - Schritt 3 (Retention): Die Retention betrifft Personen (`crm_person_retention`, 36 Monate, Kandidat nur ohne aktive Beziehung zu einer lebenden Org); Org-Leads ohne Person sind weiter zurückgestellt. Achtung Testbericht des Org-Schnitts: Die Kandidatenabfrage ist dort fehlerhaft unkorreliert (Befund), eine Gegenprobe „Kandidat ohne Einschränkung wird gezählt“ ist daher Pflicht.
-- Belegt sind die Opt-out-Wirkungen heute über `POST /api/v1/crm/opt-out` (Token v2) und `POST /admin/crm/persons/{id}/opt-out` (Journeys `crm-opt-out`, `admin-crm-relation-channels`, API-Abnahme AC 15/16/17); die Journey selbst ist noch nicht implementiert.
+- Belegt sind die Opt-out-Wirkungen heute über `POST /api/v1/crm/opt-out` (Token v2, Quelle `optout_link`) und den Admin-Knopf „Record objection“ auf der Personenseite mit Quelle und Begründung (`POST /admin/crm/persons/{id}/opt-out` mit `{source, reason}`; Journeys `crm-opt-out` AC5/AC6, `admin-crm-persons` Schritt 8, `admin-crm-relation-channels`, API-Abnahme AC 15/16/17); die Journey selbst ist noch nicht implementiert. Der Export (Art. 15) enthält Zeitpunkt, Quelle und Begründung des Widerspruchs, die Löschung entfernt sie mit der Personenzeile.

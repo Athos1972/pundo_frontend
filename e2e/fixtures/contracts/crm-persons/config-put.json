@@ -5,14 +5,14 @@
     "send_caps": {
       "email": {
         "limit": 25,
-        "sent_24h": 8
+        "sent_24h": 21
       }
     },
     "owner_optout_rule": true,
     "require_human_approval_for_tier": [
       "red"
     ],
-    "updated_at": "2026-10-25T09:44:18.117524Z",
+    "updated_at": "2026-10-25T19:27:40.909938Z",
     "updated_by": "1"
   }
 }

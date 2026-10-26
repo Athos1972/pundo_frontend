@@ -450,10 +450,24 @@ export interface CrmPerson {
   /** ISO date; with `birth_year_unknown` the year is the placeholder 2000 and must never be shown. */
   birth_date: string | null; birth_year_unknown: boolean
   optout: boolean; address: CrmAddress | null
+  /**
+   * Objection metadata (backend migration f7600obj01). `optout_source` is `null` for objections recorded before it,
+   * `optout_link` for the unsubscribe link; `optout_reason` exists only for the admin path; `optout_by` is the id of the
+   * recording admin (not shown in the UI).
+   */
+  optout_at: string | null; optout_source: CrmOptOutSource | null
+  optout_reason: string | null; optout_by: string | null
   /** Personal channels; channels of a relation are in `relations[].channels`. */
   channels: CrmChannelOut[]; relations: CrmRelationOut[]
   created_at: string; updated_at: string
 }
+
+/** Source of an objection recorded in the admin ("Record objection" on the person page). */
+export type CrmObjectionSource = 'phone' | 'email' | 'in_person' | 'letter' | 'other'
+/** Every stored source: the admin sources plus `optout_link` (unsubscribe link of an outreach mail). */
+export type CrmOptOutSource = CrmObjectionSource | 'optout_link'
+/** `POST /admin/crm/persons/{id}/opt-out`: source and reason (trimmed 10..500 characters) are required. */
+export interface CrmPersonOptOutRequest { source: CrmObjectionSource; reason: string }
 
 // — Review —
 export type CrmReviewCategory = 'legacy' | 'channel_owner' | 'relations_without_role' | 'persons_name_parts'

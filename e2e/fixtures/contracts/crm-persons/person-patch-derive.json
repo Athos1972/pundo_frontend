@@ -1,19 +1,23 @@
 {
   "status": 200,
   "body": {
-    "id": 27,
-    "display_name": "Andreas Konstantinou 202610250944",
+    "id": 87,
+    "display_name": "Andreas Konstantinou 202610251927",
     "first_name": "Andreas",
-    "last_name": "Konstantinou 202610250944",
+    "last_name": "Konstantinou 202610251927",
     "name_derived": true,
     "salutation": null,
     "birth_date": "1987-03-14",
     "birth_year_unknown": false,
     "optout": false,
+    "optout_at": null,
+    "optout_source": null,
+    "optout_reason": null,
+    "optout_by": null,
     "address": null,
     "channels": [],
     "relations": [],
-    "created_at": "2026-10-25T09:44:17.886058Z",
-    "updated_at": "2026-10-25T09:44:18.021618Z"
+    "created_at": "2026-10-25T19:27:40.689167Z",
+    "updated_at": "2026-10-25T19:27:40.845518Z"
   }
 }

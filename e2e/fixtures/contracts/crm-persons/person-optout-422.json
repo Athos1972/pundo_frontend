@@ -1,0 +1,6 @@
+{
+  "status": 422,
+  "body": {
+    "detail": "person_optout_reason_invalid"
+  }
+}

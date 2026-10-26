@@ -13,6 +13,12 @@
  * |-------------------------------------------|--------------------------------------------------------------|------------------------------------------|
  * | Org `E2E OptOut {uuid}`                   | Akquise-Ziel, Quelle business_card, Org-Mail = Empfaenger    | AC1-AC3: Org-Kanal → Org HARD_OPTOUT      |
  * | Org `E2E OptOut Rel {uuid}` + Person      | Beziehung (Rolle manager) mit eigener Beziehungs-Mail        | AC4: Beziehungskanal → nur Person gesperrt |
+ * | Org `E2E Objection {uuid}` + Person       | Beziehung (Rolle manager), Beziehungs-Mail; Widerspruch per Admin-Knopf | AC5: nur Person gesperrt, Org-Mail kommt an |
+ * | Org `E2E Objection Owner {uuid}` + Person | Beziehung (Rolle owner), Beziehungs-Mail; Widerspruch per Admin-Knopf   | AC6: Inhaber-Regel, Org HARD_OPTOUT, keine Mail |
+ *
+ * AC5/AC6 (Folgeauftrag "Widerspruch einer Person im Admin erfassen", Spec 2026-10-26-crm-person-widerspruch-knopf):
+ * gleiche Wirkungspruefung wie beim Link, aber ueber den Knopf "Record objection" auf der Personenseite; der Widerspruch
+ * selbst erzeugt keine Mail an die Person (Mail-Sink-Zaehler vorher = nachher).
  *
  * Cleanup: die Org aus AC1-AC3 endet in HARD_OPTOUT (Terminal), die zweite Org wird per Suppress geschlossen, die Person
  * geloescht. Eine Org kann das CRM nicht loeschen.
@@ -23,7 +29,8 @@ import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { adminLogin, adminHeaders, apiFetch } from './_helpers'
-import { waitForMail } from './_helpers/mail-sink'
+import { mailsTo, waitForMail } from './_helpers/mail-sink'
+import { waitForPageHydrated } from './_helpers/hydration'
 import { psql } from './_helpers/test-data'
 import { BASE_URL, BACKEND_URL, IS_WORKTREE_SLOT, SLOT_ENV } from '../env'
 
@@ -35,12 +42,17 @@ const UUID = randomUUID().slice(0, 8)
 const EMAIL = `e2e-optout-${UUID}@test-e2e.invalid`
 const REL_ORG_EMAIL = `e2e-optout-rel-org-${UUID}@test-e2e.invalid`
 const REL_EMAIL = `e2e-optout-rel-${UUID}@test-e2e.invalid`
+const OBJ_ORG_EMAIL = `e2e-objection-org-${UUID}@test-e2e.invalid`
+const OBJ_REL_EMAIL = `e2e-objection-rel-${UUID}@test-e2e.invalid`
+const OWNER_ORG_EMAIL = `e2e-objection-owner-org-${UUID}@test-e2e.invalid`
+const OWNER_REL_EMAIL = `e2e-objection-owner-rel-${UUID}@test-e2e.invalid`
 const BACKEND_REPO = process.env.BACKEND_REPO ?? '/Users/bb_studio_2025/dev/github/pundo_main_backend'
 
 const ctx = {
   token: null as string | null,
   orgId: 0, channelId: 0, messageId: 0,
   relOrgId: 0, relOrgChannelId: 0, personId: 0, relationId: 0, relChannelId: 0,
+  objOrgIds: [] as number[], objPersonIds: [] as number[],
 }
 const adminFetch = (method: string, urlPath: string, body?: unknown) =>
   apiFetch(method, urlPath, body, adminHeaders(ctx.token))
@@ -115,6 +127,38 @@ async function confirmOptOut(page: Page, url: string) {
   await page.getByRole('button', { name: /confirm unsubscribe/i }).click()
   expect((await answered).status(), 'the public opt-out always answers 200 (no enumeration)').toBe(200)
   await expect(page.locator('.bg-green-50')).toBeVisible({ timeout: 10_000 })
+}
+
+/** Person with one relation (given role) to `orgId` and one relation e-mail; returns person and relation channel ids. */
+async function personAt(orgId: number, role: string, email: string, last: string) {
+  const created = await adminFetch('POST', '/api/v1/admin/crm/persons', { first_name: 'E2E', last_name: `${last} ${UUID}` })
+  expect(created.status, JSON.stringify(created.data)).toBe(201)
+  const personId = (created.data as { id: number }).id
+  ctx.objPersonIds.push(personId)
+  const relation = await adminFetch('POST', '/api/v1/admin/crm/relations', { person_id: personId, org_id: orgId, roles: [role] })
+  expect(relation.status, JSON.stringify(relation.data)).toBe(201)
+  const relationId = (relation.data as { id: number }).id
+  const withChannel = await adminFetch('POST', `/api/v1/admin/crm/relations/${relationId}/channels`, { kind: 'email', value: email })
+  expect(withChannel.status, JSON.stringify(withChannel.data)).toBe(201)
+  const channelId = (withChannel.data as { channels: ChannelOut[] }).channels.find((c) => c.value_normalized === email)!.id
+  return { personId, channelId }
+}
+
+/** "Record objection" on the person page: dialog, source and reason, confirm; waits for the 200 and the banner. */
+async function recordObjection(page: Page, personId: number, source: string, reason: string, expectedOrgNote: string,
+  expectedEffect: string) {
+  await page.goto(`${BASE_URL}/admin/crm/persons/${personId}`)
+  await waitForPageHydrated(page)
+  await page.getByTestId('person-objection-button').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('listitem')).toHaveText([expectedOrgNote])
+  await expect(dialog.getByTestId('person-objection-effect')).toHaveText(expectedEffect)
+  await dialog.getByLabel('Source').selectOption({ label: source })
+  await dialog.getByLabel('Reason (10 to 500 characters)').fill(reason)
+  const answered = page.waitForResponse((res) => res.url().includes(`/persons/${personId}/opt-out`) && res.request().method() === 'POST')
+  await dialog.getByTestId('person-objection-confirm').click()
+  expect((await answered).status()).toBe(200)
+  await expect(page.getByTestId('person-objection-recorded')).toContainText(source, { timeout: 15_000 })
 }
 
 const suppressedCount = (channelId: number) =>
@@ -232,12 +276,85 @@ test.describe.serial('CRM outreach mail → opt-out (token v2, opt-out by owner)
     expect(leadStateOf(org.id)).toBe('CONTACTED')
     expect(consentOf(ctx.relOrgChannelId)).not.toBe('optout')
     expect(suppressedCount(ctx.relOrgChannelId)).toBe(0)
+    // the link names itself as the source of the objection (spec 2026-10-26-crm-person-widerspruch-knopf A1)
+    expect(psql(`select coalesce(optout_source, '') || '|' || (optout_reason is null) from crm_person where id=${ctx.personId}`))
+      .toBe('optout_link|true')
+  })
+
+  test('AC5: objection through the admin button blocks the person; the organisation stays contactable (mail in the sink)', async ({ adminPage: page }) => {
+    test.setTimeout(90_000)
+    const org = await queuedOrg(`E2E Objection ${UUID}`, OBJ_ORG_EMAIL)
+    ctx.objOrgIds.push(org.id)
+    const orgChannelId = org.channels.find((c) => c.kind === 'email')!.id
+    const { personId, channelId } = await personAt(org.id, 'manager', OBJ_REL_EMAIL, 'Objection')
+    const offeredBefore = (await adminFetch('GET', `/api/v1/admin/crm/orgs/${org.id}/outreach/recipients`)).data as Array<{ channel_id: number }>
+    expect(offeredBefore.map((r) => r.channel_id)).toContain(channelId)
+
+    await recordObjection(page, personId, 'By e-mail', `Mail of today (${UUID}): no further contact wanted`,
+      `E2E Objection ${UUID}: stays contactable.`,
+      'The only personal or relation channel of this person is blocked for good. The person disappears from every recipient list. The organisations stay contactable through their own channels.')
+
+    // effect: person objected with source, relation channel opted out and suppressed; organisation untouched
+    expect(psql(`select optout_source from crm_person where id=${personId}`)).toBe('email')
+    expect(consentOf(channelId)).toBe('optout')
+    expect(suppressedCount(channelId)).toBe(1)
+    expect(leadStateOf(org.id)).toBe('QUEUED')
+    expect(consentOf(orgChannelId)).not.toBe('optout')
+    expect(suppressedCount(orgChannelId)).toBe(0)
+    expect(mailsTo(OBJ_REL_EMAIL), 'the objection itself sends no mail to the person').toEqual([])
+
+    // outreach afterwards: the person's channel is no recipient; the org channel still gets the mail
+    const offered = (await adminFetch('GET', `/api/v1/admin/crm/orgs/${org.id}/outreach/recipients`)).data as Array<{ channel_id: number }>
+    expect(offered.map((r) => r.channel_id)).toEqual([orgChannelId])
+    const refused = await adminFetch('POST', `/api/v1/admin/crm/orgs/${org.id}/outreach/send`, {
+      language: 'en', subject: 'Hello', body: 'Hi', idempotency_key: `e2e-objection-person-${UUID}`, recipient_channel_id: channelId,
+    })
+    expect([refused.status, (refused.data as { detail: string }).detail]).toEqual([422, 'outreach_recipient_invalid'])
+    await sendOutreach(org.id, orgChannelId, 'objection-org')
+    await waitForMail(OBJ_ORG_EMAIL)
+    expect(mailsTo(OBJ_REL_EMAIL), 'nothing ever arrives at the objected person').toEqual([])
+  })
+
+  test('AC6: objection of an owner through the admin button: owner rule blocks her organisation, no outreach, no mail', async ({ adminPage: page }) => {
+    test.setTimeout(90_000)
+    const config = (await adminFetch('GET', '/api/v1/admin/crm/config')).data as { owner_optout_rule: boolean }
+    expect(config.owner_optout_rule, 'the owner rule is on in the test instance (default)').toBe(true)
+    const name = `E2E Objection Owner ${UUID}`
+    const org = await queuedOrg(name, OWNER_ORG_EMAIL)
+    ctx.objOrgIds.push(org.id)
+    const orgChannelId = org.channels.find((c) => c.kind === 'email')!.id
+    const { personId, channelId } = await personAt(org.id, 'owner', OWNER_REL_EMAIL, 'Owner')
+
+    await recordObjection(page, personId, 'In person', `Said in the shop today (${UUID}): stop all contact`,
+      `${name} will also be set to "Hard opt-out" and all its channels are blocked (owner rule).`,
+      'The only personal or relation channel of this person is blocked for good. The person disappears from every recipient list. Organisations this person owns are also blocked, including all their channels (owner rule).')
+
+    expect(psql(`select optout_source from crm_person where id=${personId}`)).toBe('in_person')
+    expect(consentOf(channelId)).toBe('optout')
+    expect(leadStateOf(org.id)).toBe('HARD_OPTOUT')
+    expect(consentOf(orgChannelId)).toBe('optout')
+    expect(suppressedCount(orgChannelId)).toBe(1)
+    expect(psql(`select payload->>'owner_rule_applied' || '|' || (payload->>'source') from crm_interaction
+      where org_id=${org.id} and outcome='person_optout'`)).toBe('true|in_person')
+
+    const refused = await adminFetch('POST', `/api/v1/admin/crm/orgs/${org.id}/outreach/send`, {
+      language: 'en', subject: 'Hello', body: 'Hi', idempotency_key: `e2e-objection-owner-${UUID}`,
+    })
+    expect([refused.status, (refused.data as { detail: string }).detail]).toEqual([422, 'outreach_not_allowed_state'])
+    expect(mailsTo(OWNER_ORG_EMAIL)).toEqual([])
+    expect(mailsTo(OWNER_REL_EMAIL)).toEqual([])
+
+    // the organisation page shows the lead status and the timeline entry "Person objected"
+    await page.goto(`${BASE_URL}/admin/crm/orgs/${org.id}`)
+    await expect(page.getByText('Person objected').first()).toBeVisible()
   })
 
   test.afterAll(async () => {
     if (!ctx.token) return
-    if (ctx.personId) await adminFetch('DELETE', `/api/v1/admin/crm/persons/${ctx.personId}`).catch(() => undefined)
-    for (const orgId of [ctx.orgId, ctx.relOrgId].filter(Boolean)) {
+    for (const personId of [ctx.personId, ...ctx.objPersonIds].filter(Boolean)) {
+      await adminFetch('DELETE', `/api/v1/admin/crm/persons/${personId}`).catch(() => undefined)
+    }
+    for (const orgId of [ctx.orgId, ctx.relOrgId, ...ctx.objOrgIds].filter(Boolean)) {
       const res = await adminFetch('GET', `/api/v1/admin/crm/orgs/${orgId}`)
       const org = res.data as OrgDetail
       if (!res.ok || org.lead.state === 'HARD_OPTOUT') continue

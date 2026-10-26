@@ -1,0 +1,227 @@
+{
+  "status": 200,
+  "body": {
+    "id": 88,
+    "display_name": "Nikos Objection 202610251927",
+    "first_name": "Nikos",
+    "last_name": "Objection 202610251927",
+    "name_derived": true,
+    "salutation": null,
+    "birth_date": null,
+    "birth_year_unknown": false,
+    "optout": false,
+    "optout_at": null,
+    "optout_source": null,
+    "optout_reason": null,
+    "optout_by": null,
+    "address": null,
+    "channels": [
+      {
+        "id": 8199,
+        "kind": "email",
+        "value_normalized": "nikos.private@obj-202610251927.example",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "manual",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "person",
+          "id": 88
+        },
+        "created_at": "2026-10-25T19:27:40.962275Z"
+      },
+      {
+        "id": 8200,
+        "kind": "phone_call",
+        "value_normalized": "+35799251927",
+        "reachable": "unknown",
+        "consent_state": "none",
+        "is_preferred": false,
+        "legal_tier": "green",
+        "origin": "manual",
+        "owner_review_pending": false,
+        "owner": {
+          "type": "person",
+          "id": 88
+        },
+        "created_at": "2026-10-25T19:27:40.962275Z"
+      }
+    ],
+    "relations": [
+      {
+        "id": 63,
+        "person": {
+          "id": 88,
+          "display_name": "Nikos Objection 202610251927",
+          "optout": false
+        },
+        "org": {
+          "id": 7657,
+          "name": "E2E F7600 OBJ Kafeneio Nikos 202610251927",
+          "city": "Paphos"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "active": true,
+        "roles": [
+          "owner"
+        ],
+        "role_missing": false,
+        "note": null,
+        "source": "manual",
+        "address": null,
+        "uses_org_address": true,
+        "preferred_channel_id": null,
+        "channels": [
+          {
+            "id": 8201,
+            "kind": "email",
+            "value_normalized": "nikos@obj-c-202610251927.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "relation",
+              "id": 63
+            },
+            "created_at": "2026-10-25T19:27:41.032992Z"
+          },
+          {
+            "id": 8202,
+            "kind": "email",
+            "value_normalized": "owner@obj-c-202610251927.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "relation",
+              "id": 63
+            },
+            "created_at": "2026-10-25T19:27:41.053924Z"
+          }
+        ],
+        "person_channels": [
+          {
+            "id": 8199,
+            "kind": "email",
+            "value_normalized": "nikos.private@obj-202610251927.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 88
+            },
+            "created_at": "2026-10-25T19:27:40.962275Z"
+          },
+          {
+            "id": 8200,
+            "kind": "phone_call",
+            "value_normalized": "+35799251927",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 88
+            },
+            "created_at": "2026-10-25T19:27:40.962275Z"
+          }
+        ]
+      },
+      {
+        "id": 64,
+        "person": {
+          "id": 88,
+          "display_name": "Nikos Objection 202610251927",
+          "optout": false
+        },
+        "org": {
+          "id": 7658,
+          "name": "E2E F7600 OBJ Bakery Delta 202610251927",
+          "city": "Larnaca"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "active": true,
+        "roles": [
+          "manager"
+        ],
+        "role_missing": false,
+        "note": null,
+        "source": "manual",
+        "address": null,
+        "uses_org_address": true,
+        "preferred_channel_id": null,
+        "channels": [
+          {
+            "id": 8203,
+            "kind": "email",
+            "value_normalized": "nikos@obj-d-202610251927.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "relation",
+              "id": 64
+            },
+            "created_at": "2026-10-25T19:27:41.075090Z"
+          }
+        ],
+        "person_channels": [
+          {
+            "id": 8199,
+            "kind": "email",
+            "value_normalized": "nikos.private@obj-202610251927.example",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 88
+            },
+            "created_at": "2026-10-25T19:27:40.962275Z"
+          },
+          {
+            "id": 8200,
+            "kind": "phone_call",
+            "value_normalized": "+35799251927",
+            "reachable": "unknown",
+            "consent_state": "none",
+            "is_preferred": false,
+            "legal_tier": "green",
+            "origin": "manual",
+            "owner_review_pending": false,
+            "owner": {
+              "type": "person",
+              "id": 88
+            },
+            "created_at": "2026-10-25T19:27:40.962275Z"
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-10-25T19:27:40.962275Z",
+    "updated_at": "2026-10-25T19:27:40.962275Z"
+  }
+}

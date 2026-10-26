@@ -12,6 +12,10 @@
  *   - person `E2E Person <run>` with a personal e-mail, created through the UI
  * Fehlerpfad (AC9): mock answers with the RECORDED backend response e2e/fixtures/contracts/admin-crm-orgs-search-too-short.json;
  * the "Real backend" test compares the real answer of the search route the UI calls (`/orgs/search`) with the same file.
+ * Last step (follow-up "Widerspruch einer Person im Admin erfassen", spec 2026-10-26-crm-person-widerspruch-knopf): the
+ * objection of THIS run's person (irreversible, hence the fresh person per run) through the button on the person page:
+ * dialog, required fields, Cancel without request, banner, effect in the database, mark in the list and at the organisation.
+ * The second call answers with the RECORDED 409 (e2e/fixtures/contracts/crm-persons/person-optout-409.json).
  */
 import { randomUUID } from 'node:crypto'
 import { test, expect } from '../fixtures'
@@ -238,6 +242,81 @@ test.describe.serial('F7600 CRM — people, relations and roles by search (org c
     await expect(nicCard.getByRole('button', { name: 'End relation' })).toHaveCount(0) // history only, no controls
     await expect.poll(async () => relationAt(ctx.orgIds[0]), { timeout: 15_000 })
       .toMatchObject({ active: false, valid_to: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), roles: ['owner'] })
+  })
+
+  test('record objection: dialog with effect, required source and reason, banner, blocked channels, mark in list and at the organisation', async ({ adminPage: page }) => {
+    test.setTimeout(90_000)
+    const before = await person()
+    const channelCount = before.channels.length + before.relations.reduce((n, r) => n + (r as unknown as { channels: unknown[] }).channels.length, 0)
+    const optOutCalls: string[] = []
+    page.on('request', (req) => { if (req.url().includes(`/api/admin/crm/persons/${ctx.personId}/opt-out`)) optOutCalls.push(req.method()) })
+    await page.goto(`${BASE_URL}/admin/crm/persons/${ctx.personId}`)
+    await waitForPageHydrated(page)
+
+    const privacy = page.getByTestId('person-privacy-section')
+    await expect(privacy.getByRole('heading', { name: 'Privacy' })).toBeVisible()
+    await privacy.getByRole('button', { name: 'Record objection' }).click()
+    const dialog = page.getByRole('dialog')
+    // singular for exactly one channel; no owner relation is active, so all organisations stay contactable
+    await expect(dialog.getByTestId('person-objection-effect')).toHaveText(channelCount === 1
+      ? 'The only personal or relation channel of this person is blocked for good. The person disappears from every recipient list. The organisations stay contactable through their own channels.'
+      : `All ${channelCount} personal and relation channels of this person are blocked for good. The person disappears from every recipient list. The organisations stay contactable through their own channels.`)
+    expect(channelCount, 'this run\'s person has exactly its personal e-mail').toBe(1)
+    // only the ACTIVE relations are listed in relation order (the Nicosia owner relation ended in the previous step, so
+    // no owner note): "two" (added second) and the Limassol bakery (added from the organisation page)
+    await expect(dialog.getByRole('listitem')).toHaveText([
+      `E2E Person Org ${run} two: stays contactable.`, `${bakery}: stays contactable.`,
+    ])
+    await expect(dialog.getByText('This cannot be undone in the admin.')).toBeVisible()
+
+    const confirm = dialog.getByTestId('person-objection-confirm')
+    await expect(confirm).toBeDisabled()
+    await dialog.getByLabel('Source').selectOption({ label: 'By phone' })
+    await dialog.getByLabel('Reason (10 to 500 characters)').fill('too short')
+    await expect(confirm).toBeDisabled()
+    // Cancel sends nothing and leaves the person untouched
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(optOutCalls, 'Cancel sends no request').toEqual([])
+    expect(psql(`select optout_at is null from crm_person where id=${ctx.personId}`)).toBe('t')
+
+    await privacy.getByRole('button', { name: 'Record objection' }).click()
+    await dialog.getByLabel('Source').selectOption({ label: 'By phone' })
+    const reason = `Called today (${run}), does not want to be contacted again`
+    await dialog.getByLabel('Reason (10 to 500 characters)').fill(reason)
+    await expect(confirm).toBeEnabled()
+    const answered = page.waitForResponse((res) => res.url().includes(`/persons/${ctx.personId}/opt-out`) && res.request().method() === 'POST')
+    await confirm.click()
+    expect((await answered).status()).toBe(200)
+
+    // after the refresh: banner with date, source and reason; the button is gone (no way back in the admin)
+    const banner = page.getByTestId('person-objection-banner')
+    await expect(banner.getByTestId('person-objection-recorded')).toHaveText(/^Objection recorded on .+ · By phone$/, { timeout: 15_000 })
+    await expect(banner.getByTestId('person-objection-reason')).toHaveText(reason)
+    await expect(page.getByTestId('person-objection-button')).toHaveCount(0)
+    expect(optOutCalls, 'exactly one request').toEqual(['POST'])
+
+    // effect in the database: objection stored with source and reason, every own channel opted out and suppressed
+    expect(psql(`select optout_source || '|' || optout_reason from crm_person where id=${ctx.personId}`)).toBe(`phone|${reason}`)
+    expect(psql(`select count(*) from crm_channel c where c.person_id=${ctx.personId} and (c.consent_state <> 'optout'
+      or not exists (select 1 from crm_suppression s where s.suppression_key = c.value_hmac))`)).toBe('0')
+    // the organisations keep their lead status and their own channels
+    expect(psql(`select count(*) from crm_channel where org_id in (${ctx.orgIds.join(',')}) and consent_state = 'optout'`)).toBe('0')
+
+    // a second call (e.g. a second admin) is refused without new rows: the RECORDED 409 body
+    const audits = psql(`select count(*) from crm_masterdata_audit where entity_type='person' and entity_id=${ctx.personId}`)
+    const again = await fetch(`${BACKEND_URL}/api/v1/admin/crm/persons/${ctx.personId}/opt-out`, {
+      method: 'POST', headers: { ...adminHeaders(ctx.token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'letter', reason: 'second admin, same person' }),
+    })
+    expectRealMatchesContract('crm-persons/person-optout-409', again.status, await again.json())
+    expect(psql(`select count(*) from crm_masterdata_audit where entity_type='person' and entity_id=${ctx.personId}`)).toBe(audits)
+
+    // mark "Opted out" in the person list and in the contact person list of the organisation
+    await page.goto(`${BASE_URL}/admin/crm/persons?q=${encodeURIComponent(personName)}`)
+    await expect(page.getByRole('row', { name: new RegExp(personName) })).toContainText('Opted out')
+    await page.goto(`${BASE_URL}/admin/crm/orgs/${ctx.orgIds[1]}`)
+    await expect(page.getByTestId('crm-org-relations')).toContainText('Opted out')
   })
 
   test.afterAll(async () => {

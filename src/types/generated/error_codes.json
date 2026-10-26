@@ -159,6 +159,7 @@
    "relation_role_not_found"
   ],
   "409": [
+   "person_already_opted_out",
    "person_channel_exists",
    "relation_active_exists",
    "relation_role_exists"
@@ -168,9 +169,13 @@
    "invalid_person_role",
    "person_birth_date_invalid",
    "person_display_name_derived",
+   "person_optout_reason_invalid",
    "person_salutation_invalid",
    "relation_dates_invalid",
    "suppressed"
+  ],
+  "500": [
+   "person_optout_no_effect"
   ]
  },
  "lib/crm/review": {

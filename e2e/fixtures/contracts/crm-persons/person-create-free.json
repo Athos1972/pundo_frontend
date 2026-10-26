@@ -1,7 +1,7 @@
 {
   "status": 201,
   "body": {
-    "id": 26,
+    "id": 86,
     "display_name": "Γεωργίου Ελένη",
     "first_name": null,
     "last_name": null,
@@ -10,10 +10,14 @@
     "birth_date": null,
     "birth_year_unknown": false,
     "optout": false,
+    "optout_at": null,
+    "optout_source": null,
+    "optout_reason": null,
+    "optout_by": null,
     "address": null,
     "channels": [],
     "relations": [],
-    "created_at": "2026-10-25T09:44:17.877416Z",
-    "updated_at": "2026-10-25T09:44:17.877416Z"
+    "created_at": "2026-10-25T19:27:40.680268Z",
+    "updated_at": "2026-10-25T19:27:40.680268Z"
   }
 }

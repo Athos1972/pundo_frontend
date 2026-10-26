@@ -30,7 +30,7 @@ export interface CrmRequestOptions {
  * Backend `detail` codes of 409 and 422 answers → translation key (B8950-016 T18). One table instead of two if-chains;
  * the drift guard `tests/unit/guards/error-code-drift.test.ts` compares it with `docs/error_codes.json` of the backend: a new
  * 409/422 code there without an entry here fails the gate (it would otherwise show the generic message), and an entry
- * the backend no longer raises fails it too. 404/423/429/502 are handled by status (`CRM_STATUS_KEYS`).
+ * the backend no longer raises fails it too. 404/423/429/500/502 are handled by status (`CRM_STATUS_KEYS`).
  * A 409 with an unknown code falls back to `crm_err_conflict`.
  */
 export const CRM_ERROR_KEYS = {
@@ -75,6 +75,8 @@ export const CRM_ERROR_KEYS = {
   person_birth_date_invalid: 'crm_err_person_birth_date_invalid',
   person_salutation_invalid: 'crm_err_person_salutation_invalid',
   person_channel_exists: 'crm_err_person_channel_exists',
+  person_optout_reason_invalid: 'crm_err_person_optout_reason_invalid',
+  person_already_opted_out: 'crm_err_person_already_opted_out',
 } as const satisfies Record<string, keyof SysAdminTranslations>
 
 /** Statuses handled by status alone (the `detail` code does not change the message). */
@@ -85,6 +87,8 @@ export const CRM_STATUS_KEYS = {
   423: 'crm_err_paused',
   429: 'crm_err_cap',
   502: 'crm_err_send_failed',
+  // 500 `person_optout_no_effect` (objection without effect, rolled back and alarmed): the generic text, by status
+  500: 'crm_err_generic',
 } as const satisfies Record<number, keyof SysAdminTranslations>
 
 /** `{detail: "code"}` or `{detail: {detail: "code", …extras}}` → code and extras; a validation list or a text has no code. */

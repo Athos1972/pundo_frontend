@@ -35,7 +35,8 @@ async function openNaidivseAccount(lang: 'ru' | 'he') {
   const naidivse = new URL(BASE_URL)
   naidivse.hostname = 'naidivse.com'
   const naidivseUrl = naidivse.toString().replace(/\/$/, '')
-  const naidivseOrigin = naidivse.origin
+  // The browser requests naidivse.com over https (HSTS upgrade); that is the origin to rewrite to loopback.
+  const naidivseOrigin = `https://naidivse.com:${naidivse.port}`
   const loopbackOrigin = loopbackUrl.origin
   const host = `naidivse.com:${naidivse.port}`
   const context = await browser.newContext({ baseURL: naidivseUrl })

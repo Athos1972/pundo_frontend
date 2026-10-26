@@ -31,7 +31,7 @@ export interface HelpTopic {
 export const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: 'admin-tour', number: '1', order: 1,
-    videoId: 'fAgsmmvzEIQ', durationSec: 164,
+    videoId: 'mp9eCQIgzKg', durationSec: 170,
     adminLinks: [{ href: '/admin/dashboard', navKey: 'nav_dashboard' }],
   },
   {
@@ -69,7 +69,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'translations', number: '4b', order: 6,
-    videoId: 'sw0l_oaN73M', durationSec: 181,
+    videoId: 'x3eVDgb1Vws', durationSec: 182,
     adminLinks: [
       { href: '/admin/categories', navKey: 'nav_categories' },
       { href: '/admin/products', navKey: 'nav_products' },
@@ -77,7 +77,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'crm', number: '5', order: 7,
-    videoId: '0gdPz5DOLsk', durationSec: 226,
+    videoId: 'tUT5P_PmpVI', durationSec: 287,
     adminLinks: [
       { href: '/admin/crm/orgs', navKey: 'nav_crm' },
       { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
@@ -87,6 +87,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   },
   {
     id: 'crm-persons', number: '5b', order: 8,
+    videoId: 'c9YX7SDTwVM', durationSec: 213,
     adminLinks: [
       { href: '/admin/crm/persons', navKey: 'crm_persons_title' },
       { href: '/admin/crm/orgs', navKey: 'nav_crm' },

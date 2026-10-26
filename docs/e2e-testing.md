@@ -31,6 +31,15 @@ nutzen `tsconfig.next-worktree.json` (`extends`, `typescript.tsconfigPath` in
 `next.config.ts`), damit Next `tsconfig.json` nicht umschreibt (Fingerabdruck-Input,
 sonst dauerhaft dirty).
 
+**Test-Worker im Arbeitsbaum-Gate.** Die Test-Worker (`restart_test_worker.sh`,
+`worker.test*.yml`) pollen das gemeinsame Test-Gateway 8600 und holen Aufträge ab,
+die Journeys selbst leasen und mit einem Mock beantworten (Review-Foto-Moderation S7:
+„Auftrag des abgelehnten Fotos wartet noch in der Queue“). `playwright_preflight`
+(`scripts/gate-lib.sh`, `gate_pause_test_workers`) beendet sie deshalb vor Playwright
+und startet sie beim Verlassen des Gates wieder (`PUNDO_WORKERS_REPO`, Standard
+`../pundo_llm_workers`; `GATE_KEEP_TEST_WORKERS=1` lässt sie laufen). In einem Slot
+entfällt das, weil dessen Gateway kein Worker pollt.
+
 ```bash
 # Backend-Worktree: Slot erzeugen und nur dessen Backend starten
 scripts/worktree-env new --slot 1 --backend "$PWD" --frontend <frontend-worktree> --data-mode prodcopy

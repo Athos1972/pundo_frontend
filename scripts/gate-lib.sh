@@ -57,6 +57,7 @@ gate_on_signal() {
 
 gate_on_exit() {
   local rc=$?
+  gate_resume_test_workers
   gate_lock_release
   return $rc
 }
@@ -124,6 +125,51 @@ gate_wait_idle() {
     fi
     [ "$waited" = 0 ] && gate_say "warte auf laufende Test-Prozesse ($what, PID $pids) ..."
     sleep 5; waited=$((waited + 5))
+  done
+}
+
+# ---- Test-Worker pausieren -------------------------------------------------------------------------------
+# Lokale/Cloud/Scrape-Test-Worker (pundo_llm_workers, worker.test*.yml) pollen das gemeinsame Test-Gateway :8600 und
+# holen Auftraege ab, die Journeys selbst leasen und mit einem Mock beantworten (Review-Foto-Moderation S7, 2026-10-26:
+# "Auftrag des abgelehnten Fotos wartet noch in der Queue"). Das Arbeitsbaum-Gate beendet sie deshalb vor Playwright und
+# startet sie am Ende wieder (wie es einen laufenden next dev auf :3500 beendet). In einem Slot ist das nicht noetig:
+# der Slot hat ein eigenes Gateway, das kein Worker pollt. GATE_KEEP_TEST_WORKERS=1 laesst sie laufen.
+GATE_PAUSED_WORKERS=""
+gate_pause_test_workers() {
+  [ -n "${PUNDO_SLOT:-}" ] && return 0
+  [ "${GATE_KEEP_TEST_WORKERS:-0}" = "1" ] && return 0
+  local entry name config found=""
+  for entry in local:worker.test.yml cloud:worker.test.cloud.yml cloud:worker.test.cloud.anthropic.yml \
+               scrape:worker.test.scrape.yml scrape:worker.test.scrape.anthropic.yml; do
+    name="${entry%%:*}"; config="${entry#*:}"
+    if pkill -f "workers\\.main ${config//./\\.}\$" 2>/dev/null; then
+      case " $found " in *" $name "*) ;; *) found="$found $name" ;; esac
+      [ "$config" = worker.test.cloud.anthropic.yml ] && GATE_PAUSED_CLOUD_PROVIDER=anthropic
+      [ "$config" = worker.test.scrape.anthropic.yml ] && GATE_PAUSED_SCRAPE_PROVIDER=anthropic
+    fi
+  done
+  found="${found# }"
+  [ -n "$found" ] || return 0
+  GATE_PAUSED_WORKERS="$found"
+  gate_say "Test-Worker pausiert ($found): sie wuerden Gateway-Auftraege der Journeys abholen; sie starten nach dem Gate wieder."
+}
+
+gate_resume_test_workers() {
+  [ -n "$GATE_PAUSED_WORKERS" ] || return 0
+  local repo="${PUNDO_WORKERS_REPO:-$ROOT/../pundo_llm_workers}" name
+  local paused="$GATE_PAUSED_WORKERS"
+  GATE_PAUSED_WORKERS=""
+  if [ ! -x "$repo/restart_test_worker.sh" ]; then
+    gate_say "WARNUNG: Test-Worker ($paused) bleiben aus: $repo/restart_test_worker.sh nicht gefunden (PUNDO_WORKERS_REPO setzen)."
+    return 0
+  fi
+  for name in $paused; do
+    if CLOUD_PROVIDER="${GATE_PAUSED_CLOUD_PROVIDER:-openrouter}" SCRAPE_PROVIDER="${GATE_PAUSED_SCRAPE_PROVIDER:-openrouter}" \
+         "$repo/restart_test_worker.sh" "$name" >/dev/null 2>&1; then
+      gate_say "Test-Worker $name wieder gestartet."
+    else
+      gate_say "WARNUNG: Test-Worker $name liess sich nicht neu starten: im Workers-Repo ./restart_test_worker.sh $name ausfuehren."
+    fi
   done
 }
 

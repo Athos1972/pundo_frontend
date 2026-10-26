@@ -71,6 +71,7 @@ playwright_preflight() {
   [ -x "$BACKEND_REPO/.venv/bin/uvicorn" ] || gate_die 4 "$BACKEND_REPO/.venv fehlt (uv sync --all-extras --all-groups)."
   gate_preflight_db "$BACKEND_REPO"
   gate_wait_idle both
+  gate_pause_test_workers
   # B8950-013 §10: Das Gate testet nur gegen den Standalone-Build. Erst NACH gate_wait_idle (kein anderer Playwright-Lauf
   # besitzt :3500) und VOR Playwright (der webServer entscheidet vor dem Global Setup ueber Wiederverwendung).
   [ "${E2E_FRONTEND_MODE:-}" = "dev" ] && gate_die 4 "E2E_FRONTEND_MODE=dev ist im Gate nicht erlaubt (B8950-013 §10). Variable entfernen."

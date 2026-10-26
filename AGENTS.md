@@ -75,6 +75,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 **Hauptumgebung vs. Worktree-Slots (F8970 Worktree-Umgebungen):** Die Hauptumgebung bleibt 3500/8500 (Gateway 8600) mit `pundo_test`. Worktree-Slots haben eigene Ports und eine eigene Datenbank `pundo_wt_sN` (nie `pundo_test`, nie `pundo`). 3000/8000/8100 bleiben tabu. Ein Slot wird **ausschließlich** mit `scripts/worktree-env` (Backend-Repo) angelegt und entfernt; fremde Prozesse auf Slot-Ports beendet der Controller nicht.
 
+- **Frontend-Pushes laufen isoliert (F8970 Worktree-Umgebungen, ab 2026-10-26):** Der Pre-Push-Hook des Frontends ruft `scripts/worktree-env verify-push --repo frontend` auf: sauberer Worktree, freier Slot mit eigenem Backend, Gateway, Stub-Worker und Datenbank, komplettes Frontend-Gate (ca. 7 min). Die Ports 3500/8500 gehören damit nur dem Haupt-Gate im Backend-Push und der Nightly. Wer sonst Tests, Playwright oder einen Dev-Server braucht, nimmt einen Slot (`scripts/worktree-env`); ein `next dev` auf 3500 ist nicht mehr nötig und stört fremde Läufe. Zwei unveröffentlichte Branches lassen sich vorab zusammen prüfen: `verify-push --repo frontend --sha <Frontend-Commit> --partner-ref <Backend-Ref>`.
+
 **Datenbanken und Migrationen (PFLICHT):**
 - Migrationen **nie** aus Entwürfen oder unveröffentlichten Branches auf die gemeinsame `pundo_test` anwenden (Wettlauf 2026-10-22/23 mit `f3900ops02` und `f7600s3p01`). Dafür einen Worktree-Slot nutzen.
 - `pundo_test` nur manuell über `sync_prod_to_test.sh` auffrischen; keine Fremdschlüssel-Waisen hinterlassen (Prodcopy-Slots tolerieren sie, `pundo_test` soll sauber sein).

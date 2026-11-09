@@ -354,12 +354,23 @@ function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console
     // in a production build. Default to Cloudflare's always-passes TEST sitekey (inlined at build
     // time; the E2E backend runs without a secret and bypasses verification on pundo_test).
     const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY || '1x00000000000000000000AA'
-    run('npx', ['next', 'build'], {
-      env: {
-        ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
-        ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
-      },
-    })
+    // next/font/google fetches the font CSS at build time. In a fresh checkout (isolated slot gate) that fetch
+    // occasionally fails with "next/font/google queries have exactly one entry"; a second attempt succeeds. A real
+    // compile error fails every attempt and still ends the build.
+    const buildEnv = {
+      ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
+      ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
+    }
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        run('npx', ['next', 'build'], { env: buildEnv })
+        break
+      } catch (err) {
+        if (attempt >= 3) throw err
+        log(`[E2E Frontend] next build fehlgeschlagen (Versuch ${attempt}/3) - wiederhole nach ${attempt * 10}s (Schriften-Abruf kann sporadisch scheitern).`)
+        execFileSync('sleep', [String(attempt * 10)])
+      }
+    }
     const sa = path.join(repoRoot, dist, 'standalone')
     fs.rmSync(path.join(sa, dist, 'static'), { recursive: true, force: true })
     fs.rmSync(path.join(sa, 'public'), { recursive: true, force: true })

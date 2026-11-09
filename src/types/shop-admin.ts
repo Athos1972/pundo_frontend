@@ -589,6 +589,8 @@ export interface OnboardingSubmitPayload {
   catalogConsent?: boolean
   /** F5980 AC1: UI language in which the consent text was shown (proof). */
   catalogConsentLang?: string
+  /** UI language of the wizard; selects the language of the verification and follow-up mails. */
+  lang?: string
 }
 
 export interface OnboardingSubmitResponse {

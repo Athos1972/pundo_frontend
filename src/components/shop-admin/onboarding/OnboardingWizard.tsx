@@ -98,6 +98,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           credentials: { type: 'google' },
           catalogConsent: saved.catalogConsent === true,
           catalogConsentLang: lang,
+          lang,
         })
         clearDraft()
         trackCompleteRegistrationOnce(resumed.shop_id)
@@ -219,6 +220,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           turnstileToken,
           catalogConsent: draft.catalogConsent === true,
           catalogConsentLang: lang,
+          lang,
         })
         if (photoFile) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }
@@ -276,6 +278,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           credentials: { type: 'google' },
           catalogConsent: draft.catalogConsent === true,
           catalogConsentLang: lang,
+          lang,
         })
         if (photoFile) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }

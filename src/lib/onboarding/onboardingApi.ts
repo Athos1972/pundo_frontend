@@ -4,6 +4,21 @@ import type { ClaimCandidate, OnboardingSubmitPayload, OnboardingSubmitResponse 
 import { matchClaimCandidates } from '@/lib/shop-admin-claim-client'
 import { OTHER_DOMAIN_SLUG, OTHER_OFFER_MAX_LENGTH } from '@/lib/onboarding/domains'
 import { CATALOG_CONSENT_TEXT_VERSION } from '@/lib/onboarding/catalogConsent'
+import { LANGS, DEFAULT_LANG } from '@/lib/lang'
+import type { Lang } from '@/lib/lang'
+
+/**
+ * Language for the verification and follow-up mails: the wizard language wins (what the user actually saw),
+ * the browser language is only a fallback, and anything unsupported becomes the default.
+ */
+export function resolveMailLang(wizardLang?: string): Lang {
+  const candidates = [wizardLang, typeof navigator !== 'undefined' ? navigator.language?.slice(0, 2) : undefined]
+  for (const c of candidates) {
+    const l = c?.toLowerCase()
+    if (l && (LANGS as readonly string[]).includes(l)) return l as Lang
+  }
+  return DEFAULT_LANG
+}
 
 export async function submitOnboarding(payload: OnboardingSubmitPayload): Promise<OnboardingSubmitResponse> {
   // Transform camelCase frontend types to snake_case backend API format.
@@ -45,7 +60,7 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
     credentials: emailCreds
       ? { type: 'email' as const, email: emailCreds.email, password: emailCreds.password, name: payload.shopName }
       : { type: 'google' as const },
-    lang: navigator.language?.slice(0, 2) ?? 'en',
+    lang: resolveMailLang(payload.lang),
     ...(otherOfferText ? { other_offer_text: otherOfferText } : {}),
     ...(sendConsent
       ? {

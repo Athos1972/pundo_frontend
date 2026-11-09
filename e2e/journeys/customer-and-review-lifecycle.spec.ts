@@ -81,6 +81,8 @@ async function publicShopReviews(): Promise<Array<{ id: number }>> {
 
 test.describe.serial('Customer Auth + Interaction + Review Lifecycle', () => {
 
+  test.fixme('F6110: Abschlussmail und unsichtbare Review nach Kontolöschung; Mail-Sink-/Archiv-Fixtures folgen im e2e-tester.', async () => {})
+
   test.beforeAll(async () => {
     test.setTimeout(120_000)
     const health = await api('GET', '/api/v1/products?limit=1')

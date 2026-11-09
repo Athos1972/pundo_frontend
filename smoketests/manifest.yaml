@@ -98,6 +98,21 @@ checks:
         attribute: dir
         expected: rtl
 
+  - id: privacy-request-anon
+    phase: anonymous
+    path: /privacy-request
+    per_language: false
+    languages: [de, ar]
+    priority: P1
+    timeout_ms: 15000
+    retries: 1
+    asserts:
+      - type: status
+        expected: 200
+      - type: selector-visible
+        selector: "h1"
+      - type: no-console-errors
+
   - id: protected-profile-blocks-anon
     phase: negative-auth
     path: /account

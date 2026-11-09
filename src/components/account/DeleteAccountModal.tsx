@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { t } from '@/lib/translations'
+import { privacyT } from '@/lib/i18n/privacy'
 
 interface Props {
   lang: string
@@ -12,6 +13,7 @@ interface Props {
 
 export function DeleteAccountModal({ lang, email, onConfirmed, onClose }: Props) {
   const tr = t(lang)
+  const privacy = privacyT(lang)
   const [phase, setPhase] = useState<'warning' | 'otp' | 'pending'>('warning')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
@@ -64,14 +66,17 @@ export function DeleteAccountModal({ lang, email, onConfirmed, onClose }: Props)
         body: JSON.stringify({ otp }),
       })
       if (!res.ok) {
+        if (res.status === 500) throw new Error(privacy.failed)
         const data = await res.json().catch(() => ({}))
         throw new Error(data?.detail ?? tr.auth_otp_invalid)
       }
       const data = await res.json().catch(() => ({}))
-      if (data?.status === 'archive_pending') {
+      if (data?.status === 'archive_pending' || data?.status === 'account_deletion_in_progress') {
         setPhase('pending')
-      } else {
+      } else if (data?.status === 'account_deleted') {
         onConfirmed()
+      } else {
+        throw new Error(privacy.failed)
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : tr.error_generic)

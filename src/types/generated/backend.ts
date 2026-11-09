@@ -3285,6 +3285,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customer/privacy-requests/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current Export */
+        get: operations["current_export_api_v1_customer_privacy_requests_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/privacy-requests/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Export */
+        post: operations["request_export_api_v1_customer_privacy_requests_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customer/privacy-requests/exports/{export_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Export */
+        get: operations["download_export_api_v1_customer_privacy_requests_exports__export_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customer/progression/account": {
         parameters: {
             query?: never;
@@ -3775,6 +3826,40 @@ export interface paths {
         get: operations["list_price_units_api_v1_price_units_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/privacy-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Public Request */
+        post: operations["create_public_request_api_v1_privacy_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/privacy-requests/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Public Request */
+        post: operations["confirm_public_request_api_v1_privacy_requests_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9181,6 +9266,19 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** CustomerExportOut */
+        CustomerExportOut: {
+            /** Expires At */
+            expires_at?: string | null;
+            /** Id */
+            id: string;
+            /** State */
+            state: string;
+        };
+        /** CustomerPrivacyStatusOut */
+        CustomerPrivacyStatusOut: {
+            export?: components["schemas"]["CustomerExportOut"] | null;
+        };
         /** DCRRequest */
         DCRRequest: {
             /** Client Name */
@@ -12004,6 +12102,19 @@ export interface components {
             /** Sort Order */
             sort_order: number;
         };
+        /** PrivacyConfirmIn */
+        PrivacyConfirmIn: {
+            /** Token */
+            token: string;
+        };
+        /** PrivacyConfirmOut */
+        PrivacyConfirmOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "confirmed" | "already_confirmed" | "expired" | "public_intake_disabled";
+        };
         /** ProductDetailResponse */
         ProductDetailResponse: {
             attributes: components["schemas"]["AttributeMap-Output"] | null;
@@ -12522,6 +12633,40 @@ export interface components {
             unit: string;
             /** Unit Label */
             unit_label?: string | null;
+        };
+        /** PublicPrivacyIntakeIn */
+        PublicPrivacyIntakeIn: {
+            /**
+             * Brand
+             * @default pundo
+             * @enum {string}
+             */
+            brand: "pundo" | "naidivse";
+            /**
+             * Company
+             * @default
+             */
+            company: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Language
+             * @default en
+             * @enum {string}
+             */
+            language: "en" | "de" | "el" | "ru" | "ar" | "he";
+            /** Message */
+            message?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Right
+             * @enum {string}
+             */
+            right: "access" | "export" | "erasure" | "restriction" | "objection" | "correction";
         };
         /**
          * PublicReviewReplyOut
@@ -23257,6 +23402,107 @@ export interface operations {
             };
         };
     };
+    current_export_api_v1_customer_privacy_requests_current_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerPrivacyStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_export_api_v1_customer_privacy_requests_export_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerExportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_export_api_v1_customer_privacy_requests_exports__export_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                export_id: string;
+            };
+            cookie?: {
+                customer_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     progression_account_api_v1_customer_progression_account_get: {
         parameters: {
             query: {
@@ -24289,6 +24535,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceUnitPublic"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_public_request_api_v1_privacy_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicPrivacyIntakeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_public_request_api_v1_privacy_requests_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacyConfirmOut"];
                 };
             };
             /** @description Validation Error */

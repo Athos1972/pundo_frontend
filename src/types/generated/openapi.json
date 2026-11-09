@@ -9835,6 +9835,51 @@
     "title": "CustomSocialLink",
     "type": "object"
    },
+   "CustomerExportOut": {
+    "properties": {
+     "expires_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "state": {
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "state"
+    ],
+    "title": "CustomerExportOut",
+    "type": "object"
+   },
+   "CustomerPrivacyStatusOut": {
+    "properties": {
+     "export": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/CustomerExportOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "CustomerPrivacyStatusOut",
+    "type": "object"
+   },
    "DCRRequest": {
     "properties": {
      "client_name": {
@@ -18387,6 +18432,40 @@
     "title": "PriceUnitPublic",
     "type": "object"
    },
+   "PrivacyConfirmIn": {
+    "properties": {
+     "token": {
+      "maxLength": 256,
+      "minLength": 20,
+      "title": "Token",
+      "type": "string"
+     }
+    },
+    "required": [
+     "token"
+    ],
+    "title": "PrivacyConfirmIn",
+    "type": "object"
+   },
+   "PrivacyConfirmOut": {
+    "properties": {
+     "status": {
+      "enum": [
+       "confirmed",
+       "already_confirmed",
+       "expired",
+       "public_intake_disabled"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "PrivacyConfirmOut",
+    "type": "object"
+   },
    "ProductDetailResponse": {
     "properties": {
      "attributes": {
@@ -19882,6 +19961,85 @@
      "unit"
     ],
     "title": "PublicPriceTier",
+    "type": "object"
+   },
+   "PublicPrivacyIntakeIn": {
+    "properties": {
+     "brand": {
+      "default": "pundo",
+      "enum": [
+       "pundo",
+       "naidivse"
+      ],
+      "title": "Brand",
+      "type": "string"
+     },
+     "company": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Company",
+      "type": "string"
+     },
+     "email": {
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+     },
+     "language": {
+      "default": "en",
+      "enum": [
+       "en",
+       "de",
+       "el",
+       "ru",
+       "ar",
+       "he"
+      ],
+      "title": "Language",
+      "type": "string"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "right": {
+      "enum": [
+       "access",
+       "export",
+       "erasure",
+       "restriction",
+       "objection",
+       "correction"
+      ],
+      "title": "Right",
+      "type": "string"
+     }
+    },
+    "required": [
+     "right",
+     "email"
+    ],
+    "title": "PublicPrivacyIntakeIn",
     "type": "object"
    },
    "PublicReviewReplyOut": {
@@ -45908,6 +46066,208 @@
     ]
    }
   },
+  "/api/v1/customer/privacy-requests/current": {
+   "get": {
+    "operationId": "current_export_api_v1_customer_privacy_requests_current_get",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomerPrivacyStatusOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Current Export",
+    "tags": [
+     "customer-privacy"
+    ]
+   }
+  },
+  "/api/v1/customer/privacy-requests/export": {
+   "post": {
+    "operationId": "request_export_api_v1_customer_privacy_requests_export_post",
+    "parameters": [
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CustomerExportOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Request Export",
+    "tags": [
+     "customer-privacy"
+    ]
+   }
+  },
+  "/api/v1/customer/privacy-requests/exports/{export_id}/download": {
+   "get": {
+    "operationId": "download_export_api_v1_customer_privacy_requests_exports__export_id__download_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "export_id",
+      "required": true,
+      "schema": {
+       "title": "Export Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "header",
+      "name": "authorization",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     },
+     {
+      "in": "cookie",
+      "name": "customer_token",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Customer Token"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Download Export",
+    "tags": [
+     "customer-privacy"
+    ]
+   }
+  },
   "/api/v1/customer/progression/account": {
    "get": {
     "description": "Read the K4a account projection without provisioning progression data.",
@@ -48142,6 +48502,92 @@
     "summary": "List Price Units",
     "tags": [
      "price-units"
+    ]
+   }
+  },
+  "/api/v1/privacy-requests": {
+   "post": {
+    "operationId": "create_public_request_api_v1_privacy_requests_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PublicPrivacyIntakeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Create Public Request Api V1 Privacy Requests Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Public Request",
+    "tags": [
+     "privacy"
+    ]
+   }
+  },
+  "/api/v1/privacy-requests/confirm": {
+   "post": {
+    "operationId": "confirm_public_request_api_v1_privacy_requests_confirm_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PrivacyConfirmIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PrivacyConfirmOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Confirm Public Request",
+    "tags": [
+     "privacy"
     ]
    }
   },

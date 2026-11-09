@@ -8,13 +8,15 @@ import { ProfileTab } from './ProfileTab'
 import { SecurityTab } from './SecurityTab'
 import { ReviewsTab } from './ReviewsTab'
 import { DangerTab } from './DangerTab'
+import { PrivacyTab } from './PrivacyTab'
 import { FavoritesTab } from './FavoritesTab'
 import type { AuthUser, LinkedAccountsResponse } from '@/types/customer'
 import type { MyReview, ProgressionAccountResponse, TrustProfileResponse } from '@/types/api'
 import { TrustProfileSection } from './TrustProfileSection'
 import { ProgressionSection } from './ProgressionSection'
+import { privacyT } from '@/lib/i18n/privacy'
 
-type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'progression' | 'danger'
+type Tab = 'profile' | 'security' | 'reviews' | 'favorites' | 'progression' | 'privacy' | 'danger'
 type InitialTab = Tab | 'trust'
 
 interface Props {
@@ -47,6 +49,7 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
     { id: 'reviews', label: tr.account_tab_reviews },
     { id: 'favorites', label: tr.favorites_tab },
     { id: 'progression', label: tr.progression_tab },
+    { id: 'privacy', label: privacyT(lang).tab },
     { id: 'danger', label: tr.account_tab_danger },
   ]
 
@@ -93,6 +96,15 @@ export function AccountTabs({ initialUser, linkedAccounts, reviews, trustProfile
 
       {/* Tab panels */}
       <div className="flex-1 min-w-0">
+        <div
+          role="tabpanel"
+          id="tabpanel-privacy"
+          aria-labelledby="tab-privacy"
+          hidden={activeTab !== 'privacy'}
+        >
+          {activeTab === 'privacy' && <PrivacyTab lang={lang} />}
+        </div>
+
         <div
           role="tabpanel"
           id="tabpanel-profile"

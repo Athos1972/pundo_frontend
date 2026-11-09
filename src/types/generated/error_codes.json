@@ -90,6 +90,14 @@
    "progression_rules_unavailable"
   ]
  },
+ "api/customer/privacy": {
+  "404": [
+   "privacy_export_not_found"
+  ],
+  "410": [
+   "privacy_export_expired"
+  ]
+ },
  "api/internal/llm_webhook": {
   "503": [
    "correlation_not_ready"
@@ -98,6 +106,11 @@
  "api/mail_guard": {
   "400": [
    "captcha_failed"
+  ]
+ },
+ "api/privacy": {
+  "429": [
+   "privacy_request_rate_limited"
   ]
  },
  "api/shop_owner/shop_owner_items": {

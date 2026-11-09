@@ -191,7 +191,8 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
     await page.fill('input[name="password"]', ctx.password)
     await page.click('button[type="submit"]')
 
-    const alert = page.getByRole('alert')
+    // Not getByRole('alert') alone: Next's route announcer (#__next-route-announcer__) also has role="alert".
+    const alert = page.locator('[role="alert"]:not(#__next-route-announcer__)')
     await expect(alert).toContainText('awaiting approval', { timeout: 10_000 })
     await expect(alert, 'Backend-Rohtext darf nicht erscheinen').not.toContainText('Account pending approval')
 

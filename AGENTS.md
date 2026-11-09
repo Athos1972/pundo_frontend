@@ -100,7 +100,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Gemeinsamer Main-Baum: nur explizite Pfade committen (`git commit -- <pfade>`), Commit und Push nie in einem Befehl verketten, den Push-Check (`git fetch`, `origin/main..main`) unmittelbar vor `git push` ausführen. Am 2026-10-24 gingen so drei fremde Commits mit einem Datenschutz-Push raus.
 - Das Gate im Arbeitsbaum-Modus testet auch die uncommitteten Dateien anderer Sessions mit (2026-10-25: fremde Worker-Dateien machten einen Fast-Gate rot). Größere Pushes laufen deshalb aus dem sauberen Worktree-Paar.
 - Slots: Entwicklungs-Sessions belegen von Slot 1 aufwärts und tragen sich mit `new --owner "<Session/Auftrag>"` ein; `verify-push`/`verify-pair` nehmen von Slot 5 abwärts, reservieren atomar und warten bei Vollbelegung bis zu 300 s. `list` zeigt Besitzer, Branches, Leerlauf und `lease_expired` (nur Hinweis; der Controller räumt nie von selbst auf). `doctor --all --repair` entfernt auch Reste abgebrochener Verify-Läufe.
-- Offene Punkte: Der Pre-Push-Hook des Frontends wird noch auf die automatische Moduswahl umgestellt (der Backend-Hook nutzt `verify-push` bereits); Test `test_generate_category_synonyms` ist im vollen Prodcopy-Lauf reihenfolgeabhängig (einzeln grün).
+- Offene Punkte: Test `test_generate_category_synonyms` ist im vollen Prodcopy-Lauf reihenfolgeabhängig (einzeln grün).
 <!-- END:port-convention -->
 
 <!-- BEGIN:test-gates -->

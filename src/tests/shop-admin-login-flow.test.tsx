@@ -86,12 +86,15 @@ describe('Shop-admin login flow', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/shop-admin/pending-approval'))
   })
 
-  it('shows the backend message on failure, the generic one when there is none', async () => {
+  it('shows the translated message for a known backend detail, the generic one for unknown or missing ones', async () => {
     const user = userEvent.setup()
-    mockFetch.mockResolvedValueOnce(json(401, { detail: 'Wrong password' }))
+    mockFetch.mockResolvedValueOnce(json(401, { detail: 'Invalid credentials' }))
     render(<LoginPage />)
     await submit(user)
-    expect((await screen.findByRole('alert')).textContent).toBe('Wrong password')
+    expect((await screen.findByRole('alert')).textContent).toBe(en.login_error_invalid_credentials)
+    mockFetch.mockResolvedValueOnce(json(401, { detail: 'Wrong password' }))
+    await user.click(screen.getByRole('button', { name: en.login_btn }))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe(en.error_generic))
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => { throw new Error('no json') } })
     await user.click(screen.getByRole('button', { name: en.login_btn }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toBe(en.error_generic))

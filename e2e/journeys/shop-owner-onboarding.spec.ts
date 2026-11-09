@@ -181,6 +181,26 @@ test.describe.serial('Shop-Owner Onboarding: Register → Verify → Approve →
     ).toBe(true)
   })
 
+  // ── Test 4b: Login vor der Freigabe zeigt eine übersetzte Meldung ─────────
+
+  test('T4b — Login vor Freigabe: übersetzte Meldung statt "Account pending approval"; falsches Passwort ebenso', async ({ page }) => {
+    await page.goto(BASE_URL + '/shop-admin/login')
+    await waitForPageHydrated(page)
+
+    await page.fill('input[name="email"]', ctx.email)
+    await page.fill('input[name="password"]', ctx.password)
+    await page.click('button[type="submit"]')
+
+    const alert = page.getByRole('alert')
+    await expect(alert).toContainText('awaiting approval', { timeout: 10_000 })
+    await expect(alert, 'Backend-Rohtext darf nicht erscheinen').not.toContainText('Account pending approval')
+
+    await page.fill('input[name="password"]', 'FalschesPasswort!123')
+    await page.click('button[type="submit"]')
+    await expect(alert).toContainText('Email or password is incorrect', { timeout: 10_000 })
+    await expect(alert).not.toContainText('Invalid credentials')
+  })
+
   // ── Test 5: Admin approves owner ──────────────────────────────────────────
 
   test('T5 — Admin approved den Owner', async () => {

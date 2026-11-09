@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getLangFromCookie } from '@/lib/lang'
 import { tAdmin } from '@/lib/shop-admin-translations'
 import { sanitizeNextPath } from '@/lib/safe-redirect'
+import { loginErrorMessage } from '@/lib/shop-admin-login-error'
 import { FormField } from '@/components/shop-admin/FormField'
 import { ShopOwnerOAuthButton } from '@/components/shop-admin/onboarding/ShopOwnerOAuthButton'
 import { Suspense } from 'react'
@@ -75,7 +76,7 @@ function LoginForm() {
           }
         } else {
           const body = await res.json().catch(() => ({}))
-          setErrors({ general: body?.detail ?? tr.error_generic })
+          setErrors({ general: loginErrorMessage(body?.detail, tr) })
         }
       } catch {
         setErrors({ general: tr.error_generic })

@@ -86,7 +86,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Manuelle Gate-Umgebungen nur per `source ~/.pundo/worktree-env/slots/slot-N/frontend.env` bzw. `backend.env` herstellen (setzt Ports, Datenbank und `MAIL_SINK_DIR` konsistent). Selbstgebaute Variablen führten am 2026-10-25 zu „keine Mail im Mail-Sink“ und zu einer `.env`, die auf `pundo_test` zeigte.
 
 **Worktrees (F8970):**
-- Verpflichtend bei größeren Änderungen (Migration, Vertrags-Snapshot oder mehr als zwölf Dateien; Entwurf `scripts/push_mode.py`, an den Hooks noch nicht aktiv) und bei jeder Migration. Bugfixes weiter direkt im Main-Arbeitsbaum.
+- Der Backend-Push auf main läuft standardmäßig isoliert (`scripts/push_mode.py` wählt `clean`: freier Slot, eigene Datenbank, sauberer Checkout). Der schnelle Arbeitsbaum-Modus teilt sich Schema-Vorlage und uncommittete Dateien aller Sessions (Vorfälle 2026-10-24/25/26 und 2026-11-09). `PUNDO_PUSH_MODE=auto` stellt die größenabhängige Wahl wieder her (Migration, Vertrags-Snapshot oder mehr als zwölf Dateien), `PUNDO_PUSH_MODE=working-tree` erzwingt den Arbeitsbaum-Modus (nur Notfall). Bugfixes entwickelt man weiter direkt im Main-Arbeitsbaum, nur der Push-Check läuft isoliert. `verify-push` warnt vor Slots mit abgelaufener Lease; Aufräumen mit `scripts/worktree-env destroy --slot N`.
 - Push-Gate einer größeren Änderung läuft aus einem frischen Worktree: `.venv`/`.env` verlinken, Frontend mit echtem `npm ci`, `MAIL_SINK_DIR` auf den laufenden Sink; Backend-Gate mit `PUNDO_FRONTEND_REPO`, Frontend-Gate mit `BACKEND_REPO`/`PUNDO_BACKEND_DIR` auf die zusammengehörigen Worktrees. Parken fremder Dateien per `git stash` entfällt dadurch.
 - Selbstbedienung (aus dem Backend-Worktree):
   ```bash

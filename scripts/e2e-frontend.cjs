@@ -361,13 +361,18 @@ function ensureStandaloneBuild({ repoRoot = REPO_ROOT, backendUrl, log = console
       ...process.env, BACKEND_URL: backend, NEXT_PUBLIC_TURNSTILE_SITEKEY: sitekey,
       ...(coverageMode() ? { E2E_COVERAGE_BUILD: '1' } : {}),
     }
+    // Three identical retries were not enough on 2026-11-09 (all failed in one gate run). The slot's own build
+    // directory may hold a stale Turbopack state (see F8970 note), so every retry starts with an empty one. Only
+    // `.next-worktree-sN` / `.next-cov` are removed, never the shared `.next` of a main checkout.
+    const MAX_BUILD_ATTEMPTS = 4
     for (let attempt = 1; ; attempt += 1) {
       try {
         run('npx', ['next', 'build'], { env: buildEnv })
         break
       } catch (err) {
-        if (attempt >= 3) throw err
-        log(`[E2E Frontend] next build fehlgeschlagen (Versuch ${attempt}/3) - wiederhole nach ${attempt * 10}s (Schriften-Abruf kann sporadisch scheitern).`)
+        if (attempt >= MAX_BUILD_ATTEMPTS) throw err
+        log(`[E2E Frontend] next build fehlgeschlagen (Versuch ${attempt}/${MAX_BUILD_ATTEMPTS}) - leere ${dist}, wiederhole nach ${attempt * 10}s (Schriften-Abruf kann sporadisch scheitern).`)
+        if (dist !== '.next') fs.rmSync(path.join(repoRoot, dist), { recursive: true, force: true })
         execFileSync('sleep', [String(attempt * 10)])
       }
     }

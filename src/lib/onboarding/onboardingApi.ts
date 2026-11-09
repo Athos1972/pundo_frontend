@@ -89,6 +89,17 @@ export async function submitOnboarding(payload: OnboardingSubmitPayload): Promis
     // Backend rejects non-http(s) website URLs (javascript:, data: …) with 422.
     const body = await res.json().catch(() => ({})) as unknown
     const text = JSON.stringify(body)
+    // Pydantic 422: detail[].loc ends with the offending field (credentials -> password / email).
+    const locs = ((body as { detail?: unknown }).detail instanceof Array ? (body as { detail: unknown[] }).detail : [])
+      .map(d => (d as { loc?: unknown })?.loc)
+      .filter((l): l is unknown[] => Array.isArray(l))
+      .map(l => l[l.length - 1])
+    if (locs.includes('password')) {
+      throw Object.assign(new Error('PASSWORD_INVALID'), { code: 'PASSWORD_INVALID' })
+    }
+    if (locs.includes('email')) {
+      throw Object.assign(new Error('EMAIL_INVALID'), { code: 'EMAIL_INVALID' })
+    }
     // Consent codes first: the 422 body echoes the request (incl. a "website" key), which would
     // otherwise be mistaken for INVALID_URL.
     if (text.includes('catalog_consent_')) {

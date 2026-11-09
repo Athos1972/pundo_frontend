@@ -96,3 +96,39 @@ describe('GET /api/nominatim', () => {
     expect(await down.json()).toEqual([])
   })
 })
+
+// Antwort von nominatim.openstreetmap.org/reverse?format=json (gekürzt)
+const NOMINATIM_REVERSE_ANSWER = { place_id: 1, lat: '34.9167', lon: '33.6333', display_name: 'Makariou III 12, Larnaca, Cyprus', address: { road: 'Makariou III' } }
+const getReverse = (qs: string) => new NextRequest(`http://localhost:3500/api/nominatim?${qs}`)
+
+describe('GET /api/nominatim (reverse: lat/lon)', () => {
+  it('calls the Nominatim reverse endpoint with User-Agent and returns display_name', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(NOMINATIM_REVERSE_ANSWER), { status: 200 }))
+    const { GET } = await import('@/app/api/nominatim/route')
+    const res = await GET(getReverse('lat=34.9167&lon=33.6333'))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ display_name: 'Makariou III 12, Larnaca, Cyprus' })
+    const [url, init] = fetchMock.mock.calls[0]
+    const parsed = new URL(String(url))
+    expect(`${parsed.origin}${parsed.pathname}`).toBe('https://nominatim.openstreetmap.org/reverse')
+    expect(Object.fromEntries(parsed.searchParams)).toEqual({ lat: '34.9167', lon: '33.6333', format: 'json' })
+    expect(init.headers['User-Agent']).toMatch(/^pundo-admin\//)
+  })
+
+  it.each([
+    'lat=abc&lon=33', 'lat=34&lon=', 'lat=34', 'lon=33', 'lat=91&lon=33', 'lat=34&lon=181', 'lat=Infinity&lon=1',
+  ])('rejects invalid coordinates (%s) with 400 without calling Nominatim', async (qs) => {
+    const { GET } = await import('@/app/api/nominatim/route')
+    const res = await GET(getReverse(qs))
+    expect(res.status).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('forwards an HTTP error status and answers 502 when Nominatim is unreachable', async () => {
+    const { GET } = await import('@/app/api/nominatim/route')
+    fetchMock.mockResolvedValue(new Response('rate limited', { status: 429 }))
+    expect((await GET(getReverse('lat=34&lon=33'))).status).toBe(429)
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'))
+    expect((await GET(getReverse('lat=34&lon=33'))).status).toBe(502)
+  })
+})

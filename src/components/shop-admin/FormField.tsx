@@ -7,10 +7,15 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   as?: 'input' | 'textarea' | 'select'
   rows?: number
   children?: React.ReactNode
+  /** Dauerhafter Hilfetext; wird per aria-describedby mit dem Feld verknüpft (auch neben einer Fehlermeldung). */
+  hint?: string
 }
 
-export function FormField({ label, error, as = 'input', rows = 3, children, className, id, ...props }: FormFieldProps) {
+export function FormField({ label, error, hint, as = 'input', rows = 3, children, className, id, ...props }: FormFieldProps) {
   const fieldId = id ?? props.name
+  const describedBy = [error ? `${fieldId}-error` : null, hint ? `${fieldId}-hint` : null]
+    .filter(Boolean)
+    .join(' ') || undefined
 
   const baseClass = `w-full rounded-lg border px-3 py-2 text-sm
     focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
@@ -37,7 +42,7 @@ export function FormField({ label, error, as = 'input', rows = 3, children, clas
           onChange={props.onChange as unknown as React.ChangeEventHandler<HTMLTextAreaElement>}
           className={baseClass}
           aria-invalid={!!error}
-          aria-describedby={error ? `${fieldId}-error` : undefined}
+          aria-describedby={describedBy}
         />
       ) : as === 'select' ? (
         <select
@@ -50,7 +55,7 @@ export function FormField({ label, error, as = 'input', rows = 3, children, clas
           onChange={props.onChange as unknown as React.ChangeEventHandler<HTMLSelectElement>}
           className={baseClass}
           aria-invalid={!!error}
-          aria-describedby={error ? `${fieldId}-error` : undefined}
+          aria-describedby={describedBy}
         >
           {children}
         </select>
@@ -60,8 +65,14 @@ export function FormField({ label, error, as = 'input', rows = 3, children, clas
           {...props}
           className={baseClass}
           aria-invalid={!!error}
-          aria-describedby={error ? `${fieldId}-error` : undefined}
+          aria-describedby={describedBy}
         />
+      )}
+
+      {hint && (
+        <p id={`${fieldId}-hint`} className="text-xs text-gray-500">
+          {hint}
+        </p>
       )}
 
       {error && (

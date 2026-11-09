@@ -63,6 +63,11 @@ Nur Brands mit gesetztem `metaPixelId` laden den Pixel und zeigen die Marketing-
 | `PageView` | `MetaPixel.tsx` beim Init |
 | `Search` | `SearchContent.tsx` — bei geänderter Query |
 | `ViewContent` | `PixelViewContent.tsx` auf Produkt-/Shop-Detailseite |
+| `CompleteRegistration` | `OnboardingWizard.tsx` (Shop-Registrierung) direkt nach erfolgreicher Backend-Antwort von `submitOnboarding` (E-Mail- und Google-Pfad, auch OAuth-Resume), vor dem Redirect auf `/shop-admin/register/check-email`. Genau einmal pro Registrierung: `trackCompleteRegistrationOnce(shop_id)` dedupliziert per Modul-Set und `sessionStorage`. Nicht beim Seitenaufruf, nicht bei Fehlern, nicht auf der check-email-/verify-email-Seite (Reload bzw. nie erreicht). |
+
+### Pixel im Shop-Admin (Registrierung)
+
+`/shop-admin/**` liegt ausserhalb des Customer-Layouts. `src/app/(shop-admin)/layout.tsx` bindet den Pixel daher ueber `src/components/shop-admin/ShopAdminMetaPixel.tsx` ein. Clean-Boundary-Entscheidung: kein Import von `ConsentContext`/`MetaPixel` aus Customer-Code; der Init-Snippet liegt gemeinsam in `src/lib/meta-pixel.ts` (`buildMetaPixelInitScript`), die Einwilligung wird serverseitig aus dem Consent-Cookie (`app_cookie_consent`, `path=/`) gelesen. Ohne Marketing-Opt-in wird nichts gerendert. Im Shop-Admin gibt es keinen Cookie-Banner: wer dort direkt einsteigt, ohne zuvor auf der Kundenseite zugestimmt zu haben, wird nicht getrackt. Die CSP (`proxy.ts`) greift fuer alle Pfade, auch `/shop-admin/**`.
 
 ### CSP
 

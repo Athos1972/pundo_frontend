@@ -6,11 +6,15 @@ import { FormField } from '@/components/shop-admin/FormField'
 import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
 import { ShopOwnerOAuthButton } from './ShopOwnerOAuthButton'
 import type { ShopAdminTranslations } from '@/lib/shop-admin-translations'
+import { isValidEmail, validatePassword } from '@/lib/onboarding/credentialsValidation'
 
 interface StepCredentialsProps {
   tr: ShopAdminTranslations
   emailTakenError: boolean
   submitError: string | null
+  /** Backend rejected the password / email (422): shown at the matching field. */
+  passwordRejected?: boolean
+  emailRejected?: boolean
   isPending: boolean
   /** Increment after a rejected captcha / failed submit: a fresh single-use token is requested. */
   captchaResetKey: number
@@ -18,9 +22,11 @@ interface StepCredentialsProps {
   onBack: () => void
 }
 
-export function StepCredentials({ tr, emailTakenError, submitError, isPending, captchaResetKey, onSubmit, onBack }: StepCredentialsProps) {
+export function StepCredentials({ tr, emailTakenError, submitError, passwordRejected = false, emailRejected = false, isPending, captchaResetKey, onSubmit, onBack }: StepCredentialsProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [emailTouched, setEmailTouched] = useState(false)
+  const [passwordTouched, setPasswordTouched] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [seenResetKey, setSeenResetKey] = useState(captchaResetKey)
   // A reset means the old token was consumed/rejected: drop it until the widget issues a new one.
@@ -30,9 +36,27 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, c
   }
   const handleToken = useCallback((token: string) => setTurnstileToken(token), [])
 
+  const passwordCheck = validatePassword(password)
+  const emailValid = isValidEmail(email)
+  const emailFieldError = emailTakenError
+    ? tr.onboarding_error_email_taken
+    : emailTouched && email && !emailValid
+      ? tr.onboarding_email_error_invalid
+      : emailRejected && emailValid
+        ? tr.onboarding_email_error_invalid
+        : undefined
+  const passwordFieldError = passwordTouched && password && passwordCheck
+    ? (passwordCheck === 'short' ? tr.onboarding_password_error_short : tr.onboarding_password_error_long)
+    : passwordRejected && !passwordCheck
+      ? tr.onboarding_credentials_rejected
+      : undefined
+  const canSubmit = emailValid && !passwordCheck && !!turnstileToken
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email || !password || !turnstileToken) return
+    setEmailTouched(true)
+    setPasswordTouched(true)
+    if (!canSubmit || !turnstileToken) return
     onSubmit(email, password, turnstileToken)
   }
 
@@ -57,7 +81,8 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, c
           required
           value={email}
           onChange={e => setEmail(e.target.value)}
-          error={emailTakenError ? tr.onboarding_error_email_taken : undefined}
+          onBlur={() => setEmailTouched(true)}
+          error={emailFieldError}
         />
         <FormField
           label={tr.onboarding_password_label}
@@ -67,6 +92,9 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, c
           required
           value={password}
           onChange={e => setPassword(e.target.value)}
+          onBlur={() => setPasswordTouched(true)}
+          error={passwordFieldError}
+          hint={tr.onboarding_password_hint}
         />
 
         <TurnstileWidget
@@ -99,7 +127,7 @@ export function StepCredentials({ tr, emailTakenError, submitError, isPending, c
           </button>
           <button
             type="submit"
-            disabled={isPending || !email || !password || !turnstileToken}
+            disabled={isPending || !canSubmit}
             className="flex-1 py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPending ? '…' : tr.onboarding_submit}

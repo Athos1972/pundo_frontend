@@ -10,6 +10,7 @@ import {
   loadDraft, saveDraft, clearDraft, draftAgeMs,
 } from '@/lib/onboarding/draftStorage'
 import { matchExistingShops, submitOnboarding, uploadOnboardingPhoto } from '@/lib/onboarding/onboardingApi'
+import { trackCompleteRegistrationOnce } from '@/lib/meta-pixel'
 import { tShopAdminClaim } from '@/lib/i18n/shop-admin-claim'
 import type {
   ClaimCandidate, OnboardingProviderType, OnboardingContact, OnboardingLocation, OnboardingDraft,
@@ -57,6 +58,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [showDraftBanner, setShowDraftBanner] = useState(false)
   const [draftAge, setDraftAge] = useState(0)
   const [emailTakenError, setEmailTakenError] = useState(false)
+  const [passwordRejected, setPasswordRejected] = useState(false)
+  const [emailRejected, setEmailRejected] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [websiteError, setWebsiteError] = useState<string | null>(null)
   const [consentError, setConsentError] = useState<string | null>(null)
@@ -84,7 +87,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     if (!saved?.providerType || !saved?.location) return
     startTransition(async () => {
       try {
-        await submitOnboarding({
+        const resumed = await submitOnboarding({
           providerType: saved.providerType!,
           domainSlugs: saved.domainSlugs,
           specialtySlugs: saved.specialtySlugs,
@@ -97,6 +100,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           catalogConsentLang: lang,
         })
         clearDraft()
+        trackCompleteRegistrationOnce(resumed.shop_id)
         router.push('/shop-admin/register/check-email')
       } catch {
         setSubmitError(tr.onboarding_error_oauth_failed)
@@ -196,6 +200,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
 
   function handleFinalSubmit(email: string, password: string, turnstileToken: string) {
     setEmailTakenError(false)
+    setPasswordRejected(false)
+    setEmailRejected(false)
     setSubmitError(null)
     if (!draft.providerType || !draft.location) return
 
@@ -219,7 +225,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         }
         clearDraft()
         // Pass shop_id so portal can use it
-        void result
+        trackCompleteRegistrationOnce(result.shop_id)
         router.push('/shop-admin/register/check-email')
       } catch (err) {
         const code = (err as { code?: string }).code
@@ -240,6 +246,10 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           setConsentError(tr.catalog_consent_version_error)
         } else if (code === 'CAPTCHA_FAILED') {
           setSubmitError(tr.onboarding_error_captcha)
+        } else if (code === 'PASSWORD_INVALID') {
+          setPasswordRejected(true)
+        } else if (code === 'EMAIL_INVALID') {
+          setEmailRejected(true)
         } else if (code === 'RATE_LIMITED') {
           setSubmitError(tr.onboarding_error_rate_limited)
         } else {
@@ -271,7 +281,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           try { await uploadOnboardingPhoto(photoFile) } catch { /* non-fatal */ }
         }
         clearDraft()
-        void result
+        trackCompleteRegistrationOnce(result.shop_id)
         router.push('/shop-admin/register/check-email')
       } catch (err) {
         const code = (err as { code?: string }).code
@@ -398,6 +408,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
             tr={tr}
             emailTakenError={emailTakenError}
             submitError={submitError}
+            passwordRejected={passwordRejected}
+            emailRejected={emailRejected}
             isPending={isPending}
             captchaResetKey={captchaResetKey}
             onSubmit={handleFinalSubmit}

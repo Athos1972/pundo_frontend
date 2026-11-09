@@ -90,10 +90,7 @@ export function StepLocation({ tr, initialLocation, onNext, onBack }: StepLocati
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     setReversing(true)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        { headers: { 'Accept-Language': 'en' } }
-      )
+      const res = await fetch(`/api/nominatim?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`)
       if (res.ok) {
         const data = await res.json() as { display_name?: string }
         if (data.display_name) setAddress(data.display_name)

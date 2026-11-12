@@ -9,6 +9,7 @@ touches-modules:
   - src/app/(system-admin)/admin/(portal)/privacy-requests/**
   - src/app/(system-admin)/admin/(portal)/crm/**
   - src/components/system-admin/privacy/**
+  - src/components/system-admin/crm/**
   - src/app/crm/opt-out/**
 touches-roles:
   - admin
@@ -37,23 +38,23 @@ last-result: N/A
 **Fixtures:**
 | Fixture-Name | Was wird aufgebaut | Was wird damit geprüft |
 |---|---|---|
-| `contact-restricted` | CRM-Kontakt plus Kunde mit Favoriten-Alert, Einschränkungsfall | AC22 |
-| `contact-objection` | CRM-Kontakt im Status kontaktierbar, Kunde mit Benachrichtigungs-Einwilligung | AC23 |
+| `person-restricted` | CRM-Person mit Beziehung zu einer Organisation plus Kunde mit Favoriten-Alert, Einschränkungsfall | AC22 |
+| `person-objection` | kontaktierbare CRM-Person mit Personen-/Beziehungskanal, Kunde mit Benachrichtigungs-Einwilligung | AC23 |
 
 **Schritte (Runbook):**
-1. Admin setzt im Fall von `contact-restricted` die Einschränkung → Markierung in Fall, CRM-Kontakt- und Kundenansicht sichtbar.
-2. Outreach-Lauf und Benachrichtigungslauf auslösen → keine Mail an die Adresse im Mail-Sink (Gegenprobe: Kontrollkontakt bekommt seine Mail).
+1. Admin setzt im Fall von `person-restricted` die Einschränkung → Markierung in Fall, CRM-Person- und Kundenansicht sichtbar.
+2. Outreach-Lauf und Benachrichtigungslauf auslösen → keine Mail an die Adresse im Mail-Sink (Gegenprobe: Kontrollperson bekommt ihre Mail).
 3. Retention-Job mit einer Frist auslösen, die den Kontakt sonst träfe → Daten bleiben (AC22).
 4. Einschränkung im Fall mit Notiz aufheben → nächster Lauf versendet wieder.
-5. Widerspruch für `contact-objection` umsetzen, für die CRM-Person über den Knopf „Record objection“ auf der Personenseite (Quelle und Begründung, Folgeauftrag „Widerspruch einer Person im Admin erfassen“) → Adresse als Hash in der Unterdrückungsliste, Werbe- und Benachrichtigungs-Einwilligungen aus; folgender Outreach-Lauf versendet nichts (AC23).
+5. Widerspruch für `person-objection` über den Knopf „Record objection“ auf der Personenseite (Quelle und Begründung) erfassen; der Fallweg verwendet `PersonService.record_objection` statt eines zweiten Suppression-Pfads → Adresse als Hash in der Unterdrückungsliste, Werbe- und Benachrichtigungs-Einwilligungen aus; folgender Outreach-Lauf versendet nichts (AC23).
 6. Opt-out-Seite (`/crm/opt-out`) verlinkt auf das Datenschutzformular.
 
 **Known Risks:**
 - Gegenprobe mit Kontrollkontakt ist Pflicht, sonst ist „keine Mail“ nicht von „Lauf tat nichts“ zu unterscheiden (R2 Wirkungs-Assertion).
 
 **Delta CRM-Org-Schnitt ([F7600 CRM-Backbone], Spec 2026-10-25-crm-person-contact-modell, Architektur §13 und Abweichung A12; Pflicht für die Umsetzung dieser Journey, Stand e2e-tester 2026-10-25):**
-- Begriffe: „CRM-Kontakt“ ist jetzt entweder eine **Organisation** mit Lead-Status (`crm_org.lead_state`) oder eine **Person** mit Beziehungen. Die Fixtures `contact-restricted` und `contact-objection` werden als Person mit Beziehung zu einer Akquise-Organisation (`QUEUED`) und eigener Beziehungs- oder Personenmail angelegt; der Kontrollkontakt ist eine zweite Person bzw. der Org-Kanal derselben Firma.
+- Begriffe: Es gibt keinen „CRM-Kontakt“ mehr. Die Fixtures `person-restricted` und `person-objection` werden als Person mit Beziehung zu einer Akquise-Organisation (`QUEUED`) und eigener Beziehungs- oder Personenmail angelegt; die Kontrollperson ist eine zweite Person bzw. der Org-Kanal derselben Firma.
 - Schritt 5 (Widerspruch) prüft nach Besitzer: `crm_person.optout_at` gesetzt (Entscheidung EA17 Personensperre), alle Personen- und Beziehungskanäle `consent_state = optout` und ihre HMACs in `crm_suppression`; **die Organisation behält Lead-Status und Org-Kanäle**, ein folgender Outreach an den Org-Kanal kommt im Mail-Sink an, die Person fehlt in jeder Empfängerauswahl (`GET /orgs/{id}/outreach/recipients`).
-- Inhaber-Regel (Entscheidung E3, Schalter `owner_optout_rule` in der CRM-Konfiguration, Standard an): widerspricht eine Person mit aktiver Rolle `owner`, steht ihre Firma zusätzlich auf `HARD_OPTOUT` und deren Org-Kanäle sind gesperrt; mit Schalter aus nicht. Eigene Fixture, nicht mit `contact-objection` zusammenlegen.
+- Inhaber-Regel (Entscheidung E3, Schalter `owner_optout_rule` in der CRM-Konfiguration, Standard an): widerspricht eine Person mit aktiver Rolle `owner`, steht ihre Firma zusätzlich auf `HARD_OPTOUT` und deren Org-Kanäle sind gesperrt; mit Schalter aus nicht. Eigene Fixture, nicht mit `person-objection` zusammenlegen.
 - Schritt 3 (Retention): Die Retention betrifft Personen (`crm_person_retention`, 36 Monate, Kandidat nur ohne aktive Beziehung zu einer lebenden Org); Org-Leads ohne Person sind weiter zurückgestellt. Achtung Testbericht des Org-Schnitts: Die Kandidatenabfrage ist dort fehlerhaft unkorreliert (Befund), eine Gegenprobe „Kandidat ohne Einschränkung wird gezählt“ ist daher Pflicht.
 - Belegt sind die Opt-out-Wirkungen heute über `POST /api/v1/crm/opt-out` (Token v2, Quelle `optout_link`) und den Admin-Knopf „Record objection“ auf der Personenseite mit Quelle und Begründung (`POST /admin/crm/persons/{id}/opt-out` mit `{source, reason}`; Journeys `crm-opt-out` AC5/AC6, `admin-crm-persons` Schritt 8, `admin-crm-relation-channels`, API-Abnahme AC 15/16/17); die Journey selbst ist noch nicht implementiert. Der Export (Art. 15) enthält Zeitpunkt, Quelle und Begründung des Widerspruchs, die Löschung entfernt sie mit der Personenzeile.

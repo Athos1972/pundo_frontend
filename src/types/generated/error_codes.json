@@ -23,6 +23,29 @@
    "photo_already_moderated"
   ]
  },
+ "api/admin/privacy": {
+  "404": [
+   "privacy_action_not_found",
+   "privacy_case_not_found"
+  ],
+  "409": [
+   "privacy_action_right_mismatch",
+   "privacy_case_closed",
+   "privacy_customer_self_erasure",
+   "privacy_erasure_failed",
+   "privacy_export_not_ready",
+   "privacy_preview_stale"
+  ],
+  "422": [
+   "extension_already_used",
+   "privacy_action_reason_required",
+   "privacy_erasure_confirmation_required",
+   "privacy_response_message_required"
+  ],
+  "423": [
+   "privacy_identity_pending"
+  ]
+ },
  "api/admin/progression_archive": {
   "403": [
    "archive_approval_token_invalid"
@@ -109,6 +132,12 @@
   ]
  },
  "api/privacy": {
+  "404": [
+   "privacy_download_not_found"
+  ],
+  "410": [
+   "privacy_download_gone"
+  ],
   "429": [
    "privacy_request_rate_limited"
   ]

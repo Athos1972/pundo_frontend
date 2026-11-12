@@ -1,6 +1,6 @@
 ---
 id: privacy-erasure-cross-role
-title: Löschung über alle Rollen — Kunde, CRM-Kontakt und Shop-Besitzer mit derselben Adresse, Vorschau, Abschlussmail, Wirkung je Kategorie (F6110)
+title: Löschung über alle Rollen — Kunde, CRM-Person und Shop-Besitzer mit derselben Adresse, Vorschau, Abschlussmail, Wirkung je Kategorie (F6110)
 status: approved
 priority: P1
 owner-agent: designer
@@ -11,7 +11,9 @@ touches-modules:
   - src/components/account/DeleteAccountModal.tsx
   - src/app/(customer)/[lang]/privacy-request/**
   - src/app/(system-admin)/admin/(portal)/privacy-requests/**
+  - src/app/(system-admin)/admin/(portal)/crm/**
   - src/components/system-admin/privacy/**
+  - src/components/system-admin/crm/**
   - src/app/(customer)/[lang]/shops/[slug]/**
 touches-roles:
   - customer
@@ -42,7 +44,7 @@ last-result: N/A
 | Fixture-Name | Was wird aufgebaut | Was wird damit geprüft |
 |---|---|---|
 | `customer-erase-self` | Kunde mit Daten in allen Kunden-Kategorien inkl. Foto, Avatar, Wallet | Pfad A: Selbstlöschung im Account |
-| `person-all-roles` | eine lauf-eindeutige Adresse als Kunde (Review mit Foto), CRM-Kontakt und deaktivierter Shop-Besitzer mit Claim-Dokument | Pfad B: Formular-Löschung über den Admin |
+| `person-all-roles` | eine lauf-eindeutige Adresse als Kunde (Review mit Foto), CRM-Person mit Beziehung zu einer Organisation sowie deaktivierter Shop-Besitzer mit Claim-Dokument | Pfad B: Formular-Löschung über den Admin |
 
 **Schritte (Runbook):**
 1. Pfad A: `customer-erase-self` löscht im Gefahrenbereich (Code aus dem Mail-Sink). Abschlussmail liegt vor der Löschung im Mail-Sink und nennt gelöschte Kategorien und jede behaltene mit Grund und Frist (AC16).
@@ -50,7 +52,7 @@ last-result: N/A
 3. Pfad B: `person-all-roles` stellt über `/en/privacy-request` eine Löschanfrage und bestätigt.
 4. Admin öffnet den Fall: Vorschau zeigt je Kategorie Anzahl und Verhalten (löschen/anonymisieren/behalten mit Grund) über alle drei Rollen; ohne Bestätigung ändert sich nichts (AC21).
 5. Admin bestätigt die Löschung → Ergebnis je Kategorie im Fall.
-6. Nachprüfung: Kunden-, CRM- und Shop-Besitzer-Daten leer, Claim-Dokument-Datei weg, Adresse als Hash in der Unterdrückungsliste (AC19, AC20).
+6. Nachprüfung: Kunden-, CRM-Person- (einschließlich Beziehungen, Rollen und Personen-/Beziehungskanäle) und Shop-Besitzer-Daten leer, Claim-Dokument-Datei weg, Adresse als Hash in der Unterdrückungsliste; Organisation und nicht zugeordnete Org-Kanäle bleiben erhalten (AC19, AC20).
 7. Öffentliche Shop-Seite des Shop-Besitzers bleibt erreichbar und zeigt keine Daten des Besitzers (AC20).
 8. Ein Editor ohne Löschrecht sieht den Ausführen-Knopf nicht; die API lehnt ab (Teil von AC31).
 

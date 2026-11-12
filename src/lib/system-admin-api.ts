@@ -53,6 +53,39 @@ type SysAdminProductAttribute = SysAdminItemAttribute
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:8000'
 const BASE = `${BACKEND}/api/v1/admin`
 
+export interface SysAdminPrivacyCase {
+  id: string
+  case_number: string
+  brand: string
+  right: string
+  channel: string
+  language: string
+  status: string
+  identity_state: string
+  received_at: string
+  deadline_at: string | null
+  extended_deadline_at: string | null
+  assigned_admin_id: number | null
+  deadline_signal?: 'green' | 'amber' | 'red' | null
+}
+
+export interface SysAdminPrivacyCaseDetail {
+  case: SysAdminPrivacyCase
+  contact: string | null
+  categories: Array<{ id: string; count: number | null; state: 'counted' | 'in_c2'; strategy: string; reason: string | null }>
+  correction_note: string | null
+  correction_noted_by: number | null
+  correction_noted_at: string | null
+  events: Array<{ sequence: number; action: string; outcome: string; reason_code: string | null; actor_kind: string | null; actor_id: string | null; occurred_at: string }>
+}
+
+export interface SysAdminPrivacyMetrics {
+  open: number
+  by_right: Record<string, number>
+  median_duration_hours: number | null
+  overdue: number
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const store = await cookies()
   const token = store.get('admin_token')?.value
@@ -86,6 +119,18 @@ function buildQs(params: Record<string, string | number | boolean | undefined | 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 export async function getAdminMe(): Promise<SysAdminUser> {
   return apiFetch<SysAdminUser>('/auth/me')
+}
+
+export function getPrivacyCases(params: { status?: string; right?: string; brand?: string; limit?: number; offset?: number } = {}): Promise<PaginatedResponse<SysAdminPrivacyCase>> {
+  return apiFetch<PaginatedResponse<SysAdminPrivacyCase>>(`/privacy-requests${buildQs(params)}`)
+}
+
+export function getPrivacyCase(id: string): Promise<SysAdminPrivacyCaseDetail> {
+  return apiFetch<SysAdminPrivacyCaseDetail>(`/privacy-requests/${encodeURIComponent(id)}`)
+}
+
+export function getPrivacyMetrics(): Promise<SysAdminPrivacyMetrics> {
+  return apiFetch<SysAdminPrivacyMetrics>('/privacy-metrics')
 }
 
 // ─── Shops ─────────────────────────────────────────────────────────────────────
